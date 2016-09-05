@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:submodules/Signals/SSignalKit.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/Postbox/Postbox.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/MtProtoKit/MtProtoKit.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/TelegramCore/TelegramCore.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Telegram-Mac.xcodeproj">
+   </FileRef>
+</Workspace>
