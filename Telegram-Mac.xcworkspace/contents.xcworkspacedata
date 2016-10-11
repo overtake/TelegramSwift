@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:TGUIKit/TGUIKit.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:submodules/Signals/SSignalKit.xcodeproj">
    </FileRef>
    <FileRef
