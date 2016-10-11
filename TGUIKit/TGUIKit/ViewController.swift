@@ -10,9 +10,15 @@ import Foundation
 import SwiftSignalKitMac
 open class ViewController : NSObject {
     private var _view:View?;
-    private var _frameRect:NSRect
+    public var _frameRect:NSRect
     
-    weak open var navigationController:NavigationViewController?
+    weak open var navigationController:NavigationViewController? {
+        didSet {
+            if navigationController != oldValue {
+                updateNavigation(navigationController)
+            }
+        }
+    }
     public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:kCAMediaTimingFunctionSpring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
@@ -37,6 +43,10 @@ open class ViewController : NSObject {
             return _view!;
         }
        
+    }
+    
+    open func updateNavigation(_ navigation:NavigationViewController?) {
+        
     }
     
     public private(set) var internalId:Int = 0;

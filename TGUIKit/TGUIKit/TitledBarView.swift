@@ -10,19 +10,48 @@ import Cocoa
 
 open class TitledBarView: BarView {
     
-    var textNode:TextNode = TextNode()
+    public var text:NSAttributedString? {
+        didSet {
+            if text != oldValue {
+                self.setNeedsDisplay()
+            }
+        }
+    }
     
-    var text:NSAttributedString
+    public var status:NSAttributedString? {
+        didSet {
+            if status != oldValue {
+                self.setNeedsDisplay()
+            }
+        }
+    }
 
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        let (textLayout, textApply) = TextNode.layoutText(textNode)(text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false)
-        textApply().draw(NSMakeRect(round((NSWidth(layer.bounds) - textLayout.size.width)/2.0), round((NSHeight(layer.bounds) - textLayout.size.height)/2.0), textLayout.size.width, textLayout.size.height), in: ctx)
+        if let text = text {
+            let (textLayout, textApply) = TextNode.layoutText(nil)(text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false)
+            
+            var tY = NSMinY(focus(textLayout.size))
+            
+            if let status = status {
+                
+                let (statusLayout, statusApply) = TextNode.layoutText(nil)(status, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false)
+                
+                let t = textLayout.size.height + statusLayout.size.height + 2.0
+                tY = (NSHeight(self.frame) - t) / 2.0
+                
+                let sY = tY + textLayout.size.height + 2.0
+                
+                statusApply().draw(NSMakeRect(round((NSWidth(layer.bounds) - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
+            }
+            
+            textApply().draw(NSMakeRect(round((NSWidth(layer.bounds) - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height), in: ctx)
+        }
         
     }
     
-    public init(_ text:NSAttributedString) {
+    public init(_ text:NSAttributedString?) {
         self.text = text
         super.init()
     }

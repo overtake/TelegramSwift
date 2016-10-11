@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "TGUIKit/TGUIKit/View.swift"
-            timestampString = "497699878.181704"
+            timestampString = "497897934.165342"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "154"
-            endingLineNumber = "154"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
             landmarkName = "draw(_:)"
             landmarkType = "7">
          </BreakpointContent>

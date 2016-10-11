@@ -111,6 +111,7 @@ open class View : NSView,CALayerDelegate {
     
     public func setNeedsDisplay() -> Void {
         self.layer?.setNeedsDisplay()
+        self.needsDisplay = true
     }
     
     

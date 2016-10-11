@@ -50,7 +50,7 @@ open class TableRowItem: NSObject,Identifiable {
     
  
     public var isSelected:Bool {
-        return self.table!.selectedItem() == self
+        return self.table!.isSelected(self)
     }
     
     open func viewClass() ->AnyClass {

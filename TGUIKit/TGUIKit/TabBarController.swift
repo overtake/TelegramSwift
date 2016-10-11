@@ -34,8 +34,8 @@ public class TabBarController: ViewController, TabViewDelegate {
                 current.view.removeFromSuperview()
                 current.viewDidDisappear(false)
             }
-            
-            item.controller.view.frame = NSMakeRect(0, 0, NSWidth(self.bounds), NSHeight(self.bounds) - NSHeight(tabView.frame))
+            item.controller._frameRect = NSMakeRect(0, 0, NSWidth(self.bounds), NSHeight(self.bounds) - NSHeight(tabView.frame))
+            item.controller.view.frame = item.controller._frameRect
             item.controller.viewWillAppear(false)
             addSubview(item.controller.view)
             item.controller.viewDidAppear(false)

@@ -47,7 +47,7 @@ public  func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CG
 private let screenQueue = Queue(name: "ScreenQueue")
 
 
-public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1) -> CGImage? {
+public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, reversed:Bool = false) -> CGImage? {
     var image:CGImageSource? = CGImageSourceCreateWithData(data as CFData, nil)
     
     var size = s;
@@ -90,7 +90,12 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1) -> CG
                     ctx.clip()
                 }
                
-                
+                if reversed {
+                    ctx.translateBy(x: size.width/2.0, y: size.height/2.0)
+                    ctx.scaleBy(x: 1.0, y: -1.0)
+                    ctx.translateBy(x: -(size.width/2.0), y: -(size.height/2.0))
+
+                }
                 ctx.draw(c, in: NSMakeRect(0, 0, size.width, size.height))
                 
 

@@ -121,6 +121,20 @@ public struct TGColor {
         }
     }
     
+    public static var badgeMuted:NSColor  {
+        get {
+            return colorFromRGB(rgbValue: 0xd7d7d7)
+        }
+    }
+    
+    public static var badge:NSColor  {
+        get {
+            return TGColor.blue
+        }
+    }
+    
+    
+    
     public static var grayText:NSColor  {
         get {
             return colorFromRGB(rgbValue: 0x999999)

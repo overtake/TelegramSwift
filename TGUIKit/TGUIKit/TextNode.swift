@@ -245,21 +245,10 @@ public class TextNode: NSObject {
         
         
         if let layout = self.currentLayout {
-            
-            context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-
-            
-            let bg = backgroundColor ?? NSColor.white
-           // context.setBlendMode(.copy)
-           // context.setFillColor(bg.cgColor)
-          //  context.fill(dirtyRect)
-            
             let textMatrix = context.textMatrix
             let textPosition = context.textPosition
-            
-            
-            
-            for i in 0 ..< layout.lines.count {
+            context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
                 context.textPosition = CGPoint(x: line.frame.origin.x + NSMinX(dirtyRect), y: line.frame.origin.y + NSMinY(dirtyRect))
                 CTLineDraw(line.line, context)

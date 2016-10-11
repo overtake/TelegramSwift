@@ -189,7 +189,9 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
   
     }
 
-    
+    public func cancel(_ animated:Bool) -> Void {
+        change(state: .None, animated)
+    }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

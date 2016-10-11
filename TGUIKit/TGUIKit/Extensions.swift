@@ -328,7 +328,7 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ color:NSColor? = nil) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, reversed:Bool = false) -> CGImage {
         
         var image:NSImage = self.copy() as! NSImage
         if let color = color {
@@ -339,7 +339,7 @@ public extension NSImage {
             image.unlockFocus()
         }
 
-        return roundImage(image.tiffRepresentation!, self.size, cornerRadius: 0)!
+        return roundImage(image.tiffRepresentation!, self.size, cornerRadius: 0, reversed:reversed)!
     }
     
 }
@@ -396,5 +396,38 @@ public extension NSRange {
     }
     public var max:Int {
         return self.location + self.length
+    }
+}
+
+public extension NSBezierPath {
+    public var cgPath:CGPath? {
+        if self.elementCount == 0 {
+            return nil
+        }
+        
+        let path = CGMutablePath()
+        var didClosePath = false
+        
+        for i in 0...self.elementCount-1 {
+            var points = [NSPoint](repeating: NSZeroPoint, count: 3)
+            
+            switch self.element(at: i, associatedPoints: &points) {
+            case .moveToBezierPathElement:
+                path.move(to: points[0])
+            case .lineToBezierPathElement:
+                path.addLine(to: points[0])
+            case .curveToBezierPathElement:
+                path.addCurve(to: points[0], control1: points[1], control2: points[2])
+                case .closePathBezierPathElement:
+                path.closeSubpath()
+            didClosePath = true;
+            }
+        }
+        
+        if !didClosePath {
+            path.closeSubpath()
+        }
+        
+        return path.copy()
     }
 }

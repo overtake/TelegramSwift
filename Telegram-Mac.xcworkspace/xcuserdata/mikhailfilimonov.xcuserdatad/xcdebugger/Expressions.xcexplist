@@ -9,6 +9,17 @@
          contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1):MediaBox.swift">
       </ContextState>
       <ContextState
+         contextName = "BadgeNode.draw(CALayer, in : CGContext) -&gt; ():BadgeNode.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "layer.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TitledBarView.draw(CALayer, in : CGContext) -&gt; ():TitledBarView.swift">
+      </ContextState>
+      <ContextState
          contextName = "TGTableView.moveItem(from : Int, to : Int, changeItem : TGTableRowItem?, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
       </ContextState>
       <ContextState
@@ -98,9 +109,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TextNode.draw(CGRect, in : CGContext) -&gt; ():TextNode.swift">
-      </ContextState>
-      <ContextState
          contextName = "TGTableView.(viewDidMoveToSuperview() -&gt; ()).(closure #1):TGTableView.swift">
       </ContextState>
       <ContextState
@@ -174,6 +182,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatListRowItem.init(TableView, Account, Message, CombinedPeerReadState?, PeerNotificationSettings?) -&gt; ChatListRowItem:ChatListRowItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.loadChat(account : Account, peerId : PeerId, message : Message?) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
@@ -195,6 +206,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatListController.checkList() -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListRowView.draw(CALayer, in : CGContext) -&gt; ():ChatListRowView.swift">
       </ContextState>
       <ContextState
          contextName = "static TGTextField.getlayout(attributedString : NSAttributedString?, maximumNumberOfLines : Int, truncationType : CTLineTruncationType, backgroundColor : NSColor?, constrainedSize : CGSize, cutout : TextNodeCutout?) -&gt; TextNodeLayout:TGTextField.swift">
@@ -236,6 +250,9 @@
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatListMessageRowItem.stableId.getter:ChatListMessageRowItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "TGDialogRowView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():TGDialogRowView.swift">
          <PersistentStrings>
             <PersistentString
@@ -245,6 +262,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatListController.merge([Int], [(Int, ChatListRowItem)]) -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableView.merge([Int], [(Int, TableRowItem, Int?)], Bool, TableScrollState) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
          contextName = "Popover.show(for : NSView, edge : NSRectEdge) -&gt; ():Popover.swift">
@@ -305,6 +325,17 @@
             </PersistentString>
             <PersistentString
                value = "_defaultHeight">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #9):ChatController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "strongSelf.centerBarView">
+            </PersistentString>
+            <PersistentString
+               value = "(strongSelf.centerBarView as? TitledBarView)">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -412,6 +443,14 @@
       </ContextState>
       <ContextState
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TitledBarView.text.didset:TitledBarView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "text">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">

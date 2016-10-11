@@ -127,7 +127,11 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     weak public var delegate:TableViewDelegate?
     private var trackingArea:NSTrackingArea?
     private var listhash:[Int64:TableRowItem] = [Int64:TableRowItem]();
-    private var selectedhash:Int64 = -1;
+    
+    
+    private var selectedhash:Atomic<Int64> = Atomic(value: -1);
+   
+    
     private var updating:Bool = false
     
     private var previousScroll:ScrollPosition?
@@ -272,11 +276,18 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     }
     
     public func selectedItem() -> TableRowItem? {
-        if(self.selectedhash != -1) {
-            return self.item(stableId:self.selectedhash);
+        
+        let hash = selectedhash.modify({$0})
+        
+        if(hash != -1) {
+            return self.item(stableId:hash);
         }
         
         return nil;
+    }
+    
+    public func isSelected(_ item:TableRowItem) ->Bool {
+        return selectedhash.modify({$0}) == item.stableId
     }
     
     public func item(stableId:Int64) -> TableRowItem? {
@@ -346,7 +357,8 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     
     func reloadData(row:Int) -> Void {
         if let view = self.viewNecessary(at: row) {
-            view.setItem(item: self.item(at: row), selected: false)
+            let item = self.item(at: row)
+            view.setItem(item: item, selected: item.isSelected)
             view.needsDisplay = true
         }
         //self.moveItem(from: row, to: row)
@@ -463,10 +475,10 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     
     public func select(item:TableRowItem) -> Bool {
         
-        if(self.item(stableId:item.stableId) != nil && item.stableId != self.selectedhash) {
+        if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})) {
             if(self.delegate?.isSelectable(row: item.index, item: item) == true) {
                 self.cancelSelection();
-                self.selectedhash = item.stableId;
+                let _ = selectedhash.swap(item.stableId)
                 item.prepare(true)
                 self.reloadData(row:item.index)
                 self.delegate?.selectionDidChange(row: item.index, item: item)
@@ -479,31 +491,25 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     }
     
     public func cancelSelection() -> Void {
-        
-        if let item = self.item(stableId: self.selectedhash) {
+        if let item = self.item(stableId: selectedhash.modify({$0})) {
             item.prepare(false)
+            let _ = selectedhash.swap(-1)
             self.reloadData(row:item.index)
+        } else {
+            let _ = selectedhash.swap(-1)
         }
-        
-        self.selectedhash = -1;
-        
     }
     
     
     func rowView(item:TableRowItem) -> TableRowView {
-        
         var identifier:String = NSStringFromClass(item.viewClass())
-        
         var view = self.tableView.make(withIdentifier: identifier, owner: self.tableView)
-        
         if(view == nil) {
             var vz = item.viewClass() as! TableRowView.Type
             
             view = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), item.height))
             
             view?.identifier = identifier
-            
-        } else {
             
         }
         
@@ -535,7 +541,7 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
         var view:TableRowView = self.rowView(item: item);
         
         
-        view.setItem(item: item, selected:self.selectedItem() === item)
+        view.setItem(item: item, selected:self.selectedItem() == item)
         
         return view
     }
@@ -638,12 +644,12 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
                 
                 
                 
-                if y < 0 {
-                    var bp = 0
-                    bp += 1
-                }
+//                if y < 0 {
+//                    var bp = 0
+//                    bp += 1
+//                }
                 
-                NSLog("o:\(rect.minY), n:\(nrect.minY)")
+               // NSLog("o:\(rect.minY), n:\(nrect.minY)")
                 self.contentView.bounds = NSMakeRect(0, y, 0, NSHeight(self.contentView.bounds))
             }
 

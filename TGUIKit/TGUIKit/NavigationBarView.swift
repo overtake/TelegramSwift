@@ -76,6 +76,10 @@ class NavigationBarView: View {
             self.addSubview(center)
             self.addSubview(right)
             
+            left.setNeedsDisplay()
+            center.setNeedsDisplay()
+            right.setNeedsDisplay()
+            
             let pLeft = self.leftView
             let pCenter = self.centerView
             let pRight = self.rightView

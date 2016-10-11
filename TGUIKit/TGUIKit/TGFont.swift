@@ -16,7 +16,6 @@ public func systemFont(_ size:CGFloat) ->NSFont {
     } else {
         return NSFont.init(name: "HelveticaNeue", size: size)!
     }
-    
 }
 
 public func systemMediumFont(_ size:CGFloat) ->NSFont {
@@ -25,6 +24,16 @@ public func systemMediumFont(_ size:CGFloat) ->NSFont {
         return NSFont.systemFont(ofSize: size, weight: NSFontWeightSemibold)
     } else {
         return NSFont.init(name: "HelveticaNeue-Medium", size: size)!
+    }
+    
+}
+
+public func systemBoldFont(_ size:CGFloat) ->NSFont {
+    
+    if #available(OSX 10.11, *) {
+        return NSFont.systemFont(ofSize: size, weight: NSFontWeightBold)
+    } else {
+        return NSFont.init(name: "HelveticaNeue-Bold", size: size)!
     }
     
 }
