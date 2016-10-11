@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "ChatMediaItem.init(Account, ChatHistoryEntry) -&gt; ChatMediaItem:ChatMediaItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1):MediaBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TGTableView.moveItem(from : Int, to : Int, changeItem : TGTableRowItem?, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #5).(closure #1):MediaBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(loadView() -&gt; ()).(closure #1).(closure #2).(closure #1):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowView.setFrameSize(CGSize) -&gt; ():ChatRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NavigationViewController.back(Int) -&gt; ():NavigationViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CGImage.backingSize.getter:Extensions.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "width">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "insertItems">
+            </PersistentString>
+            <PersistentString
+               value = "removedItems">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #3).(closure #1):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowView.draw(CALayer, in : CGContext) -&gt; ():ChatRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.item">
+            </PersistentString>
+            <PersistentString
+               value = "author.0.size">
+            </PersistentString>
+            <PersistentString
+               value = "item.messageSize">
+            </PersistentString>
+            <PersistentString
+               value = "titleLayout.size">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(chatMessageSticker(account : Account, file : TelegramMediaFile, size : CGSize) -&gt; Signal&lt;CGImage?, ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "fullSizeImage.width">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TableView.(viewDidMoveToSuperview() -&gt; ()).(closure #1):TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "strongSelf.changedRange">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "list.laterIndex">
+            </PersistentString>
+            <PersistentString
+               value = "self.historyLoader">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextNode.draw(CGRect, in : CGContext) -&gt; ():TextNode.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TGTableView.(viewDidMoveToSuperview() -&gt; ()).(closure #1):TGTableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(loadView() -&gt; ()).(closure #1).(closure #2):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1):MediaUtils.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "photo">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TitleButton.sizeToFit(CGSize, CGSize) -&gt; ():TitleButton.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.text.string">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1).(closure #1):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "chatListView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.(loadOnScroll(Account, TGScrollPosition) -&gt; ()).(closure #1):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TitleButton.sizeToFit(CGSize) -&gt; ():TitleButton.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.text.string">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ImageView.viewDidChangeBackingProperties() -&gt; ():ImageView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "window.backingScaleFactor">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TableView.change(size : CGSize, animated : Bool, Bool) -&gt; ():TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TabBarView.draw(CALayer, in : CGContext) -&gt; ():TabBarView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "layer.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TGTableView.remove(item : TGTableRowItem, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.list[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.loadChat(account : Account, peerId : PeerId, message : Message?) -&gt; ():ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.merge([Int], [(Int, ChatListRowItem, Int?)]) -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SearchView.changeState(Bool) -&gt; ():SearchView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.animateContainer.frame">
+            </PersistentString>
+            <PersistentString
+               value = "leftInset">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.loadOnScroll(Account, TGTableScrollUpdate) -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.checkList() -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static TGTextField.getlayout(attributedString : NSAttributedString?, maximumNumberOfLines : Int, truncationType : CTLineTruncationType, backgroundColor : NSColor?, constrainedSize : CGSize, cutout : TextNodeCutout?) -&gt; TextNodeLayout:TGTextField.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TitleButton.apply(state : ControlState) -&gt; ():TitleButton.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "style.font">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ReplyModel.draw(CALayer, in : CGContext) -&gt; ():ReplyModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "layer.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.insertItems([(Int, ChatListEntry, Int?)]) -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ValuePipe.putNext(A) -&gt; ():ValuePipe.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableView.reloadData(row : Int) -&gt; ():TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.item(at: row)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TGDialogRowView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():TGDialogRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "ditem.displayName">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.merge([Int], [(Int, ChatListRowItem)]) -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Popover.show(for : NSView, edge : NSRectEdge) -&gt; ():Popover.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.merge([Int], [(Int, TGTableRowItem, Int?)]) -&gt; ():ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "deleteIndexes">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(loadView() -&gt; ()).(closure #1):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "scrollPosition">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TGMessageRowItem.makeSize(CGFloat) -&gt; Bool:TGMessageRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "_height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GalleryPagerNode.animateIn(from : NSView?, completion : () -&gt; ()?) -&gt; ():GalleryPagerNode.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "view.superview.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #1).(closure #1):MediaUtils.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "smallestRepresentation">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "static ChatRowItem.item(from : ChatHistoryEntry, with : Account) -&gt; ChatRowItem:ChatRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "message.media">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.height.getter:ChatRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentSize.height">
+            </PersistentString>
+            <PersistentString
+               value = "_defaultHeight">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Node.loadIfNeeded() -&gt; ():Node.swift">
+      </ContextState>
+      <ContextState
+         contextName = "GalleryPagerNode.animateIn(from : (Int64) -&gt; NSView?, completion : () -&gt; ()?) -&gt; ():GalleryPagerNode.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "view.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Layer.willChangeValue(forKey : String) -&gt; ():Layer.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.superlayer">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TabBarView.setSelectedIndex(Int, respondToDelegate : Bool) -&gt; ():TabBarView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "selectView.subviews">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NavigationViewController.show(ViewController, ViewControllerStyle) -&gt; ():NavigationViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "pto">
+            </PersistentString>
+            <PersistentString
+               value = "controller.bar.height">
+            </PersistentString>
+            <PersistentString
+               value = "controller.view.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentNode!.content">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewLabel.sizeToFit() -&gt; ():TextViewLabel.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ImageView.image.didset:ImageView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "image">
+            </PersistentString>
+            <PersistentString
+               value = "self.layer">
+            </PersistentString>
+            <PersistentString
+               value = "self.layer?.bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowView.fillReplyIfNeeded(ReplyModel?, ChatRowItem) -&gt; ():ChatRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "reply.size.width">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatInputAdditions.frame.setter:ChatInputAdditions.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.container.frame">
+            </PersistentString>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+            <PersistentString
+               value = "self.view.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "EditableViewController.update(with : ViewControllerState) -&gt; ():EditableViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "editBar.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GalleryControls.animateIn() -&gt; ():GalleryControls.swift">
+      </ContextState>
+      <ContextState
+         contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.messageSize">
+            </PersistentString>
+            <PersistentString
+               value = "_contentSize">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.contentOffset">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #2):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.init(Account, ChatHistoryEntry) -&gt; ChatRowItem:ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableView.change(size : CGSize, animated : Bool) -&gt; ():TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.bounds">
+            </PersistentString>
+            <PersistentString
+               value = "">
+            </PersistentString>
+            <PersistentString
+               value = "tableView.bounds">
+            </PersistentString>
+            <PersistentString
+               value = "self.contentView.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ImageView.draw(CALayer, in : CGContext) -&gt; ():ImageView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "layer.contents">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)], [(Int, A, Int)]):System.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TextView.update(TextViewLayout) -&gt; ():TextView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableAnimationInterface.animate(added : [TableRowItem], removed : [TableRowItem]) -&gt; ():TableAnimationInterface.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "table.bounds">
+            </PersistentString>
+            <PersistentString
+               value = "table.documentView.bounds">
+            </PersistentString>
+            <PersistentString
+               value = "table.contentView.bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

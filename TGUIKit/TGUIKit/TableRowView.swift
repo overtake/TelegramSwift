@@ -1,0 +1,109 @@
+//
+//  TableRowView.swift
+//  TGUIKit
+//
+//  Created by keepcoder on 07/09/16.
+//  Copyright © 2016 Telegram. All rights reserved.
+//
+
+import Cocoa
+
+open class TableRowView: NSTableRowView, CALayerDelegate {
+    
+    open weak private(set) var item:TableRowItem?
+   // var selected:Bool?
+    
+    open var border:BorderType?
+    
+    public private(set) var contextMenu:ContextMenu?
+    
+    required public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+       // self.layer = (self.layerClass() as! CALayer.Type).init()
+        self.wantsLayer = true
+
+        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        self.layer?.delegate = self
+        self.layer?.drawsAsynchronously = System.drawAsync
+    }
+    
+
+    open func layerClass() ->AnyClass {
+        return CALayer.self;
+    }
+    
+    open var backdorColor: NSColor {
+        return TGColor.white
+    }
+    
+    open override func draw(_ dirtyRect: NSRect) {
+        
+    }
+    
+    open func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(backdorColor.cgColor)
+        ctx.fill(layer.bounds)
+       
+        if let border = border {
+            
+            ctx.setFillColor(TGColor.border.cgColor)
+            
+            if border.contains(.Top) {
+                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - TGColor.borderSize, NSWidth(self.frame), TGColor.borderSize))
+            }
+            if border.contains(.Bottom) {
+                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), TGColor.borderSize))
+            }
+            if border.contains(.Left) {
+                ctx.fill(NSMakeRect(0, 0, TGColor.borderSize, NSHeight(self.frame)))
+            }
+            if border.contains(.Right) {
+                ctx.fill(NSMakeRect(NSWidth(self.frame) - TGColor.borderSize, 0, TGColor.borderSize, NSHeight(self.frame)))
+            }
+            
+        }
+        
+    }
+    
+    open var interactionContentView:NSView {
+        return self
+    }
+    
+    open override func rightMouseDown(with event: NSEvent) {
+        super.rightMouseDown(with: event)
+        
+        if let items = item?.menuItems() {
+            ContextMenu.show(items: items, view: self, event: event, onShow: {[weak self] (menu) in
+                self?.contextMenu = menu
+                self?.onShowContextMenu()
+            }, onClose: {[weak self] () in
+                self?.contextMenu = nil
+                self?.onCloseContextMenu()
+            })
+        }
+    }
+    
+    open func onShowContextMenu() ->Void {
+        self.layer?.setNeedsDisplay()
+    }
+    
+    open func onCloseContextMenu() ->Void {
+        self.layer?.setNeedsDisplay()
+    }
+        
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    
+
+    
+    open func setItem(item:TableRowItem, selected:Bool) -> Void {
+        self.item = item;
+
+    }
+    
+
+    
+}
