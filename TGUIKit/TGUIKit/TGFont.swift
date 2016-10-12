@@ -56,4 +56,8 @@ public struct TGFont {
         return 14
     }
     
+    public static var hugeSize:CGFloat {
+        return 18
+    }
+    
 }

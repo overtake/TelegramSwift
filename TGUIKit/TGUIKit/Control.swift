@@ -31,6 +31,7 @@ open class Control: View {
     private var handlers:[(ControlEvent,() -> Void)] = []
     private var stateHandlers:[(ControlState,() -> Void)] = []
 
+    private var backgroundState:[ControlState:NSColor] = [:]
 
     open override var backgroundColor: NSColor {
         get{
@@ -65,7 +66,16 @@ open class Control: View {
     }
     
     func apply(state:ControlState) -> Void {
-        
+        if let color = backgroundState[state] {
+            self.layer?.backgroundColor = color.cgColor
+        } else {
+            self.layer?.backgroundColor = self.backgroundColor.cgColor
+        }
+        if animates {
+            let  animation = CABasicAnimation(keyPath: "backgroundColor")
+            animation.duration = 0.2
+            self.layer?.add(animation, forKey: "backgroundColor")
+        }
     }
     
     private var mouseIsDown:Bool = false
@@ -112,6 +122,10 @@ open class Control: View {
     
     public func set(handler:@escaping () -> Void, for event:ControlState) -> Void {
         stateHandlers.append((event,handler))
+    }
+    
+    public func set(background:NSColor, for state:ControlState) -> Void {
+        backgroundState[state] = background
     }
     
     public func removeLastHandler() -> Void {
@@ -200,6 +214,8 @@ open class Control: View {
     
     func apply(style:ControlStyle) -> Void {
         self.setNeedsDisplayLayer()
+        
+        
     }
     
     required public init(frame frameRect: NSRect) {

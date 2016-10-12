@@ -65,7 +65,7 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         input.backgroundColor = NSColor.clear
         input.delegate = self
         
-        input.placeholderAttributedString = NSAttributedString.initialize(string: NSLocalizedString("SearchField.Search", comment: ""), color: TGColor.grayText, font: systemFont(TGFont.textSize), coreText: false)
+        input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: TGColor.grayText, font: systemFont(TGFont.textSize), coreText: false)
         
         input.font = systemFont(TGFont.textSize)
         input.textColor = TGColor.textColor

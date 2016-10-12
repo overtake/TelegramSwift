@@ -10,6 +10,8 @@ import Cocoa
 
 open class TitledBarView: BarView {
     
+   
+    
     public var text:NSAttributedString? {
         didSet {
             if text != oldValue {
@@ -51,10 +53,15 @@ open class TitledBarView: BarView {
         
     }
     
-    public init(_ text:NSAttributedString?) {
+    public init(_ text:NSAttributedString?, _ status:NSAttributedString? = nil) {
         self.text = text
+        self.status = status
+        
         super.init()
+        
     }
+    
+    
     
     override required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")

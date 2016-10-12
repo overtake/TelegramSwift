@@ -18,6 +18,10 @@ open class TableRowItem: NSObject,Identifiable {
         return NSMakeSize(NSWidth(self.table!.frame), height)
     }
     
+    public var width:CGFloat  {
+        return self.table!.frame.width
+    }
+    
     open var stableId:Int64 {
         return Int64(0)
     }
@@ -47,7 +51,9 @@ open class TableRowItem: NSObject,Identifiable {
     }
     
     
-    
+    public func redraw()->Void {
+        table?.reloadData(row: index)
+    }
  
     public var isSelected:Bool {
         return self.table!.isSelected(self)

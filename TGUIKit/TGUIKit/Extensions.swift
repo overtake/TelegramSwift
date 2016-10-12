@@ -146,6 +146,18 @@ public extension CALayer {
 
     }
     
+    public func animateBackground() ->Void {
+        let animation = CABasicAnimation(keyPath: "backgroundColor")
+        animation.duration = 0.2
+        self.add(animation, forKey: "backgroundColor")
+    }
+    
+    public func animateContents() ->Void {
+        let animation = CABasicAnimation(keyPath: "contents")
+        animation.duration = 0.2
+        self.add(animation, forKey: "contents")
+    }
+    
 }
 
 public extension String {
@@ -429,5 +441,16 @@ public extension NSBezierPath {
         }
         
         return path.copy()
+    }
+}
+
+
+public extension EdgeInsets {
+
+    public init(left:CGFloat = 0, right:CGFloat = 0, top:CGFloat = 0, bottom:CGFloat = 0) {
+        self.left = left
+        self.right = right
+        self.top = top
+        self.bottom = bottom
     }
 }

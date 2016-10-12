@@ -26,6 +26,10 @@ public struct System {
  
 }
 
+public func localizedString(_ key:String) -> String {
+    return NSLocalizedString(key, comment: "")
+}
+
 public func reverseIndexList<T>(_ list:[(Int,T,Int?)], _ previousCount:Int, _ updateCount:Int) -> [(Int,T,Int?)] {
     var reversed:[(Int,T,Int?)] = []
     

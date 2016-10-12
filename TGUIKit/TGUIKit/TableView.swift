@@ -118,7 +118,7 @@ public protocol InteractionContentViewProtocol : class {
     func contentInteractionView(for stableId:Int64) -> NSView?
 }
 
-public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol {
+open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol {
     
     public var separator:TableSeparator = .none
     
@@ -145,7 +145,7 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     }
     
 
-    public override var isFlipped: Bool {
+    open override var isFlipped: Bool {
         return true
     }
     
@@ -199,13 +199,13 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
         
     }
     
-    public override func draw(_ layer: CALayer, in ctx: CGContext) {
+    open override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
     }
     
     let reqCount = 4
     
-    public override func viewDidMoveToSuperview() {
+    open override func viewDidMoveToSuperview() {
         if let sv = superview {
             let clipView = self.contentView
             
@@ -254,7 +254,7 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
     }
 
     
-    public override func updateTrackingAreas() {
+    open override func updateTrackingAreas() {
         super.updateTrackingAreas();
         
         if(self.trackingArea != nil) {
@@ -266,7 +266,7 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
         self.addTrackingArea(self.trackingArea!)
     }
     
-    public override func setFrameOrigin(_ newOrigin: NSPoint) {
+    open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin);
         self.updateTrackingAreas();
     }
@@ -555,6 +555,10 @@ public class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Se
         
         return hlist;
         
+    }
+    
+    public func apply(transition:TableTransition) ->Void {
+        self.merge(transition.deleted, transition.inserted, transition.animated, transition.scrollState)
     }
     
     public func merge(_ deleteIndexes:[Int], _ insertedIndexes:[(Int,TableRowItem,Int?)], _ animated:Bool = true,_ state:TableScrollState = .none(nil)) -> Void {

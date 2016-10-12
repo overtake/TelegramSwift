@@ -36,6 +36,7 @@ public func ==(lhs:ViewControllerState, rhs:ViewControllerState) -> Bool {
 
 open class EditableViewController: ViewController {
     
+    
     var editBar:TextButtonBarView = TextButtonBarView(text: "", style: navigationButtonStyle, alignment:.Right)
 
     public var state:ViewControllerState! {
@@ -46,11 +47,15 @@ open class EditableViewController: ViewController {
         }
     }
     
+    open override var enableBack: Bool {
+        return true
+    }
+    
     open func change(state:ViewControllerState) ->Void {
         if case let .Normal(text) = state {
-            self.state = ViewControllerState.Edit(NSLocalizedString("Navigation.Done", comment:""))
+            self.state = ViewControllerState.Edit(localizedString("Navigation.Done"))
         } else {
-            self.state = ViewControllerState.Normal(NSLocalizedString("Navigation.Edit", comment:""))
+            self.state = ViewControllerState.Normal(localizedString("Navigation.Edit"))
         }
     }
     
@@ -87,14 +92,22 @@ open class EditableViewController: ViewController {
         
         self.editBar.setFrameSize(self.editBar.frame.size)
         
-        
     }
     
+    public func set(editable:Bool) ->Void {
+        editBar.button.isHidden = !editable
+    }
+    
+    open override func updateNavigation(_ navigation: NavigationViewController?) {
+        super.updateNavigation(navigation)
+        if let navigation = navigation {
+            rightBarView = editBar
+            self.state = .Normal(localizedString("Navigation.Edit"))
+        }
+    }
     
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.rightBarView = editBar
-        self.state = .Normal(NSLocalizedString("Navigation.Edit", comment:""))
     }
     
 }

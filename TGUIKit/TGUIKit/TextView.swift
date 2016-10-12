@@ -14,7 +14,7 @@ public final class TextViewLayout {
     public var frame:CTFrame!
     public var size:NSSize = NSZeroSize
     
-    public init(_ attributedString:NSAttributedString, size:NSSize) {
+    public init(_ attributedString:NSAttributedString, size:NSSize = NSZeroSize) {
         
         self.attributedString = attributedString
         self.framesetter = CTFramesetterCreateWithAttributedString(attributedString)
@@ -22,8 +22,8 @@ public final class TextViewLayout {
         
     }
     
-    public func measure(size:NSSize) -> Void {
-        self.size = size
+    public func measure(width:CGFloat) -> Void {
+        self.size = attributedString.CTSize(width,framesetter:framesetter).1
         let path:CGMutablePath = CGMutablePath()
         path.addRect(NSMakeRect(0, 0, size.width , size.height))
         frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, nil)

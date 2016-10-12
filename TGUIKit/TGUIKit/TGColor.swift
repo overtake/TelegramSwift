@@ -27,6 +27,8 @@ public struct TGColor {
         }
     }
     
+    
+    
     public static var white:NSColor  {
         get {
             return NSColor.white
@@ -37,8 +39,20 @@ public struct TGColor {
         return TGColor.colorFromRGB(rgbValue: 0x2481cc)
     }
     
+    public static var blueUI:NSColor {
+        return TGColor.colorFromRGB(rgbValue: 0x2481cc)
+    }
+    
+    public static var redUI:NSColor {
+        return TGColor.colorFromRGB(rgbValue: 0xff3b30)
+    }
+    
     public static var blackTransparent:NSColor {
         return colorFromRGB(rgbValue: 0x000000, alpha: 0.6)
+    }
+    
+    public static var grayTransparent:NSColor {
+        return colorFromRGB(rgbValue: 0xf4f4f4, alpha: 0.4)
     }
     
     public static var cornerRadius:CGFloat {

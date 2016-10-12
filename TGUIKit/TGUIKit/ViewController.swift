@@ -22,10 +22,9 @@ open class ViewController : NSObject {
     public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:kCAMediaTimingFunctionSpring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
-    public var leftBarView:BarView = BarView()
-    public var centerBarView:BarView = BarView()
-    public var rightBarView:BarView = BarView()
-    
+    public var leftBarView:BarView!
+    public var centerBarView:TitledBarView!
+    public var rightBarView:BarView!
     
     public var popover:Popover?
     
@@ -45,9 +44,20 @@ open class ViewController : NSObject {
        
     }
     
-    open func updateNavigation(_ navigation:NavigationViewController?) {
-        
+    open var enableBack:Bool {
+        return false
     }
+    
+    open func updateNavigation(_ navigation:NavigationViewController?) {
+        if let navigation = navigation {
+            
+            leftBarView = enableBack ? BackNavigationBar(navigation) : BarView()
+            centerBarView = TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: systemMediumFont(TGFont.titleSize)))
+            rightBarView = BarView()
+        }
+    }
+    
+
     
     public private(set) var internalId:Int = 0;
     
@@ -69,8 +79,12 @@ open class ViewController : NSObject {
         }
     }
     
-    public func loadViewIfNeeded() -> Void {
-        guard let view = _view else {
+    public func loadViewIfNeeded(_ frame:NSRect = NSZeroRect) -> Void {
+        
+         guard let view = _view else {
+            if !NSIsEmptyRect(frame) {
+                _frameRect = frame
+            }
             self.loadView()
             
             return
@@ -120,7 +134,7 @@ open class ViewController : NSObject {
     public let backImage = #imageLiteral(resourceName: "Icon_NavigationBack").precomposed()
     
     open func backSettings() -> (String,CGImage?) {
-        return (NSLocalizedString("Navigation.back",comment:""),backImage)
+        return (localizedString("Navigation.back"),backImage)
     }
     
     open var popoverClass:AnyClass {

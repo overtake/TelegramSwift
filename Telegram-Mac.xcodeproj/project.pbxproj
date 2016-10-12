@@ -26,6 +26,20 @@
 		C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271D9B1DACC027001792B6 /* SearchController.swift */; };
 		C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271D9D1DACC796001792B6 /* ChatListMessageRowItem.swift */; };
 		C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271D9F1DACC7F7001792B6 /* ChatListMessageRowView.swift */; };
+		C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DA91DAD8716001792B6 /* PeerInfoController.swift */; };
+		C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DAB1DAE1116001792B6 /* PeerInfoEntries.swift */; };
+		C2271DAE1DAE1172001792B6 /* UserInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DAD1DAE1172001792B6 /* UserInfoEntries.swift */; };
+		C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB01DAE126B001792B6 /* GeneralRowItem.swift */; };
+		C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB21DAE127A001792B6 /* GeneralRowView.swift */; };
+		C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB41DAE131C001792B6 /* GeneralInteractedRowItem.swift */; };
+		C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */; };
+		C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB81DAE2125001792B6 /* GroupInfoEntries.swift */; };
+		C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */; };
+		C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBC1DAE2CFA001792B6 /* GeneralTableView.swift */; };
+		C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */; };
+		C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */; };
+		C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */; };
+		C2271DC61DAE5E5A001792B6 /* TextAndLabelRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC51DAE5E5A001792B6 /* TextAndLabelRowView.swift */; };
 		C2271F4F1D9C38F500424F7B /* InputAttachRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F4E1D9C38F500424F7B /* InputAttachRowItem.swift */; };
 		C2271F511D9C392400424F7B /* InputAttachRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F501D9C392400424F7B /* InputAttachRowView.swift */; };
 		C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F531D9D420B00424F7B /* ContactsController.swift */; };
@@ -124,6 +138,20 @@
 		C2271D9B1DACC027001792B6 /* SearchController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchController.swift; sourceTree = "<group>"; };
 		C2271D9D1DACC796001792B6 /* ChatListMessageRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListMessageRowItem.swift; sourceTree = "<group>"; };
 		C2271D9F1DACC7F7001792B6 /* ChatListMessageRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListMessageRowView.swift; sourceTree = "<group>"; };
+		C2271DA91DAD8716001792B6 /* PeerInfoController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoController.swift; sourceTree = "<group>"; };
+		C2271DAB1DAE1116001792B6 /* PeerInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoEntries.swift; sourceTree = "<group>"; };
+		C2271DAD1DAE1172001792B6 /* UserInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserInfoEntries.swift; sourceTree = "<group>"; };
+		C2271DB01DAE126B001792B6 /* GeneralRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralRowItem.swift; sourceTree = "<group>"; };
+		C2271DB21DAE127A001792B6 /* GeneralRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralRowView.swift; sourceTree = "<group>"; };
+		C2271DB41DAE131C001792B6 /* GeneralInteractedRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInteractedRowItem.swift; sourceTree = "<group>"; };
+		C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInteractedRowView.swift; sourceTree = "<group>"; };
+		C2271DB81DAE2125001792B6 /* GroupInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupInfoEntries.swift; sourceTree = "<group>"; };
+		C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelInfoEntries.swift; sourceTree = "<group>"; };
+		C2271DBC1DAE2CFA001792B6 /* GeneralTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralTableView.swift; sourceTree = "<group>"; };
+		C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderItem.swift; sourceTree = "<group>"; };
+		C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextAndLabelItem.swift; sourceTree = "<group>"; };
+		C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderView.swift; sourceTree = "<group>"; };
+		C2271DC51DAE5E5A001792B6 /* TextAndLabelRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextAndLabelRowView.swift; sourceTree = "<group>"; };
 		C2271F4E1D9C38F500424F7B /* InputAttachRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAttachRowItem.swift; sourceTree = "<group>"; };
 		C2271F501D9C392400424F7B /* InputAttachRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAttachRowView.swift; sourceTree = "<group>"; };
 		C2271F531D9D420B00424F7B /* ContactsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsController.swift; sourceTree = "<group>"; };
@@ -274,6 +302,40 @@
 			name = search;
 			sourceTree = "<group>";
 		};
+		C2271DA81DAD867E001792B6 /* PeerInfo */ = {
+			isa = PBXGroup;
+			children = (
+				C2271DC21DAE5E32001792B6 /* table */,
+				C2271DA91DAD8716001792B6 /* PeerInfoController.swift */,
+				C2271DAB1DAE1116001792B6 /* PeerInfoEntries.swift */,
+				C2271DAD1DAE1172001792B6 /* UserInfoEntries.swift */,
+				C2271DB81DAE2125001792B6 /* GroupInfoEntries.swift */,
+				C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */,
+			);
+			name = PeerInfo;
+			sourceTree = "<group>";
+		};
+		C2271DAF1DAE124C001792B6 /* general */ = {
+			isa = PBXGroup;
+			children = (
+				C2271DB01DAE126B001792B6 /* GeneralRowItem.swift */,
+				C2271DB21DAE127A001792B6 /* GeneralRowView.swift */,
+				C2271DB41DAE131C001792B6 /* GeneralInteractedRowItem.swift */,
+				C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */,
+				C2271DBC1DAE2CFA001792B6 /* GeneralTableView.swift */,
+			);
+			name = general;
+			sourceTree = "<group>";
+		};
+		C2271DC21DAE5E32001792B6 /* table */ = {
+			isa = PBXGroup;
+			children = (
+				C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */,
+				C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */,
+			);
+			name = table;
+			sourceTree = "<group>";
+		};
 		C2271F4A1D9C38DA00424F7B /* table */ = {
 			isa = PBXGroup;
 			children = (
@@ -294,10 +356,13 @@
 		C2271F551D9D468900424F7B /* table-elements */ = {
 			isa = PBXGroup;
 			children = (
+				C2271DAF1DAE124C001792B6 /* general */,
 				C2271F561D9D46BC00424F7B /* ShortPeerRowItem.swift */,
 				C2271F581D9D46CA00424F7B /* ShortPeerRowView.swift */,
 				C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */,
 				C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */,
+				C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */,
+				C2271DC51DAE5E5A001792B6 /* TextAndLabelRowView.swift */,
 			);
 			name = "table-elements";
 			sourceTree = "<group>";
@@ -367,6 +432,7 @@
 		C2303E881D9A767E00098E12 /* right */ = {
 			isa = PBXGroup;
 			children = (
+				C2271DA81DAD867E001792B6 /* PeerInfo */,
 				C20232A61D81D178007C9ADE /* chat */,
 			);
 			name = right;
@@ -701,10 +767,12 @@
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				C253A95F1D9165CD00CDC850 /* webp.m in Sources */,
+				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2412DFB1DA681B500588C14 /* GalleryPhotoItem.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
 				C253A92D1D8EE1A600CDC850 /* ChatMediaView.swift in Sources */,
 				C2256D961DAB9CEA00494CF4 /* ChatHistoryLocation.swift in Sources */,
+				C2271DAE1DAE1172001792B6 /* UserInfoEntries.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
 				C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
@@ -715,29 +783,36 @@
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				C2B1A1231DA2AFA000ACB1DD /* NSWeakReference.m in Sources */,
 				C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */,
+				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */,
 				C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
+				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
+				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
 				C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C2271F511D9C392400424F7B /* InputAttachRowView.swift in Sources */,
+				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
+				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				C2844ACE1DA905BA009308DC /* InfoViewController.swift in Sources */,
+				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */,
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C2B1A1201DA2AE4800ACB1DD /* Notifier.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* MessageContentView.swift in Sources */,
+				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */,
 				C2412DFF1DA6872F00588C14 /* GalleryVideoItem.swift in Sources */,
@@ -747,6 +822,7 @@
 				C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */,
 				C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */,
 				C2844AD21DA906AD009308DC /* InfoHeaderItem.swift in Sources */,
+				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				C296AF821D8D9397001DBB59 /* ChatPhotoLayer.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
@@ -757,8 +833,10 @@
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
+				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
 				C2271F4F1D9C38F500424F7B /* InputAttachRowItem.swift in Sources */,
+				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C253A9611D917ACD00CDC850 /* MessageStickerContentNode.swift in Sources */,
 				C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */,
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,
@@ -766,8 +844,10 @@
 				C2412DFD1DA6843400588C14 /* GalleryItem.swift in Sources */,
 				C2412E051DA6AB6300588C14 /* GalleryMediaItem.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
+				C2271DC61DAE5E5A001792B6 /* TextAndLabelRowView.swift in Sources */,
 				C219E1D91D886A160042F0C8 /* ChatHoleRowView.swift in Sources */,
 				C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */,
+				C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */,
 				C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

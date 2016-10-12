@@ -86,8 +86,6 @@ open class View : NSView,CALayerDelegate {
             ctx.setFillColor(self.backgroundColor.cgColor)
             ctx.fill(layer.bounds)
             
-            
-            
             if let border = border {
                 
                 ctx.setFillColor(TGColor.border.cgColor)

@@ -14,6 +14,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
    // var selected:Bool?
     
     open var border:BorderType?
+    public var animates:Bool = true
     
     public private(set) var contextMenu:ContextMenu?
     

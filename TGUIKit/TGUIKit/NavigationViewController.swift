@@ -31,7 +31,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         self.view.autoresizesSubviews = true
         self.stack.append(controller)
         
-        
+        controller.navigationController = self
         
         self.view.addSubview(navigationBar)
         
@@ -51,6 +51,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     public func push(_ controller:ViewController, _ animated:Bool = true) -> Void {
         
         controller.navigationController = self
+        controller.loadViewIfNeeded(self.bounds)
         
         self.pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {

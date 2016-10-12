@@ -10,22 +10,39 @@ import Cocoa
 
 open class BarView: View {
     
+    var overlay:OverlayControl = OverlayControl()
+    
+    public var clickHandler:()->Void = {}
+    
     public var minWidth:CGFloat = 80
 
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
-        
         super.draw(layer, in: ctx)
-        
+    }
+    
+    open override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        self.overlay.setFrameSize(newSize)
     }
     
     override init() {
         super.init()
-        self.border = [.Bottom]
-        self.frame = NSMakeRect(0, 0, minWidth, 50)
+        border = [.Bottom]
+        frame = NSMakeRect(0, 0, minWidth, 50)
+        addSubview(overlay)
+        overlayInitEvent()
+    }
+    
+    func overlayInitEvent() -> Void {
+        self.overlay.set(handler: { [weak self] in
+            self?.clickHandler()
+        }, for: .Click)
     }
     
     override required public init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+        self.addSubview(overlay)
+        overlayInitEvent()
     }
     
     required public init?(coder: NSCoder) {
