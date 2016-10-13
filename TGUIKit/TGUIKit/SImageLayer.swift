@@ -56,6 +56,13 @@ open class SImageLayer: CALayer {
         
     }
     
+    open override func removeFromSuperlayer() {
+        super.removeFromSuperlayer()
+        disposable.set(nil)
+    }
+    
+
+    
     public func animate() -> Void {
         let  animation = CABasicAnimation(keyPath: "contents")
         animation.duration = 0.2

@@ -142,7 +142,7 @@ public extension CALayer {
     
     public func disableActions() -> Void {
         
-        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull()]
+        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull()]
 
     }
     
@@ -150,6 +150,12 @@ public extension CALayer {
         let animation = CABasicAnimation(keyPath: "backgroundColor")
         animation.duration = 0.2
         self.add(animation, forKey: "backgroundColor")
+    }
+    
+    public func animateBorder() ->Void {
+        let animation = CABasicAnimation(keyPath: "borderWidth")
+        animation.duration = 0.2
+        self.add(animation, forKey: "borderWidth")
     }
     
     public func animateContents() ->Void {

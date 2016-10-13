@@ -22,6 +22,8 @@ public enum ControlEvent {
 
 open class Control: View {
     
+    open var isEnabled:Bool = true
+    
     open var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:kCAMediaTimingFunctionSpring)
     
     var trackingArea:NSTrackingArea?
@@ -134,6 +136,10 @@ open class Control: View {
     
     public func removeLastStateHandler() -> Void {
         stateHandlers.removeLast()
+    }
+    
+    public func removeAllHandlers() ->Void {
+        handlers.removeAll()
     }
     
     

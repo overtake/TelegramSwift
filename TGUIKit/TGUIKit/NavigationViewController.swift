@@ -14,17 +14,18 @@ public enum ViewControllerStyle {
     case none;
 }
 
-
-
 public class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
 
-    private var stack:[ViewController] = [ViewController]()
-    public private(set) var controller:ViewController = ViewController()
+    var stack:[ViewController] = [ViewController]()
+    
+    var empty:ViewController
+    
+    public private(set) var controller:ViewController
     
     private var navigationBar:NavigationBarView = NavigationBarView()
     
-    private var pushDisposable:MetaDisposable = MetaDisposable()
-    private var popDisposable:MetaDisposable = MetaDisposable()
+    var pushDisposable:MetaDisposable = MetaDisposable()
+    var popDisposable:MetaDisposable = MetaDisposable()
     
     public override func loadView() {
         super.loadView();
@@ -37,6 +38,12 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         
         self.view.addSubview(controller.view)
         
+    }
+    
+    public init(_ empty:ViewController) {
+        self.empty = empty
+        self.controller = empty
+        super.init()
     }
     
     public var stackCount:Int {
@@ -120,12 +127,18 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
             controller.viewDidAppear(false);
             controller.becomeFirstResponder();
             
+            self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: style, animationStyle: controller.animationStyle)
+
+            
             return // without animations
         }
         
         
         previous.viewWillDisappear(true);
         controller.viewWillAppear(true);
+        
+        
+        
         
         CATransaction.begin()
 
@@ -151,17 +164,10 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         
         CATransaction.commit()
         
-
-
-        
     }
     
-    public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
-        
-    }
-
     
-    func back(_ index:Int = -1) -> Void {
+    public func back(_ index:Int = -1) -> Void {
         if stackCount > 1 {
             show(stack[stackCount - 2], .pop)
         }

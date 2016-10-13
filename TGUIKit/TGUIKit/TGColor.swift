@@ -47,6 +47,10 @@ public struct TGColor {
         return TGColor.colorFromRGB(rgbValue: 0xff3b30)
     }
     
+    public static var greenUI:NSColor {
+        return TGColor.colorFromRGB(rgbValue: 0x63DA6E)
+    }
+    
     public static var blackTransparent:NSColor {
         return colorFromRGB(rgbValue: 0x000000, alpha: 0.6)
     }

@@ -100,9 +100,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
 
     
-    open func setItem(item:TableRowItem, selected:Bool) -> Void {
+    open func set(item:TableRowItem, animated:Bool = false) -> Void {
         self.item = item;
-
     }
     
 

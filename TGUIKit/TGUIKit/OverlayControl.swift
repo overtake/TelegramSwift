@@ -8,7 +8,7 @@
 
 import Cocoa
 
-public class OverlayControl: Control {
+open class OverlayControl: Control {
 
     
     open override func updateTrackingAreas() {

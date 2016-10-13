@@ -40,6 +40,12 @@
 		C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */; };
 		C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */; };
 		C2271DC61DAE5E5A001792B6 /* TextAndLabelRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC51DAE5E5A001792B6 /* TextAndLabelRowView.swift */; };
+		C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC91DAED681001792B6 /* PresenceStrings.swift */; };
+		C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */; };
+		C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */; };
+		C2271DDF1DAF8CE4001792B6 /* PhotoVideoGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DDE1DAF8CE4001792B6 /* PhotoVideoGridItem.swift */; };
+		C2271DE11DAF8F39001792B6 /* MediaGridHoleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE01DAF8F39001792B6 /* MediaGridHoleItem.swift */; };
+		C2271DE31DAF8FB7001792B6 /* MediaGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE21DAF8FB7001792B6 /* MediaGridItem.swift */; };
 		C2271F4F1D9C38F500424F7B /* InputAttachRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F4E1D9C38F500424F7B /* InputAttachRowItem.swift */; };
 		C2271F511D9C392400424F7B /* InputAttachRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F501D9C392400424F7B /* InputAttachRowView.swift */; };
 		C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F531D9D420B00424F7B /* ContactsController.swift */; };
@@ -92,8 +98,6 @@
 		C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */; };
 		C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1101D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift */; };
 		C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1121D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift */; };
-		C2B1A1201DA2AE4800ACB1DD /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A11F1DA2AE4800ACB1DD /* Notifier.swift */; };
-		C2B1A1231DA2AFA000ACB1DD /* NSWeakReference.m in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1221DA2AFA000ACB1DD /* NSWeakReference.m */; };
 		C2B1A1271DA3D84900ACB1DD /* ChatInputAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1261DA3D84900ACB1DD /* ChatInputAdditions.swift */; };
 		C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */; };
 		C2CBCAC01D81528700142EC0 /* System.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABF1D81528700142EC0 /* System.swift */; };
@@ -152,6 +156,12 @@
 		C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextAndLabelItem.swift; sourceTree = "<group>"; };
 		C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderView.swift; sourceTree = "<group>"; };
 		C2271DC51DAE5E5A001792B6 /* TextAndLabelRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextAndLabelRowView.swift; sourceTree = "<group>"; };
+		C2271DC91DAED681001792B6 /* PresenceStrings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PresenceStrings.swift; sourceTree = "<group>"; };
+		C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyChatViewController.swift; sourceTree = "<group>"; };
+		C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaController.swift; sourceTree = "<group>"; };
+		C2271DDE1DAF8CE4001792B6 /* PhotoVideoGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoVideoGridItem.swift; sourceTree = "<group>"; };
+		C2271DE01DAF8F39001792B6 /* MediaGridHoleItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaGridHoleItem.swift; sourceTree = "<group>"; };
+		C2271DE21DAF8FB7001792B6 /* MediaGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaGridItem.swift; sourceTree = "<group>"; };
 		C2271F4E1D9C38F500424F7B /* InputAttachRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAttachRowItem.swift; sourceTree = "<group>"; };
 		C2271F501D9C392400424F7B /* InputAttachRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAttachRowView.swift; sourceTree = "<group>"; };
 		C2271F531D9D420B00424F7B /* ContactsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsController.swift; sourceTree = "<group>"; };
@@ -214,9 +224,6 @@
 		C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceState.swift; sourceTree = "<group>"; };
 		C2B1A1101D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceInteraction.swift; sourceTree = "<group>"; };
 		C2B1A1121D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatPresentationInterfaceState.swift; sourceTree = "<group>"; };
-		C2B1A11F1DA2AE4800ACB1DD /* Notifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
-		C2B1A1211DA2AFA000ACB1DD /* NSWeakReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSWeakReference.h; sourceTree = "<group>"; };
-		C2B1A1221DA2AFA000ACB1DD /* NSWeakReference.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSWeakReference.m; sourceTree = "<group>"; };
 		C2B1A1261DA3D84900ACB1DD /* ChatInputAdditions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputAdditions.swift; sourceTree = "<group>"; };
 		C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryViewer.swift; sourceTree = "<group>"; };
 		C2CBCABF1D81528700142EC0 /* System.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = System.swift; sourceTree = "<group>"; };
@@ -336,6 +343,32 @@
 			name = table;
 			sourceTree = "<group>";
 		};
+		C2271DD01DAF6DD9001792B6 /* some controllers */ = {
+			isa = PBXGroup;
+			children = (
+				C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */,
+			);
+			name = "some controllers";
+			sourceTree = "<group>";
+		};
+		C2271DD51DAF80AC001792B6 /* shared media */ = {
+			isa = PBXGroup;
+			children = (
+				C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */,
+				C2271DE01DAF8F39001792B6 /* MediaGridHoleItem.swift */,
+				C2271DDE1DAF8CE4001792B6 /* PhotoVideoGridItem.swift */,
+				C2271DE21DAF8FB7001792B6 /* MediaGridItem.swift */,
+			);
+			name = "shared media";
+			sourceTree = "<group>";
+		};
+		C2271DEB1DAFE498001792B6 /* image */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = image;
+			sourceTree = "<group>";
+		};
 		C2271F4A1D9C38DA00424F7B /* table */ = {
 			isa = PBXGroup;
 			children = (
@@ -370,8 +403,6 @@
 		C22B63531D967F3800085C19 /* external-objc */ = {
 			isa = PBXGroup;
 			children = (
-				C2B1A1211DA2AFA000ACB1DD /* NSWeakReference.h */,
-				C2B1A1221DA2AFA000ACB1DD /* NSWeakReference.m */,
 				C22B63541D967F4500085C19 /* TGInputTextTag.h */,
 				C22B63551D967F4500085C19 /* TGInputTextTag.m */,
 				C22B63561D967F4500085C19 /* TGModernGrowingTextView.h */,
@@ -432,6 +463,8 @@
 		C2303E881D9A767E00098E12 /* right */ = {
 			isa = PBXGroup;
 			children = (
+				C2271DD51DAF80AC001792B6 /* shared media */,
+				C2271DD01DAF6DD9001792B6 /* some controllers */,
 				C2271DA81DAD867E001792B6 /* PeerInfo */,
 				C20232A61D81D178007C9ADE /* chat */,
 			);
@@ -614,6 +647,7 @@
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				C2271DEB1DAFE498001792B6 /* image */,
 				C22B63531D967F3800085C19 /* external-objc */,
 				C253A95D1D9165CD00CDC850 /* webp.h */,
 				C253A95E1D9165CD00CDC850 /* webp.m */,
@@ -625,7 +659,7 @@
 				C276248A1D95AF7600FE5B2B /* ObjcUtils.h */,
 				C276248B1D95AF7600FE5B2B /* ObjcUtils.m */,
 				C276248D1D95B4F300FE5B2B /* Extensions.swift */,
-				C2B1A11F1DA2AE4800ACB1DD /* Notifier.swift */,
+				C2271DC91DAED681001792B6 /* PresenceStrings.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -781,7 +815,6 @@
 				C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
-				C2B1A1231DA2AFA000ACB1DD /* NSWeakReference.m in Sources */,
 				C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
@@ -806,19 +839,23 @@
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				C2844ACE1DA905BA009308DC /* InfoViewController.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
+				C2271DE31DAF8FB7001792B6 /* MediaGridItem.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */,
+				C2271DE11DAF8F39001792B6 /* MediaGridHoleItem.swift in Sources */,
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
-				C2B1A1201DA2AE4800ACB1DD /* Notifier.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* MessageContentView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */,
 				C2412DFF1DA6872F00588C14 /* GalleryVideoItem.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,
+				C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */,
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,
+				C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */,
 				C2844AD41DA906BD009308DC /* InfoHeaderView.swift in Sources */,
+				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
 				C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */,
 				C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */,
 				C2844AD21DA906AD009308DC /* InfoHeaderItem.swift in Sources */,
@@ -829,6 +866,7 @@
 				C296AF8A1D8E9F94001DBB59 /* MessageInteractiveContent.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* MessageFileContentNode.swift in Sources */,
+				C2271DDF1DAF8CE4001792B6 /* PhotoVideoGridItem.swift in Sources */,
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,

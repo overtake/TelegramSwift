@@ -26,6 +26,14 @@
          contextName = "ChatListController.loadOnScroll(Account, TGTableScrollUpdate) -&gt; ():ChatListController.swift">
       </ContextState>
       <ContextState
+         contextName = "PeerInfoController.(init(account : Account, peerId : PeerId) -&gt; PeerInfoController).(closure #3):PeerInfoController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "strongSelf.navigationController">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1).(closure #1):ChatListController.swift">
          <PersistentStrings>
             <PersistentString
@@ -286,6 +294,14 @@
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #2):ChatController.swift">
       </ContextState>
       <ContextState
+         contextName = "GridItem.resize(size : CGSize) -&gt; ():GridRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "originalSize.aspectFilled(size)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -434,6 +450,14 @@
          contextName = "shortStatus(for : Peer, with : CachedPeerData?) -&gt; (String, NSColor):System.swift">
       </ContextState>
       <ContextState
+         contextName = "GeneralInteractedRowView.setItem(item : TableRowItem, selected : Bool) -&gt; ():GeneralInteractedRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "value(item)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatListController.insertItems([(Int, ChatListEntry, Int?)]) -&gt; ():ChatListController.swift">
       </ContextState>
       <ContextState
@@ -441,6 +465,29 @@
          <PersistentStrings>
             <PersistentString
                value = "item.height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GridRowItem.sizeToFit() -&gt; ():GridRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.width">
+            </PersistentString>
+            <PersistentString
+               value = "prop * CGFloat(items.count) + fitInset">
+            </PersistentString>
+            <PersistentString
+               value = "prop * 5">
+            </PersistentString>
+            <PersistentString
+               value = "fitWidth">
+            </PersistentString>
+            <PersistentString
+               value = "fitInset">
+            </PersistentString>
+            <PersistentString
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

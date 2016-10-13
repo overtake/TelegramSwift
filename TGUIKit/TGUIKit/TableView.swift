@@ -17,6 +17,20 @@ public enum TableSeparator {
     case none;
 }
 
+public final class GridTransition {
+    public private(set) var inserted:[(Int,GridItem,Int?)]
+    public private(set) var deleted:[Int]
+    public private(set) var scrollState:TableScrollState
+    public private(set) var animated:Bool
+    
+    public init(deleted:[Int], inserted:[(Int,GridItem,Int?)], animated:Bool = false, scrollState:TableScrollState = .none(nil)) {
+        self.inserted = inserted
+        self.deleted = deleted
+        self.animated = animated
+        self.scrollState = scrollState
+    }
+}
+
 public final class TableTransition {
     public private(set) var inserted:[(Int,TableRowItem,Int?)]
     public private(set) var deleted:[Int]
@@ -312,7 +326,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
-    public func insert(item:TableRowItem, at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Bool {
+    public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Bool {
         
         if(self.item(stableId:item.stableId) == nil) {
             
@@ -337,7 +351,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.insert(item: item, at: self.count, redraw: redraw, animation:animation)
     }
     
-    public func insert(items:[TableRowItem], at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
+    public func insert(items:[TableRowItem], at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
         
         
         var current:Int = 0;
@@ -355,10 +369,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    func reloadData(row:Int) -> Void {
+    func reloadData(row:Int, animated:Bool = false) -> Void {
         if let view = self.viewNecessary(at: row) {
             let item = self.item(at: row)
-            view.setItem(item: item, selected: item.isSelected)
+            view.set(item: item, animated: animated)
             view.needsDisplay = true
         }
         //self.moveItem(from: row, to: row)
@@ -541,7 +555,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var view:TableRowView = self.rowView(item: item);
         
         
-        view.setItem(item: item, selected:self.selectedItem() == item)
+        view.set(item: item, animated:false)
         
         return view
     }

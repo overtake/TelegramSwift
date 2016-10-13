@@ -32,6 +32,7 @@ open class ViewController : NSObject {
     open var ready: Promise<Bool> {
         return self._ready
     }
+    public var didSetReady:Bool = false
     
     public var view:View {
         get {
@@ -72,10 +73,18 @@ open class ViewController : NSObject {
         self.internalId = Int(arc4random());
     }
     
+    open func readyOnce() -> Void {
+        if !didSetReady {
+            didSetReady = true
+            ready.set(.single(true))
+        }
+    }
+    
     open func loadView() -> Void {
         if(_view == nil) { 
             _view = View(frame: _frameRect);
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+
         }
     }
     
@@ -89,6 +98,10 @@ open class ViewController : NSObject {
             
             return
         }
+    }
+    
+    open func viewDidLoad() -> Void {
+        
     }
     
     open func viewWillAppear(_ animated:Bool) -> Void {
@@ -141,7 +154,7 @@ open class ViewController : NSObject {
         return Popover.self
     }
     
-    public func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint) -> Void {
+    open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint) -> Void {
         if popover == nil {
             
             self.popover = (self.popoverClass as! Popover.Type).init(controller: self)

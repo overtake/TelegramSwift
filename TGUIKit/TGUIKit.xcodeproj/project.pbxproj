@@ -22,6 +22,13 @@
 		C219E1F81D8C14930042F0C8 /* BarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1F71D8C14930042F0C8 /* BarView.swift */; };
 		C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1F91D8C316C0042F0C8 /* TitledBarView.swift */; };
 		C2271DA61DAD16B4001792B6 /* BadgeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DA51DAD16B4001792B6 /* BadgeNode.swift */; };
+		C2271DC81DAEAAF9001792B6 /* SwitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC71DAEAAF9001792B6 /* SwitchView.swift */; };
+		C2271DCF1DAF6B4E001792B6 /* MajorNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */; };
+		C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD31DAF766A001792B6 /* WeakReference.swift */; };
+		C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD81DAF82D0001792B6 /* GridRowItem.swift */; };
+		C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DDA1DAF82E3001792B6 /* GridRowView.swift */; };
+		C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE91DAFCE69001792B6 /* GridTableView.swift */; };
+		C2271DED1DAFE4D0001792B6 /* TransformImageLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */; };
 		C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E062D1D7F3CC000A11C88 /* TGColor.swift */; };
 		C22E06351D804C8200A11C88 /* TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E06341D804C8200A11C88 /* TableView.swift */; };
 		C22E06371D804D3B00A11C88 /* TableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E06361D804D3B00A11C88 /* TableRowItem.swift */; };
@@ -83,6 +90,13 @@
 		C219E1F71D8C14930042F0C8 /* BarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BarView.swift; sourceTree = "<group>"; };
 		C219E1F91D8C316C0042F0C8 /* TitledBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TitledBarView.swift; sourceTree = "<group>"; };
 		C2271DA51DAD16B4001792B6 /* BadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BadgeNode.swift; sourceTree = "<group>"; };
+		C2271DC71DAEAAF9001792B6 /* SwitchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwitchView.swift; sourceTree = "<group>"; };
+		C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorNavigationController.swift; sourceTree = "<group>"; };
+		C2271DD31DAF766A001792B6 /* WeakReference.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WeakReference.swift; sourceTree = "<group>"; };
+		C2271DD81DAF82D0001792B6 /* GridRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowItem.swift; sourceTree = "<group>"; };
+		C2271DDA1DAF82E3001792B6 /* GridRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowView.swift; sourceTree = "<group>"; };
+		C2271DE91DAFCE69001792B6 /* GridTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridTableView.swift; sourceTree = "<group>"; };
+		C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageLayer.swift; sourceTree = "<group>"; };
 		C22E062D1D7F3CC000A11C88 /* TGColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGColor.swift; sourceTree = "<group>"; };
 		C22E06341D804C8200A11C88 /* TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableView.swift; sourceTree = "<group>"; };
 		C22E06361D804D3B00A11C88 /* TableRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableRowItem.swift; sourceTree = "<group>"; };
@@ -154,6 +168,7 @@
 			children = (
 				C219E1DF1D8A71820042F0C8 /* SImageLayer.swift */,
 				C253A9511D9147A400CDC850 /* Layer.swift */,
+				C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */,
 			);
 			name = layers;
 			sourceTree = "<group>";
@@ -163,6 +178,7 @@
 			children = (
 				C219E1F41D8BEA1F0042F0C8 /* bar */,
 				C219E1EA1D8AD1470042F0C8 /* NavigationViewController.swift */,
+				C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */,
 				C2E0DEB81D7EF7F300EF1C8D /* ViewController.swift */,
 				C2B1A1311DA57E8300ACB1DD /* EditableViewController.swift */,
 			);
@@ -189,6 +205,16 @@
 			name = nodes;
 			sourceTree = "<group>";
 		};
+		C2271DE41DAF9BB5001792B6 /* grid */ = {
+			isa = PBXGroup;
+			children = (
+				C2271DD81DAF82D0001792B6 /* GridRowItem.swift */,
+				C2271DDA1DAF82E3001792B6 /* GridRowView.swift */,
+				C2271DE91DAFCE69001792B6 /* GridTableView.swift */,
+			);
+			name = grid;
+			sourceTree = "<group>";
+		};
 		C22E062A1D7F3C2700A11C88 /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -201,6 +227,7 @@
 				C219E1F21D8B02FA0042F0C8 /* CAAnimationUtils.swift */,
 				C2303E701D9956C400098E12 /* Style.swift */,
 				C2B1A11D1DA26BA400ACB1DD /* TransactionHandler.swift */,
+				C2271DD31DAF766A001792B6 /* WeakReference.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -208,6 +235,7 @@
 		C22E06331D804C5800A11C88 /* table */ = {
 			isa = PBXGroup;
 			children = (
+				C2271DE41DAF9BB5001792B6 /* grid */,
 				C22E06341D804C8200A11C88 /* TableView.swift */,
 				C22E06361D804D3B00A11C88 /* TableRowItem.swift */,
 				C22E063A1D8067A000A11C88 /* TableRowView.swift */,
@@ -325,6 +353,7 @@
 				C2303E8B1D9A8B3000098E12 /* SearchView.swift */,
 				C2B1A1281DA3DDED00ACB1DD /* Node.swift */,
 				C2B1A12B1DA50CC600ACB1DD /* TitleButton.swift */,
+				C2271DC71DAEAAF9001792B6 /* SwitchView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -417,8 +446,10 @@
 				C234CA8F1D97DF26003023F7 /* Image.swift in Sources */,
 				C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */,
 				C2E0DEBB1D7F05AB00EF1C8D /* View.swift in Sources */,
+				C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */,
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
 				C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */,
+				C2271DED1DAFE4D0001792B6 /* TransformImageLayer.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
 				C2B1A1291DA3DDED00ACB1DD /* Node.swift in Sources */,
 				C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */,
@@ -434,6 +465,7 @@
 				C219E1EB1D8AD1470042F0C8 /* NavigationViewController.swift in Sources */,
 				C253A9761D9430A900CDC850 /* ImageView.swift in Sources */,
 				C2B1A1321DA57E8300ACB1DD /* EditableViewController.swift in Sources */,
+				C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */,
 				C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */,
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
@@ -442,6 +474,7 @@
 				C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */,
 				C2303E7C1D99880B00098E12 /* Modal.swift in Sources */,
 				C219E1E21D8A93050042F0C8 /* TextView.swift in Sources */,
+				C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */,
 				C25FC7F71D86DC370041E303 /* TGClipView.swift in Sources */,
 				C2CBCAC31D81595900142EC0 /* Extensions.swift in Sources */,
 				C219E1ED1D8ADEE00042F0C8 /* NavigationBarView.swift in Sources */,
@@ -452,9 +485,12 @@
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,
 				C253A9521D9147A400CDC850 /* Layer.swift in Sources */,
+				C2271DCF1DAF6B4E001792B6 /* MajorNavigationController.swift in Sources */,
 				C22E06371D804D3B00A11C88 /* TableRowItem.swift in Sources */,
 				C2303E711D9956C400098E12 /* Style.swift in Sources */,
+				C2271DC81DAEAAF9001792B6 /* SwitchView.swift in Sources */,
 				C2B1A1251DA2F3DC00ACB1DD /* ContextMenu.swift in Sources */,
+				C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */,
 				C2B1A1301DA53E7D00ACB1DD /* BackNavigationBar.swift in Sources */,
 				C2303E761D996E6300098E12 /* ImageButton.swift in Sources */,
 				C2CBCABD1D814D4B00142EC0 /* System.swift in Sources */,
