@@ -51,16 +51,23 @@ public protocol ViewDisplayDelegate : class {
     func draw(_ layer: CALayer, in ctx: CGContext);
 }
 
+public class CustomViewHandlers {
+    public var sizeHandler:((NSSize) ->Void)?
+    public var originHandler:((NSPoint) ->Void)?
+}
+
 open class View : NSView,CALayerDelegate {
     
     public var animates:Bool = false
     
     public weak var displayDelegate:ViewDisplayDelegate?
     
+    public let customHandler:CustomViewHandlers = CustomViewHandlers()
+    
     open var backgroundColor:NSColor = TGColor.white {
         didSet {
             if oldValue != backgroundColor {
-                self.layer?.setNeedsDisplay()
+                setNeedsDisplay()
             }
         }
     }
@@ -109,7 +116,6 @@ open class View : NSView,CALayerDelegate {
     
     public func setNeedsDisplay() -> Void {
         self.layer?.setNeedsDisplay()
-        self.needsDisplay = true
     }
     
     
@@ -136,6 +142,21 @@ open class View : NSView,CALayerDelegate {
         self.layer?.drawsAsynchronously = System.drawAsync
     }
     
+    open override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        
+        if let sizeHandler = customHandler.sizeHandler {
+            sizeHandler(newSize)
+        }
+    }
+    
+    open override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        if let originHandler = customHandler.originHandler {
+            originHandler(newOrigin)
+        }
+    }
+    
     
     open func setNeedsDisplayLayer() -> Void {
         self.layer?.setNeedsDisplay()
@@ -151,6 +172,10 @@ open class View : NSView,CALayerDelegate {
     
     open override func draw(_ dirtyRect: NSRect) {
        
+    }
+    
+    open var kitWindow: Window? {
+        return super.window as? Window
     }
     
 }

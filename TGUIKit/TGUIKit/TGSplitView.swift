@@ -83,13 +83,17 @@ public class TGSplitView : View {
     
     
     public func addController(controller:ViewController, proportion:TGSplitProportion) ->Void {
+        controller.viewWillAppear(false)
         self.addSubview(controller.view);
         _controllers.append(controller);
         _startSize.updateValue(controller.view.frame.size, forKey: controller.internalId);
         _proportions.updateValue(proportion, forKey: controller.internalId)
+        controller.viewDidAppear(false)
     }
     
     func removeController(controller:ViewController) -> Void {
+        
+        controller.viewWillDisappear(false)
         let idx = _controllers.index(of: controller)!;
         
        // assert([NSThread isMainThread]);
@@ -100,13 +104,30 @@ public class TGSplitView : View {
             _startSize.removeValue(forKey: controller.internalId);
             _proportions.removeValue(forKey: controller.internalId);
         }
+        controller.viewDidDisappear(false)
     }
     
     public func removeAllControllers() -> Void {
+        
+        var copy:[ViewController] = []
+        
+        
+        for controller in _controllers {
+            copy.append(controller)
+        }
+        
+        for controller in copy {
+            controller.viewWillDisappear(false)
+        }
+        
         self.removeAllSubviews();
         _controllers.removeAll();
         _startSize.removeAll();
         _proportions.removeAll();
+        
+        for controller in copy {
+            controller.viewDidDisappear(false)
+        }
     }
     
     public func setProportion(proportion:TGSplitProportion, state:TGSplitViewState) -> Void {

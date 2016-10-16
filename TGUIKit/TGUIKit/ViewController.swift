@@ -9,8 +9,10 @@
 import Foundation
 import SwiftSignalKitMac
 open class ViewController : NSObject {
-    private var _view:View?;
+    public var _view:View?;
     public var _frameRect:NSRect
+    
+    
     
     weak open var navigationController:NavigationViewController? {
         didSet {
@@ -112,16 +114,46 @@ open class ViewController : NSObject {
         
     }
     
+   // private var escapeModifier:(()-> Void,NSEventModifierFlags?)?
+   // private var enterModifier:(()-> Void,NSEventModifierFlags?)?
+    
     open func viewDidAppear(_ animated:Bool) -> Void {
+//        escapeModifier = self.window?.set(escape: {[weak self] in
+//            self?.escAction()
+//        });
+    }
+    
+    open func escapeKeyAction() -> Bool {
+
+        return false
+    }
+    
+    open func returnKeyAction() -> Bool {
+        
+        return false
+    }
+    
+    open func didRemovedFromStack() -> Void {
         
     }
     
     open func viewDidDisappear(_ animated:Bool) -> Void {
-        
+//        if let escapeModifier = escapeModifier {
+//            self.window?.set(escape: escapeModifier.0)
+//        }
     }
     
     open func becomeFirstResponder() -> Bool? {
+        
+        self.window?.setKeyboardResponder(force: {[weak self] () -> NSResponder? in
+            return self?.view
+        })
+        
         return self.view.becomeFirstResponder()
+    }
+    
+    public var window:Window? {
+        return self.view.kitWindow
     }
     
     public var frame:NSRect {

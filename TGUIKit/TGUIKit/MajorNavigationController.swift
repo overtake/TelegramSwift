@@ -39,7 +39,11 @@ public class MajorNavigationController: NavigationViewController {
                 let removeAnimateFlag = strongSelf.stackCount == 2 && controller.isKind(of: strongSelf.majorClass) ?? false
                 
                 if controller.isKind(of: strongSelf.majorClass) {
+                    for controller in strongSelf.stack {
+                        controller.didRemovedFromStack()
+                    }
                     strongSelf.stack.removeAll()
+                    
                     strongSelf.stack.append(strongSelf.empty)
                 }
                 
@@ -60,8 +64,34 @@ public class MajorNavigationController: NavigationViewController {
         if stackCount > 1 {
             let ncontroller = stack[stackCount - 2]
             let removeAnimateFlag = stack.last!.isKind(of: majorClass) && stackCount == 2
+            stack.last?.didRemovedFromStack()
+            stack.removeLast()
+            
             show(ncontroller, removeAnimateFlag ? .none : .pop)
         }
+    }
+    
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.window?.set(handler: escapeKeyAction, with: self, for: .Escape, priority:.medium)
+        self.window?.set(handler: returnKeyAction, with: self, for: .Return, priority:.low)
+    }
+    
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.window?.remove(object: self, for: .Escape)
+        self.window?.remove(object: self, for: .Return)
+    }
+    
+    public override func escapeKeyAction() -> Bool {
+        let success = stackCount > 1
+        self.back()
+        return success
+    }
+    
+    public override func returnKeyAction() -> Bool {
+        
+        return false
     }
     
     public func add(listener:WeakReference<ViewController>) -> Void {

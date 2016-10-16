@@ -227,11 +227,13 @@ open class Control: View {
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         animates = true
+        self.layer?.isOpaque = true
     }
     
     public override init() {
         super.init(frame: NSZeroRect)
         animates = true
+        self.layer?.isOpaque = true
     }
     
     required public init?(coder: NSCoder) {

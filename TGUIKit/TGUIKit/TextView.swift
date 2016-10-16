@@ -211,7 +211,7 @@ public class TextView: View {
             self.removeTrackingArea(trackingArea)
         }
         
-        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
+        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.assumeInside]
         self.trackingArea = NSTrackingArea.init(rect: self.bounds, options: options, owner: self, userInfo: nil)
         
         self.addTrackingArea(self.trackingArea!)
@@ -447,6 +447,8 @@ public class TextView: View {
             } else {
                 NSCursor.iBeam().set()
             }
+        } else {
+            NSCursor.arrow().set()
         }
     }
     

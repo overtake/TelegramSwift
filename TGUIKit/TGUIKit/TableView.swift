@@ -48,6 +48,7 @@ public final class TableTransition {
 public protocol TableViewDelegate : class {
     
     func selectionDidChange(row:Int, item:TableRowItem) -> Void;
+    func selectionWillChange(row:Int, item:TableRowItem) -> Bool;
     func isSelectable(row:Int, item:TableRowItem) -> Bool;
     
 }
@@ -64,7 +65,7 @@ protocol SelectDelegate : class {
     func selectRow(index:Int) -> Void;
 }
 
-private class TGFlipableTableView : NSTableView, CALayerDelegate {
+class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     public var flip:Bool = true
     
@@ -72,20 +73,20 @@ private class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     var border:BorderType?
     
-    private override var isFlipped: Bool {
+    override var isFlipped: Bool {
         return flip
     }
     
-    public override func draw(_ dirtyRect: NSRect) {
+    override func draw(_ dirtyRect: NSRect) {
        
     }
 
     
-    private override func addSubview(_ view: NSView) {
+    override func addSubview(_ view: NSView) {
         super.addSubview(view)
     }
     
-    fileprivate func draw(_ layer: CALayer, in ctx: CGContext) {
+    func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(TGColor.white.cgColor)
         ctx.fill(self.bounds)
         
@@ -110,7 +111,7 @@ private class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
 
     
-    private override func mouseDown(with event: NSEvent) {
+    override func mouseDown(with event: NSEvent) {
         
        
         let point = self.convert(event.locationInWindow, from: nil)
@@ -122,22 +123,22 @@ private class TGFlipableTableView : NSTableView, CALayerDelegate {
         
     }
     
-    private override func mouseUp(with event: NSEvent) {
+    override func mouseUp(with event: NSEvent) {
         
     }
 
 }
 
 public protocol InteractionContentViewProtocol : class {
-    func contentInteractionView(for stableId:Int64) -> NSView?
+    func contentInteractionView(for stableId: Int64) -> NSView?
 }
 
 open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol {
     
     public var separator:TableSeparator = .none
     
-    private var list:[TableRowItem] = [TableRowItem]();
-    private var tableView:TGFlipableTableView
+    var list:[TableRowItem] = [TableRowItem]();
+    var tableView:TGFlipableTableView
     weak public var delegate:TableViewDelegate?
     private var trackingArea:NSTrackingArea?
     private var listhash:[Int64:TableRowItem] = [Int64:TableRowItem]();
@@ -347,11 +348,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func addItem(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Bool {
+    public func addItem(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
         return self.insert(item: item, at: self.count, redraw: redraw, animation:animation)
     }
     
-    public func insert(items:[TableRowItem], at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
+    public func insert(items:[TableRowItem], at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         
         
         var current:Int = 0;
@@ -475,7 +476,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func item(at:Int) -> TableRowItem {
-        return self.list[at];
+        return self.list[at]
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
@@ -487,7 +488,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
-    public func select(item:TableRowItem) -> Bool {
+    public func select(item:TableRowItem, notify:Bool = true) -> Bool {
         
         if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})) {
             if(self.delegate?.isSelectable(row: item.index, item: item) == true) {
@@ -495,13 +496,27 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let _ = selectedhash.swap(item.stableId)
                 item.prepare(true)
                 self.reloadData(row:item.index)
-                self.delegate?.selectionDidChange(row: item.index, item: item)
+                if notify {
+                    self.delegate?.selectionDidChange(row: item.index, item: item)
+                }
                 return true;
             }
         }
         
         return false;
         
+    }
+    
+    public func changeSelection(stableId:Int64?) {
+        if let stableId = stableId {
+            if let item = self.item(stableId: stableId) {
+                self.select(item:item, notify:false)
+            } else {
+                cancelSelection()
+            }
+        } else {
+            cancelSelection()
+        }
     }
     
     public func cancelSelection() -> Void {
@@ -698,7 +713,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let item = self.item(stableId: stableId) {
             let view = viewNecessary(at:item.index)
             if let view = view, !NSIsEmptyRect(view.visibleRect) {
-                 return view.interactionContentView
+                return view.interactionContentView
             }
            
         }
@@ -709,7 +724,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     func selectRow(index: Int) {
         if self.count > index {
-            self.select(item: self.item(at: index))
+            if let delegate = delegate, delegate.selectionWillChange(row: index, item: self.item(at: index)) {
+                self.select(item: self.item(at: index))
+            }
         }
     
     }

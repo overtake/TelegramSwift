@@ -10,9 +10,14 @@ import Cocoa
 
 public struct NavigationBarStyle {
     let height:CGFloat
+    public init(height:CGFloat) {
+        self.height = height
+    }
 }
 
 class NavigationBarView: View {
+    
+    private var bottomBorder:View = View()
     
     private var leftView:BarView = BarView()
     private var centerView:BarView = BarView()
@@ -20,10 +25,14 @@ class NavigationBarView: View {
     
     override init() {
         super.init()
+        bottomBorder.backgroundColor = TGColor.border
+        self.autoresizingMask = [.viewWidthSizable]
     }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        bottomBorder.backgroundColor = TGColor.border
+        self.autoresizingMask = [.viewWidthSizable]
     }
     
     required public init?(coder: NSCoder) {
@@ -32,24 +41,27 @@ class NavigationBarView: View {
     
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        ctx.setFillColor(NSColor.white.cgColor)
-        ctx.fill(self.bounds)
-        
-        ctx.setFillColor(TGColor.border.cgColor)
-        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - TGColor.borderSize, NSWidth(self.frame), TGColor.borderSize))
+        super.draw(layer, in: ctx)
+//        ctx.setFillColor(NSColor.white.cgColor)
+//        ctx.fill(self.bounds)
+//
+//        ctx.setFillColor(TGColor.border.cgColor)
+//        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - TGColor.borderSize, NSWidth(self.frame), TGColor.borderSize))
     }
     
 
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+        self.bottomBorder.frame = NSMakeRect(0, newSize.height - TGColor.borderSize, newSize.width, TGColor.borderSize)
+        self.bottomBorder.setNeedsDisplay()
         self.layout(left: leftView, center: centerView, right: rightView)
     }
     
     
     func layout(left:BarView, center:BarView, right:BarView) -> Void {
-        left.frame = NSMakeRect(0, 0, NSWidth(left.frame), NSHeight(self.frame) - TGColor.borderSize);
-        center.frame = NSMakeRect(NSMaxX(left.frame), 0, NSWidth(self.frame) - (NSWidth(left.frame) + NSWidth(right.frame)), NSHeight(self.frame) - TGColor.borderSize);
-        right.frame = NSMakeRect(NSMaxX(center.frame), 0, NSWidth(right.frame), NSHeight(self.frame) - TGColor.borderSize);
+        left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - TGColor.borderSize);
+        center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - TGColor.borderSize);
+        right.frame = NSMakeRect(center.frame.maxX, 0, NSWidth(right.frame), frame.height - TGColor.borderSize);
     }
     
     // ! PUSH !
@@ -75,6 +87,7 @@ class NavigationBarView: View {
             self.addSubview(left)
             self.addSubview(center)
             self.addSubview(right)
+            self.addSubview(bottomBorder)
             
             left.setNeedsDisplay()
             center.setNeedsDisplay()
@@ -175,6 +188,12 @@ class NavigationBarView: View {
             self.addSubview(left)
             self.addSubview(center)
             self.addSubview(right)
+            
+            self.leftView = left
+            self.centerView = center
+            self.rightView = right
+            
+            self.addSubview(bottomBorder)
         }
         
         

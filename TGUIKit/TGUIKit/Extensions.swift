@@ -142,7 +142,7 @@ public extension CALayer {
     
     public func disableActions() -> Void {
         
-        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull()]
+        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull()]
 
     }
     
@@ -178,6 +178,14 @@ public extension String {
 }
 
 public extension NSView {
+    
+    public func setFrameSize(_ width:CGFloat, _ height:CGFloat) {
+        self.setFrameSize(NSMakeSize(width, height))
+    }
+    
+    public func setFrameOrigin(_ x:CGFloat, _ y:CGFloat) {
+        self.setFrameOrigin(NSMakePoint(x, y))
+    }
     
     public func centerX(_ superView:NSView? = nil, y:CGFloat? = nil) -> Void {
         
@@ -458,5 +466,11 @@ public extension EdgeInsets {
         self.right = right
         self.top = top
         self.bottom = bottom
+    }
+}
+
+public extension NSColor {
+    public convenience init(_ rgbValue:UInt32, _ alpha:CGFloat = 1.0) {
+        self.init(deviceRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha: alpha)
     }
 }

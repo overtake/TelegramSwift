@@ -33,7 +33,7 @@ public final class SearchInteractions {
 
 public class SearchView: OverlayControl, NSTextFieldDelegate {
     
-    var state:SearchFieldState = .None
+    public private(set) var state:SearchFieldState = .None
 
     private var input:SearchTextField = SearchTextField()
     
@@ -148,6 +148,15 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
             lock = true
             
             if state == .Focus {
+                
+                self.kitWindow?.set(escape: {[weak self] () -> Bool in
+                    if let strongSelf = self {
+                        return strongSelf.changeResponder()
+                    }
+                    return false
+                    
+                }, with: self, priority:.high)
+                
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 2
                 
                 self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset, NSHeight(placeholder.frame))
@@ -167,6 +176,9 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
             }
             
             if state == .None {
+                
+                self.kitWindow?.remove(object: self, for: .Escape)
+                
                 self.input.isHidden = true
                 self.input.stringValue = ""
                 self.input.resignFirstResponder()
@@ -188,7 +200,22 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         }
   
     }
+    
+    public override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        switch state {
+        case .None:
+            animateContainer.center()
+         case .Focus:
+            animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
+        }
+    }
 
+    public func changeResponder() -> Bool {
+        change(state: state == .None ? .Focus : .None, true)
+        return true
+    }
+    
     public func cancel(_ animated:Bool) -> Void {
         change(state: .None, animated)
     }

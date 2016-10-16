@@ -20,8 +20,6 @@ open class Popover: NSObject {
     private var disposable:MetaDisposable = MetaDisposable()
     
     public var animates:Bool = true
-
-    private var window:NSWindow
     
     public weak var controller:ViewController?
     
@@ -39,10 +37,14 @@ open class Popover: NSObject {
     
     required public init(controller:ViewController) {
         self.controller = controller
-
-        window = NSWindow.init(contentRect: NSZeroRect, styleMask: [], backing: .buffered, defer: true, screen: NSScreen.main())
-        window.backgroundColor = NSColor.clear
+        self.background.layer?.shadowOpacity = 0.35
+        self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
+        self.background.layer?.shouldRasterize = true
         
+        self.background.layer?.shadowOffset = NSMakeSize(0, -1)
+
+       // self.background.wantsLayer = false
+       
         super.init()
     }
     
@@ -50,7 +52,7 @@ open class Popover: NSObject {
     
     open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, contentRect:NSRect = NSZeroRect) -> Void {
         
-        if let controller = controller, let viewWindow = control.window {
+        if let controller = controller, let parentView = control.window?.contentView {
             
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
@@ -60,14 +62,15 @@ open class Popover: NSObject {
                 if let strongSelf = self {
                     strongSelf.control = control
                     
-                    var point:NSPoint = control.convert(NSMakePoint(0, 0), to: nil)
-                    point = viewWindow.convertToScreen(NSMakeRect(point.x, point.y, 0, 0)).origin
+                    var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
                     
                     if let edge = edge {
                         
                         switch edge {
                         case .maxX:
                             point.x -= controller.frame.width
+                        case .maxY:
+                            point.y -= controller.frame.height
                         default:
                             fatalError("Not Implemented")
                         }
@@ -85,31 +88,32 @@ open class Popover: NSObject {
                         rect = contentRect
                     }
                     
+                    parentView.layer?.isOpaque = true
                     
-                    strongSelf.window.setFrame(NSMakeRect(point.x, point.y, rect.width + TGColor.borderSize * 2, rect.height + TGColor.borderSize * 2), display: false)
-                    
-                    strongSelf.background.frame = NSMakeRect(0, 0, strongSelf.window.frame.width, strongSelf.window.frame.height)
+                    //TGColor.borderSize * 2
+                    strongSelf.background.frame = NSMakeRect(point.x, point.y, rect.width + 14, rect.height + 14)
                     strongSelf.background.backgroundColor = TGColor.clear
                     strongSelf.background.layer?.cornerRadius = TGColor.cornerRadius
                     
-                    strongSelf.overlay = OverlayControl(frame: NSMakeRect(contentRect.minX, contentRect.minY, controller.frame.width + TGColor.borderSize * 2, controller.frame.height + TGColor.borderSize * 2))
-                    strongSelf.overlay.backgroundColor = TGColor.border
+                    strongSelf.overlay = OverlayControl(frame: NSMakeRect(contentRect.minX, contentRect.minY, controller.frame.width , controller.frame.height ))
+                    strongSelf.overlay.backgroundColor = TGColor.white
                     strongSelf.overlay.layer?.cornerRadius = TGColor.cornerRadius
                     
-                    //  self.window.hasShadow = true
                     
                     strongSelf.background.addSubview(strongSelf.overlay)
-                    
-                    
-                    strongSelf.window.contentView = strongSelf.background
-                    strongSelf.window.contentView?.layer?.cornerRadius = TGColor.cornerRadius
+
                     
                     controller.view.layer?.cornerRadius = TGColor.cornerRadius
-                    controller.view.setFrameOrigin(NSMakePoint(TGColor.borderSize, TGColor.borderSize))
+                    controller.view.setFrameOrigin(NSMakePoint(0, 0))
+                    
                     
                     strongSelf.overlay.addSubview(controller.view)
                     
-                    viewWindow.addChildWindow(strongSelf.window, ordered: .above)
+                    parentView.addSubview(strongSelf.background)
+                    
+                    strongSelf.overlay.center()
+                    
+                    controller.becomeFirstResponder()
                     
                     strongSelf.isShown = true
                     
@@ -148,7 +152,7 @@ open class Popover: NSObject {
                             
                             self?.disposable.set(s.start(next: { () in
                                 
-                                if let strongSelf = self {
+                                if let strongSelf = self, control.controlState == .Normal {
                                     if !strongSelf.inside() {
                                         strongSelf.hide()
                                     }
@@ -189,10 +193,15 @@ open class Popover: NSObject {
     
     func inside() -> Bool {
         
-        let g:NSPoint = NSEvent.mouseLocation()
-        let w:NSPoint = self.window.convertFromScreen(NSMakeRect(g.x, g.y, 1, 1)).origin
-        let v:NSPoint = self.window.contentView!.convert(w, from: nil)
-        return NSPointInRect(v, self.window.contentView!.bounds)
+       // return true
+        
+        if let window = control?.window, let content = window.contentView {
+            let g:NSPoint = NSEvent.mouseLocation()
+            let w:NSPoint = window.convertFromScreen(NSMakeRect(g.x, g.y, 1, 1)).origin
+            //if w.x > background.frame.minX && background
+            return NSPointInRect(w, background.frame)
+        }
+        return false
     }
     
 
@@ -222,7 +231,7 @@ open class Popover: NSObject {
                     if let strongSelf = self, !once {
                         once = true
                         strongSelf.controller?.popover = nil
-                        strongSelf.window.parent?.removeChildWindow(strongSelf.window)
+                        strongSelf.background.removeFromSuperview()
                     }
                 })
                 sub.layer?.opacity = 0.0
@@ -232,7 +241,7 @@ open class Popover: NSObject {
             
             
         } else {
-            self.window.parent?.removeChildWindow(self.window)
+            self.background.removeFromSuperview()
             self.controller?.popover = nil
 
         }

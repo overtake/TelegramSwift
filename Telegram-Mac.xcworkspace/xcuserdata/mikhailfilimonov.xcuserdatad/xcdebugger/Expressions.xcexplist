@@ -42,6 +42,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "GalleryViewer.show() -&gt; ():GalleryViewer.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "pager.currentNode">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1):MediaUtils.swift">
          <PersistentStrings>
             <PersistentString
@@ -99,6 +107,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "Window.set(handler : () -&gt; (), with : AnyObject, for : KeyboardKey, priority : HandlerPriority, modifierFlags : NSEventModifierFlags?) -&gt; ():Window.swift">
+      </ContextState>
+      <ContextState
          contextName = "NavigationViewController.show(ViewController, ViewControllerStyle) -&gt; ():NavigationViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -124,6 +135,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatInputAdditions.frame.setter:ChatInputAdditions.swift">
          <PersistentStrings>
             <PersistentString
@@ -138,9 +152,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
-      </ContextState>
-      <ContextState
          contextName = "TGMessageRowItem.makeSize(CGFloat) -&gt; Bool:TGMessageRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -150,6 +161,9 @@
       </ContextState>
       <ContextState
          contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.viewDidAppear(Bool) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatController.(loadOnScroll(Account, TGScrollPosition) -&gt; ()).(closure #1):ChatController.swift">
@@ -186,6 +200,14 @@
          contextName = "ChatListMessageRowItem.stableId.getter:ChatListMessageRowItem.swift">
       </ContextState>
       <ContextState
+         contextName = "GalleryPagerNode.currentNode.setter:GalleryPagerNode.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "newValue.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TitledBarView.draw(CALayer, in : CGContext) -&gt; ():TitledBarView.swift">
       </ContextState>
       <ContextState
@@ -209,6 +231,9 @@
                value = "fullSizeImage.width">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.viewWillAppear(Bool) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.height.getter:ChatRowItem.swift">
@@ -302,6 +327,17 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "GridRowView.layout(items : [GridItem], parent : GridRowItem, animated : Bool) -&gt; ():GridRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "parent.index">
+            </PersistentString>
+            <PersistentString
+               value = "item.stableId">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -324,6 +360,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "Window.sendEvent(NSEvent) -&gt; ():Window.swift">
+      </ContextState>
+      <ContextState
          contextName = "ReplyModel.draw(CALayer, in : CGContext) -&gt; ():ReplyModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -333,6 +372,14 @@
       </ContextState>
       <ContextState
          contextName = "ValuePipe.putNext(A) -&gt; ():ValuePipe.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Window.remove(object : AnyObject, for : KeyboardKey) -&gt; ():Window.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "copy[i].object.value">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TableView.change(size : CGSize, animated : Bool) -&gt; ():TableView.swift">
@@ -447,6 +494,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "GridTableView.apply(transition : GridTransition) -&gt; ():GridTableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.stableId">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "shortStatus(for : Peer, with : CachedPeerData?) -&gt; (String, NSColor):System.swift">
       </ContextState>
       <ContextState
@@ -475,7 +530,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -487,9 +542,12 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GridTableView.refill() -&gt; [GridRowItem]:GridTableView.swift">
       </ContextState>
       <ContextState
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
@@ -520,6 +578,9 @@
                value = "self.list[0]">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ViewController.(viewDidAppear(Bool) -&gt; ()).(closure #1):ViewController.swift">
       </ContextState>
       <ContextState
          contextName = "TGTableView.moveItem(from : Int, to : Int, changeItem : TGTableRowItem?, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
@@ -618,6 +679,14 @@
          <PersistentStrings>
             <PersistentString
                value = "centerBarView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(init(Account) -&gt; ChatListController).(closure #1):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self?.tableView">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

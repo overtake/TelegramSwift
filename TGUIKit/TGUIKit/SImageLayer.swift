@@ -19,6 +19,7 @@ open class SImageLayer: CALayer {
     public override init() {
         super.init();
         self.drawsAsynchronously = System.drawAsync
+        self.disableActions()
     }
 //    
 //    open override func action(forKey event: String) -> CAAction? {
@@ -40,20 +41,23 @@ open class SImageLayer: CALayer {
         }
     }
     
-    public func load(_ signal:Signal<CGImage?,NoError>?) -> Void {
-        
-        self.contents = nil
-        
-        if let signal = signal {
-             disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] (image) in
-                self?.contents = image
-                self?.animate()
 
-             }))
-
- 
-        }
-        
+    
+    public func setSignal(_ signal: Signal<CGImage?, NoError>) {
+        var first = true
+        self.disposable.set((signal |> deliverOnMainQueue).start(next: {[weak self] next in
+           // dispatcher.dispatch {
+                if let strongSelf = self {
+                    strongSelf.contents = next
+                    if first {
+                        first = false
+                       // if strongSelf.isNodeLoaded {
+                          //  strongSelf.animateAlpha(from: 0.0, to: 1.0, duration: 0.18)
+                       // }
+                    }
+                }
+          //  }
+        }))
     }
     
     open override func removeFromSuperlayer() {

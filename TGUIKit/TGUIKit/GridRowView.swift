@@ -10,15 +10,17 @@ import Cocoa
 
 open class GridView : OverlayControl {
     
-    public private(set) weak var item:GridItem?
+    public weak var item:GridItem?
     
     required public override init() {
         super.init()
         self.backgroundColor = TGColor.grayBackground
+        self.layer?.disableActions()
     }
     
     open func set(item:GridItem, animated:Bool = true) {
         self.item = item
+        assert(NSStringFromClass(item.viewClass) == self.className)
     }
     
     override required public init(frame frameRect: NSRect) {
@@ -27,6 +29,13 @@ open class GridView : OverlayControl {
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    open override func copy() -> Any {
+        let view = GridView()
+        view.frame = self.frame
+        view.backgroundColor = TGColor.random
+        return view
     }
     
 }
@@ -43,7 +52,7 @@ public class GridRowView: TableRowView {
     
     func layout(items:[GridItem], parent:GridRowItem, animated:Bool) {
         while subviews.count > items.count {
-            subviews.removeLast()
+            self.subviews.last?.removeFromSuperview()
         }
         var x:CGFloat = parent.inset
         var i:Int = 0
@@ -52,7 +61,7 @@ public class GridRowView: TableRowView {
            
             if subviews.count > i {
                 let v = subviews[i]
-                if v.isKind(of: item.viewClass) {
+                if  v.className == NSStringFromClass(item.viewClass) {
                     view = v as? GridView
                 } else {
                     v.removeFromSuperview()
@@ -62,25 +71,25 @@ public class GridRowView: TableRowView {
             if view == nil {
                 var vz = item.viewClass as! GridView.Type
                 view = vz.init()
-                addSubview(view!)
+                subviews.insert(view!, at: i)
             }
             
             if let view = view {
                 view.frame = NSMakeRect(x, parent.inset, item.size.width, item.size.height)
 
-                if view.item != item {
+             //   if view.item != item {
                      view.set(item: item, animated: animated)
-                }
+              //  }
                 x += item.size.width + parent.inset
             }
             
-            
-            
             i += 1
         }
+        
+        
+        assert(subviews.count == items.count)
 
     }
     
 
-    
 }

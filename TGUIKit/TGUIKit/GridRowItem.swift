@@ -45,6 +45,10 @@ public class GridRowItem: TableRowItem {
         return items.filter({!$0.isKind(of: EmptyGridItem.self)}).count
     }
     
+    public var count:Int {
+        return items.count
+    }
+    
     public override var height: CGFloat {
         return items.map({ (item) -> CGFloat in
             return item.size.height
@@ -52,12 +56,14 @@ public class GridRowItem: TableRowItem {
         
     }
     
+    
+    let _stableId:Int64 = Int64(arc4random())
     public override var stableId: Int64 {
-        var s:Int64 = 0
+        var s:String = ""
         for item in items {
-            s += item.stableId
+            s += "_\(item.stableId)_"
         }
-        return s
+        return Int64(s.hashValue)
     }
     
     let inset:CGFloat
@@ -94,6 +100,28 @@ public class GridRowItem: TableRowItem {
         item.parent = nil
     }
     
+    public func remove(at index:Int) -> Void {
+        let item = items[index]
+        item.parent = nil
+        items[index] = EmptyGridItem()
+    }
+    
+    public func compress() ->Bool {
+        if !isFilled && items.index(where: {$0.isKind(of: EmptyGridItem.self)}) != count - 1 {
+            var copy:[GridItem] = [GridItem](repeating: EmptyGridItem(), count: count)
+            var i:Int = 0
+            for item in items {
+                if !(item is EmptyGridItem) {
+                    copy[i] = item
+                    i += 1
+                }
+            }
+            self.items = copy
+            return true
+        }
+        return false
+    }
+    
     public func index(where stableId:Int64) -> Int? {
         return items.index(where:{$0.stableId == stableId})
     }
@@ -111,6 +139,10 @@ public class GridRowItem: TableRowItem {
     
     public var isFilled:Bool {
         return items.index(where: {$0.isKind(of: EmptyGridItem.self)}) == nil
+    }
+    
+    public var isEmpty:Bool {
+        return items.filter({$0.isKind(of: EmptyGridItem.self)}).count == self.itemsCount
     }
     
     public override func viewClass() -> AnyClass {

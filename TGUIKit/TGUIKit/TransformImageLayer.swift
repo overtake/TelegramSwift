@@ -121,6 +121,15 @@ public class TransformImageLayer: CALayer {
     
     private var argumentsPromise = Promise<TransformImageArguments>()
     
+    override public init() {
+        super.init()
+        self.disableActions()
+    }
+    
+    required public init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     deinit {
         self.disposable.dispose()
     }

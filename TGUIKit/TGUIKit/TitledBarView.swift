@@ -45,10 +45,10 @@ open class TitledBarView: BarView {
                 
                 let sY = tY + textLayout.size.height + 2.0
                 
-                statusApply().draw(NSMakeRect(round((NSWidth(layer.bounds) - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
+                statusApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
             }
             
-            textApply().draw(NSMakeRect(round((NSWidth(layer.bounds) - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height), in: ctx)
+            textApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height), in: ctx)
         }
         
     }

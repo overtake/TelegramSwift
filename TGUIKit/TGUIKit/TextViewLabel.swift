@@ -22,6 +22,9 @@ public class TextViewLabel: View {
     
     var needSizeToFit:Bool = false
     
+    public var autosize:Bool = false
+    public var inset:EdgeInsets = EdgeInsets()
+    
     public var attributedString:NSAttributedString? {
         didSet {
             self.update(attr: self.attributedString, size: NSMakeSize(NSWidth(self.bounds), NSHeight(self.bounds)))
@@ -39,7 +42,8 @@ public class TextViewLabel: View {
         ctx.fill(layer.bounds)
         
         if let text = text {
-            text.1().draw(NSMakeRect(0, 0, text.0.size.width, text.0.size.height), in: ctx)
+            let focus = self.focus(text.0.size)
+            text.1().draw(focus, in: ctx)
         }
     }
     
@@ -65,7 +69,13 @@ public class TextViewLabel: View {
         self.layer?.setNeedsDisplay()
     }
 
-
+    public override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        if autosize {
+            text = TextNode.layoutText(node)(self.attributedString, nil, 1, .end, NSMakeSize(newSize.width - inset.left - inset.right, newSize.height), nil,false)
+            self.setNeedsDisplay()
+        }
+    }
     
     override public var frame: CGRect {
         get {

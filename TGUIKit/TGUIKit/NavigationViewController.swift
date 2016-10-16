@@ -96,11 +96,9 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         self.navigationBar.frame = NSMakeRect(0, 0, NSWidth(self.frame), controller.bar.height)
         
         controller.view.removeFromSuperview()
-        controller.view.frame = NSMakeRect(0, controller.bar.height - 1, NSWidth(self.frame), NSHeight(self.frame) - controller.bar.height + 1)
+        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(self.frame), NSHeight(self.frame) - controller.bar.height)
         
-        if style == .pop {
-            stack.remove(at: stack.index(of: previous)!)
-        }
+
         
         var pfrom:CGFloat = 0, pto:CGFloat = 0, nto:CGFloat = 0, nfrom:CGFloat = 0;
         
@@ -167,9 +165,13 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     }
     
     
+    
     public func back(_ index:Int = -1) -> Void {
         if stackCount > 1 {
-            show(stack[stackCount - 2], .pop)
+            var controller = stack[stackCount - 2]
+            stack.last?.didRemovedFromStack()
+            stack.removeLast()
+            show(controller, .pop)
         }
     }
     

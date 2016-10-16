@@ -8,6 +8,16 @@
 
 import Cocoa
 
+public struct FetchControls {
+    let fetch: () -> Void
+    let cancel: () -> Void
+    public init(fetch:@escaping()->Void,cancel:@escaping()->Void) {
+        self.fetch = fetch
+        self.cancel = cancel
+    }
+}
+
+
 private class RadialProgressParameters: NSObject {
     let theme: RadialProgressTheme
     let diameter: CGFloat
@@ -111,6 +121,24 @@ private class RadialProgressOverlayLayer: Layer {
 
 public class RadialProgressView: Control {
     
+    public var fetchControls:FetchControls? {
+        didSet {
+            self.removeAllHandlers()
+            if let fetchControls = fetchControls {
+                set(handler: { [weak self] in
+                    if let strongSelf = self {
+                        switch (strongSelf.state) {
+                        case .Fetching(progress: _):
+                            fetchControls.cancel()
+                        default :
+                            fetchControls.fetch()
+                        }
+                    }   
+                }, for: .Click)
+            }
+        }
+    }
+    
     private let theme:RadialProgressTheme
     private let overlay: RadialProgressOverlayLayer
     private var parameters:RadialProgressParameters {
@@ -192,18 +220,13 @@ public class RadialProgressView: Control {
         }
     }
     
-    public init(theme: RadialProgressTheme) {
+    public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: TGColor.blackTransparent, foregroundColor: TGColor.white, icon: nil)) {
         self.theme = theme
         self.overlay = RadialProgressOverlayLayer(theme: theme)
-        
         super.init()
         
         self.frame = NSMakeRect(0, 0, 40, 40)
-        
-    }
     
-     public override convenience init() {
-        self.init(theme: RadialProgressTheme(backgroundColor: TGColor.blackTransparent, foregroundColor: TGColor.white, icon: nil))
     }
     
     

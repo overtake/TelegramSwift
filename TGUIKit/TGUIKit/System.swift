@@ -16,8 +16,8 @@ public struct System {
         }
     }
     
-    public static var backingScale:Int {
-        return Int(NSScreen.main()?.backingScaleFactor ?? 1)
+    public static var backingScale:CGFloat {
+        return CGFloat(NSScreen.main()?.backingScaleFactor ?? 2.0)
     }
     
     public static var drawAsync:Bool {

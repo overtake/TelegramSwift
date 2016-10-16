@@ -23,11 +23,11 @@ open class BarView: View {
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         self.overlay.setFrameSize(newSize)
+        self.setNeedsDisplay()
     }
     
     override init() {
         super.init()
-        border = [.Bottom]
         frame = NSMakeRect(0, 0, minWidth, 50)
         addSubview(overlay)
         overlayInitEvent()

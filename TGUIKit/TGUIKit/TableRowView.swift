@@ -71,6 +71,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return self
     }
     
+    
     open override func rightMouseDown(with event: NSEvent) {
         super.rightMouseDown(with: event)
         
@@ -98,7 +99,13 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
 
     
-
+    open override func setFrameSize(_ newSize: NSSize) {
+        let update = self.frame.size != newSize
+        super.setFrameSize(newSize)
+        if update {
+            self.layer?.setNeedsDisplay()
+        }
+    }
     
     open func set(item:TableRowItem, animated:Bool = false) -> Void {
         self.item = item;

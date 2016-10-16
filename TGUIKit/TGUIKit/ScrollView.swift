@@ -69,7 +69,8 @@ open class ScrollView: NSScrollView, CALayerDelegate{
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-        
+        ctx.setFillColor(TGColor.white.cgColor)
+        ctx.fill(bounds)
     }
     
     public var clipView:TGClipView {
@@ -84,6 +85,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         self.layer?.delegate = self
         self.canDrawSubviewsIntoLayer = true
         self.layer?.drawsAsynchronously = System.drawAsync
+        self.layer?.isOpaque = true
         
     //    self.contentView.wantsLayer = true
      //   self.contentView.layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -94,7 +96,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         
         let clipView = TGClipView(frame:self.contentView.frame)
         self.contentView = clipView;
-
+        
         self.scrollerStyle = .overlay
  
     }

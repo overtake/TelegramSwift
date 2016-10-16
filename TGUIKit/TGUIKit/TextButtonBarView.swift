@@ -31,8 +31,6 @@ public class TextButtonBarView: BarView {
         
         self.alignment = alignment
         
-        self.border = [.Bottom]
-
         
         self.addSubview(button)
         
