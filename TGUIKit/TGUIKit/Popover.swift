@@ -27,7 +27,6 @@ open class Popover: NSObject {
     
     public var isShown:Bool = false
     
-    
     public var overlay:OverlayControl!
     private var background:PopoverBackground = PopoverBackground(frame: NSZeroRect)
     
@@ -40,7 +39,7 @@ open class Popover: NSObject {
         self.background.layer?.shadowOpacity = 0.35
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
-        
+        self.background.layer?.isOpaque = true
         self.background.layer?.shadowOffset = NSMakeSize(0, -1)
 
        // self.background.wantsLayer = false

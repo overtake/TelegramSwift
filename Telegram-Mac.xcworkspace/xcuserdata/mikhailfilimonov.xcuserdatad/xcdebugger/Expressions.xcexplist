@@ -20,6 +20,14 @@
          contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1):MediaBox.swift">
       </ContextState>
       <ContextState
+         contextName = "NavigationViewController.empty.didset:NavigationViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "stack">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "Node.loadIfNeeded() -&gt; ():Node.swift">
       </ContextState>
       <ContextState

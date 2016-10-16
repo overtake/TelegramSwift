@@ -18,7 +18,14 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
 
     var stack:[ViewController] = [ViewController]()
     
-    var empty:ViewController
+    public var empty:ViewController {
+        didSet {
+            empty.navigationController = self
+            empty.loadViewIfNeeded()
+            self.stack.remove(at: 0)
+            self.stack.insert(empty, at: 0)
+        }
+    }
     
     public private(set) var controller:ViewController
     
@@ -30,7 +37,6 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     public override func loadView() {
         super.loadView();
         self.view.autoresizesSubviews = true
-        self.stack.append(controller)
         
         controller.navigationController = self
         
@@ -43,6 +49,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     public init(_ empty:ViewController) {
         self.empty = empty
         self.controller = empty
+        self.stack.append(controller)
         super.init()
     }
     
@@ -130,6 +137,9 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
             
             return // without animations
         }
+        
+        navigationBar.removeFromSuperview()
+        self.view.addSubview(navigationBar)
         
         
         previous.viewWillDisappear(true);

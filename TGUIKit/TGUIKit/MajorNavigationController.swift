@@ -17,12 +17,14 @@ public protocol MajorControllerListener : class {
 public class MajorNavigationController: NavigationViewController {
 
     private var majorClass:AnyClass
-    
+    private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
+    
     
     
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
         self.majorClass = majorClass
+        self.defaultEmpty = empty
         assert(majorClass is ViewController.Type)
         
         super.init(empty)
@@ -53,7 +55,7 @@ public class MajorNavigationController: NavigationViewController {
                 
                  strongSelf.stack.append(controller)
                 
-                let anim = animated && strongSelf.controller != strongSelf.empty && !removeAnimateFlag
+                let anim = animated && strongSelf.controller != strongSelf.defaultEmpty && !removeAnimateFlag
                 
                 strongSelf.show(controller, anim ? .push : .none)
             }
@@ -63,7 +65,7 @@ public class MajorNavigationController: NavigationViewController {
     public override func back(_ index:Int = -1) -> Void {
         if stackCount > 1 {
             let ncontroller = stack[stackCount - 2]
-            let removeAnimateFlag = stack.last!.isKind(of: majorClass) && stackCount == 2
+            let removeAnimateFlag = ncontroller == defaultEmpty
             stack.last?.didRemovedFromStack()
             stack.removeLast()
             

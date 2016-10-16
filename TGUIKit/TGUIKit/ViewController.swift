@@ -138,9 +138,9 @@ open class ViewController : NSObject {
     
     open func becomeFirstResponder() -> Bool? {
         
-        self.window?.setKeyboardResponder(force: {[weak self] () -> NSResponder? in
-            return self?.view
-        })
+//        self.window?.setKeyboardResponder(force: {[weak self] () -> NSResponder? in
+//            return self?.view
+//        })
         
         return self.view.becomeFirstResponder()
     }
