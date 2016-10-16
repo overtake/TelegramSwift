@@ -19,12 +19,12 @@ public func <(lhs: HandlerPriority, rhs: HandlerPriority) -> Bool {
 }
 
 class KeyHandler : Comparable {
-    let handler:()->Bool
+    let handler:()->KeyHandlerResult
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let modifierFlags:NSEventModifierFlags?
     
-    init(_ handler:@escaping()->Bool, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEventModifierFlags?) {
+    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEventModifierFlags?) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -38,20 +38,24 @@ func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
     return lhs.priority < rhs.priority
 }
 
+public enum KeyHandlerResult {
+    case invoked // invoke and return
+    case rejected // can invoke next priprity event
+    case invokeNext // invoke and send global event
+}
+
 public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var keyboardResponderHandler:(()->NSResponder?)?
     
-    public func set(handler:@escaping() -> Bool, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
+    public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]
         if handlers == nil {
             handlers = []
             keyHandlers[key] = handlers
         }
         keyHandlers[key]?.append(KeyHandler(handler, object, priority, modifierFlags))
-        
-        var bp:Int = 0
-        bp += 1
+
     }
     
     public func remove(object:NSObject, for key:KeyboardKey) {
@@ -85,18 +89,17 @@ public class Window: NSWindow {
             
             if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
                 var sorted = handlers.sorted(by: >)
-                for handle in sorted {
-                    if let modifier = handle.modifierFlags {
-                        if event.modifierFlags.contains(modifier) {
-                            if handle.handler() {
-                                return
-                            }
-                        }
-                    } else {
-                        if handle.handler() {
-                             return
-                        }
+                loop: for handle in sorted {
+                    if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
                         
+                        switch handle.handler() {
+                        case .invoked:
+                            return
+                        case .rejected:
+                            continue
+                        case .invokeNext:
+                            break loop
+                        }
                         
                     }
                 }
@@ -114,7 +117,7 @@ public class Window: NSWindow {
 //        return self.set(handler: handler, for: .V, modifierFlags: [.command])
 //    }
     
-    public func set(escape handler:@escaping() -> Bool, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
+    public func set(escape handler:@escaping() -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
         set(handler: handler, with: object, for: .Escape, priority:priority, modifierFlags:modifierFlags)
     }
     

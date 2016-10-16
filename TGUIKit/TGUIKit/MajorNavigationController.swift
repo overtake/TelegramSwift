@@ -83,15 +83,18 @@ public class MajorNavigationController: NavigationViewController {
         self.window?.remove(object: self, for: .Return)
     }
     
-    public override func escapeKeyAction() -> Bool {
-        let success = stackCount > 1
+    public override func escapeKeyAction() -> KeyHandlerResult {
+        let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
+        if self.controller.escapeKeyAction() == .invokeNext {
+            return .invokeNext
+        }
         self.back()
-        return success
+        return status
     }
     
-    public override func returnKeyAction() -> Bool {
+    public override func returnKeyAction() -> KeyHandlerResult {
         
-        return false
+        return .rejected
     }
     
     public func add(listener:WeakReference<ViewController>) -> Void {

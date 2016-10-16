@@ -114,23 +114,16 @@ open class ViewController : NSObject {
         
     }
     
-   // private var escapeModifier:(()-> Void,NSEventModifierFlags?)?
-   // private var enterModifier:(()-> Void,NSEventModifierFlags?)?
-    
     open func viewDidAppear(_ animated:Bool) -> Void {
-//        escapeModifier = self.window?.set(escape: {[weak self] in
-//            self?.escAction()
-//        });
-    }
-    
-    open func escapeKeyAction() -> Bool {
 
-        return false
     }
     
-    open func returnKeyAction() -> Bool {
-        
-        return false
+    open func escapeKeyAction() -> KeyHandlerResult {
+        return .rejected
+    }
+    
+    open func returnKeyAction() -> KeyHandlerResult {
+        return .rejected
     }
     
     open func didRemovedFromStack() -> Void {

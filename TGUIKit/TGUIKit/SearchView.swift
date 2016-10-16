@@ -149,11 +149,11 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
             
             if state == .Focus {
                 
-                self.kitWindow?.set(escape: {[weak self] () -> Bool in
+                self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
                     if let strongSelf = self {
-                        return strongSelf.changeResponder()
+                        return strongSelf.changeResponder() ? .invoked : .rejected
                     }
-                    return false
+                    return .rejected
                     
                 }, with: self, priority:.high)
                 
