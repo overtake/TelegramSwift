@@ -8,47 +8,37 @@
 
 import Foundation
 
-public struct TGColor {
+public extension NSColor {
+    
     public static func colorFromRGB(rgbValue:UInt32) ->NSColor {
-        
-        return NSColor.init(deviceRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha: 1.0)
-        
+         return NSColor.init(deviceRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha: 1.0)
     }
     
     public static func colorFromRGB(rgbValue:UInt32, alpha:CGFloat) ->NSColor {
-        
         return NSColor.init(deviceRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha:alpha)
-        
-    }
-    
-    public static var textColor:NSColor  {
-        get {
-            return NSColor.textColor
-        }
     }
     
     
-    
-    public static var white:NSColor  {
+     public static var white:NSColor  {
         get {
             return NSColor.white
         }
     }
     
     public static var link:NSColor {
-        return TGColor.colorFromRGB(rgbValue: 0x2481cc)
+        return .colorFromRGB(rgbValue: 0x2481cc)
     }
     
     public static var blueUI:NSColor {
-        return TGColor.colorFromRGB(rgbValue: 0x2481cc)
+        return .colorFromRGB(rgbValue: 0x2481cc)
     }
     
     public static var redUI:NSColor {
-        return TGColor.colorFromRGB(rgbValue: 0xff3b30)
+        return colorFromRGB(rgbValue: 0xff3b30)
     }
     
     public static var greenUI:NSColor {
-        return TGColor.colorFromRGB(rgbValue: 0x63DA6E)
+        return colorFromRGB(rgbValue: 0x63DA6E)
     }
     
     public static var blackTransparent:NSColor {
@@ -63,17 +53,12 @@ public struct TGColor {
         return NSColor(0x333333)
     }
     
-    public static var cornerRadius:CGFloat {
-        return 5
-    }
     
     public static var blueText:NSColor  {
         get {
             return colorFromRGB(rgbValue: 0x4ba3e2)
         }
     }
-    
-    
     
     public static var blueSelect:NSColor  {
         get {
@@ -118,11 +103,7 @@ public struct TGColor {
         }
     }
     
-    public static var borderSize:CGFloat  {
-        get {
-            return 1
-        }
-    }
+    
     
     public static var grayBackground:NSColor  {
         get {
@@ -135,7 +116,7 @@ public struct TGColor {
             return colorFromRGB(rgbValue: 0x9e9e9e)
         }
     }
-
+    
     
     public static var blueIcon:NSColor  {
         get {
@@ -151,7 +132,7 @@ public struct TGColor {
     
     public static var badge:NSColor  {
         get {
-            return TGColor.blue
+            return .blue
         }
     }
     
@@ -162,6 +143,22 @@ public struct TGColor {
             return colorFromRGB(rgbValue: 0x999999)
         }
     }
+}
+
+public extension CGFloat {
+    
+    
+    public static var cornerRadius:CGFloat {
+        return 5
+    }
+    
+    public static var borderSize:CGFloat  {
+        get {
+            return 1
+        }
+    }
+    
+   
     
 }
 

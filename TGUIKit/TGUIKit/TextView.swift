@@ -12,27 +12,190 @@ public final class TextViewInteractions {
     var processURL:(String, Bool)->Void = {_ in} // link, isPresent
 }
 
-public final class TextViewLayout : Equatable {
-    public var attributedString:NSAttributedString
-    public var framesetter:CTFramesetter
-    public var frame:CTFrame!
-    public var size:NSSize = NSZeroSize
-    public var interactions:TextViewInteractions = TextViewInteractions()
+private final class TextViewLine {
+    let line: CTLine
+    let frame: NSRect
     
-    
-    public var selectedRange:TextSelectedRange = TextSelectedRange()
-    
-    public init(_ attributedString:NSAttributedString, size:NSSize = NSZeroSize) {
-        self.attributedString = attributedString
-        self.framesetter = CTFramesetterCreateWithAttributedString(attributedString)
-        self.size = size
+    init(line: CTLine, frame: CGRect) {
+        self.line = line
+        self.frame = frame
     }
     
-    public func measure(width:CGFloat) -> Void {
-        self.size = attributedString.CTSize(width,framesetter:framesetter).1
-        let path:CGMutablePath = CGMutablePath()
-        path.addRect(NSMakeRect(0, 0, size.width , size.height))
-        frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, nil)
+}
+
+public enum TextViewCutoutPosition {
+    case TopLeft
+    case TopRight
+}
+
+public struct TextViewCutout: Equatable {
+    public let position: TextViewCutoutPosition
+    public let size: NSSize
+}
+
+public func ==(lhs: TextViewCutout, rhs: TextViewCutout) -> Bool {
+    return lhs.position == rhs.position && lhs.size == rhs.size
+}
+
+private let defaultFont:NSFont = systemFont(TGFont.textSize)
+
+public final class TextViewLayout : Equatable {
+    
+    public var attributedString:NSAttributedString
+    public var constrainedSize:NSSize = NSZeroSize
+    public var interactions:TextViewInteractions = TextViewInteractions()
+    public var selectedRange:TextSelectedRange = TextSelectedRange()
+    
+    
+    fileprivate var lines:[TextViewLine] = []
+    
+    private var maximumNumberOfLines:Int32
+    private var truncationType:CTLineTruncationType
+    private var cutout:TextViewCutout?
+    
+    public private(set) var layoutSize:NSSize = NSZeroSize
+    
+    public init(_ attributedString:NSAttributedString, constrainedSize:NSSize = NSZeroSize, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil) {
+        self.truncationType = truncationType
+        self.maximumNumberOfLines = maximumNumberOfLines
+        self.cutout = cutout
+        self.attributedString = attributedString
+        self.constrainedSize = constrainedSize
+    }
+    
+    func calculateLayout() -> Void {
+        let font: CTFont
+        if attributedString.length != 0 {
+            if let stringFont = attributedString.attribute(kCTFontAttributeName as String, at: 0, effectiveRange: nil) {
+                font = stringFont as! CTFont
+            } else {
+                font = defaultFont
+            }
+        } else {
+            font = defaultFont
+        }
+        
+        self.lines.removeAll()
+        
+        let fontAscent = CTFontGetAscent(font)
+        let fontDescent = CTFontGetDescent(font)
+        let fontLineHeight = floor(fontAscent + fontDescent)
+        let fontLineSpacing = floor(fontLineHeight * 0.12)
+        
+        
+        var maybeTypesetter: CTTypesetter?
+        maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)
+        
+        let typesetter = maybeTypesetter!
+        
+        var lastLineCharacterIndex: CFIndex = 0
+        var layoutSize = NSSize()
+        
+        var cutoutEnabled = false
+        var cutoutMinY: CGFloat = 0.0
+        var cutoutMaxY: CGFloat = 0.0
+        var cutoutWidth: CGFloat = 0.0
+        var cutoutOffset: CGFloat = 0.0
+        if let cutout = cutout {
+            cutoutMinY = -fontLineSpacing
+            cutoutMaxY = cutout.size.height + fontLineSpacing
+            cutoutWidth = cutout.size.width
+            if case .TopLeft = cutout.position {
+                cutoutOffset = cutoutWidth
+            }
+            cutoutEnabled = true
+        }
+        
+        var first = true
+        while true {
+            var lineConstrainedWidth = constrainedSize.width
+            var lineOriginY = floor(layoutSize.height + fontLineHeight - fontLineSpacing * 2.0)
+            if !first {
+                lineOriginY += fontLineSpacing
+            }
+            var lineCutoutOffset: CGFloat = 0.0
+            var lineAdditionalWidth: CGFloat = 0.0
+            
+            if cutoutEnabled {
+                if lineOriginY < cutoutMaxY && lineOriginY + fontLineHeight > cutoutMinY {
+                    lineConstrainedWidth = max(1.0, lineConstrainedWidth - cutoutWidth)
+                    lineCutoutOffset = cutoutOffset
+                    lineAdditionalWidth = cutoutWidth
+                }
+            }
+            
+            let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, lastLineCharacterIndex, Double(lineConstrainedWidth))
+            
+            if maximumNumberOfLines != 0 && lines.count == maximumNumberOfLines - 1 && lineCharacterCount > 0 {
+                if first {
+                    first = false
+                } else {
+                    layoutSize.height += fontLineSpacing
+                }
+                
+                let coreTextLine: CTLine
+                
+                let originalLine = CTTypesetterCreateLineWithOffset(typesetter, CFRange(location: lastLineCharacterIndex, length: attributedString.length - lastLineCharacterIndex), 0.0)
+                
+                if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedSize.width) {
+                    coreTextLine = originalLine
+                } else {
+                    var truncationTokenAttributes: [String : AnyObject] = [:]
+                    truncationTokenAttributes[kCTFontAttributeName as String] = font
+                    truncationTokenAttributes[kCTForegroundColorFromContextAttributeName as String] = true as NSNumber
+                    let tokenString = "\u{2026}"
+                    let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
+                    let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
+                    
+                    coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedSize.width), truncationType, truncationToken) ?? truncationToken
+                }
+                
+                let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
+                let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: fontLineHeight)
+                layoutSize.height += fontLineHeight + fontLineSpacing
+                layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
+                
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
+                
+                break
+            } else {
+                if lineCharacterCount > 0 {
+                    if first {
+                        first = false
+                    } else {
+                        layoutSize.height += fontLineSpacing
+                    }
+                    
+                    let coreTextLine = CTTypesetterCreateLineWithOffset(typesetter, CFRangeMake(lastLineCharacterIndex, lineCharacterCount), 100.0)
+                    lastLineCharacterIndex += lineCharacterCount
+                    
+                    let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
+                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: fontLineHeight)
+                    layoutSize.height += fontLineHeight
+                    layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
+                    
+                    
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
+                } else {
+                    if !lines.isEmpty {
+                        layoutSize.height += fontLineSpacing
+                    }
+                    break
+                }
+            }
+            
+        }
+        
+        self.layoutSize = layoutSize
+    }
+    
+    public func measure(size: NSSize) -> Void {
+        
+        if constrainedSize != size {
+            self.constrainedSize = size
+             calculateLayout()
+        }
+
     }
     
     public func selectedRange(startPoint:NSPoint, currentPoint:NSPoint) -> NSRange {
@@ -40,17 +203,15 @@ public final class TextViewLayout : Equatable {
         var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
         
         if (currentPoint.x != -1 && currentPoint.y != -1) {
-            let lines:Array<CTLine> = Array.fromCFArray(records: CTFrameGetLines(frame))!
-            var origins = [CGPoint] (repeating: .zero, count: lines.count)
-            CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), &origins)
             
-            var startSelectLineIndex = findIndex(origins: origins, location: startPoint)
-            var currentSelectLineIndex = findIndex( origins: origins, location: currentPoint)
+            
+            var startSelectLineIndex = findIndex(location: startPoint)
+            var currentSelectLineIndex = findIndex(location: currentPoint)
             var dif = abs(startSelectLineIndex - currentSelectLineIndex)
             var isReversed = currentSelectLineIndex < startSelectLineIndex
             var i = startSelectLineIndex
             while isReversed ? i >= currentSelectLineIndex : i <= currentSelectLineIndex {
-                var line = lines[i]
+                var line = lines[i].line
                 var lineRange = CTLineGetStringRange(line)
                 var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, startPoint)
                 var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, currentPoint)
@@ -84,57 +245,53 @@ public final class TextViewLayout : Equatable {
                 i +=  isReversed ? -1 : 1
             }
         }
-        
         return selectedRange
     }
     
     
-    public func findIndex(origins:[CGPoint], location:NSPoint) -> Int {
+    public func findIndex(location:NSPoint) -> Int {
         
-        var idx:Int = 0
-        for point in origins {
-            if  isCurrentLine(pos: location, linePos: point, index: idx) {
+        for idx in 0 ..< lines.count {
+            if  isCurrentLine(pos: location, index: idx) {
                 return idx
             }
-            idx += 1
         }
         
-        return location.y >= size.height ? 0 : (origins.count - 1)
+        return location.y <= layoutSize.height ? 0 : (lines.count - 1)
         
     }
     
-    public func isCurrentLine(pos:NSPoint, linePos:NSPoint, index:Int) -> Bool {
-        let lines:Array<CTLine> = Array.fromCFArray(records: CTFrameGetLines(frame))!
+    public func isCurrentLine(pos:NSPoint, index:Int) -> Bool {
         
         let line = lines[index]
+        var rect = line.frame
         
         var ascent:CGFloat = 0
         var descent:CGFloat = 0
         var leading:CGFloat = 0
         
-        CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+        CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading)
         
-        let height = ceil(ascent + ceil(descent) + leading)
+        rect.origin.y = rect.minY - rect.height + ceil(descent - leading)
+        rect.size.height += ceil(descent - leading)
         
-        return (pos.y > linePos.y) && pos.y < (linePos.y + height)
+        
+        return (pos.y > rect.minY) && pos.y < rect.maxY
         
     }
 
     public func link(at point:NSPoint) -> (String, Bool, NSRect)? {
         
-        let lines:Array<CTLine> = Array.fromCFArray(records: CTFrameGetLines(frame))!
-        var origins = [CGPoint] (repeating: .zero, count: lines.count)
-        CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), &origins)
-        let index = findIndex(origins: origins, location: point)
+        let index = findIndex(location: point)
         let line = lines[index]
         var ascent:CGFloat = 0
         var descent:CGFloat = 0
         var leading:CGFloat = 0
         
-        var width:CGFloat = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, &leading));
+        var width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
         
         if  width > point.x {
-            var pos = CTLineGetStringIndexForPosition(line, point);
+            var pos = CTLineGetStringIndexForPosition(line.line, point);
             pos = min(max(0,pos),attributedString.length - 1)
             var range:NSRange = NSMakeRange(NSNotFound, 0)
             let attrs = attributedString.attributes(at: pos, effectiveRange: &range)
@@ -144,9 +301,9 @@ public final class TextViewLayout : Equatable {
             if let link = link, !link.isEmpty {
                 let present = attributedString.string.nsstring.substring(with: range)
                 
-                let startOffset = CTLineGetOffsetForStringIndex(line, range.location, nil);
-                let endOffset = CTLineGetOffsetForStringIndex(line, range.location + range.length, nil);
-                return (link, present == link, NSMakeRect(startOffset, origins[index].y, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
+                let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
+                let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
+                return (link, present == link, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
             }
         }
         return nil
@@ -155,7 +312,7 @@ public final class TextViewLayout : Equatable {
 }
 
 public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
-    return lhs.size == rhs.size && lhs.attributedString == rhs.attributedString && lhs.selectedRange != rhs.selectedRange
+    return lhs.constrainedSize == rhs.constrainedSize && lhs.attributedString.isEqual(to: rhs.attributedString) && lhs.selectedRange != rhs.selectedRange
 }
 
 public struct TextSelectedRange: Equatable {
@@ -192,11 +349,12 @@ public class TextView: View {
     }
 
     public override var isFlipped: Bool {
-        return false
+        return true
     }
 
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+        self.layer?.isOpaque = true
         self.layer?.drawsAsynchronously = System.drawAsync
     }
     
@@ -216,7 +374,7 @@ public class TextView: View {
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         if let layout = layout {
             
-           
+        
             super.draw(layer, in: ctx)
             
             ctx.setAllowsAntialiasing(true)
@@ -224,27 +382,19 @@ public class TextView: View {
             ctx.setAllowsFontSmoothing(!System.isRetina)
             
             
-            
-            ctx.textPosition = NSMakePoint(0, 0)
-            
-            let path:CGMutablePath = CGMutablePath()
-            path.addRect(NSMakeRect(0, 0, NSWidth(self.bounds) , NSHeight(self.bounds)))
-            
-            
             if !isSelectable {
                 return
             }
+            
             
             if layout.selectedRange.range.location != NSNotFound {
                 
                 var lessRange = layout.selectedRange.range
                 
-                let lines:Array<CTLine> = Array.fromCFArray(records: CTFrameGetLines(layout.frame))!
-                var origins = [CGPoint] (repeating: .zero, count: lines.count)
-                CTFrameGetLineOrigins(layout.frame, CFRangeMake(0, 0), &origins)
-                
+                var lines:[TextViewLine] = layout.lines
+
                 var beginIndex:Int = 0
-                var endIndex:Int = origins.count - 1
+                var endIndex:Int = layout.lines.count - 1
                 var dif:Int = 0
 
                 
@@ -256,7 +406,8 @@ public class TextView: View {
                 while isReversed ? i >= endIndex : i <= endIndex {
                     
                     
-                    let line = lines[i]
+                    let line = lines[i].line
+                    var rect:NSRect = lines[i].frame
                     let lineRange = CTLineGetStringRange(line)
                     
                     var beginLineIndex:CFIndex = 0
@@ -286,14 +437,12 @@ public class TextView: View {
                         width = endOffset - startOffset;
                         
                         
-                        var rect = NSZeroRect
-                        
+
                         rect.size.width = width
-                        rect.size.height = ceil(ascent + ceil(descent) + leading);
-                        
+
                         rect.origin.x = startOffset
-                        rect.origin.y = origins[i].y - ceil(descent - leading)
-                        
+                        rect.origin.y = rect.minY - rect.height
+                        rect.size.height += ceil(descent - leading)
                         let color = TGColor.selectText
                         
                         ctx.setFillColor(color.cgColor)
@@ -309,8 +458,20 @@ public class TextView: View {
                 
             }
             
-
-            CTFrameDraw(layout.frame, ctx);
+            let textMatrix = ctx.textMatrix
+            let textPosition = ctx.textPosition
+            
+            ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+            
+            for i in 0 ..< layout.lines.count {
+                let line = layout.lines[i]
+                ctx.textPosition = CGPoint(x: line.frame.minX, y: line.frame.minY)
+                CTLineDraw(line.line, ctx)
+                
+            }
+            
+            ctx.textMatrix = textMatrix
+            ctx.textPosition = CGPoint(x: textPosition.x, y: textPosition.y)
             
         }
         
@@ -323,7 +484,7 @@ public class TextView: View {
         
         self.set(selectedRange: NSMakeRange(NSNotFound, 0))
         
-        self.frame = NSMakeRect(origin.x, origin.y, layout.size.width, layout.size.height)
+        self.frame = NSMakeRect(origin.x, origin.y, layout.layoutSize.width, layout.layoutSize.height)
         self.setNeedsDisplayLayer()
     }
     
