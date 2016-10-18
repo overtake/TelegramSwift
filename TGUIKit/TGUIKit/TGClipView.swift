@@ -54,24 +54,24 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     public func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(TGColor.white.cgColor)
+        ctx.setFillColor(NSColor.white.cgColor)
         ctx.fill(self.bounds)
 
         if let border = border {
             
-            ctx.setFillColor(TGColor.border.cgColor)
+            ctx.setFillColor(NSColor.border.cgColor)
             
             if border.contains(.Top) {
-                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - TGColor.borderSize, NSWidth(self.frame), TGColor.borderSize))
+                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
             }
             if border.contains(.Bottom) {
-                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), TGColor.borderSize))
+                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
             }
             if border.contains(.Left) {
-                ctx.fill(NSMakeRect(0, 0, TGColor.borderSize, NSHeight(self.frame)))
+                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
             }
             if border.contains(.Right) {
-                ctx.fill(NSMakeRect(NSWidth(self.frame) - TGColor.borderSize, 0, TGColor.borderSize, NSHeight(self.frame)))
+                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
             }
             
         }

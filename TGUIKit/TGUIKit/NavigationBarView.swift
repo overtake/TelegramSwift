@@ -25,13 +25,13 @@ class NavigationBarView: View {
     
     override init() {
         super.init()
-        bottomBorder.backgroundColor = TGColor.border
+        bottomBorder.backgroundColor = .border
         self.autoresizingMask = [.viewWidthSizable]
     }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        bottomBorder.backgroundColor = TGColor.border
+        bottomBorder.backgroundColor = .border
         self.autoresizingMask = [.viewWidthSizable]
     }
     
@@ -45,23 +45,23 @@ class NavigationBarView: View {
 //        ctx.setFillColor(NSColor.white.cgColor)
 //        ctx.fill(self.bounds)
 //
-//        ctx.setFillColor(TGColor.border.cgColor)
-//        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - TGColor.borderSize, NSWidth(self.frame), TGColor.borderSize))
+//        ctx.setFillColor(NSColor.border.cgColor)
+//        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
     }
     
 
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        self.bottomBorder.frame = NSMakeRect(0, newSize.height - TGColor.borderSize, newSize.width, TGColor.borderSize)
+        self.bottomBorder.frame = NSMakeRect(0, newSize.height - .borderSize, newSize.width, .borderSize)
         self.bottomBorder.setNeedsDisplay()
         self.layout(left: leftView, center: centerView, right: rightView)
     }
     
     
     func layout(left:BarView, center:BarView, right:BarView) -> Void {
-        left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - TGColor.borderSize);
-        center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - TGColor.borderSize);
-        right.frame = NSMakeRect(center.frame.maxX, 0, NSWidth(right.frame), frame.height - TGColor.borderSize);
+        left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - .borderSize);
+        center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - .borderSize);
+        right.frame = NSMakeRect(center.frame.maxX, 0, NSWidth(right.frame), frame.height - .borderSize);
     }
     
     // ! PUSH !

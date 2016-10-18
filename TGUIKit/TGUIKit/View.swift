@@ -64,7 +64,7 @@ open class View : NSView,CALayerDelegate {
     
     public let customHandler:CustomViewHandlers = CustomViewHandlers()
     
-    open var backgroundColor:NSColor = TGColor.white {
+    open var backgroundColor:NSColor = .white {
         didSet {
             if oldValue != backgroundColor {
                 setNeedsDisplay()
@@ -88,26 +88,26 @@ open class View : NSView,CALayerDelegate {
             displayDelegate.draw(layer, in: ctx)
         } else {
             
-          //  ctx.setShadow(offset: NSMakeSize(5.0, 5.0), blur: 0.0, color: TGColor.shadow.cgColor)
+          //  ctx.setShadow(offset: NSMakeSize(5.0, 5.0), blur: 0.0, color: .shadow.cgColor)
             
             ctx.setFillColor(self.backgroundColor.cgColor)
             ctx.fill(layer.bounds)
             
             if let border = border {
                 
-                ctx.setFillColor(TGColor.border.cgColor)
+                ctx.setFillColor(NSColor.border.cgColor)
                 
                 if border.contains(.Top) {
-                    ctx.fill(NSMakeRect(0, !self.isFlipped ? NSHeight(self.frame) - TGColor.borderSize : 0, NSWidth(self.frame), TGColor.borderSize))
+                    ctx.fill(NSMakeRect(0, !self.isFlipped ? NSHeight(self.frame) - .borderSize : 0, NSWidth(self.frame), .borderSize))
                 }
                 if border.contains(.Bottom) {
-                    ctx.fill(NSMakeRect(0, self.isFlipped ? NSHeight(self.frame) - TGColor.borderSize : 0, NSWidth(self.frame), TGColor.borderSize))
+                    ctx.fill(NSMakeRect(0, self.isFlipped ? NSHeight(self.frame) - .borderSize : 0, NSWidth(self.frame), .borderSize))
                 }
                 if border.contains(.Left) {
-                    ctx.fill(NSMakeRect(0, 0, TGColor.borderSize, NSHeight(self.frame)))
+                    ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
                 }
                 if border.contains(.Right) {
-                    ctx.fill(NSMakeRect(NSWidth(self.frame) - TGColor.borderSize, 0, TGColor.borderSize, NSHeight(self.frame)))
+                    ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
                 }
                 
             }

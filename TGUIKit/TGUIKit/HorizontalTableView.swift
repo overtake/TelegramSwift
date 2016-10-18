@@ -13,7 +13,7 @@ public class HorizontalTableView: TableView {
     public override init(frame frameRect: NSRect, isFlipped: Bool = true) {
         super.init(frame: frameRect, isFlipped: isFlipped)
         //        [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
-        self.verticalScroller?.controlSize = NSControlSize.small
+        //self.verticalScroller?.controlSize = NSControlSize.small
         self.rotate(byDegrees: 270)
         
         self.clipView.border = []

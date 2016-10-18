@@ -9,7 +9,11 @@
 import Cocoa
 
 public final class TextViewInteractions {
-    var processURL:(String, Bool)->Void = {_ in} // link, isPresent
+    public var processURL:(String, Bool)->Void // link, isPresent
+    
+    public init(processURL:@escaping (String, Bool)->Void = {_ in}) {
+        self.processURL = processURL
+    }
 }
 
 private final class TextViewLine {
@@ -189,11 +193,13 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = layoutSize
     }
     
-    public func measure(size: NSSize) -> Void {
+    public func measure(size: NSSize = NSZeroSize) -> Void {
         
         if constrainedSize != size {
-            self.constrainedSize = size
-             calculateLayout()
+            if size != NSZeroSize {
+                constrainedSize = size
+            }
+            calculateLayout()
         }
 
     }
@@ -317,7 +323,7 @@ public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
 
 public struct TextSelectedRange: Equatable {
     var range:NSRange = NSMakeRange(NSNotFound, 0)
-    var color:NSColor = TGColor.selectText
+    var color:NSColor = .selectText
     var def:Bool = true
 }
 
@@ -382,12 +388,9 @@ public class TextView: View {
             ctx.setAllowsFontSmoothing(!System.isRetina)
             
             
-            if !isSelectable {
-                return
-            }
+
             
-            
-            if layout.selectedRange.range.location != NSNotFound {
+            if layout.selectedRange.range.location != NSNotFound && isSelectable {
                 
                 var lessRange = layout.selectedRange.range
                 
@@ -443,7 +446,7 @@ public class TextView: View {
                         rect.origin.x = startOffset
                         rect.origin.y = rect.minY - rect.height
                         rect.size.height += ceil(descent - leading)
-                        let color = TGColor.selectText
+                        let color:NSColor = .selectText
                         
                         ctx.setFillColor(color.cgColor)
                         ctx.fill(rect)
@@ -478,6 +481,9 @@ public class TextView: View {
     }
     
 
+    public func isEqual(to layout:TextViewLayout) -> Bool {
+        return self.layout == layout
+    }
     
     public func update(_ layout:TextViewLayout, origin:NSPoint = NSZeroPoint) -> Void {
         self.layout = layout
@@ -493,7 +499,7 @@ public class TextView: View {
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
         
         
-        layout?.selectedRange = TextSelectedRange(range:range, color:TGColor.selectText, def:true)
+        layout?.selectedRange = TextSelectedRange(range:range, color:.selectText, def:true)
         
         beginSelect = NSMakePoint(-1, -1)
         endSelect = NSMakePoint(-1, -1)
@@ -527,7 +533,7 @@ public class TextView: View {
     
     public override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
-        NSCursor.iBeam().set()
+        checkCursor(event)
         _mouseDragged(with: event)
     }
     
@@ -542,6 +548,7 @@ public class TextView: View {
         }
         self.setNeedsDisplayLayer()
     }
+    
     
     public override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
@@ -578,8 +585,10 @@ public class TextView: View {
             
             if let layout = layout, let (_, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand().set()
-            } else {
+            } else if isSelectable {
                 NSCursor.iBeam().set()
+            } else {
+                NSCursor.arrow().set()
             }
         } else {
             NSCursor.arrow().set()

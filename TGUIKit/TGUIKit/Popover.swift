@@ -36,7 +36,7 @@ open class Popover: NSObject {
     
     required public init(controller:ViewController) {
         self.controller = controller
-       // self.background.layer?.backgroundColor = TGColor.blue.cgColor
+       // self.background.layer?.backgroundColor = .blueUI.cgColor
         self.background.layer?.shadowOpacity = 0.35
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
@@ -97,20 +97,20 @@ open class Popover: NSObject {
                     
                     parentView.layer?.isOpaque = true
                     
-                    //TGColor.borderSize * 2
+                    //.borderSize * 2
                     strongSelf.background.frame = NSMakeRect(point.x, point.y, rect.width + 14, rect.height + 14)
-                    strongSelf.background.backgroundColor = TGColor.clear
-                    strongSelf.background.layer?.cornerRadius = TGColor.cornerRadius
+                    strongSelf.background.backgroundColor = .clear
+                    strongSelf.background.layer?.cornerRadius = .cornerRadius
                     
                     strongSelf.overlay = OverlayControl(frame: NSMakeRect(contentRect.minX, contentRect.minY, controller.frame.width , controller.frame.height ))
-                    strongSelf.overlay.backgroundColor = TGColor.white
-                    strongSelf.overlay.layer?.cornerRadius = TGColor.cornerRadius
+                    strongSelf.overlay.backgroundColor = .white
+                    strongSelf.overlay.layer?.cornerRadius = .cornerRadius
                     
                     
                     strongSelf.background.addSubview(strongSelf.overlay)
 
                     
-                    controller.view.layer?.cornerRadius = TGColor.cornerRadius
+                    controller.view.layer?.cornerRadius = .cornerRadius
                     controller.view.setFrameOrigin(NSMakePoint(0, 0))
                     
                     

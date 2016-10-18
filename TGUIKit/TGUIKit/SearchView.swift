@@ -53,8 +53,8 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
     
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.backgroundColor = TGColor.grayBackground
-        self.layer?.cornerRadius = TGColor.cornerRadius
+        self.backgroundColor = .grayBackground
+        self.layer?.cornerRadius = .cornerRadius
         
         
         input.isBordered = false
@@ -65,17 +65,17 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         input.backgroundColor = NSColor.clear
         input.delegate = self
         
-        input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: TGColor.grayText, font: systemFont(TGFont.textSize), coreText: false)
+        input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: systemFont(TGFont.textSize), coreText: false)
         
         input.font = systemFont(TGFont.textSize)
-        input.textColor = TGColor.textColor
+        input.textColor = .textColor
         input.isHidden = true
 
         
-        animateContainer.backgroundColor = TGColor.clear
+        animateContainer.backgroundColor = .clear
         
         placeholder.attributedString = input.placeholderAttributedString
-        placeholder.backgroundColor = TGColor.grayBackground
+        placeholder.backgroundColor = .grayBackground
         placeholder.sizeToFit()
         animateContainer.addSubview(placeholder)
         
@@ -93,7 +93,7 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         
         
         clear.set(image: clearImage, for: .Normal)
-        clear.backgroundColor = TGColor.clear
+        clear.backgroundColor = .clear
         
         
         clear.set(handler: {[weak self] (event) in

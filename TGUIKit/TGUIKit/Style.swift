@@ -10,9 +10,9 @@ import Cocoa
 
 public struct ControlStyle: Equatable {
     public var font:NSFont = systemFont(TGFont.textSize)
-    public var foregroundColor:NSColor = TGColor.textColor
-    public var backgroundColor:NSColor = TGColor.clear
-    public var highlightColor:NSColor = NSColor.textColor
+    public var foregroundColor:NSColor = .textColor
+    public var backgroundColor:NSColor = .clear
+    public var highlightColor:NSColor = .blueIcon
     
     public func highlight(image:CGImage) -> CGImage {
         
@@ -70,17 +70,17 @@ public struct ControlStyle: Equatable {
 }
 
 
-public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:TGColor.link, highlightColor:TGColor.textColor)
+public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.textColor)
 
-public let headerTextStyle = ControlStyle(font:systemFont(TGFont.headerSize), highlightColor:TGColor.white)
-public let titleTextStyle = ControlStyle(font:systemFont(TGFont.titleSize), highlightColor:TGColor.white)
-public let textStyle = ControlStyle(font:systemFont(TGFont.textSize), highlightColor:TGColor.white)
-public let shortTextStyle = ControlStyle(font:systemFont(TGFont.shortSize), highlightColor:TGColor.white)
+public let headerTextStyle = ControlStyle(font:systemFont(TGFont.headerSize), highlightColor:.white)
+public let titleTextStyle = ControlStyle(font:systemFont(TGFont.titleSize), highlightColor:.white)
+public let textStyle = ControlStyle(font:systemFont(TGFont.textSize), highlightColor:.white)
+public let shortTextStyle = ControlStyle(font:systemFont(TGFont.shortSize), highlightColor:.white)
 
-public let headerTextGrayStyle = ControlStyle(font:systemFont(TGFont.headerSize), foregroundColor:TGColor.grayText, highlightColor:TGColor.white)
-public let titleTextGrayStyle = ControlStyle(font:systemFont(TGFont.titleSize), foregroundColor:TGColor.grayText, highlightColor:TGColor.white)
-public let textGrayStyle = ControlStyle(font:systemFont(TGFont.textSize), foregroundColor:TGColor.grayText, highlightColor:TGColor.white)
-public let shortGrayStyle = ControlStyle(font:systemFont(TGFont.shortSize), foregroundColor:TGColor.grayText, highlightColor:TGColor.white)
+public let headerTextGrayStyle = ControlStyle(font:systemFont(TGFont.headerSize), foregroundColor:.grayText, highlightColor:.white)
+public let titleTextGrayStyle = ControlStyle(font:systemFont(TGFont.titleSize), foregroundColor:.grayText, highlightColor:.white)
+public let textGrayStyle = ControlStyle(font:systemFont(TGFont.textSize), foregroundColor:.grayText, highlightColor:.white)
+public let shortGrayStyle = ControlStyle(font:systemFont(TGFont.shortSize), foregroundColor:.grayText, highlightColor:.white)
 
 public func ==(lhs:ControlStyle, rhs:ControlStyle) -> Bool {
     return lhs.font == rhs.font && lhs.foregroundColor == rhs.foregroundColor && rhs.backgroundColor == lhs.backgroundColor

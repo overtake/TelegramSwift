@@ -32,7 +32,7 @@ public class TabBarView: View {
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        ctx.setFillColor(TGColor.border.cgColor)
+        ctx.setFillColor(NSColor.border.cgColor)
         
         ctx.fill(self.bounds)
     }
@@ -59,7 +59,7 @@ public class TabBarView: View {
     
     func redraw() {
         var width = NSWidth(self.bounds)
-        var height = NSHeight(self.bounds) - TGColor.borderSize
+        var height = NSHeight(self.bounds) - .borderSize
         var defWidth = width / CGFloat(self.tabs.count)
         self.removeAllSubviews()
         var xOffset:CGFloat = 0
@@ -68,7 +68,7 @@ public class TabBarView: View {
         
         for tab in tabs {
             var itemWidth = defWidth
-            var view = View(frame: NSMakeRect(xOffset, TGColor.borderSize, itemWidth, height))
+            var view = View(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
             var container = View(frame: view.bounds)
             view.autoresizingMask = [.viewMinXMargin, .viewMaxXMargin, .viewWidthSizable]
             view.autoresizesSubviews = true
@@ -92,16 +92,16 @@ public class TabBarView: View {
     override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         var width = NSWidth(self.bounds)
-        var height = NSHeight(self.bounds) - TGColor.borderSize
+        var height = NSHeight(self.bounds) - .borderSize
         var defWidth = width / CGFloat( max(1, self.tabs.count) )
         var xOffset:CGFloat = 0
         
         var idx:Int = 0
         
         for subview in subviews {
-            var w = idx == subviews.count - 1 ? defWidth - TGColor.borderSize : defWidth
+            var w = idx == subviews.count - 1 ? defWidth - .borderSize : defWidth
             var child = subview.subviews[0]
-            subview.frame = NSMakeRect(xOffset, TGColor.borderSize, w, height)
+            subview.frame = NSMakeRect(xOffset, .borderSize, w, height)
             child.center()
             xOffset += w
             

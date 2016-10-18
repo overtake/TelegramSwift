@@ -41,9 +41,9 @@ public class TextButtonBarView: BarView {
         
         switch alignment {
         case .Center:
-            button.sizeToFit(NSZeroSize,NSMakeSize(newSize.width, newSize.height - TGColor.borderSize))
+            button.sizeToFit(NSZeroSize,NSMakeSize(newSize.width, newSize.height - .borderSize))
         case .Left:
-            button.sizeToFit(NSZeroSize,NSMakeSize(newSize.width, newSize.height - TGColor.borderSize))
+            button.sizeToFit(NSZeroSize,NSMakeSize(newSize.width, newSize.height - .borderSize))
         case .Right:
             button.sizeToFit()
             let f = focus(button.frame.size)

@@ -9,8 +9,8 @@
 import Cocoa
 
 public struct FetchControls {
-    let fetch: () -> Void
-    let cancel: () -> Void
+    public let fetch: () -> Void
+    public let cancel: () -> Void
     public init(fetch:@escaping()->Void,cancel:@escaping()->Void) {
         self.fetch = fetch
         self.cancel = cancel
@@ -55,6 +55,7 @@ public enum RadialProgressState {
 private class RadialProgressOverlayLayer: Layer {
     let theme: RadialProgressTheme
     
+    
     var parameters:RadialProgressParameters {
         return RadialProgressParameters(theme: self.theme, diameter: NSWidth(self.frame), state: self.state)
     }
@@ -80,14 +81,16 @@ private class RadialProgressOverlayLayer: Layer {
         case .None, .Remote, .Play:
             break
         case let .Fetching(progress):
-            let startAngle = -CGFloat(M_PI_2)
-            let endAngle = 2.0 * (CGFloat(M_PI)) * CGFloat(progress) - CGFloat(M_PI_2)
             
-            let pathDiameter = parameters.diameter - 2.25 - 2.5 * 2.0
+
+            let startAngle = 2.0 * (CGFloat(M_PI)) * CGFloat(progress) - CGFloat(M_PI_2)
+            let endAngle = -CGFloat(M_PI_2)
+            
+            let pathDiameter = parameters.diameter - 2.0 - 2.0 * 2.0
             
             ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, parameters.diameter / 2.0), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
             
-            ctx.setLineWidth(2.25);
+            ctx.setLineWidth(2.0);
             ctx.setLineCap(.round);
             ctx.strokePath()
             
@@ -220,7 +223,7 @@ public class RadialProgressView: Control {
         }
     }
     
-    public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: TGColor.blackTransparent, foregroundColor: TGColor.white, icon: nil)) {
+    public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil)) {
         self.theme = theme
         self.overlay = RadialProgressOverlayLayer(theme: theme)
         super.init()
@@ -270,7 +273,8 @@ public class RadialProgressView: Control {
         case .Play:
             if let icon = parameters.theme.icon {
                 
-                context.draw(icon, in: NSMakeRect(floor((parameters.diameter - CGFloat(icon.width)) / 2.0), floor((parameters.diameter - CGFloat(icon.height)) / 2.0), CGFloat(icon.width), CGFloat(icon.height)))
+                var f = focus(icon.backingSize)
+                context.draw(icon, in: f)
             }
         }
 

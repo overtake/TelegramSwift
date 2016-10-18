@@ -14,7 +14,7 @@ open class GridView : OverlayControl {
     
     required public override init() {
         super.init()
-        self.backgroundColor = TGColor.grayBackground
+        self.backgroundColor = .grayBackground
         self.layer?.disableActions()
     }
     
@@ -34,7 +34,7 @@ open class GridView : OverlayControl {
     open override func copy() -> Any {
         let view = GridView()
         view.frame = self.frame
-        view.backgroundColor = TGColor.random
+        view.backgroundColor = .random
         return view
     }
     

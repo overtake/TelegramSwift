@@ -19,12 +19,6 @@ public extension NSColor {
     }
     
     
-     public static var white:NSColor  {
-        get {
-            return NSColor.white
-        }
-    }
-    
     public static var link:NSColor {
         return .colorFromRGB(rgbValue: 0x2481cc)
     }
@@ -66,11 +60,6 @@ public extension NSColor {
         }
     }
     
-    public static var shadow:NSColor  {
-        get {
-            return .blue //colorFromRGB(rgbValue: 0x000000)
-        }
-    }
     
     public static var selectText:NSColor  {
         get {
@@ -84,18 +73,12 @@ public extension NSColor {
         }
     }
     
-    public static var blue:NSColor  {
+    public static var blueFill:NSColor  {
         get {
             return colorFromRGB(rgbValue: 0x4ba3e2)
         }
     }
     
-    
-    public static var clear:NSColor  {
-        get {
-            return NSColor.clear
-        }
-    }
     
     public static var border:NSColor  {
         get {
@@ -132,11 +115,9 @@ public extension NSColor {
     
     public static var badge:NSColor  {
         get {
-            return .blue
+            return .blueFill
         }
     }
-    
-    
     
     public static var grayText:NSColor  {
         get {

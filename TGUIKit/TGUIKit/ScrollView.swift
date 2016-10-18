@@ -69,7 +69,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(TGColor.white.cgColor)
+        ctx.setFillColor(NSColor.white.cgColor)
         ctx.fill(bounds)
     }
     
