@@ -32,6 +32,10 @@
 		C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DDA1DAF82E3001792B6 /* GridRowView.swift */; };
 		C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE91DAFCE69001792B6 /* GridTableView.swift */; };
 		C2271DED1DAFE4D0001792B6 /* TransformImageLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */; };
+		C2271F331DB4CEB30045E719 /* HorizontalTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */; };
+		C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F351DB4CF270045E719 /* HorizontalRowView.swift */; };
+		C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F421DB4EE2F0045E719 /* TableStickItem.swift */; };
+		C2271F451DB4EE3C0045E719 /* TableStickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F441DB4EE3C0045E719 /* TableStickView.swift */; };
 		C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E062D1D7F3CC000A11C88 /* TGColor.swift */; };
 		C22E06351D804C8200A11C88 /* TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E06341D804C8200A11C88 /* TableView.swift */; };
 		C22E06371D804D3B00A11C88 /* TableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E06361D804D3B00A11C88 /* TableRowItem.swift */; };
@@ -105,6 +109,10 @@
 		C2271DDA1DAF82E3001792B6 /* GridRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowView.swift; sourceTree = "<group>"; };
 		C2271DE91DAFCE69001792B6 /* GridTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridTableView.swift; sourceTree = "<group>"; };
 		C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageLayer.swift; sourceTree = "<group>"; };
+		C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalTableView.swift; sourceTree = "<group>"; };
+		C2271F351DB4CF270045E719 /* HorizontalRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalRowView.swift; sourceTree = "<group>"; };
+		C2271F421DB4EE2F0045E719 /* TableStickItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableStickItem.swift; sourceTree = "<group>"; };
+		C2271F441DB4EE3C0045E719 /* TableStickView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableStickView.swift; sourceTree = "<group>"; };
 		C22E062D1D7F3CC000A11C88 /* TGColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGColor.swift; sourceTree = "<group>"; };
 		C22E06341D804C8200A11C88 /* TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableView.swift; sourceTree = "<group>"; };
 		C22E06361D804D3B00A11C88 /* TableRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableRowItem.swift; sourceTree = "<group>"; };
@@ -226,6 +234,24 @@
 			name = grid;
 			sourceTree = "<group>";
 		};
+		C2271F341DB4CF040045E719 /* horizontal */ = {
+			isa = PBXGroup;
+			children = (
+				C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */,
+				C2271F351DB4CF270045E719 /* HorizontalRowView.swift */,
+			);
+			name = horizontal;
+			sourceTree = "<group>";
+		};
+		C2271F411DB4EE170045E719 /* stick */ = {
+			isa = PBXGroup;
+			children = (
+				C2271F421DB4EE2F0045E719 /* TableStickItem.swift */,
+				C2271F441DB4EE3C0045E719 /* TableStickView.swift */,
+			);
+			name = stick;
+			sourceTree = "<group>";
+		};
 		C22E062A1D7F3C2700A11C88 /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -249,6 +275,8 @@
 		C22E06331D804C5800A11C88 /* table */ = {
 			isa = PBXGroup;
 			children = (
+				C2271F411DB4EE170045E719 /* stick */,
+				C2271F341DB4CF040045E719 /* horizontal */,
 				C2271DE41DAF9BB5001792B6 /* grid */,
 				C22E06341D804C8200A11C88 /* TableView.swift */,
 				C22E06361D804D3B00A11C88 /* TableRowItem.swift */,
@@ -461,6 +489,7 @@
 				C2271DA61DAD16B4001792B6 /* BadgeNode.swift in Sources */,
 				C234CA8F1D97DF26003023F7 /* Image.swift in Sources */,
 				C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */,
+				C2271F331DB4CEB30045E719 /* HorizontalTableView.swift in Sources */,
 				C2E0DEBB1D7F05AB00EF1C8D /* View.swift in Sources */,
 				C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */,
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
@@ -494,6 +523,8 @@
 				C219E1E21D8A93050042F0C8 /* TextView.swift in Sources */,
 				C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */,
 				C21AAE3A1DB2398B007638C5 /* DisplayLinkDispatcher.swift in Sources */,
+				C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */,
+				C2271F451DB4EE3C0045E719 /* TableStickView.swift in Sources */,
 				C25FC7F71D86DC370041E303 /* TGClipView.swift in Sources */,
 				C2CBCAC31D81595900142EC0 /* Extensions.swift in Sources */,
 				C219E1ED1D8ADEE00042F0C8 /* NavigationBarView.swift in Sources */,
@@ -501,6 +532,7 @@
 				C2CBCABB1D80AD1F00142EC0 /* TGFont.swift in Sources */,
 				C2B1A12E1DA5148B00ACB1DD /* TextButtonBarView.swift in Sources */,
 				C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */,
+				C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */,
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,
 				C253A9521D9147A400CDC850 /* Layer.swift in Sources */,

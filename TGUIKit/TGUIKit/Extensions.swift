@@ -42,7 +42,34 @@ public extension NSAttributedString {
     
 }
 
+public extension String {
+    
+    
+    public static func prettySized(with size:Int) -> String {
+        var converted:Double = Double(size)
+        var factor:Int = 0
+        
+        let tokens:[String] = ["Bytes", "KB", "MB", "GB", "TB"]
+        
+        while converted > 1024.0 {
+            converted /= 1024.0
+            factor += 1
+        }
+        
+        if factor == 0 {
+            converted = 1.0
+        }
+        factor = max(1,factor)
+        
+        if ceil(converted) - converted != 0.0 {
+            return String(format: "%.2f %@", converted, tokens[factor])
+        } else {
+            return String(format: "%.0f %@", converted, tokens[factor])
+        }
+        
+    }
 
+}
 
 public let kSelectedColorAttribute:String = "kFontSelectedColorAttribute"
 

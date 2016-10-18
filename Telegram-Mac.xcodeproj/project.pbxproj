@@ -49,6 +49,13 @@
 		C2271DE11DAF8F39001792B6 /* MediaGridHoleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE01DAF8F39001792B6 /* MediaGridHoleItem.swift */; };
 		C2271DE31DAF8FB7001792B6 /* MediaGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE21DAF8FB7001792B6 /* MediaGridItem.swift */; };
 		C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F2A1DB3BEB60045E719 /* GlobalHandlers.swift */; };
+		C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F371DB4D0490045E719 /* EmojiViewController.swift */; };
+		C2271F3A1DB4D0540045E719 /* StickersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F391DB4D0540045E719 /* StickersViewController.swift */; };
+		C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3B1DB4D0630045E719 /* GIFViewController.swift */; };
+		C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3D1DB4D4240045E719 /* ETabRowItem.swift */; };
+		C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3F1DB4D5850045E719 /* ETabRowView.swift */; };
+		C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F461DB4FC130045E719 /* EStickItem.swift */; };
+		C2271F491DB4FC220045E719 /* EStickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F481DB4FC220045E719 /* EStickView.swift */; };
 		C2271F4F1D9C38F500424F7B /* InputAttachRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F4E1D9C38F500424F7B /* InputAttachRowItem.swift */; };
 		C2271F511D9C392400424F7B /* InputAttachRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F501D9C392400424F7B /* InputAttachRowView.swift */; };
 		C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F531D9D420B00424F7B /* ContactsController.swift */; };
@@ -91,7 +98,6 @@
 		C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */; };
 		C2844AE01DA90C8A009308DC /* emoji.txt in Resources */ = {isa = PBXBuildFile; fileRef = C2844ADF1DA90C8A009308DC /* emoji.txt */; };
 		C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */; };
-		C296AF821D8D9397001DBB59 /* ChatPhotoLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF811D8D9397001DBB59 /* ChatPhotoLayer.swift */; };
 		C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF851D8DB178001DBB59 /* MediaUtils.swift */; };
 		C296AF881D8DB2A7001DBB59 /* MessageContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* MessageContentView.swift */; };
 		C296AF8A1D8E9F94001DBB59 /* MessageInteractiveContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF891D8E9F94001DBB59 /* MessageInteractiveContent.swift */; };
@@ -168,6 +174,13 @@
 		C2271DE01DAF8F39001792B6 /* MediaGridHoleItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaGridHoleItem.swift; sourceTree = "<group>"; };
 		C2271DE21DAF8FB7001792B6 /* MediaGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaGridItem.swift; sourceTree = "<group>"; };
 		C2271F2A1DB3BEB60045E719 /* GlobalHandlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalHandlers.swift; sourceTree = "<group>"; };
+		C2271F371DB4D0490045E719 /* EmojiViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiViewController.swift; sourceTree = "<group>"; };
+		C2271F391DB4D0540045E719 /* StickersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickersViewController.swift; sourceTree = "<group>"; };
+		C2271F3B1DB4D0630045E719 /* GIFViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFViewController.swift; sourceTree = "<group>"; };
+		C2271F3D1DB4D4240045E719 /* ETabRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ETabRowItem.swift; sourceTree = "<group>"; };
+		C2271F3F1DB4D5850045E719 /* ETabRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ETabRowView.swift; sourceTree = "<group>"; };
+		C2271F461DB4FC130045E719 /* EStickItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickItem.swift; sourceTree = "<group>"; };
+		C2271F481DB4FC220045E719 /* EStickView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickView.swift; sourceTree = "<group>"; };
 		C2271F4E1D9C38F500424F7B /* InputAttachRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAttachRowItem.swift; sourceTree = "<group>"; };
 		C2271F501D9C392400424F7B /* InputAttachRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAttachRowView.swift; sourceTree = "<group>"; };
 		C2271F531D9D420B00424F7B /* ContactsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsController.swift; sourceTree = "<group>"; };
@@ -220,7 +233,6 @@
 		C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntertainmentViewController.swift; sourceTree = "<group>"; };
 		C2844ADF1DA90C8A009308DC /* emoji.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji.txt; sourceTree = "<group>"; };
 		C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowView.swift; sourceTree = "<group>"; };
-		C296AF811D8D9397001DBB59 /* ChatPhotoLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatPhotoLayer.swift; sourceTree = "<group>"; };
 		C296AF851D8DB178001DBB59 /* MediaUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaUtils.swift; sourceTree = "<group>"; };
 		C296AF871D8DB2A7001DBB59 /* MessageContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageContentView.swift; sourceTree = "<group>"; };
 		C296AF891D8E9F94001DBB59 /* MessageInteractiveContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageInteractiveContent.swift; sourceTree = "<group>"; };
@@ -268,7 +280,6 @@
 			children = (
 				C2B1A10F1D9FD09000ACB1DD /* interface */,
 				C22B635A1D969D7E00085C19 /* input */,
-				C296AF801D8D72D9001DBB59 /* nodes */,
 				C219E1E61D8AC84B0042F0C8 /* items */,
 				C219E1E51D8AC83A0042F0C8 /* views */,
 				C20232A71D81D189007C9ADE /* ChatController.swift */,
@@ -569,8 +580,13 @@
 		C2844AD81DA907ED009308DC /* emoji */ = {
 			isa = PBXGroup;
 			children = (
+				C2271F371DB4D0490045E719 /* EmojiViewController.swift */,
 				C20D5AB01DA996480042616A /* EBlockItem.swift */,
 				C20D5AB21DA9965B0042616A /* EBlockRowView.swift */,
+				C2271F3D1DB4D4240045E719 /* ETabRowItem.swift */,
+				C2271F3F1DB4D5850045E719 /* ETabRowView.swift */,
+				C2271F461DB4FC130045E719 /* EStickItem.swift */,
+				C2271F481DB4FC220045E719 /* EStickView.swift */,
 			);
 			name = emoji;
 			sourceTree = "<group>";
@@ -578,6 +594,7 @@
 		C2844AD91DA907F2009308DC /* stickers */ = {
 			isa = PBXGroup;
 			children = (
+				C2271F391DB4D0540045E719 /* StickersViewController.swift */,
 			);
 			name = stickers;
 			sourceTree = "<group>";
@@ -585,16 +602,9 @@
 		C2844ADA1DA907F7009308DC /* gifs */ = {
 			isa = PBXGroup;
 			children = (
+				C2271F3B1DB4D0630045E719 /* GIFViewController.swift */,
 			);
 			name = gifs;
-			sourceTree = "<group>";
-		};
-		C296AF801D8D72D9001DBB59 /* nodes */ = {
-			isa = PBXGroup;
-			children = (
-				C296AF811D8D9397001DBB59 /* ChatPhotoLayer.swift */,
-			);
-			name = nodes;
 			sourceTree = "<group>";
 		};
 		C296AF8D1D8EACD3001DBB59 /* content */ = {
@@ -811,6 +821,7 @@
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				C253A95F1D9165CD00CDC850 /* webp.m in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
+				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2412DFB1DA681B500588C14 /* GalleryPhotoItem.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
 				C253A92D1D8EE1A600CDC850 /* ChatMediaView.swift in Sources */,
@@ -822,6 +833,7 @@
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */,
+				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */,
@@ -835,11 +847,13 @@
 				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
+				C2271F3A1DB4D0540045E719 /* StickersViewController.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
 				C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
+				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C2271F511D9C392400424F7B /* InputAttachRowView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
@@ -853,6 +867,7 @@
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
 				C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */,
+				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
 				C2271DE11DAF8F39001792B6 /* MediaGridHoleItem.swift in Sources */,
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* MessageContentView.swift in Sources */,
@@ -872,10 +887,10 @@
 				C2844AD21DA906AD009308DC /* InfoHeaderItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
-				C296AF821D8D9397001DBB59 /* ChatPhotoLayer.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* MessageInteractiveContent.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
+				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* MessageFileContentNode.swift in Sources */,
 				C2271DDF1DAF8CE4001792B6 /* PhotoVideoGridItem.swift in Sources */,
@@ -883,6 +898,7 @@
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
+				C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */,
 				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
 				C2271F4F1D9C38F500424F7B /* InputAttachRowItem.swift in Sources */,

@@ -15,6 +15,8 @@ open class Button: Control {
     public var autohighlight:Bool = true
     public var highlightHovered:Bool = false
     
+    private var stateBackground:[ControlState:NSColor] = [:]
+    
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
     }
@@ -25,6 +27,11 @@ open class Button: Control {
         
     }
     
+//    public func set(backgroundColor:NSColor, for state:ControlState) -> Void {
+//        stateBackground[state] = backgroundColor
+//        apply(state: self.controlState)
+//    }
+    
     public override init() {
         super.init()
         prepare()
@@ -33,11 +40,19 @@ open class Button: Control {
     func prepare() -> Void {
         
         
-        
     }
     
     override func apply(state:ControlState) -> Void {
         self.setNeedsDisplayLayer()
+        
+//        if let backgroundColor = stateBackground[state] {
+//            self.layer?.backgroundColor = backgroundColor.cgColor
+//            if animates {
+//                self.layer?.animateBackground()
+//            }
+//        } else {
+//            self.layer?.backgroundColor = self.backgroundColor.cgColor
+//        }
     }
     
     override func apply(style:ControlStyle) -> Void {

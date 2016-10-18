@@ -561,6 +561,14 @@
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
       </ContextState>
       <ContextState
+         contextName = "TableView.init(frame : CGRect, isFlipped : Bool) -&gt; TableView:TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.layer">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "static ChatRowItem.item(from : ChatHistoryEntry, with : Account) -&gt; ChatRowItem:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString

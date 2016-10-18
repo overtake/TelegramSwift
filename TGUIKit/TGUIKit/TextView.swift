@@ -8,18 +8,24 @@
 
 import Cocoa
 
-public final class TextViewLayout {
+public final class TextViewInteractions {
+    var processURL:(String, Bool)->Void = {_ in} // link, isPresent
+}
+
+public final class TextViewLayout : Equatable {
     public var attributedString:NSAttributedString
     public var framesetter:CTFramesetter
     public var frame:CTFrame!
     public var size:NSSize = NSZeroSize
+    public var interactions:TextViewInteractions = TextViewInteractions()
+    
+    
+    public var selectedRange:TextSelectedRange = TextSelectedRange()
     
     public init(_ attributedString:NSAttributedString, size:NSSize = NSZeroSize) {
-        
         self.attributedString = attributedString
         self.framesetter = CTFramesetterCreateWithAttributedString(attributedString)
         self.size = size
-        
     }
     
     public func measure(width:CGFloat) -> Void {
@@ -146,22 +152,20 @@ public final class TextViewLayout {
         return nil
     }
 
-    
-    
+}
+
+public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
+    return lhs.size == rhs.size && lhs.attributedString == rhs.attributedString && lhs.selectedRange != rhs.selectedRange
 }
 
 public struct TextSelectedRange: Equatable {
-    let range:NSRange
-    let color:NSColor
-    let def:Bool
+    var range:NSRange = NSMakeRange(NSNotFound, 0)
+    var color:NSColor = TGColor.selectText
+    var def:Bool = true
 }
 
 public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
     return lhs.def == rhs.def && lhs.range.location == rhs.range.location && lhs.range.length == rhs.range.length
-}
-
-public protocol TextViewDelegate : class {
-    func textViewDid(click url:String, isPresent:Bool)
 }
 
 
@@ -169,17 +173,9 @@ public class TextView: View {
     
     private var layout:TextViewLayout?
     
-    private var _selectedTextRanges:[TextSelectedRange] = []
-    private var _selectedTextRange:TextSelectedRange?
-    
-    public private(set) var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
-    
     private var beginSelect:NSPoint = NSZeroPoint
     private var endSelect:NSPoint = NSZeroPoint
-    
 
-    
-    public weak var delegate:TextViewDelegate?
     
     public var isSelectable:Bool = true {
         didSet {
@@ -211,7 +207,7 @@ public class TextView: View {
             self.removeTrackingArea(trackingArea)
         }
         
-        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.assumeInside]
+        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
         self.trackingArea = NSTrackingArea.init(rect: self.bounds, options: options, owner: self, userInfo: nil)
         
         self.addTrackingArea(self.trackingArea!)
@@ -239,11 +235,9 @@ public class TextView: View {
                 return
             }
             
-            selectedRange = layout.selectedRange(startPoint: beginSelect, currentPoint: endSelect)
-            
-            if selectedRange.location != NSNotFound {
+            if layout.selectedRange.range.location != NSNotFound {
                 
-                var lessRange = selectedRange
+                var lessRange = layout.selectedRange.range
                 
                 let lines:Array<CTLine> = Array.fromCFArray(records: CTFrameGetLines(layout.frame))!
                 var origins = [CGPoint] (repeating: .zero, count: lines.count)
@@ -326,23 +320,10 @@ public class TextView: View {
     
     public func update(_ layout:TextViewLayout, origin:NSPoint = NSZeroPoint) -> Void {
         self.layout = layout
-        _selectedTextRanges.removeAll()
-        _selectedTextRange = nil
         
-    
         self.set(selectedRange: NSMakeRange(NSNotFound, 0))
         
         self.frame = NSMakeRect(origin.x, origin.y, layout.size.width, layout.size.height)
-        self.setNeedsDisplayLayer()
-    }
-    
-    func add(selectRange range:TextSelectedRange) -> Void {
-        for select in _selectedTextRanges {
-            if select == range {
-                return
-            }
-        }
-        _selectedTextRanges.append(range)
         self.setNeedsDisplayLayer()
     }
     
@@ -350,16 +331,12 @@ public class TextView: View {
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
         
-        if let _ = _selectedTextRange {
-            _selectedTextRanges.removeFirst()
-        }
         
-        _selectedTextRange = TextSelectedRange(range:range, color:TGColor.selectText, def:true)
+        layout?.selectedRange = TextSelectedRange(range:range, color:TGColor.selectText, def:true)
         
         beginSelect = NSMakePoint(-1, -1)
         endSelect = NSMakePoint(-1, -1)
         
-        _selectedTextRanges.append(_selectedTextRange!)
         
         if display {
             self.setNeedsDisplayLayer()
@@ -380,7 +357,6 @@ public class TextView: View {
         
         self.becomeFirstResponder()
         
-        self.endSelect = NSMakePoint(-1, -1)
         set(selectedRange: NSMakeRange(NSNotFound, 0), display: false)
         self.beginSelect = self.convert(event.locationInWindow, from: nil)
         
@@ -400,7 +376,9 @@ public class TextView: View {
         }
         
         endSelect = self.convert(event.locationInWindow, from: nil)
-        
+        if let layout = layout {
+            layout.selectedRange.range = layout.selectedRange(startPoint: beginSelect, currentPoint: endSelect)
+        }
         self.setNeedsDisplayLayer()
     }
     
@@ -422,17 +400,12 @@ public class TextView: View {
     public override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         
-        if let delegate = delegate {
-            if selectedRange.location == NSNotFound || !isSelectable {
-                if let layout = layout {
-                    let point = self.convert(event.locationInWindow, from: nil)
-                    
-                    if let (link,isPresent,_) = layout.link(at: point) {
-                        delegate.textViewDid(click: link, isPresent:isPresent)
-                    }
+        if let layout = layout {
+            if layout.selectedRange.range.location == NSNotFound || !isSelectable {
+                let point = self.convert(event.locationInWindow, from: nil)
+                if let (link,isPresent,_) = layout.link(at: point) {
+                    layout.interactions.processURL(link,isPresent)
                 }
-                
-                
             }
         }
     }
@@ -440,7 +413,7 @@ public class TextView: View {
     func checkCursor(_ event:NSEvent) -> Void {
         let location = self.convert(event.locationInWindow, from: nil)
         
-        if self.mouse(location , in: self.bounds) {
+        if self.mouse(location , in: self.visibleRect) && !hasVisibleModal {
             
             if let layout = layout, let (_, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand().set()
@@ -451,6 +424,8 @@ public class TextView: View {
             NSCursor.arrow().set()
         }
     }
+    
+    
     
     
     public override func becomeFirstResponder() -> Bool {
@@ -474,19 +449,19 @@ public class TextView: View {
     public override func responds(to aSelector: Selector!) -> Bool {
         
         if NSStringFromSelector(aSelector) == "copy:" {
-            return self.selectedRange.location != NSNotFound
+            return self.layout?.selectedRange.range.location != NSNotFound
         }
         
         return super.responds(to: aSelector)
     }
     
     @objc public func copy(_ sender:Any) -> Void {
-        if selectedRange.location != NSNotFound, let layout = layout {
+        if let layout = layout, layout.selectedRange.range.location != NSNotFound {
             let pb = NSPasteboard.general()
             
             pb.declareTypes([NSStringPboardType], owner: self)
             
-            pb.setString(layout.attributedString.string.nsstring.substring(with: selectedRange), forType: NSStringPboardType)
+            pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: NSStringPboardType)
         }
     }
     

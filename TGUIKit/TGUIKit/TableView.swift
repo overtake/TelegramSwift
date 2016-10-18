@@ -189,13 +189,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.autoresizesSubviews = true;
         self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
         
-      //  table.frameRotation = -10
-        
-      //  self.frameCenterRotation = 0.5
-        
-       // self.layer?.sublayerTransform = CATransform3DMakeRotation(90 * CGFloat(M_PI) / 180, 0.0, 0.0, 1.0);
-
-        
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
         self.tableView.sdelegate = self
@@ -203,11 +196,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.updateTrackingAreas();
         
 
-        var column:NSTableColumn = NSTableColumn.init(identifier: "column");
+        
+        var column:NSTableColumn = NSTableColumn(identifier: "column");
         column.width = NSWidth(frameRect)
         self.tableView.addTableColumn(column)
-        
-        
+
         self.tableView.headerView = nil;
         
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
@@ -215,7 +208,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
+        
         super.draw(layer, in: ctx)
+        
     }
     
     let reqCount = 4
@@ -226,6 +221,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name.NSViewBoundsDidChange, object: clipView, queue: nil, using: { [weak self] notification  in
                 if let strongSelf = self {
+                    
+                    strongSelf.updateStickAfterScroll()
+                    
                     if (strongSelf.scrollHandler != nil && !strongSelf.updating) {
                         
                         let scroll = strongSelf.scrollPosition
@@ -263,6 +261,119 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
            NotificationCenter.default.removeObserver(self)
         }
     }
+    
+    
+    private var stickClass:AnyClass?
+    private var stickView:TableStickView?
+    private var stickItem:TableStickItem? {
+        didSet {
+            if stickItem != oldValue {
+                if let stickHandler = stickHandler {
+                    stickHandler(stickItem)
+                }
+            }
+        }
+    }
+    private var stickHandler:((TableStickItem?)->Void)?
+    
+    public func set(stickClass:AnyClass?, handler:@escaping(TableStickItem?)->Void) {
+        self.stickClass = stickClass
+        self.stickHandler = handler
+        if let stickClass = stickClass {
+            if stickView == nil {
+                var stickItem:TableStickItem?
+                for item in list {
+                    if item.isKind(of: stickClass) {
+                        stickItem = item as? TableStickItem
+                        break
+                    }
+                }
+                if let stickItem = stickItem {
+                    self.stickItem = stickItem
+                    var vz = stickItem.viewClass() as! TableStickView.Type
+                    stickView = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), stickItem.height))
+                    stickView!.header = true
+                    stickView!.set(item: stickItem, animated: true)
+                    tableView.addSubview(stickView!)
+                }
+            }
+            
+            Queue.mainQueue().async {[weak self] in
+                self?.updateStickAfterScroll()
+            }
+            
+        } else {
+            stickView?.removeFromSuperview()
+            stickView = nil
+            stickItem = nil
+        }
+    }
+    
+    func optionalItem(at:Int) -> TableRowItem? {
+        return at < count ? self.item(at: at) : nil
+    }
+    
+    func updateStickAfterScroll() -> Void {
+        let range = self.visibleRows()
+        
+        if let stickClass = stickClass {
+            if documentSize.height > frame.height {
+                var index:Int = range.location + 1
+                
+                
+                var scrollInset = self.documentOffset.y - frame.minY
+                var item:TableRowItem? = optionalItem(at: index)
+                
+                if let s = item, !s.isKind(of: stickClass) {
+                    index += 1
+                    item = self.optionalItem(at: index)
+                 }
+                
+                var currentStick:TableStickItem?
+                
+                for index in stride(from: range.location, to: -1, by: -1) {
+                    let item = self.optionalItem(at: index)
+                    if let item = item, item.isKind(of: stickClass) {
+                        currentStick = item as? TableStickItem
+                        break
+                    }
+                }
+                
+                if let currentStick = currentStick, stickView?.item != currentStick {
+                    stickView?.set(item: currentStick, animated: true)
+                    
+                }
+                
+                stickItem = currentStick
+                
+                if let item = item {
+                   
+                    if let stickView = stickView {
+                        if tableView.subviews.last != stickView {
+                            stickView.removeFromSuperview()
+                            tableView.addSubview(stickView)
+                        }
+                    }
+                    
+                    if item.isKind(of: stickClass) {
+                        var rect:NSRect = tableView.rect(ofRow: index)
+                        var dif:CGFloat = max(min(0, scrollInset - rect.minY), -item.height)
+                        var yTopOffset:CGFloat = scrollInset - (dif + item.height)
+                                            
+                        stickView?.setFrameOrigin(0, max(0,yTopOffset))
+                        stickView?.header = fabs(dif) == item.height
+                    }
+                    
+                } else if let stickView = stickView {
+                    stickView.setFrameOrigin(0, max(0,scrollInset))
+                    stickView.header = true
+                }
+  
+            }
+
+        }
+    }
+
     
     public func resetScrollNotifies() ->Void {
         self.previousScroll = nil
@@ -374,7 +485,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let view = self.viewNecessary(at: row) {
             let item = self.item(at: row)
             view.set(item: item, animated: animated)
-            view.needsDisplay = true
+            view.layer?.setNeedsDisplay()
         }
         //self.moveItem(from: row, to: row)
     }
@@ -792,7 +903,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
-
+    
+    public func scroll(to item: TableRowItem, animated: Bool, inset:EdgeInsets = EdgeInsets()) {
+        if let index = self.index(of: item) {
+            var rowRect = tableView.rect(ofRow:index)
+            var scrollOffset = self.documentOffset
+            clipView.scroll(to: NSMakePoint(0, NSMinY(rowRect) + inset.top), animated:animated)
+           // self.clipView.scrollRectToVisible(NSMakeRect(0, NSMinY(rowRect) + inset.top, NSWidth(rowRect), frame.height), animated: animated)
+        }
+        
+    }
     
     public func setScrollHandler(_ handler: @escaping (_ scrollPosition:ScrollPosition) ->Void) -> Void {
         

@@ -66,7 +66,7 @@ public class Window: NSWindow {
                 copy.append(handle)
             }
             for i in 0 ..< copy.count {
-                if copy[i].object.value == object  {
+                if copy[i].object.value == object || copy[i].object.value == nil  {
                     keyHandlers[key]?.remove(at: i)
                 }
             }
@@ -128,5 +128,7 @@ public class Window: NSWindow {
     public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
         self.acceptsMouseMovedEvents = true
+        self.contentView?.wantsLayer = true
+        self.contentView?.canDrawSubviewsIntoLayer = true
     }
 }

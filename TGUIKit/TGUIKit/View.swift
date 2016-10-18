@@ -174,6 +174,19 @@ open class View : NSView,CALayerDelegate {
        
     }
     
+    public var hasVisibleModal:Bool {
+        if let contentView = self.window?.contentView {
+            for subview in contentView.subviews {
+                if subview is PopoverBackground {
+                    return true
+                }
+            }
+        }
+       
+        
+        return false
+    }
+    
     open var kitWindow: Window? {
         return super.window as? Window
     }

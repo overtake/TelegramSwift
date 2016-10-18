@@ -59,6 +59,10 @@ public struct TGColor {
         return colorFromRGB(rgbValue: 0xf4f4f4, alpha: 0.4)
     }
     
+    public static var darkGrayText:NSColor {
+        return NSColor(0x333333)
+    }
+    
     public static var cornerRadius:CGFloat {
         return 5
     }
@@ -133,7 +137,7 @@ public struct TGColor {
     }
 
     
-    public static var hoverIcon:NSColor  {
+    public static var blueIcon:NSColor  {
         get {
             return colorFromRGB(rgbValue: 0x0f8fe4)
         }

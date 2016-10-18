@@ -36,6 +36,7 @@ open class Popover: NSObject {
     
     required public init(controller:ViewController) {
         self.controller = controller
+       // self.background.layer?.backgroundColor = TGColor.blue.cgColor
         self.background.layer?.shadowOpacity = 0.35
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
@@ -59,6 +60,13 @@ open class Popover: NSObject {
             self.readyDisposable.set( (controller.ready.get() |> take(1)).start(next: {[weak self] (ready) in
                 
                 if let strongSelf = self {
+                    
+                    
+                    control.kitWindow?.set(escape: {[weak strongSelf] () -> KeyHandlerResult in
+                        strongSelf?.hide()
+                        return .invoked
+                    }, with: strongSelf, priority: .high)
+                    
                     strongSelf.control = control
                     
                     var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
@@ -122,7 +130,7 @@ open class Popover: NSObject {
                             var once:Bool = false
                             
                             for sub in strongSelf.background.subviews {
-                                sub.layer?.animate(from: (-strongSelf.background.frame.height) as NSNumber, to: (sub.frame.minY) as NSNumber, keyPath: "position.y", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration, removeOnCompletion: true, additive: false, completion:{[weak self] (comple) in
+                                sub.layer?.animate(from: (-strongSelf.background.frame.height) as NSNumber, to: (sub.frame.minY) as NSNumber, keyPath: "position.y", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration, removeOnCompletion: true, additive: false, completion:{[weak strongSelf] (comple) in
                                     if let strongSelf = self, !once {
                                         once = true
                                         controller.viewDidAppear(strongSelf.animates)
@@ -149,9 +157,9 @@ open class Popover: NSObject {
                                 
                             }) |> delay(0.2, queue: Queue.mainQueue())
                             
-                            self?.disposable.set(s.start(next: { () in
+                            self?.disposable.set(s.start(next: {[weak strongSelf] () in
                                 
-                                if let strongSelf = self, control.controlState == .Normal {
+                                if let strongSelf = strongSelf, control.controlState == .Normal {
                                     if !strongSelf.inside() {
                                         strongSelf.hide()
                                     }
@@ -161,9 +169,9 @@ open class Popover: NSObject {
                             
                         }
                         
-                        let hHandler:() -> Void = { [weak self] in
+                        let hHandler:() -> Void = { [weak strongSelf] in
                             
-                            self?.disposable.set(nil)
+                            strongSelf?.disposable.set(nil)
                             
                         }
                         
@@ -212,6 +220,8 @@ open class Popover: NSObject {
     public func hide() -> Void {
         
         isShown = false
+        
+        control?.kitWindow?.remove(object: self, for: .Escape)
         
         overlay?.removeLastStateHandler()
         overlay?.removeLastStateHandler()

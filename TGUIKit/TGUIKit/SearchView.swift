@@ -155,7 +155,7 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
                     }
                     return .rejected
                     
-                }, with: self, priority:.high)
+                }, with: self, priority: .high)
                 
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 2
                 
@@ -209,6 +209,7 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
          case .Focus:
             animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
         }
+        clear.frame = NSMakeRect(frame.width - inset - clearImage.backingSize.width, clear.frame.minY, clearImage.backingSize.width, clearImage.backingSize.height)
     }
 
     public func changeResponder() -> Bool {

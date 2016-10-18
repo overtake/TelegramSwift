@@ -17,14 +17,27 @@ public enum ViewControllerStyle {
 public class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
 
     var stack:[ViewController] = [ViewController]()
+    var lock:Bool = false
     
     public var empty:ViewController {
         didSet {
             empty.navigationController = self
             empty.loadViewIfNeeded()
+            let prev = self.stack.last
             self.stack.remove(at: 0)
             self.stack.insert(empty, at: 0)
+            
+            if prev == oldValue {
+                controller = empty
+                oldValue.removeFromSuperview()
+                empty.view.frame = self.bounds
+                self.addSubview(empty.view)
+            }
         }
+    }
+    
+    open var isLocked:Bool {
+        return lock
     }
     
     public private(set) var controller:ViewController
@@ -64,11 +77,16 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     
     public func push(_ controller:ViewController, _ animated:Bool = true) -> Void {
         
+        if isLocked {
+            return
+        }
+        
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)
         
         self.pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
+                strongSelf.lock = true
                 controller.navigationController = strongSelf
                 
                 if let index = strongSelf.stack.index(of: controller) {
@@ -133,7 +151,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
             controller.becomeFirstResponder();
             
             self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: style, animationStyle: controller.animationStyle)
-
+            lock = false
             
             return // without animations
         }
@@ -155,11 +173,11 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         
         
          
-        previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { (completed) in
+        previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (completed) in
             
             previous.viewDidDisappear(true);
             previous.view.removeFromSuperview()
-            
+            self?.lock = false
         });
         
 
@@ -177,7 +195,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     
     
     public func back(_ index:Int = -1) -> Void {
-        if stackCount > 1 {
+        if stackCount > 1 && !isLocked {
             var controller = stack[stackCount - 2]
             stack.last?.didRemovedFromStack()
             stack.removeLast()

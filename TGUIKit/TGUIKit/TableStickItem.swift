@@ -1,0 +1,30 @@
+//
+//  TableStickItem.swift
+//  TGUIKit
+//
+//  Created by keepcoder on 17/10/2016.
+//  Copyright © 2016 Telegram. All rights reserved.
+//
+
+import Cocoa
+
+open class TableStickItem: TableRowItem {
+
+    let _stableId = Int64(arc4random())
+    open override var stableId: Int64 {
+        return _stableId
+    }
+    
+    open override var height: CGFloat {
+        return 30.0
+    }
+    
+    public override init(_ table: TableView) {
+        super.init(table)
+    }
+    
+    open override func viewClass() -> AnyClass {
+        return TableStickView.self
+    }
+    
+}

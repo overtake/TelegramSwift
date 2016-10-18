@@ -29,15 +29,21 @@ public class MajorNavigationController: NavigationViewController {
         
         super.init(empty)
     }
+
     
     override public func push(_ controller: ViewController, _ animated: Bool) {
+        
+        if isLocked {
+            return
+        }
+        
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)
         
         
         pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
-                
+                strongSelf.lock = true
                 let removeAnimateFlag = strongSelf.stackCount == 2 && controller.isKind(of: strongSelf.majorClass) ?? false
                 
                 if controller.isKind(of: strongSelf.majorClass) {
@@ -63,7 +69,7 @@ public class MajorNavigationController: NavigationViewController {
     }
     
     public override func back(_ index:Int = -1) -> Void {
-        if stackCount > 1 {
+        if stackCount > 1 && !isLocked {
             let ncontroller = stack[stackCount - 2]
             let removeAnimateFlag = ncontroller == defaultEmpty
             stack.last?.didRemovedFromStack()

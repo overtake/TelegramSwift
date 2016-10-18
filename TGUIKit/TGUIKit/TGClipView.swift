@@ -30,14 +30,11 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
         
     }
-    var scrollCompletion:(_ success:Bool) ->Void
+    var scrollCompletion:((_ success:Bool) ->Void)?
     public var decelerationRate:CGFloat = 0.78
     
 
-
-    
     override init(frame frameRect: NSRect) {
-        scrollCompletion = {(_) in }
         
         super.init(frame: frameRect)
         self.wantsLayer = true
@@ -46,6 +43,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.layer?.delegate = self
         createDisplayLink()
 
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     public override func draw(_ dirtyRect: NSRect) {
@@ -77,39 +78,39 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     private func createDisplayLink() {
-//        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
-//        guard let displayLink = displayLink else {
-//            return
-//        }
-//        
-//        let callback: CVDisplayLinkOutputCallback = { (_, _, _, _, _, userInfo) -> CVReturn in
-//            let clipView = Unmanaged<TGClipView>.fromOpaque(userInfo!).takeUnretainedValue()
-//            
-//            Queue.mainQueue().async {
-//                clipView.updateOrigin()
-//            }
-//            
-//            return kCVReturnSuccess
-//        }
-//        
-//        let userInfo = Unmanaged.passUnretained(self).toOpaque()
-//        CVDisplayLinkSetOutputCallback(displayLink, callback, userInfo)
+        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
+        guard let displayLink = displayLink else {
+            return
+        }
+        
+        let callback: CVDisplayLinkOutputCallback = { (_, _, _, _, _, userInfo) -> CVReturn in
+            let clipView = Unmanaged<TGClipView>.fromOpaque(userInfo!).takeUnretainedValue()
+            
+            Queue.mainQueue().async {
+                clipView.updateOrigin()
+            }
+            
+            return kCVReturnSuccess
+        }
+        
+        let userInfo = Unmanaged.passUnretained(self).toOpaque()
+        CVDisplayLinkSetOutputCallback(displayLink, callback, userInfo)
     }
     
     
     func beginScroll() -> Void {
-//        if (CVDisplayLinkIsRunning(self.displayLink!)) {
-//            return;
-//        }
-//        
-//        CVDisplayLinkStart(self.displayLink!);
+        if (CVDisplayLinkIsRunning(self.displayLink!)) {
+            return;
+        }
+        
+        CVDisplayLinkStart(self.displayLink!);
     }
     
     func endScroll() -> Void {
-//        if (!CVDisplayLinkIsRunning(self.displayLink!)) {
-//            return;
-//        }
-//        CVDisplayLinkStop(self.displayLink!);
+        if (!CVDisplayLinkIsRunning(self.displayLink!)) {
+            return;
+        }
+        CVDisplayLinkStop(self.displayLink!);
     }
     
     public func updateOrigin() -> Void {
@@ -138,43 +139,58 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 
                 super.scroll(to: o)
 
-                self.scrollCompletion(true)
+                handleCompletionIfNeeded(withSuccess: true)
             }
         }
         
-        
 
     }
     
     
-
-    required public init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
-//        if let w = newWindow {
-//            
-//            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSNotification.Name.NSWindowDidChangeScreen, object: w)
-//            
-//        } else {
-//            NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidChangeScreen, object: self.window)
-//        }
+        if let w = newWindow {
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSNotification.Name.NSWindowDidChangeScreen, object: w)
+            
+        } else {
+            NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidChangeScreen, object: self.window)
+        }
         
         super.viewWillMove(toWindow: newWindow)
     }
     
     func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
         
-//        if let s = self.window?.screen {
-//            CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, CGMainDisplayID());
-//        } else {
-//            let dictionary:[String:Any] = (NSScreen.main()?.deviceDescription)!
-//            let screenId = dictionary["NSScreenNumber"] as! NSNumber
-//            let displayID:CGDirectDisplayID = screenId.uint32Value
-//            CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, displayID);
-//        }
+        if let s = self.window?.screen {
+            CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, CGMainDisplayID());
+        } else {
+            let dictionary:[String:Any] = (NSScreen.main()?.deviceDescription)!
+            let screenId = dictionary["NSScreenNumber"] as! NSNumber
+            let displayID:CGDirectDisplayID = screenId.uint32Value
+            CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, displayID);
+        }
         
+    }
+    
+    
+    func scrollRectToVisible(_ rect: NSRect, animated: Bool) -> Bool {
+        self.shouldAnimateOriginChange = animated
+        return super.scrollToVisible(rect)
+    }
+    
+    func scrollRectToVisible(_ rect: CGRect, animated: Bool, completion: @escaping (Bool) -> Void) -> Bool {
+        self.scrollCompletion = completion
+        var success = self.scrollRectToVisible(rect, animated: animated)
+        if !animated || !success {
+            self.handleCompletionIfNeeded(withSuccess: success)
+        }
+        return success
+    }
+    
+    public func scroll(to point: NSPoint, animated:Bool)  {
+        self.shouldAnimateOriginChange = animated
+        self.scroll(to: point)
     }
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
@@ -188,6 +204,14 @@ public class TGClipView: NSClipView,CALayerDelegate {
             super.scroll(to: newOrigin)
         }
         
+    }
+    
+    
+    func handleCompletionIfNeeded(withSuccess success: Bool) {
+        if self.scrollCompletion != nil {
+            self.scrollCompletion!(success)
+            self.scrollCompletion = nil
+        }
     }
     
 }

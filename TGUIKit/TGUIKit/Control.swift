@@ -16,6 +16,7 @@ public enum ControlState {
 }
 
 public enum ControlEvent {
+    case Down
     case Click
     case RightClick
 }
@@ -23,6 +24,14 @@ public enum ControlEvent {
 open class Control: View {
     
     open var isEnabled:Bool = true
+    
+    public var isSelected:Bool {
+        didSet {
+            if isSelected != oldValue {
+                self.updateState()
+            }
+        }
+    }
     
     open var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:kCAMediaTimingFunctionSpring)
     
@@ -74,9 +83,7 @@ open class Control: View {
             self.layer?.backgroundColor = self.backgroundColor.cgColor
         }
         if animates {
-            let  animation = CABasicAnimation(keyPath: "backgroundColor")
-            animation.duration = 0.2
-            self.layer?.add(animation, forKey: "backgroundColor")
+            self.layer?.animateBackground()
         }
     }
     
@@ -96,18 +103,7 @@ open class Control: View {
     }
     
     
-    override open func mouseDown(with event: NSEvent) {
-        
-        mouseIsDown = true
-        
-        if userInteractionEnabled {
-            
-            updateState()
-            
-        } else {
-            super.mouseDown(with: event)
-        }
-    }
+   
     
     func mouseInside() -> Bool {
         if let window = self.window {
@@ -142,6 +138,18 @@ open class Control: View {
         handlers.removeAll()
     }
     
+    override open func mouseDown(with event: NSEvent) {
+        
+        mouseIsDown = true
+        
+        if userInteractionEnabled {
+            send(event: .Down)
+            updateState()
+            
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
     
     override open func mouseUp(with event: NSEvent) {
         
@@ -178,7 +186,12 @@ open class Control: View {
     }
     
     func updateState() -> Void {
-                
+        
+        if isSelected {
+            self.controlState = .Highlight
+            return
+        }
+        
         if mouseInside() {
             if mouseIsDown {
                 self.controlState = .Highlight
@@ -225,12 +238,14 @@ open class Control: View {
     }
     
     required public init(frame frameRect: NSRect) {
+        self.isSelected = false
         super.init(frame: frameRect)
         animates = true
         self.layer?.isOpaque = true
     }
     
     public override init() {
+        self.isSelected = false
         super.init(frame: NSZeroRect)
         animates = true
         self.layer?.isOpaque = true
