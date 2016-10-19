@@ -8,7 +8,7 @@
 
 import Cocoa
 
-private let defaultFont = systemFont(13)
+private let defaultFont:NSFont = .normal(.text)
 
 private final class TextNodeLine {
     let line: CTLine

@@ -57,6 +57,10 @@ open class Popover: NSObject {
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
             
+            while let view = parentView.subviews.last, view.isKind(of: PopoverBackground.self) {
+                view.removeFromSuperview()
+            }
+            
             self.readyDisposable.set( (controller.ready.get() |> take(1)).start(next: {[weak self] (ready) in
                 
                 if let strongSelf = self {

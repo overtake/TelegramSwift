@@ -383,16 +383,45 @@ public extension NSImage {
     
     func precomposed(_ color:NSColor? = nil, reversed:Bool = false) -> CGImage {
         
-        var image:NSImage = self.copy() as! NSImage
-        if let color = color {
-            image.lockFocus()
-            color.set()
-            var imageRect = NSMakeRect(0, 0, image.size.width * 2.0, image.size.height * 2.0)
-            NSRectFillUsingOperation(imageRect, NSCompositeSourceAtop)
-            image.unlockFocus()
-        }
+        let drawContext:DrawingContext = DrawingContext.init(size: self.size, scale: 2.0, clear: true)
+        
+        let image:NSImage = self
+        
+        let make:(CGContext) -> Void = { (ctx) in
+            let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
+            
+            let cimage = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithData(image.tiffRepresentation! as CFData, nil)!, 0, nil)
+            ctx.clip(to: rect, mask: cimage!)
+            
+            if let color = color {
+                ctx.setFillColor(color.cgColor)
+                ctx.fill(rect)
+            } else {
+                ctx.draw(cimage!, in: rect)
+            }
 
-        return roundImage(image.tiffRepresentation!, self.size, cornerRadius: 0, reversed:reversed)!
+        }
+        
+        if reversed {
+            drawContext.withFlippedContext(make)
+        } else {
+            drawContext.withContext(make)
+        }
+        
+        
+        
+        return drawContext.generateImage()!
+        
+//        var image:NSImage = self.copy() as! NSImage
+//        if let color = color {
+//            image.lockFocus()
+//            color.set()
+//            var imageRect = NSMakeRect(0, 0, image.size.width * 2.0, image.size.height * 2.0)
+//            NSRectFillUsingOperation(imageRect, NSCompositeSourceAtop)
+//            image.unlockFocus()
+//        }
+
+    //    return roundImage(image.tiffRepresentation!, self.size, cornerRadius: 0, reversed:reversed)!
     }
     
 }
@@ -461,7 +490,7 @@ public extension NSBezierPath {
         let path = CGMutablePath()
         var didClosePath = false
         
-        for i in 0...self.elementCount-1 {
+        for i in 0 ..< self.elementCount {
             var points = [NSPoint](repeating: NSZeroPoint, count: 3)
             
             switch self.element(at: i, associatedPoints: &points) {
@@ -469,11 +498,13 @@ public extension NSBezierPath {
                 path.move(to: points[0])
             case .lineToBezierPathElement:
                 path.addLine(to: points[0])
+                didClosePath = false
             case .curveToBezierPathElement:
                 path.addCurve(to: points[0], control1: points[1], control2: points[2])
-                case .closePathBezierPathElement:
+                didClosePath = false
+            case .closePathBezierPathElement:
                 path.closeSubpath()
-            didClosePath = true;
+                didClosePath = true;
             }
         }
         
@@ -481,7 +512,7 @@ public extension NSBezierPath {
             path.closeSubpath()
         }
         
-        return path.copy()
+        return path
     }
 }
 

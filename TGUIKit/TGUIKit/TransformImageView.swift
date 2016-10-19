@@ -1,5 +1,5 @@
 //
-//  TransformImageLayer.swift
+//  TransformImageView.swift
 //  TGUIKit
 //
 //  Created by keepcoder on 13/10/2016.
@@ -114,7 +114,7 @@ public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bo
     return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners
 }
 
-public class TransformImageLayer: CALayer {
+public class TransformImageView: Control {
     public var imageUpdated: (() -> Void)?
     public var alphaTransitionOnFirstUpdate = false
     private var disposable = MetaDisposable()
@@ -123,7 +123,12 @@ public class TransformImageLayer: CALayer {
     
     override public init() {
         super.init()
-        self.disableActions()
+        self.layer?.disableActions()
+    }
+    
+    required public init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layer?.disableActions()
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -144,7 +149,7 @@ public class TransformImageLayer: CALayer {
         }
         
         self.disposable.set((result |> deliverOnMainQueue).start(next: {[weak self] next in
-            self?.contents = next
+            self?.layer?.contents = next
         }))
     }
     

@@ -8,12 +8,33 @@
 
 import Cocoa
 
+private let progressInteractiveThumb:CGImage = {
+    
+    let context = DrawingContext(size: NSMakeSize(40, 40), scale: 1.0, clear: true)
+    
+    context.withContext { (ctx) in
+        
+        ctx.round(context.size, context.size.height/2.0)
+        ctx.setFillColor(NSColor.blueFill.cgColor)
+        
+        let image = #imageLiteral(resourceName: "Icon_MessageFile").precomposed()
+        
+        ctx.fill(NSMakeRect(0, 0, context.size.width, context.size.height))
+        ctx.draw(image, in: NSMakeRect(floorToScreenPixels((context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels((context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
+    }
+    
+    return context.generateImage()!
+    
+}()
+
 public struct FetchControls {
     public let fetch: () -> Void
     public let cancel: () -> Void
-    public init(fetch:@escaping()->Void,cancel:@escaping()->Void) {
+    public let open: () -> Void
+    public init(fetch:@escaping()->Void,cancel:@escaping()->Void, open:@escaping()->Void) {
         self.fetch = fetch
         self.cancel = cancel
+        self.open = open
     }
 }
 
@@ -133,6 +154,8 @@ public class RadialProgressView: Control {
                         switch (strongSelf.state) {
                         case .Fetching(progress: _):
                             fetchControls.cancel()
+                        case .Play:
+                            fetchControls.open()
                         default :
                             fetchControls.fetch()
                         }
@@ -277,6 +300,14 @@ public class RadialProgressView: Control {
                 context.draw(icon, in: f)
             }
         }
+
+    }
+    
+    public override func copy() -> Any {
+        let view = View()
+        view.frame = self.frame
+        view.layer?.contents = progressInteractiveThumb
+        return view
 
     }
     

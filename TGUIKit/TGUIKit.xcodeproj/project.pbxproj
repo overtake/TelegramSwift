@@ -31,7 +31,7 @@
 		C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD81DAF82D0001792B6 /* GridRowItem.swift */; };
 		C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DDA1DAF82E3001792B6 /* GridRowView.swift */; };
 		C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE91DAFCE69001792B6 /* GridTableView.swift */; };
-		C2271DED1DAFE4D0001792B6 /* TransformImageLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */; };
+		C2271DED1DAFE4D0001792B6 /* TransformImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DEC1DAFE4D0001792B6 /* TransformImageView.swift */; };
 		C2271F331DB4CEB30045E719 /* HorizontalTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */; };
 		C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F351DB4CF270045E719 /* HorizontalRowView.swift */; };
 		C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F421DB4EE2F0045E719 /* TableStickItem.swift */; };
@@ -108,7 +108,7 @@
 		C2271DD81DAF82D0001792B6 /* GridRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowItem.swift; sourceTree = "<group>"; };
 		C2271DDA1DAF82E3001792B6 /* GridRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowView.swift; sourceTree = "<group>"; };
 		C2271DE91DAFCE69001792B6 /* GridTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridTableView.swift; sourceTree = "<group>"; };
-		C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageLayer.swift; sourceTree = "<group>"; };
+		C2271DEC1DAFE4D0001792B6 /* TransformImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageView.swift; sourceTree = "<group>"; };
 		C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalTableView.swift; sourceTree = "<group>"; };
 		C2271F351DB4CF270045E719 /* HorizontalRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalRowView.swift; sourceTree = "<group>"; };
 		C2271F421DB4EE2F0045E719 /* TableStickItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableStickItem.swift; sourceTree = "<group>"; };
@@ -187,7 +187,7 @@
 			children = (
 				C219E1DF1D8A71820042F0C8 /* SImageLayer.swift */,
 				C253A9511D9147A400CDC850 /* Layer.swift */,
-				C2271DEC1DAFE4D0001792B6 /* TransformImageLayer.swift */,
+				C2271DEC1DAFE4D0001792B6 /* TransformImageView.swift */,
 			);
 			name = layers;
 			sourceTree = "<group>";
@@ -494,7 +494,7 @@
 				C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */,
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
 				C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */,
-				C2271DED1DAFE4D0001792B6 /* TransformImageLayer.swift in Sources */,
+				C2271DED1DAFE4D0001792B6 /* TransformImageView.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
 				C2B1A1291DA3DDED00ACB1DD /* Node.swift in Sources */,
 				C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */,

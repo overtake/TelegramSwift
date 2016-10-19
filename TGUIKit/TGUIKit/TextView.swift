@@ -35,36 +35,40 @@ public enum TextViewCutoutPosition {
 public struct TextViewCutout: Equatable {
     public let position: TextViewCutoutPosition
     public let size: NSSize
+    public init(position:TextViewCutoutPosition, size:NSSize) {
+        self.position = position
+        self.size = size
+    }
 }
 
 public func ==(lhs: TextViewCutout, rhs: TextViewCutout) -> Bool {
     return lhs.position == rhs.position && lhs.size == rhs.size
 }
 
-private let defaultFont:NSFont = systemFont(TGFont.textSize)
+private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
     
     public var attributedString:NSAttributedString
-    public var constrainedSize:NSSize = NSZeroSize
+    public var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
     public var selectedRange:TextSelectedRange = TextSelectedRange()
     
     
     fileprivate var lines:[TextViewLine] = []
     
-    private var maximumNumberOfLines:Int32
-    private var truncationType:CTLineTruncationType
-    private var cutout:TextViewCutout?
+    public var maximumNumberOfLines:Int32
+    public var truncationType:CTLineTruncationType
+    public var cutout:TextViewCutout?
     
     public private(set) var layoutSize:NSSize = NSZeroSize
     
-    public init(_ attributedString:NSAttributedString, constrainedSize:NSSize = NSZeroSize, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil) {
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
         self.attributedString = attributedString
-        self.constrainedSize = constrainedSize
+        self.constrainedWidth = constrainedWidth
     }
     
     func calculateLayout() -> Void {
@@ -112,7 +116,7 @@ public final class TextViewLayout : Equatable {
         
         var first = true
         while true {
-            var lineConstrainedWidth = constrainedSize.width
+            var lineConstrainedWidth = constrainedWidth
             var lineOriginY = floor(layoutSize.height + fontLineHeight - fontLineSpacing * 2.0)
             if !first {
                 lineOriginY += fontLineSpacing
@@ -141,7 +145,7 @@ public final class TextViewLayout : Equatable {
                 
                 let originalLine = CTTypesetterCreateLineWithOffset(typesetter, CFRange(location: lastLineCharacterIndex, length: attributedString.length - lastLineCharacterIndex), 0.0)
                 
-                if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedSize.width) {
+                if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedWidth) {
                     coreTextLine = originalLine
                 } else {
                     var truncationTokenAttributes: [String : AnyObject] = [:]
@@ -151,7 +155,7 @@ public final class TextViewLayout : Equatable {
                     let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
                     
-                    coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedSize.width), truncationType, truncationToken) ?? truncationToken
+                    coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedWidth), truncationType, truncationToken) ?? truncationToken
                 }
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
@@ -193,11 +197,11 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = layoutSize
     }
     
-    public func measure(size: NSSize = NSZeroSize) -> Void {
+    public func measure(width: CGFloat = 0) -> Void {
         
-        if constrainedSize != size {
-            if size != NSZeroSize {
-                constrainedSize = size
+        if constrainedWidth != width {
+            if width != 0 {
+                constrainedWidth = width
             }
             calculateLayout()
         }
@@ -318,7 +322,7 @@ public final class TextViewLayout : Equatable {
 }
 
 public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
-    return lhs.constrainedSize == rhs.constrainedSize && lhs.attributedString.isEqual(to: rhs.attributedString) && lhs.selectedRange != rhs.selectedRange
+    return lhs.constrainedWidth == rhs.constrainedWidth && lhs.attributedString.isEqual(to: rhs.attributedString) && lhs.selectedRange == rhs.selectedRange && lhs.maximumNumberOfLines == rhs.maximumNumberOfLines && lhs.cutout == rhs.cutout && lhs.truncationType == rhs.truncationType && lhs.constrainedWidth == rhs.constrainedWidth
 }
 
 public struct TextSelectedRange: Equatable {
@@ -485,12 +489,13 @@ public class TextView: View {
         return self.layout == layout
     }
     
-    public func update(_ layout:TextViewLayout, origin:NSPoint = NSZeroPoint) -> Void {
+    public func update(_ layout:TextViewLayout?, origin:NSPoint = NSZeroPoint) -> Void {
         self.layout = layout
         
         self.set(selectedRange: NSMakeRange(NSNotFound, 0))
-        
-        self.frame = NSMakeRect(origin.x, origin.y, layout.layoutSize.width, layout.layoutSize.height)
+        if let layout = layout {
+            self.frame = NSMakeRect(origin.x, origin.y, layout.layoutSize.width, layout.layoutSize.height)
+        }
         self.setNeedsDisplayLayer()
     }
     

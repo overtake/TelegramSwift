@@ -56,6 +56,8 @@ public class CustomViewHandlers {
     public var originHandler:((NSPoint) ->Void)?
 }
 
+
+
 open class View : NSView,CALayerDelegate {
     
     public var animates:Bool = false

@@ -57,7 +57,15 @@ public class DrawingContext {
         }
         
         if let _context = self._context {
+            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
+            _context.scaleBy(x: 1.0, y: -1.0)
+            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
+            
             f(_context)
+            
+            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
+            _context.scaleBy(x: 1.0, y: -1.0)
+            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
         }
     }
     

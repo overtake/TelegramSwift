@@ -43,7 +43,7 @@ public extension NSFont {
         if #available(OSX 10.11, *) {
             return NSFont.systemFont(ofSize: convert(from:size), weight: NSFontWeightRegular)
         } else {
-            return NSFont.init(name: "HelveticaNeue", size: convert(from:size))!
+            return NSFont(name: "HelveticaNeue", size: convert(from:size))!
         }
     }
     
@@ -52,7 +52,7 @@ public extension NSFont {
         if #available(OSX 10.11, *) {
             return NSFont.systemFont(ofSize: convert(from:size), weight: NSFontWeightSemibold)
         } else {
-            return NSFont.init(name: "HelveticaNeue-Medium", size: convert(from:size))!
+            return NSFont(name: "HelveticaNeue-Medium", size: convert(from:size))!
         }
         
     }
@@ -68,6 +68,7 @@ public extension NSFont {
 }
 
 public enum FontSize {
+    case small
     case short
     case text
     case title
@@ -78,6 +79,8 @@ public enum FontSize {
 
 fileprivate func convert(from s:FontSize) -> CGFloat {
     switch s {
+    case .small:
+        return 11.0
     case .short:
         return 12.0
     case .text:

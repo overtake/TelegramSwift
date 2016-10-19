@@ -10,7 +10,7 @@ import Cocoa
 
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
-    open weak private(set) var item:TableRowItem?
+    open private(set) var item:TableRowItem?
    // var selected:Bool?
     
     open var border:BorderType?

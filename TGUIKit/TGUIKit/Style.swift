@@ -9,7 +9,7 @@
 import Cocoa
 
 public struct ControlStyle: Equatable {
-    public var font:NSFont = systemFont(TGFont.textSize)
+    public var font:NSFont = .normal(.text)
     public var foregroundColor:NSColor = .textColor
     public var backgroundColor:NSColor = .clear
     public var highlightColor:NSColor = .blueIcon
@@ -72,15 +72,15 @@ public struct ControlStyle: Equatable {
 
 public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.textColor)
 
-public let headerTextStyle = ControlStyle(font:systemFont(TGFont.headerSize), highlightColor:.white)
-public let titleTextStyle = ControlStyle(font:systemFont(TGFont.titleSize), highlightColor:.white)
-public let textStyle = ControlStyle(font:systemFont(TGFont.textSize), highlightColor:.white)
-public let shortTextStyle = ControlStyle(font:systemFont(TGFont.shortSize), highlightColor:.white)
+public let headerTextStyle = ControlStyle(font:.normal(.header), highlightColor:.white)
+public let titleTextStyle = ControlStyle(font:.normal(.title), highlightColor:.white)
+public let textStyle = ControlStyle(font:.normal(.text), highlightColor:.white)
+public let shortTextStyle = ControlStyle(font:.normal(.short), highlightColor:.white)
 
-public let headerTextGrayStyle = ControlStyle(font:systemFont(TGFont.headerSize), foregroundColor:.grayText, highlightColor:.white)
-public let titleTextGrayStyle = ControlStyle(font:systemFont(TGFont.titleSize), foregroundColor:.grayText, highlightColor:.white)
-public let textGrayStyle = ControlStyle(font:systemFont(TGFont.textSize), foregroundColor:.grayText, highlightColor:.white)
-public let shortGrayStyle = ControlStyle(font:systemFont(TGFont.shortSize), foregroundColor:.grayText, highlightColor:.white)
+public let headerTextGrayStyle = ControlStyle(font:.normal(.header), foregroundColor:.grayText, highlightColor:.white)
+public let titleTextGrayStyle = ControlStyle(font:.normal(.title), foregroundColor:.grayText, highlightColor:.white)
+public let textGrayStyle = ControlStyle(font:.normal(.text), foregroundColor:.grayText, highlightColor:.white)
+public let shortGrayStyle = ControlStyle(font:.normal(.short), foregroundColor:.grayText, highlightColor:.white)
 
 public func ==(lhs:ControlStyle, rhs:ControlStyle) -> Bool {
     return lhs.font == rhs.font && lhs.foregroundColor == rhs.foregroundColor && rhs.backgroundColor == lhs.backgroundColor

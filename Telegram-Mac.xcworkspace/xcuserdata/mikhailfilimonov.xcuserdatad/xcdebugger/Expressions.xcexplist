@@ -42,6 +42,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "TextViewLayout.calculateLayout() -&gt; ():TextView.swift">
+      </ContextState>
+      <ContextState
          contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1).(closure #1):ChatListController.swift">
          <PersistentStrings>
             <PersistentString
@@ -200,6 +203,14 @@
       </ContextState>
       <ContextState
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #3).(closure #1):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static ChatRowItem.item(TableView, from : ChatHistoryEntry, with : Account, interaction : ChatInteraction) -&gt; ChatRowItem:ChatRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "message.media[0]">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatListController.merge([Int], [(Int, ChatListRowItem, Int?)]) -&gt; ():ChatListController.swift">
@@ -480,7 +491,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "WArticleLayout.init(with : TelegramMediaWebpageLoadedContent, account : Account) -&gt; WArticleLayout:WArticleLayout.swift">
+      </ContextState>
+      <ContextState
          contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #5).(closure #1):MediaBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "GridTableView.apply(transition : GridTransition) -&gt; ():GridTableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.stableId">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "SearchView.changeState(Bool) -&gt; ():SearchView.swift">
@@ -498,14 +520,6 @@
          <PersistentStrings>
             <PersistentString
                value = "layer.contents">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "GridTableView.apply(transition : GridTransition) -&gt; ():GridTableView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "item.stableId">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -538,7 +552,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -550,15 +564,9 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "GridTableView.refill() -&gt; [GridRowItem]:GridTableView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
       </ContextState>
       <ContextState
          contextName = "TableView.init(frame : CGRect, isFlipped : Bool) -&gt; TableView:TableView.swift">
@@ -567,6 +575,12 @@
                value = "self.layer">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
+      </ContextState>
+      <ContextState
+         contextName = "GridTableView.refill() -&gt; [GridRowItem]:GridTableView.swift">
       </ContextState>
       <ContextState
          contextName = "static ChatRowItem.item(from : ChatHistoryEntry, with : Account) -&gt; ChatRowItem:ChatRowItem.swift">
@@ -637,6 +651,9 @@
       </ContextState>
       <ContextState
          contextName = "Popover.show(for : NSView, edge : NSRectEdge) -&gt; ():Popover.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MessageFileContentNode.(update(with : ChatMediaItem, size : CGSize, account : Account) -&gt; ()).(closure #3):MessageFileContentNode.swift">
       </ContextState>
       <ContextState
          contextName = "ChatController.loadChat(account : Account, peerId : PeerId, message : Message?) -&gt; ():ChatController.swift">
