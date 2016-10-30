@@ -10,6 +10,8 @@
 		C20232A21D8188F1007C9ADE /* TGImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A11D8188F1007C9ADE /* TGImageView.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
+		C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E5C1DC2534300F98E03 /* SelectingControl.swift */; };
+		C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */; };
 		C219E1D51D87F4A00042F0C8 /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C219E1D41D87F4A00042F0C8 /* SwiftSignalKitMac.framework */; };
 		C219E1DD1D8978960042F0C8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C219E1DC1D8978960042F0C8 /* QuartzCore.framework */; };
 		C219E1E01D8A71820042F0C8 /* SImageLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1DF1D8A71820042F0C8 /* SImageLayer.swift */; };
@@ -24,6 +26,8 @@
 		C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE371DB233F7007638C5 /* UIUtils.swift */; };
 		C21AAE3A1DB2398B007638C5 /* DisplayLinkDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE391DB2398B007638C5 /* DisplayLinkDispatcher.swift */; };
 		C21AAE3C1DB239ED007638C5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C21AAE3B1DB239ED007638C5 /* Foundation.framework */; };
+		C226741B1DBCD6E8000BA9ED /* GridNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741A1DBCD6E8000BA9ED /* GridNode.swift */; };
+		C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741C1DBCDBA8000BA9ED /* ContainableController.swift */; };
 		C2271DA61DAD16B4001792B6 /* BadgeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DA51DAD16B4001792B6 /* BadgeNode.swift */; };
 		C2271DC81DAEAAF9001792B6 /* SwitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC71DAEAAF9001792B6 /* SwitchView.swift */; };
 		C2271DCF1DAF6B4E001792B6 /* MajorNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */; };
@@ -87,6 +91,8 @@
 		C20232A11D8188F1007C9ADE /* TGImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGImageView.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
+		C2167E5C1DC2534300F98E03 /* SelectingControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectingControl.swift; sourceTree = "<group>"; };
+		C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinearProgressControl.swift; sourceTree = "<group>"; };
 		C219E1D41D87F4A00042F0C8 /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSignalKitMac.framework; path = "../../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/SwiftSignalKitMac.framework"; sourceTree = "<group>"; };
 		C219E1DC1D8978960042F0C8 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		C219E1DF1D8A71820042F0C8 /* SImageLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SImageLayer.swift; sourceTree = "<group>"; };
@@ -101,6 +107,8 @@
 		C21AAE371DB233F7007638C5 /* UIUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIUtils.swift; sourceTree = "<group>"; };
 		C21AAE391DB2398B007638C5 /* DisplayLinkDispatcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayLinkDispatcher.swift; sourceTree = "<group>"; };
 		C21AAE3B1DB239ED007638C5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		C226741A1DBCD6E8000BA9ED /* GridNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridNode.swift; sourceTree = "<group>"; };
+		C226741C1DBCDBA8000BA9ED /* ContainableController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainableController.swift; sourceTree = "<group>"; };
 		C2271DA51DAD16B4001792B6 /* BadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BadgeNode.swift; sourceTree = "<group>"; };
 		C2271DC71DAEAAF9001792B6 /* SwitchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwitchView.swift; sourceTree = "<group>"; };
 		C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorNavigationController.swift; sourceTree = "<group>"; };
@@ -216,6 +224,14 @@
 			name = bar;
 			sourceTree = "<group>";
 		};
+		C22674191DBCD6CA000BA9ED /* gridnode */ = {
+			isa = PBXGroup;
+			children = (
+				C226741A1DBCD6E8000BA9ED /* GridNode.swift */,
+			);
+			name = gridnode;
+			sourceTree = "<group>";
+		};
 		C2271DA71DAD1728001792B6 /* nodes */ = {
 			isa = PBXGroup;
 			children = (
@@ -268,6 +284,7 @@
 				C21AAE371DB233F7007638C5 /* UIUtils.swift */,
 				C21AAE391DB2398B007638C5 /* DisplayLinkDispatcher.swift */,
 				C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */,
+				C226741C1DBCDBA8000BA9ED /* ContainableController.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -275,6 +292,7 @@
 		C22E06331D804C5800A11C88 /* table */ = {
 			isa = PBXGroup;
 			children = (
+				C22674191DBCD6CA000BA9ED /* gridnode */,
 				C2271F411DB4EE170045E719 /* stick */,
 				C2271F341DB4CF040045E719 /* horizontal */,
 				C2271DE41DAF9BB5001792B6 /* grid */,
@@ -398,6 +416,8 @@
 				C2B1A12B1DA50CC600ACB1DD /* TitleButton.swift */,
 				C2271DC71DAEAAF9001792B6 /* SwitchView.swift */,
 				C291ED981DB35BC5008C6B2A /* Window.swift */,
+				C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */,
+				C2167E5C1DC2534300F98E03 /* SelectingControl.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -493,6 +513,7 @@
 				C2E0DEBB1D7F05AB00EF1C8D /* View.swift in Sources */,
 				C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */,
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
+				C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */,
 				C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */,
 				C2271DED1DAFE4D0001792B6 /* TransformImageView.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
@@ -512,11 +533,13 @@
 				C219E1EB1D8AD1470042F0C8 /* NavigationViewController.swift in Sources */,
 				C253A9761D9430A900CDC850 /* ImageView.swift in Sources */,
 				C2B1A1321DA57E8300ACB1DD /* EditableViewController.swift in Sources */,
+				C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */,
 				C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */,
 				C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */,
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
 				C2303E7A1D9987FE00098E12 /* Popover.swift in Sources */,
+				C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */,
 				C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */,
 				C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */,
 				C2303E7C1D99880B00098E12 /* Modal.swift in Sources */,
@@ -544,6 +567,7 @@
 				C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */,
 				C2B1A1301DA53E7D00ACB1DD /* BackNavigationBar.swift in Sources */,
 				C2303E761D996E6300098E12 /* ImageButton.swift in Sources */,
+				C226741B1DBCD6E8000BA9ED /* GridNode.swift in Sources */,
 				C2CBCABD1D814D4B00142EC0 /* System.swift in Sources */,
 				C2303E7F1D99BEAE00098E12 /* OverlayControl.swift in Sources */,
 				C2B1A12C1DA50CC600ACB1DD /* TitleButton.swift in Sources */,

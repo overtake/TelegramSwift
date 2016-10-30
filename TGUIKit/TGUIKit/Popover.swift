@@ -50,7 +50,7 @@ open class Popover: NSObject {
     
  
     
-    open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, contentRect:NSRect = NSZeroRect) -> Void {
+    open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, contentRect:NSRect = NSMakeRect(7, 7, 0, 0)) -> Void {
         
         if let controller = controller, let parentView = control.window?.contentView {
             
@@ -81,6 +81,7 @@ open class Popover: NSObject {
                         case .maxX:
                             point.x -= controller.frame.width
                         case .maxY:
+                            point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
                             point.y -= controller.frame.height
                         default:
                             fatalError("Not Implemented")
@@ -122,7 +123,7 @@ open class Popover: NSObject {
                     
                     parentView.addSubview(strongSelf.background)
                     
-                    strongSelf.overlay.center()
+                    //strongSelf.overlay.center()
                     
                     controller.becomeFirstResponder()
                     

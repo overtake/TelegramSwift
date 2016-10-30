@@ -8,6 +8,40 @@
 
 import Cocoa
 
+
+public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false) -> CGImage? {
+    let scale = deviceScale
+    let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
+    let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
+    let length = bytesPerRow * Int(scaledSize.height)
+    let bytes = malloc(length)!.assumingMemoryBound(to: Int8.self)
+    
+    guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
+        free(bytes)
+    })
+        else {
+            return nil
+    }
+    
+    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | (opaque ? CGImageAlphaInfo.noneSkipFirst.rawValue : CGImageAlphaInfo.premultipliedFirst.rawValue))
+    
+    guard let context = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo.rawValue)
+        else {
+            return nil
+    }
+    
+    context.scaleBy(x: scale, y: scale)
+    
+    contextGenerator(size, context)
+    
+    guard let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo, provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+        else {
+            return nil
+    }
+    
+    return image
+}
+
 let deviceScale:CGFloat = 2.0
 let deviceColorSpace = CGColorSpaceCreateDeviceRGB()
 
@@ -36,15 +70,7 @@ public class DrawingContext {
         }
         
         if let _context = self._context {
-//            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-//            _context.scaleBy(x: 1.0, y: -1.0)
-//            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
-            
             f(_context)
-            
-//            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-//            _context.scaleBy(x: 1.0, y: -1.0)
-//            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
         }
     }
     

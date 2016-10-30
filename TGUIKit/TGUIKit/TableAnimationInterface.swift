@@ -81,6 +81,10 @@ open class TableAnimationInterface: NSObject {
             
         }
     }
+    
+    public func scroll(from:NSRect, to:NSRect) -> Void {
+        table?.contentView.layer?.animateBounds(from: from, to: to, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+    }
 
     
 }

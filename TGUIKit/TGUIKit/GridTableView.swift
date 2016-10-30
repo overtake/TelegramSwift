@@ -49,6 +49,10 @@ public class GridTableView: TableView {
         self.beginUpdates()
         
         
+        let prevRects = self.itemRects()
+        let lsize = self.documentSize
+        let loffset = self.documentOffset
+        
         var rd:Int = 0
         
         var stream:[GridItem] = []
@@ -79,6 +83,8 @@ public class GridTableView: TableView {
             }
         }
         
+        var bp:Int = 0
+
         
         for (idx,item,prev) in transition.inserted {
             if let prev = prev {
@@ -118,7 +124,6 @@ public class GridTableView: TableView {
             from = rects(true)
         }
 
-        tableView.beginUpdates()
         
         var reload:Bool = false
         
@@ -143,13 +148,60 @@ public class GridTableView: TableView {
             
             j+=1
         }
+        
         if reload {
+            
+            tableView.beginUpdates()
+            
             self.removeAll(redraw: true)
             self.insert(items: copy, redraw:true)
+            
+            tableView.endUpdates()
+
         }
       
         
-        tableView.endUpdates()
+        switch grid.scrollState {
+        case  .none(_): break
+            // print("scroll do nothing")
+            
+        case let .save(animation):
+            
+            var noffset = self.documentOffset
+            var nsize = self.documentSize
+            var sitem:TableRowItem?
+            var rect:NSRect = NSZeroRect
+            var nrect:NSRect = NSZeroRect
+            
+            loop: for (item,r,idx) in prevRects.reversed() {
+                if let item = item as? GridRowItem, let first = stream.first  {
+                    for gridItem in item.items {
+                        if gridItem.stableId == first.stableId {
+                            sitem = item
+                            rect = r
+                            nrect = self.rectOf(item: self.item(at: 0))
+                            break loop
+                        }
+                    }
+                    i += 1
+                    
+                }
+            }
+            
+            if let item = sitem {
+                let y = noffset.y - (NSMinY(rect) - NSMinY(nrect))
+                // clipView.scroll(to: NSMakePoint(0, y))
+                self.contentView.bounds = NSMakeRect(0, y, 0, NSHeight(self.contentView.bounds))
+              //  reflectScrolledClipView(clipView)
+            }
+            
+           // animation?.animate(added: inserted, removed:removed)
+            
+        default:
+            break
+        }
+
+        
         
         if transition.animated {
             var to:[Int64:(NSRect,NSView)] = from.count > 0 ? rects(false) : [:]
@@ -310,3 +362,77 @@ public class GridTableView: TableView {
     }
     
 }
+
+/*
+ public func removeAndRefill(_ idx:Int,_ from:[GridRowItem]) -> [GridRowItem] {
+ var items:[GridRowItem] = from
+ let settings = rowSetting()
+ let start:Int = idx / settings.0
+ items[start].remove(at: idx % settings.0)
+ 
+ for i in start ..< items.count {
+ let row = items[i] as! GridRowItem
+ let compressed = row.compress()
+ 
+ if items.count - 1 > i {
+ let next = items[i + 1] as! GridRowItem
+ var fill:Int = row.count - row.itemsCount
+ 
+ for j in 0 ..< fill {
+ row.add(item: next.items[0])
+ next.remove(at: 0)
+ }
+ 
+ }
+ 
+ }
+ var rm:NSRange = NSMakeRange(items.count , 0)
+ 
+ for item in items.reversed() {
+ 
+ if item.isEmpty {
+ rm.location -= 1
+ rm.length += 1
+ }
+ 
+ assert(item.isCompressed())
+ }
+ 
+ items.removeSubrange(rm.location ..< rm.location + rm.length)
+ 
+ return items
+ }
+ 
+ public func insertAndRefill(_ idx:Int, _ item:GridItem, _ to:[GridRowItem]) -> [GridRowItem] {
+ var items:[GridRowItem] = to
+ let settings = rowSetting()
+ let start:Int = idx / settings.0
+ 
+ if start >= items.count {
+ items.append(GridRowItem(grid: self))
+ }
+ 
+ let count = items.count
+ 
+ var outside:GridItem = item
+ var index:Int = idx % settings.0
+ for i in start ..< count {
+ let swap = items[i].items.last!
+ items[i].insert(item: outside, at: index)
+ items[i].sizeToFit()
+ index = 0
+ outside = swap
+ 
+ 
+ if i == count - 1 && items[i].isFilled {
+ let n = GridRowItem(grid: self)
+ items.append(n)
+ n.add(item: outside)
+ n.sizeToFit()
+ }
+ }
+ 
+ return items
+ }
+
+ */

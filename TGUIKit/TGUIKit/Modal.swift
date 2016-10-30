@@ -10,14 +10,12 @@ import Cocoa
 
 class Modal: NSObject {
     
-    private var window:NSWindow
+    private var window:Window
     private weak var controller:ViewController?
 
-    public init(controller:ViewController) {
+    public init(controller:ViewController, for window:Window) {
         self.controller = controller
-        window = NSWindow.init(contentRect: NSZeroRect, styleMask: [], backing: .buffered, defer: true, screen: NSScreen.main())
-        window.backgroundColor = NSColor.clear
-        
+        self.window = window
         super.init()
     }
     

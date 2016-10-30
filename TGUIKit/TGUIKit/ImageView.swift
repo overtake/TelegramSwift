@@ -14,14 +14,14 @@ public class ImageView: NSView {
     
     public var image:CGImage? {
         didSet {
+            self.layer?.contents = image
             if animates {
                 animate()
             }
-            self.layer?.contents = image
         }
     }
     
-    override init(frame frameRect: NSRect) {
+    override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true
     }

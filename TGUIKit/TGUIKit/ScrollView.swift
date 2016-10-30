@@ -7,11 +7,17 @@
 //
 
 import Cocoa
-
+import Foundation
 public enum ScrollDirection {
     case top;
     case bottom;
     case none;
+}
+
+private class Scroller : NSScroller {
+    fileprivate override func sendAction(on mask: NSEventMask) -> Int {
+        return super.sendAction(on: mask)
+    }
 }
 
 public struct ScrollPosition : Equatable {
@@ -30,17 +36,28 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
 
 open class ScrollView: NSScrollView, CALayerDelegate{
     private var currentpos:ScrollPosition = ScrollPosition()
+    public var deltaCorner:Int64 = 60
+    private var scroller:Scroller?
 
     public var scrollPosition:ScrollPosition {
+        
+//        if self.contentView.bounds.minY < 0 {
+//            return ScrollPosition(currentpos.rect,.none)
+//        }
         
         let rect = NSMakeRect(NSMinX(self.contentView.bounds), NSMaxY(self.contentView.bounds),NSWidth(self.contentView.documentRect),NSHeight(self.contentView.documentRect))
         
         var d:ScrollDirection = .none
         
+        
+        if abs(currentpos.rect.minY - rect.minY) < 5 {
+            return currentpos
+        }
+        
        // if(rect.origin.y < rect.size.height && rect.origin.y > 0) {
-            if(NSMinY(currentpos.rect) > NSMinY(rect)) {
+            if(currentpos.rect.minY > rect.minY) {
                 d = .top
-            } else if(NSMinY(currentpos.rect) < NSMinY(rect)) {
+            } else if(currentpos.rect.minY < rect.minY) {
                 d = .bottom
             }
       //  }
@@ -52,7 +69,8 @@ open class ScrollView: NSScrollView, CALayerDelegate{
     }
     
     func updateScroll() -> Void {
-        self.currentpos = self.scrollPosition
+        self.currentpos = ScrollPosition(NSMakeRect(NSMinX(self.contentView.bounds), NSMaxY(self.contentView.bounds),NSWidth(self.contentView.documentRect),NSHeight(self.contentView.documentRect))
+, .none)
     }
     
     public var documentOffset:NSPoint {
@@ -81,11 +99,13 @@ open class ScrollView: NSScrollView, CALayerDelegate{
      override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        scroller = Scroller(frame: self.bounds)
+        
         self.wantsLayer = true;
+
         self.layer?.delegate = self
-        self.canDrawSubviewsIntoLayer = true
-        self.layer?.drawsAsynchronously = System.drawAsync
-        self.layer?.isOpaque = true
+//        self.canDrawSubviewsIntoLayer = true
+//        self.layer?.drawsAsynchronously = System.drawAsync
         
     //    self.contentView.wantsLayer = true
      //   self.contentView.layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -97,16 +117,127 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         let clipView = TGClipView(frame:self.contentView.frame)
         self.contentView = clipView;
         
-        self.scrollerStyle = .overlay
+        
+        
+      //  verticalScrollElasticity = .automatic
+        //allowsMagnification = true
+        //self.hasVerticalScroller = false
+        
+       // self.scrollerStyle = .overlay
  
+    }
+    
+  
+    
+    open override var hasVerticalScroller: Bool {
+        get {
+            return true
+        }
+        set {
+            super.hasVerticalScroller = newValue
+        }
     }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-
+  
     
+    
+//    override open func scrollWheel(with event: NSEvent) {
+//        NSLog("\(event)")
+//        var scrollPoint = self.contentView.bounds.origin
+//       // var isInverted = CBool(UserDefaults.standard.object(forKey: "com.apple.swipescrolldirection")!)
+////        if !isInverted {
+////            scrollPoint.x += (event.scrollingDeltaY() + event.scrollingDeltaX())
+////        }
+////        else {
+//            scrollPoint.y -= (event.scrollingDeltaY + event.scrollingDeltaY)
+//       // }
+//        self.clipView.scroll(to: scrollPoint)
+//    }
+    
+    let dynamic:CGFloat = 100.0
 
+    open override func scrollWheel(with event: NSEvent) {
+        var origin = clipView.bounds.origin
+        let frameOrigin = clipView.frame.origin
+        
+        deltaCorner = Int64(floorToScreenPixels(frame.height / 6.0))
+        
+        let deltaScrollY = min(max(Int64(event.scrollingDeltaY),-deltaCorner),deltaCorner)
+
+        
+       // NSLog("\(event.deltaY)")
+
+        if  let cgEvent = event.cgEvent?.copy() {
+            
+          
+            
+           // cgEvent.setDoubleValueField(.scrollWheelEventDeltaAxis1, value: Double(min(max(-4,event.deltaY),4)))
+            
+            
+            //if delta == deltaCorner || delta == -deltaCorner || delta == 0 {
+                cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: min(1,cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)))
+           // }
+            cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: deltaScrollY)
+//            if event.scrollingDeltaY > 0 {
+//                
+//            } else {
+//                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: )
+//            }
+            
+         //   NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)) == \(delta)")
+            
+          //  cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: 10)
+           // cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: Int64(delta))
+            
+            let newEvent = NSEvent(cgEvent: cgEvent)!
+            
+            super.scrollWheel(with: newEvent)
+            
+
+        }  else {
+            //NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount))")
+
+            super.scrollWheel(with: event)
+        }
+        
+        
+        if origin == clipView.bounds.origin
+        {
+            
+            if let documentView = documentView, !(self is HorizontalTableView) {
+                
+                if frame.minY < origin.y && deltaScrollY != 0 {
+                    if origin.y > documentView.frame.maxY + dynamic {
+                        clipView.scroll(to: NSMakePoint(origin.x, documentView.frame.minY))
+                    }
+                    
+                    if origin.y < documentView.frame.height {
+                        if documentView.isFlipped {
+                            if origin.y < documentView.frame.height -  frame.height + frame.minY {
+                                origin.y -= CGFloat(deltaScrollY)
+                                clipView.scroll(to: origin)
+                                reflectScrolledClipView(clipView)
+                            }
+                        } else {
+                            if origin.y + frame.height < documentView.frame.height {
+                                origin.y += CGFloat(deltaScrollY)
+                                clipView.scroll(to: origin)
+                                reflectScrolledClipView(clipView)
+                            }
+                            
+                        }
+                    }
+                } else if origin.y < -dynamic {
+                    clipView.scroll(to: NSMakePoint(origin.x, 0))
+                }
+            }
+        }
+
+    }
+//
     
 }

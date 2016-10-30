@@ -7,43 +7,60 @@ import TGUIKit
 import Accelerate
 
 
-public  func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 50, height: 50)) -> Signal<CGImage?, NoError>? {
-    var location: TelegramCloudMediaLocation?
-    
-    if let user = peer as? TelegramUser {
-        if let photo = user.photo.first {
-            location = photo.location.cloudLocation
-        }
-    } else if let group = peer as? TelegramGroup {
-        if let photo = group.photo.first {
-            location = photo.location.cloudLocation
-        }
-    } else if let channel = peer as? TelegramChannel {
-        if let photo = channel.photo.first {
-            location = photo.location.cloudLocation
-        }
-    }
-    
-    if let location = location {
-        return deferred { () -> Signal<CGImage?, NoError> in
-            return cachedCloudFileLocation(location)
-                |> `catch` { _ in
-                    return multipartDownloadFromCloudLocation(account: account, location: location, size: nil)
-                        |> afterNext { data in
-                            cacheCloudFileLocation(location, data: data)
+public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0)) -> Signal<CGImage?, NoError>? {
+    if let smallProfileImage = peer.smallProfileImage {
+        let resourceData = account.postbox.mediaBox.resourceData(smallProfileImage.resource)
+        let imageData = resourceData
+            |> take(1)
+            |> mapToSignal { maybeData -> Signal<Data?, NoError> in
+                if maybeData.complete {
+                    return .single(try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)))
+                } else {
+                    return Signal { subscriber in
+                        let resourceDataDisposable = resourceData.start(next: { data in
+                            if data.complete {
+                                subscriber.putNext(try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)))
+                                subscriber.putCompletion()
+                            }
+                            }, error: { error in
+                                subscriber.putError(error)
+                            }, completed: {
+                                subscriber.putCompletion()
+                        })
+                        let fetchedDataDisposable = account.postbox.mediaBox.fetchedResource(smallProfileImage.resource).start()
+                        return ActionDisposable {
+                            resourceDataDisposable.dispose()
+                            fetchedDataDisposable.dispose()
+                        }
                     }
                 }
-                |> runOn(account.graphicsThreadPool) |> deliverOn(account.graphicsThreadPool)
-                |> map { data -> CGImage? in
-                    
-                    return roundImage(data,displayDimensions)
-            }
-            } |> runOn(account.graphicsThreadPool)
+        }
+        return imageData
+            |> deliverOn(account.graphicsThreadPool)
+            |> map { data -> CGImage? in
+                if let data = data {
+                    return roundImage(data, displayDimensions)
+                } else {
+                    return nil
+                }
+                
+//                if let data = data, let image = generateImage(displayDimensions, contextGenerator: { size, context -> Void in
+//                    if let imageSource = CGImageSourceCreateWithData(data as CFData, nil), let dataImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+//                        context.setBlendMode(.copy)
+//                        context.draw(dataImage, in: CGRect(origin: CGPoint(), size: displayDimensions))
+//                        context.setBlendMode(.destinationOut)
+//                        context.draw(roundCorners.cgImage!, in: CGRect(origin: CGPoint(), size: displayDimensions))
+//                    }
+//                }) {
+//                    return image
+//                } else {
+//                   return nil
+//                }
+        }
     } else {
         return nil
     }
 }
-
 private let screenQueue = Queue(name: "ScreenQueue")
 
 

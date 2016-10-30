@@ -119,7 +119,7 @@ public class TransformImageView: Control {
     public var alphaTransitionOnFirstUpdate = false
     private var disposable = MetaDisposable()
     
-    private var argumentsPromise = Promise<TransformImageArguments>()
+    private let argumentsPromise = Promise<TransformImageArguments>()
     
     override public init() {
         super.init()
@@ -139,8 +139,15 @@ public class TransformImageView: Control {
         self.disposable.dispose()
     }
     
+    public override func removeFromSuperview() {
+        super.removeFromSuperview()
+        self.disposable.set(nil)
+    }
+    
     public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext, NoError>, dispatchOnDisplayLink: Bool = true) {
-        let argumentsPromise = self.argumentsPromise
+
+       
+        self.layer?.contents = nil
         
         let result = combineLatest(signal, argumentsPromise.get()) |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
             return deferred {
@@ -156,6 +163,8 @@ public class TransformImageView: Control {
     public func set(arguments:TransformImageArguments) ->Void {
         argumentsPromise.set(.single(arguments))
     }
+    
+    
 }
 
 

@@ -24,6 +24,7 @@ public enum ControlEvent {
 open class Control: View {
     
     open var isEnabled:Bool = true
+    open var hideAnimated:Bool = false
     
     public var isSelected:Bool {
         didSet {
@@ -102,7 +103,35 @@ open class Control: View {
         self.addTrackingArea(self.trackingArea!)
     }
     
+    open override var isHidden: Bool {
+        get {
+            return super.isHidden
+        }
+        set {
+            if newValue != super.isHidden {
+                if hideAnimated {
+                    if !newValue {
+                        super.isHidden = newValue
+                    }
+                    self.layer?.opacity = newValue ? 0.0 : 1.0
+                    self.layer?.animateAlpha(from: newValue ? 1.0 : 0.0, to: newValue ? 0.0 : 1.0, duration: 0.2, completion:{[weak self](completed) in
+                        self?.updateHiddenState(newValue)
+                    })
+                } else {
+                    updateHiddenState(newValue)
+                }
+            }
+        }
+    }
     
+    public func forceHide() -> Void {
+        super.isHidden = true
+        self.layer?.removeAllAnimations()
+    }
+    
+    private func updateHiddenState(_ value:Bool) -> Void {
+        super.isHidden = value
+    }
    
     
     func mouseInside() -> Bool {
@@ -241,14 +270,16 @@ open class Control: View {
         self.isSelected = false
         super.init(frame: frameRect)
         animates = true
-        self.layer?.isOpaque = true
+        //self.wantsLayer = true
+        //self.layer?.isOpaque = true
     }
     
     public override init() {
         self.isSelected = false
         super.init(frame: NSZeroRect)
         animates = true
-        self.layer?.isOpaque = true
+        //self.wantsLayer = true
+        //self.layer?.isOpaque = true
     }
     
     required public init?(coder: NSCoder) {

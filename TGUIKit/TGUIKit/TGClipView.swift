@@ -38,8 +38,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
         super.init(frame: frameRect)
         self.wantsLayer = true
-        self.canDrawSubviewsIntoLayer = true
-        self.layer?.drawsAsynchronously = System.drawAsync
+        //self.canDrawSubviewsIntoLayer = true
+      //  self.layer?.drawsAsynchronously = System.drawAsync
         self.layer?.delegate = self
         createDisplayLink()
 
@@ -99,19 +99,46 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     func beginScroll() -> Void {
-        if (CVDisplayLinkIsRunning(self.displayLink!)) {
-            return;
+        if let displayLink = displayLink {
+            if (CVDisplayLinkIsRunning(displayLink)) {
+                return
+            }
+            
+            CVDisplayLinkStart(displayLink)
         }
         
-        CVDisplayLinkStart(self.displayLink!);
+    }
+    
+    public var isAnimateScrolling:Bool {
+        if let displayLink = displayLink {
+            if (CVDisplayLinkIsRunning(displayLink)) {
+                return true
+            }
+        }
+        return false
     }
     
     func endScroll() -> Void {
-        if (!CVDisplayLinkIsRunning(self.displayLink!)) {
-            return;
+        if let displayLink = displayLink {
+            if (!CVDisplayLinkIsRunning(displayLink)) {
+                return;
+            }
+            CVDisplayLinkStop(displayLink);
         }
-        CVDisplayLinkStop(self.displayLink!);
+        
     }
+//    
+//    func easeInOutQuad (percentComplete: CGFloat, elapsedTimeMs: CGFloat, startValue: CGFloat, endValue: CGFloat, totalDuration: CGFloat) -> CGFloat {
+//        var newElapsedTimeMs = elapsedTimeMs
+//        newElapsedTimeMs /= totalDuration/2
+//        
+//        if newElapsedTimeMs < 1 {
+//            return endValue/2*newElapsedTimeMs*newElapsedTimeMs + startValue
+//        }
+//        newElapsedTimeMs = newElapsedTimeMs - 1
+//        return -endValue/2 * ((newElapsedTimeMs)*(newElapsedTimeMs-2) - 1) + startValue
+//    }
+
     
     public func updateOrigin() -> Void {
         if (self.window == nil) {
@@ -123,6 +150,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
             var o:CGPoint = self.bounds.origin;
             var lastOrigin:CGPoint = o;
             var deceleration:CGFloat = self.decelerationRate;
+            
+            
             
             o.x = ceil(o.x + (destination.x - o.x) * (1 - self.decelerationRate));
             o.y = ceil(o.y + (destination.y - o.y) * (1 - self.decelerationRate));
@@ -188,10 +217,24 @@ public class TGClipView: NSClipView,CALayerDelegate {
         return success
     }
     
+    let maxScrollHeight:CGFloat = 1500.0
+    
     public func scroll(to point: NSPoint, animated:Bool)  {
         self.shouldAnimateOriginChange = animated
+        
+        if animated && abs(bounds.minY - point.y) > maxScrollHeight {
+            let y:CGFloat
+            if bounds.minY < point.y {
+                y = point.y - maxScrollHeight
+            } else {
+                y = point.y + maxScrollHeight
+            }
+            super.scroll(to: NSMakePoint(point.x,y))
+        }
+        
         self.scroll(to: point)
     }
+    
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
         

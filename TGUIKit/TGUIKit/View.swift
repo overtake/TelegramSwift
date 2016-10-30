@@ -132,7 +132,7 @@ open class View : NSView,CALayerDelegate {
         self.wantsLayer = true
         self.layer?.delegate = self
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        self.layer?.drawsAsynchronously = System.drawAsync
+       // self.layer?.drawsAsynchronously = System.drawAsync
     }
     
     override required public init(frame frameRect: NSRect) {
@@ -141,7 +141,7 @@ open class View : NSView,CALayerDelegate {
         self.wantsLayer = true
         self.layer?.delegate = self
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        self.layer?.drawsAsynchronously = System.drawAsync
+      //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     
     open override func setFrameSize(_ newSize: NSSize) {
@@ -187,6 +187,12 @@ open class View : NSView,CALayerDelegate {
        
         
         return false
+    }
+    
+    open override func copy() -> Any {
+        let copy:View = View(frame:bounds)
+        copy.layer?.contents = self.layer?.contents
+        return copy
     }
     
     open var kitWindow: Window? {

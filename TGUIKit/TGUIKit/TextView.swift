@@ -9,9 +9,9 @@
 import Cocoa
 
 public final class TextViewInteractions {
-    public var processURL:(String, Bool)->Void // link, isPresent
+    public var processURL:(Any!)->Void // link, isPresent
     
-    public init(processURL:@escaping (String, Bool)->Void = {_ in}) {
+    public init(processURL:@escaping (Any!)->Void = {_ in}) {
         self.processURL = processURL
     }
 }
@@ -290,7 +290,7 @@ public final class TextViewLayout : Equatable {
         
     }
 
-    public func link(at point:NSPoint) -> (String, Bool, NSRect)? {
+    public func link(at point:NSPoint) -> (Any, NSRect)? {
         
         let index = findIndex(location: point)
         let line = lines[index]
@@ -306,14 +306,14 @@ public final class TextViewLayout : Equatable {
             var range:NSRange = NSMakeRange(NSNotFound, 0)
             let attrs = attributedString.attributes(at: pos, effectiveRange: &range)
             
-            let link:String? = attrs[NSLinkAttributeName] as? String
+            let link:Any? = attrs[NSLinkAttributeName]
             
-            if let link = link, !link.isEmpty {
-                let present = attributedString.string.nsstring.substring(with: range)
+            if let link = link {
+              //  let present = attributedString.string.nsstring.substring(with: range)
                 
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
-                return (link, present == link, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
+                return (link, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
             }
         }
         return nil
@@ -343,6 +343,13 @@ public class TextView: View {
     private var beginSelect:NSPoint = NSZeroPoint
     private var endSelect:NSPoint = NSZeroPoint
 
+    public var userInteractionEnabled:Bool = true {
+        didSet {
+            if oldValue != userInteractionEnabled {
+                self.setNeedsDisplayLayer()
+            }
+        }
+    }
     
     public var isSelectable:Bool = true {
         didSet {
@@ -364,8 +371,9 @@ public class TextView: View {
 
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+        
         self.layer?.isOpaque = true
-        self.layer?.drawsAsynchronously = System.drawAsync
+       // self.layer?.drawsAsynchronously = System.drawAsync
     }
     
     public override func updateTrackingAreas() {
@@ -382,10 +390,10 @@ public class TextView: View {
     }
     
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
-        if let layout = layout {
-            
         
-            super.draw(layer, in: ctx)
+        super.draw(layer, in: ctx)
+
+        if let layout = layout {
             
             ctx.setAllowsAntialiasing(true)
             ctx.setShouldSmoothFonts(!System.isRetina)
@@ -573,11 +581,11 @@ public class TextView: View {
     public override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         
-        if let layout = layout {
+        if let layout = layout, userInteractionEnabled {
             if layout.selectedRange.range.location == NSNotFound || !isSelectable {
                 let point = self.convert(event.locationInWindow, from: nil)
-                if let (link,isPresent,_) = layout.link(at: point) {
-                    layout.interactions.processURL(link,isPresent)
+                if let (link,_) = layout.link(at: point) {
+                    layout.interactions.processURL(link)
                 }
             }
         }
@@ -586,9 +594,9 @@ public class TextView: View {
     func checkCursor(_ event:NSEvent) -> Void {
         let location = self.convert(event.locationInWindow, from: nil)
         
-        if self.mouse(location , in: self.visibleRect) && !hasVisibleModal {
+        if self.mouse(location , in: self.visibleRect) && !hasVisibleModal && userInteractionEnabled {
             
-            if let layout = layout, let (_, _, _) = layout.link(at: location) {
+            if let layout = layout, let (_, _) = layout.link(at: location) {
                 NSCursor.pointingHand().set()
             } else if isSelectable {
                 NSCursor.iBeam().set()

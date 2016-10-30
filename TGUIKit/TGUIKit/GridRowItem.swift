@@ -122,6 +122,15 @@ public class GridRowItem: TableRowItem {
         return false
     }
     
+    public func isCompressed() -> Bool {
+        for i in 0 ..< items.count - 1 {
+            if items[i] is EmptyGridItem && !(items[i + 1] is EmptyGridItem) {
+                return false
+            }
+        }
+        return true
+    }
+    
     public func index(where stableId:Int64) -> Int? {
         return items.index(where:{$0.stableId == stableId})
     }

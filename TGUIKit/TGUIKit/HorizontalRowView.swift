@@ -22,6 +22,7 @@ open class HorizontalRowView: TableRowView {
         
         if let layer = container.layer {
             layer.transform = CATransform3DTranslate(layer.transform, frame.height/2, frame.width/2.0, 1.0)
+            layer.transform = CATransform3DScale(layer.transform, -1, 1, 1)
             layer.transform = CATransform3DRotate(layer.transform, 270 * CGFloat(M_PI) / 180, 0, 0, 1.0)
             layer.transform = CATransform3DTranslate(layer.transform, -frame.height/2, -frame.width/2.0, 1.0)
         }

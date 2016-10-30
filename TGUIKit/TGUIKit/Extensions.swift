@@ -32,6 +32,8 @@ public extension NSAttributedString {
         return NSMakeRange(0, self.length)
     }
     
+ 
+    
     public static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
         var attr:NSMutableAttributedString = NSMutableAttributedString()
         attr.append(string: string, color: color, font: font, coreText: true)
@@ -248,7 +250,7 @@ public extension NSView {
             y = CGFloat(roundf(Float(NSHeight(sv.frame) - NSHeight(self.frame))/2.0))
         }
         
-        self.setFrameOrigin(NSMakePoint(x == nil ? NSMinX(self.frame) : x!, y))
+        self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y))
     }
 
     
@@ -282,6 +284,8 @@ public extension NSView {
             }
             
             self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut, removeOnCompletion: true)
+        } else {
+            self.layer?.removeAnimation(forKey: "position")
         }
         if save {
             self.setFrameOrigin(position)
@@ -300,6 +304,8 @@ public extension NSView {
             
             self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
             
+        } else {
+            self.layer?.removeAnimation(forKey: "bounds")
         }
         if save {
             self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
@@ -319,6 +325,8 @@ public extension NSView {
             }
            
             
+        } else {
+            layer?.removeAnimation(forKey: "opacity")
         }
         if save {
             self.layer?.opacity = Float(to)
@@ -434,6 +442,10 @@ public extension CGImage {
     
     var size:NSSize {
         return NSMakeSize(CGFloat(width), CGFloat(height))
+    }
+    
+    var scale:CGFloat {
+        return 2.0
     }
     
 }

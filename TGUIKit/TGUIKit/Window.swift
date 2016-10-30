@@ -65,7 +65,7 @@ public class Window: NSWindow {
             for handle in handlers {
                 copy.append(handle)
             }
-            for i in 0 ..< copy.count {
+            for i in stride(from: copy.count - 1, to: 0, by: -1) {
                 if copy[i].object.value == object || copy[i].object.value == nil  {
                     keyHandlers[key]?.remove(at: i)
                 }
@@ -80,12 +80,12 @@ public class Window: NSWindow {
     public override func sendEvent(_ event: NSEvent) {
         
         if event.type == .keyDown {
-            if let responderHandler = keyboardResponderHandler {
-                let responder = responderHandler()
-                if self.firstResponder != responder {
-                    self.makeFirstResponder(responder)
-                }
-            }
+//            if let responderHandler = keyboardResponderHandler {
+//                let responder = responderHandler()
+//                if self.firstResponder != responder {
+//                    self.makeFirstResponder(responder)
+//                }
+//            }
             
             if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
                 var sorted = handlers.sorted(by: >)
@@ -129,6 +129,6 @@ public class Window: NSWindow {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
-        self.contentView?.canDrawSubviewsIntoLayer = true
+      //  self.contentView?.canDrawSubviewsIntoLayer = true
     }
 }

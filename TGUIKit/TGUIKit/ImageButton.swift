@@ -21,7 +21,7 @@ open class ImageButton: Button {
         images[state] = image
         
         if state == .Normal  {
-            if autohighlight {
+            if autohighlight && images[.Highlight] == nil {
                 set(image: style.highlight(image: image), for: .Highlight)
             }
             if highlightHovered {
@@ -48,13 +48,13 @@ open class ImageButton: Button {
     
     override func apply(state: ControlState) {
         super.apply(state: state)
-        
+        updateLayout()
+
         if let image = images[state] {
-            imageView.image = image.copy()
+            imageView.image = image
         } else {
-            imageView.image = images[.Normal]?.copy()
+            imageView.image = images[.Normal]
         }
-        
     }
     
     override public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) {

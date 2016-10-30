@@ -107,6 +107,12 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    open override func copy() -> Any {
+        let view:View = View(frame:bounds)
+        view.backgroundColor = self.backdorColor
+        return view
+    }
+    
     open func set(item:TableRowItem, animated:Bool = false) -> Void {
         self.item = item;
     }

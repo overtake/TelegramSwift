@@ -53,12 +53,70 @@ public protocol TableViewDelegate : class {
     
 }
 
-public enum TableScrollState {
-    case top(TableRowItem, TableAnimationInterface?); // stableId
-    case bottom(TableRowItem, TableAnimationInterface?); // stableId
-    case center(TableRowItem, TableAnimationInterface?); // stableId
+public enum TableScrollState :Equatable {
+    case top(Int64, Bool); // stableId, animation
+    case bottom(Int64, Bool); //  stableId, animation
+    case center(Int64, Bool); //  stableId, animation
     case save(TableAnimationInterface?);
     case none(TableAnimationInterface?);
+    case down(Bool);
+    case up(Bool);
+}
+
+public func ==(lhs:TableScrollState, rhs:TableScrollState) -> Bool {
+    switch lhs {
+    case let .top(lhsStableId, lhsAnimated):
+        switch rhs {
+        case let .top(rhsStableId,rhsAnimated):
+            return lhsStableId == rhsStableId && lhsAnimated == rhsAnimated
+        default:
+            return false
+        }
+    case let .bottom(lhsStableId, lhsAnimated):
+        switch rhs {
+        case let .bottom(rhsStableId,rhsAnimated):
+            return lhsStableId == rhsStableId && lhsAnimated == rhsAnimated
+        default:
+            return false
+        }
+    case let .center(lhsStableId, lhsAnimated):
+        switch rhs {
+        case let .center(rhsStableId,rhsAnimated):
+            return lhsStableId == rhsStableId && lhsAnimated == rhsAnimated
+        default:
+            return false
+        }
+    case let .down(lhsAnimated):
+        switch rhs {
+        case let .down(rhsAnimated):
+            return lhsAnimated == rhsAnimated
+        default:
+            return false
+        }
+    case let .up(lhsAnimated):
+        switch rhs {
+        case let .up(rhsAnimated):
+            return lhsAnimated == rhsAnimated
+        default:
+            return false
+        }
+    case let .save(_):
+        switch rhs {
+        case let .save(_):
+            return true
+        default:
+            return false
+        }
+    case let .none(_):
+        switch rhs {
+        case let .none(_):
+            return true
+        default:
+            return false
+        }
+    default:
+        return false
+    }
 }
 
 protocol SelectDelegate : class {
@@ -174,7 +232,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView = table
         self.tableView.wantsLayer = true
         
-        self.tableView.layer?.drawsAsynchronously = System.drawAsync
+      //  self.tableView.layer?.drawsAsynchronously = System.drawAsync
         self.tableView.layerContentsRedrawPolicy = .onSetNeedsDisplay
         
 
@@ -213,7 +271,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    let reqCount = 4
+    
     
     open override func viewDidMoveToSuperview() {
         if let sv = superview {
@@ -222,26 +280,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NotificationCenter.default.addObserver(forName: NSNotification.Name.NSViewBoundsDidChange, object: clipView, queue: nil, using: { [weak self] notification  in
                 if let strongSelf = self {
                     
+                    let reqCount = strongSelf.count / 6
+                    
                     strongSelf.updateStickAfterScroll()
                     
-                    if (strongSelf.scrollHandler != nil && !strongSelf.updating) {
+                    if (!strongSelf.updating && !strongSelf.clipView.isAnimateScrolling) {
                         
                         let scroll = strongSelf.scrollPosition
                     
                         
                         let range = strongSelf.tableView.rows(in: strongSelf.tableView.visibleRect)
                         
-                        if(scroll.direction != strongSelf.previousScroll?.direction) {
+                        if(scroll.direction != strongSelf.previousScroll?.direction && scroll.rect != strongSelf.previousScroll?.rect) {
                             
                             switch(scroll.direction) {
                             case .top:
-                                if(range.location  <=  strongSelf.reqCount) {
+                                if(range.location  <=  reqCount) {
                                     strongSelf.scrollHandler(scroll)
                                     strongSelf.previousScroll = scroll
 
                                 }
                             case .bottom:
-                                if(strongSelf.count - (range.location + range.length) <= strongSelf.reqCount) {
+                                if(strongSelf.count - (range.location + range.length) <= reqCount) {
                                     strongSelf.scrollHandler(scroll)
                                     strongSelf.previousScroll = scroll
 
@@ -546,7 +606,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    func remove(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
+    func remove(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         var pos:Int? = self.index(of: item);
         
         if let p = pos {
@@ -562,11 +622,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
-        self.remove(item: self.item(at: at), redraw: redraw)
+    public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+        self.remove(item: self.item(at: at), redraw: redraw, animation:animation)
     }
     
-    public func remove(range:Range<Int>, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
+    public func remove(range:Range<Int>, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         
         var sub:[TableRowItem] = Array(self.list[range])
         
@@ -580,7 +640,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func removeAll(redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Void {
+    public func removeAll(redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         var count:Int = self.count;
         self.list.removeAll()
         self.listhash.removeAll()
@@ -705,6 +765,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
+    func itemRects() -> [(TableRowItem, NSRect, Int)] {
+        var ilist:[(TableRowItem,NSRect,Int)] = [(TableRowItem,NSRect,Int)]()
+        
+        for item in self.list {
+            ilist.append((item,self.rectOf(item: item), index(of: item)!))
+            
+        }
+        
+        return ilist;
+        
+    }
+    
     public func apply(transition:TableTransition) ->Void {
         self.merge(transition.deleted, transition.inserted, transition.animated, transition.scrollState)
     }
@@ -720,9 +792,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let lsize = self.documentSize
         let loffset = self.documentOffset
         
-        if(loffset.y < 0) {
-            self.contentView.bounds = NSMakeRect(0, 0, 0, NSHeight(self.contentView.bounds))
-        }
+//        if(loffset.y < 0) {
+//            self.contentView.bounds = NSMakeRect(0, 0, 0, NSHeight(self.contentView.bounds))
+//        }
         
         self.tableView.beginUpdates()
         
@@ -747,7 +819,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             if(!s) {
                 removed.append(self.item(at: rdx - rd))
-                self.remove(at: rdx - rd, redraw: true, animation:animated ? .effectFade : .none)
+                
+                let effect:NSTableViewAnimationOptions
+                if case let .none(interface) = state {
+                    effect = .effectFade
+                } else {
+                    effect = animated ? .effectFade : .none
+                }
+                self.remove(at: rdx - rd, redraw: true, animation:effect)
                 rd+=1
             }
         }
@@ -790,36 +869,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             
             if let item = sitem {
-                //let y = min(max(noffset.y - (NSMinY(rect) - NSMinY(nrect)),0),nsize.height - NSHeight(self.frame))
-                
                 let y = noffset.y - (NSMinY(rect) - NSMinY(nrect))
-                
-                
-                
-//                if y < 0 {
-//                    var bp = 0
-//                    bp += 1
-//                }
-                
-               // NSLog("o:\(rect.minY), n:\(nrect.minY)")
+               // clipView.scroll(to: NSMakePoint(0, y))
                 self.contentView.bounds = NSMakeRect(0, y, 0, NSHeight(self.contentView.bounds))
+                reflectScrolledClipView(clipView)
             }
 
             animation?.animate(added: inserted, removed:removed)
             
-        case let .bottom(item,animation):
-            break
-        case let .top(item,animation):
-            
-            let rect = self.rectOf(item: item)
-            
-            self.contentView.bounds = NSMakeRect(0, rect.maxY - bounds.height, 0, self.contentView.bounds.height)
-            
-            animation?.animate(added: inserted, removed:removed)
-            
-            break
-        case let .center(item,animation):
-            break
+        case .bottom(_,_), .top(_,_), .center(_,_):
+            self.scroll(to:state)
+        case .up(_), .down(_):
+            self.scroll(to:state)
         }
         
     
@@ -912,14 +973,58 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     
-    public func scroll(to item: TableRowItem, animated: Bool, inset:EdgeInsets = EdgeInsets()) {
-        if let index = self.index(of: item) {
-            var rowRect = tableView.rect(ofRow:index)
-            var scrollOffset = self.documentOffset
-            clipView.scroll(to: NSMakePoint(0, NSMinY(rowRect) + inset.top), animated:animated)
-           // self.clipView.scrollRectToVisible(NSMakeRect(0, NSMinY(rowRect) + inset.top, NSWidth(rowRect), frame.height), animated: animated)
-        }
+    public func scroll(to state:TableScrollState, inset:EdgeInsets = EdgeInsets()) {
+       // if let index = self.index(of: item) {
         
+            var item:TableRowItem?
+            var animate:Bool = false
+
+            switch state {
+            case let .bottom(stableId,animation), let .top(stableId,animation), let .center(stableId,animation):
+                item = self.item(stableId: stableId)
+                animate = animation
+            case let .down(animation):
+                clipView.scroll(to: NSMakePoint(0, 0), animated:animation)
+                return
+            case let .up(animation):
+                clipView.scroll(to: NSMakePoint(0, documentSize.height), animated:animation)
+                return
+            default:
+                fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
+            }
+        
+        if let item = item {
+            var rowRect = self.rectOf(item: item)
+            
+            let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
+            
+            switch state {
+            case let .top(stableId, _):
+                if !tableView.isFlipped {
+                    rowRect.origin.y += height
+                }
+            case let .center(stableId, _):
+                if !tableView.isFlipped {
+                    rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0)
+                } else {
+                    
+                    if rowRect.maxY > height/2.0 {
+                        rowRect.origin.y += floorToScreenPixels((height) / 2.0) - rowRect.height - rowRect.height/2.0 
+                    } else {
+                        rowRect.origin.y = self is HorizontalTableView ? frame.minY : 0
+                    }
+                    
+
+                   // fatalError("not implemented")
+                }
+            default:
+                fatalError("not implemented")
+            }
+            
+            
+            clipView.scroll(to: NSMakePoint(0, NSMinY(rowRect) + inset.top), animated:animate)
+            
+        } 
     }
     
     public func setScrollHandler(_ handler: @escaping (_ scrollPosition:ScrollPosition) ->Void) -> Void {

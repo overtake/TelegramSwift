@@ -31,7 +31,7 @@ public struct FetchControls {
     public let fetch: () -> Void
     public let cancel: () -> Void
     public let open: () -> Void
-    public init(fetch:@escaping()->Void,cancel:@escaping()->Void, open:@escaping()->Void) {
+    public init(fetch:@escaping()->Void,cancel:@escaping()->Void, open:@escaping()->Void = {}) {
         self.fetch = fetch
         self.cancel = cancel
         self.open = open
@@ -95,7 +95,7 @@ private class RadialProgressOverlayLayer: Layer {
         self.isOpaque = false
     }
     
-    private override func draw(in ctx: CGContext) {
+    fileprivate override func draw(in ctx: CGContext) {
         ctx.setStrokeColor(parameters.theme.foregroundColor.cgColor)
         
         switch parameters.state {

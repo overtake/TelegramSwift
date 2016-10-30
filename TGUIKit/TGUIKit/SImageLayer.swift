@@ -18,7 +18,7 @@ open class SImageLayer: CALayer {
     
     public override init() {
         super.init();
-        self.drawsAsynchronously = System.drawAsync
+      //  self.drawsAsynchronously = System.drawAsync
         self.disableActions()
     }
 //    
