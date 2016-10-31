@@ -240,7 +240,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         self.clipView.border = BorderType([.Right])
         self.tableView.border = BorderType([.Right])
-
+       // self.tableView.usesStaticContents = true
         self.hasVerticalScroller = true;
 
         self.documentView = self.tableView;

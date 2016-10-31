@@ -181,6 +181,8 @@ public extension CALayer {
         self.add(animation, forKey: "backgroundColor")
     }
     
+
+    
     public func animateBorder() ->Void {
         let animation = CABasicAnimation(keyPath: "borderWidth")
         animation.duration = 0.2
@@ -330,6 +332,17 @@ public extension NSView {
         }
         if save {
             self.layer?.opacity = Float(to)
+        }
+    }
+    
+    public func hierarchyInteraction(enable:Bool) -> Void {
+        for sub in self.subviews {
+            if let sub = sub as? Control {
+                sub.userInteractionEnabled = enable
+            }
+            if sub.subviews.count > 0 {
+                sub.hierarchyInteraction(enable: enable)
+            }
         }
     }
 

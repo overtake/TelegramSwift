@@ -265,6 +265,17 @@
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatInteraction.init() -&gt; ChatInteraction:ChatInterfaceInteraction.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.change(state : ViewControllerState) -&gt; ():ChatController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TabBarView.setSelectedIndex(Int, respondToDelegate : Bool) -&gt; ():TabBarView.swift">
          <PersistentStrings>
             <PersistentString
@@ -506,6 +517,9 @@
          contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
       </ContextState>
       <ContextState
+         contextName = "ViewTracker.unsentViewUpdated() -&gt; ():ViewTracker.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatListController.loadOnScroll(Account, TGTableScrollUpdate) -&gt; ():ChatListController.swift">
       </ContextState>
       <ContextState
@@ -523,7 +537,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -535,12 +549,15 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.openChat(account : Account, peerId : PeerId, message : Message?, tagMask : MessageTags?) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #2):ChatController.swift">
@@ -731,6 +748,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "UnsentMessageHistoryView.replay([IntermediateMessageHistoryUnsentOperation]) -&gt; Bool:UnsentMessageHistoryView.swift">
+      </ContextState>
+      <ContextState
          contextName = "TableView.apply(transition : TableTransition) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
@@ -759,6 +779,9 @@
       </ContextState>
       <ContextState
          contextName = "groupInfoEntries(view : PeerView) -&gt; [PeerInfoEntry]:GroupInfoEntries.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PendingMessageManager.(updatePendingMessageIndices(Set&lt;MessageIndex&gt;) -&gt; ()).(closure #1):PendingMessageManager.swift">
       </ContextState>
       <ContextState
          contextName = "GalleryPagerNode.animateIn(from : NSView?, completion : () -&gt; ()?) -&gt; ():GalleryPagerNode.swift">

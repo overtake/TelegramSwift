@@ -29,6 +29,7 @@ open class ViewController : NSObject {
     public var rightBarView:BarView!
     
     public var popover:Popover?
+    public var modal:Modal?
     
     private let _ready = Promise<Bool>()
     open var ready: Promise<Bool> {
@@ -83,11 +84,20 @@ open class ViewController : NSObject {
     }
     
     open func loadView() -> Void {
-        if(_view == nil) { 
-            _view = View(frame: _frameRect);
+        if(_view == nil) {
+            let vz = viewClass() as! View.Type
+            _view = vz.init(frame: _frameRect);
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
 
         }
+    }
+    
+    public func viewClass() ->AnyClass {
+        return View.self
+    }
+    
+    open func draggingItems(for pasteboard:NSPasteboard) -> [DragItem] {
+        return []
     }
     
     public func loadViewIfNeeded(_ frame:NSRect = NSZeroRect) -> Void {
@@ -181,7 +191,6 @@ open class ViewController : NSObject {
     
     open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint) -> Void {
         if popover == nil {
-            
             self.popover = (self.popoverClass as! Popover.Type).init(controller: self)
         }
         
@@ -189,5 +198,13 @@ open class ViewController : NSObject {
             popover.show(for: control, edge: edge, inset: inset)
         }
     }
+    
 
+}
+
+public func showModal(with controller:ViewController, for window:Window) -> Void {
+    assert(controller.modal == nil)
+    
+    controller.modal = Modal(controller: controller, for: window)
+    controller.modal?.show()
 }

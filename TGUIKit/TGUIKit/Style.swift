@@ -16,30 +16,33 @@ public struct ControlStyle: Equatable {
     
     public func highlight(image:CGImage) -> CGImage {
         
-        var img:NSImage = NSImage.init(cgImage: image, size: image.size)
-        img.lockFocus()
-        highlightColor.set()
-        var imageRect = NSMakeRect(0, 0, image.size.width , image.size.height)
-        NSRectFillUsingOperation(imageRect, NSCompositeSourceAtop)
-        img.unlockFocus()
+       // var img:NSImage = NSImage.init(cgImage: image, size: image.size)
         
-        return roundImage(img.tiffRepresentation!, image.backingSize, cornerRadius: 0)!
+        let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
+        
+        context.withContext { (ctx) in
+            let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
+            ctx.setFillColor(backgroundColor.cgColor)
+            ctx.fill(imageRect)
+            
+            
+            ctx.clip(to: imageRect, mask: image)
+            ctx.setFillColor(highlightColor.cgColor)
+            ctx.fill(imageRect)
+        }
+        
+        return context.generateImage() ?? image
+        
+//        img.lockFocus()
+//        highlightColor.set()
+//        var imageRect = NSMakeRect(0, 0, image.size.width , image.size.height)
+//        NSRectFillUsingOperation(imageRect, NSCompositeSourceAtop)
+//        img.unlockFocus()
+        
+     //   return img.precomposed(highlightColor)
 
 //        
-//        let context = DrawingContext(size:image.backingSize, scale:2.0)
-//        
-//        context.withContext { (ctx) in
-//            let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
-//            ctx.setFillColor(backgroundColor.cgColor)
-//            ctx.fill(imageRect)
-//
-//            
-//            ctx.clip(to: imageRect, mask: image)
-//            ctx.setFillColor(highlightColor.cgColor)
-//            ctx.fill(imageRect)
-//        }
-        
-//        let img = context.generateImage() ?? image
+
 //        
 //
 //        

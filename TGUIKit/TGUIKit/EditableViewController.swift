@@ -10,29 +10,29 @@ import Cocoa
 
 
 public enum ViewControllerState : Equatable {
-    case Edit(String)
-    case Normal(String)
-    case Some(String)
+    case Edit
+    case Normal
+    case Some
 }
 
-public func ==(lhs:ViewControllerState, rhs:ViewControllerState) -> Bool {
-    if case let .Normal(ltext) = lhs {
-        if case let .Normal(rtext) = rhs {
-            return ltext == rtext
-        }
-    }
-    if case let .Edit(ltext) = lhs {
-        if case let .Edit(rtext) = rhs {
-            return ltext == rtext
-        }
-    }
-    if case let .Some(ltext) = lhs {
-        if case let .Some(rtext) = rhs {
-            return ltext == rtext
-        }
-    }
-    return false
-}
+//public func ==(lhs:ViewControllerState, rhs:ViewControllerState) -> Bool {
+//    if case let .Normal(ltext) = lhs {
+//        if case let .Normal(rtext) = rhs {
+//            return ltext == rtext
+//        }
+//    }
+//    if case let .Edit(ltext) = lhs {
+//        if case let .Edit(rtext) = rhs {
+//            return ltext == rtext
+//        }
+//    }
+//    if case let .Some(ltext) = lhs {
+//        if case let .Some(rtext) = rhs {
+//            return ltext == rtext
+//        }
+//    }
+//    return false
+//}
 
 open class EditableViewController: ViewController {
     
@@ -53,9 +53,9 @@ open class EditableViewController: ViewController {
     
     open func change(state:ViewControllerState) ->Void {
         if case let .Normal(text) = state {
-            self.state = ViewControllerState.Edit(localizedString("Navigation.Done"))
+            self.state = ViewControllerState.Edit
         } else {
-            self.state = ViewControllerState.Normal(localizedString("Navigation.Edit"))
+            self.state = ViewControllerState.Normal
         }
     }
     
@@ -79,15 +79,15 @@ open class EditableViewController: ViewController {
         addHandler()
     }
     
-    func update(with state:ViewControllerState) -> Void {
+    open func update(with state:ViewControllerState) -> Void {
         
         switch state {
-        case let .Edit(text):
-            editBar.button.set(text: text, for: .Normal)
-        case let .Normal(text):
-            editBar.button.set(text: text, for: .Normal)
-        case let .Some(text):
-            editBar.button.set(text: text, for: .Normal)
+        case .Edit:
+            editBar.button.set(text: localizedString("Navigation.Done"), for: .Normal)
+        case .Normal:
+            editBar.button.set(text: localizedString("Navigation.Edit"), for: .Normal)
+        case .Some:
+            editBar.button.set(text: localizedString("Navigation.Some"), for: .Normal)
         }
         
         self.editBar.setFrameSize(self.editBar.frame.size)
@@ -102,7 +102,7 @@ open class EditableViewController: ViewController {
         super.updateNavigation(navigation)
         if let navigation = navigation {
             rightBarView = editBar
-            self.state = .Normal(localizedString("Navigation.Edit"))
+            self.state = .Normal
         }
     }
     

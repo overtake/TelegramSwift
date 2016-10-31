@@ -20,7 +20,7 @@ public class MajorNavigationController: NavigationViewController {
     private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
     
-    
+   
     
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
         self.majorClass = majorClass
@@ -28,6 +28,16 @@ public class MajorNavigationController: NavigationViewController {
         assert(majorClass is ViewController.Type)
         
         super.init(empty)
+    }
+    
+    public override func currentControllerDidChange() {
+        if let view = view as? DraggingView {
+            view.controller = controller
+        }
+    }
+    
+    public override func viewClass() ->AnyClass {
+        return DraggingView.self
     }
 
     
@@ -90,6 +100,7 @@ public class MajorNavigationController: NavigationViewController {
         self.window?.remove(object: self, for: .Escape)
         self.window?.remove(object: self, for: .Return)
     }
+    
     
     public override func escapeKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected

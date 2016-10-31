@@ -50,7 +50,10 @@ open class Control: View {
             return self.style.backgroundColor
         }
         set {
-            self.style.backgroundColor = newValue
+            if self.style.backgroundColor != newValue {
+                self.style.backgroundColor = newValue
+                self.setNeedsDisplayLayer()
+            }
         }
     }
     
@@ -134,14 +137,7 @@ open class Control: View {
     }
    
     
-    func mouseInside() -> Bool {
-        if let window = self.window {
-            var location:NSPoint = window.mouseLocationOutsideOfEventStream
-            location = self.convert(location, from: nil)
-            return NSPointInRect(location, self.bounds)
-        }
-        return false
-    }
+
     
     public func set(handler:@escaping () -> Void, for event:ControlEvent) -> Void {
         handlers.append((event,handler))
@@ -185,7 +181,7 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled {
-            if mouseInside() {
+            if mouseInside()  {
                 send(event: .Click)
             }
             
@@ -256,14 +252,13 @@ open class Control: View {
             
              updateState()
         } else {
-            super.mouseDown(with: event)
+            super.mouseDragged(with: event)
         }
     }
     
     func apply(style:ControlStyle) -> Void {
         self.setNeedsDisplayLayer()
-        
-        
+
     }
     
     required public init(frame frameRect: NSRect) {

@@ -8,6 +8,25 @@
 
 import Foundation
 
+public let kUIKitAnimationBackground = "UIKitAnimationBackground"
+
+class ViewLayer : CALayer {
+    override init(layer: Any) {
+        super.init(layer: layer)
+    }
+    
+    override open class func needsDisplay(forKey:String) -> Bool {
+        if forKey == kUIKitAnimationBackground {
+            return true
+        }
+        return false
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 public struct BorderType: OptionSet {
     public var rawValue: UInt32
     
@@ -85,7 +104,10 @@ open class View : NSView,CALayerDelegate {
  
     }
     
+    
+    
     open func draw(_ layer: CALayer, in ctx: CGContext) {
+                
         if let displayDelegate = displayDelegate {
             displayDelegate.draw(layer, in: ctx)
         } else {
@@ -119,6 +141,7 @@ open class View : NSView,CALayerDelegate {
     public func setNeedsDisplay() -> Void {
         self.layer?.setNeedsDisplay()
     }
+    
     
     
     open override var isFlipped: Bool {
@@ -195,8 +218,33 @@ open class View : NSView,CALayerDelegate {
         return copy
     }
     
+    func mouseInside() -> Bool {
+        if let window = self.window {
+            var location:NSPoint = window.mouseLocationOutsideOfEventStream
+            location = self.convert(location, from: nil)
+            
+            if let view = window.contentView!.hitTest(window.mouseLocationOutsideOfEventStream) {
+                if view == self {
+                    return NSPointInRect(location, self.bounds)
+                } else {
+                    var s = view.superview
+                    while let sv = s {
+                        if sv == self {
+                            return NSPointInRect(location, self.bounds)
+                        }
+                        s = sv.superview
+                    }
+                }
+            }
+
+        }
+        return false
+    }
+    
     open var kitWindow: Window? {
         return super.window as? Window
     }
+    
+   
     
 }

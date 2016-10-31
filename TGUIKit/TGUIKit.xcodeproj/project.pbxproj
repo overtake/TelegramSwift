@@ -70,6 +70,7 @@
 		C291ED991DB35BC5008C6B2A /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED981DB35BC5008C6B2A /* Window.swift */; };
 		C291ED9B1DB361ED008C6B2A /* KeyboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */; };
 		C296AF841D8D9D7D001DBB59 /* RadialProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF831D8D9D7D001DBB59 /* RadialProgressView.swift */; };
+		C29B5F3C1DC66DAC00D13E65 /* DraggingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */; };
 		C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1171DA1673200ACB1DD /* TableAnimationInterface.swift */; };
 		C2B1A11E1DA26BA400ACB1DD /* TransactionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A11D1DA26BA400ACB1DD /* TransactionHandler.swift */; };
 		C2B1A1251DA2F3DC00ACB1DD /* ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1241DA2F3DC00ACB1DD /* ContextMenu.swift */; };
@@ -153,6 +154,7 @@
 		C291ED981DB35BC5008C6B2A /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardUtils.swift; sourceTree = "<group>"; };
 		C296AF831D8D9D7D001DBB59 /* RadialProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressView.swift; sourceTree = "<group>"; };
+		C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DraggingView.swift; sourceTree = "<group>"; };
 		C2B1A1171DA1673200ACB1DD /* TableAnimationInterface.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableAnimationInterface.swift; sourceTree = "<group>"; };
 		C2B1A11D1DA26BA400ACB1DD /* TransactionHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionHandler.swift; sourceTree = "<group>"; };
 		C2B1A1241DA2F3DC00ACB1DD /* ContextMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMenu.swift; sourceTree = "<group>"; };
@@ -418,6 +420,7 @@
 				C291ED981DB35BC5008C6B2A /* Window.swift */,
 				C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */,
 				C2167E5C1DC2534300F98E03 /* SelectingControl.swift */,
+				C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -539,6 +542,7 @@
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
 				C2303E7A1D9987FE00098E12 /* Popover.swift in Sources */,
+				C29B5F3C1DC66DAC00D13E65 /* DraggingView.swift in Sources */,
 				C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */,
 				C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */,
 				C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */,

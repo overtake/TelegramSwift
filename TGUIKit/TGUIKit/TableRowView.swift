@@ -38,6 +38,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return .white
     }
     
+    open var isSelect: Bool {
+        return false
+    }
+    
     open override func draw(_ dirtyRect: NSRect) {
         
     }

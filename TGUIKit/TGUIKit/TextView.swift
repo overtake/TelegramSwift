@@ -53,7 +53,7 @@ public final class TextViewLayout : Equatable {
     public var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
     public var selectedRange:TextSelectedRange = TextSelectedRange()
-    
+    public var penFlush:CGFloat = 0.0
     
     fileprivate var lines:[TextViewLine] = []
     
@@ -63,12 +63,21 @@ public final class TextViewLayout : Equatable {
     
     public private(set) var layoutSize:NSSize = NSZeroSize
     
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil) {
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
         self.attributedString = attributedString
         self.constrainedWidth = constrainedWidth
+        
+        switch alignment {
+        case .center:
+            penFlush = 0.5
+        case .right:
+            penFlush = 1.0
+        default:
+            penFlush = 0.0
+        }
     }
     
     func calculateLayout() -> Void {
@@ -336,20 +345,13 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
 }
 
 
-public class TextView: View {
+public class TextView: Control {
     
     private var layout:TextViewLayout?
     
     private var beginSelect:NSPoint = NSZeroPoint
     private var endSelect:NSPoint = NSZeroPoint
 
-    public var userInteractionEnabled:Bool = true {
-        didSet {
-            if oldValue != userInteractionEnabled {
-                self.setNeedsDisplayLayer()
-            }
-        }
-    }
     
     public var isSelectable:Bool = true {
         didSet {
@@ -359,10 +361,10 @@ public class TextView: View {
         }
     }
     
-    private var trackingArea:NSTrackingArea?
     
     public override init() {
         super.init();
+        self.style = ControlStyle(backgroundColor:.white)
     }
 
     public override var isFlipped: Bool {
@@ -371,24 +373,12 @@ public class TextView: View {
 
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
-        
+        self.style = ControlStyle(backgroundColor:.white)
         self.layer?.isOpaque = true
        // self.layer?.drawsAsynchronously = System.drawAsync
     }
     
-    public override func updateTrackingAreas() {
-        super.updateTrackingAreas();
-        
-        if let trackingArea = trackingArea {
-            self.removeTrackingArea(trackingArea)
-        }
-        
-        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
-        self.trackingArea = NSTrackingArea.init(rect: self.bounds, options: options, owner: self, userInfo: nil)
-        
-        self.addTrackingArea(self.trackingArea!)
-    }
-    
+
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         super.draw(layer, in: ctx)
@@ -480,7 +470,10 @@ public class TextView: View {
             
             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
-                ctx.textPosition = CGPoint(x: line.frame.minX, y: line.frame.minY)
+                
+                let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(frame.width)))
+                
+                ctx.textPosition = CGPoint(x: penOffset, y: line.frame.minY)
                 CTLineDraw(line.line, ctx)
                 
             }
@@ -531,7 +524,7 @@ public class TextView: View {
     
     func _mouseDown(with event: NSEvent) -> Void {
         
-        if !isSelectable {
+        if !isSelectable || !userInteractionEnabled {
             return
         }
         
@@ -551,7 +544,7 @@ public class TextView: View {
     }
     
     func _mouseDragged(with event: NSEvent) -> Void {
-        if !isSelectable {
+        if !isSelectable || !userInteractionEnabled {
             return
         }
         
@@ -594,7 +587,7 @@ public class TextView: View {
     func checkCursor(_ event:NSEvent) -> Void {
         let location = self.convert(event.locationInWindow, from: nil)
         
-        if self.mouse(location , in: self.visibleRect) && !hasVisibleModal && userInteractionEnabled {
+        if self.mouse(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
             
             if let layout = layout, let (_, _) = layout.link(at: location) {
                 NSCursor.pointingHand().set()

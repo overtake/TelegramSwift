@@ -40,7 +40,11 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         return lock
     }
     
-    public private(set) var controller:ViewController
+    public private(set) var controller:ViewController {
+        didSet {
+            currentControllerDidChange()
+        }
+    }
     
     private var navigationBar:NavigationBarView = NavigationBarView()
     
@@ -56,6 +60,10 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         self.view.addSubview(navigationBar)
         
         self.view.addSubview(controller.view)
+        
+    }
+    
+    open func currentControllerDidChange() {
         
     }
     
