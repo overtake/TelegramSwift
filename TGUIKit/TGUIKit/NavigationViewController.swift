@@ -16,6 +16,8 @@ public enum ViewControllerStyle {
 
 public class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
 
+    public private(set) var modalAction:NavigationModalAction?
+    
     var stack:[ViewController] = [ViewController]()
     var lock:Bool = false
     
@@ -43,6 +45,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     public private(set) var controller:ViewController {
         didSet {
             currentControllerDidChange()
+            self.removeModalAction()
         }
     }
     
@@ -172,8 +175,6 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         controller.viewWillAppear(true);
         
         
-        
-        
         CATransaction.begin()
 
         
@@ -209,6 +210,21 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
             stack.removeLast()
             show(controller, .pop)
         }
+    }
+    
+    public func set(modalAction:NavigationModalAction) {
+        self.modalAction = modalAction
+        
+        let actionView = NavigationModalView(action: modalAction, viewController: self)
+        modalAction.view = actionView
+        actionView.frame = bounds
+        view.addSubview(actionView)
+        
+    }
+    
+    public func removeModalAction() {
+        self.modalAction?.view?.removeFromSuperview()
+        self.modalAction = nil
     }
     
     

@@ -64,7 +64,7 @@ public class TextViewLabel: View {
     
     func update(attr:NSAttributedString?, size:NSSize) -> Void {
         if let attr = attr {
-            text = TextNode.layoutText(node)(attr, nil, 1, .end, size, nil,false)
+            text = TextNode.layoutText(node)(attr, nil, 1, .end, size, nil,false, .left)
         } else {
             text = nil
         }
@@ -74,7 +74,7 @@ public class TextViewLabel: View {
     public override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         if autosize {
-            text = TextNode.layoutText(node)(self.attributedString, nil, 1, .end, NSMakeSize(newSize.width - inset.left - inset.right, newSize.height), nil,false)
+            text = TextNode.layoutText(node)(self.attributedString, nil, 1, .end, NSMakeSize(newSize.width - inset.left - inset.right, newSize.height), nil,false, .left)
             self.setNeedsDisplay()
         }
     }

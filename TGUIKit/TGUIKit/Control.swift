@@ -38,7 +38,13 @@ open class Control: View {
     
     var trackingArea:NSTrackingArea?
 
-    public var userInteractionEnabled:Bool = true
+    public var interactionStateForRestore = true
+    
+    public var userInteractionEnabled:Bool = true {
+        didSet {
+            interactionStateForRestore = oldValue
+        }
+    }
     
     private var handlers:[(ControlEvent,() -> Void)] = []
     private var stateHandlers:[(ControlState,() -> Void)] = []
@@ -279,6 +285,13 @@ open class Control: View {
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    open override func becomeFirstResponder() -> Bool {
+        if let window = kitWindow {
+            return window.makeFirstResponder(self)
+        }
+        return false
     }
     
 }

@@ -52,7 +52,7 @@ open class EditableViewController: ViewController {
     }
     
     open func change(state:ViewControllerState) ->Void {
-        if case let .Normal(text) = state {
+        if case .Normal = state {
             self.state = ViewControllerState.Edit
         } else {
             self.state = ViewControllerState.Normal

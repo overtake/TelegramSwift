@@ -110,8 +110,9 @@ public class TitleButton: ImageButton {
             }
         }
        
+
+
         self.text.frame = NSMakeRect(0, 0, textSize, size.height)
-        
         self.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: maxWidth, height: max(size.height,maxSize.height))
 
     }
@@ -123,8 +124,8 @@ public class TitleButton: ImageButton {
         if let image = imageView.image {
             var imageFocus:NSRect = focus(self.imageView.frame.size)
             
-            self.text.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 + 6.0), textFocus.minY, textFocus.width, textFocus.height)
             self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
+            self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
         } else {
             self.text.frame = textFocus
         }
@@ -151,7 +152,7 @@ public class TitleButton: ImageButton {
             self.set(color: style.foregroundColor, for: .Normal)
             self.set(color: style.highlightColor, for: .Highlight)
             self.set(font: style.font, for: .Normal)
-
+            self.backgroundColor = style.backgroundColor
         }
         get {
             return super.style

@@ -7,11 +7,12 @@
 //
 
 import Cocoa
-
+import SwiftSignalKitMac
 open class Node: NSObject, ViewDisplayDelegate {
     
     
-    public var readyDisplay:(Bool)->Void = {(_) in}
+    public let nodeReady = Promise<Bool>()
+    
     
     open var backgroundColor:NSColor? {
         return self.view?.backgroundColor

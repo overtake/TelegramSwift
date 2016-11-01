@@ -104,8 +104,13 @@ public class MajorNavigationController: NavigationViewController {
     
     public override func escapeKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
-        if self.controller.escapeKeyAction() == .invokeNext {
+        
+        let cInvoke = self.controller.escapeKeyAction()
+        
+        if cInvoke == .invokeNext {
             return .invokeNext
+        } else if cInvoke == .invoked {
+            return .invoked
         }
         self.back()
         return status

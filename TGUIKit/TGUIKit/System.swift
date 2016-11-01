@@ -30,6 +30,22 @@ public func localizedString(_ key:String) -> String {
     return NSLocalizedString(key, comment: "")
 }
 
+public func localizedString(_ key:String, countable:Int = 0, apply:Bool = true) -> String {
+    let suffix:String
+    if countable == 1 {
+        suffix = ".singular"
+    } else if countable > 1 {
+        suffix = ".pluar"
+    } else {
+        suffix = ".zero"
+    }
+    if apply {
+        return String(format: NSLocalizedString(key + suffix, comment: ""), countable)
+    } else {
+        return NSLocalizedString(key + suffix, comment: "")
+    }
+}
+
 public func reverseIndexList<T>(_ list:[(Int,T,Int?)], _ previousCount:Int, _ updateCount:Int) -> [(Int,T,Int?)] {
     var reversed:[(Int,T,Int?)] = []
     

@@ -32,9 +32,28 @@ class KeyHandler : Comparable {
     }
 }
 func ==(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
-    return lhs.priority < rhs.priority
+    return lhs.priority == rhs.priority
 }
 func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
+    return lhs.priority < rhs.priority
+}
+
+
+class ResponderObserver : Comparable {
+    let handler:()->KeyHandlerResult
+    let object:WeakReference<NSObject>
+    let priority:HandlerPriority
+    
+    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority) {
+        self.handler = handler
+        self.object = WeakReference(value: object)
+        self.priority = priority
+    }
+}
+func ==(lhs: ResponderObserver, rhs: ResponderObserver) -> Bool {
+    return lhs.priority == rhs.priority
+}
+func <(lhs: ResponderObserver, rhs: ResponderObserver) -> Bool {
     return lhs.priority < rhs.priority
 }
 
@@ -47,6 +66,8 @@ public enum KeyHandlerResult {
 public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var keyboardResponderHandler:(()->NSResponder?)?
+    
+    
     
     public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]

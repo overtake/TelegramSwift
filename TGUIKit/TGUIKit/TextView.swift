@@ -385,12 +385,13 @@ public class TextView: Control {
 
         if let layout = layout {
             
+
             ctx.setAllowsAntialiasing(true)
+            ctx.setShouldAntialias(true)
             ctx.setShouldSmoothFonts(!System.isRetina)
             ctx.setAllowsFontSmoothing(!System.isRetina)
             
-            
-
+           
             
             if layout.selectedRange.range.location != NSNotFound && isSelectable {
                 

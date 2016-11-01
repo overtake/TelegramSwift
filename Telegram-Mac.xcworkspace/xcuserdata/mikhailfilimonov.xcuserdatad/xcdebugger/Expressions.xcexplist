@@ -246,6 +246,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatInputAccessory.isVisibility() -&gt; Bool:ChatInputAccessory.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "forwardModel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatRowView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatRowView.swift">
          <PersistentStrings>
             <PersistentString
@@ -262,18 +270,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatInteraction.init() -&gt; ChatInteraction:ChatInterfaceInteraction.swift">
-      </ContextState>
-      <ContextState
          contextName = "ChatController.change(state : ViewControllerState) -&gt; ():ChatController.swift">
          <PersistentStrings>
             <PersistentString
                value = "">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatInteraction.init() -&gt; ChatInteraction:ChatInterfaceInteraction.swift">
+      </ContextState>
+      <ContextState
+         contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
       </ContextState>
       <ContextState
          contextName = "TabBarView.setSelectedIndex(Int, respondToDelegate : Bool) -&gt; ():TabBarView.swift">
@@ -473,12 +481,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ReplyModel.draw(CALayer, in : CGContext) -&gt; ():ReplyModel.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "layer.frame">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "ViewTracker.unsentViewUpdated() -&gt; ():ViewTracker.swift">
       </ContextState>
       <ContextState
          contextName = "ImageView.image.didset:ImageView.swift">
@@ -491,6 +494,14 @@
             </PersistentString>
             <PersistentString
                value = "self.layer?.bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ReplyModel.draw(CALayer, in : CGContext) -&gt; ():ReplyModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "layer.frame">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -517,9 +528,6 @@
          contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
       </ContextState>
       <ContextState
-         contextName = "ViewTracker.unsentViewUpdated() -&gt; ():ViewTracker.swift">
-      </ContextState>
-      <ContextState
          contextName = "ChatListController.loadOnScroll(Account, TGTableScrollUpdate) -&gt; ():ChatListController.swift">
       </ContextState>
       <ContextState
@@ -537,7 +545,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -549,7 +557,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

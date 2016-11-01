@@ -21,7 +21,7 @@ open class ImageButton: Button {
         images[state] = image
         
         if state == .Normal  {
-            if autohighlight && images[.Highlight] == nil {
+            if autohighlight {
                 set(image: style.highlight(image: image), for: .Highlight)
             }
             if highlightHovered {

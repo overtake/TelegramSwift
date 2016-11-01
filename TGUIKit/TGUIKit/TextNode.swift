@@ -41,11 +41,12 @@ public final class TextNodeLayout: NSObject {
     fileprivate let backgroundColor: NSColor?
     fileprivate let constrainedSize: NSSize
     fileprivate let cutout: TextNodeCutout?
+    fileprivate let alignment:NSTextAlignment
     public let size: NSSize
     fileprivate let lines: [TextNodeLine]
     public var selected:Bool = false
     
-    fileprivate init(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, constrainedSize: NSSize, cutout: TextNodeCutout?, size: NSSize, lines: [TextNodeLine], backgroundColor: NSColor?) {
+    fileprivate init(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, constrainedSize: NSSize, cutout: TextNodeCutout?, size: NSSize, lines: [TextNodeLine], backgroundColor: NSColor?, alignment:NSTextAlignment = .left) {
         self.attributedString = attributedString
         self.maximumNumberOfLines = maximumNumberOfLines
         self.truncationType = truncationType
@@ -54,6 +55,7 @@ public final class TextNodeLayout: NSObject {
         self.size = size
         self.lines = lines
         self.backgroundColor = backgroundColor
+        self.alignment = alignment
     }
     
     var numberOfLines: Int {
@@ -78,7 +80,7 @@ public class TextNode: NSObject {
     }
     
     
-    private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool) -> TextNodeLayout {
+    private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool, alignment:NSTextAlignment) -> TextNodeLayout {
         
         var attr = attributedString
         
@@ -124,7 +126,7 @@ public class TextNode: NSObject {
             var maybeTypesetter: CTTypesetter?
             maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)
             if maybeTypesetter == nil {
-                return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor)
+                return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment)
             }
             
             let typesetter = maybeTypesetter!
@@ -227,9 +229,9 @@ public class TextNode: NSObject {
                 }
             }
             
-            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(width: ceil(layoutSize.width), height: ceil(layoutSize.height)), lines: lines, backgroundColor: backgroundColor)
+            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(width: ceil(layoutSize.width), height: ceil(layoutSize.height)), lines: lines, backgroundColor: backgroundColor, alignment:alignment)
         } else {
-            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor)
+            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment)
         }
     }
     
@@ -250,7 +252,15 @@ public class TextNode: NSObject {
             context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
              for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
-                context.textPosition = CGPoint(x: line.frame.origin.x + NSMinX(dirtyRect), y: line.frame.origin.y + NSMinY(dirtyRect))
+                
+                var penFlush:CGFloat = 0.0
+                if layout.alignment == .center {
+                    penFlush = 0.5
+                }
+                
+                let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, penFlush, Double(dirtyRect.width)))
+
+                context.textPosition = CGPoint(x: penOffset + NSMinX(dirtyRect), y: line.frame.origin.y + NSMinY(dirtyRect))
                 CTLineDraw(line.line, context)
                 
             }
@@ -262,14 +272,16 @@ public class TextNode: NSObject {
       //  context.setBlendMode(.normal)
     }
     
-     open class func layoutText(_ maybeNode: TextNode?) -> (_ attributedString: NSAttributedString?, _ backgroundColor: NSColor?, _ maximumNumberOfLines: Int, _ truncationType: CTLineTruncationType, _ constrainedSize: NSSize, _ cutout: TextNodeCutout?,_ selected:Bool ) -> (TextNodeLayout, () -> TextNode) {
+
+    
+    open class func layoutText(_ maybeNode: TextNode?) -> (_ attributedString: NSAttributedString?, _ backgroundColor: NSColor?, _ maximumNumberOfLines: Int, _ truncationType: CTLineTruncationType, _ constrainedSize: NSSize, _ cutout: TextNodeCutout?,_ selected:Bool, _ alignment:NSTextAlignment ) -> (TextNodeLayout, () -> TextNode) {
         let existingLayout: TextNodeLayout? = maybeNode?.currentLayout
         
-        return { attributedString, backgroundColor, maximumNumberOfLines, truncationType, constrainedSize, cutout, selected in
+        return { attributedString, backgroundColor, maximumNumberOfLines, truncationType, constrainedSize, cutout, selected, alignment in
             let layout: TextNodeLayout
             
             var updated = false
-            if let existingLayout = existingLayout, existingLayout.constrainedSize == constrainedSize && existingLayout.maximumNumberOfLines == maximumNumberOfLines && existingLayout.truncationType == truncationType && existingLayout.cutout == cutout && existingLayout.selected == selected {
+            if let existingLayout = existingLayout, existingLayout.constrainedSize == constrainedSize && existingLayout.maximumNumberOfLines == maximumNumberOfLines && existingLayout.truncationType == truncationType && existingLayout.cutout == cutout && existingLayout.selected == selected && existingLayout.alignment == alignment {
                 let stringMatch: Bool
                 if let existingString = existingLayout.attributedString, let string = attributedString {
                     stringMatch = existingString.isEqual(to: string)
@@ -282,11 +294,11 @@ public class TextNode: NSObject {
                 if stringMatch {
                     layout = existingLayout
                 } else {
-                    layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected)
+                    layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
                     updated = true
                 }
             } else {
-                layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected)
+                layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
                 updated = true
             }
             

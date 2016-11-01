@@ -31,7 +31,7 @@ public class BadgeNode: Node {
     }
     
     public init(_ attributedString:NSAttributedString, _ fillColor:NSColor) {
-        textLayout = TextNode.layoutText(nil)(attributedString, nil, 1, .middle, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false)
+        textLayout = TextNode.layoutText(nil)(attributedString, nil, 1, .middle, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
         self.fillColor = fillColor
         super.init()
         

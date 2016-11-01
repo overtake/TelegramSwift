@@ -31,6 +31,7 @@ open class ViewController : NSObject {
     public var popover:Popover?
     public var modal:Modal?
     
+    
     private let _ready = Promise<Bool>()
     open var ready: Promise<Bool> {
         return self._ready
@@ -198,6 +199,7 @@ open class ViewController : NSObject {
             popover.show(for: control, edge: edge, inset: inset)
         }
     }
+    
     
 
 }

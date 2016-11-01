@@ -135,6 +135,8 @@
 		C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F401DC7859800D13E65 /* InputContextHelper.swift */; };
 		C29B5F431DC7970400D13E65 /* sent.caf in Resources */ = {isa = PBXBuildFile; fileRef = C29B5F421DC794C700D13E65 /* sent.caf */; };
 		C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */; };
+		C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */; };
+		C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */; };
 		C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */; };
 		C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */; };
 		C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */; };
@@ -314,6 +316,8 @@
 		C29B5F401DC7859800D13E65 /* InputContextHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputContextHelper.swift; sourceTree = "<group>"; };
 		C29B5F421DC794C700D13E65 /* sent.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sent.caf; sourceTree = "<group>"; };
 		C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageActionsPanelView.swift; sourceTree = "<group>"; };
+		C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardPanelModel.swift; sourceTree = "<group>"; };
+		C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWDNavigationAction.swift; sourceTree = "<group>"; };
 		C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowItem.swift; sourceTree = "<group>"; };
 		C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowView.swift; sourceTree = "<group>"; };
 		C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceState.swift; sourceTree = "<group>"; };
@@ -626,6 +630,7 @@
 		C2303E881D9A767E00098E12 /* right */ = {
 			isa = PBXGroup;
 			children = (
+				C29B5F4D1DC8F37100D13E65 /* navigation actions */,
 				C2271DD01DAF6DD9001792B6 /* some controllers */,
 				C2271DA81DAD867E001792B6 /* PeerInfo */,
 				C20232A61D81D178007C9ADE /* chat */,
@@ -828,6 +833,14 @@
 			name = context;
 			sourceTree = "<group>";
 		};
+		C29B5F4D1DC8F37100D13E65 /* navigation actions */ = {
+			isa = PBXGroup;
+			children = (
+				C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */,
+			);
+			name = "navigation actions";
+			sourceTree = "<group>";
+		};
 		C2B1A10F1D9FD09000ACB1DD /* interface */ = {
 			isa = PBXGroup;
 			children = (
@@ -844,6 +857,7 @@
 			children = (
 				C253A96C1D92F69C00CDC850 /* ReplyModel.swift */,
 				C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */,
+				C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */,
 			);
 			name = models;
 			sourceTree = "<group>";
@@ -1100,6 +1114,7 @@
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C2271F511D9C392400424F7B /* InputAttachRowView.swift in Sources */,
+				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
@@ -1111,6 +1126,7 @@
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
+				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
 				C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */,
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,

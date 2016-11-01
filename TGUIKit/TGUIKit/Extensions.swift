@@ -335,13 +335,24 @@ public extension NSView {
         }
     }
     
-    public func hierarchyInteraction(enable:Bool) -> Void {
+    public func disableHierarchyInteraction() -> Void {
         for sub in self.subviews {
             if let sub = sub as? Control {
-                sub.userInteractionEnabled = enable
+                sub.userInteractionEnabled = false
             }
             if sub.subviews.count > 0 {
-                sub.hierarchyInteraction(enable: enable)
+                sub.disableHierarchyInteraction()
+            }
+        }
+    }
+    
+    public func restoreHierarchyInteraction() -> Void {
+        for sub in self.subviews {
+            if let sub = sub as? Control {
+                sub.userInteractionEnabled = sub.interactionStateForRestore
+            }
+            if sub.subviews.count > 0 {
+                sub.restoreHierarchyInteraction()
             }
         }
     }
