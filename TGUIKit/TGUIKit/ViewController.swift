@@ -121,12 +121,34 @@ open class ViewController : NSObject {
         
     }
     
+    deinit {
+        self.window?.removeObserver(for: self)
+    }
+    
     open func viewWillDisappear(_ animated:Bool) -> Void {
-        
+        //assert(self.window != nil)
+        if canBecomeResponder {
+            self.window?.removeObserver(for: self)
+        }
+    }
+    
+    public func isLoaded() -> Bool {
+        return _view != nil
     }
     
     open func viewDidAppear(_ animated:Bool) -> Void {
-
+        //assert(self.window != nil)
+        if canBecomeResponder {
+            self.window?.set(responder: {[weak self] () -> NSResponder? in
+                return self?.firstResponder()
+            }, with: self, priority: responderPriority)
+            
+            self.window?.applyResponderIfNeeded()
+        }
+    }
+    
+    open var canBecomeResponder: Bool {
+        return true
     }
     
     open func escapeKeyAction() -> KeyHandlerResult {
@@ -142,22 +164,24 @@ open class ViewController : NSObject {
     }
     
     open func viewDidDisappear(_ animated:Bool) -> Void {
-//        if let escapeModifier = escapeModifier {
-//            self.window?.set(escape: escapeModifier.0)
-//        }
+        
     }
     
     open func becomeFirstResponder() -> Bool? {
-        
-//        self.window?.setKeyboardResponder(force: {[weak self] () -> NSResponder? in
-//            return self?.view
-//        })
-        
-        return self.view.becomeFirstResponder()
+
+        return _view?.becomeFirstResponder()
     }
     
     public var window:Window? {
-        return self.view.kitWindow
+        return _view?.kitWindow
+    }
+    
+    open func firstResponder() -> NSResponder? {
+        return nil
+    }
+    
+    open var responderPriority:HandlerPriority {
+        return .low
     }
     
     public var frame:NSRect {
@@ -200,13 +224,7 @@ open class ViewController : NSObject {
         }
     }
     
-    
 
 }
 
-public func showModal(with controller:ViewController, for window:Window) -> Void {
-    assert(controller.modal == nil)
-    
-    controller.modal = Modal(controller: controller, for: window)
-    controller.modal?.show()
-}
+

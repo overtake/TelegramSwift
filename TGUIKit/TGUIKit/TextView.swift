@@ -642,6 +642,11 @@ public class TextView: Control {
         }
     }
     
+    @objc func paste(_ sender:Any) {
+        
+    }
+    
+ 
     
     override required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

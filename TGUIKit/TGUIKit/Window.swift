@@ -12,6 +12,8 @@ public enum HandlerPriority: Int, Comparable {
     case low = 0
     case medium = 1
     case high = 2
+    case modal = 3
+    
 }
 
 public func <(lhs: HandlerPriority, rhs: HandlerPriority) -> Bool {
@@ -40,11 +42,11 @@ func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
 
 
 class ResponderObserver : Comparable {
-    let handler:()->KeyHandlerResult
+    let handler:()->NSResponder?
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     
-    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority) {
+    init(_ handler:@escaping()->NSResponder?, _ object:NSObject?, _ priority:HandlerPriority) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -65,9 +67,23 @@ public enum KeyHandlerResult {
 
 public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
-    private var keyboardResponderHandler:(()->NSResponder?)?
+    private var responsders:[ResponderObserver] = []
     
+    public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
+        responsders.append(ResponderObserver(responder, object, priority))
+    }
     
+    public func removeObserver(for object:NSObject) {
+        var copy:[ResponderObserver] = []
+        for observer in responsders {
+            copy.append(observer)
+        }
+        for i in stride(from: copy.count - 1, to: -1, by: -1) {
+            if copy[i].object.value == object || copy[i].object.value == nil  {
+                responsders.remove(at: i)
+            }
+        }
+    }
     
     public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]
@@ -86,7 +102,7 @@ public class Window: NSWindow {
             for handle in handlers {
                 copy.append(handle)
             }
-            for i in stride(from: copy.count - 1, to: 0, by: -1) {
+            for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == object || copy[i].object.value == nil  {
                     keyHandlers[key]?.remove(at: i)
                 }
@@ -94,13 +110,40 @@ public class Window: NSWindow {
         }
     }
     
-    public func setKeyboardResponder(force handler:@escaping()->NSResponder?) {
-        keyboardResponderHandler = handler
+    public func applyResponderIfNeeded() ->Void {
+        let sorted = responsders.sorted(by: >)
+        
+        for observer in sorted {
+            if let responder = observer.handler() {
+                if self.firstResponder != responder {
+                    let _ = self.resignFirstResponder()
+                    self.makeFirstResponder(responder)
+                }
+                break
+            }
+        }
+    }
+    
+    
+    
+    @objc public func pasteToFirstResponder(_ sender: Any) {
+        
+        applyResponderIfNeeded()
+        
+        if firstResponder.responds(to: NSSelectorFromString("paste:")) {
+            firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+        }
+        
     }
     
     public override func sendEvent(_ event: NSEvent) {
         
         if event.type == .keyDown {
+            
+           applyResponderIfNeeded()
+            
+            
+            
 //            if let responderHandler = keyboardResponderHandler {
 //                let responder = responderHandler()
 //                if self.firstResponder != responder {

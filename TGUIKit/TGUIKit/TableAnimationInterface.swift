@@ -52,7 +52,7 @@ open class TableAnimationInterface: NSObject {
                 
             } else if height - bounds.height < table.frame.height {
                 
-                var range:NSRange = table.visibleRows(height)
+                let range:NSRange = table.visibleRows(height)
                 
                 for item in added {
                     if item.index < range.location || item.index > range.location + range.length {

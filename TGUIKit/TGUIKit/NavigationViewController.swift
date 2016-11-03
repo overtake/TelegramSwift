@@ -58,14 +58,19 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         super.loadView();
         self.view.autoresizesSubviews = true
         
+        controller.viewWillAppear(false)
         controller.navigationController = self
         
         self.view.addSubview(navigationBar)
-        
         self.view.addSubview(controller.view)
+        controller.viewDidAppear(false)
         
     }
     
+    
+    open override var canBecomeResponder: Bool {
+        return false
+    }
     open func currentControllerDidChange() {
         
     }
@@ -153,9 +158,9 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
             previous.view.setFrameOrigin(NSMakePoint(pto, previous.frame.minY))
             self.view.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
         case .none:
+            previous.viewWillDisappear(false);
             previous.view.removeFromSuperview()
             self.view.addSubview(controller.view)
-            previous.viewWillDisappear(false);
             controller.viewWillAppear(false);
             previous.viewDidDisappear(false);
             controller.viewDidAppear(false);
@@ -184,8 +189,9 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
          
         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (completed) in
             
-            previous.viewDidDisappear(true);
             previous.view.removeFromSuperview()
+            previous.viewDidDisappear(true);
+
             self?.lock = false
         });
         

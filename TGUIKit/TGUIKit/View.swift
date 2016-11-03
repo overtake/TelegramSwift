@@ -183,6 +183,10 @@ open class View : NSView,CALayerDelegate {
     }
     
     
+    open var responder:NSResponder? {
+        return self
+    }
+    
     open func setNeedsDisplayLayer() -> Void {
         self.layer?.setNeedsDisplay()
     }

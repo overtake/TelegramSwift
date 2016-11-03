@@ -541,7 +541,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    func reloadData(row:Int, animated:Bool = false) -> Void {
+    public var firstItem:TableRowItem? {
+        return self.list.first
+    }
+    
+    public var lastItem:TableRowItem? {
+        return self.list.last
+    }
+    
+    public func noteHeightOfRow(_ row:Int, _ animated:Bool = true) {
+        tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+    }
+    
+    public func reloadData(row:Int, animated:Bool = false) -> Void {
         if let view = self.viewNecessary(at: row) {
             let item = self.item(at: row)
             
@@ -648,6 +660,63 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if(redraw) {
             self.tableView.removeRows(at: IndexSet(integersIn: 0..<count), withAnimation: animation)
         }
+    }
+    
+    public func selectNext(_ scroll:Bool = false, _ animated:Bool = false) -> Void {
+        let hash = selectedhash.modify({$0})
+        if hash != -1 {
+            let selectedItem = self.item(stableId: hash)
+            if let selectedItem = selectedItem {
+                var selectedIndex = self.index(of: selectedItem)!
+                selectedIndex += 1
+                
+                if selectedIndex == count  {
+                   selectedIndex = 0
+                }
+                
+                 select(item: item(at: selectedIndex))
+            }
+            
+            
+        } else {
+            if let firstItem = firstItem {
+                self.select(item: firstItem)
+            }
+        }
+        if selectedhash.modify({$0}) != -1 {
+            self.scroll(to: .top(selectedhash.modify({$0}), true), inset: EdgeInsets(), true)
+        }
+    }
+    
+    public func selectPrev(_ scroll:Bool = false, _ animated:Bool = false) -> Void {
+        let hash = selectedhash.modify({$0})
+        if hash != -1 {
+            let selectedItem = self.item(stableId: hash)
+            if let selectedItem = selectedItem {
+                var selectedIndex = self.index(of: selectedItem)!
+                selectedIndex -= 1
+                
+                if selectedIndex == -1  {
+                    selectedIndex = count - 1
+                }
+                
+                select(item: item(at: selectedIndex))
+            }
+            
+            
+        } else {
+            if let lastItem = lastItem {
+                self.select(item: lastItem)
+            }
+        }
+        
+        if selectedhash.modify({$0}) != -1 {
+            self.scroll(to: .bottom(selectedhash.modify({$0}), animated), inset: EdgeInsets(), true)
+        }
+    }
+    
+    public var isEmpty:Bool {
+        return self.list.isEmpty
     }
     
     public func reloadData() -> Void {
@@ -973,7 +1042,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     
-    public func scroll(to state:TableScrollState, inset:EdgeInsets = EdgeInsets()) {
+    public func scroll(to state:TableScrollState, inset:EdgeInsets = EdgeInsets(), _ toVisible:Bool = false) {
        // if let index = self.index(of: item) {
         
             var item:TableRowItem?
@@ -984,10 +1053,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 item = self.item(stableId: stableId)
                 animate = animation
             case let .down(animation):
-                clipView.scroll(to: NSMakePoint(0, 0), animated:animation)
+                if !tableView.isFlipped {
+                    clipView.scroll(to: NSMakePoint(0, 0), animated:animation)
+                } else {
+                    clipView.scroll(to: NSMakePoint(0, max(0,documentSize.height - frame.height)), animated:animation)
+                }
                 return
             case let .up(animation):
-                clipView.scroll(to: NSMakePoint(0, documentSize.height), animated:animation)
+                if !tableView.isFlipped {
+                    clipView.scroll(to: NSMakePoint(0, max(documentSize.height,frame.height)), animated:animation)
+                } else {
+                   clipView.scroll(to: NSMakePoint(0, 0), animated:animation)
+                }
                 return
             default:
                 fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
@@ -999,6 +1076,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
             
             switch state {
+            case let .bottom(stableId, _):
+                if tableView.isFlipped {
+                    rowRect.origin.y -= (height - rowRect.height)
+                }
             case let .top(stableId, _):
                 if !tableView.isFlipped {
                     rowRect.origin.y += height
@@ -1017,12 +1098,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
                    // fatalError("not implemented")
                 }
+    
             default:
                 fatalError("not implemented")
             }
             
+            if toVisible {
+                let view = self.viewNecessary(at: item.index)
+                if let view = view, view.visibleRect.height == item.height {
+                    return
+                }
+            }
             
-            clipView.scroll(to: NSMakePoint(0, NSMinY(rowRect) + inset.top), animated:animate)
+            clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate)
             
         } 
     }

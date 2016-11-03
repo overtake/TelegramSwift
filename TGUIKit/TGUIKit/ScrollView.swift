@@ -164,7 +164,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         var origin = clipView.bounds.origin
         let frameOrigin = clipView.frame.origin
         
-        deltaCorner = Int64(floorToScreenPixels(frame.height / 6.0))
+        deltaCorner = max(Int64(floorToScreenPixels(frame.height / 6.0)),40)
         
         let deltaScrollY = min(max(Int64(event.scrollingDeltaY),-deltaCorner),deltaCorner)
 

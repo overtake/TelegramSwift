@@ -7,6 +7,22 @@
 //
 
 import Cocoa
+import SwiftSignalKitMac
+open class ModalViewController : ViewController {
+    
+
+    open var modalInteractions:ModalInteractions? {
+        return nil
+    }
+    
+    open override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    open override func firstResponder() -> NSResponder? {
+        return self.view
+    }
+}
 
 private class ModalBackground : Control {
     fileprivate override func scrollWheel(with event: NSEvent) {
@@ -14,23 +30,127 @@ private class ModalBackground : Control {
     }
 }
 
+public class ModalInteractions {
+    let accept:(()->Void)?
+    let cancel:(()->Void)?
+    let acceptTitle:String
+    let cancelTitle:String?
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil)  {
+        self.accept = accept
+        self.cancel = cancel
+        self.acceptTitle = acceptTitle
+        self.cancelTitle = cancelTitle
+    }
+    
+}
+
+private class ModalInteractionsContainer : View {
+    let acceptView:TitleButton
+    let cancelView:TitleButton?
+    let modal:Modal
+    let interactions:ModalInteractions
+    init(interactions:ModalInteractions, modal:Modal) {
+        self.modal = modal
+        self.interactions = interactions
+        acceptView = TitleButton()
+        acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
+        acceptView.set(text: interactions.acceptTitle, for: .Normal)
+        acceptView.sizeToFit()
+        if let cancelTitle = interactions.cancelTitle {
+            cancelView = TitleButton()
+            cancelView?.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
+            cancelView?.set(text: cancelTitle, for: .Normal)
+            cancelView?.sizeToFit()
+            
+        } else {
+            cancelView = nil
+        }
+        
+        super.init()
+        
+        if let cancel = interactions.cancel {
+            cancelView?.set(handler: cancel, for: .Click)
+        } else {
+            cancelView?.set(handler: {
+                modal.close()
+            }, for: .Click)
+        }
+        
+        if let accept = interactions.accept {
+            acceptView.set(handler: {
+                accept()
+                modal.close()
+            }, for: .Click)
+        } else {
+            acceptView.set(handler: {
+                modal.close()
+            }, for: .Click)
+
+        }
+        
+        addSubview(acceptView)
+        if let cancelView = cancelView {
+            addSubview(cancelView)
+        }
+
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override required public init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    fileprivate override func layout() {
+        super.layout()
+        
+        acceptView.centerY(x:frame.width - acceptView.frame.width - 30)
+        if let cancelView = cancelView {
+            cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
+        }
+        
+    }
+    
+    
+}
+
 public class Modal: NSObject {
     
     private var background:ModalBackground
-    private var controller:ViewController?
-    private var container:View
+    private var controller:ModalViewController?
+    private var container:View!
     private var window:Window
+    private let disposable:MetaDisposable = MetaDisposable()
+    private var interactionsView:ModalInteractionsContainer?
 
-    public init(controller:ViewController, for window:Window) {
+    public init(controller:ModalViewController, for window:Window) {
         self.controller = controller
         self.window = window
         background = ModalBackground()
         background.backgroundColor = .blackTransparent
         background.layer?.disableActions()
-        container = View(frame: controller.bounds)
-        container.layer?.cornerRadius = .cornerRadius
-        background.addSubview(container)
+        
         super.init()
+
+        
+        var containerRect = controller.bounds
+        if let interactions = controller.modalInteractions {
+            interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
+            interactionsView?.frame = NSMakeRect(0, containerRect.height, containerRect.width, 60.0)
+            containerRect.size.height += 60.0
+        }
+        
+        container = View(frame: containerRect)
+        container.layer?.cornerRadius = .cornerRadius
+        container.addSubview(controller.view)
+        
+        if let interactionsView = interactionsView {
+            container.addSubview(interactionsView)
+        }
+        
+        background.addSubview(container)
         
         window.set(escape: {[weak self] () -> KeyHandlerResult in
             self?.close()
@@ -42,117 +162,58 @@ public class Modal: NSObject {
         }, for: .Click)
     }
     
-    func close() ->Void {
+    public func close(_ callAcceptInteraction:Bool = false) ->Void {
         
         window.remove(object: self, for: .Escape)
+        controller?.viewWillDisappear(true)
+        
+        if callAcceptInteraction, let interactionsView = interactionsView {
+            interactionsView.interactions.accept?()
+        }
         
         background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self] (complete) in
-            self?.background.removeFromSuperview()
-            self?.controller?.modal = nil
-            self?.controller = nil
+            if let stongSelf = self {
+                stongSelf.background.removeFromSuperview()
+                stongSelf.controller?.viewDidDisappear(true)
+                stongSelf.controller?.modal = nil
+                stongSelf.controller = nil
+            }
         })
        
     }
     
+    deinit {
+        disposable.dispose()
+    }
+    
     func show() -> Void {
        // if let view
-        if let view = window.contentView?.subviews.first {
-            background.frame = view.bounds
-            background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            background.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
-            container.center()
-            container.autoresizingMask = [.viewMinXMargin,.viewMaxXMargin,.viewMinYMargin,.viewMaxYMargin]
-            view.addSubview(background)
+        if let controller = controller {
+            disposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] (ready) in
+                if let strongSelf = self, let view = self?.window.contentView?.subviews.first {
+                    strongSelf.controller?.viewWillAppear(true)
+                    strongSelf.background.frame = view.bounds
+                    strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
+                        strongSelf?.controller?.viewDidAppear(true)
+                    })
+                    strongSelf.background.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+                    strongSelf.container.center()
+                    strongSelf.container.autoresizingMask = [.viewMinXMargin,.viewMaxXMargin,.viewMinYMargin,.viewMaxYMargin]
+                    view.addSubview(strongSelf.background)
+                    
+                }
+            }))
         }
+
     }
     
 }
 
+public func showModal(with controller:ModalViewController, for window:Window) -> Void {
+    assert(controller.modal == nil)
+    
+    controller.modal = Modal(controller: controller, for: window)
+    controller.modal?.show()
+}
 
-/*
- //
- //  Modal.swift
- //  TGUIKit
- //
- //  Created by keepcoder on 26/09/2016.
- //  Copyright © 2016 Telegram. All rights reserved.
- //
- 
- import Cocoa
- 
- private class ModalBackground : Control {
- 
- }
- 
- public class Modal: NSObject {
- 
- private var background:ModalBackground
- private var controller:ViewController?
- private var container:View
- private var window:Window
- private var child:Window
- 
- public init(controller:ViewController, for window:Window) {
- self.controller = controller
- self.window = window
- background = ModalBackground()
- background.backgroundColor = .blackTransparent
- background.layer?.disableActions()
- container = View(frame: controller.bounds)
- container.layer?.cornerRadius = .cornerRadius
- background.addSubview(container)
- background.layer?.cornerRadius = .cornerRadius
- 
- 
- child = Window(contentRect: window.frame, styleMask: [], backing: .buffered, defer: true)
- child.backgroundColor = .clear
- super.init()
- 
- 
- NotificationCenter.default.addObserver(forName: Notification.Name.NSWindowDidResize, object: window, queue: nil, using: {[weak self] (notification) in
- if let strongSelf = self {
- strongSelf.child.setFrame(NSMakeRect(strongSelf.window.frame.minX, strongSelf.window.frame.minY, strongSelf.window.frame.width, strongSelf.window.contentView!.frame.height), display: true)
- }
- })
- 
- window.set(escape: {[weak self] () -> KeyHandlerResult in
- self?.close()
- return .invoked
- }, with: self, priority: .high)
- 
- background.set(handler: { [weak self] in
- self?.close()
- }, for: .Click)
- }
- 
- func close() ->Void {
- 
- window.remove(object: self, for: .Escape)
- 
- background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self] (complete) in
- if let strongSelf = self {
- strongSelf.window.removeChildWindow(strongSelf.child)
- strongSelf.background.removeFromSuperview()
- strongSelf.controller?.modal = nil
- strongSelf.controller = nil
- }
- 
- })
- 
- }
- 
- func show() -> Void {
- // if let view
- background.frame = child.contentView!.bounds
- background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
- background.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
- container.center()
- container.autoresizingMask = [.viewMinXMargin,.viewMaxXMargin,.viewMinYMargin,.viewMaxYMargin]
- child.contentView = background
- 
- window.addChildWindow(child, ordered: .above)
- 
- }
- 
- }
- */
+

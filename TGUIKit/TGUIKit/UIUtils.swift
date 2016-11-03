@@ -17,3 +17,8 @@ public func floorToScreenPixels(_ value: CGFloat) -> CGFloat {
 public func assertNotOnMainThread(_ file: String = #file, line: Int = #line) {
     assert(!Thread.isMainThread, "\(file):\(line) running on main thread")
 }
+
+
+public func assertOnMainThread(_ file: String = #file, line: Int = #line) {
+    assert(Thread.isMainThread, "\(file):\(line) running on main thread")
+}

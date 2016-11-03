@@ -70,6 +70,11 @@ class NavigationModalView: Control {
         })
     }
     
+    override func removeFromSuperview() {
+        kitWindow?.remove(object: self, for: .Escape)
+        super.removeFromSuperview()
+    }
+    
     override func viewDidMoveToWindow() {
         if window != nil {
             self.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
