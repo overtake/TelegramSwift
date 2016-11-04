@@ -1032,12 +1032,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                 
                 CATransaction.commit()
-                
-                self.setFrameSize(size)
-                
+            
             }
         }
         
+        self.setFrameSize(size)
     }
     
     

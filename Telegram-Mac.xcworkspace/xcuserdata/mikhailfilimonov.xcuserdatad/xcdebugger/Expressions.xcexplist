@@ -78,6 +78,14 @@
          contextName = "GalleryControls.animateIn() -&gt; ():GalleryControls.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatInputView.defaultContentHeight.getter:ChatInputView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "chatState == .normal">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #3).(closure #1):MediaUtils.swift">
       </ContextState>
       <ContextState
@@ -235,7 +243,12 @@
          contextName = "shortStatus(for : Peer, with : CachedPeerData?) -&gt; (String, NSColor):System.swift">
       </ContextState>
       <ContextState
-         contextName = "TGTableView.(viewDidMoveToSuperview() -&gt; ()).(closure #1):TGTableView.swift">
+         contextName = "ChatInputAccessory.isVisibility() -&gt; Bool:ChatInputAccessory.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "forwardModel">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "GridItem.resize(size : CGSize) -&gt; ():GridRowItem.swift">
@@ -246,10 +259,13 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatInputAccessory.isVisibility() -&gt; Bool:ChatInputAccessory.swift">
+         contextName = "TGTableView.(viewDidMoveToSuperview() -&gt; ()).(closure #1):TGTableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatInterfaceState.encode(Encoder) -&gt; ():ChatInterfaceState.swift">
          <PersistentStrings>
             <PersistentString
-               value = "forwardModel">
+               value = "forwardMessageIds">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -410,6 +426,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatController.(openChat(account : Account, peerId : PeerId, message : Message?, action : NavigationModalAction?) -&gt; ()).(closure #15):ChatController.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.viewDidAppear(Bool) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
@@ -545,7 +564,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -557,7 +576,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

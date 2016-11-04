@@ -39,10 +39,10 @@ open class EditableViewController: ViewController {
     
     var editBar:TextButtonBarView = TextButtonBarView(text: "", style: navigationButtonStyle, alignment:.Right)
 
-    public var state:ViewControllerState! {
+    public var state:ViewControllerState = .Normal {
         didSet {
             if state != oldValue {
-                update(with: state)
+                updateEditStateTitles()
             }
         }
     }
@@ -51,21 +51,36 @@ open class EditableViewController: ViewController {
         return true
     }
     
-    open func change(state:ViewControllerState) ->Void {
+    open func changeState() ->Void {
+       
         if case .Normal = state {
             self.state = ViewControllerState.Edit
         } else {
             self.state = ViewControllerState.Normal
         }
+        
+        update(with:state)
+    }
+    
+    func updateEditStateTitles() -> Void {
+        switch state {
+        case .Edit:
+            editBar.button.set(text: localizedString("Navigation.Done"), for: .Normal)
+        case .Normal:
+            editBar.button.set(text: localizedString("Navigation.Edit"), for: .Normal)
+        case .Some:
+            editBar.button.set(text: localizedString("Navigation.Some"), for: .Normal)
+        }
+        
+        self.editBar.setFrameSize(self.editBar.frame.size)
     }
     
     func addHandler() -> Void {
         editBar.button.set (handler:{[weak self] in
             if let strongSelf = self {
-                strongSelf.change(state:strongSelf.state)
+                strongSelf.changeState()
             }
-            
-            
+
         }, for:.Click)
     }
     
@@ -80,18 +95,7 @@ open class EditableViewController: ViewController {
     }
     
     open func update(with state:ViewControllerState) -> Void {
-        
-        switch state {
-        case .Edit:
-            editBar.button.set(text: localizedString("Navigation.Done"), for: .Normal)
-        case .Normal:
-            editBar.button.set(text: localizedString("Navigation.Edit"), for: .Normal)
-        case .Some:
-            editBar.button.set(text: localizedString("Navigation.Some"), for: .Normal)
-        }
-        
-        self.editBar.setFrameSize(self.editBar.frame.size)
-        
+        updateEditStateTitles()
     }
     
     public func set(editable:Bool) ->Void {
@@ -102,7 +106,7 @@ open class EditableViewController: ViewController {
         super.updateNavigation(navigation)
         if let navigation = navigation {
             rightBarView = editBar
-            self.state = .Normal
+            updateEditStateTitles()
         }
     }
     

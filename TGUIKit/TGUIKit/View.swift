@@ -140,6 +140,7 @@ open class View : NSView,CALayerDelegate {
     
     public func setNeedsDisplay() -> Void {
         self.layer?.setNeedsDisplay()
+        assertOnMainThread()
     }
     
     
@@ -151,7 +152,7 @@ open class View : NSView,CALayerDelegate {
 
     public init() {
         super.init(frame: NSZeroRect)
-        
+        assertOnMainThread()
         self.wantsLayer = true
         self.layer?.delegate = self
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -160,7 +161,7 @@ open class View : NSView,CALayerDelegate {
     
     override required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
+        assertOnMainThread()
         self.wantsLayer = true
         self.layer?.delegate = self
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -180,6 +181,10 @@ open class View : NSView,CALayerDelegate {
         if let originHandler = customHandler.originHandler {
             originHandler(newOrigin)
         }
+    }
+    
+    deinit {
+        assertOnMainThread()
     }
     
     

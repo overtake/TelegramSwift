@@ -117,6 +117,12 @@ public class Window: NSWindow {
             if let responder = observer.handler() {
                 if self.firstResponder != responder {
                     let _ = self.resignFirstResponder()
+                    if responder.responds(to: NSSelectorFromString("window")) {
+                        let window:NSWindow? = responder.value(forKey: "window") as? NSWindow
+                        if window != self {
+                            continue
+                        }
+                    }
                     self.makeFirstResponder(responder)
                 }
                 break
@@ -142,14 +148,6 @@ public class Window: NSWindow {
             
            applyResponderIfNeeded()
             
-            
-            
-//            if let responderHandler = keyboardResponderHandler {
-//                let responder = responderHandler()
-//                if self.firstResponder != responder {
-//                    self.makeFirstResponder(responder)
-//                }
-//            }
             
             if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
                 var sorted = handlers.sorted(by: >)
