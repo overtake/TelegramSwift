@@ -121,6 +121,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         
         var previous:ViewController = self.controller;
         self.controller = controller
+        controller.navigationController = self
 
         
         if(previous == controller) {
@@ -139,7 +140,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         controller.view.removeFromSuperview()
         controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(self.frame), NSHeight(self.frame) - controller.bar.height)
         
-
+        
         
         var pfrom:CGFloat = 0, pto:CGFloat = 0, nto:CGFloat = 0, nfrom:CGFloat = 0;
         

@@ -12,6 +12,7 @@ import Cocoa
 open class NavigationModalAction: NSObject {
     let reason:String
     let desc:String
+    public var afterInvoke:()->Void = {}
     
     weak var view:NavigationModalView?
     
@@ -19,4 +20,18 @@ open class NavigationModalAction: NSObject {
         self.reason = reason
         self.desc = desc
     }
+    
+    open func alertError(for value:Any, with:Window) -> Void {
+        
+    }
+    
+    open func isInvokable(for value:Any) -> Bool {
+        return true
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+   
 }

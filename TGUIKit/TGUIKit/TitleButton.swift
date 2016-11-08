@@ -164,7 +164,8 @@ public class TitleButton: ImageButton {
         text.truncationMode = "middle";
         text.alignmentMode = "center";
         self.layer?.addSublayer(text)
-       // text.actions = ["bounds":NSNull(),"position":NSNull()]
+        
+        text.actions = ["bounds":NSNull(),"position":NSNull()]
     }
     
     public override func draw(_ dirtyRect: NSRect) {

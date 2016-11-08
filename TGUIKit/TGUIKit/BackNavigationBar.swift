@@ -10,12 +10,12 @@ import Cocoa
 
 public class BackNavigationBar: TextButtonBarView {
 
-    private weak var navigation:NavigationViewController?
+    private weak var controller:ViewController?
     
-    public init(_ navigation:NavigationViewController) {
-        self.navigation = navigation
+    public init(_ controller:ViewController?) {
+        self.controller = controller
         
-        let backSettings = navigation.controller.backSettings()
+        let backSettings = controller?.backSettings() ?? ("",nil)
 
         super.init(text: backSettings.0, style: navigationButtonStyle)
         
@@ -25,7 +25,7 @@ public class BackNavigationBar: TextButtonBarView {
         
         button.set (handler:{[weak self] in
             
-            self?.navigation?.back()
+            self?.controller?.navigationController?.back()
             
         }, for:.Click)
     }

@@ -8,6 +8,7 @@
 
 import Cocoa
 import TelegramCoreMac
+/*
 open class GridItem : NSObject,Identifiable {
     
     public internal(set) weak var parent:GridRowItem?
@@ -161,3 +162,4 @@ public class GridRowItem: TableRowItem {
     
     
 }
+ */

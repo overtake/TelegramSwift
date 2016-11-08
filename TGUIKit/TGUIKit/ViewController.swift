@@ -18,6 +18,9 @@ open class ViewController : NSObject {
         didSet {
             if navigationController != oldValue {
                 updateNavigation(navigationController)
+                if let modalAction = navigationController?.modalAction {
+                    self.invokeNavigation(action: modalAction)
+                }
             }
         }
     }
@@ -41,6 +44,8 @@ open class ViewController : NSObject {
     public var view:View {
         get {
             if(_view == nil) {
+               
+
                 loadView();
             }
             
@@ -54,12 +59,7 @@ open class ViewController : NSObject {
     }
     
     open func updateNavigation(_ navigation:NavigationViewController?) {
-        if let navigation = navigation {
-            
-            leftBarView = enableBack ? BackNavigationBar(navigation) : BarView()
-            centerBarView = TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: systemMediumFont(TGFont.titleSize)))
-            rightBarView = BarView()
-        }
+        
     }
     
 
@@ -86,6 +86,11 @@ open class ViewController : NSObject {
     
     open func loadView() -> Void {
         if(_view == nil) {
+            
+            leftBarView = getLeftBarViewOnce()
+            centerBarView = getCenterBarViewOnce()
+            rightBarView = getRightBarViewOnce()
+            
             let vz = viewClass() as! View.Type
             _view = vz.init(frame: _frameRect);
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
@@ -93,7 +98,19 @@ open class ViewController : NSObject {
         }
     }
     
-    public func viewClass() ->AnyClass {
+    open func getLeftBarViewOnce() -> BarView {
+        return enableBack ? BackNavigationBar(self) : BarView()
+    }
+    
+    open func getCenterBarViewOnce() -> TitledBarView {
+        return TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: systemMediumFont(TGFont.titleSize)))
+    }
+    
+    open func getRightBarViewOnce() -> BarView {
+        return BarView()
+    }
+    
+    open func viewClass() ->AnyClass {
         return View.self
     }
     
@@ -222,6 +239,10 @@ open class ViewController : NSObject {
         if let popover = popover {
             popover.show(for: control, edge: edge, inset: inset)
         }
+    }
+    
+    open func invokeNavigation(action:NavigationModalAction) {
+        
     }
     
 

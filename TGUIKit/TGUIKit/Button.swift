@@ -43,7 +43,7 @@ open class Button: Control {
     }
     
     override func apply(state:ControlState) -> Void {
-        self.setNeedsDisplayLayer()
+        super.apply(state: state)
         
 //        if let backgroundColor = stateBackground[state] {
 //            self.layer?.backgroundColor = backgroundColor.cgColor

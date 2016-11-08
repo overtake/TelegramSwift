@@ -66,6 +66,27 @@ public func makeSpringAnimation(_ path:String) -> CABasicAnimation {
    
 }
 
+public func makeSpringBounceAnimation(_ path:String, _ initialVelocity:CGFloat) -> CABasicAnimation {
+    if #available(OSX 10.11, *) {
+        let springAnimation:CASpringAnimation = CASpringAnimation(keyPath: path)
+        springAnimation.mass = 5.0
+        springAnimation.stiffness = 900.0
+        springAnimation.damping = 88.0
+        springAnimation.initialVelocity = initialVelocity
+        springAnimation.duration = springAnimation.settlingDuration
+        springAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+        return springAnimation;
+    } else {
+        let anim:CABasicAnimation = CABasicAnimation(keyPath: path)
+        anim.duration = 0.2
+        anim.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        
+        return anim
+    }
+    
+}
+
+
 public extension CALayer {
     public func animate(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: String, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
         if timingFunction == kCAMediaTimingFunctionSpring {
@@ -134,6 +155,39 @@ public extension CALayer {
         
         self.add(animation, forKey: key)
     }
+    
+    public func animateScaleSpring(from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let animation = makeSpringBounceAnimation("transform", initialVelocity)
+        
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DScale(fr, from, from, 1)
+        fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = kCAFillModeForwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        var speed: Float = 1.0
+        
+        
+        animation.speed = speed * Float(animation.duration / duration)
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DScale(tr, to, to, 1)
+        tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+
+        
+        self.add(animation, forKey: "transform")
+    }
+
     
     public func animateAlpha(from: CGFloat, to: CGFloat, duration: Double, timingFunction: String = kCAMediaTimingFunctionEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> ())? = nil) {
         self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "opacity", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)

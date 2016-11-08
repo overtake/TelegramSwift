@@ -47,9 +47,10 @@ public class MajorNavigationController: NavigationViewController {
             return
         }
         
+        assertOnMainThread()
+        
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)
-        
         
         pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {

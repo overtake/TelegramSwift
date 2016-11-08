@@ -75,6 +75,7 @@ public class TGSplitView : View {
     override required public init(frame frameRect: NSRect)  {
         super.init(frame: frameRect);
         self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
+        self.autoresizesSubviews = false
     }
     
     required public init?(coder: NSCoder) {

@@ -20,7 +20,7 @@ public class SelectingControl: Control {
         self.unselectedImage = unselectedImage
         self.selectedImage = selectedImage
         imageView.image = unselectedImage
-        super.init(frame:NSMakeRect(0, 0, max(unselectedImage.backingSize.width,selectedImage.backingSize.width), max(unselectedImage.backingSize.height,selectedImage.backingSize.height)))
+        super.init(frame:NSMakeRect(0, 0, max(unselectedImage.backingSize.width ,selectedImage.backingSize.width ), max(unselectedImage.backingSize.height,selectedImage.backingSize.height )))
         userInteractionEnabled = false
 
         addSubview(imageView)
@@ -35,8 +35,10 @@ public class SelectingControl: Control {
     
     public func set(selected:Bool, animated:Bool = false) {
         self.isSelected = selected
-        imageView.animates = animated
         imageView.image = selected ? selectedImage : unselectedImage
+        if animated {
+            self.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.4)
+        }
     }
     
     required public init?(coder: NSCoder) {

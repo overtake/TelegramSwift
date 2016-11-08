@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+/*
 open class GridView : OverlayControl {
     
     public weak var item:GridItem?
@@ -93,3 +93,4 @@ public class GridRowView: TableRowView {
     
 
 }
+*/

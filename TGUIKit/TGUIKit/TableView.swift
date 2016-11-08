@@ -17,19 +17,6 @@ public enum TableSeparator {
     case none;
 }
 
-public final class GridTransition {
-    public private(set) var inserted:[(Int,GridItem,Int?)]
-    public private(set) var deleted:[Int]
-    public private(set) var scrollState:TableScrollState
-    public private(set) var animated:Bool
-    
-    public init(deleted:[Int], inserted:[(Int,GridItem,Int?)], animated:Bool = false, scrollState:TableScrollState = .none(nil)) {
-        self.inserted = inserted
-        self.deleted = deleted
-        self.animated = animated
-        self.scrollState = scrollState
-    }
-}
 
 public final class TableTransition {
     public private(set) var inserted:[(Int,TableRowItem,Int?)]
@@ -128,7 +115,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     public var flip:Bool = true
     
     public weak var sdelegate:SelectDelegate?
-    
+    weak var table:TableView?
     var border:BorderType?
     
     override var isFlipped: Bool {
@@ -170,16 +157,39 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 
     
     override func mouseDown(with event: NSEvent) {
-        
-       
         let point = self.convert(event.locationInWindow, from: nil)
-        
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
-        
         sdelegate?.selectRow(index: range.location)
 
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        
+        if inLiveResize {
+            if let table = table {
+                table.layoutIfNeeded(with: table.visibleRows())
+            }
+        }
+    }
+    
+    var liveWidth:CGFloat = 0
+    
+    override func viewWillStartLiveResize() {
+        liveWidth = frame.width
+    }
+    
+    override func viewDidEndLiveResize() {
+
+        if liveWidth != frame.width && liveWidth != 0 {
+            liveWidth = 0
+            if let table = table {
+                table.layoutIfNeeded(with: NSMakeRange(0, table.count))
+            }
+        }
         
     }
+    
     
     override func mouseUp(with event: NSEvent) {
         
@@ -227,7 +237,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let table = TGFlipableTableView.init(frame:frameRect);
         table.flip = isFlipped
         
-        
 
         self.tableView = table
         self.tableView.wantsLayer = true
@@ -237,6 +246,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
 
         super.init(frame: frameRect);
+        
+        table.table = self
+
         
         self.clipView.border = BorderType([.Right])
         self.tableView.border = BorderType([.Right])
@@ -271,7 +283,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    
+    func layoutIfNeeded(with range:NSRange) {
+        for i in range.min ..< range.max {
+            let item = self.item(at: i)
+            let before = item.height
+            let updated = item.makeSize(tableView.frame.width)
+            let after = item.height
+            if before != after && updated {
+                reloadData(row: i, animated: false)
+                noteHeightOfRow(i, false)
+            }
+        }
+    }
     
     open override func viewDidMoveToSuperview() {
         if let sv = superview {
@@ -550,6 +573,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func noteHeightOfRow(_ row:Int, _ animated:Bool = true) {
+        if !animated {
+            NSAnimationContext.current().duration = 0
+        }
         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
     }
     
@@ -761,6 +787,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.select(item:item, notify:false)
             } else {
                 cancelSelection()
+                self.selectedhash.swap(stableId)
             }
         } else {
             cancelSelection()
@@ -810,8 +837,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
-
-    
+  
     public func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
         var item:TableRowItem = self.item(at: row);
         

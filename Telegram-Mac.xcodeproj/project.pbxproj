@@ -124,6 +124,11 @@
 		C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */; };
 		C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C276248B1D95AF7600FE5B2B /* ObjcUtils.m */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
+		C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */; };
+		C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B5F1DCF4766008B69DD /* CoreExtension.swift */; };
+		C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B611DCFB4C9008B69DD /* ChatServiceItem.swift */; };
+		C2777B641DCFB559008B69DD /* ChatServiceRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B631DCFB559008B69DD /* ChatServiceRowView.swift */; };
+		C2777B661DCFC649008B69DD /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B651DCFC649008B69DD /* Localizable.swift */; };
 		C2844ACE1DA905BA009308DC /* InfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844ACD1DA905BA009308DC /* InfoViewController.swift */; };
 		C2844AD21DA906AD009308DC /* InfoHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844AD11DA906AD009308DC /* InfoHeaderItem.swift */; };
 		C2844AD41DA906BD009308DC /* InfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844AD31DA906BD009308DC /* InfoHeaderView.swift */; };
@@ -311,6 +316,11 @@
 		C276248A1D95AF7600FE5B2B /* ObjcUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcUtils.h; sourceTree = "<group>"; };
 		C276248B1D95AF7600FE5B2B /* ObjcUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcUtils.m; sourceTree = "<group>"; };
 		C276248D1D95B4F300FE5B2B /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SendingClockProgress.swift; sourceTree = "<group>"; };
+		C2777B5F1DCF4766008B69DD /* CoreExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreExtension.swift; sourceTree = "<group>"; };
+		C2777B611DCFB4C9008B69DD /* ChatServiceItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatServiceItem.swift; sourceTree = "<group>"; };
+		C2777B631DCFB559008B69DD /* ChatServiceRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatServiceRowView.swift; sourceTree = "<group>"; };
+		C2777B651DCFC649008B69DD /* Localizable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Localizable.swift; sourceTree = "<group>"; };
 		C2844ACD1DA905BA009308DC /* InfoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InfoViewController.swift; sourceTree = "<group>"; };
 		C2844AD11DA906AD009308DC /* InfoHeaderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InfoHeaderItem.swift; sourceTree = "<group>"; };
 		C2844AD31DA906BD009308DC /* InfoHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InfoHeaderView.swift; sourceTree = "<group>"; };
@@ -412,6 +422,7 @@
 		C219E1E51D8AC83A0042F0C8 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				C2777B561DCE1174008B69DD /* controls */,
 				C250B01D1DB67934004E9FBE /* webpages */,
 				C296AF8D1D8EACD3001DBB59 /* content */,
 				C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */,
@@ -421,6 +432,7 @@
 				C253A92C1D8EE1A600CDC850 /* ChatMediaView.swift */,
 				C253A9731D94182500CDC850 /* ChatRightView.swift */,
 				C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */,
+				C2777B631DCFB559008B69DD /* ChatServiceRowView.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -434,6 +446,7 @@
 				C219E1F51D8C09130042F0C8 /* ChatMessageItem.swift */,
 				C219E1FB1D8D35FA0042F0C8 /* ChatMediaItem.swift */,
 				C253A9621D91A90100CDC850 /* ChatFileMediaItem.swift */,
+				C2777B611DCFB4C9008B69DD /* ChatServiceItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -590,6 +603,7 @@
 		C22B635A1D969D7E00085C19 /* input */ = {
 			isa = PBXGroup;
 			children = (
+				C2777B5C1DCE48F4008B69DD /* panels */,
 				C29B5F3F1DC7858100D13E65 /* context */,
 				C2271F4A1D9C38DA00424F7B /* table */,
 				C22B635B1D96A14E00085C19 /* ChatInputView.swift */,
@@ -741,6 +755,22 @@
 			path = lib;
 			sourceTree = "<group>";
 		};
+		C2777B561DCE1174008B69DD /* controls */ = {
+			isa = PBXGroup;
+			children = (
+				C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */,
+			);
+			name = controls;
+			sourceTree = "<group>";
+		};
+		C2777B5C1DCE48F4008B69DD /* panels */ = {
+			isa = PBXGroup;
+			children = (
+				C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */,
+			);
+			name = panels;
+			sourceTree = "<group>";
+		};
 		C2844ACB1DA90594009308DC /* info */ = {
 			isa = PBXGroup;
 			children = (
@@ -860,7 +890,6 @@
 				C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */,
 				C2B1A1101D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift */,
 				C2B1A1121D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift */,
-				C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */,
 			);
 			name = interface;
 			sourceTree = "<group>";
@@ -925,6 +954,8 @@
 				C2167E5E1DC25C6900F98E03 /* InterfaceObserver.swift */,
 				C226742E1DBE2CB3000BA9ED /* PanelUtils.swift */,
 				C291942E1DCC6E2200359491 /* DeclareEncodables.swift */,
+				C2777B5F1DCF4766008B69DD /* CoreExtension.swift */,
+				C2777B651DCFC649008B69DD /* Localizable.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -1088,6 +1119,7 @@
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2412DFB1DA681B500588C14 /* GalleryPhotoItem.swift in Sources */,
+				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
 				C253A92D1D8EE1A600CDC850 /* ChatMediaView.swift in Sources */,
 				C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */,
@@ -1169,6 +1201,7 @@
 				C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */,
 				C2844AD41DA906BD009308DC /* InfoHeaderView.swift in Sources */,
 				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
+				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */,
 				C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */,
 				C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */,
@@ -1198,9 +1231,11 @@
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
 				C2271F4F1D9C38F500424F7B /* InputAttachRowItem.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
+				C2777B661DCFC649008B69DD /* Localizable.swift in Sources */,
 				C253A9611D917ACD00CDC850 /* ChatStickerContentView.swift in Sources */,
 				C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */,
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,
+				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				C2412DFD1DA6843400588C14 /* GalleryItem.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
@@ -1211,6 +1246,7 @@
 				C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */,
 				C2271DC61DAE5E5A001792B6 /* TextAndLabelRowView.swift in Sources */,
 				C219E1D91D886A160042F0C8 /* ChatHoleRowView.swift in Sources */,
+				C2777B641DCFB559008B69DD /* ChatServiceRowView.swift in Sources */,
 				C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */,
 				C22674351DBF6A85000BA9ED /* EStickerPackItem.swift in Sources */,
 				C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */,

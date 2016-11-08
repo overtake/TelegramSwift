@@ -18,7 +18,8 @@ open class Node: NSObject, ViewDisplayDelegate {
         return self.view?.backgroundColor
     }
     
-    open var view:View? {
+    private let _strongView:View?
+    open weak var view:View? {
         didSet {
             self.view?.displayDelegate = self
         }
@@ -35,12 +36,21 @@ open class Node: NSObject, ViewDisplayDelegate {
         }
     }
     
-    public init(_ view:View? = nil) {
-        super.init()
-        self.view = view
+    deinit {
+        if _strongView != nil {
+            assertOnMainThread()
+        }
     }
     
-
+    public init(_ view:View? = nil) {
+        _strongView = view
+        if view != nil {
+            assertOnMainThread()
+        }
+        super.init()
+        self.view = view
+        
+    }
     
 
     open func setNeedDisplay() -> Void {

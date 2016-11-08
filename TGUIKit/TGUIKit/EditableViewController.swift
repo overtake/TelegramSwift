@@ -47,6 +47,10 @@ open class EditableViewController: ViewController {
         }
     }
     
+    override open func getRightBarViewOnce() -> BarView {
+        return editBar
+    }
+    
     open override var enableBack: Bool {
         return true
     }
@@ -80,7 +84,6 @@ open class EditableViewController: ViewController {
             if let strongSelf = self {
                 strongSelf.changeState()
             }
-
         }, for:.Click)
     }
     

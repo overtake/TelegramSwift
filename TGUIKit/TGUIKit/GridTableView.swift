@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+/*
 public class GridTableView: TableView {
     
     private let gridSize:NSSize
@@ -435,4 +435,5 @@ public class GridTableView: TableView {
  return items
  }
 
+ */
  */

@@ -149,7 +149,10 @@ public extension NSMutableAttributedString {
         
     }
     
-    
+    public func add(link:Any, for range:NSRange)  {
+        self.addAttribute(NSLinkAttributeName, value: link, range: range)
+        self.addAttribute(NSForegroundColorAttributeName, value: NSColor.link, range: range)
+    }
     
     public func setCTFont(font:NSFont, range:NSRange) -> Void {
         self.addAttribute(kCTFontAttributeName as String, value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
@@ -568,3 +571,27 @@ public extension NSColor {
         self.init(deviceRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha: alpha)
     }
 }
+
+public extension Int {
+    
+    func prettyFormatter(_ n: Int, iteration: Int) -> String {
+        let keys = ["K", "M", "B", "T"]
+        let d = Double((n / 100)) / 10.0
+        let isRound:Bool = (Int(d) * 10) % 10 == 0
+        if d < 1000 {
+            return "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)\(keys[iteration])"
+        }
+        else {
+            return self.prettyFormatter(Int(d), iteration: iteration + 1)
+        }
+    }
+    
+    public var prettyNumber:String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        return self.prettyFormatter(self, iteration: 0)
+    }
+}
+
+

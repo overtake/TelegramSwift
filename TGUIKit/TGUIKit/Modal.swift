@@ -193,6 +193,7 @@ public class Modal: NSObject {
                 if let strongSelf = self, let view = self?.window.contentView?.subviews.first {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
+                    strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
                     strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
                         strongSelf?.controller?.viewDidAppear(true)
                     })

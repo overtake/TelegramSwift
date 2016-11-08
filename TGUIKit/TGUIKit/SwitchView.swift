@@ -7,16 +7,20 @@
 //
 
 import Cocoa
-
 public class SwitchView: Control {
     
     public var isOn:Bool = false {
         didSet {
             if isOn != oldValue {
                 afterChanged()
+                if let stateChanged = stateChanged {
+                    stateChanged()
+                }
             }
         }
     }
+    
+    public var stateChanged:(()->Void)?
 
     private var buble:CALayer = CALayer()
     private var backBuble:CALayer = CALayer()
