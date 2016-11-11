@@ -61,7 +61,9 @@ open class TitledBarView: BarView {
         
     }
     
-    
+    public override init() {
+        super.init()
+    }
     
     override required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")

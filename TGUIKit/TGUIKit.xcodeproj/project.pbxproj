@@ -56,6 +56,7 @@
 		C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E831D9A69BD00098E12 /* TabBarView.swift */; };
 		C2303E861D9A6C2A00098E12 /* TabItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E851D9A6C2A00098E12 /* TabItem.swift */; };
 		C2303E8C1D9A8B3000098E12 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E8B1D9A8B3000098E12 /* SearchView.swift */; };
+		C230B9181DD3A6350057F596 /* ProgressModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9171DD3A6350057F596 /* ProgressModal.swift */; };
 		C234CA8D1D97DF26003023F7 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8A1D97DF26003023F7 /* Cache.swift */; };
 		C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8B1D97DF26003023F7 /* DrawingContext.swift */; };
 		C234CA8F1D97DF26003023F7 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8C1D97DF26003023F7 /* Image.swift */; };
@@ -140,6 +141,7 @@
 		C2303E831D9A69BD00098E12 /* TabBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
 		C2303E851D9A6C2A00098E12 /* TabItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabItem.swift; sourceTree = "<group>"; };
 		C2303E8B1D9A8B3000098E12 /* SearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
+		C230B9171DD3A6350057F596 /* ProgressModal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProgressModal.swift; sourceTree = "<group>"; };
 		C234CA881D97DEB6003023F7 /* TGLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TGLibrary.framework; path = ../TGLibrary/build/Debug/TGLibrary.framework; sourceTree = "<group>"; };
 		C234CA8A1D97DF26003023F7 /* Cache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		C234CA8B1D97DF26003023F7 /* DrawingContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawingContext.swift; sourceTree = "<group>"; };
@@ -334,6 +336,7 @@
 				C2303E7B1D99880B00098E12 /* Modal.swift */,
 				C29B5F461DC8CA2B00D13E65 /* NavigationModalView.swift */,
 				C29B5F481DC8CA3C00D13E65 /* NavigationModalAction.swift */,
+				C230B9171DD3A6350057F596 /* ProgressModal.swift */,
 			);
 			name = overlay;
 			sourceTree = "<group>";
@@ -544,6 +547,7 @@
 				C2B1A1321DA57E8300ACB1DD /* EditableViewController.swift in Sources */,
 				C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */,
 				C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */,
+				C230B9181DD3A6350057F596 /* ProgressModal.swift in Sources */,
 				C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */,
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,

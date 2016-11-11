@@ -16,7 +16,7 @@ public enum TextBarAligment {
 
 public class TextButtonBarView: BarView {
 
-    var button:TitleButton
+    private(set) public var button:TitleButton
     
     public var alignment:TextBarAligment = .Center
     

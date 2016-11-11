@@ -75,6 +75,21 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return self
     }
     
+    open var firstResponder:NSResponder? {
+        return self
+    }
+    
+    open override func mouseUp(with event: NSEvent) {
+        if event.clickCount == 2 {
+            doubleClick(in: convert(event.locationInWindow, from: nil))
+            return
+        }
+        super.mouseUp(with: event)
+    }
+    
+    open func doubleClick(in location:NSPoint) -> Void {
+        
+    }
     
     open override func rightMouseDown(with event: NSEvent) {
         super.rightMouseDown(with: event)

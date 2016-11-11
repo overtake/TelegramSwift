@@ -12,7 +12,10 @@ let searchImage = #imageLiteral(resourceName: "Icon_SearchField").precomposed()
 let clearImage = #imageLiteral(resourceName: "Icon_SearchClear").precomposed()
 
 
-class SearchTextField: NSTextField {
+class SearchTextField: NSTextView {
+
+    
+  
     
 }
 
@@ -31,11 +34,11 @@ public final class SearchInteractions {
     }
 }
 
-public class SearchView: OverlayControl, NSTextFieldDelegate {
+public class SearchView: OverlayControl, NSTextViewDelegate {
     
     public private(set) var state:SearchFieldState = .None
 
-    private var input:SearchTextField = SearchTextField()
+    private(set) public var input:NSTextView = SearchTextField()
     
     private var lock:Bool = false
     
@@ -57,15 +60,15 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         self.layer?.cornerRadius = .cornerRadius
         
         
-        input.isBordered = false
-        input.isBezeled = false
+       // input.isBordered = false
+       // input.isBezeled = false
         input.focusRingType = .none
         input.frame = self.bounds
         input.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
         input.backgroundColor = NSColor.clear
         input.delegate = self
         
-        input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
+        //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
         
         input.font = .normal(.text)
         input.textColor = .textColor
@@ -74,7 +77,7 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         
         animateContainer.backgroundColor = .clear
         
-        placeholder.attributedString = input.placeholderAttributedString
+        placeholder.attributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: true)
         placeholder.backgroundColor = .grayBackground
         placeholder.sizeToFit()
         animateContainer.addSubview(placeholder)
@@ -122,12 +125,16 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
     public override func controlTextDidChange(_ obj: Notification) {
         
         if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(input.stringValue)
+            searchInteractions.textModified(input.string)
         }
     }
     
-    public override func controlTextDidEndEditing(_ obj: Notification) {
+    public func didResignResponder() {
         change(state: .None, true)
+    }
+    
+    public func didBecomeResponder() {
+        change(state: .Focus, true)
     }
     
     
@@ -163,7 +170,7 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
                 
                 animateContainer.layer?.animate(from: NSMinX(animateContainer.frame) as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
                     self?.input.isHidden = false
-                    self?.input.becomeFirstResponder()
+                    self?.window?.makeFirstResponder(self?.input)
                     self?.placeholder.isHidden = true
                     self?.lock = false
                 })
@@ -180,8 +187,8 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
                 self.kitWindow?.remove(object: self, for: .Escape)
                 
                 self.input.isHidden = true
-                self.input.stringValue = ""
-                self.input.resignFirstResponder()
+                self.input.string = ""
+                self.window?.makeFirstResponder(nil)
                 self.placeholder.isHidden = false
                 
                 animateContainer.center()
@@ -216,6 +223,8 @@ public class SearchView: OverlayControl, NSTextFieldDelegate {
         change(state: state == .None ? .Focus : .None, true)
         return true
     }
+    
+
     
     public func cancel(_ animated:Bool) -> Void {
         change(state: .None, animated)

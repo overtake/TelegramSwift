@@ -26,9 +26,9 @@ open class HorizontalRowView: TableRowView {
             layer.transform = CATransform3DRotate(layer.transform, 90 * CGFloat(M_PI) / 180, 0, 0, 1.0)
             layer.transform = CATransform3DTranslate(layer.transform, -frame.height/2, -frame.width/2.0, 1.0)
         }
-
-
     }
+    
+    
     
     open override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
@@ -56,6 +56,7 @@ open class HorizontalRowView: TableRowView {
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+        container.setFrameSize(newSize)
     }
     
     required public init?(coder: NSCoder) {

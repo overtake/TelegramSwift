@@ -83,7 +83,7 @@ class DragView : OverlayControl {
     }
 }
 
-public class DraggingView: Control {
+public class DraggingView: TGSplitView {
     
     var container:View = View()
     
@@ -92,10 +92,7 @@ public class DraggingView: Control {
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
       
-        
         container.backgroundColor = .clear
-        
-        
         self.register(forDraggedTypes: [NSFilenamesPboardType,NSStringPboardType,NSTIFFPboardType,NSURLPboardType])
     }
     

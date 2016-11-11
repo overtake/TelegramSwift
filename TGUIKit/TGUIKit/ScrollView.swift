@@ -142,7 +142,9 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         fatalError("init(coder:) has not been implemented")
     }
     
-  
+    deinit {
+        assertOnMainThread()
+    }
     
     
 //    override open func scrollWheel(with event: NSEvent) {

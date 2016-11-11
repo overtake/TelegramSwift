@@ -14,7 +14,7 @@ public enum ViewControllerStyle {
     case none;
 }
 
-public class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
+open class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
 
     public private(set) var modalAction:NavigationModalAction?
     
@@ -54,16 +54,24 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
     var pushDisposable:MetaDisposable = MetaDisposable()
     var popDisposable:MetaDisposable = MetaDisposable()
     
-    public override func loadView() {
+    open override func loadView() {
         super.loadView();
         self.view.autoresizesSubviews = true
-        
+        controller._frameRect = bounds
         controller.viewWillAppear(false)
         controller.navigationController = self
         
-        self.view.addSubview(navigationBar)
-        self.view.addSubview(controller.view)
+        containerView.addSubview(navigationBar)
+        
+        navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
+        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
+        
+        navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: .none, animationStyle: controller.animationStyle)
+
+        containerView.addSubview(controller.view)
         controller.viewDidAppear(false)
+        
+        viewDidLoad()
         
     }
     
@@ -135,10 +143,10 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
             return;
         }
         
-        self.navigationBar.frame = NSMakeRect(0, 0, NSWidth(self.frame), controller.bar.height)
+        self.navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
         
         controller.view.removeFromSuperview()
-        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(self.frame), NSHeight(self.frame) - controller.bar.height)
+        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
         
         
         
@@ -146,22 +154,22 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         
         switch style {
         case .push:
-            nfrom = NSWidth(self.frame) 
+            nfrom = NSWidth(containerView.frame) 
             nto = 0
             pfrom = 0
             pto = -100//round(NSWidth(self.frame)/3.0)
-            self.view.addSubview(controller.view, positioned: .above, relativeTo: previous.view)
+            containerView.addSubview(controller.view, positioned: .above, relativeTo: previous.view)
         case .pop:
-            nfrom = -round(NSWidth(self.frame)/3.0)
+            nfrom = -round(NSWidth(containerView.frame)/3.0)
             nto = 0
             pfrom = 0
-            pto = NSWidth(self.frame)
+            pto = NSWidth(containerView.frame)
             previous.view.setFrameOrigin(NSMakePoint(pto, previous.frame.minY))
-            self.view.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
+            containerView.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
         case .none:
             previous.viewWillDisappear(false);
             previous.view.removeFromSuperview()
-            self.view.addSubview(controller.view)
+            containerView.addSubview(controller.view)
             controller.viewWillAppear(false);
             previous.viewDidDisappear(false);
             controller.viewDidAppear(false);
@@ -174,7 +182,7 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         }
         
         navigationBar.removeFromSuperview()
-        self.view.addSubview(navigationBar)
+        containerView.addSubview(navigationBar)
         
         
         previous.viewWillDisappear(true);
@@ -208,7 +216,9 @@ public class NavigationViewController: ViewController, CALayerDelegate,CAAnimati
         
     }
     
-    
+    public var containerView: View {
+        return view
+    }
     
     public func back(_ index:Int = -1) -> Void {
         if stackCount > 1 && !isLocked {

@@ -424,7 +424,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                 if let currentStick = currentStick, stickView?.item != currentStick {
                     stickView?.set(item: currentStick, animated: true)
-                    
                 }
                 
                 stickItem = currentStick
@@ -437,6 +436,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             tableView.addSubview(stickView)
                         }
                     }
+                    
+                    stickView?.setFrameSize(tableView.frame.width, item.height)
                     
                     if item.isKind(of: stickClass) {
                         var rect:NSRect = tableView.rect(ofRow: index)
@@ -1115,9 +1116,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 } else {
                     
                     if rowRect.maxY > height/2.0 {
-                        rowRect.origin.y += floorToScreenPixels((height) / 2.0) - rowRect.height - rowRect.height/2.0 
+                        rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0)
                     } else {
-                        rowRect.origin.y = self is HorizontalTableView ? frame.minY : 0
+                        rowRect.origin.y = 0
                     }
                     
 

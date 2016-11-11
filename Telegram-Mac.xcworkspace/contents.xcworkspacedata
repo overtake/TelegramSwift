@@ -17,6 +17,6 @@
       location = "group:submodules/TelegramCore/TelegramCore.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:Telegram-Mac.xcodeproj">
+      location = "group:/Users/mikhailfilimonov/Dropbox/Telegram-Mac/TelegramMac.xcodeproj">
    </FileRef>
 </Workspace>

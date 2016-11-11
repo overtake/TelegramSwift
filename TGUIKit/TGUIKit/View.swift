@@ -71,8 +71,9 @@ public protocol ViewDisplayDelegate : class {
 }
 
 public class CustomViewHandlers {
-    public var sizeHandler:((NSSize) ->Void)?
-    public var originHandler:((NSPoint) ->Void)?
+    public var size:((NSSize) ->Void)?
+    public var origin:((NSPoint) ->Void)?
+    public var layout:(() ->Void)?
 }
 
 
@@ -104,7 +105,12 @@ open class View : NSView,CALayerDelegate {
  
     }
     
-    
+    open override func layout() {
+        super.layout()
+        if let layout = customHandler.layout {
+            layout()
+        }
+    }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
                 
@@ -171,15 +177,15 @@ open class View : NSView,CALayerDelegate {
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         
-        if let sizeHandler = customHandler.sizeHandler {
-            sizeHandler(newSize)
+        if let size = customHandler.size {
+            size(newSize)
         }
     }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)
-        if let originHandler = customHandler.originHandler {
-            originHandler(newOrigin)
+        if let origin = customHandler.origin {
+            origin(newOrigin)
         }
     }
     

@@ -114,7 +114,7 @@ public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bo
     return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners
 }
 
-public class TransformImageView: Control {
+open class TransformImageView: Control {
     public var imageUpdated: (() -> Void)?
     public var alphaTransitionOnFirstUpdate = false
     private var disposable = MetaDisposable()
@@ -139,7 +139,7 @@ public class TransformImageView: Control {
         self.disposable.dispose()
     }
     
-    public override func removeFromSuperview() {
+    open override func removeFromSuperview() {
         super.removeFromSuperview()
         self.disposable.set(nil)
     }

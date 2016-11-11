@@ -18,6 +18,5 @@ open class TableStickView: TableRowView {
         }
     }
     
-   
     
 }

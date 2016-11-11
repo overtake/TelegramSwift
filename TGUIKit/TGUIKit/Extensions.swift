@@ -321,7 +321,7 @@ public extension NSView {
     public func change(opacity to: CGFloat, animated: Bool, _ save:Bool = true) {
         if animated {
             if let layer = self.layer {
-                var opacity:CGFloat = CGFloat(layer.opacity) ?? 0.0
+                var opacity:CGFloat = CGFloat(layer.opacity)
                 if let presentation = self.layer?.presentation(), self.layer?.animation(forKey:"opacity") != nil {
                     opacity = CGFloat(presentation.opacity)
                 }

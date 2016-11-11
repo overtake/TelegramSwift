@@ -29,7 +29,7 @@ open class Control: View {
     public var isSelected:Bool {
         didSet {
             if isSelected != oldValue {
-                self.updateState()
+                apply(state: isSelected ? .Highlight : self.controlState)
             }
         }
     }
@@ -74,7 +74,7 @@ open class Control: View {
     public private(set) var controlState:ControlState = .Normal {
         didSet {
             if oldValue != controlState {
-                apply(state:controlState)
+                apply(state: isSelected ? .Highlight : self.controlState)
                 
                 for (state,handler) in stateHandlers {
                     if state == controlState {
@@ -187,7 +187,7 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled {
-            if mouseInside()  {
+            if mouseInside() && event.clickCount == 1  {
                 send(event: .Click)
             }
             
@@ -218,10 +218,7 @@ open class Control: View {
     
     func updateState() -> Void {
         
-        if isSelected {
-            self.controlState = .Highlight
-            return
-        }
+
         
         if mouseInside() {
             if mouseIsDown {

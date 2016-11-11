@@ -10,9 +10,7 @@ import Cocoa
 import SwiftSignalKitMac
 
 class PopoverBackground: View {
-    override var isFlipped: Bool {
-        return false
-    }
+   
 }
 
 open class Popover: NSObject {
@@ -21,7 +19,7 @@ open class Popover: NSObject {
     
     public var animates:Bool = true
     
-    public weak var controller:ViewController?
+    public var controller:ViewController?
     
     private weak var control:Control?
     
@@ -65,6 +63,7 @@ open class Popover: NSObject {
                 
                 if let strongSelf = self {
                     
+                    control.isSelected = true
                     
                     control.kitWindow?.set(escape: {[weak strongSelf] () -> KeyHandlerResult in
                         strongSelf?.hide()
@@ -72,7 +71,7 @@ open class Popover: NSObject {
                     }, with: strongSelf, priority: .high)
                     
                     strongSelf.control = control
-                    
+                    strongSelf.background.flip = false
                     var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
                     
                     if let edge = edge {
@@ -83,6 +82,7 @@ open class Popover: NSObject {
                         case .maxY:
                             point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
                             point.y -= controller.frame.height
+                            strongSelf.background.flip = true
                         default:
                             fatalError("Not Implemented")
                         }
@@ -225,7 +225,7 @@ open class Popover: NSObject {
     public func hide() -> Void {
         
         isShown = false
-        
+        control?.isSelected = false
         control?.kitWindow?.remove(object: self, for: .Escape)
         
         overlay?.removeLastStateHandler()
@@ -245,6 +245,7 @@ open class Popover: NSObject {
                     if let strongSelf = self, !once {
                         once = true
                         strongSelf.controller?.popover = nil
+                        strongSelf.controller = nil
                         strongSelf.background.removeFromSuperview()
                     }
                 })
@@ -261,5 +262,14 @@ open class Popover: NSObject {
         }
     }
     
+}
+
+public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint) -> Void {
+    if controller.popover == nil {
+        controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller)
+    }
     
+    if let popover = controller.popover {
+        popover.show(for: control, edge: edge, inset: inset)
+    }
 }

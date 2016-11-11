@@ -27,7 +27,7 @@ public enum TGSplitViewState : Int {
 }
 
 
-public protocol TGSplitControllerDelegate {
+public protocol TGSplitControllerDelegate : class {
     func splitViewDidNeedSwapToLayout(state:TGSplitViewState) -> Void
     func splitViewDidNeedMinimisize(controller:ViewController) -> Void
     func splitViewDidNeedFullsize(controller:ViewController) -> Void
@@ -54,7 +54,7 @@ public class TGSplitView : View {
     
     
     public var canChangeState:Bool = true;
-    public var delegate:TGSplitControllerDelegate?
+    public weak var delegate:TGSplitControllerDelegate?
     
     
     private var _proportions:[Int:TGSplitProportion] = [Int:TGSplitProportion]()
@@ -76,6 +76,7 @@ public class TGSplitView : View {
         super.init(frame: frameRect);
         self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
         self.autoresizesSubviews = false
+
     }
     
     required public init?(coder: NSCoder) {
@@ -85,7 +86,7 @@ public class TGSplitView : View {
     
     public func addController(controller:ViewController, proportion:TGSplitProportion) ->Void {
         controller.viewWillAppear(false)
-        self.addSubview(controller.view);
+        addSubview(controller.view);
         _controllers.append(controller);
         _startSize.updateValue(controller.view.frame.size, forKey: controller.internalId);
         _proportions.updateValue(proportion, forKey: controller.internalId)
@@ -100,7 +101,7 @@ public class TGSplitView : View {
        // assert([NSThread isMainThread]);
         
         if(idx != nil) {
-            self.subviews[idx].removeFromSuperview();
+            subviews[idx].removeFromSuperview();
             _controllers.remove(at: idx);
             _startSize.removeValue(forKey: controller.internalId);
             _proportions.removeValue(forKey: controller.internalId);
@@ -121,7 +122,7 @@ public class TGSplitView : View {
             controller.viewWillDisappear(false)
         }
         
-        self.removeAllSubviews();
+        removeAllSubviews();
         _controllers.removeAll();
         _startSize.removeAll();
         _proportions.removeAll();
@@ -215,7 +216,7 @@ public class TGSplitView : View {
                 
                 var m2:CGFloat = 0;
                 
-                for i:Int in index + 1 ..< _controllers.count - index - 1 {
+                for i:Int in index + 1 ..< _controllers.count - index  {
                     
                     var split:ViewController = _controllers[i];
                     

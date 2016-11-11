@@ -25,7 +25,7 @@ public class BackNavigationBar: TextButtonBarView {
         
         button.set (handler:{[weak self] in
             
-            self?.controller?.navigationController?.back()
+            self?.controller?.executeReturn()
             
         }, for:.Click)
     }

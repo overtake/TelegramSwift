@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0800"
+   LastUpgradeVersion = "0810"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -17,7 +17,7 @@
                BlueprintIdentifier = "D098C7141D7E175A007784E4"
                BuildableName = "Telegram-Mac.app"
                BlueprintName = "Telegram-Mac"
-               ReferencedContainer = "container:Telegram-Mac.xcodeproj">
+               ReferencedContainer = "container:TelegramMac.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,7 +35,7 @@
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
             BuildableName = "Telegram-Mac.app"
             BlueprintName = "Telegram-Mac"
-            ReferencedContainer = "container:Telegram-Mac.xcodeproj">
+            ReferencedContainer = "container:TelegramMac.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -58,7 +58,7 @@
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
             BuildableName = "Telegram-Mac.app"
             BlueprintName = "Telegram-Mac"
-            ReferencedContainer = "container:Telegram-Mac.xcodeproj">
+            ReferencedContainer = "container:TelegramMac.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -84,7 +84,7 @@
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
             BuildableName = "Telegram-Mac.app"
             BlueprintName = "Telegram-Mac"
-            ReferencedContainer = "container:Telegram-Mac.xcodeproj">
+            ReferencedContainer = "container:TelegramMac.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -20,6 +20,16 @@ public class HorizontalTableView: TableView {
         self.tableView.border = []
     }
     
+    
+    open override var hasVerticalScroller: Bool {
+        get {
+            return false
+        }
+        set {
+            super.hasVerticalScroller = newValue
+        }
+    }
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

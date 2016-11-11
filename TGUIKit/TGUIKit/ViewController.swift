@@ -58,11 +58,14 @@ open class ViewController : NSObject {
         return false
     }
     
+    open func executeReturn() -> Void {
+        self.navigationController?.back()
+    }
+    
     open func updateNavigation(_ navigation:NavigationViewController?) {
         
     }
     
-
     
     public private(set) var internalId:Int = 0;
     
@@ -239,6 +242,10 @@ open class ViewController : NSObject {
         if let popover = popover {
             popover.show(for: control, edge: edge, inset: inset)
         }
+    }
+    
+    open func closePopover() -> Void {
+        self.popover?.hide()
     }
     
     open func invokeNavigation(action:NavigationModalAction) {
