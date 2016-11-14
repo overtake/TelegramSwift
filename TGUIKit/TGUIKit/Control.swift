@@ -18,6 +18,7 @@ public enum ControlState {
 public enum ControlEvent {
     case Down
     case Click
+    case UpInside
     case RightClick
 }
 
@@ -187,8 +188,11 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled {
-            if mouseInside() && event.clickCount == 1  {
-                send(event: .Click)
+            if mouseInside() {
+                if event.clickCount == 1  {
+                    send(event: .Click)
+                }
+                send(event: .UpInside)
             }
             
             updateState()

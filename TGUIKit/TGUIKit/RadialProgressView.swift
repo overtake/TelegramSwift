@@ -29,12 +29,8 @@ private let progressInteractiveThumb:CGImage = {
 
 public struct FetchControls {
     public let fetch: () -> Void
-    public let cancel: () -> Void
-    public let open: () -> Void
-    public init(fetch:@escaping()->Void,cancel:@escaping()->Void, open:@escaping()->Void = {}) {
+    public init(fetch:@escaping()->Void) {
         self.fetch = fetch
-        self.cancel = cancel
-        self.open = open
     }
 }
 
@@ -149,17 +145,8 @@ public class RadialProgressView: Control {
         didSet {
             self.removeAllHandlers()
             if let fetchControls = fetchControls {
-                set(handler: { [weak self] in
-                    if let strongSelf = self {
-                        switch (strongSelf.state) {
-                        case .Fetching(progress: _):
-                            fetchControls.cancel()
-                        case .Play:
-                            fetchControls.open()
-                        default :
-                            fetchControls.fetch()
-                        }
-                    }   
+                set(handler: {
+                    fetchControls.fetch()
                 }, for: .Click)
             }
         }

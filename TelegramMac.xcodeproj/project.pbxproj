@@ -167,6 +167,8 @@
 		C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1121D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift */; };
 		C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */; };
 		C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */; };
+		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
+		C2C738F31DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */; };
 		C2CBCAC01D81528700142EC0 /* System.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABF1D81528700142EC0 /* System.swift */; };
 		C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */; };
 		C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; };
@@ -374,6 +376,8 @@
 		C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputAccessory.swift; sourceTree = "<group>"; };
 		C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryViewer.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryGIFMediaItem.swift; sourceTree = "<group>"; };
 		C2CBCABF1D81528700142EC0 /* System.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = System.swift; sourceTree = "<group>"; };
 		C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListRowView.swift; sourceTree = "<group>"; };
 		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TelegramCoreMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/TelegramCoreMac.framework"; sourceTree = "<group>"; };
@@ -382,7 +386,7 @@
 		C2FBC1E61DC631980063A23B /* SPPreviewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPPreviewController.swift; sourceTree = "<group>"; };
 		C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderController.swift; sourceTree = "<group>"; };
 		C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInputRow.swift; sourceTree = "<group>"; };
-		D098C7151D7E175A007784E4 /* Telegram-Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Telegram-Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D098C7151D7E175A007784E4 /* TelegramMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TelegramMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7181D7E175A007784E4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D098C71A1D7E175A007784E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D098C71D1D7E175A007784E4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -396,6 +400,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */,
 				C2FBC1DF1DC61B580063A23B /* MtProtoKitMac.framework in Frameworks */,
 				C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */,
 				C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */,
@@ -1015,6 +1020,7 @@
 				C2412DFC1DA6843400588C14 /* GalleryItem.swift */,
 				C2412E021DA690F400588C14 /* GalleryPagerNode.swift */,
 				C2412E061DA795D200588C14 /* GalleryControls.swift */,
+				C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */,
 			);
 			name = gallery;
 			sourceTree = "<group>";
@@ -1072,7 +1078,7 @@
 		D098C7161D7E175A007784E4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D098C7151D7E175A007784E4 /* Telegram-Mac.app */,
+				D098C7151D7E175A007784E4 /* TelegramMac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1101,6 +1107,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C2C738F01DD898DA00CE9D8A /* AVKit.framework */,
 				C2C030CC1DD5097400617711 /* CoreMedia.framework */,
 				C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */,
 				C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */,
@@ -1118,9 +1125,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D098C7141D7E175A007784E4 /* Telegram-Mac */ = {
+		D098C7141D7E175A007784E4 /* TelegramMac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Telegram-Mac" */;
+			buildConfigurationList = D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "TelegramMac" */;
 			buildPhases = (
 				D098C7121D7E175A007784E4 /* Frameworks */,
 				C20D5AB61DAA94500042616A /* CopyFiles */,
@@ -1131,9 +1138,9 @@
 			);
 			dependencies = (
 			);
-			name = "Telegram-Mac";
+			name = TelegramMac;
 			productName = "Telegram-Mac";
-			productReference = D098C7151D7E175A007784E4 /* Telegram-Mac.app */;
+			productReference = D098C7151D7E175A007784E4 /* TelegramMac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1175,7 +1182,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D098C7141D7E175A007784E4 /* Telegram-Mac */,
+				D098C7141D7E175A007784E4 /* TelegramMac */,
 			);
 		};
 /* End PBXProject section */
@@ -1203,6 +1210,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
+				C2C738F31DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift in Sources */,
 				C2412E011DA6875F00588C14 /* GalleryHoleItem.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
@@ -1535,7 +1543,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Telegram-Mac" */ = {
+		D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "TelegramMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D098C7231D7E175A007784E4 /* Debug */,
