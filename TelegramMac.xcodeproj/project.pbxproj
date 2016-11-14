@@ -1012,17 +1012,25 @@
 		C2B1A1341DA6581500ACB1DD /* gallery */ = {
 			isa = PBXGroup;
 			children = (
+				C2C738F41DD9CDD000CE9D8A /* items */,
 				C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */,
-				C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */,
-				C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */,
 				C2412E041DA6AB6300588C14 /* GalleryMediaItem.swift */,
 				C2412E001DA6875F00588C14 /* GalleryHoleItem.swift */,
 				C2412DFC1DA6843400588C14 /* GalleryItem.swift */,
 				C2412E021DA690F400588C14 /* GalleryPagerNode.swift */,
 				C2412E061DA795D200588C14 /* GalleryControls.swift */,
-				C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */,
 			);
 			name = gallery;
+			sourceTree = "<group>";
+		};
+		C2C738F41DD9CDD000CE9D8A /* items */ = {
+			isa = PBXGroup;
+			children = (
+				C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */,
+				C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */,
+				C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */,
+			);
+			name = items;
 			sourceTree = "<group>";
 		};
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
