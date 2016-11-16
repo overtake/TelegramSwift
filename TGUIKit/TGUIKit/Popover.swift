@@ -90,8 +90,13 @@ open class Popover: NSObject {
                         
                     }
                     
-                    point.x += inset.x
-                    point.y += inset.y
+                    if inset.x != 0 {
+                        point.x += (inset.x)
+
+                    }
+                    if inset.y != 0 {
+                        point.y += inset.y
+                    }
                     
                     controller.viewWillAppear(strongSelf.animates)
                     

@@ -139,7 +139,15 @@ public class Window: NSWindow {
         if firstResponder.responds(to: NSSelectorFromString("paste:")) {
             firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
         }
+    }
+    
+    @objc public func copyFromFirstResponder(_ sender: Any) {
         
+        applyResponderIfNeeded()
+        
+        if firstResponder.responds(to: NSSelectorFromString("copy:")) {
+            firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
+        }
     }
     
     public override func sendEvent(_ event: NSEvent) {

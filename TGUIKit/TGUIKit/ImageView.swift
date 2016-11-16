@@ -21,6 +21,12 @@ public class ImageView: NSView {
         }
     }
     
+    public func sizeToFit() {
+        if let image = self.image {
+            setFrameSize(image.backingSize)
+        }
+    }
+    
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true

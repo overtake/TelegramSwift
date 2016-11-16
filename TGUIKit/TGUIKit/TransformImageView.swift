@@ -164,6 +164,20 @@ open class TransformImageView: Control {
         argumentsPromise.set(.single(arguments))
     }
     
+    override open func copy() -> Any {
+        let view = View()
+        view.backgroundColor = .clear
+        let layer:CALayer = CALayer()
+        layer.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 :  self.visibleRect.height - self.frame.height, self.frame.width,  self.frame.height)
+        layer.contents = self.layer?.contents
+        layer.masksToBounds = true
+        view.frame = self.visibleRect
+        layer.shouldRasterize = true
+        layer.rasterizationScale = System.backingScale
+        view.layer?.addSublayer(layer)
+        return view
+    }
+    
     
 }
 

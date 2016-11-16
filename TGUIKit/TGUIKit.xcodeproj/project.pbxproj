@@ -74,6 +74,7 @@
 		C29B5F3C1DC66DAC00D13E65 /* DraggingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */; };
 		C29B5F471DC8CA2B00D13E65 /* NavigationModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F461DC8CA2B00D13E65 /* NavigationModalView.swift */; };
 		C29B5F491DC8CA3C00D13E65 /* NavigationModalAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F481DC8CA3C00D13E65 /* NavigationModalAction.swift */; };
+		C2A71CEB1DDB382F00C69F73 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CEA1DDB382F00C69F73 /* TableViewController.swift */; };
 		C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1171DA1673200ACB1DD /* TableAnimationInterface.swift */; };
 		C2B1A11E1DA26BA400ACB1DD /* TransactionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A11D1DA26BA400ACB1DD /* TransactionHandler.swift */; };
 		C2B1A1251DA2F3DC00ACB1DD /* ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1241DA2F3DC00ACB1DD /* ContextMenu.swift */; };
@@ -161,6 +162,7 @@
 		C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DraggingView.swift; sourceTree = "<group>"; };
 		C29B5F461DC8CA2B00D13E65 /* NavigationModalView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationModalView.swift; sourceTree = "<group>"; };
 		C29B5F481DC8CA3C00D13E65 /* NavigationModalAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationModalAction.swift; sourceTree = "<group>"; };
+		C2A71CEA1DDB382F00C69F73 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		C2B1A1171DA1673200ACB1DD /* TableAnimationInterface.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableAnimationInterface.swift; sourceTree = "<group>"; };
 		C2B1A11D1DA26BA400ACB1DD /* TransactionHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionHandler.swift; sourceTree = "<group>"; };
 		C2B1A1241DA2F3DC00ACB1DD /* ContextMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMenu.swift; sourceTree = "<group>"; };
@@ -216,6 +218,7 @@
 				C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */,
 				C2E0DEB81D7EF7F300EF1C8D /* ViewController.swift */,
 				C2B1A1311DA57E8300ACB1DD /* EditableViewController.swift */,
+				C2A71CEA1DDB382F00C69F73 /* TableViewController.swift */,
 			);
 			name = navigation;
 			sourceTree = "<group>";
@@ -588,6 +591,7 @@
 				C2B1A12C1DA50CC600ACB1DD /* TitleButton.swift in Sources */,
 				C291ED9B1DB361ED008C6B2A /* KeyboardUtils.swift in Sources */,
 				C29B5F491DC8CA3C00D13E65 /* NavigationModalAction.swift in Sources */,
+				C2A71CEB1DDB382F00C69F73 /* TableViewController.swift in Sources */,
 				C234CA8D1D97DF26003023F7 /* Cache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

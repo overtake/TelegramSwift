@@ -10,6 +10,13 @@ import Cocoa
 import SwiftSignalKitMac
 open class ModalViewController : ViewController {
     
+    open var dynamicSize:Bool {
+        return false
+    }
+    
+    open func measure(size:NSSize) {
+        
+    }
 
     open var modalInteractions:ModalInteractions? {
         return nil
@@ -135,12 +142,12 @@ public class Modal: NSObject {
         super.init()
 
         
-        var containerRect = controller.bounds
+        
         if let interactions = controller.modalInteractions {
             interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
-            interactionsView?.frame = NSMakeRect(0, containerRect.height, containerRect.width, 60.0)
-            containerRect.size.height += 60.0
+            interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, 60.0)
         }
+       
         
         container = View(frame: containerRect)
         container.layer?.cornerRadius = .cornerRadius
@@ -160,6 +167,28 @@ public class Modal: NSObject {
         background.set(handler: { [weak self] in
             self?.close()
         }, for: .Click)
+        
+        if controller.dynamicSize {
+            background.customHandler.size = {[weak self] (size) in
+                if let strongSelf = self {
+                    controller.measure(size: size)
+                    strongSelf.container.setFrameSize(strongSelf.containerRect.size)
+                    strongSelf.container.center()
+                }
+            }
+        }
+        
+    }
+    
+    private var containerRect:NSRect {
+        if let controller = controller {
+            var containerRect = controller.bounds
+            if let interactions = controller.modalInteractions {
+                containerRect.size.height += 60.0
+            }
+            return containerRect
+        }
+       return NSZeroRect
     }
     
     public func close(_ callAcceptInteraction:Bool = false) ->Void {

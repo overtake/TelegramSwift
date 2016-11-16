@@ -105,6 +105,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             return
         }
         
+        
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)
         
