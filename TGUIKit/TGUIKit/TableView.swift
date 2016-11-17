@@ -212,9 +212,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var listhash:[Int64:TableRowItem] = [Int64:TableRowItem]();
     
     
-    private var selectedhash:Atomic<Int64> = Atomic(value: -1);
+    public let selectedhash:Atomic<Int64> = Atomic(value: -1);
    
-    
     private var updating:Bool = false
     
     private var previousScroll:ScrollPosition?
