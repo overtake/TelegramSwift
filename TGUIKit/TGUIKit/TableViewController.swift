@@ -22,7 +22,7 @@ open class TableViewController: ViewController {
     }
     
     open override func viewDidLoad() {
-        
+        super.viewDidLoad()
     }
     
     override open var enableBack: Bool {

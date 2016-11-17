@@ -10,7 +10,7 @@ import Cocoa
 
 
 public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false) -> CGImage? {
-    let scale = deviceScale
+    let scale:CGFloat = 2.0
     let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
     let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
     let length = bytesPerRow * Int(scaledSize.height)
@@ -42,7 +42,7 @@ public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) 
     return image
 }
 
-let deviceScale:CGFloat = 2.0
+let deviceScale:CGFloat = System.backingScale
 let deviceColorSpace = CGColorSpaceCreateDeviceRGB()
 
 public enum DrawingContextBltMode {

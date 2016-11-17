@@ -145,10 +145,7 @@ open class TransformImageView: Control {
     }
     
     public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext, NoError>, dispatchOnDisplayLink: Bool = true) {
-
-       
         self.layer?.contents = nil
-        
         let result = combineLatest(signal, argumentsPromise.get()) |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
             return deferred {
                 return Signal<CGImage?, NoError>.single(transform(arguments).generateImage())

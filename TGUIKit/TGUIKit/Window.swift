@@ -142,9 +142,7 @@ public class Window: NSWindow {
     }
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
-        
-        applyResponderIfNeeded()
-        
+                
         if firstResponder.responds(to: NSSelectorFromString("copy:")) {
             firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
         }

@@ -96,6 +96,7 @@
 		C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */; };
 		C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
+		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C2412DFB1DA681B500588C14 /* GalleryPhotoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */; };
 		C2412DFD1DA6843400588C14 /* GalleryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412DFC1DA6843400588C14 /* GalleryItem.swift */; };
 		C2412DFF1DA6872F00588C14 /* GalleryVideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */; };
@@ -311,6 +312,7 @@
 		C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFPlayerView.swift; sourceTree = "<group>"; };
 		C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatGIFMediaItem.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/PostboxMac.framework"; sourceTree = "<group>"; };
+		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPhotoItem.swift; sourceTree = "<group>"; };
 		C2412DFC1DA6843400588C14 /* GalleryItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryItem.swift; sourceTree = "<group>"; };
 		C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryVideoItem.swift; sourceTree = "<group>"; };
@@ -446,6 +448,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				C2379D281DDCCBD00063AD30 /* bot */,
 				C250B02C1DB78041004E9FBE /* utils */,
 				C2B1A10F1D9FD09000ACB1DD /* interface */,
 				C22B635A1D969D7E00085C19 /* input */,
@@ -787,6 +790,14 @@
 				C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */,
 			);
 			name = video;
+			sourceTree = "<group>";
+		};
+		C2379D281DDCCBD00063AD30 /* bot */ = {
+			isa = PBXGroup;
+			children = (
+				C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */,
+			);
+			name = bot;
 			sourceTree = "<group>";
 		};
 		C250B01D1DB67934004E9FBE /* webpages */ = {
@@ -1300,6 +1311,7 @@
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C2A71CE51DDB2ED400C69F73 /* PrivacySettingsViewController.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
+				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
 				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,

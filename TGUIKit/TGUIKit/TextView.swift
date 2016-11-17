@@ -466,6 +466,8 @@ public class TextView: Control {
             
             let textMatrix = ctx.textMatrix
             let textPosition = ctx.textPosition
+            let startPosition = focus(layout.layoutSize).origin
+            
             
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             
@@ -474,7 +476,7 @@ public class TextView: Control {
                 
                 let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(frame.width)))
                 
-                ctx.textPosition = CGPoint(x: penOffset, y: line.frame.minY)
+                ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY)
                 CTLineDraw(line.line, ctx)
                 
             }
@@ -501,7 +503,10 @@ public class TextView: Control {
         self.setNeedsDisplayLayer()
     }
     
-    
+    public func set(layout:TextViewLayout?) {
+        self.layout = layout
+        self.setNeedsDisplayLayer()
+    }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
         

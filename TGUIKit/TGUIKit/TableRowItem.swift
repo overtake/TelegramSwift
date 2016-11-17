@@ -9,32 +9,49 @@
 import Cocoa
 import TelegramCoreMac
 open class TableRowItem: NSObject,Identifiable {
-    public weak var table:TableView?
+    public weak var table:TableView? {
+        didSet {
+            tableViewDidUpdated()
+        }
+    }
+    public let initialSize:NSSize
+
+    open func tableViewDidUpdated() {
+        
+    }
     
     open private(set) var height:CGFloat = 60;
     
     
     public var size:NSSize  {
-        return NSMakeSize(NSWidth(self.table!.frame), height)
+        return NSMakeSize(width, height)
     }
     
     public var width:CGFloat  {
-        return self.table!.frame.width
+        if let table = table {
+            return table.frame.width
+        } else {
+            return initialSize.width
+        }
     }
     
     open var stableId:Int64 {
         return Int64(0)
     }
     
-    public  var index:Int {
+    public var index:Int {
         get {
-            return self.table!.index(of:self)!;
+            if let table = table {
+                return table.index(of:self)!;
+            } else {
+                return -1
+            }
         }
 
     }
     
-    public init(_ table:TableView) {
-        self.table = table
+    public init(_ initialSize:NSSize) {
+        self.initialSize = initialSize
     }
     
     open func prepare(_ selected:Bool) {
@@ -50,13 +67,16 @@ open class TableRowItem: NSObject,Identifiable {
         
     }
     
-    
     public func redraw()->Void {
         table?.reloadData(row: index)
     }
  
     public var isSelected:Bool {
-        return self.table!.isSelected(self)
+        if let table = table {
+            return table.isSelected(self)
+        } else {
+            return false
+        }
     }
     
     open func viewClass() ->AnyClass {

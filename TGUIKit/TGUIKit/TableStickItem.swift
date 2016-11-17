@@ -19,8 +19,8 @@ open class TableStickItem: TableRowItem {
         return 30.0
     }
     
-    public override init(_ table: TableView) {
-        super.init(table)
+    public override init(_ initialSize:NSSize) {
+        super.init(initialSize)
     }
     
     open override func viewClass() -> AnyClass {

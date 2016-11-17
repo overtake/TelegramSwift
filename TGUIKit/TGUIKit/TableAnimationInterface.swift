@@ -13,6 +13,7 @@ open class TableAnimationInterface: NSObject {
     weak var table:TableView?
     let scrollBelow:Bool
     public init(_ table:TableView, _ scrollBelow:Bool = true) {
+        assertOnMainThread()
         self.table = table
         self.scrollBelow = scrollBelow
     }

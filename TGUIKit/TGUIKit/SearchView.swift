@@ -164,6 +164,10 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                     
                 }, with: self, priority: .high)
                 
+                self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
+                    return self?.input
+                }, with: self, priority: .high)
+                
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 2
                 
                 self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset, NSHeight(placeholder.frame))
@@ -185,7 +189,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             if state == .None {
                 
                 self.kitWindow?.remove(object: self, for: .Escape)
-                
+                self.kitWindow?.removeObserver(for: self)
                 self.input.isHidden = true
                 self.input.string = ""
                 self.window?.makeFirstResponder(nil)

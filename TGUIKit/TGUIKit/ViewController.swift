@@ -12,7 +12,7 @@ open class ViewController : NSObject {
     public var _view:View?;
     public var _frameRect:NSRect
     
-    
+    public var atomicSize:Atomic<NSSize> = Atomic(value:NSZeroSize)
     
     weak open var navigationController:NavigationViewController? {
         didSet {
@@ -44,8 +44,6 @@ open class ViewController : NSObject {
     public var view:View {
         get {
             if(_view == nil) {
-               
-
                 loadView();
             }
             
@@ -97,8 +95,17 @@ open class ViewController : NSObject {
             let vz = viewClass() as! View.Type
             _view = vz.init(frame: _frameRect);
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
-
+            _view?.customHandler.size = {[weak self] (size) in
+                self?.viewDidResized(size)
+            }
+            _ = atomicSize.swap(_view!.frame.size)
         }
+    }
+    
+    
+    
+    open func viewDidResized(_ size:NSSize) {
+        _ = atomicSize.swap(size)
     }
     
     open func getLeftBarViewOnce() -> BarView {
@@ -134,7 +141,7 @@ open class ViewController : NSObject {
     }
     
     open func viewDidLoad() -> Void {
-        
+        viewDidResized(view.frame.size)
     }
     
     open func viewWillAppear(_ animated:Bool) -> Void {
