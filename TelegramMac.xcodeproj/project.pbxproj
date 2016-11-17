@@ -241,6 +241,7 @@
 		C219E1FB1D8D35FA0042F0C8 /* ChatMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaItem.swift; sourceTree = "<group>"; };
 		C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTitleBarView.swift; sourceTree = "<group>"; };
 		C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AvatarLayer.swift; sourceTree = "<group>"; };
+		C2203E9F1DDE040F001E6AB6 /* libcommonCrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcommonCrypto.tbd; path = usr/lib/system/libcommonCrypto.tbd; sourceTree = SDKROOT; };
 		C2256D951DAB9CEA00494CF4 /* ChatHistoryLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHistoryLocation.swift; sourceTree = "<group>"; };
 		C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHistoryViewForLocation.swift; sourceTree = "<group>"; };
 		C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerGridEntries.swift; sourceTree = "<group>"; };
@@ -1160,6 +1161,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C2203E9F1DDE040F001E6AB6 /* libcommonCrypto.tbd */,
 				C2A71CDB1DDA0FCF00C69F73 /* Sparkle.framework */,
 				C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */,
 				C2C738F01DD898DA00CE9D8A /* AVKit.framework */,
@@ -1564,6 +1566,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Telegram-Mac/libwebp/lib",
+					"$(SDKROOT)/usr/lib/system",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
@@ -1592,6 +1595,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Telegram-Mac/libwebp/lib",
+					"$(SDKROOT)/usr/lib/system",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
