@@ -217,6 +217,10 @@ public final class TextViewLayout : Equatable {
 
     }
     
+    public func clearSelect() {
+        self.selectedRange.range = NSMakeRange(NSNotFound, 0)
+    }
+    
     public func selectedRange(startPoint:NSPoint, currentPoint:NSPoint) -> NSRange {
         
         var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
@@ -318,8 +322,6 @@ public final class TextViewLayout : Equatable {
             let link:Any? = attrs[NSLinkAttributeName]
             
             if let link = link {
-              //  let present = attributedString.string.nsstring.substring(with: range)
-                
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
                 return (link, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
@@ -327,6 +329,64 @@ public final class TextViewLayout : Equatable {
         }
         return nil
     }
+    
+    func findCharacterIndex(at point:NSPoint) -> Int {
+        let index = findIndex(location: point)
+        let line = lines[index]
+        let width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, nil, nil, nil));
+        if width > point.x {
+            let charIndex = Int(CTLineGetStringIndexForPosition(line.line, point))
+            return charIndex == attributedString.length ? charIndex - 1 : charIndex
+        }
+        return -1
+    }
+    
+    public func selectWord(at point:NSPoint) -> Void {
+        let startIndex = findCharacterIndex(at: point)
+        if startIndex == -1 {
+            return
+        }
+        var prev = startIndex
+        var next = startIndex
+        var range = NSMakeRange(startIndex, 1)
+        let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
+        if char == "" {
+            self.selectedRange = TextSelectedRange()
+            return
+        }
+        var valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
+        let string:NSString = attributedString.string.nsstring
+        while valid {
+            var prevChar = string.substring(with: NSMakeRange(prev, 1))
+            var nextChar = string.substring(with: NSMakeRange(next, 1))
+            var prevValid:Bool = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
+            var nextValid:Bool = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
+            if (prevValid && prev > 0) {
+                prev -= 1
+            }
+            if(nextValid && next < string.length - 1) {
+                next += 1
+            }
+            range.location = prevValid ? prev : prev + 1;
+            range.length =  next - range.location;
+            if prev == 0 {
+                prevValid = false
+            }
+            if(next == string.length - 1) {
+                nextValid = false
+                range.length += 1
+            }
+            if !prevValid && !nextValid {
+                break
+            }
+            if prev == 0 && !nextValid {
+                break
+            }
+        }
+        
+        self.selectedRange = TextSelectedRange(range: range, color: .selectText, def: true)
+    }
+    
 
 }
 
@@ -335,9 +395,13 @@ public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
 }
 
 public struct TextSelectedRange: Equatable {
-    var range:NSRange = NSMakeRange(NSNotFound, 0)
-    var color:NSColor = .selectText
-    var def:Bool = true
+    public var range:NSRange = NSMakeRange(NSNotFound, 0)
+    public var color:NSColor = .selectText
+    public var def:Bool = true
+    
+    public var hasSelectText:Bool {
+        return range.location != NSNotFound
+    }
 }
 
 public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
@@ -347,11 +411,12 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
 
 public class TextView: Control {
     
-    private var layout:TextViewLayout?
+    private(set) public var layout:TextViewLayout?
     
     private var beginSelect:NSPoint = NSZeroPoint
     private var endSelect:NSPoint = NSZeroPoint
-
+    
+    public var canBeResponder:Bool = true
     
     public var isSelectable:Bool = true {
         didSet {
@@ -581,12 +646,17 @@ public class TextView: Control {
         super.mouseUp(with: event)
         
         if let layout = layout, userInteractionEnabled {
-            if layout.selectedRange.range.location == NSNotFound || !isSelectable {
-                let point = self.convert(event.locationInWindow, from: nil)
+            let point = self.convert(event.locationInWindow, from: nil)
+            if event.clickCount == 3 {
+                layout.selectedRange = TextSelectedRange(range: NSMakeRange(0,layout.attributedString.length), color: .selectText, def: true)
+            } else if event.clickCount == 2 || (event.type == .rightMouseUp  && !layout.selectedRange.hasSelectText) {
+                layout.selectWord(at : point)
+            } else if !layout.selectedRange.hasSelectText || !isSelectable {
                 if let (link,_) = layout.link(at: point) {
                     layout.interactions.processURL(link)
                 }
             }
+            setNeedsDisplay()
         }
     }
     
@@ -611,9 +681,12 @@ public class TextView: Control {
     
     
     public override func becomeFirstResponder() -> Bool {
-        if let window = self.window {
-            return window.makeFirstResponder(self)
+        if canBeResponder {
+            if let window = self.window {
+                return window.makeFirstResponder(self)
+            }
         }
+        
         
         return false        
     }

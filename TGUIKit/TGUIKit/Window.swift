@@ -59,6 +59,26 @@ func <(lhs: ResponderObserver, rhs: ResponderObserver) -> Bool {
     return lhs.priority < rhs.priority
 }
 
+class MouseObserver : Comparable {
+    let handler:()->KeyHandlerResult
+    let object:WeakReference<NSObject>
+    let priority:HandlerPriority
+    let type:NSEventType?
+    
+    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ type:NSEventType) {
+        self.handler = handler
+        self.object = WeakReference(value: object)
+        self.priority = priority
+        self.type = type
+    }
+}
+func ==(lhs: MouseObserver, rhs: MouseObserver) -> Bool {
+    return lhs.priority == rhs.priority
+}
+func <(lhs: MouseObserver, rhs: MouseObserver) -> Bool {
+    return lhs.priority < rhs.priority
+}
+
 public enum KeyHandlerResult {
     case invoked // invoke and return
     case rejected // can invoke next priprity event
@@ -68,6 +88,7 @@ public enum KeyHandlerResult {
 public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var responsders:[ResponderObserver] = []
+    private var mouseHandlers:[NSEventType:[MouseObserver]] = [:]
     
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
@@ -105,6 +126,31 @@ public class Window: NSWindow {
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == object || copy[i].object.value == nil  {
                     keyHandlers[key]?.remove(at: i)
+                }
+            }
+        }
+    }
+    
+    public func set(mouseHandler:@escaping() -> KeyHandlerResult, with object:NSObject, for type:NSEventType, priority:HandlerPriority = .low) -> Void {
+        var handlers:[MouseObserver]? = mouseHandlers[type]
+        if handlers == nil {
+            handlers = []
+            mouseHandlers[type] = handlers
+        }
+        mouseHandlers[type]?.append(MouseObserver(mouseHandler, object, priority, type))
+        
+    }
+    
+    public func remove(object:NSObject, for type:NSEventType) {
+        var handlers = mouseHandlers[type]
+        if let handlers = handlers {
+            var copy:[MouseObserver] = []
+            for handle in handlers {
+                copy.append(handle)
+            }
+            for i in stride(from: copy.count - 1, to: -1, by: -1) {
+                if copy[i].object.value == object || copy[i].object.value == nil  {
+                    mouseHandlers[type]?.remove(at: i)
                 }
             }
         }
@@ -154,7 +200,6 @@ public class Window: NSWindow {
             
            applyResponderIfNeeded()
             
-            
             if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
                 var sorted = handlers.sorted(by: >)
                 loop: for handle in sorted {
@@ -169,6 +214,20 @@ public class Window: NSWindow {
                             break loop
                         }
                         
+                    }
+                }
+            }
+        } else {
+            if  let handlers = mouseHandlers[event.type] {
+                var sorted = handlers.sorted(by: >)
+                loop: for handle in sorted {
+                    switch handle.handler() {
+                    case .invoked:
+                        return
+                    case .rejected:
+                        continue
+                    case .invokeNext:
+                        break loop
                     }
                 }
             }

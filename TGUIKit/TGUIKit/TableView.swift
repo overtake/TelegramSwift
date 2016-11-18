@@ -157,6 +157,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 
     
     override func mouseDown(with event: NSEvent) {
+        self.window?.makeFirstResponder(nil)
         let point = self.convert(event.locationInWindow, from: nil)
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
         sdelegate?.selectRow(index: range.location)
@@ -757,7 +758,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
     }
     
+    public func row(at point:NSPoint) -> Int {
+        return tableView.row(at: point)
+    }
+    
     public func viewNecessary(at row:Int) -> TableRowView? {
+        if row < 0 || row > count - 1 {
+            return nil
+        }
         return self.tableView.rowView(atRow: row, makeIfNecessary: false) as? TableRowView
     }
     

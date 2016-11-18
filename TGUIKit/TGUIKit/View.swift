@@ -207,6 +207,7 @@ open class View : NSView,CALayerDelegate {
     }
     
     open override func mouseDown(with event: NSEvent) {
+        self.window?.makeFirstResponder(nil)
         super.mouseDown(with: event)
     }
     
