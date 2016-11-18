@@ -10,6 +10,18 @@ import Cocoa
 import SwiftSignalKitMac
 open class ModalViewController : ViewController {
     
+    open var closable:Bool {
+        return true
+    }
+    
+    open var background:NSColor {
+        return .blackTransparent
+    }
+    
+    open var containerBackground: NSColor {
+        return .white
+    }
+    
     open var dynamicSize:Bool {
         return false
     }
@@ -136,7 +148,7 @@ public class Modal: NSObject {
         self.controller = controller
         self.window = window
         background = ModalBackground()
-        background.backgroundColor = .blackTransparent
+        background.backgroundColor = controller.background
         background.layer?.disableActions()
         
         super.init()
@@ -151,6 +163,7 @@ public class Modal: NSObject {
         
         container = View(frame: containerRect)
         container.layer?.cornerRadius = .cornerRadius
+        container.backgroundColor = controller.containerBackground
         container.addSubview(controller.view)
         
         if let interactionsView = interactionsView {

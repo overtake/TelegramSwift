@@ -61,11 +61,47 @@ public struct RadialProgressTheme {
     }
 }
 
-public enum RadialProgressState {
+public enum RadialProgressState: Equatable {
     case None
     case Remote
     case Fetching(progress: Float)
+    case ImpossibleFetching(progress: Float)
     case Play
+}
+
+public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
+    switch lhs {
+    case .None:
+        if case .None = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .Remote:
+        if case .Remote = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .Play:
+        if case .Play = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .Fetching(lhsProgress):
+        if case let .Fetching(rhsProgress) = rhs, lhsProgress == rhsProgress {
+            return true
+        } else {
+            return false
+        }
+    case let .ImpossibleFetching(lhsProgress):
+            if case let .ImpossibleFetching(rhsProgress) = rhs, lhsProgress == rhsProgress {
+                return true
+            } else {
+                return false
+        }
+    }
 }
 
 
@@ -97,7 +133,7 @@ private class RadialProgressOverlayLayer: Layer {
         switch parameters.state {
         case .None, .Remote, .Play:
             break
-        case let .Fetching(progress):
+        case let .Fetching(progress), let .ImpossibleFetching(progress):
             
 
             let startAngle = 2.0 * (CGFloat(M_PI)) * CGFloat(progress) - CGFloat(M_PI_2)
@@ -161,7 +197,11 @@ public class RadialProgressView: Control {
     public var state: RadialProgressState = .None {
         didSet {
             self.overlay.state = self.state
-            if case .Fetching = self.state {
+            if case .Fetching = state {
+                if self.overlay.superlayer == nil {
+                    self.layer?.addSublayer(self.overlay)
+                }
+            } else if case .ImpossibleFetching = state {
                 if self.overlay.superlayer == nil {
                     self.layer?.addSublayer(self.overlay)
                 }
@@ -174,6 +214,13 @@ public class RadialProgressView: Control {
             case .Fetching:
                 switch self.state {
                 case .Fetching:
+                    break
+                default:
+                    self.setNeedsDisplay()
+                }
+            case .ImpossibleFetching:
+                switch self.state {
+                case .ImpossibleFetching:
                     break
                 default:
                     self.setNeedsDisplay()
@@ -200,6 +247,7 @@ public class RadialProgressView: Control {
                     self.setNeedsDisplay()
                 }
             }
+            
         }
     }
     
@@ -286,6 +334,8 @@ public class RadialProgressView: Control {
                 var f = focus(icon.backingSize)
                 context.draw(icon, in: f)
             }
+        case .ImpossibleFetching:
+            break
         }
 
     }

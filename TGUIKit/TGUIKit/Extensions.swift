@@ -595,3 +595,19 @@ public extension Int {
 }
 
 
+public extension NSProgressIndicator {
+    public func set(color:NSColor) {
+        var colorPoly = CIFilter(name: "CIColorPolynomial")
+        if let colorPoly = colorPoly {
+            colorPoly.setDefaults()
+            var redVector = CIVector(x: color.redComponent, y: 0, z: 0, w: 0)
+            var greenVector = CIVector(x: color.greenComponent, y: 0, z: 0, w: 0)
+            var blueVector = CIVector(x: color.blueComponent, y: 0, z: 0, w: 0)
+            
+            colorPoly.setValue(redVector, forKey: "inputRedCoefficients")
+            colorPoly.setValue(greenVector, forKey: "inputGreenCoefficients")
+            colorPoly.setValue(blueVector, forKey: "inputBlueCoefficients")
+            self.contentFilters = [colorPoly]
+        }
+    }
+}

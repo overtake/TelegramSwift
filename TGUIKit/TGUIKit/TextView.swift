@@ -274,6 +274,12 @@ public final class TextViewLayout : Equatable {
     
     public func findIndex(location:NSPoint) -> Int {
         
+        if location.y == .greatestFiniteMagnitude {
+            return lines.count - 1
+        } else if location.y == 0 {
+            return 0
+        }
+        
         for idx in 0 ..< lines.count {
             if  isCurrentLine(pos: location, index: idx) {
                 return idx
@@ -297,7 +303,6 @@ public final class TextViewLayout : Equatable {
         
         rect.origin.y = rect.minY - rect.height + ceil(descent - leading)
         rect.size.height += ceil(descent - leading)
-        
         
         return (pos.y > rect.minY) && pos.y < rect.maxY
         
