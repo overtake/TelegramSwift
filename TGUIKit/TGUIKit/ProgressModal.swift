@@ -80,7 +80,7 @@ public class ProgressModalController<T>: ModalViewController {
     public init(_ signal:Signal<T,Void>) {
         super.init(frame:NSMakeRect(0,0,100,100))
         
-        let modified = signal |> delay(2.0, queue: Queue.mainQueue()) |> deliverOnMainQueue
+        let modified = signal |> deliverOnMainQueue
         afterDisposable.set(modified.start(next: {[weak self] (result) in
             self?.promise?.set(.single(result))
         }))

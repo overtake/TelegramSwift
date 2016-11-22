@@ -115,6 +115,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "NavigationHeader.navigation.didset:NavigationViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "navigation">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "static ChatLayoutUtils.contentNode(for : Media) -&gt; ChatMediaContentView.Type:ChatLayoutUtils.swift">
       </ContextState>
       <ContextState
@@ -452,15 +460,15 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatController.(loadOnScroll(Account, TGScrollPosition) -&gt; ()).(closure #1):ChatController.swift">
+      </ContextState>
+      <ContextState
          contextName = "EditableViewController.state.didset:EditableViewController.swift">
          <PersistentStrings>
             <PersistentString
                value = "state">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatController.(loadOnScroll(Account, TGScrollPosition) -&gt; ()).(closure #1):ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1):ChatListController.swift">
@@ -584,7 +592,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -596,7 +604,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -669,6 +677,9 @@
                value = "_contentSize">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NavigationHeader.hide(Bool) -&gt; ():NavigationViewController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatPresentationInterfaceState.state.getter:ChatPresentationInterfaceState.swift">
@@ -802,6 +813,9 @@
                value = "controlState">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "APController.(init(account : Account, peerId : PeerId, message : Message?, isVoice : Bool) -&gt; APController).(closure #4):AudioPlayerController.swift">
       </ContextState>
       <ContextState
          contextName = "GridNode.applyPresentaionLayout(GridNodePresentationLayout) -&gt; ():GridNode.swift">

@@ -10,17 +10,18 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 
+
+
 public protocol MajorControllerListener : class {
     func navigationWillShowMajorController(_ controller:ViewController);
 }
 
 public class MajorNavigationController: NavigationViewController {
     
-    
-
     private var majorClass:AnyClass
     private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
+    
     
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
         self.majorClass = majorClass
@@ -39,14 +40,12 @@ public class MajorNavigationController: NavigationViewController {
     public override func viewClass() ->AnyClass {
         return DraggingView.self
     }
-    
-    
+   
     override public func push(_ controller: ViewController, _ animated: Bool) {
         
         if isLocked {
             return
         }
-        
         
         assertOnMainThread()
         

@@ -711,7 +711,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         if selectedhash.modify({$0}) != -1 {
-            self.scroll(to: .top(selectedhash.modify({$0}), true), inset: EdgeInsets(), true)
+            self.scroll(to: .top(selectedhash.modify({$0}), animated), inset: EdgeInsets(), true)
         }
     }
     
@@ -772,16 +772,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func select(item:TableRowItem, notify:Bool = true) -> Bool {
         
-        if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})) {
-            if(self.delegate?.isSelectable(row: item.index, item: item) == true) {
-                self.cancelSelection();
-                let _ = selectedhash.swap(item.stableId)
-                item.prepare(true)
-                self.reloadData(row:item.index)
-                if notify {
-                    self.delegate?.selectionDidChange(row: item.index, item: item)
+        if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})), let delegate = delegate {
+            if delegate.isSelectable(row: item.index, item: item) {
+                if delegate.selectionWillChange(row: item.index, item: item) {
+                    self.cancelSelection();
+                    let _ = selectedhash.swap(item.stableId)
+                    item.prepare(true)
+                    self.reloadData(row:item.index)
+                    if notify {
+                        self.delegate?.selectionDidChange(row: item.index, item: item)
+                    }
+                    return true;
                 }
-                return true;
+                
             }
         }
         
@@ -1007,11 +1010,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     func selectRow(index: Int) {
         if self.count > index {
-            if let delegate = delegate, delegate.selectionWillChange(row: index, item: self.item(at: index)) {
-                self.select(item: self.item(at: index))
-            }
+            self.select(item: self.item(at: index))
         }
-    
     }
     
     public override func change(size: NSSize, animated: Bool, _ save:Bool = true) {
