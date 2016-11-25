@@ -49,7 +49,7 @@ private class RadialProgressParameters: NSObject {
     }
 }
 
-public struct RadialProgressTheme {
+public struct RadialProgressTheme : Equatable {
     public let backgroundColor: NSColor
     public let foregroundColor: NSColor
     public let icon: CGImage?
@@ -59,6 +59,10 @@ public struct RadialProgressTheme {
         self.foregroundColor = foregroundColor
         self.icon = icon
     }
+}
+
+public func ==(lhs:RadialProgressTheme, rhs:RadialProgressTheme) -> Bool {
+    return lhs.backgroundColor == rhs.backgroundColor && lhs.foregroundColor == rhs.foregroundColor && ((lhs.icon == nil) == (rhs.icon == nil))
 }
 
 public enum RadialProgressState: Equatable {
@@ -188,7 +192,11 @@ public class RadialProgressView: Control {
         }
     }
     
-    private let theme:RadialProgressTheme
+    public var theme:RadialProgressTheme {
+        didSet {
+            self.setNeedsDisplay()
+        }
+    }
     private let overlay: RadialProgressOverlayLayer
     private var parameters:RadialProgressParameters {
         return RadialProgressParameters(theme: self.theme, diameter: NSWidth(self.frame), state: self.state)

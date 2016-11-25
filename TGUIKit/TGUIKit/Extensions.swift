@@ -221,6 +221,25 @@ public extension NSView {
         self.setFrameOrigin(NSMakePoint(x, y))
     }
     
+    open var background:NSColor {
+        get {
+            if let view = self as? View {
+                return view.backgroundColor
+            }
+            if let backgroundColor = layer?.backgroundColor {
+                return NSColor(cgColor: backgroundColor) ?? .clear
+            }
+            return .clear
+        }
+        set {
+            if let view = self as? View {
+                view.backgroundColor = newValue
+            } else {
+                self.layer?.backgroundColor = newValue.cgColor
+            }
+        }
+    }
+    
     public func centerX(_ superView:NSView? = nil, y:CGFloat? = nil) -> Void {
         
         var x:CGFloat = 0

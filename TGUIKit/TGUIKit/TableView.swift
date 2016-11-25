@@ -19,16 +19,18 @@ public enum TableSeparator {
 
 
 public final class TableTransition {
-    public private(set) var inserted:[(Int,TableRowItem,Int?)]
-    public private(set) var deleted:[Int]
-    public private(set) var scrollState:TableScrollState
-    public private(set) var animated:Bool
+    public let inserted:[(Int,TableRowItem,Int?)]
+    public let deleted:[Int]
+    public let scrollState:TableScrollState
+    public let animated:Bool
+    public let grouping:Bool
     
-    public init(deleted:[Int], inserted:[(Int,TableRowItem,Int?)], animated:Bool = false, scrollState:TableScrollState = .none(nil)) {
+    public init(deleted:[Int], inserted:[(Int,TableRowItem,Int?)], animated:Bool = false, scrollState:TableScrollState = .none(nil), grouping:Bool = true) {
         self.inserted = inserted
         self.deleted = deleted
         self.animated = animated
         self.scrollState = scrollState
+        self.grouping = grouping
     }
 }
 
@@ -230,6 +232,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     open override var isFlipped: Bool {
         return true
+    }
+    
+    convenience override init(frame frameRect: NSRect) {
+        self.init(frame:frameRect, isFlipped:true)
     }
     
     public init(frame frameRect: NSRect, isFlipped:Bool = true) {
@@ -758,6 +764,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
     }
     
+    public var listHeight:CGFloat {
+        var height:CGFloat = 0
+        for item in list {
+            height += item.height
+        }
+        return height
+    }
+    
     public func row(at point:NSPoint) -> Int {
         return tableView.row(at: point)
     }
@@ -883,14 +897,22 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func apply(transition:TableTransition) ->Void {
-        self.merge(transition.deleted, transition.inserted, transition.animated, transition.scrollState)
+    public func beginTableUpdates() {
+        self.tableView.beginUpdates()
     }
     
-    public func merge(_ deleteIndexes:[Int], _ insertedIndexes:[(Int,TableRowItem,Int?)], _ animated:Bool = true,_ state:TableScrollState = .none(nil)) -> Void {
+    public func endTableUpdates() {
+        self.tableView.endUpdates()
+    }
+    
+    public func apply(transition:TableTransition) ->Void {
+        self.merge(transition.deleted, transition.inserted, transition.animated, transition.scrollState, transition.grouping)
+    }
+    
+    public func merge(_ deleteIndexes:[Int], _ insertedIndexes:[(Int,TableRowItem,Int?)], _ animated:Bool = true,_ state:TableScrollState = .none(nil), _ grouping:Bool = true) -> Void {
         
-        
-        assert(!self.updating)
+        assertOnMainThread()
+        assert(!updating)
             
         self.beginUpdates()
         
@@ -898,11 +920,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let lsize = self.documentSize
         let loffset = self.documentOffset
         
-//        if(loffset.y < 0) {
-//            self.contentView.bounds = NSMakeRect(0, 0, 0, NSHeight(self.contentView.bounds))
-//        }
-        
-        self.tableView.beginUpdates()
+        if grouping {
+            self.tableView.beginUpdates()
+        }
         
         var inserted:[TableRowItem] = []
         var removed:[TableRowItem] = []
@@ -927,7 +947,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 removed.append(self.item(at: rdx - rd))
                 
                 let effect:NSTableViewAnimationOptions
-                if case let .none(interface) = state {
+                if case let .none(interface) = state, interface != nil {
                     effect = .effectFade
                 } else {
                     effect = animated ? .effectFade : .none
@@ -948,9 +968,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-        
-        self.tableView.endUpdates()
-        
+        if grouping {
+            self.tableView.endUpdates()
+        }
+
         
         switch state {
         case let .none(animation):
@@ -1019,7 +1040,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let s = self.frame.size
         
         if animated {
-            if !tableView.isFlipped {
+            //if !tableView.isFlipped {
                 
                 let y =  (s.height - size.height)
                 
@@ -1036,18 +1057,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
                 
                 
-                
+            if !tableView.isFlipped {
                 if (y > 0) {
-                    
-                    
                     var presentBounds:NSRect = contentView.layer?.bounds ?? contentView.bounds
                     presentation = contentView.layer?.presentation()
                     if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
                         presentBounds = presentation.bounds
                     }
-                    
                     presentBounds.size.height += y
-                    
                     contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
                     
                 }
@@ -1060,17 +1077,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
                 
                 let pos = contentView.layer?.position ?? NSZeroPoint
-                
                 contentView.layer?.animatePosition(from: NSMakePoint(0,currentY + (y > 0 ? -y : y)), to: pos, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-                
-                
+            }
+            
                 
                 CATransaction.commit()
             
-            }
+          //  }
         }
         
         self.setFrameSize(size)
+      //  self.tableView.setFrameSize(size.width,max(listHeight,size.height))
     }
     
     

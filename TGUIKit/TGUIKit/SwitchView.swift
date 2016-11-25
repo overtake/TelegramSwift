@@ -24,7 +24,7 @@ public class SwitchView: Control {
 
     private var buble:CALayer = CALayer()
     private var backBuble:CALayer = CALayer()
-    private var background:CALayer = CALayer()
+    private var backgroundLayer:CALayer = CALayer()
     
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -33,11 +33,11 @@ public class SwitchView: Control {
         
         resize();
         
-        background.backgroundColor = NSColor.white.cgColor
+        backgroundLayer.backgroundColor = NSColor.white.cgColor
         buble.backgroundColor = NSColor.white.cgColor
         
         
-        layer?.addSublayer(background)
+        layer?.addSublayer(backgroundLayer)
         layer?.addSublayer(backBuble)
         layer?.addSublayer(buble)
         
@@ -53,8 +53,8 @@ public class SwitchView: Control {
             // self.isEnabled = false
             
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
-            background.backgroundColor = isOn ? NSColor.greenUI.cgColor : NSColor.white.cgColor
-            background.borderWidth = isOn ? 0.0 : 1.0
+            backgroundLayer.backgroundColor = isOn ? NSColor.greenUI.cgColor : NSColor.white.cgColor
+            backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
             buble.borderWidth = isOn ? 0.0 : 1.0
             //  buble.backgroundColor = !isOn ? .border.cgColor : .white.cgColor
             
@@ -63,8 +63,8 @@ public class SwitchView: Control {
             //            buble.shadowRadius = 2.0
             //            buble.shadowOffset = NSMakeSize(0, 3.0)
             
-            background.animateBackground()
-            background.animateBorder()
+            backgroundLayer.animateBackground()
+            backgroundLayer.animateBorder()
             
             buble.animateBackground()
             buble.animateBorder()
@@ -86,10 +86,10 @@ public class SwitchView: Control {
     func resize() -> Void {
         // standart 36:20
         
-        background.frame = NSMakeRect(0, 0, frame.width, frame.height)
-        background.cornerRadius = frame.height / 2.0
-        background.borderWidth = 1.0
-        background.borderColor = NSColor.border.cgColor
+        backgroundLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
+        backgroundLayer.cornerRadius = frame.height / 2.0
+        backgroundLayer.borderWidth = 1.0
+        backgroundLayer.borderColor = NSColor.border.cgColor
         
         buble.frame = bubleRect
         buble.cornerRadius = bubleRect.height/2.0

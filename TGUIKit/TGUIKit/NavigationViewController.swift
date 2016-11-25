@@ -35,19 +35,18 @@ open class NavigationHeaderView : View {
 
 public final class NavigationHeader {
     let height:CGFloat
-    
     let initializer:(NavigationHeader)->NavigationHeaderView
     weak var navigation:NavigationViewController?
     private var _view:NavigationHeaderView?
     private let disposable:MetaDisposable = MetaDisposable()
     private(set) var isShown:Bool = false
-    
+    public var needShown:Bool = false
     public init(_ height:CGFloat, initializer:@escaping(NavigationHeader)->NavigationHeaderView) {
         self.height = height
         self.initializer = initializer
     }
     
-    var view:NavigationHeaderView {
+    public var view:NavigationHeaderView {
         if _view == nil {
             _view = initializer(self)
         }
@@ -60,6 +59,7 @@ public final class NavigationHeader {
     
     public func show(_ animated:Bool) {
         assert(navigation != nil)
+        needShown = true
         if isShown {
             return
         }
@@ -86,6 +86,7 @@ public final class NavigationHeader {
         if !isShown {
             return
         }
+        needShown = false
         isShown = false
         
         if let navigation = navigation {
@@ -99,7 +100,6 @@ public final class NavigationHeader {
                 view.removeFromSuperview()
                 _view = nil
             }
-            navigation.set(header: nil)
             navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, navigation.frame.height - navigation.controller.bar.height)
         }
         
@@ -248,7 +248,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         var contentInset = controller.bar.height
         
-        if let header = header {
+        if let header = header, header.needShown {
             header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
             containerView.addSubview(header.view)
             contentInset += header.height
@@ -323,7 +323,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
     }
     
-    public var containerView: View {
+    public var containerView: NSView {
         return view
     }
     

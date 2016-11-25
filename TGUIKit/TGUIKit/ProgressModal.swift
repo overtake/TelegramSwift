@@ -28,7 +28,7 @@ public class ProgressModalController<T>: ModalViewController {
    
         progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
         progressView?.state = .ImpossibleFetching(progress: progress)
-        view.backgroundColor = NSColor(0x000000,0.8)
+        view.background = NSColor(0x000000,0.8)
         view.addSubview(progressView!)
         progressView?.center()
         

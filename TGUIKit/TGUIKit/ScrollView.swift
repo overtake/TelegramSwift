@@ -219,7 +219,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
                     
                     if origin.y < documentView.frame.height {
                         if documentView.isFlipped {
-                            if origin.y < documentView.frame.height -  frame.height + frame.minY {
+                            if origin.y < documentView.frame.height - (frame.height + frame.minY) {
                                 origin.y -= CGFloat(deltaScrollY)
                                 clipView.scroll(to: origin)
                                 reflectScrolledClipView(clipView)

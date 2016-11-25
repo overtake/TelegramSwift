@@ -1,9 +1,6 @@
 [submodule "submodules/Postbox"]
 	path = submodules/Postbox
 	url = https://github.com/peter-iakovlev/Postbox.git
-[submodule "submodules/MtProtoKit"]
-	path = submodules/MtProtoKit
-	url = git@github.com:peter-iakovlev/MtProtoKit.git
 [submodule "submodules/TelegramCore"]
 	path = submodules/TelegramCore
 	url = https://github.com/peter-iakovlev/TelegramCore.git
@@ -13,3 +10,6 @@
 [submodule "submodules/Signals"]
 	path = submodules/Signals
 	url = https://github.com/peter-iakovlev/Signals.git
+[submodule "submodules/MtProtoKit"]
+	path = submodules/MtProtoKit
+	url = https://github.com/peter-iakovlev/MtProtoKit.git

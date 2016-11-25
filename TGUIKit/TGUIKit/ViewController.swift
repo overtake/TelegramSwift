@@ -9,7 +9,7 @@
 import Foundation
 import SwiftSignalKitMac
 open class ViewController : NSObject {
-    public var _view:View?;
+    public var _view:NSView?;
     public var _frameRect:NSRect
     
     public var atomicSize:Atomic<NSSize> = Atomic(value:NSZeroSize)
@@ -41,7 +41,7 @@ open class ViewController : NSObject {
     }
     public var didSetReady:Bool = false
     
-    public var view:View {
+    public var view:NSView {
         get {
             if(_view == nil) {
                 loadView();
@@ -92,17 +92,19 @@ open class ViewController : NSObject {
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
             
-            let vz = viewClass() as! View.Type
+            let vz = viewClass() as! NSView.Type
             _view = vz.init(frame: _frameRect);
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
-            _view?.customHandler.size = {[weak self] (size) in
-                self?.viewDidResized(size)
-            }
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
+            
             _ = atomicSize.swap(_view!.frame.size)
         }
     }
     
-    
+    @objc func viewFrameChanged(_ notification:Notification) {
+        viewDidResized(frame.size)
+    }
     
     open func viewDidResized(_ size:NSSize) {
         _ = atomicSize.swap(size)
@@ -150,6 +152,7 @@ open class ViewController : NSObject {
     
     deinit {
         self.window?.removeObserver(for: self)
+        NotificationCenter.default.removeObserver(self)
     }
     
     open func viewWillDisappear(_ animated:Bool) -> Void {
@@ -200,7 +203,7 @@ open class ViewController : NSObject {
     }
     
     public var window:Window? {
-        return _view?.kitWindow
+        return _view?.window as? Window
     }
     
     open func firstResponder() -> NSResponder? {

@@ -16,3 +16,4 @@ public class WeakReference<T> where T:AnyObject {
         self.value = value
     }
 }
+
