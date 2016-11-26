@@ -36,7 +36,7 @@ public final class TableTransition {
 
 public protocol TableViewDelegate : class {
     
-    func selectionDidChange(row:Int, item:TableRowItem) -> Void;
+    func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool) -> Void;
     func selectionWillChange(row:Int, item:TableRowItem) -> Bool;
     func isSelectable(row:Int, item:TableRowItem) -> Bool;
     
@@ -784,7 +784,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
-    public func select(item:TableRowItem, notify:Bool = true) -> Bool {
+    public func select(item:TableRowItem, notify:Bool = true, byClick:Bool = false) -> Bool {
         
         if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})), let delegate = delegate {
             if delegate.isSelectable(row: item.index, item: item) {
@@ -794,7 +794,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     item.prepare(true)
                     self.reloadData(row:item.index)
                     if notify {
-                        self.delegate?.selectionDidChange(row: item.index, item: item)
+                        self.delegate?.selectionDidChange(row: item.index, item: item, byClick:byClick)
                     }
                     return true;
                 }
@@ -944,7 +944,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
             if(!s) {
-                removed.append(self.item(at: rdx - rd))
                 
                 let effect:NSTableViewAnimationOptions
                 if case let .none(interface) = state, interface != nil {
@@ -1031,7 +1030,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     func selectRow(index: Int) {
         if self.count > index {
-            self.select(item: self.item(at: index))
+            self.select(item: self.item(at: index), byClick:true)
         }
     }
     
@@ -1040,6 +1039,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let s = self.frame.size
         
         if animated {
+
+            
             //if !tableView.isFlipped {
                 
                 let y =  (s.height - size.height)
@@ -1057,7 +1058,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
                 
                 
-            if !tableView.isFlipped {
+            
                 if (y > 0) {
                     var presentBounds:NSRect = contentView.layer?.bounds ?? contentView.bounds
                     presentation = contentView.layer?.presentation()
@@ -1068,7 +1069,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
                     
                 }
-                
+         //   }
+            if !tableView.isFlipped {
                 var currentY:CGFloat = 0
                 
                 presentation = contentView.layer?.presentation()
@@ -1087,7 +1089,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         self.setFrameSize(size)
-      //  self.tableView.setFrameSize(size.width,max(listHeight,size.height))
+       // self.tableView.setFrameSize(size.width,max(listHeight,size.height))
     }
     
     

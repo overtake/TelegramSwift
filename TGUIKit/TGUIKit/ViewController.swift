@@ -8,9 +8,88 @@
 
 import Foundation
 import SwiftSignalKitMac
+
+class ControllerToasterView : View {
+    
+    private weak var toaster:ControllerToaster?
+    private let textView:TextView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        textView.isSelectable = false
+        self.autoresizingMask = [.viewWidthSizable]
+        self.border = [.Bottom]
+    }
+    
+   
+    
+    func update(with toaster:ControllerToaster) {
+        self.toaster = toaster
+    }
+    
+    override func layout() {
+        super.layout()
+        if let toaster = toaster {
+            toaster.text.measure(width: frame.width - 40)
+            textView.update(toaster.text)
+            textView.center()
+        }
+        self.setNeedsDisplayLayer()
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+public class ControllerToaster {
+    let text:TextViewLayout
+    var view:ControllerToasterView?
+    let disposable:MetaDisposable = MetaDisposable()
+    public init(text:NSAttributedString) {
+        self.text = TextViewLayout(text, maximumNumberOfLines: 1, truncationType: .middle)
+    }
+    
+    func show(for controller:ViewController, timeout:Double, animated:Bool) {
+        assert(view == nil)
+        view = ControllerToasterView(frame: NSMakeRect(0, 0, controller.frame.width, 30))
+        view?.update(with: self)
+        controller.addSubview(view!)
+        
+        if animated {
+            view?.layer?.animatePosition(from: NSMakePoint(0, -30), to: NSZeroPoint, duration: 0.2)
+        }
+        
+        let signal:Signal<Void,Void> = .single() |> delay(timeout, queue: Queue.mainQueue())
+        disposable.set(signal.start(next:{ [weak self] in
+            self?.hide(true)
+        }))
+    }
+    
+    func hide(_ animated:Bool) {
+        if animated {
+            view?.layer?.animatePosition(from: NSZeroPoint, to: NSMakePoint(0, -30), duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
+                self?.view?.removeFromSuperview()
+                self?.view = nil
+            })
+        } else {
+            view?.removeFromSuperview()
+            view = nil
+            disposable.dispose()
+        }
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+}
+
 open class ViewController : NSObject {
     public var _view:NSView?;
     public var _frameRect:NSRect
+    
+    private var toaster:ControllerToaster?
     
     public var atomicSize:Atomic<NSSize> = Atomic(value:NSZeroSize)
     
@@ -262,7 +341,16 @@ open class ViewController : NSObject {
         
     }
     
-
+    public func show(toaster:ControllerToaster, for delay:Double = 3.0, animated:Bool = true) {
+        assert(isLoaded())
+        if let toaster = self.toaster {
+            toaster.hide(true)
+        }
+        
+        self.toaster = toaster
+        toaster.show(for: self, timeout: delay, animated: animated)
+        
+    }
 }
 
 

@@ -217,6 +217,8 @@
 		C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47D91DE82653003AA6C0 /* NSObject+TGLock.m */; };
 		C2DF47E01DE846AB003AA6C0 /* ChatAudioContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47DF1DE846AB003AA6C0 /* ChatAudioContentView.swift */; };
 		C2DF47E21DE846B8003AA6C0 /* ChatMusicContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47E11DE846B8003AA6C0 /* ChatMusicContentView.swift */; };
+		C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47E31DE84A67003AA6C0 /* ChatVoiceRowItem.swift */; };
+		C2DF47E91DE892E3003AA6C0 /* ChatToasterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47E81DE892E3003AA6C0 /* ChatToasterView.swift */; };
 		C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; };
 		C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; };
 		C2FBC1DA1DC61B0F0063A23B /* SwiftSignalKitMac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -491,6 +493,8 @@
 		C2DF47D91DE82653003AA6C0 /* NSObject+TGLock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+TGLock.m"; sourceTree = "<group>"; };
 		C2DF47DF1DE846AB003AA6C0 /* ChatAudioContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatAudioContentView.swift; sourceTree = "<group>"; };
 		C2DF47E11DE846B8003AA6C0 /* ChatMusicContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMusicContentView.swift; sourceTree = "<group>"; };
+		C2DF47E31DE84A67003AA6C0 /* ChatVoiceRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatVoiceRowItem.swift; sourceTree = "<group>"; };
+		C2DF47E81DE892E3003AA6C0 /* ChatToasterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatToasterView.swift; sourceTree = "<group>"; };
 		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TelegramCoreMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/TelegramCoreMac.framework"; sourceTree = "<group>"; };
 		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSignalKitMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/SwiftSignalKitMac.framework"; sourceTree = "<group>"; };
 		C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MtProtoKitMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/MtProtoKitMac.framework"; sourceTree = "<group>"; };
@@ -586,6 +590,7 @@
 				C2777B631DCFB559008B69DD /* ChatServiceRowView.swift */,
 				C2777B671DD20DD2008B69DD /* ChatTitleBarView.swift */,
 				C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */,
+				C2DF47E81DE892E3003AA6C0 /* ChatToasterView.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -603,6 +608,7 @@
 				C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */,
 				C232234C1DE20E610078D738 /* ChatMessageDateHeader.swift */,
 				C253E22D1DE33A7C0022A29F /* ChatMusicRowItem.swift */,
+				C2DF47E31DE84A67003AA6C0 /* ChatVoiceRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -1518,6 +1524,7 @@
 				C2DF47C51DE79574003AA6C0 /* stream.c in Sources */,
 				C2271DAE1DAE1172001792B6 /* UserInfoEntries.swift in Sources */,
 				C230B9131DD392EB0057F596 /* SearchRowItem.swift in Sources */,
+				C2DF47E91DE892E3003AA6C0 /* ChatToasterView.swift in Sources */,
 				C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
 				C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */,
@@ -1622,6 +1629,7 @@
 				C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */,
 				C2844AD41DA906BD009308DC /* InfoHeaderView.swift in Sources */,
 				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
+				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
 				C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */,
