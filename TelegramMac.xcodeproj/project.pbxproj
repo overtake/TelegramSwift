@@ -190,6 +190,7 @@
 		C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */; };
 		C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */; };
 		C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */; };
+		C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */; };
 		C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */; };
 		C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */; };
 		C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */; };
@@ -454,6 +455,7 @@
 		C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UsernameSettingsViewController.swift; sourceTree = "<group>"; };
 		C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationSettingsViewController.swift; sourceTree = "<group>"; };
 		C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHeaderController.swift; sourceTree = "<group>"; };
+		C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginErrorStateView.swift; sourceTree = "<group>"; };
 		C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowItem.swift; sourceTree = "<group>"; };
 		C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowView.swift; sourceTree = "<group>"; };
 		C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceState.swift; sourceTree = "<group>"; };
@@ -1164,6 +1166,14 @@
 			name = "navigation actions";
 			sourceTree = "<group>";
 		};
+		C2A72D8E1DEC66E200C3B945 /* views */ = {
+			isa = PBXGroup;
+			children = (
+				C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */,
+			);
+			name = views;
+			sourceTree = "<group>";
+		};
 		C2B1A10F1D9FD09000ACB1DD /* interface */ = {
 			isa = PBXGroup;
 			children = (
@@ -1369,6 +1379,7 @@
 		C2DF47EA1DE9A17A003AA6C0 /* auth */ = {
 			isa = PBXGroup;
 			children = (
+				C2A72D8E1DEC66E200C3B945 /* views */,
 				C27AAFE71DE9DA51009B9629 /* utils */,
 				C2DF47EC1DE9A18E003AA6C0 /* register */,
 				C2DF47EB1DE9A18A003AA6C0 /* login */,
@@ -1632,6 +1643,7 @@
 				C2DF47D01DE82475003AA6C0 /* OpusAudioPlayer.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
+				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C2271F511D9C392400424F7B /* SPopoverRowView.swift in Sources */,

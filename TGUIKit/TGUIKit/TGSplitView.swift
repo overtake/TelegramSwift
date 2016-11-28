@@ -184,7 +184,7 @@ public class TGSplitView : View {
                         self.state = TGSplitViewState.TripleLayout;
                     }
                 } else {
-                    if(self.state != TGSplitViewState.DualLayout && NSWidth(self.frame) > dualLayout.min) {
+                    if(self.state != TGSplitViewState.DualLayout && NSWidth(self.frame) >= dualLayout.min) {
                         self.state = TGSplitViewState.DualLayout;
                     }
                 }

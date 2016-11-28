@@ -12,7 +12,7 @@ public protocol TextDelegate: class {
     
 }
 
-public class TextViewLabel: View {
+open class TextViewLabel: View {
     
     private var node:TextNode = TextNode()
     
@@ -33,11 +33,11 @@ public class TextViewLabel: View {
         }
     }
 
-    override public func draw(_ dirtyRect: NSRect) {
+    override open func draw(_ dirtyRect: NSRect) {
 
     }
     
-    override public func draw(_ layer: CALayer, in ctx: CGContext) {
+    override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
         ctx.setFillColor(self.backgroundColor.cgColor)
@@ -71,7 +71,7 @@ public class TextViewLabel: View {
         self.layer?.setNeedsDisplay()
     }
 
-    public override func setFrameSize(_ newSize: NSSize) {
+    open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         if autosize {
             text = TextNode.layoutText(node)(self.attributedString, nil, 1, .end, NSMakeSize(newSize.width - inset.left - inset.right, newSize.height), nil,false, .left)
@@ -79,7 +79,7 @@ public class TextViewLabel: View {
         }
     }
     
-    override public var frame: CGRect {
+    override open var frame: CGRect {
         get {
             return super.frame
         } set(value) {
@@ -94,7 +94,7 @@ public class TextViewLabel: View {
     }
     
     
-    public override func mouseDown(with event: NSEvent) {
+    open override func mouseDown(with event: NSEvent) {
         
     }
     
