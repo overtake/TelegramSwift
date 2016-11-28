@@ -317,6 +317,14 @@ public extension NSView {
       
     }
     
+    public func shake() {
+        let a:CGFloat = 3
+        if let layer = layer {
+            self.layer?.shake(0.04, from:NSMakePoint(-a + layer.position.x,layer.position.y), to:NSMakePoint(a + layer.position.x, layer.position.y))
+        }
+        NSBeep()
+    }
+    
     public func change(size size: NSSize, animated: Bool, _ save:Bool = true) {
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
@@ -628,5 +636,48 @@ public extension NSProgressIndicator {
             colorPoly.setValue(blueVector, forKey: "inputBlueCoefficients")
             self.contentFilters = [colorPoly]
         }
+    }
+}
+
+public extension String {
+    public func prefix(_ by:Int) -> String {
+        if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
+            return self.substring(to: index)
+        }
+        return String(stringLiteral: self)
+    }
+    
+    public func fromSuffix(_ by:Int) -> String {
+        if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
+            return self.substring(from: index)
+        }
+        return String(stringLiteral: self)
+    }
+    
+    
+}
+
+public extension NSTextField {
+    public func setSelectionRange(_ range: NSRange) {
+        textView?.setSelectedRange(range)
+    }
+    
+    public var selectedRange: NSRange {
+        if let textView = textView {
+            return textView.selectedRange
+        }
+        return NSMakeRange(0, 0)
+    }
+    
+    public func setCursorToEnd() {
+        self.setSelectionRange(NSRange(location: self.stringValue.length, length: 0))
+    }
+    
+    public func setCursorToStart() {
+        self.setSelectionRange(NSRange(location: 0, length: 0))
+    }
+    
+    public var textView:NSTextView? {
+        return (self.window?.fieldEditor(true, for: self) as? NSTextView)
     }
 }

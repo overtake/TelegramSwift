@@ -86,7 +86,7 @@ public class ControllerToaster {
 }
 
 open class ViewController : NSObject {
-    public var _view:NSView?;
+    fileprivate var _view:NSView?;
     public var _frameRect:NSRect
     
     private var toaster:ControllerToaster?
@@ -354,3 +354,27 @@ open class ViewController : NSObject {
 }
 
 
+open class GenericViewController<T> : ViewController where T:NSView {
+    public var genericView:T {
+        return super.view as! T
+    }
+    
+    override open func loadView() -> Void {
+        if(_view == nil) {
+            
+            leftBarView = getLeftBarViewOnce()
+            centerBarView = getCenterBarViewOnce()
+            rightBarView = getRightBarViewOnce()
+            
+            let vz = T.self as! NSView.Type
+            _view = vz.init(frame: _frameRect);
+            _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
+            
+            _ = atomicSize.swap(_view!.frame.size)
+        }
+    }
+
+    
+}

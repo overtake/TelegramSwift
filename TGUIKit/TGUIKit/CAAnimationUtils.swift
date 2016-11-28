@@ -231,4 +231,33 @@ public extension CALayer {
         self.animatePosition(from: CGPoint(x: from.midX, y: from.midY), to: CGPoint(x: to.midX, y: to.midY), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: nil)
         self.animateBounds(from: CGRect(origin: self.bounds.origin, size: from.size), to: CGRect(origin: self.bounds.origin, size: to.size), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
     }
+    
+    public func shake(_ duration:CFTimeInterval, from:NSPoint, to:NSPoint) {
+        let animation = CABasicAnimation(keyPath: "position")
+        animation.duration = duration;
+        animation.repeatCount = 4
+        animation.autoreverses = true
+        animation.isRemovedOnCompletion = true
+        
+        animation.fromValue = NSValue(point: from)
+        animation.toValue = NSValue(point: to)
+        
+        self.add(animation, forKey: "position")
+    }
+    
+    /*
+     + (CAAnimation *)shakeWithDuration:(float)duration fromValue:(CGPoint)fromValue toValue:(CGPoint)toValue {
+     CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"position"];
+     animation.duration = duration;
+     animation.repeatCount = 4;
+     animation.autoreverses = YES;
+     animation.removedOnCompletion = YES;
+     NSValue *fromValueValue = [NSValue value:&fromValue withObjCType:@encode(CGPoint)];
+     NSValue *toValueValue = [NSValue value:&toValue withObjCType:@encode(CGPoint)];
+     
+     animation.fromValue = fromValueValue;
+     animation.toValue = toValueValue;
+     return animation;
+     }
+ */
 }

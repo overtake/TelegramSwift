@@ -169,7 +169,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: .none, animationStyle: controller.animationStyle)
 
         containerView.addSubview(controller.view)
-        controller.viewDidAppear(false)
+        Queue.mainQueue().justDispatch {
+            self.controller.viewDidAppear(false)
+        }
         
         viewDidLoad()
         
@@ -201,9 +203,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     public func push(_ controller:ViewController, _ animated:Bool = true) -> Void {
         
-        if isLocked {
-            return
-        }
+//        if isLocked {
+//            return
+//        }
         
         
         controller.navigationController = self

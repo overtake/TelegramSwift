@@ -170,6 +170,9 @@ public class Window: NSWindow {
                         }
                     }
                     self.makeFirstResponder(responder)
+                    if let responder = responder as? NSTextField {
+                        responder.setCursorToEnd()
+                    }
                 }
                 break
             }
