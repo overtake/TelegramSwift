@@ -10,15 +10,14 @@ import Cocoa
 
 open class TableAnimationInterface: NSObject {
     
-    weak var table:TableView?
-    let scrollBelow:Bool
-    public init(_ table:TableView, _ scrollBelow:Bool = true) {
-        assertOnMainThread()
-        self.table = table
+    public let scrollBelow:Bool
+    public let saveIfAbove:Bool
+    public init(_ scrollBelow:Bool = true, _ saveIfAbove:Bool = true) {
         self.scrollBelow = scrollBelow
+        self.saveIfAbove = saveIfAbove
     }
 
-    public func animate(added:[TableRowItem], removed:[TableRowItem]) -> Void {
+    public func animate(table:TableView, added:[TableRowItem], removed:[TableRowItem]) -> Void {
         
         var height:CGFloat = 0
         
@@ -30,61 +29,61 @@ open class TableAnimationInterface: NSObject {
             return
         }
         
-        if let table = table {
-            
-           var contentView = table.contentView
-            let bounds = contentView.bounds
-            
-            if scrollBelow {
-                contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
-            }
-            
-            if bounds.minY > height && scrollBelow {
-                height = bounds.minY
-                
-                var presentation = contentView.layer?.presentation()
-                if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
-                    height += presentation.bounds.minY
-                }
-                
-                
-                contentView.layer?.animateBounds(from: NSMakeRect(0, height, contentView.bounds.width, contentView.bounds.height), to: contentView.bounds, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-                
-                
-            } else if height - bounds.height < table.frame.height {
-                
-                let range:NSRange = table.visibleRows(height)
-                
-                for item in added {
-                    if item.index < range.location || item.index > range.location + range.length {
-                        return
-                    }
-                }
-                
-                CATransaction.begin()
-                for idx in range.location ..< range.length {
-                    
-                    if let view = table.viewNecessary(at: idx), let layer = view.layer {
-                        
-                        var inset = layer.frame.minY - height;
-                        if let presentLayer = layer.presentation(), presentLayer.animation(forKey: "position") != nil {
-                            inset = presentLayer.position.y
-                        }
-                        layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-                    }
-                    
-                }
-                
-                CATransaction.commit()
-                
-            }
-           
-            
+        var contentView = table.contentView
+        let bounds = contentView.bounds
+        
+        let scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
+        
+        if scrollBelow {
+            contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
         }
+        
+        if bounds.minY > height, scrollBelow {
+            height = bounds.minY
+            
+            var presentation = contentView.layer?.presentation()
+            if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
+                height += presentation.bounds.minY
+            }
+            
+            
+            contentView.layer?.animateBounds(from: NSMakeRect(0, height, contentView.bounds.width, contentView.bounds.height), to: contentView.bounds, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+            
+            
+        } else if height - bounds.height < table.frame.height, scrollBelow {
+            
+            let range:NSRange = table.visibleRows(height)
+            
+            for item in added {
+                if item.index < range.location || item.index > range.location + range.length {
+                    return
+                }
+            }
+            
+            CATransaction.begin()
+            for idx in range.location ..< range.length {
+                
+                if let view = table.viewNecessary(at: idx), let layer = view.layer {
+                    
+                    var inset = (layer.frame.minY - height);
+                    if let presentLayer = layer.presentation(), presentLayer.animation(forKey: "position") != nil {
+                        inset = presentLayer.position.y
+                    }
+                    layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+                }
+                
+            }
+            
+            CATransaction.commit()
+            
+        } else if !scrollBelow {
+            contentView.bounds = NSMakeRect(0, bounds.minY + height, contentView.bounds.width, contentView.bounds.height)
+        }
+
     }
     
-    public func scroll(from:NSRect, to:NSRect) -> Void {
-        table?.contentView.layer?.animateBounds(from: from, to: to, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+    public func scroll(table:TableView, from:NSRect, to:NSRect) -> Void {
+        table.contentView.layer?.animateBounds(from: from, to: to, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
     }
 
     

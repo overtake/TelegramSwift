@@ -117,6 +117,8 @@ open class ViewController : NSObject {
     }
     public var didSetReady:Bool = false
     
+    public let isKeyWindow:Promise<Bool> = Promise(false)
+    
     public var view:NSView {
         get {
             if(_view == nil) {
@@ -246,6 +248,9 @@ open class ViewController : NSObject {
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
         }
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidBecomeKey, object: window)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidResignKey, object: window)
+        isKeyWindow.set(.single(false))
     }
     
     public func isLoaded() -> Bool {
@@ -261,6 +266,20 @@ open class ViewController : NSObject {
             
             self.window?.applyResponderIfNeeded()
         }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSNotification.Name.NSWindowDidBecomeKey, object: window)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSNotification.Name.NSWindowDidResignKey, object: window)
+        if let window = window {
+            isKeyWindow.set(.single(window.isKeyWindow))
+        }
+    }
+    
+    @objc open func windowDidBecomeKey() {
+        isKeyWindow.set(.single(true))
+    }
+    
+    @objc open func windowDidResignKey() {
+        isKeyWindow.set(.single(false))
     }
     
     open var canBecomeResponder: Bool {

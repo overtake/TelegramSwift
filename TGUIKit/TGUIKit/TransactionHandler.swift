@@ -20,6 +20,10 @@ public class TransactionHandler: NSObject {
         OSSpinLockUnlock(&self.lock)
     }
     
+    public var isExutable:Bool {
+        return handler != nil
+    }
+    
     public func execute() -> Bool {
         OSSpinLockLock(&self.lock)
         let success = handler != nil

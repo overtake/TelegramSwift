@@ -978,7 +978,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         switch state {
         case let .none(animation):
            // print("scroll do nothing")
-            animation?.animate(added: inserted, removed:removed)
+            animation?.animate(table:self, added: inserted, removed:removed)
 
         case let .save(animation):
             
@@ -1004,7 +1004,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 reflectScrolledClipView(clipView)
             }
 
-            animation?.animate(added: inserted, removed:removed)
+            animation?.animate(table:self, added: inserted, removed:removed)
             
         case .bottom(_,_), .top(_,_), .center(_,_):
             self.scroll(to:state)
