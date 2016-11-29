@@ -8,16 +8,16 @@
 
 import Cocoa
 
-@objc private class CALayerAnimationDelegate: NSObject, CAAnimationDelegate {
+@objc public class CALayerAnimationDelegate: NSObject, CAAnimationDelegate {
     var completion: ((Bool) -> Void)?
     
-    init(completion: ((Bool) -> Void)?) {
+    public init(completion: ((Bool) -> Void)?) {
         self.completion = completion
         
         super.init()
     }
     
-    @objc func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
+    @objc public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         if let completion = self.completion {
             completion(flag)
         }

@@ -136,6 +136,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.item = item;
     }
     
-
+    open func focusAnimation() {
+        
+    }
     
 }

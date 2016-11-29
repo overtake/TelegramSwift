@@ -137,7 +137,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     public private(set) var controller:ViewController {
         didSet {
             currentControllerDidChange()
-            self.removeModalAction()
         }
     }
     
@@ -338,14 +337,15 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
-    public func set(modalAction:NavigationModalAction) {
+    public func set(modalAction:NavigationModalAction, _ showView:Bool = true) {
         self.modalAction = modalAction
-        
-        let actionView = NavigationModalView(action: modalAction, viewController: self)
-        modalAction.view = actionView
-        actionView.frame = bounds
-        view.addSubview(actionView)
-        
+        modalAction.navigation = self
+        if showView {
+            let actionView = NavigationModalView(action: modalAction, viewController: self)
+            modalAction.view = actionView
+            actionView.frame = bounds
+            view.addSubview(actionView)
+        }  
     }
     
     public func removeModalAction() {

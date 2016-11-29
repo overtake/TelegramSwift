@@ -97,9 +97,6 @@ open class ViewController : NSObject {
         didSet {
             if navigationController != oldValue {
                 updateNavigation(navigationController)
-                if let modalAction = navigationController?.modalAction {
-                    self.invokeNavigation(action: modalAction)
-                }
             }
         }
     }
@@ -181,6 +178,12 @@ open class ViewController : NSObject {
         }
     }
     
+    public func requestUpdateBackBar() {
+        if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
+            leftBarView.requestUpdate()
+        }
+    }
+    
     @objc func viewFrameChanged(_ notification:Notification) {
         viewDidResized(frame.size)
     }
@@ -195,6 +198,10 @@ open class ViewController : NSObject {
     
     open func getCenterBarViewOnce() -> TitledBarView {
         return TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: systemMediumFont(TGFont.titleSize)))
+    }
+    
+    public func setCenterTitle(_ text:String) {
+        self.centerBarView.text = NSAttributedString.initialize(string: text, font: systemMediumFont(TGFont.titleSize))
     }
     
     open func getRightBarViewOnce() -> BarView {
@@ -338,7 +345,7 @@ open class ViewController : NSObject {
     }
     
     open func invokeNavigation(action:NavigationModalAction) {
-        
+        action.close()
     }
     
     public func show(toaster:ControllerToaster, for delay:Double = 3.0, animated:Bool = true) {

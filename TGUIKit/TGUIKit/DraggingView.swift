@@ -83,7 +83,7 @@ class DragView : OverlayControl {
     }
 }
 
-public class DraggingView: TGSplitView {
+public class DraggingView: SplitView {
     
     var container:View = View()
     

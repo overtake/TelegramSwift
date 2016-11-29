@@ -16,6 +16,11 @@ open class ImageButton: Button {
     private var backgroundImage:[ControlState:CGImage] = [:]
     
     
+    public func removeImage(for state:ControlState) {
+        images.removeValue(forKey: state)
+        apply(state: self.controlState)
+    }
+    
     public func set(image:CGImage, for state:ControlState) -> Void {
         
         images[state] = image

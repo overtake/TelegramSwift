@@ -665,6 +665,8 @@ public class TextView: Control {
         }
     }
     
+
+    
     func checkCursor(_ event:NSEvent) -> Void {
         let location = self.convert(event.locationInWindow, from: nil)
         

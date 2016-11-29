@@ -20,7 +20,7 @@ public class TextButtonBarView: BarView {
     
     public var alignment:TextBarAligment = .Center
     
-    public init(text:String, style:ControlStyle, alignment:TextBarAligment = .Center) {
+    public init(text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center) {
     
         
         button = TitleButton(frame:NSZeroRect)

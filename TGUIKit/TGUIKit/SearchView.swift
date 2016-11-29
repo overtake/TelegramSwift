@@ -107,7 +107,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
         clear.frame = NSMakeRect(NSWidth(self.frame) - inset - clearImage.backingSize.width, 0, clearImage.backingSize.width, clearImage.backingSize.height)
         addSubview(clear)
-        clear.centerY()
+        
         clear.isHidden = true
 
         animateContainer.center()
@@ -221,6 +221,11 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
         }
         clear.frame = NSMakeRect(frame.width - inset - clearImage.backingSize.width, clear.frame.minY, clearImage.backingSize.width, clearImage.backingSize.height)
+    }
+    
+    public override func layout() {
+        super.layout()
+        clear.centerY()
     }
 
     public func changeResponder() -> Bool {

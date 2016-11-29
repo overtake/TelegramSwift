@@ -13,7 +13,7 @@ open class NavigationModalAction: NSObject {
     let reason:String
     let desc:String
     public var afterInvoke:()->Void = {}
-    
+    weak var navigation:NavigationViewController?
     weak var view:NavigationModalView?
     
     public init(reason:String, desc:String) {
@@ -23,6 +23,14 @@ open class NavigationModalAction: NSObject {
     
     open func alertError(for value:Any, with:Window) -> Void {
         
+    }
+    
+    open func close() {
+        if let view = view {
+            view.close()
+        } else {
+            navigation?.removeModalAction()
+        }
     }
     
     open func isInvokable(for value:Any) -> Bool {

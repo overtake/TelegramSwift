@@ -1,5 +1,5 @@
 //
-//  TGSplitView.swift
+//  SplitView.swift
 //  TGUIKit
 //
 //  Created by keepcoder on 06/09/16.
@@ -9,7 +9,7 @@
 import Foundation
 
 
-public struct TGSplitProportion {
+public struct SplitProportion {
     var min:CGFloat = 0;
     var max:CGFloat = 0;
     
@@ -19,30 +19,27 @@ public struct TGSplitProportion {
     }
 }
 
-public enum TGSplitViewState : Int {
-    case NoneLayout = -1;
-    case SingleLayout = 0;
-    case DualLayout = 1;
-    case TripleLayout = 2;
+public enum SplitViewState : Int {
+    case none = -1;
+    case single = 0;
+    case dual = 1;
+    case triple = 2;
+    case minimisize = 3
 }
 
 
-public protocol TGSplitControllerDelegate : class {
-    func splitViewDidNeedSwapToLayout(state:TGSplitViewState) -> Void
+public protocol SplitControllerDelegate : class {
+    func splitViewDidNeedSwapToLayout(state:SplitViewState) -> Void
     func splitViewDidNeedMinimisize(controller:ViewController) -> Void
     func splitViewDidNeedFullsize(controller:ViewController) -> Void
     func splitViewIsMinimisize(controller:ViewController) -> Bool
 }
 
 
-
-
-
-
-public class TGSplitView : View {
+public class SplitView : View {
     
     
-    private(set) var state: TGSplitViewState = TGSplitViewState.NoneLayout {
+    private(set) var state: SplitViewState = .none {
         didSet {
             var notify:Bool = state != oldValue;
             assert(notify);
@@ -54,14 +51,14 @@ public class TGSplitView : View {
     
     
     public var canChangeState:Bool = true;
-    public weak var delegate:TGSplitControllerDelegate?
+    public weak var delegate:SplitControllerDelegate?
     
     
-    private var _proportions:[Int:TGSplitProportion] = [Int:TGSplitProportion]()
+    private var _proportions:[Int:SplitProportion] = [Int:SplitProportion]()
     private var _startSize:[Int:NSSize] = [Int:NSSize]()
     private var _controllers:[ViewController] = [ViewController]()
-    private var _isSingleLayout:Bool?
-    private var _layoutProportions:[TGSplitViewState:TGSplitProportion] = [TGSplitViewState:TGSplitProportion]()
+    private var _issingle:Bool?
+    private var _layoutProportions:[SplitViewState:SplitProportion] = [SplitViewState:SplitProportion]()
     
     private var _startPoint:NSPoint?
     private var _splitSuccess:Bool?
@@ -84,7 +81,7 @@ public class TGSplitView : View {
     }
     
     
-    public func addController(controller:ViewController, proportion:TGSplitProportion) ->Void {
+    public func addController(controller:ViewController, proportion:SplitProportion) ->Void {
         controller.viewWillAppear(false)
         addSubview(controller.view);
         _controllers.append(controller);
@@ -132,11 +129,11 @@ public class TGSplitView : View {
         }
     }
     
-    public func setProportion(proportion:TGSplitProportion, state:TGSplitViewState) -> Void {
+    public func setProportion(proportion:SplitProportion, state:SplitViewState) -> Void {
         _layoutProportions[state] = proportion;
     }
     
-    public func removeProportion(state:TGSplitViewState) -> Void {
+    public func removeProportion(state:SplitViewState) -> Void {
         _layoutProportions.removeValue(forKey: state);
         if(_controllers.count > state.rawValue) {
             _controllers.remove(at: state.rawValue)
@@ -146,7 +143,7 @@ public class TGSplitView : View {
     public func updateStartSize(size:NSSize, controller:ViewController) -> Void {
         _startSize[controller.internalId] = size;
         
-        _proportions[controller.internalId] = TGSplitProportion(min:size.width, max:size.height);
+        _proportions[controller.internalId] = SplitProportion(min:size.width, max:size.height);
         
        update();
 
@@ -160,32 +157,32 @@ public class TGSplitView : View {
         
         super.setFrameSize(newSize);
         
-        let s = _layoutProportions[TGSplitViewState.SingleLayout]
+        let s = _layoutProportions[.single]
         
         
-        let singleLayout:TGSplitProportion! = _layoutProportions[TGSplitViewState.SingleLayout]
-        let dualLayout:TGSplitProportion! = _layoutProportions[TGSplitViewState.DualLayout]
-        let tripleLayout:TGSplitProportion! = _layoutProportions[TGSplitViewState.TripleLayout]
+        let single:SplitProportion! = _layoutProportions[.single]
+        let dual:SplitProportion! = _layoutProportions[.dual]
+        let triple:SplitProportion! = _layoutProportions[.triple]
     
 
         
-        if(acceptLayout(prop: singleLayout) && self.canChangeState) {
-            if(NSWidth(self.frame) < singleLayout.max ) {
-                if(self.state != TGSplitViewState.SingleLayout) {
-                    self.state = TGSplitViewState.SingleLayout;
+        if(acceptLayout(prop: single) && self.canChangeState) {
+            if(NSWidth(self.frame) < single.max ) {
+                if(self.state != .single) {
+                    self.state = .single;
                 }
-            } else if(acceptLayout(prop: dualLayout)) {
-                if(acceptLayout(prop: tripleLayout)) {
-                    if(NSWidth(self.frame) >= dualLayout.min && NSWidth(self.frame) <= dualLayout.max) {
-                        if(self.state != TGSplitViewState.DualLayout) {
-                            self.state = TGSplitViewState.DualLayout;
+            } else if(acceptLayout(prop: dual)) {
+                if(acceptLayout(prop: triple)) {
+                    if(NSWidth(self.frame) >= dual.min && NSWidth(self.frame) <= dual.max) {
+                        if(self.state != .dual) {
+                            self.state = .dual;
                         }
-                    } else if(self.state != TGSplitViewState.TripleLayout) {
-                        self.state = TGSplitViewState.TripleLayout;
+                    } else if(self.state != .triple) {
+                        self.state = .triple;
                     }
                 } else {
-                    if(self.state != TGSplitViewState.DualLayout && NSWidth(self.frame) >= dualLayout.min) {
-                        self.state = TGSplitViewState.DualLayout;
+                    if(self.state != .dual && NSWidth(self.frame) >= dual.min) {
+                        self.state = .dual;
                     }
                 }
                 
@@ -197,20 +194,13 @@ public class TGSplitView : View {
         
         for (index, obj) in _controllers.enumerated() {
             
-            var proportion:TGSplitProportion = _proportions[obj.internalId]!;
+            var proportion:SplitProportion = _proportions[obj.internalId]!;
             var startSize:NSSize = _startSize[obj.internalId]!;
             var size:NSSize = NSMakeSize(x, NSHeight(self.frame));
             var min:CGFloat  = startSize.width;
             
             
             min = proportion.min;
-            
-           // if(startSize.width < proportion.min) {
-          //      min = proportion.min;
-          //  } else if(startSize.width > proportion.max) {
-           //     min = NSWidth(self.frame) - x;
-          //  }
-            
             
             if(proportion.max == CGFloat.greatestFiniteMagnitude && index != _controllers.count-1) {
                 
@@ -220,7 +210,7 @@ public class TGSplitView : View {
                     
                     var split:ViewController = _controllers[i];
                     
-                    var proportion:TGSplitProportion = _proportions[split.internalId]!;
+                    var proportion:SplitProportion = _proportions[split.internalId]!;
                     
                     m2+=proportion.min;
                 }
@@ -238,7 +228,6 @@ public class TGSplitView : View {
             var rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
             
             if(!NSEqualRects(rect, obj.view.frame)) {
-               // [obj splitViewDidNeedResizeController:rect];
                 obj.view.frame = rect;
             }
             
@@ -251,7 +240,7 @@ public class TGSplitView : View {
     
     
 
-    func acceptLayout(prop:TGSplitProportion!) -> Bool {
+    func acceptLayout(prop:SplitProportion!) -> Bool {
         return prop != nil ? (prop!.min > 0 && prop!.max > 0) : false;
     }
     

@@ -32,7 +32,11 @@ public extension NSAttributedString {
         return NSMakeRange(0, self.length)
     }
     
- 
+    public func trimRange(_ range:NSRange) -> NSRange {
+        var loc:Int = min(range.location,self.length)
+        var length:Int = min(range.length, self.length - loc)
+        return NSMakeRange(loc, length)
+    }
     
     public static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
         var attr:NSMutableAttributedString = NSMutableAttributedString()

@@ -786,21 +786,24 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func select(item:TableRowItem, notify:Bool = true, byClick:Bool = false) -> Bool {
         
-        if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})), let delegate = delegate {
-            if delegate.isSelectable(row: item.index, item: item) {
-                if delegate.selectionWillChange(row: item.index, item: item) {
+        if let delegate = delegate, delegate.isSelectable(row: item.index, item: item) {
+            if delegate.selectionWillChange(row: item.index, item: item) {
+                if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})) {
                     self.cancelSelection();
                     let _ = selectedhash.swap(item.stableId)
                     item.prepare(true)
                     self.reloadData(row:item.index)
                     if notify {
-                        self.delegate?.selectionDidChange(row: item.index, item: item, byClick:byClick)
+                        delegate.selectionDidChange(row: item.index, item: item, byClick:byClick)
                     }
                     return true;
                 }
                 
             }
+            
         }
+        
+        
         
         return false;
         
@@ -1155,14 +1158,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 fatalError("not implemented")
             }
             
+           
+            
             if toVisible {
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.height {
+                    if animate {
+                        view.focusAnimation()
+                    }
                     return
                 }
             }
             
-            clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate)
+            clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate, completion:{ [weak self] _ in
+                if animate {
+                    self?.viewNecessary(at: item.index)?.focusAnimation()
+                }
+            })
             
         } 
     }

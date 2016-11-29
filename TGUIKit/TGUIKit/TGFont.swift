@@ -65,6 +65,10 @@ public extension NSFont {
             return NSFont(name: "HelveticaNeue-Bold", size: convert(from:size))!
         }
     }
+    
+    public static func code(_ size:FontSize) ->NSFont {
+        return NSFont(name: "Menlo-Regular", size: convert(from:size)) ?? NSFont.systemFont(ofSize: 17.0)
+    }
 }
 
 public enum FontSize {

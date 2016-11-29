@@ -181,6 +181,14 @@ public class Window: NSWindow {
     
     
     
+    public override func close() {
+        if isReleasedWhenClosed {
+            super.close()
+        } else {
+            NSApp.hide(self)
+        }
+    }
+    
     @objc public func pasteToFirstResponder(_ sender: Any) {
         
         applyResponderIfNeeded()
