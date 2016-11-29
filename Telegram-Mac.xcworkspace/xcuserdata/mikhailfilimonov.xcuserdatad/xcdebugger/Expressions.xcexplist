@@ -42,6 +42,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;ChatTableTransaction, ()&gt;).(closure #1):ChatController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "toView.filteredEntries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "NavigationViewController.empty.didset:NavigationViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -98,27 +106,27 @@
          contextName = "ChatRowView.mouseDown(with : NSEvent) -&gt; ():ChatRowView.swift">
       </ContextState>
       <ContextState
+         contextName = "NavigationHeader.navigation.didset:NavigationViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "navigation">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatRowItem.init(Account, ChatHistoryEntry) -&gt; ChatRowItem:ChatRowItem.swift">
       </ContextState>
       <ContextState
-         contextName = "GridNode.transaction(GridNodeTransaction, completion : (GridNodeDisplayedItemRange) -&gt; ()) -&gt; ():GridNode.swift">
+         contextName = "TextView.update(TextViewLayout) -&gt; ():TextView.swift">
       </ContextState>
       <ContextState
-         contextName = "TextView.update(TextViewLayout) -&gt; ():TextView.swift">
+         contextName = "GridNode.transaction(GridNodeTransaction, completion : (GridNodeDisplayedItemRange) -&gt; ()) -&gt; ():GridNode.swift">
       </ContextState>
       <ContextState
          contextName = "ChatRowView.setFrameSize(CGSize) -&gt; ():ChatRowView.swift">
          <PersistentStrings>
             <PersistentString
                value = "item.height">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "NavigationHeader.navigation.didset:NavigationViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "navigation">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -150,6 +158,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatListController.merge([Int], [(Int, ChatListRowItem)]) -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.(init(account : Account, peerId : PeerId, message : Message?, navigation : NavigationViewController) -&gt; ChatController).(closure #4):ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "WArticleLayout.init(with : TelegramMediaWebpageLoadedContent, account : Account) -&gt; WArticleLayout:WArticleLayout.swift">
@@ -592,7 +603,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -604,7 +615,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -668,6 +679,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "NavigationHeader.hide(Bool) -&gt; ():NavigationViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -677,9 +691,6 @@
                value = "_contentSize">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "NavigationHeader.hide(Bool) -&gt; ():NavigationViewController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatPresentationInterfaceState.state.getter:ChatPresentationInterfaceState.swift">

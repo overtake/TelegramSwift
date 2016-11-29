@@ -47,6 +47,7 @@ public enum TableScrollState :Equatable {
     case bottom(Int64, Bool); //  stableId, animation
     case center(Int64, Bool); //  stableId, animation
     case save(TableAnimationInterface?);
+    case saveItem(Int64)
     case none(TableAnimationInterface?);
     case down(Bool);
     case up(Bool);
@@ -99,6 +100,13 @@ public func ==(lhs:TableScrollState, rhs:TableScrollState) -> Bool {
     case let .none(_):
         switch rhs {
         case let .none(_):
+            return true
+        default:
+            return false
+        }
+    case let .saveItem(lhsId):
+        switch rhs {
+        case let .saveItem(rhsId) where lhsId == rhsId:
             return true
         default:
             return false
@@ -954,11 +962,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 } else {
                     effect = animated ? .effectFade : .none
                 }
+                NSAnimationContext.current().duration = effect == .effectFade ? 0.2 : 0.0
                 self.remove(at: rdx - rd, redraw: true, animation:effect)
                 rd+=1
             }
         }
-        
+        NSAnimationContext.current().duration = animated ? 0.2 : 0.0
+
         
         for (idx,item,prev) in insertedIndexes {
             
@@ -1010,6 +1020,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to:state)
         case .up(_), .down(_):
             self.scroll(to:state)
+        case let .saveItem(stableId):
+            var rect:NSRect = NSZeroRect
+            var nrect:NSRect = NSZeroRect
+            for (hash,r) in lhash.reversed() {
+                if hash == stableId {
+                    if let item = self.item(stableId: stableId) {
+                        rect = r
+                        nrect = self.rectOf(item: item)
+                        self.contentView.bounds = NSMakeRect(0, rect.minY, 0, NSHeight(self.contentView.bounds))
+                    }
+                    
+                    break
+                }
+            }
+            break
         }
         
     
@@ -1136,8 +1161,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     rowRect.origin.y -= (height - rowRect.height)
                 }
             case let .top(stableId, _):
+               // break
                 if !tableView.isFlipped {
-                    rowRect.origin.y += height
+                    rowRect.origin.y -= (height - rowRect.height)
                 }
             case let .center(stableId, _):
                 if !tableView.isFlipped {
@@ -1174,7 +1200,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if animate {
                     self?.viewNecessary(at: item.index)?.focusAnimation()
                 }
+                if let strongSelf = self {
+                    strongSelf.reflectScrolledClipView(strongSelf.clipView)
+                }
             })
+            
             
         } 
     }

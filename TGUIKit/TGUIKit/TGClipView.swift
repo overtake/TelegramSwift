@@ -53,6 +53,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     
+    override public func setNeedsDisplay(_ invalidRect: NSRect) {
+        
+    }
+    
     public func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(NSColor.white.cgColor)
         ctx.fill(self.bounds)
@@ -258,6 +262,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         } else {
             self.endScroll()
             super.scroll(to: newOrigin)
+            handleCompletionIfNeeded(withSuccess: true)
         }
         
     }
