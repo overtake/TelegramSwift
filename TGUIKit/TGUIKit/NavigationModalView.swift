@@ -21,7 +21,6 @@ class NavigationModalView: Control {
     init(action:NavigationModalAction, viewController:NavigationViewController) {
         self.action = action
         
-        
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         attr.append(string: action.reason, color: .textColor, font: .normal(.custom(20)))
         attr.append(string: "\n")
@@ -34,7 +33,7 @@ class NavigationModalView: Control {
       //  viewController.navigationController?.lock = true
         
         super.init()
-       
+        self.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
         self.backgroundColor = NSColor(0xffffff,0.8)
         
         set(handler: { [weak self] in
@@ -89,6 +88,7 @@ class NavigationModalView: Control {
     
     override func layout() {
         super.layout()
+        self.setNeedsDisplayLayer()
     }
     
     required public init?(coder: NSCoder) {

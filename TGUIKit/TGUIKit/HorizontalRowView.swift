@@ -21,10 +21,10 @@ open class HorizontalRowView: TableRowView {
         container.frame = NSMakeRect(0, 0, frame.height, frame.width)
         
         if let layer = container.layer {
-            layer.transform = CATransform3DTranslate(layer.transform, frame.height/2, frame.width/2.0, 1.0)
+            layer.transform = CATransform3DTranslate(layer.transform, floorToScreenPixels(frame.height/2), floorToScreenPixels(frame.width/2.0), 1.0)
           //  layer.transform = CATransform3DScale(layer.transform, -1, 1, 1)
             layer.transform = CATransform3DRotate(layer.transform, 90 * CGFloat(M_PI) / 180, 0, 0, 1.0)
-            layer.transform = CATransform3DTranslate(layer.transform, -frame.height/2, -frame.width/2.0, 1.0)
+            layer.transform = CATransform3DTranslate(layer.transform, -floorToScreenPixels(frame.height/2), -floorToScreenPixels(frame.width/2.0), 1.0)
         }
     }
     
