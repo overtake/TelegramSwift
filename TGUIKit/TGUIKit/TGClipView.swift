@@ -54,7 +54,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     override public func setNeedsDisplay(_ invalidRect: NSRect) {
-        
+         
     }
     
     public func draw(_ layer: CALayer, in ctx: CGContext) {

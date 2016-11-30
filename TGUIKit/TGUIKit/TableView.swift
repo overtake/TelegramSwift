@@ -42,12 +42,17 @@ public protocol TableViewDelegate : class {
     
 }
 
+public enum TableSavingSide {
+    case lower
+    case upper
+}
+
 public enum TableScrollState :Equatable {
     case top(Int64, Bool); // stableId, animation
     case bottom(Int64, Bool); //  stableId, animation
     case center(Int64, Bool); //  stableId, animation
     case save(TableAnimationInterface?);
-    case saveItem(Int64)
+    case saveVisible(TableSavingSide)
     case none(TableAnimationInterface?);
     case down(Bool);
     case up(Bool);
@@ -104,10 +109,10 @@ public func ==(lhs:TableScrollState, rhs:TableScrollState) -> Bool {
         default:
             return false
         }
-    case let .saveItem(lhsId):
+    case let .saveVisible(lhsType):
         switch rhs {
-        case let .saveItem(rhsId) where lhsId == rhsId:
-            return true
+        case let .saveVisible(rhsType):
+            return lhsType == rhsType
         default:
             return false
         }
@@ -536,13 +541,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
-    public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = NSTableViewAnimationOptions(rawValue: 0)) -> Bool {
+    public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
         
         if(self.item(stableId:item.stableId) == nil) {
             
             self.listhash[item.stableId] = item;
             self.list.insert(item, at: at);
             item.table = self;
+            
+            let animation = animation != .none ? item.animatable ? animation : .none : .none
+            NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
             
             if(redraw) {
                 self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
@@ -614,7 +622,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         
         var item:TableRowItem = self.item(at:from);
-        
+        let animation = animation != .none ? item.animatable ? animation : .none : .none
+        NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
+       
         if let change = changeItem {
             change.table = self
             self.listhash.removeValue(forKey: item.stableId)
@@ -661,6 +671,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     func remove(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         var pos:Int? = self.index(of: item);
+        
+        let animation = animation != .none ? item.animatable ? animation : .none : .none
+        NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
         
         if let p = pos {
             self.list.remove(at: p);
@@ -896,6 +909,33 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
+    func visibleItems() -> [(TableRowItem,CGFloat,CGFloat)]  { // item, top offset, bottom offset
+        
+        var list:[(TableRowItem,CGFloat,CGFloat)] = []
+        
+        let visible = visibleRows()
+        
+        for i in visible.location ..< visible.location + visible.length {
+            let item = self.item(at: i)
+            let rect = rectOf(item: item)
+            if rect.height == item.height {
+                if !tableView.isFlipped {
+                    let top = frame.height - (rect.minY - documentOffset.y) - rect.height
+                    let bottom = (rect.minY - documentOffset.y)
+                    list.append(item,top,bottom)
+                } else {
+                    //fatalError("not supported")
+                }
+            }
+            
+           // list.append(item,)
+        }
+        
+        
+        return list;
+
+    }
+    
     func itemRects() -> [(TableRowItem, NSRect, Int)] {
         var ilist:[(TableRowItem,NSRect,Int)] = [(TableRowItem,NSRect,Int)]()
         
@@ -930,7 +970,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let lhash = self.hashRects()
         let lsize = self.documentSize
         let loffset = self.documentOffset
-        
+        let visibleItems = self.visibleItems()
         if grouping {
             self.tableView.beginUpdates()
         }
@@ -962,7 +1002,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 } else {
                     effect = animated ? .effectFade : .none
                 }
-                NSAnimationContext.current().duration = effect == .effectFade ? 0.2 : 0.0
                 self.remove(at: rdx - rd, redraw: true, animation:effect)
                 rd+=1
             }
@@ -984,6 +1023,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.endUpdates()
         }
 
+        reflectScrolledClipView(clipView)
         
         switch state {
         case let .none(animation):
@@ -1020,20 +1060,46 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to:state)
         case .up(_), .down(_):
             self.scroll(to:state)
-        case let .saveItem(stableId):
-            var rect:NSRect = NSZeroRect
+        case let .saveVisible(side):
+            
+            if documentOffset.y == 0 {
+                break
+            }
+            
             var nrect:NSRect = NSZeroRect
-            for (hash,r) in lhash.reversed() {
-                if hash == stableId {
-                    if let item = self.item(stableId: stableId) {
-                        rect = r
-                        nrect = self.rectOf(item: item)
-                        self.contentView.bounds = NSMakeRect(0, rect.minY, 0, NSHeight(self.contentView.bounds))
+            
+            var sideItem:TableRowItem? = nil
+            let strideTo:StrideTo<Int>
+            
+            if tableView.isFlipped {
+                strideTo = stride(from: 0, to: visibleItems.count, by: 1)
+            } else {
+                strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
+            }
+           
+            
+            for i in strideTo {
+                let visible = visibleItems[i]
+                if let item = self.item(stableId: visible.0.stableId) {
+                   
+                    nrect = rectOf(item: item)
+                    let y:CGFloat
+                    
+                    switch side {
+                    case .lower:
+                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        break
+                    case .upper:
+                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        break
                     }
                     
+                    self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                    reflectScrolledClipView(clipView)
                     break
                 }
             }
+            
             break
         }
         

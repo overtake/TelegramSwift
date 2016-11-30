@@ -190,7 +190,7 @@ open class View : NSView,CALayerDelegate {
     }
     
     deinit {
-        assertOnMainThread()
+        //assertOnMainThread()
     }
     
     

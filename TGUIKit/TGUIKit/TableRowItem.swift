@@ -20,6 +20,10 @@ open class TableRowItem: NSObject,Identifiable {
         
     }
     
+    open var animatable:Bool {
+        return true
+    }
+    
     open private(set) var height:CGFloat = 60;
     
     
