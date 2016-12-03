@@ -1019,9 +1019,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
+       
+        
         if grouping {
             self.tableView.endUpdates()
         }
+        
 
         reflectScrolledClipView(clipView)
         

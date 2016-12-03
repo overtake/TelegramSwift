@@ -17,9 +17,11 @@ public enum ControlState {
 
 public enum ControlEvent {
     case Down
+    case Up
     case Click
     case SingleClick
     case RightClick
+    case MouseDragging
 }
 
 open class Control: View {
@@ -188,6 +190,9 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled {
+            
+             send(event: .Up)
+            
             if mouseInside() {
                 if event.clickCount == 1  {
                     send(event: .SingleClick)
@@ -256,7 +261,7 @@ open class Control: View {
     
     override open func mouseDragged(with event: NSEvent) {
         if userInteractionEnabled {
-            
+             send(event: .MouseDragging)
              updateState()
         } else {
             super.mouseDragged(with: event)

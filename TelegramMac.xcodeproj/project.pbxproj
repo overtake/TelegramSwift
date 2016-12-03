@@ -120,6 +120,9 @@
 		C250B0351DB78A0A004E9FBE /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C250B0341DB78A0A004E9FBE /* Quartz.framework */; };
 		C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */ = {isa = PBXBuildFile; fileRef = C250B0361DB7BB09004E9FBE /* mime-types.txt */; };
 		C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */; };
+		C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */; };
+		C252532A1DF03F9600ADBC98 /* TGAudioWaveform.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */; };
+		C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */ = {isa = PBXBuildFile; fileRef = C252532C1DF0440300ADBC98 /* begin_record.caf */; };
 		C253A92D1D8EE1A600CDC850 /* ChatMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A92C1D8EE1A600CDC850 /* ChatMediaView.swift */; };
 		C253A9451D90303200CDC850 /* FastBlur.m in Sources */ = {isa = PBXBuildFile; fileRef = C253A9441D90303200CDC850 /* FastBlur.m */; };
 		C253A95C1D9165A400CDC850 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C253A95B1D9165A400CDC850 /* libwebp.a */; };
@@ -139,6 +142,7 @@
 		C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E2391DE4D3DB0022A29F /* ChatInterfaceInputContext.swift */; };
 		C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */; };
 		C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */; };
+		C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */; };
 		C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */; };
 		C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C259ED1D1DB956C1008E6712 /* QuartzCore.framework */; };
 		C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25FC7FA1D86FEA90041E303 /* ChatListHoleRowItem.swift */; };
@@ -204,7 +208,6 @@
 		C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */; };
 		C2DEC87F1DECB8C800F6544A /* ApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */; };
 		C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */; };
-		C2DF47981DE79540003AA6C0 /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C2DF47971DE79540003AA6C0 /* libopus.a */; };
 		C2DF47BA1DE79574003AA6C0 /* bitwise.c in Sources */ = {isa = PBXBuildFile; fileRef = C2DF479B1DE79574003AA6C0 /* bitwise.c */; };
 		C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */ = {isa = PBXBuildFile; fileRef = C2DF479C1DE79574003AA6C0 /* framing.c */; };
 		C2DF47BC1DE79574003AA6C0 /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C2DF47A71DE79574003AA6C0 /* libopus.a */; };
@@ -381,6 +384,11 @@
 		C250B0341DB78A0A004E9FBE /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = System/Library/Frameworks/Quartz.framework; sourceTree = SDKROOT; };
 		C250B0361DB7BB09004E9FBE /* mime-types.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "mime-types.txt"; sourceTree = "<group>"; };
 		C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MimeTypes.swift; sourceTree = "<group>"; };
+		C25253251DF03F5700ADBC98 /* TGOpusAudioRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGOpusAudioRecorder.h; sourceTree = "<group>"; };
+		C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGOpusAudioRecorder.m; sourceTree = "<group>"; };
+		C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGAudioWaveform.h; sourceTree = "<group>"; };
+		C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGAudioWaveform.m; sourceTree = "<group>"; };
+		C252532C1DF0440300ADBC98 /* begin_record.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = begin_record.caf; sourceTree = "<group>"; };
 		C253A92C1D8EE1A600CDC850 /* ChatMediaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaView.swift; sourceTree = "<group>"; };
 		C253A9431D90303200CDC850 /* FastBlur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FastBlur.h; sourceTree = "<group>"; };
 		C253A9441D90303200CDC850 /* FastBlur.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FastBlur.m; sourceTree = "<group>"; };
@@ -406,6 +414,7 @@
 		C253E2391DE4D3DB0022A29F /* ChatInterfaceInputContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceInputContext.swift; sourceTree = "<group>"; };
 		C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceStateContextQueries.swift; sourceTree = "<group>"; };
 		C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextListRowItem.swift; sourceTree = "<group>"; };
+		C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputRecordingView.swift; sourceTree = "<group>"; };
 		C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatNavigateScroller.swift; sourceTree = "<group>"; };
 		C259ED1D1DB956C1008E6712 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		C25FC7FA1D86FEA90041E303 /* ChatListHoleRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListHoleRowItem.swift; sourceTree = "<group>"; };
@@ -542,7 +551,6 @@
 				C250B0351DB78A0A004E9FBE /* Quartz.framework in Frameworks */,
 				C250B0331DB788B3004E9FBE /* Foundation.framework in Frameworks */,
 				C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */,
-				C2DF47981DE79540003AA6C0 /* libopus.a in Frameworks */,
 				C2A71CD91DDA0FA300C69F73 /* HockeySDK.framework in Frameworks */,
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
 				C2DF47BC1DE79574003AA6C0 /* libopus.a in Frameworks */,
@@ -786,6 +794,7 @@
 				C2303E771D997C3100098E12 /* ChatInputAttachView.swift */,
 				C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */,
 				C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */,
+				C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -957,9 +966,27 @@
 			name = "quick-look";
 			sourceTree = "<group>";
 		};
+		C252532B1DF043D800ADBC98 /* resources */ = {
+			isa = PBXGroup;
+			children = (
+				C252532C1DF0440300ADBC98 /* begin_record.caf */,
+				C2844ADF1DA90C8A009308DC /* emoji.txt */,
+				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
+				C29B5F421DC794C700D13E65 /* sent.caf */,
+				C250B01B1DB670B4004E9FBE /* url-schemes.txt */,
+				C250B0361DB7BB09004E9FBE /* mime-types.txt */,
+				C2A71CDE1DDA1C8100C69F73 /* dsa_pub.pem */,
+			);
+			name = resources;
+			sourceTree = "<group>";
+		};
 		C253A9531D9164CE00CDC850 /* thrid-party */ = {
 			isa = PBXGroup;
 			children = (
+				C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */,
+				C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */,
+				C25253251DF03F5700ADBC98 /* TGOpusAudioRecorder.h */,
+				C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */,
 				C2DF47CC1DE79751003AA6C0 /* ATQueue.h */,
 				C2DF47CD1DE79751003AA6C0 /* ATQueue.m */,
 				C2DF47C91DE79719003AA6C0 /* TGDataItem.h */,
@@ -1444,17 +1471,12 @@
 				C22E062F1D80439800A11C88 /* ui */,
 				D098C7381D7E1A62007784E4 /* Telegram-Mac.entitlements */,
 				D098C7181D7E175A007784E4 /* AppDelegate.swift */,
+				C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */,
 				D098C71A1D7E175A007784E4 /* Assets.xcassets */,
 				D098C71C1D7E175A007784E4 /* MainMenu.xib */,
 				D098C71F1D7E175A007784E4 /* Info.plist */,
-				C2844ADF1DA90C8A009308DC /* emoji.txt */,
-				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
-				C29B5F421DC794C700D13E65 /* sent.caf */,
-				C250B01B1DB670B4004E9FBE /* url-schemes.txt */,
-				C250B0361DB7BB09004E9FBE /* mime-types.txt */,
-				C2A71CDE1DDA1C8100C69F73 /* dsa_pub.pem */,
 				C253A9721D92F9F100CDC850 /* Localizable.strings */,
-				C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */,
+				C252532B1DF043D800ADBC98 /* resources */,
 			);
 			path = "Telegram-Mac";
 			sourceTree = "<group>";
@@ -1552,6 +1574,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
 				C2A71CDF1DDA1C8100C69F73 /* dsa_pub.pem in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
@@ -1579,6 +1602,7 @@
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				C253A95F1D9165CD00CDC850 /* webp.m in Sources */,
+				C252532A1DF03F9600ADBC98 /* TGAudioWaveform.m in Sources */,
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
@@ -1652,6 +1676,7 @@
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C2271F511D9C392400424F7B /* SPopoverRowView.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
+				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C27AAFEB1DEA01C4009B9629 /* InputAuthCodeViewController.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
@@ -1759,6 +1784,7 @@
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
+				C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */,
 				C2412DFD1DA6843400588C14 /* GalleryItem.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */,
@@ -1898,7 +1924,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1915,6 +1941,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
@@ -1946,6 +1973,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";

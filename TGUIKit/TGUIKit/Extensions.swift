@@ -658,6 +658,18 @@ public extension String {
         return String(stringLiteral: self)
     }
     
+    public static func durationTransformed(elapsed:Int) -> String {
+        let h = elapsed / 3600
+        let m = (elapsed / 60) % 60
+        let s = elapsed % 60
+        
+        if h > 0 {
+            return String.init(format: "%d:%02d:%02d", h, m, s)
+        } else {
+            return String.init(format: "%02d:%02d", m, s)
+        }
+    }
+    
     
 }
 

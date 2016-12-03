@@ -134,6 +134,9 @@
          contextName = "static ChatLayoutUtils.contentNode(for : Media) -&gt; ChatMediaContentView.Type:ChatLayoutUtils.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatInputActionsView.stop(Bool) -&gt; ():ChatInputActionsView.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatInputAdditions.frame.setter:ChatInputAdditions.swift">
          <PersistentStrings>
             <PersistentString
@@ -185,6 +188,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "TableView.insert(item : TableRowItem, at : Int, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; Bool:TableView.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatRowView.draw(CALayer, in : CGContext) -&gt; ():ChatRowView.swift">
          <PersistentStrings>
             <PersistentString
@@ -222,6 +228,14 @@
       </ContextState>
       <ContextState
          contextName = "ChatTableTransaction.init(deleted : [Int], inserted : [(Int, TableRowItem, Int?)], animated : Bool, scrollState : TableScrollState, reason : ChatHistoryViewTransitionReason, historyView : ChatHistoryView) -&gt; ChatTableTransaction:ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListController.(loadView() -&gt; ()).(closure #8):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "previousChatList">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "static TGTextField.getlayout(attributedString : NSAttributedString?, maximumNumberOfLines : Int, truncationType : CTLineTruncationType, backgroundColor : NSColor?, constrainedSize : CGSize, cutout : TextNodeCutout?) -&gt; TextNodeLayout:TGTextField.swift">
@@ -266,6 +280,9 @@
                value = "inserted">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(prepareEntries(from : ChatListView?, to : ChatListView, account : Account, initialSize : CGSize, animated : Bool) -&gt; Signal&lt;TableTransition, ()&gt;).(closure #1):ChatListController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatInterfaceState.encode(Encoder) -&gt; ():ChatInterfaceState.swift">
@@ -893,6 +910,14 @@
       </ContextState>
       <ContextState
          contextName = "PendingMessageManager.(updatePendingMessageIndices(Set&lt;MessageIndex&gt;) -&gt; ()).(closure #1):PendingMessageManager.swift">
+      </ContextState>
+      <ContextState
+         contextName = "-[AudioRecorder setupAudioUnits]:AudioRecorder.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "_inputFormat">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "GalleryPagerNode.animateIn(from : NSView?, completion : () -&gt; ()?) -&gt; ():GalleryPagerNode.swift">
