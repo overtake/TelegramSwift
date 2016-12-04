@@ -197,7 +197,6 @@ public extension CALayer {
         fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
-        animation.toValue = to
         animation.isRemovedOnCompletion = removeOnCompletion
         animation.fillMode = kCAFillModeForwards
         if let completion = completion {
