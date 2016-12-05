@@ -328,12 +328,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         return view
     }
     
-    public func back(_ index:Int = -1) -> Void {
+    public func back(animated:Bool = true) -> Void {
         if stackCount > 1 && !isLocked {
             var controller = stack[stackCount - 2]
             stack.last?.didRemovedFromStack()
             stack.removeLast()
-            show(controller, .pop)
+            show(controller, animated ? .pop : .none)
         }
     }
     

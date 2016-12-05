@@ -59,9 +59,13 @@ open class Popover: NSObject {
                 view.removeFromSuperview()
             }
             
-            self.readyDisposable.set( (controller.ready.get() |> take(1)).start(next: {[weak self] (ready) in
+            var signal = controller.ready.get() |> take(1)
+            if control.controlState == .Hover {
+                signal = signal |> delay(0.2, queue: Queue.mainQueue())
+            }
+            self.readyDisposable.set(signal.start(next: {[weak self] (ready) in
                 
-                if let strongSelf = self {
+                if let strongSelf = self, (strongSelf.inside() || control.controlState == .Hover || control.controlState == .Highlight) {
                     
                     control.isSelected = true
                     

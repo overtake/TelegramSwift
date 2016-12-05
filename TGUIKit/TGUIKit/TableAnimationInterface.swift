@@ -76,7 +76,9 @@ open class TableAnimationInterface: NSObject {
             
             CATransaction.commit()
             
-        } 
+        }  else {
+            contentView.bounds = NSMakeRect(0, bounds.minY + height, contentView.bounds.width, contentView.bounds.height)
+        }
 
     }
     

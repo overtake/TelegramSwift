@@ -182,6 +182,9 @@
 		C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */; };
 		C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */; };
 		C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */; };
+		C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506741DF438B900971A93 /* AudioWaveformView.swift */; };
+		C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506761DF5664F00971A93 /* ForwardChatListController.swift */; };
+		C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506781DF59C9700971A93 /* PicturePicker.swift */; };
 		C2A71CD71DD9EEDB00C69F73 /* WebpageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */; };
 		C2A71CD91DDA0FA300C69F73 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		C2A71CDA1DDA0FC000C69F73 /* HockeySDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -455,6 +458,9 @@
 		C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageActionsPanelView.swift; sourceTree = "<group>"; };
 		C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardPanelModel.swift; sourceTree = "<group>"; };
 		C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWDNavigationAction.swift; sourceTree = "<group>"; };
+		C2A506741DF438B900971A93 /* AudioWaveformView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioWaveformView.swift; sourceTree = "<group>"; };
+		C2A506761DF5664F00971A93 /* ForwardChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardChatListController.swift; sourceTree = "<group>"; };
+		C2A506781DF59C9700971A93 /* PicturePicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PicturePicker.swift; sourceTree = "<group>"; };
 		C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebpageModalController.swift; sourceTree = "<group>"; };
 		C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = HockeySDK.framework; sourceTree = "<group>"; };
 		C2A71CDB1DDA0FCF00C69F73 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
@@ -603,6 +609,7 @@
 		C219E1E51D8AC83A0042F0C8 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				C2A506731DF438A700971A93 /* elements */,
 				C2777B561DCE1174008B69DD /* controls */,
 				C250B01D1DB67934004E9FBE /* webpages */,
 				C296AF8D1D8EACD3001DBB59 /* content */,
@@ -828,6 +835,7 @@
 				C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */,
 				C25FC7FA1D86FEA90041E303 /* ChatListHoleRowItem.swift */,
 				C25FC7FC1D86FEE00041E303 /* ChatListHoleRowView.swift */,
+				C2A506761DF5664F00971A93 /* ForwardChatListController.swift */,
 			);
 			name = chatlist;
 			sourceTree = "<group>";
@@ -1195,6 +1203,14 @@
 			name = "navigation actions";
 			sourceTree = "<group>";
 		};
+		C2A506731DF438A700971A93 /* elements */ = {
+			isa = PBXGroup;
+			children = (
+				C2A506741DF438B900971A93 /* AudioWaveformView.swift */,
+			);
+			name = elements;
+			sourceTree = "<group>";
+		};
 		C2A72D8E1DEC66E200C3B945 /* views */ = {
 			isa = PBXGroup;
 			children = (
@@ -1290,6 +1306,7 @@
 				C2777B691DD211E5008B69DD /* PeerPresenceStatusManager.swift */,
 				C2A71CE01DDB18FF00C69F73 /* ThumbUtils.swift */,
 				C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */,
+				C2A506781DF59C9700971A93 /* PicturePicker.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -1650,6 +1667,7 @@
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
+				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C2A71CE51DDB2ED400C69F73 /* PrivacySettingsViewController.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
@@ -1660,6 +1678,7 @@
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C22674411DC13165000BA9ED /* GridHoleItem.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
+				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				C2271F3A1DB4D0540045E719 /* EStickersViewController.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
@@ -1680,6 +1699,7 @@
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C27AAFEB1DEA01C4009B9629 /* InputAuthCodeViewController.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
+				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,

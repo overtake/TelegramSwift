@@ -15,7 +15,11 @@ let clearImage = #imageLiteral(resourceName: "Icon_SearchClear").precomposed()
 class SearchTextField: NSTextView {
 
     
-  
+    
+    override func resignFirstResponder() -> Bool {
+        self.delegate?.textDidEndEditing!(Notification(name: Notification.Name.NSControlTextDidChange))
+        return super.resignFirstResponder()
+    }
     
 }
 
@@ -49,7 +53,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var animateContainer:View = View()
     
-    private let inset:CGFloat = 6.0
+    private let inset:CGFloat = 6
     private let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
@@ -121,14 +125,18 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         }, for: .Click)
     }
     
-    
-    public override func controlTextDidChange(_ obj: Notification) {
-        
+    public func textDidChange(_ notification: Notification) {
+        input.string = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
         if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(input.string)
+            searchInteractions.textModified(input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r")))
         }
+        placeholder.isHidden = input.string != nil && !input.string!.isEmpty
     }
     
+    public func textDidEndEditing(_ notification: Notification) {
+        didResignResponder()
+    }
+
     public func didResignResponder() {
         change(state: .None, true)
     }
@@ -140,7 +148,6 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        
     }
     
     func change(state:SearchFieldState, _ animated:Bool) -> Void {
@@ -168,14 +175,13 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                     return self?.input
                 }, with: self, priority: .high)
                 
-                let inputInset = leftInset + NSWidth(search.frame) + inset - 2
+                let inputInset = leftInset + NSWidth(search.frame) + inset - 5
                 
                 self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset, NSHeight(placeholder.frame))
                 
                 animateContainer.layer?.animate(from: NSMinX(animateContainer.frame) as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
                     self?.input.isHidden = false
                     self?.window?.makeFirstResponder(self?.input)
-                    self?.placeholder.isHidden = true
                     self?.lock = false
                 })
                 

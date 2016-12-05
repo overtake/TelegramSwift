@@ -207,15 +207,34 @@ public class Window: NSWindow {
     
     public override func sendEvent(_ event: NSEvent) {
         
-        if event.type == .keyDown {
-            
-           applyResponderIfNeeded()
-            
-            if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
-                var sorted = handlers.sorted(by: >)
-                loop: for handle in sorted {
-                    if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
-                        
+        if sheets.isEmpty {
+            if event.type == .keyDown {
+                
+                
+                
+                applyResponderIfNeeded()
+                
+                if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
+                    var sorted = handlers.sorted(by: >)
+                    loop: for handle in sorted {
+                        if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
+                            
+                            switch handle.handler() {
+                            case .invoked:
+                                return
+                            case .rejected:
+                                continue
+                            case .invokeNext:
+                                break loop
+                            }
+                            
+                        }
+                    }
+                }
+            } else {
+                if  let handlers = mouseHandlers[event.type] {
+                    var sorted = handlers.sorted(by: >)
+                    loop: for handle in sorted {
                         switch handle.handler() {
                         case .invoked:
                             return
@@ -224,27 +243,15 @@ public class Window: NSWindow {
                         case .invokeNext:
                             break loop
                         }
-                        
                     }
                 }
             }
-        } else {
-            if  let handlers = mouseHandlers[event.type] {
-                var sorted = handlers.sorted(by: >)
-                loop: for handle in sorted {
-                    switch handle.handler() {
-                    case .invoked:
-                        return
-                    case .rejected:
-                        continue
-                    case .invokeNext:
-                        break loop
-                    }
-                }
-            }
+            super.sendEvent(event)
+        } else if let sheet = sheets.last {
+            sheet.sendEvent(event)
         }
         
-        super.sendEvent(event)
+        
     }
     
 //    public func set(copy handler:@escaping()->Void) -> (()-> Void,NSEventModifierFlags?)? {
