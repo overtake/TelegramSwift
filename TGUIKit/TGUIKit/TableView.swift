@@ -672,36 +672,24 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    func remove(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
-        var pos:Int? = self.index(of: item);
-        
+    
+    public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+        let item = self.item(at: at)
         let animation = animation != .none ? item.animatable ? animation : .none : .none
         NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
         
-        if let p = pos {
-            self.list.remove(at: p);
-            self.listhash.removeValue(forKey: item.stableId)
-            
-            if(redraw) {
-                self.tableView.removeRows(at: IndexSet(integer:p), withAnimation: animation)
-            }
-        } else {
-            
-        }
+        self.list.remove(at: at);
+        self.listhash.removeValue(forKey: item.stableId)
         
-    }
-    
-    public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
-        self.remove(item: self.item(at: at), redraw: redraw, animation:animation)
+        if(redraw) {
+            self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation)
+        }
     }
     
     public func remove(range:Range<Int>, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         
-        var sub:[TableRowItem] = Array(self.list[range])
-        
-        
-        for item in sub {
-            self.remove(item: item, redraw: false)
+        for i in range.lowerBound ..< range.upperBound {
+            remove(at: i, redraw: false)
         }
         
         if(redraw) {
