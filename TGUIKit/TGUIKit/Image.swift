@@ -7,7 +7,7 @@ import TGUIKit
 import Accelerate
 
 
-public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0)) -> Signal<CGImage?, NoError>? {
+public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0) -> Signal<CGImage?, NoError>? {
     if let smallProfileImage = peer.smallProfileImage {
         let resourceData = account.postbox.mediaBox.resourceData(smallProfileImage.resource)
         let imageData = resourceData
@@ -39,7 +39,7 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             |> deliverOn(account.graphicsThreadPool)
             |> map { data -> CGImage? in
                 if let data = data {
-                    return roundImage(data, displayDimensions)
+                    return roundImage(data, displayDimensions, scale:scale)
                 } else {
                     return nil
                 }
@@ -64,12 +64,10 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
 private let screenQueue = Queue(name: "ScreenQueue")
 
 
-public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, reversed:Bool = false) -> CGImage? {
+public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, reversed:Bool = false, scale:CGFloat = 1.0) -> CGImage? {
     var image:CGImageSource? = CGImageSourceCreateWithData(data as CFData, nil)
     
-    var size = s;
-    
-   size =   NSMakeSize(s.width , s.height)
+    let size = NSMakeSize(s.width * scale, s.height * scale)
 
     var context:CGContext? = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: Int(4*size.width), space: NSColorSpace.genericRGB.cgColorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
     

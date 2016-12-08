@@ -53,8 +53,9 @@ public struct RadialProgressTheme : Equatable {
     public let backgroundColor: NSColor
     public let foregroundColor: NSColor
     public let icon: CGImage?
-    
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage?) {
+    public let iconInset:EdgeInsets
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage?, iconInset:EdgeInsets = EdgeInsets()) {
+        self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.icon = icon
@@ -265,6 +266,11 @@ public class RadialProgressView: Control {
         }
     }
     
+    public override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        self.overlay.contentsScale = System.backingScale
+    }
+    
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -338,8 +344,11 @@ public class RadialProgressView: Control {
             context.strokePath()
         case .Play:
             if let icon = parameters.theme.icon {
-                
                 var f = focus(icon.backingSize)
+                f.origin.x += parameters.theme.iconInset.left
+                f.origin.x -= parameters.theme.iconInset.right
+                f.origin.y += parameters.theme.iconInset.top
+                f.origin.y -= parameters.theme.iconInset.bottom
                 context.draw(icon, in: f)
             }
         case .ImpossibleFetching:

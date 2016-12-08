@@ -21,6 +21,11 @@ class SearchTextField: NSTextView {
         return super.resignFirstResponder()
     }
     
+    override func becomeFirstResponder() -> Bool {
+        self.delegate?.textDidBeginEditing!(Notification(name: Notification.Name.NSControlTextDidChange))
+        return super.becomeFirstResponder()
+    }
+    
 }
 
 public enum SearchFieldState {
@@ -135,6 +140,10 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     public func textDidEndEditing(_ notification: Notification) {
         didResignResponder()
+    }
+    
+    public func textDidBeginEditing(_ notification: Notification) {
+        didBecomeResponder()
     }
 
     public func didResignResponder() {

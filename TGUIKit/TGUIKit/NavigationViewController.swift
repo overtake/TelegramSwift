@@ -291,6 +291,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             return // without animations
         }
         
+        if previous.removeAfterDisapper, let index = stack.index(of: previous) {
+            self.stack.remove(at: index)
+        }
+        
         navigationBar.removeFromSuperview()
         containerView.addSubview(navigationBar)
         

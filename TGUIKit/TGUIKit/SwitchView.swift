@@ -9,13 +9,15 @@
 import Cocoa
 public class SwitchView: Control {
     
-    public var isOn:Bool = false {
+    public func setIsOn(_ isOn:Bool, animated:Bool = true) {
+        self.animates = animated
+        self.isOn = isOn
+    }
+    
+    private var isOn:Bool = false {
         didSet {
             if isOn != oldValue {
                 afterChanged()
-                if let stateChanged = stateChanged {
-                    stateChanged()
-                }
             }
         }
     }
@@ -25,6 +27,10 @@ public class SwitchView: Control {
     private var buble:CALayer = CALayer()
     private var backBuble:CALayer = CALayer()
     private var backgroundLayer:CALayer = CALayer()
+    
+    override convenience init() {
+        self.init(frame:NSMakeRect(0, 0, 38, 20))
+    }
     
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -36,6 +42,9 @@ public class SwitchView: Control {
         backgroundLayer.backgroundColor = NSColor.white.cgColor
         buble.backgroundColor = NSColor.white.cgColor
         
+        backgroundLayer.disableActions()
+        buble.disableActions()
+        backBuble.disableActions()
         
         layer?.addSublayer(backgroundLayer)
         layer?.addSublayer(backBuble)
@@ -43,34 +52,43 @@ public class SwitchView: Control {
         
         self.set(handler: { [weak self] in
             if let strongSelf = self {
+                let animates = strongSelf.animates
+                strongSelf.animates = true
                 strongSelf.isOn = !strongSelf.isOn
+                strongSelf.animates = animates
+                if let stateChanged = strongSelf.stateChanged {
+                    stateChanged()
+                }
             }
         }, for: .Click)
+        
+//        animates = false
+//        afterChanged()
     }
     
     func afterChanged() -> Void {
         if animates {
-            // self.isEnabled = false
-            
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
-            backgroundLayer.backgroundColor = isOn ? NSColor.greenUI.cgColor : NSColor.white.cgColor
-            backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
-            buble.borderWidth = isOn ? 0.0 : 1.0
-            //  buble.backgroundColor = !isOn ? .border.cgColor : .white.cgColor
-            
-            //            buble.shadowColor = .blueUI.cgColor
-            //            buble.shadowOpacity = 1.0
-            //            buble.shadowRadius = 2.0
-            //            buble.shadowOffset = NSMakeSize(0, 3.0)
-            
+        }
+        backgroundLayer.backgroundColor = isOn ? NSColor.greenUI.cgColor : NSColor.white.cgColor
+        backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
+        buble.borderWidth = isOn ? 0.0 : 1.0
+        //  buble.backgroundColor = !isOn ? .border.cgColor : .white.cgColor
+        
+        //            buble.shadowColor = .blueUI.cgColor
+        //            buble.shadowOpacity = 1.0
+        //            buble.shadowRadius = 2.0
+        //            buble.shadowOffset = NSMakeSize(0, 3.0)
+        
+        if animates {
             backgroundLayer.animateBackground()
             backgroundLayer.animateBorder()
             
             buble.animateBackground()
             buble.animateBorder()
-            
         }
-        
+        backgroundLayer.setNeedsDisplay()
+        buble.setNeedsDisplay()
         self.buble.frame = bubleRect
     }
     

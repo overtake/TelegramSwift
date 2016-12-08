@@ -89,7 +89,7 @@ public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var responsders:[ResponderObserver] = []
     private var mouseHandlers:[NSEventType:[MouseObserver]] = [:]
-    
+    private var saver:WindowSaver?
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -211,8 +211,9 @@ public class Window: NSWindow {
             if event.type == .keyDown {
                 
                 
-                
-                applyResponderIfNeeded()
+                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape {
+                    applyResponderIfNeeded()
+                }
                 
                 if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
                     var sorted = handlers.sorted(by: >)
@@ -265,15 +266,39 @@ public class Window: NSWindow {
     public func set(escape handler:@escaping() -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
         set(handler: handler, with: object, for: .Escape, priority:priority, modifierFlags:modifierFlags)
     }
+
+
     
     public override var canBecomeKey: Bool {
         return true
     }
     
+    public func initSaver() {
+        self.saver = .find(for: self)
+        if let saver = saver {
+            self.setFrame(saver.rect, display: true)
+        }
+    }
+    
+    @objc func windowDidNeedSaveState(_ notification: Notification) {
+        saver?.rect = frame
+        saver?.save()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
+       
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidMove, object: self)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidResize, object: self)
+
+        
       //  self.contentView?.canDrawSubviewsIntoLayer = true
     }
 }

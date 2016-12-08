@@ -118,7 +118,7 @@ open class TransformImageView: Control {
     public var imageUpdated: (() -> Void)?
     public var alphaTransitionOnFirstUpdate = false
     private var disposable = MetaDisposable()
-    
+    public var animatesAlphaOnFirstTransition:Bool = false
     private let argumentsPromise = Promise<TransformImageArguments>()
     
     override public init() {
@@ -146,6 +146,7 @@ open class TransformImageView: Control {
     
     public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, dispatchOnDisplayLink: Bool = true) {
         self.layer?.contents = nil
+        var first:Bool = true
         let result = combineLatest(signal, argumentsPromise.get()) |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
             return deferred {
                 return Signal<CGImage?, NoError>.single(transform(arguments)?.generateImage())
@@ -153,7 +154,20 @@ open class TransformImageView: Control {
         }
         
         self.disposable.set((result |> deliverOnMainQueue).start(next: {[weak self] next in
-            self?.layer?.contents = next
+            
+            if let strongSelf = self  {
+                if strongSelf.layer?.contents == nil && strongSelf.animatesAlphaOnFirstTransition {
+                    strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                
+                self?.layer?.contents = next
+                
+                if !first {
+                    self?.layer?.animateContents()
+                }
+                first = false
+            }
+           
         }))
     }
     

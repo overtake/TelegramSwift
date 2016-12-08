@@ -95,7 +95,7 @@ public class DrawingContext {
         }
     }
     
-    public init(size: CGSize, scale: CGFloat = deviceScale, clear: Bool = false) {
+    public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
         self.size = size
         self.scale = scale
         self.scaledSize = CGSize(width: size.width * scale, height: size.height * scale)

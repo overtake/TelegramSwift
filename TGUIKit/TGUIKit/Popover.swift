@@ -87,6 +87,10 @@ open class Popover: NSObject {
                             point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
                             point.y -= controller.frame.height
                             strongSelf.background.flip = true
+                        case .minX:
+                            point.x -= (controller.frame.width - control.frame.width)
+                            point.y -= controller.frame.height
+                            strongSelf.background.flip = true
                         default:
                             fatalError("Not Implemented")
                         }

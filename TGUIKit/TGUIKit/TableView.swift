@@ -18,18 +18,21 @@ public enum TableSeparator {
 }
 
 
-public final class TableTransition {
-    public let inserted:[(Int,TableRowItem,Int?)]
+
+public final class TableUpdateTransition {
+    public let inserted:[(Int,TableRowItem)]
+    public let updated:[(Int,TableRowItem)]
     public let deleted:[Int]
-    public let scrollState:TableScrollState
+    public let state:TableScrollState
     public let animated:Bool
     public let grouping:Bool
     
-    public init(deleted:[Int], inserted:[(Int,TableRowItem,Int?)], animated:Bool = false, scrollState:TableScrollState = .none(nil), grouping:Bool = true) {
+    public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true) {
         self.inserted = inserted
+        self.updated = updated
         self.deleted = deleted
         self.animated = animated
-        self.scrollState = scrollState
+        self.state = state
         self.grouping = grouping
     }
 }
@@ -178,6 +181,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         sdelegate?.selectRow(index: range.location)
 
     }
+    
+    
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
@@ -543,25 +548,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
         
-        if(self.item(stableId:item.stableId) == nil) {
-            
-            self.listhash[item.stableId] = item;
-            self.list.insert(item, at: at);
-            item.table = self;
-            
-            let animation = animation != .none ? item.animatable ? animation : .none : .none
-            NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
-            
-            if(redraw) {
-                self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
-            }
-            
-            return true;
-        } else {
-            self.moveItem(from: at, to: at)
+        assert(self.item(stableId:item.stableId) == nil)
+        self.listhash[item.stableId] = item;
+        self.list.insert(item, at: at);
+        item.table = self;
+        
+        let animation = animation != .none ? item.animatable ? animation : .none : .none
+        NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
+        
+        if(redraw) {
+            self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
         }
         
-        return false;
+        return true;
         
     }
     
@@ -608,6 +607,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             if let viewItem = view.item {
                 if viewItem.height != item.height {
+                    NSAnimationContext.current().duration = 0.2
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 
@@ -621,11 +621,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         
+        
         var item:TableRowItem = self.item(at:from);
         let animation = animation != .none ? item.animatable ? animation : .none : .none
         NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
        
         if let change = changeItem {
+            assert(change.stableId == item.stableId)
             change.table = self
             self.listhash.removeValue(forKey: item.stableId)
             self.listhash[change.stableId] = change
@@ -633,8 +635,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         self.list.remove(at: from);
+        
         self.list.insert(item, at: to);
-
+        
         
         if(redraw) {
             
@@ -924,6 +927,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     let bottom = (rect.minY - documentOffset.y)
                     list.append(item,top,bottom)
                 } else {
+                    let top = rect.minY - documentOffset.y
+                    let bottom = frame.height - (rect.minY - documentOffset.y) - rect.height
+                    list.append(item,top,bottom)
                     //fatalError("not supported")
                 }
             }
@@ -956,22 +962,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.endUpdates()
     }
     
-    public func apply(transition:TableTransition) ->Void {
-        self.merge(transition.deleted, transition.inserted, transition.animated, transition.scrollState, transition.grouping)
-    }
-    
-    public func merge(_ deleteIndexes:[Int], _ insertedIndexes:[(Int,TableRowItem,Int?)], _ animated:Bool = true,_ state:TableScrollState = .none(nil), _ grouping:Bool = true) -> Void {
+    public func merge(with transition:TableUpdateTransition) -> Void {
         
         assertOnMainThread()
         assert(!updating)
-            
+        
         self.beginUpdates()
         
         let lhash = self.hashRects()
         let lsize = self.documentSize
         let loffset = self.documentOffset
         let visibleItems = self.visibleItems()
-        if grouping {
+        if transition.grouping {
             self.tableView.beginUpdates()
         }
         
@@ -980,59 +982,42 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var rd:Int = 0
         
-        for rdx in deleteIndexes {
-            
-            var s:Bool = false
-            
-            for (_,_,prev) in insertedIndexes {
-                
-                if let p = prev {
-                    s = rdx == p
-                }
-                
-                if(s) {
-                    break
-                }
-            }
-            if(!s) {
-                
-                let effect:NSTableViewAnimationOptions
-                if case let .none(interface) = state, interface != nil {
-                    effect = .effectFade
-                } else {
-                    effect = animated ? .effectFade : .none
-                }
-                self.remove(at: rdx - rd, redraw: true, animation:effect)
-                rd+=1
-            }
-        }
-        NSAnimationContext.current().duration = animated ? 0.2 : 0.0
-
-        
-        for (idx,item,prev) in insertedIndexes {
-            
-            if let p = prev, let r = self.index(hash: item.stableId) {
-                let _ = self.moveItem(from:r, to:idx, changeItem:item, redraw: true, animation:animated ? .effectFade : .none)
+        for rdx in transition.deleted.reversed() {
+            let effect:NSTableViewAnimationOptions
+            if case let .none(interface) = transition.state, interface != nil {
+                effect = .effectFade
             } else {
-                let _ = self.insert(item: item, at:idx, redraw: true, animation:animated ? .effectFade : .none)
-                inserted.append(item)
+                effect = transition.animated ? .effectFade : .none
             }
+            self.remove(at: rdx, redraw: true, animation:effect)
+            rd+=1
         }
         
-       
+        NSAnimationContext.current().duration = transition.animated ? 0.2 : 0.0
         
-        if grouping {
+        
+        for (idx,item) in transition.inserted {
+            _ = self.insert(item: item, at:idx, redraw: true, animation: transition.animated ? .effectFade : .none)
+            inserted.append(item)
+        }
+        
+        for (index,item) in transition.updated {
+            assert(index == self.index(hash: item.stableId))
+            replace(item:item, at:index, animated: transition.animated)
+        }
+
+        if transition.grouping {
             self.tableView.endUpdates()
         }
         
-
+        
         reflectScrolledClipView(clipView)
         
-        switch state {
+        switch transition.state {
         case let .none(animation):
-           // print("scroll do nothing")
+            // print("scroll do nothing")
             animation?.animate(table:self, added: inserted, removed:removed)
-
+            
         case let .save(animation):
             
             var noffset = self.documentOffset
@@ -1052,17 +1037,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             if let item = sitem {
                 let y = noffset.y - (NSMinY(rect) - NSMinY(nrect))
-               // clipView.scroll(to: NSMakePoint(0, y))
+                // clipView.scroll(to: NSMakePoint(0, y))
                 self.contentView.bounds = NSMakeRect(0, y, 0, NSHeight(self.contentView.bounds))
                 reflectScrolledClipView(clipView)
             }
-
+            
             animation?.animate(table:self, added: inserted, removed:removed)
             
         case .bottom(_,_), .top(_,_), .center(_,_):
-            self.scroll(to:state)
+            self.scroll(to: transition.state)
         case .up(_), .down(_):
-            self.scroll(to:state)
+            self.scroll(to: transition.state)
         case let .saveVisible(side):
             
             if documentOffset.y == 0 {
@@ -1074,26 +1059,30 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             var sideItem:TableRowItem? = nil
             let strideTo:StrideTo<Int>
             
-            if tableView.isFlipped {
-                strideTo = stride(from: 0, to: visibleItems.count, by: 1)
-            } else {
-                strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
-            }
-           
+            strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
+
             
             for i in strideTo {
                 let visible = visibleItems[i]
                 if let item = self.item(stableId: visible.0.stableId) {
-                   
+                    
                     nrect = rectOf(item: item)
                     let y:CGFloat
                     
                     switch side {
                     case .lower:
-                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        if !tableView.isFlipped {
+                            y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        } else {
+                            y = nrect.minY - visible.1
+                        }
                         break
                     case .upper:
-                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        if !tableView.isFlipped {
+                            y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        } else {
+                            y = nrect.minY - visible.1
+                        }
                         break
                     }
                     
@@ -1106,12 +1095,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             break
         }
         
-    
-
+        
         self.endUpdates()
         
     }
     
+    public func replace(item:TableRowItem, at index:Int, animated:Bool) {
+        list[index] = item
+        listhash[item.stableId] = item
+        item.table = self
+        reloadData(row: index, animated: animated)
+    }
+
     public func contentInteractionView(for stableId: Int64) -> NSView? {
         if let item = self.item(stableId: stableId) {
             let view = viewNecessary(at:item.index)
@@ -1282,6 +1277,29 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         scrollHandler = handler
         
+    }
+    
+    override open func scrollWheel(with event: NSEvent) {
+        super.scrollWheel(with: event)
+        for item in list {
+            if let view = viewNecessary(at: item.index) {
+                view.updateMouse()
+            }
+        }
+    }
+    
+    public func enumerateItems(with callback:(TableRowItem)->Void) {
+        for item in list {
+            callback(item)
+        }
+    }
+    
+    public func enumerateViews(with callback:(TableRowView)->Void) {
+        for item in list {
+            if let view = viewNecessary(at: item.index) {
+                callback(view)
+            }
+        }
     }
     
     public func performScrollEvent() -> Void {

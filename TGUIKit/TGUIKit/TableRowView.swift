@@ -117,6 +117,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
+    open func updateMouse() {
+        
+    }
     
     open override func setFrameSize(_ newSize: NSSize) {
         let update = self.frame.size != newSize

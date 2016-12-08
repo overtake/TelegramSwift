@@ -263,8 +263,9 @@ open class ViewController : NSObject {
             self.window?.set(responder: {[weak self] () -> NSResponder? in
                 return self?.firstResponder()
             }, with: self, priority: responderPriority)
-            
-            self.window?.applyResponderIfNeeded()
+            if let become = becomeFirstResponder(), become == true {
+                self.window?.applyResponderIfNeeded()
+            }
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSNotification.Name.NSWindowDidBecomeKey, object: window)
@@ -286,6 +287,10 @@ open class ViewController : NSObject {
         return true
     }
     
+    open var removeAfterDisapper:Bool {
+        return false
+    }
+    
     open func escapeKeyAction() -> KeyHandlerResult {
         return .rejected
     }
@@ -304,7 +309,7 @@ open class ViewController : NSObject {
     
     open func becomeFirstResponder() -> Bool? {
 
-        return _view?.becomeFirstResponder()
+        return false
     }
     
     public var window:Window? {

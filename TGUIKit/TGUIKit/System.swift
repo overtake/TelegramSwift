@@ -59,6 +59,15 @@ public func reverseIndexList<T>(_ list:[(Int,T,Int?)], _ previousCount:Int, _ up
     return reversed
 }
 
+public func reverseIndexList<T>(_ list:[(Int,T)], _ previousCount:Int, _ updateCount:Int) -> [(Int,T)] {
+    var reversed:[(Int,T)] = []
+    
+    for (int1,obj) in list.reversed() {
+        reversed.append((updateCount - int1 - 1,obj))
+    }
+    return reversed
+}
+
 public func reverseIndexList<T>(_ list:[(Int,T,Int)], _ previousCount:Int, _ updateCount:Int) -> [(Int,T,Int)] {
     var reversed:[(Int,T,Int)] = []
     

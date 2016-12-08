@@ -41,6 +41,10 @@ open class ModalViewController : ViewController {
     open override func firstResponder() -> NSResponder? {
         return self.view
     }
+    
+    open func close() {
+        modal?.close()
+    }
 }
 
 private class ModalBackground : Control {

@@ -110,10 +110,12 @@ open class Control: View {
         }
         
         let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
-        self.trackingArea = NSTrackingArea.init(rect: self.bounds, options: options, owner: self, userInfo: nil)
+        self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
         
         self.addTrackingArea(self.trackingArea!)
     }
+    
+
     
     open override var isHidden: Bool {
         get {
@@ -225,7 +227,7 @@ open class Control: View {
         }
     }
     
-    func updateState() -> Void {
+    public func updateState() -> Void {
         
 
         

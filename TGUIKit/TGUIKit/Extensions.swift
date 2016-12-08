@@ -178,7 +178,7 @@ public extension CALayer {
     
     public func disableActions() -> Void {
         
-        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull()]
+        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull()]
 
     }
     

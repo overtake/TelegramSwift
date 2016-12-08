@@ -68,6 +68,7 @@
 		C253A9761D9430A900CDC850 /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9751D9430A900CDC850 /* ImageView.swift */; };
 		C25FC7F71D86DC370041E303 /* TGClipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25FC7F61D86DC370041E303 /* TGClipView.swift */; };
 		C25FC7F91D86E53A0041E303 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C25FC7F81D86E53A0041E303 /* CoreVideo.framework */; };
+		C28BAB0D1DF8550E0027CE3A /* WindowSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB0C1DF8550E0027CE3A /* WindowSaver.swift */; };
 		C291ED991DB35BC5008C6B2A /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED981DB35BC5008C6B2A /* Window.swift */; };
 		C291ED9B1DB361ED008C6B2A /* KeyboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */; };
 		C296AF841D8D9D7D001DBB59 /* RadialProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF831D8D9D7D001DBB59 /* RadialProgressView.swift */; };
@@ -156,6 +157,7 @@
 		C25FC7F61D86DC370041E303 /* TGClipView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGClipView.swift; sourceTree = "<group>"; };
 		C25FC7F81D86E53A0041E303 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		C27624881D95AD7300FE5B2B /* ObjcExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ObjcExtension.framework; path = ../ObjcExtension/build/Debug/ObjcExtension.framework; sourceTree = "<group>"; };
+		C28BAB0C1DF8550E0027CE3A /* WindowSaver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowSaver.swift; sourceTree = "<group>"; };
 		C291ED981DB35BC5008C6B2A /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardUtils.swift; sourceTree = "<group>"; };
 		C296AF831D8D9D7D001DBB59 /* RadialProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressView.swift; sourceTree = "<group>"; };
@@ -296,6 +298,7 @@
 				C21AAE391DB2398B007638C5 /* DisplayLinkDispatcher.swift */,
 				C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */,
 				C226741C1DBCDBA8000BA9ED /* ContainableController.swift */,
+				C28BAB0C1DF8550E0027CE3A /* WindowSaver.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -559,6 +562,7 @@
 				C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */,
 				C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */,
 				C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */,
+				C28BAB0D1DF8550E0027CE3A /* WindowSaver.swift in Sources */,
 				C2303E7C1D99880B00098E12 /* Modal.swift in Sources */,
 				C219E1E21D8A93050042F0C8 /* TextView.swift in Sources */,
 				C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */,
