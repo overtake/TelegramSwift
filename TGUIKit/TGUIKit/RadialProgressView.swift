@@ -266,10 +266,6 @@ public class RadialProgressView: Control {
         }
     }
     
-    public override func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-        self.overlay.contentsScale = System.backingScale
-    }
     
     
     required public init?(coder aDecoder: NSCoder) {
@@ -298,6 +294,7 @@ public class RadialProgressView: Control {
     public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil)) {
         self.theme = theme
         self.overlay = RadialProgressOverlayLayer(theme: theme)
+        self.overlay.contentsScale = System.backingScale
         super.init()
         
         self.frame = NSMakeRect(0, 0, 40, 40)

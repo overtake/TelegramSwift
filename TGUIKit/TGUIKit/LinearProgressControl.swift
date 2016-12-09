@@ -51,6 +51,7 @@ public class LinearProgressControl: Control {
     }
     
     public func set(progress:CGFloat, animated:Bool = false) {
+        let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
         let size = NSMakeSize(floorToScreenPixels(frame.width * progress), frame.height)
         progressView.change(size: size, animated: animated)

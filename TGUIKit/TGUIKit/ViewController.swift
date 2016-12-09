@@ -397,8 +397,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
             
-            let vz = T.self as! NSView.Type
-            _view = vz.init(frame: _frameRect);
+            _view = initializer()
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
             
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
@@ -407,5 +406,9 @@ open class GenericViewController<T> : ViewController where T:NSView {
         }
     }
 
+    open func initializer() -> T {
+        let vz = T.self as! NSView.Type
+        return vz.init(frame: _frameRect) as! T;
+    }
     
 }

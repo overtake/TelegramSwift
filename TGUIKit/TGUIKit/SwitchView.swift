@@ -62,8 +62,10 @@ public class SwitchView: Control {
             }
         }, for: .Click)
         
-//        animates = false
-//        afterChanged()
+        let animates = self.animates
+        self.animates = false
+        afterChanged()
+        self.animates = animates
     }
     
     func afterChanged() -> Void {

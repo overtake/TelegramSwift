@@ -24,6 +24,10 @@ open class TableRowItem: NSObject,Identifiable {
         return true
     }
     
+    open var instantlyResize:Bool {
+        return false
+    }
+    
     open private(set) var height:CGFloat = 60;
     
     

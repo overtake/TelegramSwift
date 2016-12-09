@@ -81,6 +81,8 @@
 		C22E06261D7F16C000A11C88 /* TGUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C22E06251D7F16C000A11C88 /* TGUIKit.framework */; };
 		C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E06311D8044CC00A11C88 /* ChatListController.swift */; };
 		C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E063C1D80929400A11C88 /* ChatListRowItem.swift */; };
+		C22EBCB81DFAB36A0034C435 /* ChatMapRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */; };
+		C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22EBCB91DFAB64F0034C435 /* ChatMapContentView.swift */; };
 		C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E721D9966BD00098E12 /* ChatInputActionsView.swift */; };
 		C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E771D997C3100098E12 /* ChatInputAttachView.swift */; };
 		C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E891D9A76D800098E12 /* MainViewController.swift */; };
@@ -353,6 +355,8 @@
 		C22E06251D7F16C000A11C88 /* TGUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TGUIKit.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/TGUIKit.framework"; sourceTree = "<group>"; };
 		C22E06311D8044CC00A11C88 /* ChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListController.swift; sourceTree = "<group>"; };
 		C22E063C1D80929400A11C88 /* ChatListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListRowItem.swift; sourceTree = "<group>"; };
+		C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMapRowItem.swift; sourceTree = "<group>"; };
+		C22EBCB91DFAB64F0034C435 /* ChatMapContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMapContentView.swift; sourceTree = "<group>"; };
 		C2303E721D9966BD00098E12 /* ChatInputActionsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputActionsView.swift; sourceTree = "<group>"; };
 		C2303E771D997C3100098E12 /* ChatInputAttachView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputAttachView.swift; sourceTree = "<group>"; };
 		C2303E891D9A76D800098E12 /* MainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -653,6 +657,7 @@
 				C232234C1DE20E610078D738 /* ChatMessageDateHeader.swift */,
 				C253E22D1DE33A7C0022A29F /* ChatMusicRowItem.swift */,
 				C2DF47E31DE84A67003AA6C0 /* ChatVoiceRowItem.swift */,
+				C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -1197,6 +1202,7 @@
 				C296AF8B1D8EA7F3001DBB59 /* ChatFileContentView.swift */,
 				C253A9601D917ACD00CDC850 /* ChatStickerContentView.swift */,
 				C230B91E1DD4BEBC0057F596 /* ChatGIFContentView.swift */,
+				C22EBCB91DFAB64F0034C435 /* ChatMapContentView.swift */,
 			);
 			name = content;
 			sourceTree = "<group>";
@@ -1672,6 +1678,7 @@
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				C2A71CD71DD9EEDB00C69F73 /* WebpageModalController.swift in Sources */,
 				C230B90F1DD383820057F596 /* ComposeViewController.swift in Sources */,
+				C22EBCB81DFAB36A0034C435 /* ChatMapRowItem.swift in Sources */,
 				C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */,
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
@@ -1702,6 +1709,7 @@
 				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,
+				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C22674411DC13165000BA9ED /* GridHoleItem.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,

@@ -29,6 +29,17 @@
          contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)], [(Int, A, Int)]):System.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatListController.(loadView() -&gt; ()).(closure #8).(closure #2):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "t">
+            </PersistentString>
+            <PersistentString
+               value = "transition">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TableView.merge([Int], [(Int, TableRowItem, Int?)], Bool, TableScrollState) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
@@ -169,6 +180,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "TableView.merge(with : TableUpdateTransition) -&gt; ():TableView.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatServiceItem.height.getter:ChatServiceItem.swift">
       </ContextState>
       <ContextState
@@ -186,15 +200,15 @@
          contextName = "TGTableView.moveItem(from : Int, to : Int, changeItem : TGTableRowItem?, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
       </ContextState>
       <ContextState
+         contextName = "MutableChatListView.init(earlier : MutableChatListEntry?, entries : [MutableChatListEntry], later : MutableChatListEntry?, count : Int) -&gt; MutableChatListView:ChatListView.swift">
+      </ContextState>
+      <ContextState
          contextName = "TitleButton.sizeToFit(CGSize) -&gt; ():TitleButton.swift">
          <PersistentStrings>
             <PersistentString
                value = "self.text.string">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "MutableChatListView.init(earlier : MutableChatListEntry?, entries : [MutableChatListEntry], later : MutableChatListEntry?, count : Int) -&gt; MutableChatListView:ChatListView.swift">
       </ContextState>
       <ContextState
          contextName = "Control.controlState.didset:Control.swift">
@@ -395,6 +409,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "__48-[TGOpusAudioRecorder prepareRecord:completion:]_block_invoke:TGOpusAudioRecorder.m">
+      </ContextState>
+      <ContextState
          contextName = "GalleryPagerNode.currentNode.setter:GalleryPagerNode.swift">
          <PersistentStrings>
             <PersistentString
@@ -406,14 +423,6 @@
          contextName = "APController.(init(account : Account, peerId : PeerId, message : Message?, isVoice : Bool) -&gt; APController).(closure #4):AudioPlayerController.swift">
       </ContextState>
       <ContextState
-         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.contentNode!.content">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "GridItem.resize(size : CGSize) -&gt; ():GridRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -422,7 +431,12 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "__48-[TGOpusAudioRecorder prepareRecord:completion:]_block_invoke:TGOpusAudioRecorder.m">
+         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentNode!.content">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TitleButton.apply(state : ControlState) -&gt; ():TitleButton.swift">
@@ -470,6 +484,9 @@
          <PersistentStrings>
             <PersistentString
                value = "previousChatList">
+            </PersistentString>
+            <PersistentString
+               value = "previousChatList.modify({$0})">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -540,6 +557,14 @@
             </PersistentString>
             <PersistentString
                value = "inserted">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GIFPlayerView.(set(path : String?) -&gt; ()).(closure #2):GIFPlayerView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "layer">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -663,6 +688,17 @@
       </ContextState>
       <ContextState
          contextName = "TextViewLayout.calculateLayout() -&gt; ():TextView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatMapContentView.update(with : Media, size : CGSize, account : Account, parent : Message?, table : TableView?, parameters : ChatMediaLayoutParameters?) -&gt; ():ChatMapContentView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "updated">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #4).(closure #1):MediaBox.swift">
       </ContextState>
       <ContextState
          contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1):ChatListController.swift">
@@ -790,9 +826,6 @@
       </ContextState>
       <ContextState
          contextName = "ChatRowView.mouseDown(with : NSEvent) -&gt; ():ChatRowView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "TableView.moveItem(from : Int, to : Int, changeItem : TableRowItem?, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
          contextName = "static ChatRowItem.item(from : ChatHistoryEntry, with : Account) -&gt; ChatRowItem:ChatRowItem.swift">

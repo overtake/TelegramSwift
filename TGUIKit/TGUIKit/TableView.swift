@@ -313,7 +313,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let before = item.height
             let updated = item.makeSize(tableView.frame.width)
             let after = item.height
-            if before != after && updated {
+            if (before != after && updated) || item.instantlyResize {
                 reloadData(row: i, animated: false)
                 noteHeightOfRow(i, false)
             }
@@ -967,9 +967,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var inserted:[TableRowItem] = []
         var removed:[TableRowItem] = []
-        
-        var rd:Int = 0
-        
+                
         for rdx in transition.deleted.reversed() {
             let effect:NSTableViewAnimationOptions
             if case let .none(interface) = transition.state, interface != nil {
@@ -978,7 +976,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 effect = transition.animated ? .effectFade : .none
             }
             self.remove(at: rdx, redraw: true, animation:effect)
-            rd+=1
         }
         
         NSAnimationContext.current().duration = transition.animated ? 0.2 : 0.0
