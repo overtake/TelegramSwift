@@ -121,6 +121,21 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    public var isInsertionAnimated:Bool {
+        if let layer = layer?.presentation(), layer.animation(forKey: "position") != nil {
+            return true
+        }
+        return false
+    }
+    
+    public var rect:NSRect {
+        if let layer = layer?.presentation(), layer.animation(forKey: "position") != nil {
+            let rect = NSMakeRect(layer.position.x, layer.position.y, frame.width, frame.height)
+            return rect
+        }
+        return frame
+    }
+    
     open override func setFrameSize(_ newSize: NSSize) {
         let update = self.frame.size != newSize
         super.setFrameSize(newSize)

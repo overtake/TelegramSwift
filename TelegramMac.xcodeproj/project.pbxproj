@@ -10,6 +10,8 @@
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
 		C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */; };
+		C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */; };
+		C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */; };
 		C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB01DA996480042616A /* EBlockItem.swift */; };
 		C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB21DA9965B0042616A /* EBlockRowView.swift */; };
 		C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB41DAA4E460042616A /* EntertainmentPopover.swift */; };
@@ -281,6 +283,8 @@
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
 		C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
+		C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatEmptyPeerItem.swift; sourceTree = "<group>"; };
+		C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListNothingItem.swift; sourceTree = "<group>"; };
 		C20D5AB01DA996480042616A /* EBlockItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EBlockItem.swift; sourceTree = "<group>"; };
 		C20D5AB21DA9965B0042616A /* EBlockRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EBlockRowView.swift; sourceTree = "<group>"; };
 		C20D5AB41DAA4E460042616A /* EntertainmentPopover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntertainmentPopover.swift; sourceTree = "<group>"; };
@@ -658,6 +662,7 @@
 				C253E22D1DE33A7C0022A29F /* ChatMusicRowItem.swift */,
 				C2DF47E31DE84A67003AA6C0 /* ChatVoiceRowItem.swift */,
 				C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */,
+				C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -854,6 +859,7 @@
 				C25FC7FA1D86FEA90041E303 /* ChatListHoleRowItem.swift */,
 				C25FC7FC1D86FEE00041E303 /* ChatListHoleRowView.swift */,
 				C2A506761DF5664F00971A93 /* ForwardChatListController.swift */,
+				C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */,
 			);
 			name = chatlist;
 			sourceTree = "<group>";
@@ -1692,6 +1698,7 @@
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
 				C250B0271DB69694004E9FBE /* WPArticleLayout.swift in Sources */,
 				C2DF47C01DE79574003AA6C0 /* picture.c in Sources */,
+				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
 				C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */,
 				C253E2381DE398980022A29F /* NativeAudioPlayer.swift in Sources */,
 				C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */,
@@ -1705,6 +1712,7 @@
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
+				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
 				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,

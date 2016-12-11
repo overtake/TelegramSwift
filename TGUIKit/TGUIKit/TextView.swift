@@ -208,12 +208,10 @@ public final class TextViewLayout : Equatable {
     
     public func measure(width: CGFloat = 0) -> Void {
         
-        if constrainedWidth != width {
-            if width != 0 {
-                constrainedWidth = width
-            }
-            calculateLayout()
+        if width != 0 {
+            constrainedWidth = width
         }
+        calculateLayout()
 
     }
     

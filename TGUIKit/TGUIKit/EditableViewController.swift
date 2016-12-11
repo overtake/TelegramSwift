@@ -34,7 +34,7 @@ public enum ViewControllerState : Equatable {
 //    return false
 //}
 
-open class EditableViewController: ViewController {
+open class EditableViewController<T>: GenericViewController<T> where T: NSView {
     
     
     var editBar:TextButtonBarView = TextButtonBarView(text: "", style: navigationButtonStyle, alignment:.Right)
