@@ -58,13 +58,18 @@ public class TitleButton: ImageButton {
             text.string = stateText[.Normal]
         }
         
-        if let stateColor = stateColor[state] {
-            text.foregroundColor = stateColor.cgColor
-        } else if let stateColor = stateColor[.Normal] {
-            text.foregroundColor = stateColor.cgColor
+        if isEnabled {
+            if let stateColor = stateColor[state] {
+                text.foregroundColor = stateColor.cgColor
+            } else if let stateColor = stateColor[.Normal] {
+                text.foregroundColor = stateColor.cgColor
+            } else {
+                text.foregroundColor = style.foregroundColor.cgColor
+            }
         } else {
-            text.foregroundColor = style.foregroundColor.cgColor
+            text.foregroundColor = NSColor.grayText.cgColor
         }
+        
         
         if let stateFont = stateFont[state] {
             text.font = stateFont.fontName as! CFTypeRef

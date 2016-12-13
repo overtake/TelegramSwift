@@ -26,7 +26,13 @@ public enum ControlEvent {
 
 open class Control: View {
     
-    open var isEnabled:Bool = true
+    open var isEnabled:Bool = true {
+        didSet {
+            if isEnabled != oldValue {
+                apply(state: controlState)
+            }
+        }
+    }
     open var hideAnimated:Bool = false
     
     public var isSelected:Bool {
