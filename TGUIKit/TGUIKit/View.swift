@@ -102,9 +102,9 @@ open class View : NSView,CALayerDelegate {
         while (self.subviews.count > 0) {
             self.subviews[0].removeFromSuperview();
         }
- 
     }
     
+
     open override func layout() {
         super.layout()
         if let layout = customHandler.layout {
@@ -113,7 +113,8 @@ open class View : NSView,CALayerDelegate {
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-                
+        
+
         if let displayDelegate = displayDelegate {
             displayDelegate.draw(layer, in: ctx)
         } else {

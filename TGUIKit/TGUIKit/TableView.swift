@@ -17,23 +17,29 @@ public enum TableSeparator {
     case none;
 }
 
-
-
-public final class TableUpdateTransition {
-    public let inserted:[(Int,TableRowItem)]
-    public let updated:[(Int,TableRowItem)]
+public class UpdateTransition<T> {
+    public let inserted:[(Int,T)]
+    public let updated:[(Int,T)]
     public let deleted:[Int]
+    
+    public init(deleted:[Int], inserted:[(Int,T)], updated:[(Int,T)]) {
+        self.inserted = inserted
+        self.updated = updated
+        self.deleted = deleted
+    }
+}
+
+
+public final class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public let state:TableScrollState
     public let animated:Bool
     public let grouping:Bool
     
     public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true) {
-        self.inserted = inserted
-        self.updated = updated
-        self.deleted = deleted
         self.animated = animated
         self.state = state
         self.grouping = grouping
+        super.init(deleted: deleted, inserted: inserted, updated: updated)
     }
 }
 

@@ -100,7 +100,6 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         super.init(frame: frameRect)
         
         scroller = Scroller(frame: self.bounds)
-        
         self.wantsLayer = true;
 
         self.layer?.delegate = self

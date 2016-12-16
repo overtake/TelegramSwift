@@ -68,6 +68,7 @@
 		C253A9761D9430A900CDC850 /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9751D9430A900CDC850 /* ImageView.swift */; };
 		C25FC7F71D86DC370041E303 /* TGClipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25FC7F61D86DC370041E303 /* TGClipView.swift */; };
 		C25FC7F91D86E53A0041E303 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C25FC7F81D86E53A0041E303 /* CoreVideo.framework */; };
+		C26505901E02EBEE001954DC /* MagnifyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C265058F1E02EBEE001954DC /* MagnifyView.swift */; };
 		C28BAB0D1DF8550E0027CE3A /* WindowSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB0C1DF8550E0027CE3A /* WindowSaver.swift */; };
 		C291ED991DB35BC5008C6B2A /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED981DB35BC5008C6B2A /* Window.swift */; };
 		C291ED9B1DB361ED008C6B2A /* KeyboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */; };
@@ -156,6 +157,7 @@
 		C253A9751D9430A900CDC850 /* ImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageView.swift; sourceTree = "<group>"; };
 		C25FC7F61D86DC370041E303 /* TGClipView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGClipView.swift; sourceTree = "<group>"; };
 		C25FC7F81D86E53A0041E303 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		C265058F1E02EBEE001954DC /* MagnifyView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MagnifyView.swift; sourceTree = "<group>"; };
 		C27624881D95AD7300FE5B2B /* ObjcExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ObjcExtension.framework; path = ../ObjcExtension/build/Debug/ObjcExtension.framework; sourceTree = "<group>"; };
 		C28BAB0C1DF8550E0027CE3A /* WindowSaver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowSaver.swift; sourceTree = "<group>"; };
 		C291ED981DB35BC5008C6B2A /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
@@ -436,6 +438,7 @@
 				C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */,
 				C2167E5C1DC2534300F98E03 /* SelectingControl.swift */,
 				C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */,
+				C265058F1E02EBEE001954DC /* MagnifyView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -592,6 +595,7 @@
 				C2CBCABD1D814D4B00142EC0 /* System.swift in Sources */,
 				C2303E7F1D99BEAE00098E12 /* OverlayControl.swift in Sources */,
 				C29B5F471DC8CA2B00D13E65 /* NavigationModalView.swift in Sources */,
+				C26505901E02EBEE001954DC /* MagnifyView.swift in Sources */,
 				C2B1A12C1DA50CC600ACB1DD /* TitleButton.swift in Sources */,
 				C291ED9B1DB361ED008C6B2A /* KeyboardUtils.swift in Sources */,
 				C29B5F491DC8CA3C00D13E65 /* NavigationModalAction.swift in Sources */,

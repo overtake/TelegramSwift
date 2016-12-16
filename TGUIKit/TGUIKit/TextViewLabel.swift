@@ -21,7 +21,7 @@ open class TextViewLabel: View {
     public weak var delegate:TextDelegate?
     
     var needSizeToFit:Bool = false
-    
+    public var linesCount:Int = 1
     public var autosize:Bool = false
     public var inset:EdgeInsets = EdgeInsets()
     
@@ -64,20 +64,21 @@ open class TextViewLabel: View {
     
     func update(attr:NSAttributedString?, size:NSSize) -> Void {
         if let attr = attr {
-            text = TextNode.layoutText(node)(attr, nil, 1, .end, size, nil,false, .left)
+            text = TextNode.layoutText(node)(attr, nil, linesCount, .end, size, nil,false, .left)
         } else {
             text = nil
         }
         self.layer?.setNeedsDisplay()
     }
-
-    open override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
+    
+    open override func layout() {
+        super.layout()
         if autosize {
-            text = TextNode.layoutText(node)(self.attributedString, nil, 1, .end, NSMakeSize(newSize.width - inset.left - inset.right, newSize.height), nil,false, .left)
+            text = TextNode.layoutText(node)(self.attributedString, nil, linesCount, .end, NSMakeSize(frame.width - inset.left - inset.right, frame.height), nil,false, .left)
             self.setNeedsDisplay()
         }
     }
+
     
     override open var frame: CGRect {
         get {

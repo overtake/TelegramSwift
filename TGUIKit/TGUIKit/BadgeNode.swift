@@ -8,7 +8,6 @@
 
 import Cocoa
 
-
 public class BadgeNode: Node {
     private var textLayout:(TextNodeLayout,()->TextNode)
     public var fillColor:NSColor {

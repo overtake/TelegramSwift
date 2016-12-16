@@ -53,8 +53,8 @@ public final class TextViewLayout : Equatable {
     public var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
     public var selectedRange:TextSelectedRange = TextSelectedRange()
-    public var penFlush:CGFloat = 0.0
-    
+    public let penFlush:CGFloat
+    public var insets:NSSize = NSZeroSize
     fileprivate var lines:[TextViewLine] = []
     
     public var maximumNumberOfLines:Int32
@@ -566,7 +566,7 @@ public class TextView: Control {
         
         self.set(selectedRange: NSMakeRange(NSNotFound, 0))
         if let layout = layout {
-            self.frame = NSMakeRect(origin.x, origin.y, layout.layoutSize.width, layout.layoutSize.height)
+            self.frame = NSMakeRect(origin.x, origin.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
         }
         self.setNeedsDisplayLayer()
     }

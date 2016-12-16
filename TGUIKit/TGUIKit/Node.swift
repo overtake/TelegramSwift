@@ -15,13 +15,15 @@ open class Node: NSObject, ViewDisplayDelegate {
     
     
     open var backgroundColor:NSColor? {
-        return self.view?.backgroundColor
+        return self.view?.background
     }
     
     private let _strongView:View?
     open weak var view:View? {
         didSet {
-            self.view?.displayDelegate = self
+            if let view = view {
+                view.displayDelegate = self
+            }
         }
     }
     
@@ -54,8 +56,10 @@ open class Node: NSObject, ViewDisplayDelegate {
     
 
     open func setNeedDisplay() -> Void {
-        self.view?.displayDelegate = self
-        self.view?.setNeedsDisplay()
+        if let view = view {
+            view.displayDelegate = self
+            view.setNeedsDisplay()
+        }
     }
     
     public var measuredWidth:CGFloat = 0
@@ -80,3 +84,4 @@ open class Node: NSObject, ViewDisplayDelegate {
     }
     
 }
+
