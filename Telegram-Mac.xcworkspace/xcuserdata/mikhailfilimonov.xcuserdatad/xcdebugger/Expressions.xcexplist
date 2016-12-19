@@ -219,6 +219,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "MGalleryPhotoItem.init(Account, ChatHistoryEntry, CGSize) -&gt; MGalleryPhotoItem:MGalleryPhotoItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entry.message!.media">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TGTableView.remove(item : TGTableRowItem, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
          <PersistentStrings>
             <PersistentString
@@ -524,6 +532,14 @@
             </PersistentString>
             <PersistentString
                value = "inset">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ExternalVideoLoader.(fetchYoutubeContent(for : String, image : TelegramMediaImage) -&gt; Signal&lt;ExternalVideo?, ()&gt;).(closure #1).(closure #1).(closure #1).(closure #1):ExternalVideoLoader.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "video.streamURLs">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

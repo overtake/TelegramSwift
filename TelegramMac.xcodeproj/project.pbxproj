@@ -110,6 +110,17 @@
 		C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E021DA690F400588C14 /* GalleryPagerNode.swift */; };
 		C2412E051DA6AB6300588C14 /* GalleryMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E041DA6AB6300588C14 /* GalleryMediaItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
+		C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */; };
+		C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */; };
+		C24DABA21E083185005EE404 /* YTVimeoExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB9A1E083184005EE404 /* YTVimeoExtractor.m */; };
+		C24DABA31E083185005EE404 /* YTVimeoExtractorOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB9C1E083184005EE404 /* YTVimeoExtractorOperation.m */; };
+		C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB9E1E083184005EE404 /* YTVimeoURLParser.m */; };
+		C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DABA01E083184005EE404 /* YTVimeoVideo.m */; };
+		C24DABBD1E0834B7005EE404 /* XCDYouTubeClient.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DABAD1E0834B7005EE404 /* XCDYouTubeClient.m */; };
+		C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DABAF1E0834B7005EE404 /* XCDYouTubeLogger.m */; };
+		C24DABBF1E0834B7005EE404 /* XCDYouTubePlayerScript.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DABB31E0834B7005EE404 /* XCDYouTubePlayerScript.m */; };
+		C24DABC01E0834B7005EE404 /* XCDYouTubeVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DABB51E0834B7005EE404 /* XCDYouTubeVideo.m */; };
+		C24DABC11E0834B7005EE404 /* XCDYouTubeVideoOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DABB81E0834B7005EE404 /* XCDYouTubeVideoOperation.m */; };
 		C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250B0191DB66B44004E9FBE /* InAppLinks.swift */; };
 		C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */ = {isa = PBXBuildFile; fileRef = C250B01B1DB670B4004E9FBE /* url-schemes.txt */; };
 		C250B01F1DB67B42004E9FBE /* WPLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250B01E1DB67B42004E9FBE /* WPLayout.swift */; };
@@ -187,6 +198,9 @@
 		C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */; };
 		C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF891D8E9F94001DBB59 /* ChatInteractiveContentView.swift */; };
 		C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF8B1D8EA7F3001DBB59 /* ChatFileContentView.swift */; };
+		C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */ = {isa = PBXBuildFile; fileRef = C29A65001E0837A70071BCEF /* XCDYouTubeVideoWebpage.m */; };
+		C29A65031E08396F0071BCEF /* MGalleryExternalVideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29A65021E08396F0071BCEF /* MGalleryExternalVideoItem.swift */; };
+		C29A65051E0845B80071BCEF /* ExternalVideoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29A65041E0845B80071BCEF /* ExternalVideoLoader.swift */; };
 		C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F3D1DC74DB400D13E65 /* SenderController.swift */; };
 		C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F401DC7859800D13E65 /* InputContextHelper.swift */; };
 		C29B5F431DC7970400D13E65 /* sent.caf in Resources */ = {isa = PBXBuildFile; fileRef = C29B5F421DC794C700D13E65 /* sent.caf */; };
@@ -392,6 +406,31 @@
 		C2412E021DA690F400588C14 /* GalleryPagerNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPagerNode.swift; sourceTree = "<group>"; };
 		C2412E041DA6AB6300588C14 /* GalleryMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryMediaItem.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
+		C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryVideoItem.swift; sourceTree = "<group>"; };
+		C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		C24DAB981E083184005EE404 /* YTVimeoError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YTVimeoError.h; sourceTree = "<group>"; };
+		C24DAB991E083184005EE404 /* YTVimeoExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YTVimeoExtractor.h; sourceTree = "<group>"; };
+		C24DAB9A1E083184005EE404 /* YTVimeoExtractor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YTVimeoExtractor.m; sourceTree = "<group>"; };
+		C24DAB9B1E083184005EE404 /* YTVimeoExtractorOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YTVimeoExtractorOperation.h; sourceTree = "<group>"; };
+		C24DAB9C1E083184005EE404 /* YTVimeoExtractorOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YTVimeoExtractorOperation.m; sourceTree = "<group>"; };
+		C24DAB9D1E083184005EE404 /* YTVimeoURLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YTVimeoURLParser.h; sourceTree = "<group>"; };
+		C24DAB9E1E083184005EE404 /* YTVimeoURLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YTVimeoURLParser.m; sourceTree = "<group>"; };
+		C24DAB9F1E083184005EE404 /* YTVimeoVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YTVimeoVideo.h; sourceTree = "<group>"; };
+		C24DABA01E083184005EE404 /* YTVimeoVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YTVimeoVideo.m; sourceTree = "<group>"; };
+		C24DABA11E083185005EE404 /* YTVimeoVideo+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "YTVimeoVideo+Private.h"; sourceTree = "<group>"; };
+		C24DABAC1E0834B7005EE404 /* XCDYouTubeClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeClient.h; sourceTree = "<group>"; };
+		C24DABAD1E0834B7005EE404 /* XCDYouTubeClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCDYouTubeClient.m; sourceTree = "<group>"; };
+		C24DABAE1E0834B7005EE404 /* XCDYouTubeLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeLogger.h; sourceTree = "<group>"; };
+		C24DABAF1E0834B7005EE404 /* XCDYouTubeLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCDYouTubeLogger.m; sourceTree = "<group>"; };
+		C24DABB01E0834B7005EE404 /* XCDYouTubeLogger+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "XCDYouTubeLogger+Private.h"; sourceTree = "<group>"; };
+		C24DABB11E0834B7005EE404 /* XCDYouTubeOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeOperation.h; sourceTree = "<group>"; };
+		C24DABB21E0834B7005EE404 /* XCDYouTubePlayerScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubePlayerScript.h; sourceTree = "<group>"; };
+		C24DABB31E0834B7005EE404 /* XCDYouTubePlayerScript.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCDYouTubePlayerScript.m; sourceTree = "<group>"; };
+		C24DABB41E0834B7005EE404 /* XCDYouTubeVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeVideo.h; sourceTree = "<group>"; };
+		C24DABB51E0834B7005EE404 /* XCDYouTubeVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCDYouTubeVideo.m; sourceTree = "<group>"; };
+		C24DABB61E0834B7005EE404 /* XCDYouTubeVideo+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "XCDYouTubeVideo+Private.h"; sourceTree = "<group>"; };
+		C24DABB71E0834B7005EE404 /* XCDYouTubeVideoOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeVideoOperation.h; sourceTree = "<group>"; };
+		C24DABB81E0834B7005EE404 /* XCDYouTubeVideoOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCDYouTubeVideoOperation.m; sourceTree = "<group>"; };
 		C250B0191DB66B44004E9FBE /* InAppLinks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InAppLinks.swift; sourceTree = "<group>"; };
 		C250B01B1DB670B4004E9FBE /* url-schemes.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "url-schemes.txt"; sourceTree = "<group>"; };
 		C250B01E1DB67B42004E9FBE /* WPLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WPLayout.swift; sourceTree = "<group>"; };
@@ -479,6 +518,11 @@
 		C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaContentView.swift; sourceTree = "<group>"; };
 		C296AF891D8E9F94001DBB59 /* ChatInteractiveContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInteractiveContentView.swift; sourceTree = "<group>"; };
 		C296AF8B1D8EA7F3001DBB59 /* ChatFileContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatFileContentView.swift; sourceTree = "<group>"; };
+		C29A64FE1E0837860071BCEF /* XCDYouTubeError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeError.h; sourceTree = "<group>"; };
+		C29A64FF1E0837A70071BCEF /* XCDYouTubeVideoWebpage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCDYouTubeVideoWebpage.h; sourceTree = "<group>"; };
+		C29A65001E0837A70071BCEF /* XCDYouTubeVideoWebpage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCDYouTubeVideoWebpage.m; sourceTree = "<group>"; };
+		C29A65021E08396F0071BCEF /* MGalleryExternalVideoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryExternalVideoItem.swift; sourceTree = "<group>"; };
+		C29A65041E0845B80071BCEF /* ExternalVideoLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalVideoLoader.swift; sourceTree = "<group>"; };
 		C29B5F3D1DC74DB400D13E65 /* SenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SenderController.swift; sourceTree = "<group>"; };
 		C29B5F401DC7859800D13E65 /* InputContextHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputContextHelper.swift; sourceTree = "<group>"; };
 		C29B5F421DC794C700D13E65 /* sent.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sent.caf; sourceTree = "<group>"; };
@@ -579,6 +623,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */,
 				C2DF47D51DE82524003AA6C0 /* libc++.1.tbd in Frameworks */,
 				C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */,
 				C2FBC1DF1DC61B580063A23B /* MtProtoKitMac.framework in Frameworks */,
@@ -964,6 +1009,63 @@
 			name = bot;
 			sourceTree = "<group>";
 		};
+		C24DAB951E082971005EE404 /* youtube */ = {
+			isa = PBXGroup;
+			children = (
+				C29A64FF1E0837A70071BCEF /* XCDYouTubeVideoWebpage.h */,
+				C29A65001E0837A70071BCEF /* XCDYouTubeVideoWebpage.m */,
+				C29A64FE1E0837860071BCEF /* XCDYouTubeError.h */,
+				C24DABAC1E0834B7005EE404 /* XCDYouTubeClient.h */,
+				C24DABAD1E0834B7005EE404 /* XCDYouTubeClient.m */,
+				C24DABAE1E0834B7005EE404 /* XCDYouTubeLogger.h */,
+				C24DABAF1E0834B7005EE404 /* XCDYouTubeLogger.m */,
+				C24DABB01E0834B7005EE404 /* XCDYouTubeLogger+Private.h */,
+				C24DABB11E0834B7005EE404 /* XCDYouTubeOperation.h */,
+				C24DABB21E0834B7005EE404 /* XCDYouTubePlayerScript.h */,
+				C24DABB31E0834B7005EE404 /* XCDYouTubePlayerScript.m */,
+				C24DABB41E0834B7005EE404 /* XCDYouTubeVideo.h */,
+				C24DABB51E0834B7005EE404 /* XCDYouTubeVideo.m */,
+				C24DABB61E0834B7005EE404 /* XCDYouTubeVideo+Private.h */,
+				C24DABB71E0834B7005EE404 /* XCDYouTubeVideoOperation.h */,
+				C24DABB81E0834B7005EE404 /* XCDYouTubeVideoOperation.m */,
+			);
+			path = youtube;
+			sourceTree = "<group>";
+		};
+		C24DAB961E082EB4005EE404 /* vimeo */ = {
+			isa = PBXGroup;
+			children = (
+				C24DAB981E083184005EE404 /* YTVimeoError.h */,
+				C24DAB991E083184005EE404 /* YTVimeoExtractor.h */,
+				C24DAB9A1E083184005EE404 /* YTVimeoExtractor.m */,
+				C24DAB9B1E083184005EE404 /* YTVimeoExtractorOperation.h */,
+				C24DAB9C1E083184005EE404 /* YTVimeoExtractorOperation.m */,
+				C24DAB9D1E083184005EE404 /* YTVimeoURLParser.h */,
+				C24DAB9E1E083184005EE404 /* YTVimeoURLParser.m */,
+				C24DAB9F1E083184005EE404 /* YTVimeoVideo.h */,
+				C24DABA01E083184005EE404 /* YTVimeoVideo.m */,
+				C24DABA11E083185005EE404 /* YTVimeoVideo+Private.h */,
+			);
+			path = vimeo;
+			sourceTree = "<group>";
+		};
+		C24DAB971E082FDF005EE404 /* objc */ = {
+			isa = PBXGroup;
+			children = (
+				C24DAB961E082EB4005EE404 /* vimeo */,
+				C24DAB951E082971005EE404 /* youtube */,
+				C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */,
+				C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */,
+				C25253251DF03F5700ADBC98 /* TGOpusAudioRecorder.h */,
+				C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */,
+				C2DF47CC1DE79751003AA6C0 /* ATQueue.h */,
+				C2DF47CD1DE79751003AA6C0 /* ATQueue.m */,
+				C2DF47C91DE79719003AA6C0 /* TGDataItem.h */,
+				C2DF47CA1DE79719003AA6C0 /* TGDataItem.m */,
+			);
+			path = objc;
+			sourceTree = "<group>";
+		};
 		C250B01D1DB67934004E9FBE /* webpages */ = {
 			isa = PBXGroup;
 			children = (
@@ -1028,14 +1130,7 @@
 		C253A9531D9164CE00CDC850 /* thrid-party */ = {
 			isa = PBXGroup;
 			children = (
-				C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */,
-				C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */,
-				C25253251DF03F5700ADBC98 /* TGOpusAudioRecorder.h */,
-				C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */,
-				C2DF47CC1DE79751003AA6C0 /* ATQueue.h */,
-				C2DF47CD1DE79751003AA6C0 /* ATQueue.m */,
-				C2DF47C91DE79719003AA6C0 /* TGDataItem.h */,
-				C2DF47CA1DE79719003AA6C0 /* TGDataItem.m */,
+				C24DAB971E082FDF005EE404 /* objc */,
 				C2DF47991DE79574003AA6C0 /* ogg */,
 				C2DF479F1DE79574003AA6C0 /* opus */,
 				C2DF47A81DE79574003AA6C0 /* opusenc */,
@@ -1043,6 +1138,7 @@
 				C253A9541D9165A400CDC850 /* libwebp */,
 			);
 			name = "thrid-party";
+			path = "../thrid-party";
 			sourceTree = "<group>";
 		};
 		C253A9541D9165A400CDC850 /* libwebp */ = {
@@ -1107,6 +1203,8 @@
 				C26505941E0301B4001954DC /* MGalleryItem.swift */,
 				C26505921E0301A5001954DC /* MGalleryPhotoItem.swift */,
 				C26505961E041B90001954DC /* MGalleryGIFItem.swift */,
+				C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */,
+				C29A65021E08396F0071BCEF /* MGalleryExternalVideoItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -1394,6 +1492,7 @@
 				C2A71CE01DDB18FF00C69F73 /* ThumbUtils.swift */,
 				C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */,
 				C2A506781DF59C9700971A93 /* PicturePicker.swift */,
+				C29A65041E0845B80071BCEF /* ExternalVideoLoader.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -1588,6 +1687,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */,
 				C2DF47D41DE82524003AA6C0 /* libc++.1.tbd */,
 				C2DF47971DE79540003AA6C0 /* libopus.a */,
 				C2203E9F1DDE040F001E6AB6 /* libcommonCrypto.tbd */,
@@ -1731,6 +1831,7 @@
 				C26A71971DC9F78B00F69385 /* ChatAccessoryNode.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
+				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
@@ -1757,6 +1858,7 @@
 				C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */,
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
+				C24DABC11E0834B7005EE404 /* XCDYouTubeVideoOperation.m in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
@@ -1766,7 +1868,10 @@
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
+				C29A65031E08396F0071BCEF /* MGalleryExternalVideoItem.swift in Sources */,
+				C24DABBF1E0834B7005EE404 /* XCDYouTubePlayerScript.m in Sources */,
 				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
+				C24DABC01E0834B7005EE404 /* XCDYouTubeVideo.m in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
@@ -1776,6 +1881,7 @@
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				C2271F3A1DB4D0540045E719 /* EStickersViewController.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
+				C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
@@ -1800,6 +1906,7 @@
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
+				C24DABBD1E0834B7005EE404 /* XCDYouTubeClient.m in Sources */,
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				C2844ACE1DA905BA009308DC /* InfoViewController.swift in Sources */,
 				C230B91D1DD4B84A0057F596 /* ShareContactNavigationAction.swift in Sources */,
@@ -1814,13 +1921,16 @@
 				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
 				C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */,
 				C2DF47C41DE79574003AA6C0 /* opusfile.c in Sources */,
+				C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */,
 				C2DF47C21DE79574003AA6C0 /* info.c in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */,
+				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */,
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
 				C2DF47CE1DE79751003AA6C0 /* ATQueue.m in Sources */,
+				C24DABA21E083185005EE404 /* YTVimeoExtractor.m in Sources */,
 				C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */,
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
 				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
@@ -1859,6 +1969,7 @@
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
 				C226743A1DC1273E000BA9ED /* PeerMediaGridController.swift in Sources */,
+				C24DABA31E083185005EE404 /* YTVimeoExtractorOperation.m in Sources */,
 				C2844AD21DA906AD009308DC /* InfoHeaderItem.swift in Sources */,
 				C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
@@ -1866,6 +1977,7 @@
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
+				C29A65051E0845B80071BCEF /* ExternalVideoLoader.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
@@ -1875,6 +1987,7 @@
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
 				C230B9111DD3866A0057F596 /* ComposeActions.swift in Sources */,
+				C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */,
 				C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */,
 				C253E22E1DE33A7C0022A29F /* ChatMusicRowItem.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
