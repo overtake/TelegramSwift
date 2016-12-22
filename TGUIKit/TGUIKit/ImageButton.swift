@@ -62,6 +62,8 @@ open class ImageButton: Button {
         }
     }
     
+    
+    
     override public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) {
         super.sizeToFit(addition)
         

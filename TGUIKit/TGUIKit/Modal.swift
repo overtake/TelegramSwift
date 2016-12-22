@@ -58,11 +58,15 @@ public class ModalInteractions {
     let cancel:(()->Void)?
     let acceptTitle:String
     let cancelTitle:String?
-    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil)  {
+    let drawBorder:Bool
+    let height:CGFloat
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50)  {
+        self.drawBorder = drawBorder
         self.accept = accept
         self.cancel = cancel
         self.acceptTitle = acceptTitle
         self.cancelTitle = cancelTitle
+        self.height = height
     }
     
 }
@@ -72,6 +76,7 @@ private class ModalInteractionsContainer : View {
     let cancelView:TitleButton?
     let modal:Modal
     let interactions:ModalInteractions
+    let borderView:View?
     init(interactions:ModalInteractions, modal:Modal) {
         self.modal = modal
         self.interactions = interactions
@@ -87,6 +92,13 @@ private class ModalInteractionsContainer : View {
             
         } else {
             cancelView = nil
+        }
+        
+        if interactions.drawBorder {
+            borderView = View()
+            borderView?.backgroundColor = .border
+        } else {
+            borderView = nil
         }
         
         super.init()
@@ -115,6 +127,9 @@ private class ModalInteractionsContainer : View {
         if let cancelView = cancelView {
             addSubview(cancelView)
         }
+        if let borderView = borderView {
+            addSubview(borderView)
+        }
 
     }
     
@@ -133,7 +148,7 @@ private class ModalInteractionsContainer : View {
         if let cancelView = cancelView {
             cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
         }
-        
+        borderView?.frame = NSMakeRect(0, 0, frame.width, .borderSize)
     }
     
     
@@ -157,11 +172,9 @@ public class Modal: NSObject {
         
         super.init()
 
-        
-        
         if let interactions = controller.modalInteractions {
             interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
-            interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, 60.0)
+            interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
         }
        
         
@@ -201,7 +214,7 @@ public class Modal: NSObject {
         if let controller = controller {
             var containerRect = controller.bounds
             if let interactions = controller.modalInteractions {
-                containerRect.size.height += 60.0
+                containerRect.size.height += interactions.height
             }
             return containerRect
         }

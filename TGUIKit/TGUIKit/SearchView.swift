@@ -76,7 +76,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         input.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
         input.backgroundColor = NSColor.clear
         input.delegate = self
-        
+        input.isRichText = false
         //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
         
         input.font = .normal(.text)

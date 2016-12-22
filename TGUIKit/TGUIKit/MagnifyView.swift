@@ -93,10 +93,10 @@ public class MagnifyView : NSView {
         self.magnify = min(max(minMagnify,self.magnify),maxMagnify)
         let point = magnifyOrigin( for: location, from:contentView.frame, factor: magnify)
         
-        contentView.change(pos: point, animated: animated)
-        contentView.change(size: magnifiedSize, animated: animated)
-       // let content = animated ? contentView.animator() : contentView
-       // content.frame = NSMakeRect(point.x, point.y, magnifiedSize.width, magnifiedSize.height)
+        //contentView.change(pos: point, animated: animated)
+       // contentView.change(size: magnifiedSize, animated: animated)
+        let content = animated ? contentView.animator() : contentView
+        content.frame = NSMakeRect(point.x, point.y, magnifiedSize.width, magnifiedSize.height)
     }
     
     func magnifyOrigin(for location:NSPoint, from past:NSRect, factor:CGFloat) -> NSPoint {
