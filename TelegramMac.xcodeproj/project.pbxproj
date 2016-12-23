@@ -211,6 +211,7 @@
 		C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */; };
 		C2A12FDD1E0ACB4B00EC2239 /* LocalNotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FDC1E0ACB4B00EC2239 /* LocalNotificationsManager.swift */; };
 		C2A12FE41E0AFD8500EC2239 /* TypingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FE31E0AFD8500EC2239 /* TypingManager.swift */; };
+		C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FE51E0C503900EC2239 /* ChatContactRowItem.swift */; };
 		C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506741DF438B900971A93 /* AudioWaveformView.swift */; };
 		C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506761DF5664F00971A93 /* ForwardChatListController.swift */; };
 		C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506781DF59C9700971A93 /* PicturePicker.swift */; };
@@ -536,6 +537,7 @@
 		C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPageController.swift; sourceTree = "<group>"; };
 		C2A12FDC1E0ACB4B00EC2239 /* LocalNotificationsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalNotificationsManager.swift; sourceTree = "<group>"; };
 		C2A12FE31E0AFD8500EC2239 /* TypingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypingManager.swift; sourceTree = "<group>"; };
+		C2A12FE51E0C503900EC2239 /* ChatContactRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatContactRowItem.swift; sourceTree = "<group>"; };
 		C2A506741DF438B900971A93 /* AudioWaveformView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioWaveformView.swift; sourceTree = "<group>"; };
 		C2A506761DF5664F00971A93 /* ForwardChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardChatListController.swift; sourceTree = "<group>"; };
 		C2A506781DF59C9700971A93 /* PicturePicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PicturePicker.swift; sourceTree = "<group>"; };
@@ -726,6 +728,7 @@
 				C2DF47E31DE84A67003AA6C0 /* ChatVoiceRowItem.swift */,
 				C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */,
 				C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */,
+				C2A12FE51E0C503900EC2239 /* ChatContactRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -1855,6 +1858,7 @@
 				C2DEC87F1DECB8C800F6544A /* ApplicationContext.swift in Sources */,
 				C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
+				C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */,
 				C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,

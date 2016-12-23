@@ -94,6 +94,14 @@ public extension NSColor {
         }
     }
     
+    public static var grayForeground:NSColor  {
+        get {
+            return colorFromRGB(rgbValue: 0xe4e4e4)
+        }
+    }
+    
+    
+    
     public static var grayIcon:NSColor  {
         get {
             return colorFromRGB(rgbValue: 0x9e9e9e)

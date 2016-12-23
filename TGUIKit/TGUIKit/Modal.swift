@@ -190,7 +190,9 @@ public class Modal: NSObject {
         background.addSubview(container)
         
         window.set(escape: {[weak self] () -> KeyHandlerResult in
-            self?.close()
+            if controller.escapeKeyAction() == .rejected {
+                self?.close()
+            }
             return .invoked
         }, with: self, priority: .high)
         

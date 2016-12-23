@@ -46,18 +46,25 @@ public class ControllerToaster {
     let text:TextViewLayout
     var view:ControllerToasterView?
     let disposable:MetaDisposable = MetaDisposable()
-    public init(text:NSAttributedString) {
+    private let height:CGFloat
+    public init(text:NSAttributedString, height:CGFloat = 30.0) {
         self.text = TextViewLayout(text, maximumNumberOfLines: 1, truncationType: .middle)
+        self.height = height
+    }
+    
+    public init(text:String, height:CGFloat = 30.0) {
+        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: .textColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+        self.height = height
     }
     
     func show(for controller:ViewController, timeout:Double, animated:Bool) {
         assert(view == nil)
-        view = ControllerToasterView(frame: NSMakeRect(0, 0, controller.frame.width, 30))
+        view = ControllerToasterView(frame: NSMakeRect(0, 0, controller.frame.width, height))
         view?.update(with: self)
         controller.addSubview(view!)
         
         if animated {
-            view?.layer?.animatePosition(from: NSMakePoint(0, -30), to: NSZeroPoint, duration: 0.2)
+            view?.layer?.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2)
         }
         
         let signal:Signal<Void,Void> = .single() |> delay(timeout, queue: Queue.mainQueue())
@@ -68,7 +75,7 @@ public class ControllerToaster {
     
     func hide(_ animated:Bool) {
         if animated {
-            view?.layer?.animatePosition(from: NSZeroPoint, to: NSMakePoint(0, -30), duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
+            view?.layer?.animatePosition(from: NSZeroPoint, to: NSMakePoint(0, -height), duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
                 self?.view?.removeFromSuperview()
                 self?.view = nil
             })
@@ -80,6 +87,10 @@ public class ControllerToaster {
     }
     
     deinit {
+        let view = self.view
+        view?.layer?.animatePosition(from: NSZeroPoint, to: NSMakePoint(0, -height), duration: 0.2, removeOnCompletion:false, completion:{ (completed) in
+            view?.removeFromSuperview()
+        })
         disposable.dispose()
     }
     

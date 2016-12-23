@@ -49,21 +49,24 @@ private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
     
-    public var attributedString:NSAttributedString
-    public var constrainedWidth:CGFloat = 0
+    
+    public fileprivate(set) var attributedString:NSAttributedString
+    public fileprivate(set) var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
     public var selectedRange:TextSelectedRange = TextSelectedRange()
-    public let penFlush:CGFloat
+    public var penFlush:CGFloat
     public var insets:NSSize = NSZeroSize
     fileprivate var lines:[TextViewLine] = []
     
-    public var maximumNumberOfLines:Int32
-    public var truncationType:CTLineTruncationType
+    public let maximumNumberOfLines:Int32
+    public let truncationType:CTLineTruncationType
     public var cutout:TextViewCutout?
+    
+    public fileprivate(set) var lineSpacing:CGFloat?
     
     public private(set) var layoutSize:NSSize = NSZeroSize
     
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left) {
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
@@ -78,6 +81,7 @@ public final class TextViewLayout : Equatable {
         default:
             penFlush = 0.0
         }
+        self.lineSpacing = lineSpacing
     }
     
     func calculateLayout() -> Void {
@@ -97,8 +101,13 @@ public final class TextViewLayout : Equatable {
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
         let fontLineHeight = floor(fontAscent + fontDescent)
-        let fontLineSpacing = floor(fontLineHeight * 0.12)
         
+        let fontLineSpacing:CGFloat
+        if let lineSpacing = lineSpacing {
+            fontLineSpacing = lineSpacing
+        } else {
+            fontLineSpacing = floor(fontLineHeight * 0.12)
+        }
         
         var maybeTypesetter: CTTypesetter?
         maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)

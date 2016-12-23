@@ -49,8 +49,8 @@ open class TableRowItem: NSObject,Identifiable {
     
     public var index:Int {
         get {
-            if let table = table {
-                return table.index(of:self)!;
+            if let table = table, let index = table.index(of:self)  {
+                return index
             } else {
                 return -1
             }

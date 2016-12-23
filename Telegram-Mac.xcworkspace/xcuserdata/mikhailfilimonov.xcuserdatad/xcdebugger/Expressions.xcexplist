@@ -304,7 +304,18 @@
          contextName = "Window.sendEvent(NSEvent) -&gt; ():Window.swift">
       </ContextState>
       <ContextState
+         contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #4):ShareModalController.swift">
+      </ContextState>
+      <ContextState
          contextName = "TableView.apply(transition : TableTransition) -&gt; ():TableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #2):ShareModalController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "transition.entries">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "GridTableView.refill() -&gt; [GridRowItem]:GridTableView.swift">
@@ -455,6 +466,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "SearchController.(loadView() -&gt; ()).(closure #3):SearchController.swift">
+      </ContextState>
+      <ContextState
          contextName = "(chatMessageSticker(account : Account, file : TelegramMediaFile, size : CGSize) -&gt; Signal&lt;CGImage?, ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
          <PersistentStrings>
             <PersistentString
@@ -513,13 +527,21 @@
          contextName = "ChatListController.(loadView() -&gt; ()).(closure #9):ChatListController.swift">
       </ContextState>
       <ContextState
+         contextName = "ExternalVideoLoader.(fetchYoutubeContent(for : String, image : TelegramMediaImage) -&gt; Signal&lt;ExternalVideo?, ()&gt;).(closure #1).(closure #1).(closure #1).(closure #1):ExternalVideoLoader.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "video.streamURLs">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "GridRowItem.sizeToFit() -&gt; ():GridRowItem.swift">
          <PersistentStrings>
             <PersistentString
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -531,15 +553,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ExternalVideoLoader.(fetchYoutubeContent(for : String, image : TelegramMediaImage) -&gt; Signal&lt;ExternalVideo?, ()&gt;).(closure #1).(closure #1).(closure #1).(closure #1):ExternalVideoLoader.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "video.streamURLs">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -976,6 +990,9 @@
       </ContextState>
       <ContextState
          contextName = "Node.loadIfNeeded() -&gt; ():Node.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SearchController.(loadView() -&gt; ()).(closure #1).(closure #3):SearchController.swift">
       </ContextState>
       <ContextState
          contextName = "NavigationHeader.navigation.didset:NavigationViewController.swift">

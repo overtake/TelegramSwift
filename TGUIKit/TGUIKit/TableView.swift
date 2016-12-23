@@ -30,7 +30,7 @@ public class UpdateTransition<T> {
 }
 
 
-public final class TableUpdateTransition : UpdateTransition<TableRowItem> {
+public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public let state:TableScrollState
     public let animated:Bool
     public let grouping:Bool
@@ -40,6 +40,14 @@ public final class TableUpdateTransition : UpdateTransition<TableRowItem> {
         self.state = state
         self.grouping = grouping
         super.init(deleted: deleted, inserted: inserted, updated: updated)
+    }
+}
+
+public final class TableEntriesTransition<T> : TableUpdateTransition {
+    public let entries:T
+    public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], entries:T, animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true) {
+        self.entries = entries
+        super.init(deleted: deleted, inserted: inserted, updated: updated, animated:animated, state: state, grouping:grouping)
     }
 }
 
@@ -173,7 +181,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 
     
     override func mouseDown(with event: NSEvent) {
-        self.window?.makeFirstResponder(nil)
+        //self.window?.makeFirstResponder(nil)
         let point = self.convert(event.locationInWindow, from: nil)
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
         sdelegate?.selectRow(index: range.location)
