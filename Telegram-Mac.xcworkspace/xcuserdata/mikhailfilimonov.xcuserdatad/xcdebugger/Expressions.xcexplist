@@ -26,6 +26,9 @@
          contextName = "TableView.merge([Int], [(Int, TableRowItem, Int?)], Bool, TableScrollState, Bool) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
+         contextName = "ChannelTypeSettingsViewController.privateEntries(with : CreateChannelResult) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)], [(Int, A, Int)]):System.swift">
       </ContextState>
       <ContextState
@@ -132,6 +135,9 @@
                value = "(strongSelf.centerBarView as? TitledBarView)">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChannelTypeSettingsViewController.restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ():ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "TitleButton.sizeToFit(CGSize, CGSize) -&gt; ():TitleButton.swift">
@@ -258,6 +264,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "(prepareEntries(from : [ChannelTypeEntry], to : [ChannelTypeEntry], account : Account, initialSize : CGSize, animated : Bool, typeHandler : (ChannelType) -&gt; ()) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1).(closure #1):ChannelTypeSettingsViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "TableView.init(frame : CGRect, isFlipped : Bool) -&gt; TableView:TableView.swift">
          <PersistentStrings>
             <PersistentString
@@ -304,10 +313,18 @@
          contextName = "Window.sendEvent(NSEvent) -&gt; ():Window.swift">
       </ContextState>
       <ContextState
-         contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #4):ShareModalController.swift">
+         contextName = "GeneralInputRowItem.text.didset:GeneralInputRow.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "text">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TableView.apply(transition : TableTransition) -&gt; ():TableView.swift">
+         contextName = "UsernameInputRowView.set(item : TableRowItem, animated : Bool) -&gt; ():UsernameInputRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #4):ShareModalController.swift">
       </ContextState>
       <ContextState
          contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #2):ShareModalController.swift">
@@ -316,6 +333,9 @@
                value = "transition.entries">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TableView.apply(transition : TableTransition) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
          contextName = "GridTableView.refill() -&gt; [GridRowItem]:GridTableView.swift">
@@ -398,6 +418,12 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "GeneralTextRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralTextRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "GeneralInputRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralInputRow.swift">
+      </ContextState>
+      <ContextState
          contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;ChatTableTransaction, ()&gt;).(closure #1):ChatController.swift">
          <PersistentStrings>
             <PersistentString
@@ -439,7 +465,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "APController.(init(account : Account, peerId : PeerId, message : Message?, isVoice : Bool) -&gt; APController).(closure #4):AudioPlayerController.swift">
+         contextName = "SearchController.(loadView() -&gt; ()).(closure #3):SearchController.swift">
       </ContextState>
       <ContextState
          contextName = "GridItem.resize(size : CGSize) -&gt; ():GridRowItem.swift">
@@ -450,12 +476,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.contentNode!.content">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "APController.(init(account : Account, peerId : PeerId, message : Message?, isVoice : Bool) -&gt; APController).(closure #4):AudioPlayerController.swift">
       </ContextState>
       <ContextState
          contextName = "TitleButton.apply(state : ControlState) -&gt; ():TitleButton.swift">
@@ -466,7 +487,12 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "SearchController.(loadView() -&gt; ()).(closure #3):SearchController.swift">
+         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentNode!.content">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "(chatMessageSticker(account : Account, file : TelegramMediaFile, size : CGSize) -&gt; Signal&lt;CGImage?, ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
@@ -541,7 +567,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -553,7 +579,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -620,6 +646,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatInputActionsView.stop(Bool) -&gt; ():ChatInputActionsView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChannelTypeSettingsViewController.publicEntries(with : CreateChannelResult, availability : UsernameAvailabilityState) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
@@ -729,6 +758,17 @@
       </ContextState>
       <ContextState
          contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #4).(closure #1):MediaBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChannelTypeSettingsViewController.(restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ()).(closure #1):ChannelTypeSettingsViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "UsernameInputRowItem.init(CGSize, stableId : AnyHashable, placeholder : String, limit : Int32, state : UsernameAvailabilityState, changeHandler : (String) -&gt; (), holdText : Bool) -&gt; UsernameInputRowItem:UsernameInputRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "current">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1):ChatListController.swift">

@@ -43,8 +43,8 @@ open class TableRowItem: NSObject,Identifiable {
         }
     }
     
-    open var stableId:Int64 {
-        return Int64(0)
+    open var stableId:AnyHashable {
+        return 0
     }
     
     public var index:Int {

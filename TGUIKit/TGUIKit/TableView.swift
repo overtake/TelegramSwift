@@ -27,6 +27,10 @@ public class UpdateTransition<T> {
         self.updated = updated
         self.deleted = deleted
     }
+    
+    var isEmpty:Bool {
+        return inserted.isEmpty && updated.isEmpty && deleted.isEmpty
+    }
 }
 
 
@@ -41,6 +45,8 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
         self.grouping = grouping
         super.init(deleted: deleted, inserted: inserted, updated: updated)
     }
+    
+    
 }
 
 public final class TableEntriesTransition<T> : TableUpdateTransition {
@@ -65,9 +71,9 @@ public enum TableSavingSide {
 }
 
 public enum TableScrollState :Equatable {
-    case top(Int64, Bool); // stableId, animation
-    case bottom(Int64, Bool); //  stableId, animation
-    case center(Int64, Bool); //  stableId, animation
+    case top(AnyHashable, Bool); // stableId, animation
+    case bottom(AnyHashable, Bool); //  stableId, animation
+    case center(AnyHashable, Bool); //  stableId, animation
     case saveVisible(TableSavingSide)
     case none(TableAnimationInterface?);
     case down(Bool);
@@ -225,7 +231,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 }
 
 public protocol InteractionContentViewProtocol : class {
-    func contentInteractionView(for stableId: Int64) -> NSView?
+    func contentInteractionView(for stableId: AnyHashable) -> NSView?
 }
 
 open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol {
@@ -236,10 +242,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     var tableView:TGFlipableTableView
     weak public var delegate:TableViewDelegate?
     private var trackingArea:NSTrackingArea?
-    private var listhash:[Int64:TableRowItem] = [Int64:TableRowItem]();
+    private var listhash:[AnyHashable:TableRowItem] = [AnyHashable:TableRowItem]();
     
     
-    public let selectedhash:Atomic<Int64> = Atomic(value: -1);
+    public let selectedhash:Atomic<AnyHashable?> = Atomic(value: nil);
    
     private var updating:Bool = false
     
@@ -521,19 +527,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func selectedItem() -> TableRowItem? {
         
         let hash = selectedhash.modify({$0})
-        
-        if(hash != -1) {
-            return self.item(stableId:hash);
+        if let hash = hash {
+            return self.item(stableId:hash)
         }
-        
-        return nil;
+        return nil
     }
     
     public func isSelected(_ item:TableRowItem) ->Bool {
         return selectedhash.modify({$0}) == item.stableId
     }
     
-    public func item(stableId:Int64) -> TableRowItem? {
+    public func item(stableId:AnyHashable) -> TableRowItem? {
         return self.listhash[stableId];
     }
     
@@ -546,7 +550,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
-    public func index(hash:Int64) -> Int? {
+    public func index(hash:AnyHashable) -> Int? {
         
         if let it = self.listhash[hash] {
             return self.list.index(of: it);
@@ -624,6 +628,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             view.set(item: item, animated: animated)
             view.layer?.setNeedsDisplay()
+            view.needsLayout = true
         }
         //self.moveItem(from: row, to: row)
     }
@@ -717,8 +722,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func selectNext(_ scroll:Bool = false, _ animated:Bool = false) -> Void {
-        let hash = selectedhash.modify({$0})
-        if hash != -1 {
+        
+        if let hash = selectedhash.modify({$0}) {
             let selectedItem = self.item(stableId: hash)
             if let selectedItem = selectedItem {
                 var selectedIndex = self.index(of: selectedItem)!
@@ -737,14 +742,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.select(item: firstItem)
             }
         }
-        if selectedhash.modify({$0}) != -1 {
-            self.scroll(to: .top(selectedhash.modify({$0}), animated), inset: EdgeInsets(), true)
+        if let hash = selectedhash.modify({$0}) {
+            self.scroll(to: .top(hash, animated), inset: EdgeInsets(), true)
         }
     }
     
     public func selectPrev(_ scroll:Bool = false, _ animated:Bool = false) -> Void {
-        let hash = selectedhash.modify({$0})
-        if hash != -1 {
+        
+        if let hash = selectedhash.modify({$0}) {
             let selectedItem = self.item(stableId: hash)
             if let selectedItem = selectedItem {
                 var selectedIndex = self.index(of: selectedItem)!
@@ -764,8 +769,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-        if selectedhash.modify({$0}) != -1 {
-            self.scroll(to: .bottom(selectedhash.modify({$0}), animated), inset: EdgeInsets(), true)
+        if let hash = selectedhash.modify({$0}) {
+            self.scroll(to: .bottom(hash, animated), inset: EdgeInsets(), true)
         }
     }
     
@@ -830,7 +835,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func changeSelection(stableId:Int64?) {
+    public func changeSelection(stableId:AnyHashable?) {
         if let stableId = stableId {
             if let item = self.item(stableId: stableId) {
                 self.select(item:item, notify:false)
@@ -844,13 +849,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func cancelSelection() -> Void {
-        if let item = self.item(stableId: selectedhash.modify({$0})) {
-            item.prepare(false)
-            let _ = selectedhash.swap(-1)
-            self.reloadData(row:item.index)
-        } else {
-            let _ = selectedhash.swap(-1)
+        if let hash = selectedhash.modify({$0}) {
+            if let item = self.item(stableId: hash) {
+                item.prepare(false)
+                let _ = selectedhash.swap(nil)
+                self.reloadData(row:item.index)
+            } else {
+                let _ = selectedhash.swap(nil)
+            }
         }
+        
     }
     
     
@@ -953,6 +961,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         assertOnMainThread()
         assert(!updating)
+        
+        if transition.isEmpty {
+            return
+        }
         
         self.beginUpdates()
         
@@ -1085,7 +1097,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         reloadData(row: index, animated: animated)
     }
 
-    public func contentInteractionView(for stableId: Int64) -> NSView? {
+    public func contentInteractionView(for stableId: AnyHashable) -> NSView? {
         if let item = self.item(stableId: stableId) {
             let view = viewNecessary(at:item.index)
             if let view = view, !NSIsEmptyRect(view.visibleRect) {
@@ -1171,7 +1183,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             var animate:Bool = false
 
             switch state {
-            case let .bottom(stableId,animation), let .top(stableId,animation), let .center(stableId,animation):
+            case let .center(stableId,animation):
+                item = self.item(stableId: stableId)
+                animate = animation
+            case let .bottom(stableId,animation):
+                item = self.item(stableId: stableId)
+                animate = animation
+            case let .top(stableId,animation):
                 item = self.item(stableId: stableId)
                 animate = animation
             case let .down(animation):

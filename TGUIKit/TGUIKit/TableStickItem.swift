@@ -11,7 +11,7 @@ import Cocoa
 open class TableStickItem: TableRowItem {
 
     let _stableId = Int64(arc4random())
-    open override var stableId: Int64 {
+    open override var stableId: AnyHashable {
         return _stableId
     }
     
