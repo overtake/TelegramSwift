@@ -601,6 +601,7 @@ public class TextView: Control {
     }
     
     public override func mouseDown(with event: NSEvent) {
+        self.window?.makeFirstResponder(nil)
         super.mouseDown(with: event)
         _mouseDown(with: event)
     }
