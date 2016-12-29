@@ -162,7 +162,7 @@ open class View : NSView,CALayerDelegate {
         assertOnMainThread()
         self.wantsLayer = true
         self.layer?.delegate = self
-        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+       // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
     }
     
@@ -171,7 +171,7 @@ open class View : NSView,CALayerDelegate {
         assertOnMainThread()
         self.wantsLayer = true
         self.layer?.delegate = self
-        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        //self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     

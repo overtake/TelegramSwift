@@ -146,7 +146,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     var popDisposable:MetaDisposable = MetaDisposable()
     
     private(set) public var header:NavigationHeader?
-    
+    fileprivate let containerView:View = View()
     public func set(header:NavigationHeader?) {
         self.header?.hide(false)
         header?.navigation = self
@@ -155,7 +155,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     open override func loadView() {
         super.loadView();
+        containerView.frame = bounds
         self.view.autoresizesSubviews = true
+        containerView.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
+        addSubview(containerView)
         controller._frameRect = bounds
         controller.viewWillAppear(false)
         controller.navigationController = self
@@ -326,10 +329,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         CATransaction.commit()
         
-    }
-    
-    public var containerView: NSView {
-        return view
     }
     
     public func back(animated:Bool = true) -> Void {

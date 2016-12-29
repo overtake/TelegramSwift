@@ -65,7 +65,6 @@ class NavigationModalView: Control {
         self.lock = true
         self.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{[weak self] (completed) in
             self?.viewController?.removeModalAction()
-           // self?.viewController?.navigationController?.lock = false
         })
     }
     

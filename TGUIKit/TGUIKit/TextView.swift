@@ -232,7 +232,7 @@ public final class TextViewLayout : Equatable {
         
         var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
         
-        if (currentPoint.x != -1 && currentPoint.y != -1) {
+        if (currentPoint.x != -1 && currentPoint.y != -1 && !lines.isEmpty) {
             
             
             var startSelectLineIndex = findIndex(location: startPoint)

@@ -30,6 +30,7 @@ public class TabBarController: ViewController, TabViewDelegate {
         
         if let tabView = tabView {
             if let current = current {
+                current.window?.makeFirstResponder(nil)
                 current.viewWillDisappear(false)
                 current.view.removeFromSuperview()
                 current.viewDidDisappear(false)

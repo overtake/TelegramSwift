@@ -181,7 +181,6 @@ open class Control: View {
     }
     
     override open func mouseDown(with event: NSEvent) {
-        self.window?.makeFirstResponder(nil)
         mouseIsDown = true
         
         if userInteractionEnabled {

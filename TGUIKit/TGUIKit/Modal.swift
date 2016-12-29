@@ -259,8 +259,9 @@ public class Modal: NSObject {
                         strongSelf?.controller?.viewDidAppear(true)
                     })
                     strongSelf.background.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
-                    strongSelf.container.center()
-                    strongSelf.container.autoresizingMask = [.viewMinXMargin,.viewMaxXMargin,.viewMinYMargin,.viewMaxYMargin]
+                    strongSelf.background.customHandler.layout = { [weak strongSelf] in
+                        strongSelf?.container.center()
+                    }
                     view.addSubview(strongSelf.background)
                     
                 }

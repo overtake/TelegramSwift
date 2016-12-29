@@ -380,7 +380,9 @@ open class ViewController : NSObject {
     }
     
     open func invokeNavigation(action:NavigationModalAction) {
-        action.close()
+        _ = (self.ready.get() |> take(1) |> deliverOnMainQueue).start(next: { (ready) in
+            action.close()
+        })
     }
     
     public func show(toaster:ControllerToaster, for delay:Double = 3.0, animated:Bool = true) {

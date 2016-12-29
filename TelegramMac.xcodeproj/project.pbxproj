@@ -101,15 +101,12 @@
 		C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */; };
 		C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */; };
 		C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232234C1DE20E610078D738 /* ChatMessageDateHeader.swift */; };
+		C232E9F41E142A7000C4D38C /* WebgameModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232E9F31E142A7000C4D38C /* WebgameModalController.swift */; };
+		C232E9F61E1437B100C4D38C /* SearchResultModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */; };
+		C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EA0D1E155E9400C4D38C /* PeersListController.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
-		C2412DFB1DA681B500588C14 /* GalleryPhotoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */; };
-		C2412DFD1DA6843400588C14 /* GalleryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412DFC1DA6843400588C14 /* GalleryItem.swift */; };
-		C2412DFF1DA6872F00588C14 /* GalleryVideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */; };
-		C2412E011DA6875F00588C14 /* GalleryHoleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E001DA6875F00588C14 /* GalleryHoleItem.swift */; };
-		C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E021DA690F400588C14 /* GalleryPagerNode.swift */; };
-		C2412E051DA6AB6300588C14 /* GalleryMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E041DA6AB6300588C14 /* GalleryMediaItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */; };
 		C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */; };
@@ -244,7 +241,6 @@
 		C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */; };
 		C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
-		C2C738F31DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */; };
 		C2CBCAC01D81528700142EC0 /* System.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABF1D81528700142EC0 /* System.swift */; };
 		C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */; };
 		C2DEC87F1DECB8C800F6544A /* ApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */; };
@@ -406,15 +402,12 @@
 		C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFPlayerView.swift; sourceTree = "<group>"; };
 		C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatGIFMediaItem.swift; sourceTree = "<group>"; };
 		C232234C1DE20E610078D738 /* ChatMessageDateHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageDateHeader.swift; sourceTree = "<group>"; };
+		C232E9F31E142A7000C4D38C /* WebgameModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebgameModalController.swift; sourceTree = "<group>"; };
+		C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultModalController.swift; sourceTree = "<group>"; };
+		C232EA0D1E155E9400C4D38C /* PeersListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeersListController.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/PostboxMac.framework"; sourceTree = "<group>"; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
-		C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPhotoItem.swift; sourceTree = "<group>"; };
-		C2412DFC1DA6843400588C14 /* GalleryItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryItem.swift; sourceTree = "<group>"; };
-		C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryVideoItem.swift; sourceTree = "<group>"; };
-		C2412E001DA6875F00588C14 /* GalleryHoleItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryHoleItem.swift; sourceTree = "<group>"; };
-		C2412E021DA690F400588C14 /* GalleryPagerNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPagerNode.swift; sourceTree = "<group>"; };
-		C2412E041DA6AB6300588C14 /* GalleryMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryMediaItem.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
 		C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryVideoItem.swift; sourceTree = "<group>"; };
 		C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -574,7 +567,6 @@
 		C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryViewer.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
-		C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryGIFMediaItem.swift; sourceTree = "<group>"; };
 		C2CBCABF1D81528700142EC0 /* System.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = System.swift; sourceTree = "<group>"; };
 		C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListRowView.swift; sourceTree = "<group>"; };
 		C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationContext.swift; sourceTree = "<group>"; };
@@ -949,6 +941,7 @@
 				C2271F521D9D41FC00424F7B /* contacts */,
 				C22E06301D8043A000A11C88 /* chatlist */,
 				C2303E891D9A76D800098E12 /* MainViewController.swift */,
+				C232EA0D1E155E9400C4D38C /* PeersListController.swift */,
 			);
 			name = left;
 			sourceTree = "<group>";
@@ -1487,25 +1480,10 @@
 		C2B1A1341DA6581500ACB1DD /* gallery */ = {
 			isa = PBXGroup;
 			children = (
-				C2C738F41DD9CDD000CE9D8A /* items */,
 				C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */,
-				C2412E041DA6AB6300588C14 /* GalleryMediaItem.swift */,
-				C2412E001DA6875F00588C14 /* GalleryHoleItem.swift */,
-				C2412DFC1DA6843400588C14 /* GalleryItem.swift */,
-				C2412E021DA690F400588C14 /* GalleryPagerNode.swift */,
 				C2412E061DA795D200588C14 /* GalleryControls.swift */,
 			);
 			name = gallery;
-			sourceTree = "<group>";
-		};
-		C2C738F41DD9CDD000CE9D8A /* items */ = {
-			isa = PBXGroup;
-			children = (
-				C2412DFA1DA681B500588C14 /* GalleryPhotoItem.swift */,
-				C2412DFE1DA6872F00588C14 /* GalleryVideoItem.swift */,
-				C2C738F21DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift */,
-			);
-			name = items;
 			sourceTree = "<group>";
 		};
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
@@ -1695,6 +1673,8 @@
 				C2FBC1E61DC631980063A23B /* SPPreviewController.swift */,
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
 				C29A65061E098B610071BCEF /* ShareModalController.swift */,
+				C232E9F31E142A7000C4D38C /* WebgameModalController.swift */,
+				C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */,
 			);
 			name = overlay;
 			sourceTree = "<group>";
@@ -1851,9 +1831,7 @@
 			files = (
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
 				C2DF47CB1DE79719003AA6C0 /* TGDataItem.m in Sources */,
-				C2C738F31DD9CC5300CE9D8A /* GalleryGIFMediaItem.swift in Sources */,
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
-				C2412E011DA6875F00588C14 /* GalleryHoleItem.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				C253A95F1D9165CD00CDC850 /* webp.m in Sources */,
@@ -1861,7 +1839,6 @@
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
-				C2412DFB1DA681B500588C14 /* GalleryPhotoItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
@@ -1916,6 +1893,7 @@
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C2A71CE51DDB2ED400C69F73 /* PrivacySettingsViewController.swift in Sources */,
+				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
@@ -1973,7 +1951,6 @@
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
 				C2DF47E01DE846AB003AA6C0 /* ChatAudioContentView.swift in Sources */,
 				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
-				C2412E031DA690F400588C14 /* GalleryPagerNode.swift in Sources */,
 				C2DF47C41DE79574003AA6C0 /* opusfile.c in Sources */,
 				C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */,
 				C2DF47C21DE79574003AA6C0 /* info.c in Sources */,
@@ -1998,10 +1975,10 @@
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
 				C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */,
+				C232E9F61E1437B100C4D38C /* SearchResultModalController.swift in Sources */,
 				C2A16E551E117BD000585A85 /* CreateChannelViewController.swift in Sources */,
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
 				C2167E571DC221E600F98E03 /* PeerMediaRowContent.swift in Sources */,
-				C2412DFF1DA6872F00588C14 /* GalleryVideoItem.swift in Sources */,
 				C2DF47BA1DE79574003AA6C0 /* bitwise.c in Sources */,
 				C250B01F1DB67B42004E9FBE /* WPLayout.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,
@@ -2057,6 +2034,7 @@
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
+				C232E9F41E142A7000C4D38C /* WebgameModalController.swift in Sources */,
 				C2DF47BF1DE79574003AA6C0 /* opusenc.m in Sources */,
 				C2DF47E21DE846B8003AA6C0 /* ChatMusicContentView.swift in Sources */,
 				C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */,
@@ -2079,10 +2057,8 @@
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */,
-				C2412DFD1DA6843400588C14 /* GalleryItem.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */,
-				C2412E051DA6AB6300588C14 /* GalleryMediaItem.swift in Sources */,
 				C2167E5F1DC25C6900F98E03 /* InterfaceObserver.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,

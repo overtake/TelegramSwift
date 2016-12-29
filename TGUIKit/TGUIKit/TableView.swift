@@ -59,7 +59,7 @@ public final class TableEntriesTransition<T> : TableUpdateTransition {
 
 public protocol TableViewDelegate : class {
     
-    func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool) -> Void;
+    func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void;
     func selectionWillChange(row:Int, item:TableRowItem) -> Bool;
     func isSelectable(row:Int, item:TableRowItem) -> Bool;
     
@@ -78,6 +78,21 @@ public enum TableScrollState :Equatable {
     case none(TableAnimationInterface?);
     case down(Bool);
     case up(Bool);
+}
+
+public extension TableScrollState {
+    public func swap(to stableId:AnyHashable) -> TableScrollState {
+        switch self {
+        case let .top(_, animated):
+            return .top(stableId, animated)
+        case let .bottom(_, animated):
+            return .bottom(stableId, animated)
+        case let .center(_, animated):
+            return .center(stableId, animated)
+        default:
+            return self
+        }
+    }
 }
 
 public func ==(lhs:TableScrollState, rhs:TableScrollState) -> Bool {
@@ -244,7 +259,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var trackingArea:NSTrackingArea?
     private var listhash:[AnyHashable:TableRowItem] = [AnyHashable:TableRowItem]();
     
-    
+    private let mergePromise:Promise<TableUpdateTransition> = Promise()
+    private let mergeDisposable:MetaDisposable = MetaDisposable()
+   
     public let selectedhash:Atomic<AnyHashable?> = Atomic(value: nil);
    
     private var updating:Bool = false
@@ -313,6 +330,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.headerView = nil;
         
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
+        
+        mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
+            self?.merge(with: transition)
+        }))
         
     }
     
@@ -813,14 +834,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func select(item:TableRowItem, notify:Bool = true, byClick:Bool = false) -> Bool {
         
         if let delegate = delegate, delegate.isSelectable(row: item.index, item: item) {
-            if delegate.selectionWillChange(row: item.index, item: item) {
-                if(self.item(stableId:item.stableId) != nil && item.stableId != selectedhash.modify({$0})) {
+            if(self.item(stableId:item.stableId) != nil) {
+                if delegate.selectionWillChange(row: item.index, item: item) {
+                    let new = item.stableId != selectedhash.modify({$0})
                     self.cancelSelection();
                     let _ = selectedhash.swap(item.stableId)
                     item.prepare(true)
                     self.reloadData(row:item.index)
                     if notify {
-                        delegate.selectionDidChange(row: item.index, item: item, byClick:byClick)
+                        delegate.selectionDidChange(row: item.index, item: item, byClick:byClick, isNew:new)
                     }
                     return true;
                 }
@@ -828,9 +850,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             
         }
-        
-        
-        
         return false;
         
     }
@@ -955,6 +974,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func endTableUpdates() {
         self.tableView.endUpdates()
+    }
+    
+    public func stopMerge() {
+        mergeDisposable.set(nil)
+    }
+    
+    public func merge(with transition:Signal<TableUpdateTransition, Void>) {
+        mergePromise.set(transition)
     }
     
     public func merge(with transition:TableUpdateTransition) -> Void {
@@ -1249,17 +1276,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if toVisible {
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.height {
-                    if animate {
+                   // if animate {
                         view.focusAnimation()
-                    }
+                   // }
                     return
                 }
             }
             
             clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate, completion:{ [weak self] _ in
-                if animate {
+                //if animate {
                     self?.viewNecessary(at: item.index)?.focusAnimation()
-                }
+               // }
                 if let strongSelf = self {
                     strongSelf.reflectScrolledClipView(strongSelf.clipView)
                 }
@@ -1305,6 +1332,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func performScrollEvent() -> Void {
         self.updateScroll()
         NotificationCenter.default.post(name: NSNotification.Name.NSViewBoundsDidChange, object: self.contentView)
+    }
+    
+    deinit {
+        mergeDisposable.dispose()
     }
     
 }

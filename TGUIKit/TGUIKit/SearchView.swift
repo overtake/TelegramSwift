@@ -248,7 +248,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         return true
     }
     
-
+    public var query:String {
+        return self.input.string ?? ""
+    }
     
     public func cancel(_ animated:Bool) -> Void {
         change(state: .None, animated)
