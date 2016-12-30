@@ -417,11 +417,16 @@ open class GenericViewController<T> : ViewController where T:NSView {
             
             _ = atomicSize.swap(_view!.frame.size)
         }
+        viewDidLoad()
     }
+    
+    
 
     open func initializer() -> T {
         let vz = T.self as! NSView.Type
         return vz.init(frame: _frameRect) as! T;
     }
+    
+    
     
 }

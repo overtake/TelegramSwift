@@ -101,9 +101,10 @@
 		C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */; };
 		C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */; };
 		C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232234C1DE20E610078D738 /* ChatMessageDateHeader.swift */; };
-		C232E9F41E142A7000C4D38C /* WebgameModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232E9F31E142A7000C4D38C /* WebgameModalController.swift */; };
 		C232E9F61E1437B100C4D38C /* SearchResultModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */; };
 		C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EA0D1E155E9400C4D38C /* PeersListController.swift */; };
+		C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EA0F1E156DE100C4D38C /* ContextCommandRowItem.swift */; };
+		C232EA131E16552900C4D38C /* WebGameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EA121E16552900C4D38C /* WebGameViewController.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
@@ -402,9 +403,10 @@
 		C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFPlayerView.swift; sourceTree = "<group>"; };
 		C230B9231DD4C78E0057F596 /* ChatGIFMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatGIFMediaItem.swift; sourceTree = "<group>"; };
 		C232234C1DE20E610078D738 /* ChatMessageDateHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageDateHeader.swift; sourceTree = "<group>"; };
-		C232E9F31E142A7000C4D38C /* WebgameModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebgameModalController.swift; sourceTree = "<group>"; };
 		C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultModalController.swift; sourceTree = "<group>"; };
 		C232EA0D1E155E9400C4D38C /* PeersListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeersListController.swift; sourceTree = "<group>"; };
+		C232EA0F1E156DE100C4D38C /* ContextCommandRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextCommandRowItem.swift; sourceTree = "<group>"; };
+		C232EA121E16552900C4D38C /* WebGameViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebGameViewController.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/PostboxMac.framework"; sourceTree = "<group>"; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
@@ -901,6 +903,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				C232EA111E16551000C4D38C /* games */,
 				C2DF47EA1DE9A17A003AA6C0 /* auth */,
 				C253E2321DE36B8F0022A29F /* inline-audio-player */,
 				C230B9201DD4C23E0057F596 /* video */,
@@ -1013,6 +1016,14 @@
 				C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */,
 			);
 			name = video;
+			sourceTree = "<group>";
+		};
+		C232EA111E16551000C4D38C /* games */ = {
+			isa = PBXGroup;
+			children = (
+				C232EA121E16552900C4D38C /* WebGameViewController.swift */,
+			);
+			name = games;
 			sourceTree = "<group>";
 		};
 		C2379D281DDCCBD00063AD30 /* bot */ = {
@@ -1376,6 +1387,7 @@
 			children = (
 				C29B5F401DC7859800D13E65 /* InputContextHelper.swift */,
 				C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */,
+				C232EA0F1E156DE100C4D38C /* ContextCommandRowItem.swift */,
 			);
 			name = context;
 			sourceTree = "<group>";
@@ -1673,7 +1685,6 @@
 				C2FBC1E61DC631980063A23B /* SPPreviewController.swift */,
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
 				C29A65061E098B610071BCEF /* ShareModalController.swift */,
-				C232E9F31E142A7000C4D38C /* WebgameModalController.swift */,
 				C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */,
 			);
 			name = overlay;
@@ -1879,6 +1890,7 @@
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
 				C250B0271DB69694004E9FBE /* WPArticleLayout.swift in Sources */,
+				C232EA131E16552900C4D38C /* WebGameViewController.swift in Sources */,
 				C2DF47C01DE79574003AA6C0 /* picture.c in Sources */,
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
 				C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */,
@@ -1894,6 +1906,7 @@
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C2A71CE51DDB2ED400C69F73 /* PrivacySettingsViewController.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
+				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
@@ -2034,7 +2047,6 @@
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
-				C232E9F41E142A7000C4D38C /* WebgameModalController.swift in Sources */,
 				C2DF47BF1DE79574003AA6C0 /* opusenc.m in Sources */,
 				C2DF47E21DE846B8003AA6C0 /* ChatMusicContentView.swift in Sources */,
 				C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */,

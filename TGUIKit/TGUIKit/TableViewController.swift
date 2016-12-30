@@ -11,10 +11,6 @@ import Cocoa
 open class TableViewController: GenericViewController<TableView> {
 
 
-    override open func loadView() {
-        super.loadView()
-        viewDidLoad()
-    }
     
     open override func viewDidLoad() {
         super.viewDidLoad()

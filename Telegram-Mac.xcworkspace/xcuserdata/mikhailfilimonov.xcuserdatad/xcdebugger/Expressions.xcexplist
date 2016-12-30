@@ -29,6 +29,9 @@
          contextName = "ChannelTypeSettingsViewController.privateEntries(with : CreateChannelResult) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
+         contextName = "SearchResultModalController.(viewDidLoad() -&gt; ()).(closure #1):SearchResultModalController.swift">
+      </ContextState>
+      <ContextState
          contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)], [(Int, A, Int)]):System.swift">
       </ContextState>
       <ContextState
@@ -49,6 +52,9 @@
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1).(closure #2):MediaUtils.swift">
       </ContextState>
       <ContextState
+         contextName = "messageEntries([MessageHistoryEntry], maxReadIndex : MessageIndex?, dayGrouping : Bool, includeEmpty : Bool) -&gt; [ChatHistoryEntry]:System.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #2):ChatController.swift">
       </ContextState>
       <ContextState
@@ -61,6 +67,12 @@
                value = "layer.frame">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #21).(closure #1):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #5):ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatController.(init(account : Account, peerId : PeerId, message : Message?, navigation : NavigationViewController) -&gt; ChatController).(closure #4):ChatController.swift">
@@ -118,12 +130,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatListController.(loadView() -&gt; ()).(closure #1):ChatListController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "scrollPosition">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "ChannelTypeSettingsViewController.restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ():ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #9):ChatController.swift">
@@ -137,7 +144,12 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChannelTypeSettingsViewController.restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ():ChannelTypeSettingsViewController.swift">
+         contextName = "ChatListController.(loadView() -&gt; ()).(closure #1):ChatListController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "scrollPosition">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TitleButton.sizeToFit(CGSize, CGSize) -&gt; ():TitleButton.swift">
@@ -233,6 +245,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #4).(closure #3):ChatController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "previous">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TGTableView.remove(item : TGTableRowItem, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">
          <PersistentStrings>
             <PersistentString
@@ -250,10 +270,10 @@
          contextName = "ChatListController.merge([Int], [(Int, ChatListRowItem, Int?)]) -&gt; ():ChatListController.swift">
       </ContextState>
       <ContextState
-         contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)]):System.swift">
+         contextName = "(prepareEntries(from : [ChannelTypeEntry], to : [ChannelTypeEntry], account : Account, initialSize : CGSize, animated : Bool, typeHandler : (ChannelType) -&gt; ()) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1).(closure #1):ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
-         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #5).(closure #1):MediaBox.swift">
+         contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)]):System.swift">
       </ContextState>
       <ContextState
          contextName = "TGMessageRowItem.makeSize(CGFloat) -&gt; Bool:TGMessageRowItem.swift">
@@ -264,7 +284,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "(prepareEntries(from : [ChannelTypeEntry], to : [ChannelTypeEntry], account : Account, initialSize : CGSize, animated : Bool, typeHandler : (ChannelType) -&gt; ()) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1).(closure #1):ChannelTypeSettingsViewController.swift">
+         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #5).(closure #1):MediaBox.swift">
       </ContextState>
       <ContextState
          contextName = "TableView.init(frame : CGRect, isFlipped : Bool) -&gt; TableView:TableView.swift">
@@ -547,6 +567,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #4):ChatController.swift">
+      </ContextState>
+      <ContextState
          contextName = "UnsentMessageHistoryView.replay([IntermediateMessageHistoryUnsentOperation]) -&gt; Bool:UnsentMessageHistoryView.swift">
       </ContextState>
       <ContextState
@@ -567,7 +590,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -579,7 +602,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -628,6 +651,9 @@
          contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
       </ContextState>
       <ContextState
+         contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1):ChatController.swift">
+      </ContextState>
+      <ContextState
          contextName = "Window.set(handler : () -&gt; (), with : AnyObject, for : KeyboardKey, priority : HandlerPriority, modifierFlags : NSEventModifierFlags?) -&gt; ():Window.swift">
       </ContextState>
       <ContextState
@@ -642,13 +668,13 @@
          contextName = "ChatTableTransaction.init(deleted : [Int], inserted : [(Int, TableRowItem, Int?)], animated : Bool, scrollState : TableScrollState, reason : ChatHistoryViewTransitionReason, historyView : ChatHistoryView) -&gt; ChatTableTransaction:ChatController.swift">
       </ContextState>
       <ContextState
-         contextName = "TableView.scroll(to : TableScrollState, inset : EdgeInsets) -&gt; ():TableView.swift">
+         contextName = "ChannelTypeSettingsViewController.publicEntries(with : CreateChannelResult, availability : UsernameAvailabilityState) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatInputActionsView.stop(Bool) -&gt; ():ChatInputActionsView.swift">
       </ContextState>
       <ContextState
-         contextName = "ChannelTypeSettingsViewController.publicEntries(with : CreateChannelResult, availability : UsernameAvailabilityState) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
+         contextName = "TableView.scroll(to : TableScrollState, inset : EdgeInsets) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
@@ -746,7 +772,13 @@
          contextName = "ChatListController.loadOnScroll(Account, TGTableScrollUpdate) -&gt; ():ChatListController.swift">
       </ContextState>
       <ContextState
+         contextName = "ChannelTypeSettingsViewController.(restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ()).(closure #1):ChannelTypeSettingsViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "TextViewLayout.calculateLayout() -&gt; ():TextView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #4).(closure #1):MediaBox.swift">
       </ContextState>
       <ContextState
          contextName = "ChatMapContentView.update(with : Media, size : CGSize, account : Account, parent : Message?, table : TableView?, parameters : ChatMediaLayoutParameters?) -&gt; ():ChatMapContentView.swift">
@@ -755,12 +787,6 @@
                value = "updated">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #4).(closure #1):MediaBox.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChannelTypeSettingsViewController.(restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ()).(closure #1):ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "UsernameInputRowItem.init(CGSize, stableId : AnyHashable, placeholder : String, limit : Int32, state : UsernameAvailabilityState, changeHandler : (String) -&gt; (), holdText : Bool) -&gt; UsernameInputRowItem:UsernameInputRowItem.swift">
@@ -930,6 +956,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatRowItem.(init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem).(closure #1):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.viewDidAppear(Bool) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
@@ -976,6 +1005,9 @@
                value = "_contentSize">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "InputContextHelper.(entries(for : ChatPresentationInputQueryResult?) -&gt; Signal&lt;[InputContextEntry], ()&gt;).(closure #1):InputContextHelper.swift">
       </ContextState>
       <ContextState
          contextName = "TableView.change(size : CGSize, animated : Bool, Bool) -&gt; ():TableView.swift">
