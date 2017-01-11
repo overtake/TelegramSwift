@@ -8,17 +8,17 @@
 
 import Cocoa
 
-public class TabItem: NSObject {
-    var image: CGImage
-    var selectedImage: CGImage
+open class TabItem: NSObject {
+    let image: CGImage
+    let selectedImage: CGImage
+    let controller:ViewController
+    let subNode:Node?
     
-    var controller:ViewController
-    
-    public init(image: CGImage, selectedImage: CGImage, controller:ViewController) {
+    public init(image: CGImage, selectedImage: CGImage, controller:ViewController, subNode:Node? = nil) {
         self.image = image
         self.selectedImage = selectedImage
         self.controller = controller
-        
+        self.subNode = subNode
         super.init()
     }
 }

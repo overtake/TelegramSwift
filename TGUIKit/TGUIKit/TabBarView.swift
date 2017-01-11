@@ -77,7 +77,11 @@ public class TabBarView: View {
             container.addSubview(imageView)
             container.setFrameSize(NSMakeSize(NSWidth(imageView.frame), NSHeight(container.frame)))
             view.addSubview(container)
-           
+            
+            if let subView = tab.subNode?.view {
+                view.addSubview(subView)
+            }
+            
             imageView.center()
             container.center()
 

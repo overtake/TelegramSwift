@@ -8,9 +8,17 @@
 
 import Cocoa
 
-let searchImage = #imageLiteral(resourceName: "Icon_SearchField").precomposed()
-let clearImage = #imageLiteral(resourceName: "Icon_SearchClear").precomposed()
 
+public struct SearchTheme {
+    let searchImage:CGImage
+    let clearImage:CGImage
+    let placeholder:String
+    public init(_ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:String) {
+        self.searchImage = searchImage
+        self.clearImage = clearImage
+        self.placeholder = placeholder
+    }
+}
 
 class SearchTextField: NSTextView {
 
@@ -62,8 +70,10 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     private let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
+    private let theme:SearchTheme
     
-    required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect, theme:SearchTheme) {
+        self.theme = theme
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
         self.layer?.cornerRadius = .cornerRadius
@@ -86,13 +96,13 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
         animateContainer.backgroundColor = .clear
         
-        placeholder.attributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: true)
+        placeholder.attributedString = NSAttributedString.initialize(string: theme.placeholder, color: .grayText, font: .normal(.text), coreText: true)
         placeholder.backgroundColor = .grayBackground
         placeholder.sizeToFit()
         animateContainer.addSubview(placeholder)
         
-        search.frame = NSMakeRect(0, 0, searchImage.backingSize.width, searchImage.backingSize.height)
-        search.image = searchImage
+        search.frame = NSMakeRect(0, 0, theme.searchImage.backingSize.width, theme.searchImage.backingSize.height)
+        search.image = theme.searchImage
         animateContainer.addSubview(search)
         
         self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
@@ -104,7 +114,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         addSubview(input)
         
         
-        clear.set(image: clearImage, for: .Normal)
+        clear.set(image: theme.clearImage, for: .Normal)
         clear.backgroundColor = .clear
         
         
@@ -114,7 +124,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             
         }, for: .Click)
         
-        clear.frame = NSMakeRect(NSWidth(self.frame) - inset - clearImage.backingSize.width, 0, clearImage.backingSize.width, clearImage.backingSize.height)
+        clear.frame = NSMakeRect(NSWidth(self.frame) - inset - theme.clearImage.backingSize.width, 0, theme.clearImage.backingSize.width, theme.clearImage.backingSize.height)
         addSubview(clear)
         
         clear.isHidden = true
@@ -227,19 +237,16 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
   
     }
     
-    public override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        switch state {
-        case .None:
-            animateContainer.center()
-         case .Focus:
-            animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
-        }
-        clear.frame = NSMakeRect(frame.width - inset - clearImage.backingSize.width, clear.frame.minY, clearImage.backingSize.width, clearImage.backingSize.height)
-    }
     
     public override func layout() {
         super.layout()
+        switch state {
+        case .None:
+            animateContainer.center()
+        case .Focus:
+            animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
+        }
+        clear.frame = NSMakeRect(frame.width - inset - theme.clearImage.backingSize.width, clear.frame.minY, theme.clearImage.backingSize.width, theme.clearImage.backingSize.height)
         clear.centerY()
     }
 
@@ -258,6 +265,10 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required public init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
     
 }

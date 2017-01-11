@@ -20,7 +20,7 @@ public class TabBarController: ViewController, TabViewDelegate {
     
     public override func loadView() {
         super.loadView()
-        tabView = TabBarView.init(frame: NSMakeRect(0, NSHeight(self.bounds) - 50, NSWidth(self.bounds), 50))
+        tabView = TabBarView(frame: NSMakeRect(0, NSHeight(self.bounds) - 50, NSWidth(self.bounds), 50))
         tabView?.delegate = self
         tabView?.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewMaxYMargin,NSAutoresizingMaskOptions.viewMinYMargin]
         addSubview(tabView!)
@@ -43,6 +43,14 @@ public class TabBarController: ViewController, TabViewDelegate {
             
             current = item.controller
             
+        }
+        
+    }
+    
+    public func hideTabView(_ hide:Bool) {
+        if let tabView = tabView {
+            tabView.isHidden = hide
+            current?.view.frame = hide ? bounds : NSMakeRect(0, 0, bounds.width, bounds.height - tabView.frame.height)
         }
         
     }

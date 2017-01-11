@@ -355,7 +355,7 @@ open class ViewController : NSObject {
         self.view.removeFromSuperview()
     }
     
-    public let backImage = #imageLiteral(resourceName: "Icon_NavigationBack").precomposed()
+    public let backImage:CGImage? = #imageLiteral(resourceName: "Icon_NavigationBack").precomposed()
     
     open func backSettings() -> (String,CGImage?) {
         return (localizedString("Navigation.back"),backImage)

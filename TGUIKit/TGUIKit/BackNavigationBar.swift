@@ -8,7 +8,7 @@
 
 import Cocoa
 
-public class BackNavigationBar: TextButtonBarView {
+open class BackNavigationBar: TextButtonBarView {
 
     private weak var controller:ViewController?
     
@@ -36,7 +36,7 @@ public class BackNavigationBar: TextButtonBarView {
         } else {
             button.removeImage(for: .Normal)
         }
-        setFrameSize(frame.size)
+        needsLayout = true
     }
     
     required public init?(coder: NSCoder) {

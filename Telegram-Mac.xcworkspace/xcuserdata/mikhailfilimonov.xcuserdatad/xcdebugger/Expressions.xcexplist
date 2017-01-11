@@ -190,6 +190,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "SplitView.layout() -&gt; ():TGSplitView.swift">
+      </ContextState>
+      <ContextState
          contextName = "PeerMediaGridController.(enqueueHistoryViewTransition(ChatHistoryGridTransition) -&gt; Signal&lt;(), ()&gt;).(closure #1):PeerMediaGridController.swift">
          <PersistentStrings>
             <PersistentString
@@ -397,6 +400,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatController.scrollToLatest() -&gt; ():ChatController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "previousView.modify({$0})?.originalView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "SearchView.changeState(Bool) -&gt; ():SearchView.swift">
          <PersistentStrings>
             <PersistentString
@@ -590,7 +601,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -602,7 +613,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -648,10 +659,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
+         contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1):ChatController.swift">
       </ContextState>
       <ContextState
-         contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1):ChatController.swift">
+         contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
       </ContextState>
       <ContextState
          contextName = "Window.set(handler : () -&gt; (), with : AnyObject, for : KeyboardKey, priority : HandlerPriority, modifierFlags : NSEventModifierFlags?) -&gt; ():Window.swift">
@@ -1030,6 +1041,9 @@
       </ContextState>
       <ContextState
          contextName = "groupInfoEntries(view : PeerView) -&gt; [PeerInfoEntry]:GroupInfoEntries.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatControllerView.(init(frame : CGRect, chatInteraction : ChatInteraction, account : Account) -&gt; ChatControllerView).(closure #7):ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "static ChatLayoutUtils.contentNode(for : Media) -&gt; ChatMediaContentView.Type:ChatLayoutUtils.swift">

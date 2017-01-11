@@ -76,7 +76,7 @@ open class EditableViewController<T>: GenericViewController<T> where T: NSView {
             editBar.button.set(text: localizedString("Navigation.Some"), for: .Normal)
         }
         
-        self.editBar.setFrameSize(self.editBar.frame.size)
+        self.editBar.needsLayout = true
     }
     
     func addHandler() -> Void {

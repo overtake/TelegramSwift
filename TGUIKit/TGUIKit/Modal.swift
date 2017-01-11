@@ -18,6 +18,10 @@ open class ModalViewController : ViewController {
         return .blackTransparent
     }
     
+    open var isFullScreen:Bool {
+        return false
+    }
+    
     open var containerBackground: NSColor {
         return .white
     }
@@ -44,6 +48,11 @@ open class ModalViewController : ViewController {
     
     open func close() {
         modal?.close()
+    }
+    
+    override open func loadView() {
+        super.loadView()
+        viewDidLoad()
     }
 }
 
@@ -162,7 +171,7 @@ public class Modal: NSObject {
     private var window:Window
     private let disposable:MetaDisposable = MetaDisposable()
     private var interactionsView:ModalInteractionsContainer?
-
+    
     public init(controller:ModalViewController, for window:Window) {
         self.controller = controller
         self.window = window
@@ -177,6 +186,9 @@ public class Modal: NSObject {
             interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
         }
        
+        if controller.isFullScreen {
+            controller._frameRect = window.contentView!.bounds
+        }
         
         container = View(frame: containerRect)
         container.layer?.cornerRadius = .cornerRadius
@@ -204,12 +216,25 @@ public class Modal: NSObject {
             background.customHandler.size = {[weak self] (size) in
                 if let strongSelf = self {
                     controller.measure(size: size)
-                    strongSelf.container.setFrameSize(strongSelf.containerRect.size)
-                    strongSelf.container.center()
                 }
             }
         }
         
+    }
+    
+    public func resize(with size:NSSize, animated:Bool = true) {
+        
+        let focus:NSRect
+        if let interactions = controller?.modalInteractions {
+            focus = background.focus(NSMakeSize(size.width, size.height + interactions.height))
+            interactionsView?.change(pos: NSMakePoint(0, size.height), animated: animated)
+        } else {
+            focus = background.focus(size)
+        }
+        container.change(size: focus.size, animated: animated)
+        container.change(pos: focus.origin, animated: animated)
+        
+        controller?.view.change(size: size, animated: animated)
     }
     
     private var containerRect:NSRect {
@@ -254,7 +279,13 @@ public class Modal: NSObject {
                 if let strongSelf = self, let view = self?.window.contentView?.subviews.first {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
-                    strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                    strongSelf.background.background = controller.isFullScreen ? .white : .blackTransparent
+                    if !controller.isFullScreen {
+                        strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                    } else {
+                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.3)
+
+                    }
                     strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
                         strongSelf?.controller?.viewDidAppear(true)
                     })

@@ -81,7 +81,7 @@ public class MagnifyView : NSView {
     }
     
     func addSmart(for location:NSPoint) {
-        var minFactor:CGFloat = max(frame.size.width / magnifiedSize.width,frame.size.height / magnifiedSize.height)
+        var minFactor:CGFloat = min(max(frame.size.width / magnifiedSize.width,frame.size.height / magnifiedSize.height),2.0)
         if magnify > 1.0 {
             minFactor = 1 - magnify
         }

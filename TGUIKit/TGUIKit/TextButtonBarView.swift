@@ -14,7 +14,7 @@ public enum TextBarAligment {
     case Center
 }
 
-public class TextButtonBarView: BarView {
+open class TextButtonBarView: BarView {
 
     private(set) public var button:TitleButton
     
@@ -36,21 +36,19 @@ public class TextButtonBarView: BarView {
         
     }
     
-    public override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        
+    open override func layout() {
+        super.layout()
         switch alignment {
         case .Center:
-            button.sizeToFit(NSZeroSize,NSMakeSize(newSize.width, newSize.height - .borderSize))
+            button.sizeToFit(NSZeroSize,NSMakeSize(frame.width, frame.height - .borderSize))
         case .Left:
-            button.sizeToFit(NSZeroSize,NSMakeSize(newSize.width, newSize.height - .borderSize))
+            button.sizeToFit(NSZeroSize,NSMakeSize(frame.width, frame.height - .borderSize))
         case .Right:
             button.sizeToFit()
             let f = focus(button.frame.size)
             button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 20.0, f.minY))
-
+            
         }
-        
     }
     
     

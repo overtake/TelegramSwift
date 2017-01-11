@@ -249,6 +249,16 @@ public protocol InteractionContentViewProtocol : class {
     func contentInteractionView(for stableId: AnyHashable) -> NSView?
 }
 
+public class TableScrollListener : NSObject {
+    fileprivate let uniqueId:UInt32 = arc4random()
+    fileprivate let handler:(ScrollPosition)->Void
+    
+    public init(_ handler:@escaping(ScrollPosition)->Void) {
+        self.handler = handler
+    }
+    
+}
+
 open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol {
     
     public var separator:TableSeparator = .none
@@ -269,6 +279,29 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var previousScroll:ScrollPosition?
     public var needUpdateVisibleAfterScroll:Bool = false
     private var scrollHandler:(_ scrollPosition:ScrollPosition) ->Void = {_ in}
+    
+    private var scrollListeners:[TableScrollListener] = []
+    
+    public func addScroll(listener:TableScrollListener) {
+        scrollListeners.append(listener)
+    }
+    
+    public func removeScroll(listener:TableScrollListener) {
+        var index:Int = 0
+        var found:Bool = false
+        for enumerate in scrollListeners {
+            if enumerate.uniqueId == listener.uniqueId {
+                found = true
+                break
+            }
+            index += 1
+        }
+        
+        if found {
+            scrollListeners.remove(at: index)
+        }
+        
+    }
     
     public var count:Int {
         get {
@@ -396,6 +429,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             }
                         }
  
+                    }
+                    for listener in strongSelf.scrollListeners {
+                        listener.handler(strongSelf.scrollPosition)
                     }
                 }
  
@@ -1196,7 +1232,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
           //  }
         }
-        
         self.setFrameSize(size)
        // self.tableView.setFrameSize(size.width,max(listHeight,size.height))
     }
