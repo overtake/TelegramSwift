@@ -1317,15 +1317,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     return
                 }
             }
-            
-            clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate, completion:{ [weak self] _ in
-                //if animate {
+            if clipView.bounds.minY != rowRect.minY {
+                clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate, completion:{ [weak self] _ in
+                    //if animate {
                     self?.viewNecessary(at: item.index)?.focusAnimation()
-               // }
-                if let strongSelf = self {
-                    strongSelf.reflectScrolledClipView(strongSelf.clipView)
-                }
-            })
+                    // }
+                    if let strongSelf = self {
+                        strongSelf.reflectScrolledClipView(strongSelf.clipView)
+                    }
+                })
+            } else {
+                viewNecessary(at: item.index)?.focusAnimation()
+            }
+            
             
             
         } 

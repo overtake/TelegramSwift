@@ -55,9 +55,10 @@ public class MajorNavigationController: NavigationViewController {
         pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
                 strongSelf.lock = true
-                let removeAnimateFlag = strongSelf.stackCount == 2 && controller.isKind(of: strongSelf.majorClass) ?? false
+                let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)
+                let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController
                 
-                if controller.isKind(of: strongSelf.majorClass) {
+                if isMajorController {
                     for controller in strongSelf.stack {
                         controller.didRemovedFromStack()
                     }
@@ -72,7 +73,7 @@ public class MajorNavigationController: NavigationViewController {
                 
                  strongSelf.stack.append(controller)
                 
-                let anim = animated && (!controller.isKind(of: strongSelf.majorClass) || strongSelf.controller != strongSelf.defaultEmpty) && !removeAnimateFlag
+                let anim = animated && (!isMajorController || strongSelf.controller != strongSelf.defaultEmpty) && !removeAnimateFlag
                 
                 strongSelf.show(controller, anim ? .push : .none)
             }
