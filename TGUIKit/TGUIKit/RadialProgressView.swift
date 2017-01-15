@@ -186,7 +186,7 @@ public class RadialProgressView: Control {
         didSet {
             self.removeAllHandlers()
             if let fetchControls = fetchControls {
-                set(handler: {
+                set(handler: { _ in
                     fetchControls.fetch()
                 }, for: .Click)
             }

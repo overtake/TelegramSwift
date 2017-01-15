@@ -80,7 +80,7 @@ open class EditableViewController<T>: GenericViewController<T> where T: NSView {
     }
     
     func addHandler() -> Void {
-        editBar.button.set (handler:{[weak self] in
+        editBar.button.set (handler:{[weak self] _ in
             if let strongSelf = self {
                 strongSelf.changeState()
             }

@@ -304,11 +304,11 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
             search.set(SearchState(state: searchView.state, request: text))
         })
         
-        self.genericView.acceptView.set(handler: { [weak self] in
+        self.genericView.acceptView.set(handler: { [weak self] _ in
             self?.share.perform(to: selectInteraction.presentation.list.map{$0.id})
         }, for: .Click)
         
-        self.genericView.cancelView.set(handler: { [weak self] in
+        self.genericView.cancelView.set(handler: { [weak self] _ in
             self?.share.cancel()
         }, for: .Click)
         

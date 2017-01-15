@@ -55,8 +55,8 @@ open class Control: View {
         }
     }
     
-    private var handlers:[(ControlEvent,() -> Void)] = []
-    private var stateHandlers:[(ControlState,() -> Void)] = []
+    private var handlers:[(ControlEvent,(Control) -> Void)] = []
+    private var stateHandlers:[(ControlState,(Control) -> Void)] = []
 
     private var backgroundState:[ControlState:NSColor] = [:]
 
@@ -87,7 +87,7 @@ open class Control: View {
                 
                 for (state,handler) in stateHandlers {
                     if state == controlState {
-                        handler()
+                        handler(self)
                     }
                 }
                 
@@ -156,11 +156,11 @@ open class Control: View {
     
 
     
-    public func set(handler:@escaping () -> Void, for event:ControlEvent) -> Void {
+    public func set(handler:@escaping (Control) -> Void, for event:ControlEvent) -> Void {
         handlers.append((event,handler))
     }
     
-    public func set(handler:@escaping () -> Void, for event:ControlState) -> Void {
+    public func set(handler:@escaping (Control) -> Void, for event:ControlState) -> Void {
         stateHandlers.append((event,handler))
     }
     
@@ -217,7 +217,7 @@ open class Control: View {
     func send(event:ControlEvent) -> Void {
         for (e,handler) in handlers {
             if e == event {
-                handler()
+                handler(self)
             }
         }
     }

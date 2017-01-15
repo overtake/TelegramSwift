@@ -113,20 +113,22 @@ private class ModalInteractionsContainer : View {
         super.init()
         
         if let cancel = interactions.cancel {
-            cancelView?.set(handler: cancel, for: .Click)
+            cancelView?.set(handler: { _ in
+                cancel()
+            }, for: .Click)
         } else {
-            cancelView?.set(handler: {
+            cancelView?.set(handler: { _ in
                 modal.close()
             }, for: .Click)
         }
         
         if let accept = interactions.accept {
-            acceptView.set(handler: {
+            acceptView.set(handler: { _ in
                 accept()
                 modal.close()
             }, for: .Click)
         } else {
-            acceptView.set(handler: {
+            acceptView.set(handler: { _ in
                 modal.close()
             }, for: .Click)
 
@@ -208,7 +210,7 @@ public class Modal: NSObject {
             return .invoked
         }, with: self, priority: .high)
         
-        background.set(handler: { [weak self] in
+        background.set(handler: { [weak self] _ in
             self?.close()
         }, for: .Click)
         

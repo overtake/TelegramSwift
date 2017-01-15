@@ -34,7 +34,7 @@ open class BarView: View {
     }
     
     func overlayInitEvent() -> Void {
-        self.overlay.set(handler: { [weak self] in
+        self.overlay.set(handler: { [weak self] control in
             self?.clickHandler()
         }, for: .Click)
     }

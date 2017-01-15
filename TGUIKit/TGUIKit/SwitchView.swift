@@ -50,15 +50,14 @@ public class SwitchView: Control {
         layer?.addSublayer(backBuble)
         layer?.addSublayer(buble)
         
-        self.set(handler: { [weak self] in
-            if let strongSelf = self {
-                let animates = strongSelf.animates
-                strongSelf.animates = true
-                strongSelf.isOn = !strongSelf.isOn
-                strongSelf.animates = animates
-                if let stateChanged = strongSelf.stateChanged {
-                    stateChanged()
-                }
+        self.set(handler: { [weak self] control in
+            let control = control as! SwitchView
+            let animates = control.animates
+            control.animates = true
+            control.isOn = !control.isOn
+            control.animates = animates
+            if let stateChanged = self?.stateChanged {
+                stateChanged()
             }
         }, for: .Click)
         

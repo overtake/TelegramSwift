@@ -163,7 +163,7 @@ open class Popover: NSObject {
                             
                         }
                         
-                        let nHandler:() -> Void = { [weak self] in
+                        let nHandler:(Control) -> Void = { [weak self] _ in
                             
                             let s = Signal<Void,NoError>({ (subscriber) -> Disposable in
                                 
@@ -187,7 +187,7 @@ open class Popover: NSObject {
                             
                         }
                         
-                        let hHandler:() -> Void = { [weak strongSelf] in
+                        let hHandler:(Control) -> Void = { [weak strongSelf] _ in
                             
                             strongSelf?.disposable.set(nil)
                             

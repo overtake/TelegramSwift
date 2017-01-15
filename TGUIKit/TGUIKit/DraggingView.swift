@@ -46,14 +46,14 @@ class DragView : OverlayControl {
         self.layer?.backgroundColor = NSColor.white.cgColor
         self.layer?.borderColor = NSColor.border.cgColor
         self.backgroundColor = .white
-        self.set(handler: { 
-            self.layer?.borderColor = NSColor.blueUI.cgColor
-            self.layer?.animateBorder()
+        self.set(handler: { control in
+            control.layer?.borderColor = NSColor.blueUI.cgColor
+            control.layer?.animateBorder()
         }, for: .Hover)
         
-        self.set(handler: {
-            self.layer?.borderColor = NSColor.border.cgColor
-            self.layer?.animateBorder()
+        self.set(handler: { control in
+            control.layer?.borderColor = NSColor.border.cgColor
+            control.layer?.animateBorder()
         }, for: .Normal)
         
         

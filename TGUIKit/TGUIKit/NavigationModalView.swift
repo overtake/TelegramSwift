@@ -36,11 +36,11 @@ class NavigationModalView: Control {
         self.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
         self.backgroundColor = NSColor(0xffffff,0.8)
         
-        set(handler: { [weak self] in
-            if let strongSelf = self, !strongSelf.lock {
-                strongSelf.close()
+        set(handler: { control in
+            let control = control as! NavigationModalView
+            if !control.lock {
+                control.close()
             }
-            
         }, for: .Click)
     }
     

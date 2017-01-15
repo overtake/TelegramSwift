@@ -21,7 +21,7 @@ open class BackNavigationBar: TextButtonBarView {
             button.set(image: image, for: .Normal)
         }
         
-        button.set (handler:{[weak self] in
+        button.set (handler:{ [weak self] _ in
             
             self?.controller?.executeReturn()
             
