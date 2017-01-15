@@ -10,7 +10,7 @@ import Cocoa
 
 public class LinearProgressControl: Control {
     
-    private var progressView:View!
+    private var progressView:NSView!
     private var progress:CGFloat = 0
     public var onUserChanged:((Float)->Void)?
     
@@ -63,13 +63,15 @@ public class LinearProgressControl: Control {
         initialize()
     }
     
-    public override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        progressView.setFrameSize(progressView.frame.width,newSize.height)
+    public override func layout() {
+        super.layout()
+        progressView.setFrameSize(progressView.frame.width,frame.height)
     }
     
+
     private func initialize() {
-        progressView = View(frame:NSMakeRect(0, 0, 0, frame.height))
+        progressView = NSView(frame:NSMakeRect(0, 0, 0, frame.height))
+        progressView.wantsLayer = true
         progressView.layer?.backgroundColor = style.foregroundColor.cgColor
         addSubview(progressView)
     }

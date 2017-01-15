@@ -70,6 +70,13 @@ open class TableAnimationInterface: NSObject {
                         inset = presentLayer.position.y
                     }
                     layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+                    
+                    for item in added {
+                        if item.index == idx {
+                            layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                    }
+                    
                 }
                 
             }

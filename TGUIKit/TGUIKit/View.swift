@@ -73,7 +73,7 @@ public protocol ViewDisplayDelegate : class {
 public class CustomViewHandlers {
     public var size:((NSSize) ->Void)?
     public var origin:((NSPoint) ->Void)?
-    public var layout:(() ->Void)?
+    public var layout:((View) ->Void)?
 }
 
 
@@ -108,7 +108,7 @@ open class View : NSView,CALayerDelegate {
     open override func layout() {
         super.layout()
         if let layout = customHandler.layout {
-            layout()
+            layout(self)
         }
     }
     

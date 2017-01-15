@@ -39,6 +39,11 @@ open class BackNavigationBar: TextButtonBarView {
         needsLayout = true
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

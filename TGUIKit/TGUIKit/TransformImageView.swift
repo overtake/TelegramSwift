@@ -139,9 +139,20 @@ open class TransformImageView: Control {
         self.disposable.dispose()
     }
     
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            disposable.set(nil)
+        }
+    }
+    
     open override func removeFromSuperview() {
         super.removeFromSuperview()
         self.disposable.set(nil)
+    }
+    
+    public func dispose() {
+        disposable.set(nil)
     }
     
     public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, dispatchOnDisplayLink: Bool = true) {

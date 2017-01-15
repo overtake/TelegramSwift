@@ -10,7 +10,7 @@ import Cocoa
 
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
-    open private(set) var item:TableRowItem?
+    open private(set) weak var item:TableRowItem?
    // var selected:Bool?
     
     open var border:BorderType?
@@ -142,6 +142,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         if update {
             self.layer?.setNeedsDisplay()
         }
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     open override func copy() -> Any {
