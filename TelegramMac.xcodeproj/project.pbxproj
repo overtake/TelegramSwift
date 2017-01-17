@@ -994,6 +994,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				C2A315AA1E2E639500D89000 /* calendar */,
 				C24D9FC21E24FFCD002CD3F3 /* passcode */,
 				C2AC9C161E1E68490085C7DE /* controls */,
 				C232EA111E16551000C4D38C /* games */,
@@ -1579,6 +1580,13 @@
 				C2A16E561E118AB000585A85 /* ChannelTypeSettingsViewController.swift */,
 			);
 			name = channel;
+			sourceTree = "<group>";
+		};
+		C2A315AA1E2E639500D89000 /* calendar */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = calendar;
 			sourceTree = "<group>";
 		};
 		C2A506731DF438A700971A93 /* elements */ = {
