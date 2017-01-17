@@ -210,7 +210,7 @@ open class ViewController : NSObject {
     }
     
     open func getCenterBarViewOnce() -> TitledBarView {
-        return TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: systemMediumFont(TGFont.titleSize)))
+        return TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: .medium(.title)))
     }
     
     public func setCenterTitle(_ text:String) {
@@ -252,6 +252,7 @@ open class ViewController : NSObject {
     deinit {
         self.window?.removeObserver(for: self)
         NotificationCenter.default.removeObserver(self)
+        assertOnMainThread()
     }
     
     open func viewWillDisappear(_ animated:Bool) -> Void {

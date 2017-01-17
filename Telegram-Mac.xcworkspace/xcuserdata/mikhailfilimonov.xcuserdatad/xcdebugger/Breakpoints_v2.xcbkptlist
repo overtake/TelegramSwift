@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "submodules/TelegramCore/TelegramCore/RequestMessageActionCallback.swift"
-            timestampString = "504637511.216606"
+            timestampString = "506267305.273286"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "49"
-            endingLineNumber = "49"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
             landmarkName = "requestMessageActionCallback(account:messageId:isGame:data:)"
             landmarkType = "9">
          </BreakpointContent>

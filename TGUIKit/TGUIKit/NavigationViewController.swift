@@ -168,7 +168,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
         controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
         
-        navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: .none, animationStyle: controller.animationStyle)
+        navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle)
 
         containerView.addSubview(controller.view)
         Queue.mainQueue().justDispatch {
@@ -288,7 +288,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             controller.viewDidAppear(false);
             controller.becomeFirstResponder();
             
-            self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: style, animationStyle: controller.animationStyle)
+            self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
             lock = false
             
             return // without animations
@@ -309,7 +309,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         CATransaction.begin()
 
         
-        self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, style: style, animationStyle: controller.animationStyle)
+        self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
         
          previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (completed) in
             

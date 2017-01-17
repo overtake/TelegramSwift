@@ -10,8 +10,10 @@ import Cocoa
 
 public struct NavigationBarStyle {
     let height:CGFloat
-    public init(height:CGFloat) {
+    let enableBorder:Bool
+    public init(height:CGFloat, enableBorder:Bool = true) {
         self.height = height
+        self.enableBorder = enableBorder
     }
 }
 
@@ -76,10 +78,10 @@ class NavigationBarView: View {
     
     
     
-    public func switchViews(left:BarView, center:BarView, right:BarView, style:ViewControllerStyle, animationStyle:AnimationStyle) {
+    public func switchViews(left:BarView, center:BarView, right:BarView, controller:ViewController, style:ViewControllerStyle, animationStyle:AnimationStyle) {
         
         layout(left: left, center: center, right: right)
-        
+        self.bottomBorder.isHidden = !controller.bar.enableBorder
         if style != .none {
             
             CATransaction.begin()

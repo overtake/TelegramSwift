@@ -18,6 +18,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     public private(set) var contextMenu:ContextMenu?
     
+    
     required public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -91,19 +92,26 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    open override func rightMouseDown(with event: NSEvent) {
-        super.rightMouseDown(with: event)
-        
-        if let items = item?.menuItems() {
-            ContextMenu.show(items: items, view: self, event: event, onShow: {[weak self] (menu) in
+    open override func menu(for event: NSEvent) -> NSMenu? {
+        if let menuItems = item?.menuItems() {
+            var menu = ContextMenu()
+            menu.onShow = { [weak self] menu in
                 self?.contextMenu = menu
                 self?.onShowContextMenu()
-            }, onClose: {[weak self] () in
+            }
+            menu.delegate = menu
+            menu.onClose = { [weak self] _ in
                 self?.contextMenu = nil
                 self?.onCloseContextMenu()
-            })
+            }
+            for item in menuItems {
+                menu.addItem(item)
+            }
+            return menu
         }
+        return nil
     }
+    
     
     open func onShowContextMenu() ->Void {
         self.layer?.setNeedsDisplay()

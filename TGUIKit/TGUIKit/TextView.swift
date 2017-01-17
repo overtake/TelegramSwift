@@ -297,6 +297,11 @@ public final class TextViewLayout : Equatable {
         
     }
     
+    public func inSelectedRange(_ location:NSPoint) -> Bool {
+        let index = findIndex(location: location)
+        return selectedRange.range.location < index && selectedRange.range.location + selectedRange.range.length > index
+    }
+    
     public func isCurrentLine(pos:NSPoint, index:Int) -> Bool {
         
         let line = lines[index]
@@ -362,6 +367,11 @@ public final class TextViewLayout : Equatable {
         var next = startIndex
         var range = NSMakeRange(startIndex, 1)
         let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
+        var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
+        if let link = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange), effectiveRange.location != NSNotFound {
+            self.selectedRange = TextSelectedRange(range: effectiveRange, color: .selectText, def: true)
+            return
+        }
         if char == "" {
             self.selectedRange = TextSelectedRange()
             return
@@ -566,6 +576,26 @@ public class TextView: Control {
     }
     
 
+    public override func menu(for event: NSEvent) -> NSMenu? {
+        if let layout = layout {
+            if !layout.selectedRange.hasSelectText || !layout.inSelectedRange(convert(event.locationInWindow, from: nil)) {
+                layout.selectWord(at : self.convert(event.locationInWindow, from: nil))
+            }
+            self.setNeedsDisplayLayer()
+            if layout.selectedRange.hasSelectText {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(localizedString("Text.Copy"), handler: { [weak self] in
+                    if let strongSelf = self {
+                        strongSelf.copy(strongSelf)
+                    }
+                }))
+                return menu
+            }
+            
+        }
+        return nil
+    }
+    
     public func isEqual(to layout:TextViewLayout) -> Bool {
         return self.layout == layout
     }
