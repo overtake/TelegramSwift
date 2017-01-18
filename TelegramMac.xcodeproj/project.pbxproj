@@ -242,6 +242,11 @@
 		C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A16E401E1167DA00585A85 /* ChannelIntroViewController.swift */; };
 		C2A16E551E117BD000585A85 /* CreateChannelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A16E541E117BD000585A85 /* CreateChannelViewController.swift */; };
 		C2A16E571E118AB000585A85 /* ChannelTypeSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A16E561E118AB000585A85 /* ChannelTypeSettingsViewController.swift */; };
+		C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315AE1E2E64BE00D89000 /* CalendarController.swift */; };
+		C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B01E2E656100D89000 /* CalendarMonthController.swift */; };
+		C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B31E2E65C600D89000 /* CalendarUtils.m */; };
+		C2A315B91E2E695800D89000 /* TwoStepVerificationMainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */; };
+		C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */; };
 		C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506741DF438B900971A93 /* AudioWaveformView.swift */; };
 		C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506761DF5664F00971A93 /* ForwardChatListController.swift */; };
 		C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506781DF59C9700971A93 /* PicturePicker.swift */; };
@@ -617,6 +622,12 @@
 		C2A16E401E1167DA00585A85 /* ChannelIntroViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelIntroViewController.swift; sourceTree = "<group>"; };
 		C2A16E541E117BD000585A85 /* CreateChannelViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateChannelViewController.swift; sourceTree = "<group>"; };
 		C2A16E561E118AB000585A85 /* ChannelTypeSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelTypeSettingsViewController.swift; sourceTree = "<group>"; };
+		C2A315AE1E2E64BE00D89000 /* CalendarController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarController.swift; sourceTree = "<group>"; };
+		C2A315B01E2E656100D89000 /* CalendarMonthController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarMonthController.swift; sourceTree = "<group>"; };
+		C2A315B21E2E65C600D89000 /* CalendarUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarUtils.h; sourceTree = "<group>"; };
+		C2A315B31E2E65C600D89000 /* CalendarUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CalendarUtils.m; sourceTree = "<group>"; };
+		C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationMainViewController.swift; sourceTree = "<group>"; };
+		C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoStepVerification.swift; sourceTree = "<group>"; };
 		C2A506741DF438B900971A93 /* AudioWaveformView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioWaveformView.swift; sourceTree = "<group>"; };
 		C2A506761DF5664F00971A93 /* ForwardChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardChatListController.swift; sourceTree = "<group>"; };
 		C2A506781DF59C9700971A93 /* PicturePicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PicturePicker.swift; sourceTree = "<group>"; };
@@ -1195,6 +1206,7 @@
 		C24D9FC81E250328002CD3F3 /* privacy */ = {
 			isa = PBXGroup;
 			children = (
+				C2A315B51E2E691300D89000 /* 2fa */,
 				C24D9FC51E250094002CD3F3 /* passcode */,
 				C24D9FC91E25033E002CD3F3 /* PrivacySettingsViewController.swift */,
 			);
@@ -1585,8 +1597,18 @@
 		C2A315AA1E2E639500D89000 /* calendar */ = {
 			isa = PBXGroup;
 			children = (
+				C2A315AE1E2E64BE00D89000 /* CalendarController.swift */,
+				C2A315B01E2E656100D89000 /* CalendarMonthController.swift */,
 			);
 			name = calendar;
+			sourceTree = "<group>";
+		};
+		C2A315B51E2E691300D89000 /* 2fa */ = {
+			isa = PBXGroup;
+			children = (
+				C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */,
+			);
+			name = 2fa;
 			sourceTree = "<group>";
 		};
 		C2A506731DF438A700971A93 /* elements */ = {
@@ -1629,6 +1651,7 @@
 				C2A12FDC1E0ACB4B00EC2239 /* LocalNotificationsManager.swift */,
 				C2A12FE31E0AFD8500EC2239 /* TypingManager.swift */,
 				C2A16E3D1E11674F00585A85 /* CreateGroupSignals.swift */,
+				C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */,
 			);
 			name = core;
 			sourceTree = "<group>";
@@ -1679,6 +1702,8 @@
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				C2A315B21E2E65C600D89000 /* CalendarUtils.h */,
+				C2A315B31E2E65C600D89000 /* CalendarUtils.m */,
 				C2B072321DFF14730082939D /* core */,
 				C28BAB2A1DF9C2790027CE3A /* DateUtils.h */,
 				C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */,
@@ -2202,6 +2227,7 @@
 				C230B91D1DD4B84A0057F596 /* ShareContactNavigationAction.swift in Sources */,
 				C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
+				C2A315B91E2E695800D89000 /* TwoStepVerificationMainViewController.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
@@ -2229,6 +2255,7 @@
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C2A16E571E118AB000585A85 /* ChannelTypeSettingsViewController.swift in Sources */,
 				C291942F1DCC6E2200359491 /* DeclareEncodables.swift in Sources */,
+				C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
@@ -2269,6 +2296,7 @@
 				C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
+				C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */,
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
@@ -2276,6 +2304,7 @@
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */,
+				C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
 				C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */,
@@ -2310,6 +2339,7 @@
 				C2777B661DCFC649008B69DD /* Localizable.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,
+				C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */,
 				C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */,
 				C27AAFF11DEB3438009B9629 /* PasswordViewController.swift in Sources */,
 				C253A9611D917ACD00CDC850 /* ChatStickerContentView.swift in Sources */,
