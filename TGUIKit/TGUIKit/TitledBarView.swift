@@ -10,7 +10,7 @@ import Cocoa
 
 open class TitledBarView: BarView {
     
-   
+    public var titleImage:CGImage?
     
     public var text:NSAttributedString? {
         didSet {
@@ -33,7 +33,6 @@ open class TitledBarView: BarView {
         
         if let text = text {
             let (textLayout, textApply) = TextNode.layoutText(nil)(text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
-            
             var tY = NSMinY(focus(textLayout.size))
             
             if let status = status {
@@ -48,7 +47,14 @@ open class TitledBarView: BarView {
                 statusApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
             }
             
-            textApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height), in: ctx)
+            var textRect = NSMakeRect(floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height)
+            
+            if let titleImage = titleImage {
+                ctx.draw(titleImage, in: NSMakeRect(textRect.minX - titleImage.backingSize.width, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
+                textRect.origin.x += floorToScreenPixels(titleImage.backingSize.width/2)
+            }
+            
+            textApply().draw(textRect, in: ctx)
         }
         
     }

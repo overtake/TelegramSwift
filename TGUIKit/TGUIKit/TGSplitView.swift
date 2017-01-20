@@ -8,79 +8,6 @@
 
 import Foundation
 
-/*
- if(![self.delegate splitViewIsMinimisize:_controllers[_splitIdx]])
- {
- [[NSCursor resizeLeftCursor] set];
- } else {
- [[NSCursor resizeRightCursor] set];
- }
- 
- -(void)mouseDown:(NSEvent *)theEvent {
- [super mouseDown:theEvent];
- 
- _startPoint = [self convertPoint:[theEvent locationInWindow] fromView:nil];
- 
- _splitIdx = 0;
- _splitSuccess = NO;
- 
- [self.subviews enumerateObjectsUsingBlock:^(TGView *obj, NSUInteger idx, BOOL *stop) {
- 
- if(fabs(_startPoint.x - NSMaxX(obj.frame)) <= 10)
- {
- _splitSuccess = YES;
- _splitIdx = idx;
- *stop = YES;
- }
- 
- }];
- 
- 
- }
- 
- -(void)mouseUp:(NSEvent *)theEvent {
- [super mouseUp:theEvent];
- 
- _startPoint = NSMakePoint(0, 0);
- _splitSuccess = NO;
- [[NSCursor arrowCursor] set];
- }
- 
- -(void)mouseDragged:(NSEvent *)theEvent {
- [super mouseDragged:theEvent];
- 
- if(_startPoint.x == 0 || !_splitSuccess)
- return;
- 
- NSPoint current = [self convertPoint:[theEvent locationInWindow] fromView:nil];
- 
- 
- if(![self.delegate splitViewIsMinimisize:_controllers[_splitIdx]])
- {
- [[NSCursor resizeLeftCursor] set];
- } else {
- [[NSCursor resizeRightCursor] set];
- }
- 
- if(_startPoint.x - current.x >= 100) {
- 
- _startPoint = current;
- 
- [self.delegate splitViewDidNeedMinimisize:_controllers[_splitIdx]];
- 
- 
- } else if(current.x - _startPoint.x >= 100) {
- 
- _startPoint = current;
- 
- [self.delegate splitViewDidNeedFullsize:_controllers[_splitIdx]];
- 
- }
- }
-
- 
- */
-
 fileprivate class SplitMinimisizeView : Control {
     
     private var startPoint:NSPoint = NSZeroPoint
@@ -100,27 +27,31 @@ fileprivate class SplitMinimisizeView : Control {
     
     fileprivate override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
-        if mouseInside() {
-            NSCursor.resizeLeft()
+        checkCursor()
+    }
+    
+    func checkCursor() {
+        if mouseInside(), let splitView = splitView {
+            if splitView.state == .minimisize {
+                NSCursor.resizeRight().set()
+            } else {
+                NSCursor.resizeLeft().set()
+            }
         } else {
-            NSCursor.arrow()
+            NSCursor.arrow().set()
         }
     }
     
     fileprivate override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
-        if mouseInside() {
-            NSCursor.resizeLeft()
-        } else {
-            NSCursor.arrow()
-        }
+        checkCursor()
     }
     
     
     
     fileprivate override func mouseExited(with event: NSEvent) {
         super.mouseExited(with: event)
-        NSCursor.arrow()
+        checkCursor()
     }
     
     fileprivate override func mouseDragged(with event: NSEvent) {
@@ -128,9 +59,9 @@ fileprivate class SplitMinimisizeView : Control {
         
         if let splitView = splitView, let delegate = splitView.delegate {
             if splitView.state == .minimisize {
-                NSCursor.resizeRight()
+                NSCursor.resizeRight().set()
             } else {
-                NSCursor.resizeLeft()
+                NSCursor.resizeLeft().set()
             }
             
             let current = splitView.convert(event.locationInWindow, from: nil)

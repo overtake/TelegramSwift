@@ -204,13 +204,14 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 5
                 
+                let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
 
                 
                 self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset, NSHeight(placeholder.frame))
                 
                 if  animated {
-                    animateContainer.layer?.animate(from: NSMinX(animateContainer.frame) as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
+                    animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
                         self?.input.isHidden = false
                         self?.window?.makeFirstResponder(self?.input)
                         self?.lock = false
@@ -221,7 +222,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                     self.lock = false
                 }
                
-                
+
                 clear.isHidden = false
                 clear.layer?.opacity = 1.0
                 if animated {

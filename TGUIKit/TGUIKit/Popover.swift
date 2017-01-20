@@ -72,7 +72,7 @@ open class Popover: NSObject {
                     control.kitWindow?.set(escape: {[weak strongSelf] () -> KeyHandlerResult in
                         strongSelf?.hide()
                         return .invoked
-                    }, with: strongSelf, priority: .high)
+                    }, with: strongSelf, priority: .modal)
                     
                     strongSelf.control = control
                     strongSelf.background.flip = false
