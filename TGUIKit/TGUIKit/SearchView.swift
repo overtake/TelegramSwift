@@ -61,7 +61,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var clear:ImageButton = ImageButton()
     private var search:ImageView = ImageView()
-    
+    private let progressIndicator:NSProgressIndicator = NSProgressIndicator()
     private var placeholder:TextViewLabel = TextViewLabel()
     
     private var animateContainer:View = View()
@@ -72,13 +72,23 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     public var searchInteractions:SearchInteractions?
     private let theme:SearchTheme
     
+    public var isLoading:Bool = false {
+        didSet {
+            if oldValue != isLoading {
+                self.updateLoading()
+            }
+        }
+    }
+    
     required public init(frame frameRect: NSRect, theme:SearchTheme) {
         self.theme = theme
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
         self.layer?.cornerRadius = .cornerRadius
-        
-        
+        progressIndicator.style = .spinningStyle
+        progressIndicator.setFrameSize(theme.clearImage.backingSize)
+        progressIndicator.wantsLayer = true
+        progressIndicator.isHidden = true
        // input.isBordered = false
        // input.isBezeled = false
         input.focusRingType = .none
@@ -132,11 +142,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         animateContainer.center()
         
         self.set(handler: {[weak self] (event) in
-            
             if let strongSelf = self {
                 strongSelf.change(state:strongSelf.state == .None ? .Focus : .None,true)
             }
-            
         }, for: .Click)
     }
     
@@ -196,19 +204,29 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 5
                 
+                animateContainer.centerY(x: leftInset)
+
+                
                 self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset, NSHeight(placeholder.frame))
                 
-                animateContainer.layer?.animate(from: NSMinX(animateContainer.frame) as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
-                    self?.input.isHidden = false
-                    self?.window?.makeFirstResponder(self?.input)
-                    self?.lock = false
-                })
-                
-                animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
+                if  animated {
+                    animateContainer.layer?.animate(from: NSMinX(animateContainer.frame) as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
+                        self?.input.isHidden = false
+                        self?.window?.makeFirstResponder(self?.input)
+                        self?.lock = false
+                    })
+                } else {
+                    self.input.isHidden = false
+                    self.window?.makeFirstResponder(self.input)
+                    self.lock = false
+                }
+               
                 
                 clear.isHidden = false
                 clear.layer?.opacity = 1.0
-                clear.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration)
+                if animated {
+                    clear.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration)
+                }
             }
             
             if state == .None {
@@ -221,20 +239,42 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 self.placeholder.isHidden = false
                 
                 animateContainer.center()
-                
-                animateContainer.layer?.animate(from: leftInset as NSNumber, to: NSMinX(animateContainer.frame) as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true)
-                
-                clear.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion:true, additive:false, completion: {[weak self] (complete) in
-                    self?.clear.isHidden = true
-                    self?.lock = false
-                })
+                if animated {
+                    animateContainer.layer?.animate(from: leftInset as NSNumber, to: NSMinX(animateContainer.frame) as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true)
+                    
+                    clear.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion:true, additive:false, completion: {[weak self] (complete) in
+                        self?.clear.isHidden = true
+                        self?.lock = false
+                    })
+                } else {
+                    clear.isHidden = true
+                    lock = false
+                }
                 
                 clear.layer?.opacity = 0.0
-
             }
-
+            self.needsLayout = true
         }
   
+    }
+    
+    func updateLoading() {
+        assert(state == .Focus)
+        
+        if isLoading {
+            if progressIndicator.superview == nil {
+                addSubview(progressIndicator)
+            }
+            progressIndicator.isHidden = false
+            progressIndicator.layer?.removeAllAnimations()
+            clear.isHidden = true
+            progressIndicator.startAnimation(self)
+        } else {
+            progressIndicator.stopAnimation(self)
+            progressIndicator.removeFromSuperview()
+            progressIndicator.isHidden = true
+            clear.isHidden = false
+        }
     }
     
     
@@ -244,14 +284,15 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         case .None:
             animateContainer.center()
         case .Focus:
-            animateContainer.setFrameOrigin(NSMakePoint(leftInset, NSMinY(self.animateContainer.frame)))
+            animateContainer.centerY(x: leftInset)
         }
         clear.frame = NSMakeRect(frame.width - inset - theme.clearImage.backingSize.width, clear.frame.minY, theme.clearImage.backingSize.width, theme.clearImage.backingSize.height)
         clear.centerY()
+        progressIndicator.setFrameOrigin(clear.frame.origin)
     }
 
-    public func changeResponder() -> Bool {
-        change(state: state == .None ? .Focus : .None, true)
+    public func changeResponder(_ animated:Bool = true) -> Bool {
+        change(state: state == .None ? .Focus : .None, animated)
         return true
     }
     

@@ -203,7 +203,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.pushDisposable.dispose()
     }
     
-    public func push(_ controller:ViewController, _ animated:Bool = true) -> Void {
+    public func push(_ controller:ViewController, _ animated:Bool = true, style: ViewControllerStyle? = nil) -> Void {
         
 //        if isLocked {
 //            return
@@ -224,7 +224,14 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 
                 strongSelf.stack.append(controller)
                 
-                strongSelf.show(controller, animated && strongSelf.stack.count > 1 ? .push : .none)
+                let newStyle:ViewControllerStyle
+                if let style = style {
+                    newStyle = style
+                } else {
+                    newStyle = animated && strongSelf.stack.count > 1 ? .push : .none
+                }
+                
+                strongSelf.show(controller, newStyle)
             }
         }))
     }

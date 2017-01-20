@@ -42,7 +42,8 @@ open class Button: Control {
         
     }
     
-    override func apply(state:ControlState) -> Void {
+    override public func apply(state:ControlState) -> Void {
+        let state:ControlState = self.isSelected ? .Highlight : state
         super.apply(state: state)
         
 //        if let backgroundColor = stateBackground[state] {

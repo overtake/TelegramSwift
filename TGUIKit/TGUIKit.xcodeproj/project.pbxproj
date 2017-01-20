@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C20232A21D8188F1007C9ADE /* TGImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A11D8188F1007C9ADE /* TGImageView.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
 		C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E5C1DC2534300F98E03 /* SelectingControl.swift */; };
@@ -35,7 +34,7 @@
 		C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD81DAF82D0001792B6 /* GridRowItem.swift */; };
 		C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DDA1DAF82E3001792B6 /* GridRowView.swift */; };
 		C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DE91DAFCE69001792B6 /* GridTableView.swift */; };
-		C2271DED1DAFE4D0001792B6 /* TransformImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DEC1DAFE4D0001792B6 /* TransformImageView.swift */; };
+		C2271DED1DAFE4D0001792B6 /* TransformImageArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DEC1DAFE4D0001792B6 /* TransformImageArguments.swift */; };
 		C2271F331DB4CEB30045E719 /* HorizontalTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */; };
 		C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F351DB4CF270045E719 /* HorizontalRowView.swift */; };
 		C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F421DB4EE2F0045E719 /* TableStickItem.swift */; };
@@ -58,11 +57,8 @@
 		C2303E8C1D9A8B3000098E12 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E8B1D9A8B3000098E12 /* SearchView.swift */; };
 		C230B9181DD3A6350057F596 /* ProgressModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B9171DD3A6350057F596 /* ProgressModal.swift */; };
 		C232EA151E165AEF00C4D38C /* ImageBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EA141E165AEF00C4D38C /* ImageBarView.swift */; };
-		C234CA8D1D97DF26003023F7 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8A1D97DF26003023F7 /* Cache.swift */; };
 		C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8B1D97DF26003023F7 /* DrawingContext.swift */; };
 		C234CA8F1D97DF26003023F7 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8C1D97DF26003023F7 /* Image.swift */; };
-		C234CA931D97E151003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA921D97E151003023F7 /* PostboxMac.framework */; };
-		C234CA951D97E163003023F7 /* TelegramCoreMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA941D97E163003023F7 /* TelegramCoreMac.framework */; };
 		C234CA971D981F00003023F7 /* Control.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA961D981F00003023F7 /* Control.swift */; };
 		C253A9521D9147A400CDC850 /* Layer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9511D9147A400CDC850 /* Layer.swift */; };
 		C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9641D91B24100CDC850 /* TextViewLabel.swift */; };
@@ -96,7 +92,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C20232A11D8188F1007C9ADE /* TGImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGImageView.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
 		C2167E5C1DC2534300F98E03 /* SelectingControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectingControl.swift; sourceTree = "<group>"; };
@@ -124,7 +119,7 @@
 		C2271DD81DAF82D0001792B6 /* GridRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowItem.swift; sourceTree = "<group>"; };
 		C2271DDA1DAF82E3001792B6 /* GridRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowView.swift; sourceTree = "<group>"; };
 		C2271DE91DAFCE69001792B6 /* GridTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridTableView.swift; sourceTree = "<group>"; };
-		C2271DEC1DAFE4D0001792B6 /* TransformImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageView.swift; sourceTree = "<group>"; };
+		C2271DEC1DAFE4D0001792B6 /* TransformImageArguments.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageArguments.swift; sourceTree = "<group>"; };
 		C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalTableView.swift; sourceTree = "<group>"; };
 		C2271F351DB4CF270045E719 /* HorizontalRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalRowView.swift; sourceTree = "<group>"; };
 		C2271F421DB4EE2F0045E719 /* TableStickItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableStickItem.swift; sourceTree = "<group>"; };
@@ -148,7 +143,6 @@
 		C230B9171DD3A6350057F596 /* ProgressModal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProgressModal.swift; sourceTree = "<group>"; };
 		C232EA141E165AEF00C4D38C /* ImageBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageBarView.swift; sourceTree = "<group>"; };
 		C234CA881D97DEB6003023F7 /* TGLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TGLibrary.framework; path = ../TGLibrary/build/Debug/TGLibrary.framework; sourceTree = "<group>"; };
-		C234CA8A1D97DF26003023F7 /* Cache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		C234CA8B1D97DF26003023F7 /* DrawingContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawingContext.swift; sourceTree = "<group>"; };
 		C234CA8C1D97DF26003023F7 /* Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		C234CA921D97E151003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "../../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/PostboxMac.framework"; sourceTree = "<group>"; };
@@ -194,8 +188,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C21AAE3C1DB239ED007638C5 /* Foundation.framework in Frameworks */,
-				C234CA951D97E163003023F7 /* TelegramCoreMac.framework in Frameworks */,
-				C234CA931D97E151003023F7 /* PostboxMac.framework in Frameworks */,
 				C219E1DD1D8978960042F0C8 /* QuartzCore.framework in Frameworks */,
 				C219E1D51D87F4A00042F0C8 /* SwiftSignalKitMac.framework in Frameworks */,
 				C25FC7F91D86E53A0041E303 /* CoreVideo.framework in Frameworks */,
@@ -211,7 +203,6 @@
 			children = (
 				C219E1DF1D8A71820042F0C8 /* SImageLayer.swift */,
 				C253A9511D9147A400CDC850 /* Layer.swift */,
-				C2271DEC1DAFE4D0001792B6 /* TransformImageView.swift */,
 			);
 			name = layers;
 			sourceTree = "<group>";
@@ -289,6 +280,7 @@
 		C22E062A1D7F3C2700A11C88 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				C2271DEC1DAFE4D0001792B6 /* TransformImageArguments.swift */,
 				C2CBCAC11D81593B00142EC0 /* extensions */,
 				C22E062D1D7F3CC000A11C88 /* TGColor.swift */,
 				C2CBCABA1D80AD1F00142EC0 /* TGFont.swift */,
@@ -365,7 +357,6 @@
 		C2CBCAC11D81593B00142EC0 /* extensions */ = {
 			isa = PBXGroup;
 			children = (
-				C234CA8A1D97DF26003023F7 /* Cache.swift */,
 				C234CA8B1D97DF26003023F7 /* DrawingContext.swift */,
 				C234CA8C1D97DF26003023F7 /* Image.swift */,
 				C2CBCAC21D81595900142EC0 /* Extensions.swift */,
@@ -423,7 +414,6 @@
 				C219E1E11D8A93050042F0C8 /* TextView.swift */,
 				C2E0DEBA1D7F05AB00EF1C8D /* View.swift */,
 				C22E06381D804DCD00A11C88 /* ScrollView.swift */,
-				C20232A11D8188F1007C9ADE /* TGImageView.swift */,
 				C20232B51D845B0B007C9ADE /* TextNode.swift */,
 				C20232B71D85525C007C9ADE /* ViewUtils.swift */,
 				C25FC7F61D86DC370041E303 /* TGClipView.swift */,
@@ -540,7 +530,7 @@
 				C232EA151E165AEF00C4D38C /* ImageBarView.swift in Sources */,
 				C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */,
 				C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */,
-				C2271DED1DAFE4D0001792B6 /* TransformImageView.swift in Sources */,
+				C2271DED1DAFE4D0001792B6 /* TransformImageArguments.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
 				C2B1A1291DA3DDED00ACB1DD /* Node.swift in Sources */,
 				C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */,
@@ -550,7 +540,6 @@
 				C234CA971D981F00003023F7 /* Control.swift in Sources */,
 				C2303E6F1D9950E000098E12 /* Button.swift in Sources */,
 				C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */,
-				C20232A21D8188F1007C9ADE /* TGImageView.swift in Sources */,
 				C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */,
 				C219E1F31D8B02FA0042F0C8 /* CAAnimationUtils.swift in Sources */,
 				C291ED991DB35BC5008C6B2A /* Window.swift in Sources */,
@@ -604,7 +593,6 @@
 				C291ED9B1DB361ED008C6B2A /* KeyboardUtils.swift in Sources */,
 				C29B5F491DC8CA3C00D13E65 /* NavigationModalAction.swift in Sources */,
 				C2A71CEB1DDB382F00C69F73 /* TableViewController.swift in Sources */,
-				C234CA8D1D97DF26003023F7 /* Cache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

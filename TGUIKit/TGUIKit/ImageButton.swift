@@ -51,7 +51,8 @@ open class ImageButton: Button {
         self.addSubview(imageView)
     }
     
-    override func apply(state: ControlState) {
+    override public func apply(state: ControlState) {
+        let state:ControlState = self.isSelected ? .Highlight : state
         super.apply(state: state)
         updateLayout()
 

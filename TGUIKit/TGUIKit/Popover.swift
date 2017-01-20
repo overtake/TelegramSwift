@@ -84,7 +84,7 @@ open class Popover: NSObject {
                         case .maxX:
                             point.x -= controller.frame.width
                         case .maxY:
-                            point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
+                          //  point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
                             point.y -= controller.frame.height
                             strongSelf.background.flip = true
                         case .minX:
@@ -249,7 +249,7 @@ open class Popover: NSObject {
         
         self.disposable.dispose()
         self.readyDisposable.dispose()
-        
+        controller?.viewWillDisappear(true)
         if animates, let overlay = overlay {
             
             var once:Bool = false
@@ -257,6 +257,7 @@ open class Popover: NSObject {
                 sub.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, completion:{[weak self] (comple) in
                     if let strongSelf = self, !once {
                         once = true
+                        strongSelf.controller?.viewDidDisappear(true)
                         strongSelf.controller?.popover = nil
                         strongSelf.controller = nil
                         strongSelf.background.removeFromSuperview()

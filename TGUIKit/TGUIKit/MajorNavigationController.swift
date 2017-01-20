@@ -41,7 +41,7 @@ public class MajorNavigationController: NavigationViewController {
         return DraggingView.self
     }
    
-    override public func push(_ controller: ViewController, _ animated: Bool) {
+    override public func push(_ controller: ViewController, _ animated: Bool, style:ViewControllerStyle? = nil) {
         
         if isLocked {
             return
@@ -75,7 +75,15 @@ public class MajorNavigationController: NavigationViewController {
                 
                 let anim = animated && (!isMajorController || strongSelf.controller != strongSelf.defaultEmpty) && !removeAnimateFlag
                 
-                strongSelf.show(controller, anim ? .push : .none)
+                let newStyle:ViewControllerStyle
+                if let style = style {
+                    newStyle = style
+                } else {
+                    newStyle = anim ? .push : .none
+                }
+
+                
+                strongSelf.show(controller, newStyle)
             }
         }))
     }

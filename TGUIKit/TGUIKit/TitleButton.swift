@@ -49,7 +49,8 @@ public class TitleButton: ImageButton {
         apply(state: self.controlState)
     }
     
-    override func apply(state: ControlState) {
+    override public func apply(state: ControlState) {
+        let state:ControlState = self.isSelected ? .Highlight : state
         super.apply(state: state)
         
         if let stateText = stateText[state] {
@@ -144,7 +145,7 @@ public class TitleButton: ImageButton {
         }
         var attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
         var size:NSSize = attributedString.CTSize(CGFloat.greatestFiniteMagnitude, framesetter: nil).1
-        size.width = ceil(size.width) + 4
+        size.width = ceil(size.width) + 10
         size.height = ceil(size.height)
         return size
     }

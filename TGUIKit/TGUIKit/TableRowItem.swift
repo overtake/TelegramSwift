@@ -7,8 +7,7 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-open class TableRowItem: NSObject,Identifiable {
+open class TableRowItem: NSObject {
     public weak var table:TableView? {
         didSet {
             tableViewDidUpdated()

@@ -7,7 +7,6 @@
 //
 
 import Cocoa
-import TelegramCoreMac
 /*
 open class GridItem : NSObject,Identifiable {
     

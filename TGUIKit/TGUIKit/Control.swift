@@ -83,7 +83,7 @@ open class Control: View {
     public private(set) var controlState:ControlState = .Normal {
         didSet {
             if oldValue != controlState {
-                apply(state: isSelected ? .Highlight : self.controlState)
+                apply(state: isSelected ? .Highlight : controlState)
                 
                 for (state,handler) in stateHandlers {
                     if state == controlState {
@@ -95,7 +95,8 @@ open class Control: View {
         }
     }
     
-    func apply(state:ControlState) -> Void {
+    public func apply(state:ControlState) -> Void {
+        let state:ControlState = self.isSelected ? .Highlight : state
         if let color = backgroundState[state] {
             self.layer?.backgroundColor = color.cgColor
         } else {
@@ -224,18 +225,13 @@ open class Control: View {
     
     override open func mouseMoved(with event: NSEvent) {
         if userInteractionEnabled {
-            
            updateState()
-            
         } else {
             super.mouseMoved(with: event)
         }
     }
     
     public func updateState() -> Void {
-        
-
-        
         if mouseInside() {
             if mouseIsDown {
                 self.controlState = .Highlight
@@ -245,7 +241,6 @@ open class Control: View {
         } else {
             self.controlState = .Normal
         }
-        
     }
     
     override open func mouseEntered(with event: NSEvent) {

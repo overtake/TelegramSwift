@@ -458,7 +458,7 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ color:NSColor? = nil, reversed:Bool = false) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
         
         let drawContext:DrawingContext = DrawingContext.init(size: self.size, scale: 2.0, clear: true)
         
@@ -479,10 +479,14 @@ public extension NSImage {
 
         }
         
-        if reversed {
+        if flipVertical {
             drawContext.withFlippedContext(make)
         } else {
-            drawContext.withContext(make)
+            if flipHorizontal {
+                drawContext.withFlippedHorizontalContext(make)
+            } else {
+                drawContext.withContext(make)
+            }
         }
         
         

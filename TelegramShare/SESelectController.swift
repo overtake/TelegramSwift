@@ -251,7 +251,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         case let .HoleEntry(hole):
                             entries.append(.other(hole.index))
                         case let .MessageEntry(id, message, _, _, _):
-                            if let peer = message.peers[message.id.peerId] {
+                            if let peer = messageMainPeer(message) {
                                 if !fromSetIds.contains(peer.id) {
                                     entries.append(.plain(peer,id))
                                 } else {

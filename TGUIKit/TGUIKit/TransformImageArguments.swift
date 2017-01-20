@@ -7,9 +7,6 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
 
 public enum ImageCorner: Equatable {
     case Corner(CGFloat)
@@ -114,119 +111,5 @@ public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bo
     return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners
 }
 
-open class TransformImageView: Control {
-    public var imageUpdated: (() -> Void)?
-    public var alphaTransitionOnFirstUpdate = false
-    private var disposable = MetaDisposable()
-    public var animatesAlphaOnFirstTransition:Bool = false
-    private let argumentsPromise = Promise<TransformImageArguments>()
-    private var first:Bool = true
-    override public init() {
-        super.init()
-        self.layer?.disableActions()
-    }
-    
-    required public init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        self.layer?.disableActions()
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    deinit {
-        self.disposable.dispose()
-    }
-    
-    open override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if window == nil {
-            disposable.set(nil)
-        }
-    }
-    
-    open override func removeFromSuperview() {
-        super.removeFromSuperview()
-        self.disposable.set(nil)
-    }
-    
-    public func dispose() {
-        disposable.set(nil)
-    }
-    
-    public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, dispatchOnDisplayLink: Bool = true) {
-        self.layer?.contents = nil
-        let result = combineLatest(signal, argumentsPromise.get()) |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
-            return deferred {
-                return Signal<CGImage?, NoError>.single(transform(arguments)?.generateImage())
-            }
-        }
-        
-        self.disposable.set((result |> deliverOnMainQueue).start(next: {[weak self] next in
-            
-            if let strongSelf = self  {
-                if strongSelf.layer?.contents == nil && strongSelf.animatesAlphaOnFirstTransition {
-                    strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                }
-                
-                self?.layer?.contents = next
-                
-                if !strongSelf.first {
-                    self?.layer?.animateContents()
-                }
-                strongSelf.first = false
-            }
-           
-        }))
-    }
-    
-    public func set(arguments:TransformImageArguments) ->Void {
-        first = true
-        argumentsPromise.set(.single(arguments))
-    }
-    
-    override open func copy() -> Any {
-        let view = NSView()
-        view.wantsLayer = true
-        view.background = .clear
-        view.layer?.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 : visibleRect.height - frame.height, frame.width,  frame.height)
-        view.layer?.contents = self.layer?.contents
-        view.layer?.masksToBounds = true
-        view.frame = self.visibleRect
-        view.layer?.shouldRasterize = true
-        view.layer?.rasterizationScale = System.backingScale
-        return view
-    }
-    
-    
-}
 
 
-
-
-/*
- if dispatchOnDisplayLink {
- displayLinkDispatcher.dispatch { [weak self] in
- if let strongSelf = self {
- if strongSelf.alphaTransitionOnFirstUpdate && strongSelf.contents == nil {
- strongSelf.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.15)
- }
- strongSelf.contents = next?.cgImage
- if let imageUpdated = strongSelf.imageUpdated {
- imageUpdated()
- }
- }
- }
- } else {
- if let strongSelf = self {
- if strongSelf.alphaTransitionOnFirstUpdate && strongSelf.contents == nil {
- strongSelf.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.15)
- }
- strongSelf.contents = next?.cgImage
- if let imageUpdated = strongSelf.imageUpdated {
- imageUpdated()
- }
- }
- }
- */

@@ -1025,9 +1025,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
-        if transition.isEmpty {
-            return
-        }
+       
         
         self.beginUpdates()
         

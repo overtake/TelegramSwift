@@ -95,6 +95,27 @@ public class DrawingContext {
         }
     }
     
+    public func withFlippedHorizontalContext(_ f: @noescape(CGContext) -> ()) {
+        if self._context == nil {
+            if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
+                c.scaleBy(x: scale, y: scale)
+                self._context = c
+            }
+        }
+        
+        if let _context = self._context {
+            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
+            _context.scaleBy(x: -1.0, y: 1.0)
+            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
+            
+            f(_context)
+            
+            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
+            _context.scaleBy(x: -1.0, y: 1.0)
+            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
+        }
+    }
+    
     public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
         self.size = size
         self.scale = scale
