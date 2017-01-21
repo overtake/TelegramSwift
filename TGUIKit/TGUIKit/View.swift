@@ -181,6 +181,25 @@ open class View : NSView,CALayerDelegate {
         if let size = customHandler.size {
             size(newSize)
         }
+        guard #available(OSX 10.12, *) else {
+            needsLayout = true
+            return
+        }
+    }
+    
+    open override var needsLayout: Bool {
+        set {
+            super.needsLayout = newValue
+            if newValue {
+                guard #available(OSX 10.12, *) else {
+                    layout()
+                    return
+                }
+            }
+        }
+        get {
+            return super.needsLayout
+        }
     }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
