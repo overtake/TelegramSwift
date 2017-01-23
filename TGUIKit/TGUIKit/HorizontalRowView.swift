@@ -19,7 +19,7 @@ open class HorizontalRowView: TableRowView {
         super.addSubview(container)
 
         container.frame = NSMakeRect(0, 0, frame.height, frame.width)
-        
+        container.backgroundColor = .random
         if let layer = container.layer {
             layer.transform = CATransform3DTranslate(layer.transform, floorToScreenPixels(frame.height/2), floorToScreenPixels(frame.width/2.0), 1.0)
           //  layer.transform = CATransform3DScale(layer.transform, -1, 1, 1)

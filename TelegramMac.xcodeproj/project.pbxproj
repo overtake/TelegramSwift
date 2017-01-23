@@ -128,6 +128,7 @@
 		C232EAC91E1D536200C4D38C /* SEModalProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EAC81E1D536200C4D38C /* SEModalProgressView.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
+		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */; };
@@ -271,6 +272,7 @@
 		C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1121D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift */; };
 		C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */; };
 		C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */; };
+		C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
 		C2CBCAC01D81528700142EC0 /* System.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABF1D81528700142EC0 /* System.swift */; };
 		C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */; };
@@ -472,6 +474,7 @@
 		C232EAC81E1D536200C4D38C /* SEModalProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SEModalProgressView.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/PostboxMac.framework"; sourceTree = "<group>"; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
+		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
 		C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorBackNavigationBar.swift; sourceTree = "<group>"; };
@@ -643,6 +646,7 @@
 		C2B1A1121D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatPresentationInterfaceState.swift; sourceTree = "<group>"; };
 		C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputAccessory.swift; sourceTree = "<group>"; };
 		C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryViewer.swift; sourceTree = "<group>"; };
+		C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrettyGridUtils.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C2CBCABF1D81528700142EC0 /* System.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = System.swift; sourceTree = "<group>"; };
@@ -990,6 +994,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				C2B4D0BF1E34E03C00CBC4E6 /* pretty-grid-inline */,
 				C2EA177D1E2FD4F900887153 /* image */,
 				C2A315AA1E2E639500D89000 /* calendar */,
 				C24D9FC21E24FFCD002CD3F3 /* passcode */,
@@ -1547,6 +1552,7 @@
 				C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */,
 				C232EA0F1E156DE100C4D38C /* ContextCommandRowItem.swift */,
 				C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */,
+				C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */,
 			);
 			name = context;
 			sourceTree = "<group>";
@@ -1683,6 +1689,14 @@
 				C2412E061DA795D200588C14 /* GalleryControls.swift */,
 			);
 			name = gallery;
+			sourceTree = "<group>";
+		};
+		C2B4D0BF1E34E03C00CBC4E6 /* pretty-grid-inline */ = {
+			isa = PBXGroup;
+			children = (
+				C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */,
+			);
+			name = "pretty-grid-inline";
 			sourceTree = "<group>";
 		};
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
@@ -2119,6 +2133,7 @@
 				C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */,
 				C2DF47C51DE79574003AA6C0 /* stream.c in Sources */,
 				C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */,
+				C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */,
 				C26505931E0301A5001954DC /* MGalleryPhotoItem.swift in Sources */,
 				C2271DAE1DAE1172001792B6 /* UserInfoEntries.swift in Sources */,
 				C230B9131DD392EB0057F596 /* SearchRowItem.swift in Sources */,
@@ -2341,6 +2356,7 @@
 				C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */,
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,
+				C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */,
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */,
