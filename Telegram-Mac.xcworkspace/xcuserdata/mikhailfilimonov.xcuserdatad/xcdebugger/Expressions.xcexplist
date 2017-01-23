@@ -58,6 +58,9 @@
          contextName = "messageEntries([MessageHistoryEntry], maxReadIndex : MessageIndex?, dayGrouping : Bool, includeEmpty : Bool) -&gt; [ChatHistoryEntry]:System.swift">
       </ContextState>
       <ContextState
+         contextName = "fitPrettyDimensions([CGSize], perSize : CGSize) -&gt; [[CGSize]]:PrettyGridUtils.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #2):ChatController.swift">
       </ContextState>
       <ContextState
@@ -117,6 +120,9 @@
                value = "view.superview.frame">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(makeMediaEnties([ChatContextResult], initialSize : CGSize, itemSize : CGFloat) -&gt; [InputMediaContextEntry]).(fillRow #1)() -&gt; ():InputContextHelper.swift">
       </ContextState>
       <ContextState
          contextName = "WArticleLayout.init(with : TelegramMediaWebpageLoadedContent, account : Account) -&gt; WArticleLayout:WArticleLayout.swift">
@@ -279,7 +285,12 @@
          contextName = "(prepareEntries(from : [ChannelTypeEntry], to : [ChannelTypeEntry], account : Account, initialSize : CGSize, animated : Bool, typeHandler : (ChannelType) -&gt; ()) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1).(closure #1):ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
-         contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)]):System.swift">
+         contextName = "CalendarMonthView.layout() -&gt; ():CalendarMonthController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "subviews[i]">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TGMessageRowItem.makeSize(CGFloat) -&gt; Bool:TGMessageRowItem.swift">
@@ -290,15 +301,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #5).(closure #1):MediaBox.swift">
+         contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)]):System.swift">
       </ContextState>
       <ContextState
-         contextName = "CalendarMonthView.layout() -&gt; ():CalendarMonthController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "subviews[i]">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1).(closure #5).(closure #1):MediaBox.swift">
       </ContextState>
       <ContextState
          contextName = "TableView.init(frame : CGRect, isFlipped : Bool) -&gt; TableView:TableView.swift">
@@ -612,7 +618,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -624,7 +630,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -677,6 +683,9 @@
       </ContextState>
       <ContextState
          contextName = "Window.set(handler : () -&gt; (), with : AnyObject, for : KeyboardKey, priority : HandlerPriority, modifierFlags : NSEventModifierFlags?) -&gt; ():Window.swift">
+      </ContextState>
+      <ContextState
+         contextName = "(makeMediaEnties([ChatContextResult], initialSize : CGSize, maxHeight : CGFloat) -&gt; [InputMediaContextEntry]).(fillRow #1)() -&gt; ():PrettyGridUtils.swift">
       </ContextState>
       <ContextState
          contextName = "Layer.willChangeValue(forKey : String) -&gt; ():Layer.swift">
@@ -1030,6 +1039,14 @@
       </ContextState>
       <ContextState
          contextName = "InputContextHelper.(entries(for : ChatPresentationInputQueryResult?) -&gt; Signal&lt;[InputContextEntry], ()&gt;).(closure #1):InputContextHelper.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatTitleBarView.inputActivities.didset:ChatTitleBarView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "inputActivities">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TableView.change(size : CGSize, animated : Bool, Bool) -&gt; ():TableView.swift">

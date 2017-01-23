@@ -27,6 +27,8 @@ open class TitledBarView: BarView {
             }
         }
     }
+    
+    public var hiddenStatus:Bool = false
 
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
@@ -43,8 +45,9 @@ open class TitledBarView: BarView {
                 tY = (NSHeight(self.frame) - t) / 2.0
                 
                 let sY = tY + textLayout.size.height + 2.0
-                
-                statusApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
+                if !hiddenStatus {
+                    statusApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
+                }
             }
             
             var textRect = NSMakeRect(floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height)
