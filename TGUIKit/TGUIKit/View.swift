@@ -98,12 +98,6 @@ open class View : NSView,CALayerDelegate {
     
     public var border:BorderType?
     
-    public func removeAllSubviews() -> Void {
-        while (self.subviews.count > 0) {
-            self.subviews[0].removeFromSuperview();
-        }
-    }
-    
 
     open override func layout() {
         super.layout()

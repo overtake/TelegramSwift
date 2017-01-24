@@ -217,6 +217,12 @@ public extension String {
 
 public extension NSView {
     
+    public func removeAllSubviews() -> Void {
+        while (self.subviews.count > 0) {
+            self.subviews[0].removeFromSuperview();
+        }
+    }
+    
     public func setFrameSize(_ width:CGFloat, _ height:CGFloat) {
         self.setFrameSize(NSMakeSize(width, height))
     }
