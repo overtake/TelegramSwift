@@ -21,6 +21,7 @@ private let progressInteractiveThumb:CGImage = {
         
         ctx.fill(NSMakeRect(0, 0, context.size.width, context.size.height))
         ctx.draw(image, in: NSMakeRect(floorToScreenPixels((context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels((context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
+        
     }
     
     return context.generateImage()!
@@ -72,6 +73,7 @@ public enum RadialProgressState: Equatable {
     case Fetching(progress: Float)
     case ImpossibleFetching(progress: Float)
     case Play
+    case Icon(image:CGImage, mode:CGBlendMode)
 }
 
 public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
@@ -106,6 +108,12 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
             } else {
                 return false
         }
+    case .Icon:
+        if case .Icon = rhs {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
@@ -136,7 +144,7 @@ private class RadialProgressOverlayLayer: Layer {
         ctx.setStrokeColor(parameters.theme.foregroundColor.cgColor)
         
         switch parameters.state {
-        case .None, .Remote, .Play:
+        case .None, .Remote, .Play, .Icon:
             break
         case let .Fetching(progress), let .ImpossibleFetching(progress):
             
@@ -253,6 +261,13 @@ public class RadialProgressView: Control {
                 default:
                     self.setNeedsDisplay()
                 }
+            case .Icon:
+                switch self.state {
+                case .Icon:
+                    break
+                default:
+                    self.setNeedsDisplay()
+                }
             }
             
         }
@@ -328,7 +343,7 @@ public class RadialProgressView: Control {
             let arrowHeadSize: CGFloat = 15.0
             let arrowLength: CGFloat = 18.0
             let arrowHeadOffset: CGFloat = 1.0
-            
+        
             context.move(to: CGPoint(x: parameters.diameter / 2.0, y: parameters.diameter / 2.0 - arrowLength / 2.0 + arrowHeadOffset))
             context.addLine(to: CGPoint(x: parameters.diameter / 2.0, y: parameters.diameter / 2.0 + arrowLength / 2.0 - 1.0 + arrowHeadOffset))
             context.strokePath()
@@ -348,6 +363,14 @@ public class RadialProgressView: Control {
             }
         case .ImpossibleFetching:
             break
+        case let .Icon(image: icon, mode:blendMode):
+            var f = focus(icon.backingSize)
+            f.origin.x += parameters.theme.iconInset.left
+            f.origin.x -= parameters.theme.iconInset.right
+            f.origin.y += parameters.theme.iconInset.top
+            f.origin.y -= parameters.theme.iconInset.bottom
+            context.setBlendMode(blendMode)
+            context.draw(icon, in: f)
         }
 
     }
