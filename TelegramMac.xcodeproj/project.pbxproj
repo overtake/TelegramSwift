@@ -235,8 +235,6 @@
 		C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */; };
 		C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */; };
 		C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */; };
-		C2A12FDD1E0ACB4B00EC2239 /* LocalNotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FDC1E0ACB4B00EC2239 /* LocalNotificationsManager.swift */; };
-		C2A12FE41E0AFD8500EC2239 /* TypingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FE31E0AFD8500EC2239 /* TypingManager.swift */; };
 		C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FE51E0C503900EC2239 /* ChatContactRowItem.swift */; };
 		C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A16E3D1E11674F00585A85 /* CreateGroupSignals.swift */; };
 		C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A16E401E1167DA00585A85 /* ChannelIntroViewController.swift */; };
@@ -610,8 +608,6 @@
 		C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardPanelModel.swift; sourceTree = "<group>"; };
 		C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWDNavigationAction.swift; sourceTree = "<group>"; };
 		C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPageController.swift; sourceTree = "<group>"; };
-		C2A12FDC1E0ACB4B00EC2239 /* LocalNotificationsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalNotificationsManager.swift; sourceTree = "<group>"; };
-		C2A12FE31E0AFD8500EC2239 /* TypingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypingManager.swift; sourceTree = "<group>"; };
 		C2A12FE51E0C503900EC2239 /* ChatContactRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatContactRowItem.swift; sourceTree = "<group>"; };
 		C2A16E3D1E11674F00585A85 /* CreateGroupSignals.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateGroupSignals.swift; sourceTree = "<group>"; };
 		C2A16E401E1167DA00585A85 /* ChannelIntroViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelIntroViewController.swift; sourceTree = "<group>"; };
@@ -1645,8 +1641,6 @@
 			isa = PBXGroup;
 			children = (
 				C2B072331DFF148E0082939D /* UsernameAvailability.swift */,
-				C2A12FDC1E0ACB4B00EC2239 /* LocalNotificationsManager.swift */,
-				C2A12FE31E0AFD8500EC2239 /* TypingManager.swift */,
 				C2A16E3D1E11674F00585A85 /* CreateGroupSignals.swift */,
 				C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */,
 			);
@@ -2182,7 +2176,6 @@
 				C253E2381DE398980022A29F /* NativeAudioPlayer.swift in Sources */,
 				C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */,
 				C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */,
-				C2A12FE41E0AFD8500EC2239 /* TypingManager.swift in Sources */,
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
 				C24DABC11E0834B7005EE404 /* XCDYouTubeVideoOperation.m in Sources */,
@@ -2236,7 +2229,6 @@
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
-				C2A12FDD1E0ACB4B00EC2239 /* LocalNotificationsManager.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
 				C24DABBD1E0834B7005EE404 /* XCDYouTubeClient.m in Sources */,

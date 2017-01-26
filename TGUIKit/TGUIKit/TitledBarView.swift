@@ -8,11 +8,14 @@
 
 import Cocoa
 
-open class TitledBarView: BarView {
+private class TitledContainerView : View {
+    var titleImage:CGImage? {
+        didSet {
+            self.setNeedsDisplay()
+        }
+    }
     
-    public var titleImage:CGImage?
-    
-    public var text:NSAttributedString? {
+    var text:NSAttributedString? {
         didSet {
             if text != oldValue {
                 self.setNeedsDisplay()
@@ -20,7 +23,7 @@ open class TitledBarView: BarView {
         }
     }
     
-    public var status:NSAttributedString? {
+    var status:NSAttributedString? {
         didSet {
             if status != oldValue {
                 self.setNeedsDisplay()
@@ -28,9 +31,13 @@ open class TitledBarView: BarView {
         }
     }
     
-    public var hiddenStatus:Bool = false
-
-    override open func draw(_ layer: CALayer, in ctx: CGContext) {
+    var hiddenStatus:Bool = false {
+        didSet {
+            self.setNeedsDisplay()
+        }
+    }
+    
+    fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
         if let text = text {
@@ -59,19 +66,68 @@ open class TitledBarView: BarView {
             
             textApply().draw(textRect, in: ctx)
         }
-        
+    }
+}
+
+open class TitledBarView: BarView {
+    
+    public var titleImage:CGImage? {
+        didSet {
+            _containerView.titleImage = titleImage
+        }
     }
     
+    public var text:NSAttributedString? {
+        didSet {
+            if text != oldValue {
+                _containerView.text = text
+            }
+        }
+    }
+    
+    public var status:NSAttributedString? {
+        didSet {
+            if status != oldValue {
+                _containerView.status = status
+            }
+        }
+    }
+    
+    private let _containerView:TitledContainerView = TitledContainerView()
+    public var containerView:View {
+        return _containerView
+    }
+    
+    public var hiddenStatus:Bool = false {
+        didSet {
+            _containerView.hiddenStatus = hiddenStatus
+        }
+    }
+    
+
+    
+    open override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        containerView.setFrameSize(newSize)
+        containerView.setNeedsDisplay()
+    }
     public init(_ text:NSAttributedString?, _ status:NSAttributedString? = nil) {
         self.text = text
         self.status = status
-        
         super.init()
+        addSubview(containerView)
+        _containerView.text = text
+        _containerView.status = status
+    }
+    
+    open override func draw(_ dirtyRect: NSRect) {
         
     }
     
+    
     public override init() {
         super.init()
+        addSubview(containerView)
     }
     
     override required public init(frame frameRect: NSRect) {
