@@ -13,7 +13,7 @@ import TelegramCoreMac
 import PostboxMac
 
 
-let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), localizedString("ShareExtension.Search"))
+let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), tr(.shareExtensionSearch))
 class ShareModalView : View {
     let searchView:SearchView = SearchView(frame: NSZeroRect, theme:searchTheme)
     let tableView:TableView = TableView()
@@ -26,11 +26,11 @@ class ShareModalView : View {
         borderView.backgroundColor = .border
         
         acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
-        acceptView.set(text: localizedString("ShareExtension.Share"), for: .Normal)
+        acceptView.set(text: tr(.shareExtensionShare), for: .Normal)
         acceptView.sizeToFit()
         
         cancelView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
-        cancelView.set(text: localizedString("ShareExtension.Cancel"), for: .Normal)
+        cancelView.set(text: tr(.shareExtensionCancel), for: .Normal)
         cancelView.sizeToFit()
         
         addSubview(acceptView)
