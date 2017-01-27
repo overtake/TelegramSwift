@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
 		C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */; };
@@ -361,6 +362,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C201C2311E3B2D1C0026C21E /* FastSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FastSettings.swift; sourceTree = "<group>"; };
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
 		C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
@@ -1728,6 +1730,7 @@
 				C2A506781DF59C9700971A93 /* PicturePicker.swift */,
 				C29A65041E0845B80071BCEF /* ExternalVideoLoader.swift */,
 				C232EABD1E1D13A800C4D38C /* TextUtils.swift */,
+				C201C2311E3B2D1C0026C21E /* FastSettings.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -2341,6 +2344,7 @@
 				C2777B661DCFC649008B69DD /* Localizable.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,
+				C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */,
 				C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */,
 				C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */,
 				C27AAFF11DEB3438009B9629 /* PasswordViewController.swift in Sources */,
