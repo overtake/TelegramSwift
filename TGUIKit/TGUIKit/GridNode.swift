@@ -10,17 +10,24 @@ import Cocoa
 
 public protocol GridListItem {
     var section: GridSection? { get }
-    func node(layout: GridNodeLayout) -> GridItemNode
+    func node(layout: GridNodeLayout, gridNode:GridNode) -> GridItemNode
 }
 
 
 
 open class GridItemNode: ImageButton {
+    
+    open var stableId:AnyHashable {
+        return 0
+    }
+    
+    public private(set) weak var grid:GridNode?
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
     }
-    public override init() {
+    public init(_ grid:GridNode) {
         super.init()
+        self.grid = grid
     }
     
     required public init?(coder: NSCoder) {
@@ -102,13 +109,19 @@ public struct GridNodeLayout: Equatable {
     public let size: CGSize
     public let insets: EdgeInsets
     public let preloadSize: CGFloat
-    public let itemSize: CGSize
+    
+    
+    fileprivate let _itemSize:CGSize
+    public var itemSize: CGSize {
+        let s = floorToScreenPixels(size.width/floor(size.width/_itemSize.width))
+        return NSMakeSize(s, s)
+    }
     
     public init(size: CGSize, insets: EdgeInsets, preloadSize: CGFloat, itemSize: CGSize) {
         self.size = size
         self.insets = insets
         self.preloadSize = preloadSize
-        self.itemSize = itemSize
+        _itemSize = itemSize
     }
     
     public static func ==(lhs: GridNodeLayout, rhs: GridNodeLayout) -> Bool {
@@ -226,7 +239,7 @@ private struct WrappedGridSection: Hashable {
 }
 
 
-open class GridNode: ScrollView {
+open class GridNode: ScrollView, InteractionContentViewProtocol {
     
     private var document:View
     
@@ -259,6 +272,15 @@ open class GridNode: ScrollView {
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func contentInteractionView(for stableId: AnyHashable) -> NSView? {
+        for (_, node) in itemNodes {
+            if node.stableId == stableId {
+                return node
+            }
+        }
+        return nil;
     }
     
     public func transaction(_ transaction: GridNodeTransaction, completion: (GridNodeDisplayedItemRange) -> Void) {
@@ -628,7 +650,7 @@ open class GridNode: ScrollView {
             if let itemNode = self.itemNodes[item.index] {
                 itemNode.frame = item.frame
             } else {
-                let itemNode = self.items[item.index].node(layout: presentationLayoutTransition.layout.layout)
+                let itemNode = self.items[item.index].node(layout: presentationLayoutTransition.layout.layout, gridNode:self)
                 itemNode.frame = item.frame
                 self.addItemNode(index: item.index, itemNode: itemNode)
             }
@@ -892,6 +914,13 @@ open class GridNode: ScrollView {
                 itemNode.removeFromSuperview()
             }
         }
+    }
+    
+    open override func layout() {
+        super.layout()
+        gridLayout = GridNodeLayout(size: frame.size, insets: gridLayout.insets, preloadSize: gridLayout.preloadSize, itemSize: gridLayout._itemSize)
+        self.itemLayout = generateItemLayout()
+        applyPresentaionLayoutTransition(generatePresentationLayoutTransition(), removedNodes: [])
     }
     
 

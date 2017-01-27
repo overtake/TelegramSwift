@@ -1568,15 +1568,6 @@
 			name = "navigation actions";
 			sourceTree = "<group>";
 		};
-		C2A105491E01561500B01F48 /* modern-gallery */ = {
-			isa = PBXGroup;
-			children = (
-				C26505911E02FC01001954DC /* items */,
-				C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */,
-			);
-			name = "modern-gallery";
-			sourceTree = "<group>";
-		};
 		C2A16E3F1E1167C300585A85 /* channel */ = {
 			isa = PBXGroup;
 			children = (
@@ -1675,7 +1666,6 @@
 		C2B1A1331DA6580C00ACB1DD /* media */ = {
 			isa = PBXGroup;
 			children = (
-				C2A105491E01561500B01F48 /* modern-gallery */,
 				C2271DD51DAF80AC001792B6 /* shared media */,
 				C2B1A1341DA6581500ACB1DD /* gallery */,
 			);
@@ -1685,6 +1675,8 @@
 		C2B1A1341DA6581500ACB1DD /* gallery */ = {
 			isa = PBXGroup;
 			children = (
+				C26505911E02FC01001954DC /* items */,
+				C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */,
 				C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */,
 				C2412E061DA795D200588C14 /* GalleryControls.swift */,
 			);

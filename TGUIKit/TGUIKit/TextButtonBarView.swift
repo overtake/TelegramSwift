@@ -37,7 +37,6 @@ open class TextButtonBarView: BarView {
     }
     
     open override func layout() {
-        super.layout()
         switch alignment {
         case .Center:
             button.sizeToFit(NSZeroSize,NSMakeSize(frame.width, frame.height - .borderSize))
@@ -49,6 +48,7 @@ open class TextButtonBarView: BarView {
             button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 20.0, f.minY))
             
         }
+        super.layout()
     }
     
     

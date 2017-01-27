@@ -39,6 +39,15 @@ open class BackNavigationBar: TextButtonBarView {
         needsLayout = true
     }
     
+    open override func layout() {
+        super.layout()
+        if controller?.backSettings().1 != nil {
+            button.centerY(x: 10)
+        } else {
+            button.center()
+        }
+    }
+    
     deinit {
         var bp:Int = 0
         bp += 1
