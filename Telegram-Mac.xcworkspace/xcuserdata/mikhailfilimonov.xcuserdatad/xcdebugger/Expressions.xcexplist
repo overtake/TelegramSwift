@@ -202,6 +202,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatContactRowItem.init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatContactRowItem:ChatContactRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = " message.media[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "PeerMediaGridController.(enqueueHistoryViewTransition(ChatHistoryGridTransition) -&gt; Signal&lt;(), ()&gt;).(closure #1):PeerMediaGridController.swift">
          <PersistentStrings>
             <PersistentString
@@ -618,7 +626,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -630,7 +638,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -679,13 +687,13 @@
          contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1):ChatController.swift">
       </ContextState>
       <ContextState
-         contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
+         contextName = "(makeMediaEnties([ChatContextResult], initialSize : CGSize, maxHeight : CGFloat) -&gt; [InputMediaContextEntry]).(fillRow #1)() -&gt; ():PrettyGridUtils.swift">
       </ContextState>
       <ContextState
          contextName = "Window.set(handler : () -&gt; (), with : AnyObject, for : KeyboardKey, priority : HandlerPriority, modifierFlags : NSEventModifierFlags?) -&gt; ():Window.swift">
       </ContextState>
       <ContextState
-         contextName = "(makeMediaEnties([ChatContextResult], initialSize : CGSize, maxHeight : CGFloat) -&gt; [InputMediaContextEntry]).(fillRow #1)() -&gt; ():PrettyGridUtils.swift">
+         contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
       </ContextState>
       <ContextState
          contextName = "Layer.willChangeValue(forKey : String) -&gt; ():Layer.swift">
@@ -953,6 +961,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatRowView.mouseDown(with : NSEvent) -&gt; ():ChatRowView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "stringStatus(for : PeerView, theme : PeerStatusStringTheme) -&gt; PeerStatusStringResult:TextUtils.swift">
       </ContextState>
       <ContextState
          contextName = "static ChatRowItem.item(from : ChatHistoryEntry, with : Account) -&gt; ChatRowItem:ChatRowItem.swift">

@@ -101,14 +101,61 @@ public class MajorNavigationController: NavigationViewController {
     
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.window?.set(handler: escapeKeyAction, with: self, for: .Escape, priority:.medium)
-        self.window?.set(handler: returnKeyAction, with: self, for: .Return, priority:.low)
+        self.window?.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.escapeKeyAction()
+            }
+            return .rejected
+        }, with: self, for: .Escape, priority:.medium)
+        
+        self.window?.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.returnKeyAction()
+            }
+            return .rejected
+        }, with: self, for: .Return, priority:.low)
+        
+        
+        self.window?.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.backKeyAction()
+            }
+            return .rejected
+        }, with: self, for: .LeftArrow, priority:.low)
+        
+        self.window?.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.nextKeyAction()
+            }
+            return .rejected
+        }, with: self, for: .RightArrow, priority:.low)
+        
     }
     
     public override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         self.window?.remove(object: self, for: .Escape)
         self.window?.remove(object: self, for: .Return)
+        self.window?.remove(object: self, for: .LeftArrow)
+        self.window?.remove(object: self, for: .RightArrow)
+    }
+    
+    public override func backKeyAction() -> KeyHandlerResult {
+        let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
+        
+        let cInvoke = self.controller.backKeyAction()
+        
+        if cInvoke == .invokeNext {
+            return .invokeNext
+        } else if cInvoke == .invoked {
+            return .invoked
+        }
+        self.back()
+        return status
+    }
+    
+    public override func nextKeyAction() -> KeyHandlerResult {
+        return self.controller.nextKeyAction()
     }
     
     
@@ -127,7 +174,6 @@ public class MajorNavigationController: NavigationViewController {
     }
     
     public override func returnKeyAction() -> KeyHandlerResult {
-        
         return .rejected
     }
     
