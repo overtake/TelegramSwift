@@ -189,7 +189,7 @@ public final class TextViewLayout : Equatable {
                     if first {
                         first = false
                     } else {
-                        //layoutSize.height += fontLineSpacing
+                        layoutSize.height += fontLineSpacing
                     }
                     
                     let coreTextLine = CTTypesetterCreateLineWithOffset(typesetter, CFRangeMake(lastLineCharacterIndex, lineCharacterCount), 100.0)
