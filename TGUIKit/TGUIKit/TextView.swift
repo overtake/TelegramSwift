@@ -156,7 +156,7 @@ public final class TextViewLayout : Equatable {
                 if first {
                     first = false
                 } else {
-                   // layoutSize.height += fontLineSpacing
+                    layoutSize.height += fontLineSpacing
                 }
                 
                 let coreTextLine: CTLine
@@ -178,7 +178,7 @@ public final class TextViewLayout : Equatable {
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: fontLineHeight)
-                layoutSize.height += fontLineHeight
+                layoutSize.height += fontLineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
                 lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
@@ -204,7 +204,7 @@ public final class TextViewLayout : Equatable {
                     lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
                 } else {
                     if !lines.isEmpty {
-                     //   layoutSize.height += fontLineSpacing
+                        layoutSize.height += fontLineSpacing
                     }
                     break
                 }

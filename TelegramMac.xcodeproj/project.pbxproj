@@ -307,6 +307,7 @@
 		C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E40A1A1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift */; };
 		C2EA177F1E2FD50000887153 /* TransformImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA177E1E2FD50000887153 /* TransformImageView.swift */; };
 		C2EA17811E2FD50A00887153 /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
+		C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */; };
 		C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; };
 		C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; };
 		C2FBC1DA1DC61B0F0063A23B /* SwiftSignalKitMac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -702,6 +703,7 @@
 		C2E40A1A1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaEmptyRowItem.swift; sourceTree = "<group>"; };
 		C2EA177E1E2FD50000887153 /* TransformImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageView.swift; sourceTree = "<group>"; };
 		C2EA17801E2FD50A00887153 /* ImageUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageUtils.swift; sourceTree = "<group>"; };
+		C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteboardUtils.swift; sourceTree = "<group>"; };
 		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TelegramCoreMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/TelegramCoreMac.framework"; sourceTree = "<group>"; };
 		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSignalKitMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/SwiftSignalKitMac.framework"; sourceTree = "<group>"; };
 		C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MtProtoKitMac.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/MtProtoKitMac.framework"; sourceTree = "<group>"; };
@@ -1731,6 +1733,7 @@
 				C29A65041E0845B80071BCEF /* ExternalVideoLoader.swift */,
 				C232EABD1E1D13A800C4D38C /* TextUtils.swift */,
 				C201C2311E3B2D1C0026C21E /* FastSettings.swift */,
+				C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -2140,6 +2143,7 @@
 				C26A71971DC9F78B00F69385 /* ChatAccessoryNode.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
+				C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */,
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,

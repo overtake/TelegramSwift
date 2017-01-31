@@ -275,10 +275,10 @@ public class Modal: NSObject {
     }
     
     func show() -> Void {
-       // if let view
+        // if let view
         if let controller = controller {
-            disposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] (ready) in
-                if let strongSelf = self, let view = self?.window.contentView?.subviews.first {
+            disposable.set((controller.ready.get() |> take(1)).start(next: {[weak self, weak controller] (ready) in
+                if let strongSelf = self, let view = self?.window.contentView?.subviews.first, let controller = controller {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.background.background = controller.isFullScreen ? .white : .blackTransparent
@@ -286,7 +286,7 @@ public class Modal: NSObject {
                         strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
                     } else {
                         strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.3)
-
+                        
                     }
                     strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
                         strongSelf?.controller?.viewDidAppear(true)
@@ -300,7 +300,7 @@ public class Modal: NSObject {
                 }
             }))
         }
-
+        
     }
     
 }

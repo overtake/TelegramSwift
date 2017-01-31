@@ -347,6 +347,15 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
+    public func close(animated:Bool = true) ->Void {
+        if stackCount > 1 && !isLocked {
+            var controller = stack[0]
+            stack.last?.didRemovedFromStack()
+            stack.removeLast()
+            show(controller, animated ? .pop : .none)
+        }
+    }
+    
     public func set(modalAction:NavigationModalAction, _ showView:Bool = true) {
         self.modalAction?.view?.removeFromSuperview()
         self.modalAction = modalAction

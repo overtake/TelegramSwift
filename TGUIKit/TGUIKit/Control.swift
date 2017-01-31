@@ -47,13 +47,9 @@ open class Control: View {
     
     var trackingArea:NSTrackingArea?
 
-    public var interactionStateForRestore = true
+    public var interactionStateForRestore:Bool? = nil
     
-    public var userInteractionEnabled:Bool = true {
-        didSet {
-            interactionStateForRestore = oldValue
-        }
-    }
+    public var userInteractionEnabled:Bool = true
     
     private var handlers:[(ControlEvent,(Control) -> Void)] = []
     private var stateHandlers:[(ControlState,(Control) -> Void)] = []
@@ -198,14 +194,15 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled {
-            
-             send(event: .Up)
-            
-            if mouseInside() {
-                if event.clickCount == 1  {
-                    send(event: .SingleClick)
+            if isEnabled {
+                send(event: .Up)
+                
+                if mouseInside() {
+                    if event.clickCount == 1  {
+                        send(event: .SingleClick)
+                    }
+                    send(event: .Click)
                 }
-                send(event: .Click)
             }
             
             updateState()

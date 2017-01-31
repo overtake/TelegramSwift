@@ -156,10 +156,38 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    open override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        guard #available(OSX 10.12, *) else {
+            needsLayout = true
+            return
+        }
+    }
+    
+    open override func viewDidMoveToSuperview() {
+        if superview != nil {
+            guard #available(OSX 10.12, *) else {
+                needsLayout = true
+                return
+            }
+        }
+    }
+    
+    open override func layout() {
+        super.layout()
+    }
+    
+    func notifySubviewsToLayout(_ subview:NSView) -> Void {
+        for sub in subview.subviews {
+            sub.needsLayout = true
+        }
+    }
+    
     open override var needsLayout: Bool {
         set {
             super.needsLayout = newValue
             if newValue {
+                notifySubviewsToLayout(self)
                 guard #available(OSX 10.12, *) else {
                     layout()
                     return
@@ -171,10 +199,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
-    deinit {
-        var bp:Int = 0
-        bp += 1
-    }
+    
     
     open override func copy() -> Any {
         let view:View = View(frame:bounds)

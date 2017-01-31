@@ -24,7 +24,7 @@ open class OverlayControl: Control {
         self.addTrackingArea(self.trackingArea!)
     }
     
-    override func mouseInside() -> Bool {
+    override public func mouseInside() -> Bool {
         if let window = self.window {
             var location:NSPoint = window.mouseLocationOutsideOfEventStream
             location = self.convert(location, from: nil)

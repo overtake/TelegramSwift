@@ -169,6 +169,15 @@ open class View : NSView,CALayerDelegate {
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     
+    open override func viewDidMoveToSuperview() {
+        if superview != nil {
+            guard #available(OSX 10.12, *) else {
+                needsLayout = true
+                return
+            }
+        }
+    }
+    
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         
@@ -181,10 +190,17 @@ open class View : NSView,CALayerDelegate {
         }
     }
     
+    func notifySubviewsToLayout(_ subview:NSView) -> Void {
+        for sub in subview.subviews {
+            sub.needsLayout = true
+        }
+    }
+    
     open override var needsLayout: Bool {
         set {
             super.needsLayout = newValue
             if newValue {
+                notifySubviewsToLayout(self)
                 guard #available(OSX 10.12, *) else {
                     layout()
                     return
@@ -196,10 +212,15 @@ open class View : NSView,CALayerDelegate {
         }
     }
     
+    
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)
         if let origin = customHandler.origin {
             origin(newOrigin)
+        }
+        guard #available(OSX 10.12, *) else {
+            needsLayout = true
+            return
         }
     }
     
@@ -248,7 +269,7 @@ open class View : NSView,CALayerDelegate {
         return copy
     }
     
-    func mouseInside() -> Bool {
+    public func mouseInside() -> Bool {
         if let window = self.window {
             var location:NSPoint = window.mouseLocationOutsideOfEventStream
             location = self.convert(location, from: nil)
