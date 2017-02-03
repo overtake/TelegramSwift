@@ -18,6 +18,7 @@ open class ModalViewController : ViewController {
         return .blackTransparent
     }
     
+    
     open var isFullScreen:Bool {
         return false
     }
@@ -148,7 +149,7 @@ private class ModalInteractionsContainer : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
@@ -204,7 +205,7 @@ public class Modal: NSObject {
         background.addSubview(container)
         
         window.set(escape: {[weak self] () -> KeyHandlerResult in
-            if controller.escapeKeyAction() == .rejected {
+            if self?.controller?.escapeKeyAction() == .rejected {
                 self?.close()
             }
             return .invoked
@@ -215,10 +216,8 @@ public class Modal: NSObject {
         }, for: .Click)
         
         if controller.dynamicSize {
-            background.customHandler.size = {[weak self] (size) in
-                if let strongSelf = self {
-                    controller.measure(size: size)
-                }
+            background.customHandler.size = { [weak self] (size) in
+                self?.controller?.measure(size: size)
             }
         }
         
@@ -278,10 +277,10 @@ public class Modal: NSObject {
         // if let view
         if let controller = controller {
             disposable.set((controller.ready.get() |> take(1)).start(next: {[weak self, weak controller] (ready) in
-                if let strongSelf = self, let view = self?.window.contentView?.subviews.first, let controller = controller {
+                if let strongSelf = self, let view = self?.window.contentView, let controller = controller {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
-                    strongSelf.background.background = controller.isFullScreen ? .white : .blackTransparent
+                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : .blackTransparent
                     if !controller.isFullScreen {
                         strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
                     } else {

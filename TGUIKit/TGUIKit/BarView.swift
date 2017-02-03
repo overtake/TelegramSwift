@@ -39,7 +39,7 @@ open class BarView: View {
         }, for: .Click)
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
         self.addSubview(overlay)
         overlayInitEvent()

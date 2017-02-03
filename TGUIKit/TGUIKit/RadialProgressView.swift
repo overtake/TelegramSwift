@@ -285,7 +285,7 @@ public class RadialProgressView: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     

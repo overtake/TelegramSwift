@@ -235,14 +235,14 @@ public final class TextViewLayout : Equatable {
         if (currentPoint.x != -1 && currentPoint.y != -1 && !lines.isEmpty) {
             
             
-            var startSelectLineIndex = findIndex(location: startPoint)
-            var currentSelectLineIndex = findIndex(location: currentPoint)
-            var dif = abs(startSelectLineIndex - currentSelectLineIndex)
-            var isReversed = currentSelectLineIndex < startSelectLineIndex
+            let startSelectLineIndex = findIndex(location: startPoint)
+            let currentSelectLineIndex = findIndex(location: currentPoint)
+            let dif = abs(startSelectLineIndex - currentSelectLineIndex)
+            let isReversed = currentSelectLineIndex < startSelectLineIndex
             var i = startSelectLineIndex
             while isReversed ? i >= currentSelectLineIndex : i <= currentSelectLineIndex {
-                var line = lines[i].line
-                var lineRange = CTLineGetStringRange(line)
+                let line = lines[i].line
+                let lineRange = CTLineGetStringRange(line)
                 var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, startPoint)
                 var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, currentPoint)
                 if dif > 0 {
@@ -323,12 +323,17 @@ public final class TextViewLayout : Equatable {
     public func link(at point:NSPoint) -> (Any, NSRect)? {
         
         let index = findIndex(location: point)
+        
+        guard index != -1 else {
+            return nil
+        }
+        
         let line = lines[index]
         var ascent:CGFloat = 0
         var descent:CGFloat = 0
         var leading:CGFloat = 0
         
-        var width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
+        let width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
         
         if  width > point.x {
             var pos = CTLineGetStringIndexForPosition(line.line, point);
@@ -349,6 +354,11 @@ public final class TextViewLayout : Equatable {
     
     func findCharacterIndex(at point:NSPoint) -> Int {
         let index = findIndex(location: point)
+        
+        guard index != -1 else {
+            return -1
+        }
+        
         let line = lines[index]
         let width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, nil, nil, nil));
         if width > point.x {
@@ -368,7 +378,8 @@ public final class TextViewLayout : Equatable {
         var range = NSMakeRange(startIndex, 1)
         let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        if let link = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange), effectiveRange.location != NSNotFound {
+        _ = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange)
+        if effectiveRange.location != NSNotFound {
             self.selectedRange = TextSelectedRange(range: effectiveRange, color: .selectText, def: true)
             return
         }
@@ -376,11 +387,11 @@ public final class TextViewLayout : Equatable {
             self.selectedRange = TextSelectedRange()
             return
         }
-        var valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
+        let valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
         let string:NSString = attributedString.string.nsstring
         while valid {
-            var prevChar = string.substring(with: NSMakeRange(prev, 1))
-            var nextChar = string.substring(with: NSMakeRange(next, 1))
+            let prevChar = string.substring(with: NSMakeRange(prev, 1))
+            let nextChar = string.substring(with: NSMakeRange(next, 1))
             var prevValid:Bool = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
             var nextValid:Bool = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
             if (prevValid && prev > 0) {
@@ -486,9 +497,8 @@ public class TextView: Control {
                 
                 var lines:[TextViewLine] = layout.lines
 
-                var beginIndex:Int = 0
-                var endIndex:Int = layout.lines.count - 1
-                var dif:Int = 0
+                let beginIndex:Int = 0
+                let endIndex:Int = layout.lines.count - 1
 
                 
                 let isReversed = endIndex < beginIndex
@@ -642,7 +652,7 @@ public class TextView: Control {
             return
         }
         
-        self.becomeFirstResponder()
+        _ = self.becomeFirstResponder()
         
         set(selectedRange: NSMakeRange(NSNotFound, 0), display: false)
         self.beginSelect = self.convert(event.locationInWindow, from: nil)
@@ -771,7 +781,7 @@ public class TextView: Control {
     
  
     
-    override required public init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     

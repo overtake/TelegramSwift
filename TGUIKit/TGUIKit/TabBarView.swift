@@ -58,21 +58,20 @@ public class TabBarView: View {
     }
     
     func redraw() {
-        var width = NSWidth(self.bounds)
-        var height = NSHeight(self.bounds) - .borderSize
-        var defWidth = width / CGFloat(self.tabs.count)
+        let width = NSWidth(self.bounds)
+        let height = NSHeight(self.bounds) - .borderSize
+        let defWidth = width / CGFloat(self.tabs.count)
         self.removeAllSubviews()
         var xOffset:CGFloat = 0
-        let minY:CGFloat = 5
         
         
         for tab in tabs {
-            var itemWidth = defWidth
-            var view = View(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
-            var container = View(frame: view.bounds)
+            let itemWidth = defWidth
+            let view = View(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
+            let container = View(frame: view.bounds)
             view.autoresizingMask = [.viewMinXMargin, .viewMaxXMargin, .viewWidthSizable]
             view.autoresizesSubviews = true
-            var imageView = ImageView(frame: NSMakeRect(0, 0, tab.image.backingSize.width, tab.image.backingSize.height))
+            let imageView = ImageView(frame: NSMakeRect(0, 0, tab.image.backingSize.width, tab.image.backingSize.height))
             imageView.image = tab.image
             container.addSubview(imageView)
             container.setFrameSize(NSMakeSize(NSWidth(imageView.frame), NSHeight(container.frame)))
@@ -95,16 +94,16 @@ public class TabBarView: View {
     
     override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        var width = NSWidth(self.bounds)
-        var height = NSHeight(self.bounds) - .borderSize
-        var defWidth = width / CGFloat( max(1, self.tabs.count) )
+        let width = NSWidth(self.bounds)
+        let height = NSHeight(self.bounds) - .borderSize
+        let defWidth = width / CGFloat( max(1, self.tabs.count) )
         var xOffset:CGFloat = 0
         
         var idx:Int = 0
         
         for subview in subviews {
-            var w = idx == subviews.count - 1 ? defWidth - .borderSize : defWidth
-            var child = subview.subviews[0]
+            let w = idx == subviews.count - 1 ? defWidth - .borderSize : defWidth
+            let child = subview.subviews[0]
             subview.frame = NSMakeRect(xOffset, .borderSize, w, height)
             child.center()
             xOffset += w
@@ -125,8 +124,8 @@ public class TabBarView: View {
         var image:ImageView = deselectView.subviews[0].subviews[0] as! ImageView
         image.image = deselectItem.image
         self.selectedIndex = selectedIndex
-        var selectItem = self.tabs[self.selectedIndex]
-        var selectView = self.subviews[self.selectedIndex]
+        let selectItem = self.tabs[self.selectedIndex]
+        let selectView = self.subviews[self.selectedIndex]
        
         image = selectView.subviews[0].subviews[0] as! ImageView
         image.image = selectItem.selectedImage

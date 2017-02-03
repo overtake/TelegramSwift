@@ -74,6 +74,11 @@ public class CustomViewHandlers {
     public var size:((NSSize) ->Void)?
     public var origin:((NSPoint) ->Void)?
     public var layout:((View) ->Void)?
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
 }
 
 

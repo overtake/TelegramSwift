@@ -16,7 +16,7 @@ open class TextViewLabel: View {
     
     private var node:TextNode = TextNode()
     
-    var text:(TextNodeLayout,() -> TextNode)?
+    var text:(TextNodeLayout,TextNode)?
     
     public weak var delegate:TextDelegate?
     
@@ -45,7 +45,7 @@ open class TextViewLabel: View {
         
         if let text = text {
             let focus = self.focus(text.0.size)
-            text.1().draw(focus, in: ctx)
+            text.1.draw(focus, in: ctx)
         }
     }
     
@@ -64,7 +64,7 @@ open class TextViewLabel: View {
     
     func update(attr:NSAttributedString?, size:NSSize) -> Void {
         if let attr = attr {
-            text = TextNode.layoutText(node)(attr, nil, linesCount, .end, size, nil,false, .left)
+            text = TextNode.layoutText(maybeNode: node, attr, nil, linesCount, .end, size, nil,false, .left)
         } else {
             text = nil
         }
@@ -74,7 +74,7 @@ open class TextViewLabel: View {
     open override func layout() {
         super.layout()
         if autosize {
-            text = TextNode.layoutText(node)(self.attributedString, nil, linesCount, .end, NSMakeSize(frame.width - inset.left - inset.right, frame.height), nil,false, .left)
+            text = TextNode.layoutText(maybeNode: node, attributedString, nil, linesCount, .end, NSMakeSize(frame.width - inset.left - inset.right, frame.height), nil,false, .left)
             self.setNeedsDisplay()
         }
     }

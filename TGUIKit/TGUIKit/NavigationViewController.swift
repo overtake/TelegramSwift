@@ -23,7 +23,7 @@ open class NavigationHeaderView : View {
         self.autoresizingMask = [.viewWidthSizable]
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
@@ -67,14 +67,16 @@ public final class NavigationHeader {
         if let navigation = navigation {
             let view = self.view
             let height = self.height
-            disposable.set((view.ready.get() |> take(1)).start(next: {[weak self] (ready) in
-                var contentInset = navigation.controller.bar.height + height
-                view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, height)
-                navigation.containerView.addSubview(view, positioned: .below, relativeTo: navigation.navigationBar)
-                navigation.controller.view.change(size: NSMakeSize(navigation.frame.width, navigation.frame.height - contentInset), animated: false)
-                navigation.controller.view.change(pos: NSMakePoint(0, contentInset), animated: false)
-                if animated {
-                    view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
+                if let navigation = navigation, let view = view {
+                    let contentInset = navigation.controller.bar.height + height
+                    view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, height)
+                    navigation.containerView.addSubview(view, positioned: .below, relativeTo: navigation.navigationBar)
+                    navigation.controller.view.change(size: NSMakeSize(navigation.frame.width, navigation.frame.height - contentInset), animated: false)
+                    navigation.controller.view.change(pos: NSMakePoint(0, contentInset), animated: false)
+                    if animated {
+                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
             }))
         }
@@ -239,18 +241,18 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     func show(_ controller:ViewController,_ style:ViewControllerStyle) -> Void {
         
-        var previous:ViewController = self.controller;
+        let previous:ViewController = self.controller;
         self.controller = controller
         controller.navigationController = self
 
         
         if(previous == controller) {
-            previous.viewWillDisappear(false);
-            previous.viewDidDisappear(false);
+            previous.viewWillDisappear(false)
+            previous.viewDidDisappear(false)
             
-            controller.viewWillAppear(false);
-            controller.viewDidAppear(false);
-            controller.becomeFirstResponder();
+            controller.viewWillAppear(false)
+            controller.viewDidAppear(false)
+            _ = controller.becomeFirstResponder()
             
             return;
         }
@@ -293,7 +295,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             controller.viewWillAppear(false);
             previous.viewDidDisappear(false);
             controller.viewDidAppear(false);
-            controller.becomeFirstResponder();
+            _ = controller.becomeFirstResponder();
             
             self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
             lock = false
@@ -330,7 +332,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { (completed) in
             
             controller.viewDidAppear(true);
-            controller.becomeFirstResponder()
+            _ = controller.becomeFirstResponder()
         });
         
         
@@ -340,7 +342,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     public func back(animated:Bool = true) -> Void {
         if stackCount > 1 && !isLocked {
-            var controller = stack[stackCount - 2]
+            let controller = stack[stackCount - 2]
             stack.last?.didRemovedFromStack()
             stack.removeLast()
             show(controller, animated ? .pop : .none)
@@ -349,7 +351,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     public func close(animated:Bool = true) ->Void {
         if stackCount > 1 && !isLocked {
-            var controller = stack[0]
+            let controller = stack[0]
             stack.last?.didRemovedFromStack()
             stack.removeLast()
             show(controller, animated ? .pop : .none)

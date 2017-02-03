@@ -9,7 +9,6 @@
 import Cocoa
 import CoreVideo
 import SwiftSignalKitMac
-import TGUIKit
 public class TGClipView: NSClipView,CALayerDelegate {
     
     var border:BorderType?
@@ -20,10 +19,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
     weak var containingScrollView:NSScrollView? {
         
         if let scroll = self.enclosingScrollView {
-            return scroll as! NSScrollView
+            return scroll 
         } else {
-            if let scroll = (self.superview as? NSScrollView) {
-                return self.superview as! NSScrollView
+            if let scroll = self.superview as? NSScrollView {
+                return scroll
             }
             
             return nil
@@ -152,8 +151,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
         if let destination = self.destinationOrigin {
             var o:CGPoint = self.bounds.origin;
-            var lastOrigin:CGPoint = o;
-            var deceleration:CGFloat = self.decelerationRate;
+            let lastOrigin:CGPoint = o;
+            var _:CGFloat = self.decelerationRate;
             
             
             
@@ -173,7 +172,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
                    
                     handleCompletionIfNeeded(withSuccess: true)
                 } else {
-                    let xdif = destination.x - o.x
+                    _ = destination.x - o.x
                     let ydif = destination.y - o.y
                     
          
@@ -208,7 +207,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
         
-        if let s = self.window?.screen {
+        if self.window?.screen != nil {
             CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, CGMainDisplayID());
         } else {
             let dictionary:[String:Any] = (NSScreen.main()?.deviceDescription)!
@@ -227,7 +226,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     func scrollRectToVisible(_ rect: CGRect, animated: Bool, completion: @escaping (Bool) -> Void) -> Bool {
         self.scrollCompletion = completion
-        var success = self.scrollRectToVisible(rect, animated: animated)
+        let success = self.scrollRectToVisible(rect, animated: animated)
         if !animated || !success {
             self.handleCompletionIfNeeded(withSuccess: success)
         }

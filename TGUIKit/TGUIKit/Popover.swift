@@ -63,9 +63,9 @@ open class Popover: NSObject {
             if control.controlState == .Hover {
                 signal = signal |> delay(0.2, queue: Queue.mainQueue())
             }
-            self.readyDisposable.set(signal.start(next: {[weak self] (ready) in
+            self.readyDisposable.set(signal.start(next: {[weak self, weak controller, weak parentView] (ready) in
                 
-                if let strongSelf = self, (strongSelf.inside() || control.controlState == .Hover || control.controlState == .Highlight) {
+                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || control.controlState == .Hover || control.controlState == .Highlight) {
                     
                     control.isSelected = true
                     
@@ -138,7 +138,7 @@ open class Popover: NSObject {
                     
                     //strongSelf.overlay.center()
                     
-                    controller.becomeFirstResponder()
+                    _ = controller.becomeFirstResponder()
                     
                     strongSelf.isShown = true
                     
@@ -148,10 +148,10 @@ open class Popover: NSObject {
                             var once:Bool = false
                             
                             for sub in strongSelf.background.subviews {
-                                sub.layer?.animate(from: (-strongSelf.background.frame.height) as NSNumber, to: (sub.frame.minY) as NSNumber, keyPath: "position.y", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration, removeOnCompletion: true, additive: false, completion:{[weak strongSelf] (comple) in
+                                sub.layer?.animate(from: (-strongSelf.background.frame.height) as NSNumber, to: (sub.frame.minY) as NSNumber, keyPath: "position.y", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration, removeOnCompletion: true, additive: false, completion:{ [weak controller] (comple) in
                                     if let strongSelf = self, !once {
                                         once = true
-                                        controller.viewDidAppear(strongSelf.animates)
+                                        controller?.viewDidAppear(strongSelf.animates)
                                     }
                                     
                                     })
@@ -220,7 +220,7 @@ open class Popover: NSObject {
         
        // return true
         
-        if let window = control?.window, let content = window.contentView {
+        if let window = control?.window {
             let g:NSPoint = NSEvent.mouseLocation()
             let w:NSPoint = window.convertFromScreen(NSMakeRect(g.x, g.y, 1, 1)).origin
             //if w.x > background.frame.minX && background
@@ -239,7 +239,7 @@ open class Popover: NSObject {
         
         isShown = false
         control?.isSelected = false
-        control?.kitWindow?.remove(object: self, for: .Escape)
+        overlay?.kitWindow?.remove(object: self, for: .Escape)
         
         overlay?.removeLastStateHandler()
         overlay?.removeLastStateHandler()
@@ -250,8 +250,7 @@ open class Popover: NSObject {
         self.disposable.dispose()
         self.readyDisposable.dispose()
         controller?.viewWillDisappear(true)
-        if animates, let overlay = overlay {
-            
+        if animates {
             var once:Bool = false
             for sub in background.subviews {
                 sub.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, completion:{[weak self] (comple) in

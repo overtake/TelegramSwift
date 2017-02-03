@@ -107,7 +107,7 @@ open class EditableViewController<T>: GenericViewController<T> where T: NSView {
     
     open override func updateNavigation(_ navigation: NavigationViewController?) {
         super.updateNavigation(navigation)
-        if let navigation = navigation {
+        if navigation != nil {
             rightBarView = editBar
             updateEditStateTitles()
         }

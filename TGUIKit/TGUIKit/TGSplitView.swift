@@ -57,7 +57,7 @@ fileprivate class SplitMinimisizeView : Control {
     fileprivate override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
         
-        if let splitView = splitView, let delegate = splitView.delegate {
+        if let splitView = splitView {
             if splitView.state == .minimisize {
                 NSCursor.resizeRight().set()
             } else {
@@ -122,7 +122,7 @@ public class SplitView : View {
     private let container:View
     fileprivate(set) var state: SplitViewState = .none {
         didSet {
-            var notify:Bool = state != oldValue;
+            let notify:Bool = state != oldValue;
             assert(notify);
             if(notify) {
                 self.delegate?.splitViewDidNeedSwapToLayout(state: state);
@@ -148,7 +148,7 @@ public class SplitView : View {
         super.draw(dirtyRect)
     }
     
-    override required public init(frame frameRect: NSRect)  {
+    required public init(frame frameRect: NSRect)  {
         container = View(frame: NSMakeRect(0,0,frameRect.width, frameRect.height))
         super.init(frame: frameRect);
         self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
@@ -178,15 +178,11 @@ public class SplitView : View {
         
         controller.viewWillDisappear(false)
         let idx = _controllers.index(of: controller)!;
+        container.subviews[idx].removeFromSuperview();
+        _controllers.remove(at: idx);
+        _startSize.removeValue(forKey: controller.internalId);
+        _proportions.removeValue(forKey: controller.internalId);
         
-       // assert([NSThread isMainThread]);
-        
-        if(idx != nil) {
-            container.subviews[idx].removeFromSuperview();
-            _controllers.remove(at: idx);
-            _startSize.removeValue(forKey: controller.internalId);
-            _proportions.removeValue(forKey: controller.internalId);
-        }
         controller.viewDidDisappear(false)
     }
     
@@ -240,8 +236,6 @@ public class SplitView : View {
     public override func layout() {
         super.layout()
         
-        let s = _layoutProportions[.single]
-        
         let single:SplitProportion! = _layoutProportions[.single]
         let dual:SplitProportion! = _layoutProportions[.dual]
         let triple:SplitProportion! = _layoutProportions[.triple]
@@ -276,8 +270,8 @@ public class SplitView : View {
         
         for (index, obj) in _controllers.enumerated() {
             
-            var proportion:SplitProportion = _proportions[obj.internalId]!;
-            var startSize:NSSize = _startSize[obj.internalId]!;
+            let proportion:SplitProportion = _proportions[obj.internalId]!;
+            let startSize:NSSize = _startSize[obj.internalId]!;
             var size:NSSize = NSMakeSize(x, frame.height);
             var min:CGFloat  = startSize.width;
             
@@ -291,9 +285,9 @@ public class SplitView : View {
                 
                 for i:Int in index + 1 ..< _controllers.count - index  {
                     
-                    var split:ViewController = _controllers[i];
+                    let split:ViewController = _controllers[i];
                     
-                    var proportion:SplitProportion = _proportions[split.internalId]!;
+                    let proportion:SplitProportion = _proportions[split.internalId]!;
                     
                     m2+=proportion.min;
                 }
@@ -309,7 +303,7 @@ public class SplitView : View {
             
             size = NSMakeSize(x + min > frame.width ? (frame.width - x) : min, frame.height);
             
-            var rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
+            let rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
             
             if(!NSEqualRects(rect, obj.view.frame)) {
                 obj.view.frame = rect;

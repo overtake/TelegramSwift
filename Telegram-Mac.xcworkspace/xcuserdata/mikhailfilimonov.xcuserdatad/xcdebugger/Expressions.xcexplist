@@ -61,6 +61,14 @@
          contextName = "fitPrettyDimensions([CGSize], perSize : CGSize) -&gt; [[CGSize]]:PrettyGridUtils.swift">
       </ContextState>
       <ContextState
+         contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "stableId">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, location : ChatHistoryLocation, tagMask : MessageTags?) -&gt; ()).(closure #2):ChatController.swift">
       </ContextState>
       <ContextState
@@ -247,6 +255,9 @@
                value = "self.text.string">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[ObjcUtils notificationTones:]:ObjcUtils.m">
       </ContextState>
       <ContextState
          contextName = "Control.controlState.didset:Control.swift">
@@ -559,6 +570,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ChatVoiceRowItem.init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatVoiceRowItem:ChatVoiceRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "object.message">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatListController.(startWithAccount(Account, messagesProtocol : TGMessagesProtocol) -&gt; ()).(closure #1).(closure #1):ChatListController.swift">
       </ContextState>
       <ContextState
@@ -582,6 +601,9 @@
                value = "selectView.subviews">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NotificationSettingsViewController.(prepareEntries(from : NotificationsSettingsList?, to : NotificationsSettingsList, account : Account, interactions : NotificationSettingsInteractions, searchInteractions : SearchInteractions, initialSize : CGSize, animated : Bool) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1).(closure #1).(closure #5):NotificationSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatListController.(loadView() -&gt; ()).(closure #8):ChatListController.swift">
@@ -626,7 +648,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -638,7 +660,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -694,6 +716,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "InAppNotificationSettings.init(decoder : Decoder) -&gt; InAppNotificationSettings:InAppNotificationSettings.swift">
       </ContextState>
       <ContextState
          contextName = "Layer.willChangeValue(forKey : String) -&gt; ():Layer.swift">
@@ -1058,6 +1083,9 @@
                value = "inputActivities">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NotificationSettingsViewController.(viewDidLoad() -&gt; ()).(closure #2):NotificationSettingsViewController.swift">
       </ContextState>
       <ContextState
          contextName = "TableView.change(size : CGSize, animated : Bool, Bool) -&gt; ():TableView.swift">

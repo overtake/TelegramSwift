@@ -12,7 +12,7 @@ open class HorizontalRowView: TableRowView {
 
     private var container:View = View()
     
-    required public override init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.layer?.delegate = nil
         container.layer?.delegate = self

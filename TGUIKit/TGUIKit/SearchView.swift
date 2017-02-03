@@ -41,9 +41,22 @@ public enum SearchFieldState {
     case Focus;
 }
 
+public struct SearchState : Equatable {
+    public let state:SearchFieldState
+    public let request:String
+    public init(state:SearchFieldState, request:String?) {
+        self.state = state
+        self.request = request ?? ""
+    }
+}
+
+public func ==(lhs:SearchState, rhs:SearchState) -> Bool {
+    return lhs.state == rhs.state && lhs.request == rhs.request
+}
+
 public final class SearchInteractions {
-    var stateModified:(SearchFieldState) -> Void
-    var textModified:(String?) -> Void
+    public let stateModified:(SearchFieldState) -> Void
+    public let textModified:(String?) -> Void
     
     public init(_ state:@escaping(SearchFieldState)->Void, _ text:@escaping(String?)->Void) {
         stateModified = state

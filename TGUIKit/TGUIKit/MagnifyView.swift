@@ -199,6 +199,11 @@ public class MagnifyView : NSView {
         contentView.setFrameOrigin(point)
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     
     public var mouseInContent:Bool {
         if let window = window {

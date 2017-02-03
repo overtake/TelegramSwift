@@ -7,7 +7,6 @@
 //
 
 import Cocoa
-import TGUIKit
 import SwiftSignalKitMac
 
 
@@ -52,7 +51,7 @@ public class MajorNavigationController: NavigationViewController {
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)
         
-        pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
+        pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
                 strongSelf.lock = true
                 let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)

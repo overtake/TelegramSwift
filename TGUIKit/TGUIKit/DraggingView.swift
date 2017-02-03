@@ -7,7 +7,6 @@
 //
 
 import Cocoa
-import TGUIKit
 
 public class DragItem {
     let title:String
@@ -22,10 +21,10 @@ public class DragItem {
         self.handler = handler
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        attr.append(string: title, color: .grayText, font: .normal(.title))
-        attr.append(string: "\n")
+        _ = attr.append(string: title, color: .grayText, font: .normal(.title))
+        _ = attr.append(string: "\n")
         
-        attr.append(string: desc, color: .textColor, font: .medium(.header))
+        _ = attr.append(string: desc, color: .textColor, font: .medium(.header))
         
         self.attr = attr.copy() as! NSAttributedString
     }
@@ -78,7 +77,7 @@ class DragView : OverlayControl {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
 }

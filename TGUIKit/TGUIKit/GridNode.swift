@@ -299,9 +299,9 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         
         for updatedItem in transaction.updateItems {
             self.items[updatedItem.index] = updatedItem.item
-            if let itemNode = self.itemNodes[updatedItem.index] {
+          //  if let itemNode = self.itemNodes[updatedItem.index] {
                 //update node
-            }
+          //  }
         }
         
         var removedNodes: [GridItemNode] = []
@@ -360,7 +360,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             self.itemNodes = remappedInsertionItemNodes
         }
         
-        var previousLayoutWasEmpty = self.itemLayout.items.isEmpty
+        let previousLayoutWasEmpty = self.itemLayout.items.isEmpty
         
         self.itemLayout = self.generateItemLayout()
         
@@ -379,7 +379,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
     }
     
     open override func viewDidMoveToSuperview() {
-        if let sv = superview {
+        if superview != nil {
             let clipView = self.contentView
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name.NSViewBoundsDidChange, object: clipView, queue: nil, using: { [weak self] notification  in
@@ -546,7 +546,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
                 var selectedContentOffset: CGPoint?
                 for (index, itemNode) in self.itemNodes {
                     if stationaryItemIndices.contains(index) {
-                        let currentScreenOffset = itemNode.frame.origin.y - self.documentOffset.y
+                  //      let currentScreenOffset = itemNode.frame.origin.y - self.documentOffset.y
                         selectedContentOffset = CGPoint(x: 0.0, y: self.itemLayout.items[index].frame.origin.y - itemNode.frame.origin.y + documentOffset.y)
                         break
                     }
@@ -560,7 +560,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             case .all:
                 var selectedContentOffset: CGPoint?
                 for (index, itemNode) in self.itemNodes {
-                    let currentScreenOffset = itemNode.frame.origin.y - self.documentOffset.y
+                   // let currentScreenOffset = itemNode.frame.origin.y - self.documentOffset.y
                     selectedContentOffset = CGPoint(x: 0.0, y: self.itemLayout.items[index].frame.origin.y - itemNode.frame.origin.y + documentOffset.y)
                     break
                 }
@@ -755,7 +755,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
                     itemNode.layer?.animatePosition(from: CGPoint(x: 0.0, y: offset), to: CGPoint(), duration: duration, timingFunction: timingFunction, additive: true)
                 }
                 for (wrappedSection, sectionNode) in self.sectionNodes where existingSections.contains(wrappedSection) {
-                    let position = sectionNode.layer?.position
+                  //  let position = sectionNode.layer?.position
                     sectionNode.layer?.animatePosition(from: CGPoint(x: 0.0, y: offset), to: CGPoint(), duration: duration, timingFunction: timingFunction, additive: true)
                 }
                 
@@ -840,10 +840,10 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
                 let bottomIndex = presentationLayoutTransition.layout.items.last!.index
                 
                 var topVisible: (Int, GridListItem) = (topIndex, self.items[topIndex])
-                var bottomVisible: (Int, GridListItem) = (bottomIndex, self.items[bottomIndex])
+                let bottomVisible: (Int, GridListItem) = (bottomIndex, self.items[bottomIndex])
                 
                 let lowerDisplayBound = presentationLayoutTransition.layout.contentOffset.y
-                let upperDisplayBound = presentationLayoutTransition.layout.contentOffset.y + self.gridLayout.size.height
+              //  let upperDisplayBound = presentationLayoutTransition.layout.contentOffset.y + self.gridLayout.size.height
                 
                 for item in presentationLayoutTransition.layout.items {
                     if lowerDisplayBound.isLess(than: item.frame.maxY) {
@@ -931,7 +931,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         applyPresentaionLayoutTransition(generatePresentationLayoutTransition(), removedNodes: [])
     }
     
-    public func forEachItemNode(_ f: @noescape(GridItemNode) -> Void) {
+    public func forEachItemNode(_ f: (GridItemNode) -> Void) {
         for (_, node) in self.itemNodes {
             f(node)
         }

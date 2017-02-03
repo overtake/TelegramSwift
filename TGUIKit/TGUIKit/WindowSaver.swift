@@ -45,8 +45,8 @@ class WindowSaver : NSObject, NSCoding {
         
         disposable.set(single.start(next: { [weak self] in
             if let strongSelf = self {
-                var user = UserDefaults.standard
-                var data = NSKeyedArchiver.archivedData(withRootObject: strongSelf)
+                let user = UserDefaults.standard
+                let data = NSKeyedArchiver.archivedData(withRootObject: strongSelf)
                 user.set(data, forKey: "window_saver_".appending(strongSelf.requiredName))
                 user.synchronize()
             }

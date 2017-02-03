@@ -22,9 +22,9 @@ class NavigationModalView: Control {
         self.action = action
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        attr.append(string: action.reason, color: .textColor, font: .normal(.custom(20)))
-        attr.append(string: "\n")
-        attr.append(string: action.desc, color: .grayText, font: .normal(.text))
+        _ = attr.append(string: action.reason, color: .textColor, font: .normal(.custom(20)))
+        _ = attr.append(string: "\n")
+        _ = attr.append(string: action.desc, color: .grayText, font: .normal(.text))
         
         self.attributeString = attr.copy() as! NSAttributedString
         
@@ -51,11 +51,11 @@ class NavigationModalView: Control {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        let node = TextNode.layoutText(textNode)(attributeString, nil, 3, .end, NSMakeSize(frame.width - 40, frame.height), nil, false, .center)
+        let node = TextNode.layoutText(maybeNode: textNode, attributeString, nil, 3, .end, NSMakeSize(frame.width - 40, frame.height), nil, false, .center)
         
         let f = focus(node.0.size)
         
-        node.1().draw(f, in: ctx)
+        node.1.draw(f, in: ctx)
     }
     
     func close() {
@@ -94,7 +94,7 @@ class NavigationModalView: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     

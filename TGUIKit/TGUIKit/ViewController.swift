@@ -231,7 +231,7 @@ open class ViewController : NSObject {
     
     public func loadViewIfNeeded(_ frame:NSRect = NSZeroRect) -> Void {
         
-         guard let view = _view else {
+         guard _view != nil else {
             if !NSIsEmptyRect(frame) {
                 _frameRect = frame
             }
@@ -324,6 +324,10 @@ open class ViewController : NSObject {
     }
     
     open func viewDidDisappear(_ animated:Bool) -> Void {
+        
+    }
+    
+    open func scrollup() {
         
     }
     
@@ -432,7 +436,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
     
 
     open func initializer() -> T {
-        let vz = T.self as! NSView.Type
+        let vz = T.self as NSView.Type
         return vz.init(frame: _frameRect) as! T;
     }
     

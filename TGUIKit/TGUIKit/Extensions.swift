@@ -33,14 +33,14 @@ public extension NSAttributedString {
     }
     
     public func trimRange(_ range:NSRange) -> NSRange {
-        var loc:Int = min(range.location,self.length)
-        var length:Int = min(range.length, self.length - loc)
+        let loc:Int = min(range.location,self.length)
+        let length:Int = min(range.length, self.length - loc)
         return NSMakeRange(loc, length)
     }
     
     public static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
-        var attr:NSMutableAttributedString = NSMutableAttributedString()
-        attr.append(string: string, color: color, font: font, coreText: true)
+        let attr:NSMutableAttributedString = NSMutableAttributedString()
+        _ = attr.append(string: string, color: color, font: font, coreText: true)
         
         return attr.copy() as! NSAttributedString
     }
@@ -207,7 +207,7 @@ public extension CALayer {
 public extension String {
     
     public var nsstring:NSString {
-        return self as! NSString
+        return self as NSString
     }
     
     public var length:Int {
@@ -231,7 +231,7 @@ public extension NSView {
         self.setFrameOrigin(NSMakePoint(x, y))
     }
     
-    open var background:NSColor {
+    public var background:NSColor {
         get {
             if let view = self as? View {
                 return view.backgroundColor
@@ -322,7 +322,7 @@ public extension NSView {
             
             var presentX = NSMinX(self.frame)
             var presentY = NSMinY(self.frame)
-            var presentation:CALayer? = self.layer?.presentation()
+            let presentation:CALayer? = self.layer?.presentation()
             if let presentation = presentation, self.layer?.animation(forKey:"position") != nil {
                 presentY =  NSMinY(presentation.frame)
                 presentX = NSMinX(presentation.frame)
@@ -346,7 +346,7 @@ public extension NSView {
         NSBeep()
     }
     
-    public func change(size size: NSSize, animated: Bool, _ save:Bool = true) {
+    public func change(size: NSSize, animated: Bool, _ save:Bool = true) {
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()
@@ -532,7 +532,7 @@ extension Array {
         var result: [Element]?
         if let records = records {
             for i in 0..<CFArrayGetCount(records) {
-                let unmanagedObject: UnsafeRawPointer = CFArrayGetValueAtIndex(records, i) as! UnsafeRawPointer
+                let unmanagedObject: UnsafeRawPointer = CFArrayGetValueAtIndex(records, i)!
                 let rec: Element = unsafeBitCast(unmanagedObject, to: Element.self)
                 if (result == nil){
                     result = [Element]()
@@ -647,12 +647,12 @@ public extension Int {
 
 public extension NSProgressIndicator {
     public func set(color:NSColor) {
-        var colorPoly = CIFilter(name: "CIColorPolynomial")
+        let colorPoly = CIFilter(name: "CIColorPolynomial")
         if let colorPoly = colorPoly {
             colorPoly.setDefaults()
-            var redVector = CIVector(x: color.redComponent, y: 0, z: 0, w: 0)
-            var greenVector = CIVector(x: color.greenComponent, y: 0, z: 0, w: 0)
-            var blueVector = CIVector(x: color.blueComponent, y: 0, z: 0, w: 0)
+            let redVector = CIVector(x: color.redComponent, y: 0, z: 0, w: 0)
+            let greenVector = CIVector(x: color.greenComponent, y: 0, z: 0, w: 0)
+            let blueVector = CIVector(x: color.blueComponent, y: 0, z: 0, w: 0)
             
             colorPoly.setValue(redVector, forKey: "inputRedCoefficients")
             colorPoly.setValue(greenVector, forKey: "inputGreenCoefficients")
@@ -716,3 +716,131 @@ public extension NSTextField {
         return (self.window?.fieldEditor(true, for: self) as? NSTextView)
     }
 }
+
+
+public extension String {
+    var emojiSkinToneModifiers: [String] {
+        return [ "🏻", "🏼", "🏽", "🏾", "🏿" ]
+    }
+    
+    public var emojiVisibleLength: Int {
+        var count = 0
+        enumerateSubstrings(in: startIndex..<endIndex, options: .byComposedCharacterSequences) { _ in
+            count += 1
+        }
+        return count
+    }
+    
+    public var emojiUnmodified: String {
+        if self.characters.isEmpty {
+            return ""
+        }
+        
+        
+        let range = Range<String.Index>(uncheckedBounds: (self.startIndex, self.index(after: self.startIndex)))
+        return self[range]
+    }
+    
+    public var canHaveSkinToneModifier: Bool {
+        if self.characters.isEmpty {
+            return false
+        }
+        
+        let modified = self.emojiUnmodified + self.emojiSkinToneModifiers[0]
+        return modified.emojiVisibleLength == 1
+    }
+    
+    public var glyphCount: Int {
+        
+        let richText = NSAttributedString(string: self)
+        let line = CTLineCreateWithAttributedString(richText)
+        return CTLineGetGlyphCount(line)
+    }
+    
+    public var isSingleEmoji: Bool {
+        
+        return glyphCount == 1 && containsEmoji
+    }
+    
+    public var containsEmoji: Bool {
+        
+        return !unicodeScalars.filter { $0.isEmoji }.isEmpty
+    }
+    
+    public var containsOnlyEmoji: Bool {
+        
+        return unicodeScalars.first(where: { !$0.isEmoji && !$0.isZeroWidthJoiner }) == nil
+    }
+    
+
+    public var emojiString: String {
+        
+        return emojiScalars.map { String($0) }.reduce("", +)
+    }
+    
+    public var emojis: [String] {
+        
+        var scalars: [[UnicodeScalar]] = []
+        var currentScalarSet: [UnicodeScalar] = []
+        var previousScalar: UnicodeScalar?
+        
+        for scalar in emojiScalars {
+            
+            if let prev = previousScalar, !prev.isZeroWidthJoiner && !scalar.isZeroWidthJoiner {
+                
+                scalars.append(currentScalarSet)
+                currentScalarSet = []
+            }
+            currentScalarSet.append(scalar)
+            
+            previousScalar = scalar
+        }
+        
+        scalars.append(currentScalarSet)
+        
+        return scalars.map { $0.map{ String($0) } .reduce("", +) }
+    }
+    
+    fileprivate var emojiScalars: [UnicodeScalar] {
+        
+        var chars: [UnicodeScalar] = []
+        var previous: UnicodeScalar?
+        for cur in unicodeScalars {
+            
+            if let previous = previous, previous.isZeroWidthJoiner && cur.isEmoji {
+                chars.append(previous)
+                chars.append(cur)
+                
+            } else if cur.isEmoji {
+                chars.append(cur)
+            }
+            
+            previous = cur
+        }
+        
+        return chars
+    }
+
+}
+
+extension UnicodeScalar {
+    
+    var isEmoji: Bool {
+        
+        switch value {
+        case 0x3030, 0x00AE, 0x00A9,
+        0x1D000 ... 0x1F77F,
+        0x2100 ... 0x27BF,
+        0xFE00 ... 0xFE0F,
+        0x1F900 ... 0x1F9FF:
+        return true
+            
+        default: return false
+        }
+    }
+    
+    var isZeroWidthJoiner: Bool {
+        return value == 8205
+    }
+}
+

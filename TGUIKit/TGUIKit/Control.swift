@@ -22,6 +22,8 @@ public enum ControlEvent {
     case SingleClick
     case RightClick
     case MouseDragging
+    case LongMouseDown
+    case LongMouseUp
 }
 
 open class Control: View {
@@ -34,6 +36,8 @@ open class Control: View {
         }
     }
     open var hideAnimated:Bool = false
+    
+    private let longHandleDisposable = MetaDisposable()
     
     public var isSelected:Bool {
         didSet {
@@ -184,12 +188,20 @@ open class Control: View {
             send(event: .Down)
             updateState()
             
+            let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+                self?.send(event: .LongMouseDown)
+            })
+            
+            longHandleDisposable.set(disposable)
+            
         } else {
             super.mouseDown(with: event)
         }
     }
     
     override open func mouseUp(with event: NSEvent) {
+        
+        longHandleDisposable.set(nil)
         
         mouseIsDown = false
         
@@ -270,6 +282,10 @@ open class Control: View {
     func apply(style:ControlStyle) -> Void {
         self.setNeedsDisplayLayer()
 
+    }
+    
+    deinit {
+        longHandleDisposable.dispose()
     }
     
     required public init(frame frameRect: NSRect) {

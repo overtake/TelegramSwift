@@ -1,18 +1,17 @@
 import Foundation
 import SwiftSignalKitMac
 import ImageIO
-import TGUIKit
 import Accelerate
 
 
 
 
 public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, reversed:Bool = false, scale:CGFloat = 1.0) -> CGImage? {
-    var image:CGImageSource? = CGImageSourceCreateWithData(data as CFData, nil)
+    let image:CGImageSource? = CGImageSourceCreateWithData(data as CFData, nil)
     
     let size = NSMakeSize(s.width * scale, s.height * scale)
 
-    var context:CGContext? = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: Int(4*size.width), space: NSColorSpace.genericRGB.cgColorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
+    let context:CGContext? = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: Int(4*size.width), space: NSColorSpace.genericRGB.cgColorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
     
     
     if let ctx = context {

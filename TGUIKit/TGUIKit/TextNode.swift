@@ -87,7 +87,7 @@ public class TextNode: NSObject {
         if let a = attr {
             if (selected && a.length > 0) {
                 
-                var c:NSMutableAttributedString = a.mutableCopy() as! NSMutableAttributedString
+                let c:NSMutableAttributedString = a.mutableCopy() as! NSMutableAttributedString
                 
                 if let color = c.attribute(kSelectedColorAttribute, at: 0, effectiveRange: nil) {
                     c.addAttribute(NSForegroundColorAttributeName, value: color, range: c.range)
@@ -274,39 +274,33 @@ public class TextNode: NSObject {
     
 
     
-    open class func layoutText(_ maybeNode: TextNode?) -> (_ attributedString: NSAttributedString?, _ backgroundColor: NSColor?, _ maximumNumberOfLines: Int, _ truncationType: CTLineTruncationType, _ constrainedSize: NSSize, _ cutout: TextNodeCutout?,_ selected:Bool, _ alignment:NSTextAlignment ) -> (TextNodeLayout, () -> TextNode) {
+    open class func layoutText(maybeNode:TextNode? = nil, _ attributedString: NSAttributedString?, _ backgroundColor: NSColor?, _ maximumNumberOfLines: Int, _ truncationType: CTLineTruncationType, _ constrainedSize: NSSize, _ cutout: TextNodeCutout?,_ selected:Bool, _ alignment:NSTextAlignment) -> (TextNodeLayout, TextNode) {
+        
         let existingLayout: TextNodeLayout? = maybeNode?.currentLayout
         
-        return { attributedString, backgroundColor, maximumNumberOfLines, truncationType, constrainedSize, cutout, selected, alignment in
-            let layout: TextNodeLayout
-            
-            var updated = false
-            if let existingLayout = existingLayout, existingLayout.constrainedSize == constrainedSize && existingLayout.maximumNumberOfLines == maximumNumberOfLines && existingLayout.truncationType == truncationType && existingLayout.cutout == cutout && existingLayout.selected == selected && existingLayout.alignment == alignment {
-                let stringMatch: Bool
-                if let existingString = existingLayout.attributedString, let string = attributedString {
-                    stringMatch = existingString.isEqual(to: string)
-                } else if existingLayout.attributedString == nil && attributedString == nil {
-                    stringMatch = true
-                } else {
-                    stringMatch = false
-                }
-                
-                if stringMatch {
-                    layout = existingLayout
-                } else {
-                    layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
-                    updated = true
-                }
+        let layout: TextNodeLayout
+        
+        if let existingLayout = existingLayout, existingLayout.constrainedSize == constrainedSize && existingLayout.maximumNumberOfLines == maximumNumberOfLines && existingLayout.truncationType == truncationType && existingLayout.cutout == cutout && existingLayout.selected == selected && existingLayout.alignment == alignment {
+            let stringMatch: Bool
+            if let existingString = existingLayout.attributedString, let string = attributedString {
+                stringMatch = existingString.isEqual(to: string)
+            } else if existingLayout.attributedString == nil && attributedString == nil {
+                stringMatch = true
             } else {
-                layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
-                updated = true
+                stringMatch = false
             }
             
-            let node = maybeNode ?? TextNode()
-            return (layout, {
-                node.currentLayout = layout
-                return node
-            })
+            if stringMatch {
+                layout = existingLayout
+            } else {
+                layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
+            }
+        } else {
+            layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
         }
+        
+        let node = maybeNode ?? TextNode()
+        node.currentLayout = layout
+        return (layout, node)
     }
 }

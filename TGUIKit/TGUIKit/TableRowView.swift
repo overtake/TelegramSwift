@@ -94,7 +94,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func menu(for event: NSEvent) -> NSMenu? {
         if let menuItems = item?.menuItems() {
-            var menu = ContextMenu()
+            let menu = ContextMenu()
             menu.onShow = { [weak self] menu in
                 self?.contextMenu = menu
                 self?.onShowContextMenu()

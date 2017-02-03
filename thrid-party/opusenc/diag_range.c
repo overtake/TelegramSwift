@@ -74,7 +74,7 @@ static int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
       const unsigned char *frames[48], short size[48], int *payload_offset)
 {
    int i, bytes;
-   int count;
+   int count = 0;
    int cbr;
    unsigned char ch, toc;
    int framesize;

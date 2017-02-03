@@ -115,7 +115,7 @@
  * @see BITHockeyManagerDelegate
  * @see BITCrashManagerDelegate
  */
-@property (nonatomic, unsafe_unretained) id<BITHockeyManagerDelegate> delegate;
+@property (nonatomic, weak) id<BITHockeyManagerDelegate> delegate;
 
 
 ///-----------------------------------------------------------------------------

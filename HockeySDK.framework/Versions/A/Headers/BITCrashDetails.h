@@ -65,4 +65,9 @@
  */
 @property (nonatomic, readonly, strong) NSString *appBuild;
 
+/**
+ *  Identifier of the app process that crashed
+ */
+@property (nonatomic, readonly, assign) NSUInteger appProcessIdentifier;
+
 @end

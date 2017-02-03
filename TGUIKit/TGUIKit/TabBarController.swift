@@ -28,23 +28,24 @@ public class TabBarController: ViewController, TabViewDelegate {
     
     public func didChange(selected item: TabItem, index: Int) {
         
-        if let tabView = tabView {
-            if let current = current {
-                current.window?.makeFirstResponder(nil)
-                current.viewWillDisappear(false)
-                current.view.removeFromSuperview()
-                current.viewDidDisappear(false)
+        if current != item.controller {
+            if let tabView = tabView {
+                if let current = current {
+                    current.window?.makeFirstResponder(nil)
+                    current.viewWillDisappear(false)
+                    current.view.removeFromSuperview()
+                    current.viewDidDisappear(false)
+                }
+                item.controller._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height - tabView.frame.height)
+                item.controller.view.frame = item.controller._frameRect
+                item.controller.viewWillAppear(false)
+                addSubview(item.controller.view)
+                item.controller.viewDidAppear(false)
+                current = item.controller
             }
-            item.controller._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height - tabView.frame.height)
-            item.controller.view.frame = item.controller._frameRect
-            item.controller.viewWillAppear(false)
-            addSubview(item.controller.view)
-            item.controller.viewDidAppear(false)
-            
-            current = item.controller
-            
+        } else {
+            current?.scrollup()
         }
-        
     }
     
     public func hideTabView(_ hide:Bool) {

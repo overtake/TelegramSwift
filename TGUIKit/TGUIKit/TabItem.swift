@@ -8,6 +8,8 @@
 
 import Cocoa
 
+
+
 open class TabItem: NSObject {
     let image: CGImage
     let selectedImage: CGImage

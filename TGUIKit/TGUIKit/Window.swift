@@ -117,7 +117,7 @@ public class Window: NSWindow {
     }
     
     public func remove(object:NSObject, for key:KeyboardKey) {
-        var handlers = keyHandlers[key]
+        let handlers = keyHandlers[key]
         if let handlers = handlers {
             var copy:[KeyHandler] = []
             for handle in handlers {
@@ -142,7 +142,7 @@ public class Window: NSWindow {
     }
     
     public func remove(object:NSObject, for type:NSEventType) {
-        var handlers = mouseHandlers[type]
+        let handlers = mouseHandlers[type]
         if let handlers = handlers {
             var copy:[MouseObserver] = []
             for handle in handlers {
@@ -216,7 +216,7 @@ public class Window: NSWindow {
                 }
                 
                 if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
-                    var sorted = handlers.sorted(by: >)
+                    let sorted = handlers.sorted(by: >)
                     loop: for handle in sorted {
                         if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
                             
@@ -234,7 +234,7 @@ public class Window: NSWindow {
                 }
             } else {
                 if  let handlers = mouseHandlers[event.type] {
-                    var sorted = handlers.sorted(by: >)
+                    let sorted = handlers.sorted(by: >)
                     loop: for handle in sorted {
                         switch handle.handler() {
                         case .invoked:
@@ -289,6 +289,7 @@ public class Window: NSWindow {
         NotificationCenter.default.removeObserver(self)
     }
     
+
     public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
        

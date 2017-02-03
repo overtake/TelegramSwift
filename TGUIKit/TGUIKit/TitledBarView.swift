@@ -41,19 +41,19 @@ private class TitledContainerView : View {
         super.draw(layer, in: ctx)
         
         if let text = text {
-            let (textLayout, textApply) = TextNode.layoutText(nil)(text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
+            let (textLayout, textApply) = TextNode.layoutText(maybeNode: nil,  text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
             var tY = NSMinY(focus(textLayout.size))
             
             if let status = status {
                 
-                let (statusLayout, statusApply) = TextNode.layoutText(nil)(status, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
+                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: nil,  status, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
                 tY = (NSHeight(self.frame) - t) / 2.0
                 
                 let sY = tY + textLayout.size.height + 2.0
                 if !hiddenStatus {
-                    statusApply().draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
+                    statusApply.draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx)
                 }
             }
             
@@ -64,7 +64,7 @@ private class TitledContainerView : View {
                 textRect.origin.x += floorToScreenPixels(titleImage.backingSize.width/2)
             }
             
-            textApply().draw(textRect, in: ctx)
+            textApply.draw(textRect, in: ctx)
         }
     }
 }
@@ -124,13 +124,17 @@ open class TitledBarView: BarView {
         
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     public override init() {
         super.init()
         addSubview(containerView)
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
