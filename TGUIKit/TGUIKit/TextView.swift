@@ -378,8 +378,8 @@ public final class TextViewLayout : Equatable {
         var range = NSMakeRange(startIndex, 1)
         let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        _ = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange)
-        if effectiveRange.location != NSNotFound {
+        let check = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange)
+        if check != nil && effectiveRange.location != NSNotFound {
             self.selectedRange = TextSelectedRange(range: effectiveRange, color: .selectText, def: true)
             return
         }
