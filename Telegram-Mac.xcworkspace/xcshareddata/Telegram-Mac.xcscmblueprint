@@ -15,7 +15,7 @@
     "7EC1C8EA9643E5D9E5CFB7785E6B7386F88D4D5C" : "Telegram-Mac\/submodules\/MtProtoKit\/",
     "8363CEA931CF1C3FFE51316B6E079ED7E49D1F6D" : "Telegram-Mac\/submodules\/Postbox\/",
     "855C36C7CE8ED0C7A22D79CB99B54C2F8325DA6D" : "Telegram-Mac\/submodules\/TelegramCore\/",
-    "E860E73EA92362394DE531098D73ED96B22811B3" : "Telegram-Mac\/submodules\/Signals\/",
+    "E860E73EA92362394DE531098D73ED96B22811B3" : "Telegram-iOS\/submodules\/SSignalKit\/",
     "49B3A1C3A9D5357B430E343381715378E6D84AE5" : "Telegram-Mac\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "Telegram-Mac",
