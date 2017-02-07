@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2013-2014 Cédric Luthi. All rights reserved.
+//  Copyright (c) 2013-2016 Cédric Luthi. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -8,6 +8,12 @@
  *  The error domain used throughout XCDYouTubeKit.
  */
 extern NSString *const XCDYouTubeVideoErrorDomain;
+
+/**
+ *  A key that may be present in the error's userInfo dictionary when the error code is XCDYouTubeErrorRestrictedPlayback.
+ *  The object for that key is a NSSet instance containing localized country names.
+ */
+extern NSString *const XCDYouTubeAllowedCountriesUserInfoKey;
 
 /**
  *  These values are returned as the error code property of an NSError object with the domain `XCDYouTubeVideoErrorDomain`.

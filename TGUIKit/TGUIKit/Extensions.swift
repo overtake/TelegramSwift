@@ -223,6 +223,20 @@ public extension NSView {
         }
     }
     
+    public func isInnerView(_ view:NSView?) -> Bool {
+        var inner = false
+        for i in 0 ..< subviews.count {
+            inner = subviews[i] == view
+            if !inner && !subviews[i].subviews.isEmpty {
+                inner = subviews[i].isInnerView(view)
+            }
+            if inner {
+                break
+            }
+        }
+        return inner
+    }
+    
     public func setFrameSize(_ width:CGFloat, _ height:CGFloat) {
         self.setFrameSize(NSMakeSize(width, height))
     }

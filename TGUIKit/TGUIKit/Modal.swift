@@ -70,6 +70,7 @@ public class ModalInteractions {
     let cancelTitle:String?
     let drawBorder:Bool
     let height:CGFloat
+    var enables:((Bool)->Void)? = nil
     public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50)  {
         self.drawBorder = drawBorder
         self.accept = accept
@@ -77,6 +78,12 @@ public class ModalInteractions {
         self.acceptTitle = acceptTitle
         self.cancelTitle = cancelTitle
         self.height = height
+    }
+    
+    public func updateEnables(_ enable:Bool) -> Void {
+        if let enables = enables {
+            enables(enable)
+        }
     }
     
 }
@@ -111,6 +118,8 @@ private class ModalInteractionsContainer : View {
             borderView = nil
         }
         
+       
+        
         super.init()
         
         if let cancel = interactions.cancel {
@@ -141,6 +150,11 @@ private class ModalInteractionsContainer : View {
         }
         if let borderView = borderView {
             addSubview(borderView)
+        }
+        
+        interactions.enables = { [weak self] enable in
+            self?.acceptView.isEnabled = enable
+            self?.acceptView.apply(state: .Normal)
         }
 
     }
@@ -174,17 +188,17 @@ public class Modal: NSObject {
     private var window:Window
     private let disposable:MetaDisposable = MetaDisposable()
     private var interactionsView:ModalInteractionsContainer?
-    
+    public let interactions:ModalInteractions?
     public init(controller:ModalViewController, for window:Window) {
         self.controller = controller
         self.window = window
         background = ModalBackground()
         background.backgroundColor = controller.background
         background.layer?.disableActions()
-        
+        self.interactions = controller.modalInteractions
         super.init()
 
-        if let interactions = controller.modalInteractions {
+        if let interactions = interactions {
             interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
             interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
         }

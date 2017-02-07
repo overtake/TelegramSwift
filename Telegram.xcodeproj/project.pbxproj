@@ -200,6 +200,7 @@
 		C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26505961E041B90001954DC /* MGalleryGIFItem.swift */; };
 		C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A71981DC9FA5100F69385 /* EditMessageModel.swift */; };
 		C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */; };
+		C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */; };
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
 		C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C276248B1D95AF7600FE5B2B /* ObjcUtils.m */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
@@ -573,6 +574,7 @@
 		C26505961E041B90001954DC /* MGalleryGIFItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryGIFItem.swift; sourceTree = "<group>"; };
 		C26A71981DC9FA5100F69385 /* EditMessageModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditMessageModel.swift; sourceTree = "<group>"; };
 		C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputPasteboardParser.swift; sourceTree = "<group>"; };
+		C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JoinLinkPreviewModalController.swift; sourceTree = "<group>"; };
 		C275932D1DF6E1CE00A0807A /* AboutModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutModalController.swift; sourceTree = "<group>"; };
 		C276248A1D95AF7600FE5B2B /* ObjcUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcUtils.h; sourceTree = "<group>"; };
 		C276248B1D95AF7600FE5B2B /* ObjcUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcUtils.m; sourceTree = "<group>"; };
@@ -1919,6 +1921,7 @@
 				C29A65061E098B610071BCEF /* ShareModalController.swift */,
 				C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */,
 				C29C3E701E43881500193A7E /* StickerPreviewModalController.swift */,
+				C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */,
 			);
 			name = overlay;
 			sourceTree = "<group>";
@@ -2366,6 +2369,7 @@
 				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
 				C253E2341DE3776A0022A29F /* InlineAudioPlayerView.swift in Sources */,
+				C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */,
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,

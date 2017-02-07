@@ -119,7 +119,7 @@ open class ViewController : NSObject {
     public var rightBarView:BarView!
     
     public var popover:Popover?
-    public var modal:Modal?
+    open  var modal:Modal?
     
     
     private let _ready = Promise<Bool>()

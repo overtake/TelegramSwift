@@ -12,7 +12,7 @@ extern NSString *const XCDYouTubeNoStreamVideoUserInfoKey;
 
 extern NSDictionary *XCDDictionaryWithQueryString(NSString *string);
 extern NSString *XCDQueryStringWithDictionary(NSDictionary *dictionary);
-extern NSString *const XCDYouTubeAllowedCountriesUserInfoKey;
+
 @interface XCDYouTubeVideo ()
 
 - (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info playerScript:(XCDYouTubePlayerScript *)playerScript response:(NSURLResponse *)response error:(NSError **)error;

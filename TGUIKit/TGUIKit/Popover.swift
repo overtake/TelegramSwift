@@ -277,6 +277,15 @@ open class Popover: NSObject {
     
 }
 
+public func hasPopover(_ window:Window) -> Bool {
+    for subview in window.contentView!.subviews {
+        if subview.isKind(of: Popover.self) {
+            return true
+        }
+    }
+    return false
+}
+
 public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint) -> Void {
     if controller.popover == nil {
         controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller)
