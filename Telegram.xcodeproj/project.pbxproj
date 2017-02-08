@@ -61,7 +61,6 @@
 		C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */; };
 		C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DB81DAE2125001792B6 /* GroupInfoEntries.swift */; };
 		C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */; };
-		C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBC1DAE2CFA001792B6 /* GeneralTableView.swift */; };
 		C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */; };
 		C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */; };
 		C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */; };
@@ -421,7 +420,6 @@
 		C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInteractedRowView.swift; sourceTree = "<group>"; };
 		C2271DB81DAE2125001792B6 /* GroupInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupInfoEntries.swift; sourceTree = "<group>"; };
 		C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelInfoEntries.swift; sourceTree = "<group>"; };
-		C2271DBC1DAE2CFA001792B6 /* GeneralTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralTableView.swift; sourceTree = "<group>"; };
 		C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderItem.swift; sourceTree = "<group>"; };
 		C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextAndLabelItem.swift; sourceTree = "<group>"; };
 		C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderView.swift; sourceTree = "<group>"; };
@@ -447,7 +445,7 @@
 		C22B63561D967F4500085C19 /* TGModernGrowingTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGModernGrowingTextView.h; sourceTree = "<group>"; };
 		C22B63571D967F4500085C19 /* TGModernGrowingTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGModernGrowingTextView.m; sourceTree = "<group>"; };
 		C22B635B1D96A14E00085C19 /* ChatInputView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputView.swift; sourceTree = "<group>"; };
-		C22E06251D7F16C000A11C88 /* TGUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TGUIKit.framework; path = "TGUIKit.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C22E06251D7F16C000A11C88 /* TGUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = TGUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C22E06311D8044CC00A11C88 /* ChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListController.swift; sourceTree = "<group>"; };
 		C22E063C1D80929400A11C88 /* ChatListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListRowItem.swift; sourceTree = "<group>"; };
 		C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMapRowItem.swift; sourceTree = "<group>"; };
@@ -482,7 +480,7 @@
 		C232EABD1E1D13A800C4D38C /* TextUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextUtils.swift; sourceTree = "<group>"; };
 		C232EAC61E1D4BD700C4D38C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C232EAC81E1D536200C4D38C /* SEModalProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SEModalProgressView.swift; sourceTree = "<group>"; };
-		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "PostboxMac.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PostboxMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
@@ -717,9 +715,9 @@
 		C2EA177E1E2FD50000887153 /* TransformImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageView.swift; sourceTree = "<group>"; };
 		C2EA17801E2FD50A00887153 /* ImageUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageUtils.swift; sourceTree = "<group>"; };
 		C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteboardUtils.swift; sourceTree = "<group>"; };
-		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TelegramCoreMac.framework; path = "TelegramCoreMac.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSignalKitMac.framework; path = "SwiftSignalKitMac.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MtProtoKitMac.framework; path = "MtProtoKitMac.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = TelegramCoreMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftSignalKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2FBC1E61DC631980063A23B /* SPPreviewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPPreviewController.swift; sourceTree = "<group>"; };
 		C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderController.swift; sourceTree = "<group>"; };
 		C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInputRow.swift; sourceTree = "<group>"; };
@@ -919,7 +917,6 @@
 				C2271DB21DAE127A001792B6 /* GeneralRowView.swift */,
 				C2271DB41DAE131C001792B6 /* GeneralInteractedRowItem.swift */,
 				C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */,
-				C2271DBC1DAE2CFA001792B6 /* GeneralTableView.swift */,
 				C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */,
 				C2A5067A1DF5BE6900971A93 /* GeneralTextRowItem.swift */,
 			);
@@ -2218,7 +2215,6 @@
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
 				C29A65031E08396F0071BCEF /* MGalleryExternalVideoItem.swift in Sources */,
 				C24DABBF1E0834B7005EE404 /* XCDYouTubePlayerScript.m in Sources */,
-				C2271DBD1DAE2CFA001792B6 /* GeneralTableView.swift in Sources */,
 				C24DABC01E0834B7005EE404 /* XCDYouTubeVideo.m in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,

@@ -191,8 +191,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
 
     }
     
-    
-    
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
         if let w = newWindow {
             
@@ -251,6 +249,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.scroll(to: point)
     }
     
+
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
         

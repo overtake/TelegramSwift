@@ -10,8 +10,8 @@ import Cocoa
 
 public class HorizontalTableView: TableView {
 
-    public override init(frame frameRect: NSRect, isFlipped: Bool = true) {
-        super.init(frame: frameRect, isFlipped: isFlipped)
+    public override init(frame frameRect: NSRect, isFlipped: Bool = true, bottomInset:CGFloat = 0) {
+        super.init(frame: frameRect, isFlipped: isFlipped, bottomInset: bottomInset)
         //        [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
         //self.verticalScroller?.controlSize = NSControlSize.small
         self.rotate(byDegrees: 270)
@@ -35,10 +35,10 @@ public class HorizontalTableView: TableView {
     }
     
     override func rowView(item:TableRowItem) -> TableRowView {
-        var identifier:String = NSStringFromClass(item.viewClass())
+        let identifier:String = NSStringFromClass(item.viewClass())
         var view = self.tableView.make(withIdentifier: identifier, owner: self.tableView)
         if(view == nil) {
-            var vz = item.viewClass() as! TableRowView.Type
+            let vz = item.viewClass() as! TableRowView.Type
             
             view = vz.init(frame:NSMakeRect(0, 0, item.height, frame.height))
             

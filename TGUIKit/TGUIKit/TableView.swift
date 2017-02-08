@@ -9,6 +9,7 @@
 import Cocoa
 import SwiftSignalKitMac
 
+
 public enum TableSeparator {
     case bottom;
     case top;
@@ -155,6 +156,8 @@ protocol SelectDelegate : class {
 
 class TGFlipableTableView : NSTableView, CALayerDelegate {
     
+    var bottomInset:CGFloat = 0
+    
     public var flip:Bool = true
     
     public weak var sdelegate:SelectDelegate?
@@ -199,18 +202,20 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
 
     
+    
+    
+    
     override func mouseDown(with event: NSEvent) {
         //self.window?.makeFirstResponder(nil)
         let point = self.convert(event.locationInWindow, from: nil)
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
         sdelegate?.selectRow(index: range.location)
-
     }
     
     
     
     override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
+        super.setFrameSize(NSMakeSize(newSize.width, newSize.height + bottomInset))
         
         if inLiveResize {
             if let table = table {
@@ -280,9 +285,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var scrollListeners:[TableScrollListener] = []
     
+    
     public func addScroll(listener:TableScrollListener) {
         scrollListeners.append(listener)
     }
+    
+    
+    public var bottomInset:CGFloat = 0 {
+        didSet {
+            tableView.bottomInset = bottomInset
+        }
+    }
+    
+    
     
     public func removeScroll(listener:TableScrollListener) {
         var index:Int = 0
@@ -319,47 +334,37 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.init(frame:frameRect, isFlipped:true)
     }
     
-    public init(frame frameRect: NSRect, isFlipped:Bool = true) {
-        
+    public init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0) {
+
         let table = TGFlipableTableView.init(frame:frameRect);
         table.flip = isFlipped
         
-
+        //self.tableView.
         self.tableView = table
         self.tableView.wantsLayer = true
         
-      //  self.tableView.layer?.drawsAsynchronously = System.drawAsync
         self.tableView.layerContentsRedrawPolicy = .onSetNeedsDisplay
         
 
         super.init(frame: frameRect);
         
         table.table = self
-
+        
+        self.bottomInset = bottomInset
         
         self.clipView.border = BorderType([.Right])
         self.tableView.border = BorderType([.Right])
-       // self.tableView.usesStaticContents = true
         self.hasVerticalScroller = true;
 
         self.documentView = self.tableView;
         self.autoresizesSubviews = true;
-        self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
+        self.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
         
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
         self.tableView.sdelegate = self
 
-        self.updateTrackingAreas();
-        
-
-        
-        let column:NSTableColumn = NSTableColumn(identifier: "column");
-        column.width = NSWidth(frameRect)
-        self.tableView.addTableColumn(column)
-
         self.tableView.headerView = nil;
-        
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
@@ -367,6 +372,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }))
         
     }
+    
+    
     
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
         
@@ -558,17 +565,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
 
     
-    open override func updateTrackingAreas() {
-        super.updateTrackingAreas();
-        
-        if(self.trackingArea != nil) {
-            self.removeTrackingArea(self.trackingArea!)
-        }
-        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.inVisibleRect, NSTrackingAreaOptions.activeAlways, NSTrackingAreaOptions.mouseMoved]
-        self.trackingArea = NSTrackingArea.init(rect: self.bounds, options: options, owner: self, userInfo: nil)
-        
-        self.addTrackingArea(self.trackingArea!)
-    }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin);
@@ -668,6 +664,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
     }
+    
+    
     
     public func reloadData(row:Int, animated:Bool = false) -> Void {
         if let view = self.viewNecessary(at: row) {
@@ -772,7 +770,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.listhash.removeAll()
         
         if(redraw) {
-            self.tableView.removeRows(at: IndexSet(integersIn: 0..<count), withAnimation: animation)
+            self.tableView.removeRows(at: IndexSet(integersIn: 0 ..< count), withAnimation: animation)
         }
     }
     
@@ -1145,6 +1143,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
+    
     public func replace(item:TableRowItem, at index:Int, animated:Bool) {
         list[index] = item
         listhash[item.stableId] = item
@@ -1272,20 +1271,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             switch state {
             case  .bottom(_, _):
                 if tableView.isFlipped {
-                    rowRect.origin.y -= (height - rowRect.height)
+                    rowRect.origin.y -= (height - rowRect.height) - bottomInset
                 }
             case  .top(_, _):
                // break
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= (height - rowRect.height)
+                    rowRect.origin.y -= (height - rowRect.height) - bottomInset
                 }
             case .center(_, _):
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0)
+                    rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0) - bottomInset
                 } else {
                     
                     if rowRect.maxY > height/2.0 {
-                        rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0)
+                        rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0) - bottomInset
                     } else {
                         rowRect.origin.y = 0
                     }

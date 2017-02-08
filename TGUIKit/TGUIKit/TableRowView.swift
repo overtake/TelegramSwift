@@ -157,7 +157,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
+        var inset:CGFloat = 0
+        if let addition = item?.table?.bottomInset {
+            inset += addition
+        }
+        super.setFrameOrigin(NSMakePoint(newOrigin.x, newOrigin.y + inset))
         guard #available(OSX 10.12, *) else {
             needsLayout = true
             return

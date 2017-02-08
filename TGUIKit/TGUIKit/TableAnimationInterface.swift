@@ -29,7 +29,7 @@ open class TableAnimationInterface: NSObject {
             return
         }
         
-        var contentView = table.contentView
+        let contentView = table.contentView
         let bounds = contentView.bounds
         
         let scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
@@ -41,7 +41,7 @@ open class TableAnimationInterface: NSObject {
         if bounds.minY > height, scrollBelow {
             height = bounds.minY
             
-            var presentation = contentView.layer?.presentation()
+            let presentation = contentView.layer?.presentation()
             if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
                 height += presentation.bounds.minY
             }
@@ -83,7 +83,7 @@ open class TableAnimationInterface: NSObject {
             
             CATransaction.commit()
             
-        }  else {
+        } else if !scrollBelow {
             contentView.bounds = NSMakeRect(0, bounds.minY + height, contentView.bounds.width, contentView.bounds.height)
         }
 
