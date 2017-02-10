@@ -286,6 +286,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var scrollListeners:[TableScrollListener] = []
     
     
+    public var emptyItem:TableRowItem?
+    private var emptyView:TableRowView?
+    
     public func addScroll(listener:TableScrollListener) {
         scrollListeners.append(listener)
     }
@@ -373,10 +376,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    
+    open override func layout() {
+        super.layout()
+        emptyView?.frame = bounds
+    }
     
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
         super.draw(layer, in: ctx)
         
     }
@@ -1016,13 +1021,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         mergePromise.set(transition)
     }
     
+    private var first:Bool = true
+    
     public func merge(with transition:TableUpdateTransition) -> Void {
         
         assertOnMainThread()
         assert(!updating)
         
-       
-        
+        let oldEmpty = self.isEmpty
         self.beginUpdates()
         
         let visibleItems = self.visibleItems()
@@ -1140,6 +1146,33 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         self.endUpdates()
+        
+        if oldEmpty != isEmpty || first {
+            updateEmpties()
+        }
+        
+        first = false
+    }
+    
+    func updateEmpties() {
+        if let emptyItem = emptyItem {
+            if isEmpty {
+                if emptyView == nil {
+                    let vz = emptyItem.viewClass() as! TableRowView.Type
+                    emptyView = vz.init(frame:bounds)
+                    emptyView?.identifier = identifier
+                }
+                emptyView?.frame = bounds
+                if emptyView?.superview == nil {
+                    addSubview(emptyView!)
+                }
+                emptyView?.set(item: emptyItem)
+                emptyView?.needsLayout = true
+            } else {
+                emptyView?.removeFromSuperview()
+                emptyView = nil
+            }
+        }
         
     }
     
