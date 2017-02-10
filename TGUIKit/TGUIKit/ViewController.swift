@@ -111,6 +111,8 @@ open class ViewController : NSObject {
             }
         }
     }
+    
+    
     public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:kCAMediaTimingFunctionSpring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     

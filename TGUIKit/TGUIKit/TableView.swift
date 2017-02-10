@@ -215,7 +215,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     
     override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(NSMakeSize(newSize.width, newSize.height + bottomInset))
+        super.setFrameSize(NSMakeSize(newSize.width, newSize.height + bottomInset + 10))
         
         if inLiveResize {
             if let table = table {
@@ -612,7 +612,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
         
-        assert(self.item(stableId:item.stableId) == nil)
+        assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
         self.listhash[item.stableId] = item;
         self.list.insert(item, at: at);
         item.table = self;
