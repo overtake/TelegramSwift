@@ -218,12 +218,23 @@ public class Modal: NSObject {
         
         background.addSubview(container)
         
+        window.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .All)
+        
         window.set(escape: {[weak self] () -> KeyHandlerResult in
             if self?.controller?.escapeKeyAction() == .rejected {
                 self?.close()
             }
             return .invoked
         }, with: self, priority: .high)
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            if let controller = self?.controller {
+                return controller.returnKeyAction()
+            }
+            return .invokeNext
+        }, with: self, for: .Return, priority: .high)
         
         background.set(handler: { [weak self] _ in
             self?.close()
@@ -264,8 +275,9 @@ public class Modal: NSObject {
     }
     
     public func close(_ callAcceptInteraction:Bool = false) ->Void {
-        
+        window.remove(object: self, for: .All)
         window.remove(object: self, for: .Escape)
+        window.remove(object: self, for: .Return)
         controller?.viewWillDisappear(true)
         
         if callAcceptInteraction, let interactionsView = interactionsView {

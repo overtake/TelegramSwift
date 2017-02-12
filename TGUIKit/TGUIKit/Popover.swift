@@ -74,6 +74,10 @@ open class Popover: NSObject {
                         return .invoked
                     }, with: strongSelf, priority: .modal)
                     
+                    control.kitWindow?.set(handler: { () -> KeyHandlerResult in
+                        return .invokeNext
+                    }, with: strongSelf, for: .All)
+                    
                     strongSelf.control = control
                     strongSelf.background.flip = false
                     var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
@@ -241,7 +245,7 @@ open class Popover: NSObject {
         isShown = false
         control?.isSelected = false
         overlay?.kitWindow?.remove(object: self, for: .Escape)
-        
+        overlay?.kitWindow?.remove(object: self, for: .All)
         overlay?.removeLastStateHandler()
         overlay?.removeLastStateHandler()
         

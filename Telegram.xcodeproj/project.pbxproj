@@ -273,7 +273,6 @@
 		C2AE4FDF1E44C43C0038B1AC /* HockeySDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C2AE4FE01E44C4460038B1AC /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B0722D1DFEDE430082939D /* UsernameInputRowItem.swift */; };
-		C2B072341DFF148E0082939D /* UsernameAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B072331DFF148E0082939D /* UsernameAvailability.swift */; };
 		C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */; };
 		C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */; };
 		C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */; };
@@ -649,7 +648,6 @@
 		C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBadgeItem.swift; sourceTree = "<group>"; };
 		C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalBadgeNode.swift; sourceTree = "<group>"; };
 		C2B0722D1DFEDE430082939D /* UsernameInputRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UsernameInputRowItem.swift; sourceTree = "<group>"; };
-		C2B072331DFF148E0082939D /* UsernameAvailability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UsernameAvailability.swift; sourceTree = "<group>"; };
 		C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowItem.swift; sourceTree = "<group>"; };
 		C2B1A0F01D9D94E400ACB1DD /* SeparatorRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowView.swift; sourceTree = "<group>"; };
 		C2B1A10D1D9FD02400ACB1DD /* ChatInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceState.swift; sourceTree = "<group>"; };
@@ -1656,7 +1654,6 @@
 		C2B072321DFF14730082939D /* core */ = {
 			isa = PBXGroup;
 			children = (
-				C2B072331DFF148E0082939D /* UsernameAvailability.swift */,
 				C2A16E3D1E11674F00585A85 /* CreateGroupSignals.swift */,
 				C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */,
 			);
@@ -2247,7 +2244,6 @@
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
-				C2B072341DFF148E0082939D /* UsernameAvailability.swift in Sources */,
 				C27AAFEB1DEA01C4009B9629 /* InputAuthCodeViewController.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,

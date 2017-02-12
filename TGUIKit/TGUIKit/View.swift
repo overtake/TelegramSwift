@@ -161,6 +161,7 @@ open class View : NSView,CALayerDelegate {
         assertOnMainThread()
         self.wantsLayer = true
         self.layer?.delegate = self
+       // self.autoresizesSubviews = false
        // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
     }

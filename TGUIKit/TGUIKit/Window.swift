@@ -105,6 +105,7 @@ public class Window: NSWindow {
             }
         }
     }
+
     
     public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]
@@ -199,7 +200,8 @@ public class Window: NSWindow {
     }
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
-                
+        
+        NSLog("\(firstResponder)")
         if firstResponder.responds(to: NSSelectorFromString("copy:")) {
             firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
         }
@@ -215,9 +217,31 @@ public class Window: NSWindow {
                     applyResponderIfNeeded()
                 }
                 
-                if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode] {
-                    let sorted = handlers.sorted(by: >)
-                    loop: for handle in sorted {
+                if let globalHandler = keyHandlers[.All]?.sorted(by: >).first, let keyCode = KeyboardKey(rawValue:event.keyCode) {
+                    
+                    if let handle = keyHandlers[keyCode]?.sorted(by: >).first {
+                        if globalHandler.object.value != handle.object.value {
+                            if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
+                                switch globalHandler.handler() {
+                                case .invoked:
+                                    return
+                                case .rejected:
+                                    break
+                                case .invokeNext:
+                                    super.sendEvent(event)
+                                    return
+                                }
+                            } else {
+                                super.sendEvent(event)
+                                return
+                            }
+                        }
+                    }
+                }
+                
+                if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode]?.sorted(by: >) {
+                    loop: for handle in handlers {
+                        
                         if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
                             
                             switch handle.handler() {

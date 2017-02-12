@@ -164,6 +164,15 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     weak var table:TableView?
     var border:BorderType?
     
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.autoresizesSubviews = false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override var isFlipped: Bool {
         return flip
     }

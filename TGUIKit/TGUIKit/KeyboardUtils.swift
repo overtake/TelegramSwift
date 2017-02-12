@@ -101,4 +101,5 @@ public enum KeyboardKey : UInt16  {
     case RightArrow = 124
     case DownArrow = 125
     case UpArrow = 126
+    case All = 1000
 }
