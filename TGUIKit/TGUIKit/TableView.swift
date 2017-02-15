@@ -215,7 +215,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     
     override func mouseDown(with event: NSEvent) {
-        //self.window?.makeFirstResponder(nil)
         let point = self.convert(event.locationInWindow, from: nil)
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
         sdelegate?.selectRow(index: range.location)
@@ -224,14 +223,17 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     
     override func setFrameSize(_ newSize: NSSize) {
+        let oldWidth: CGFloat = frame.width
         super.setFrameSize(NSMakeSize(newSize.width, newSize.height + bottomInset + 10))
         
         if inLiveResize {
             if let table = table {
-                table.layoutIfNeeded(with: table.visibleRows())
+                table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
             }
         }
     }
+    
+    
     
     var liveWidth:CGFloat = 0
     
@@ -244,7 +246,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         if liveWidth != frame.width && liveWidth != 0 {
             liveWidth = 0
             if let table = table {
-                table.layoutIfNeeded(with: NSMakeRange(0, table.count))
+                table.layoutIfNeeded(with: NSMakeRange(0, table.count), oldWidth: frame.width)
             }
         }
         
@@ -295,7 +297,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var scrollListeners:[TableScrollListener] = []
     
     
-    public var emptyItem:TableRowItem?
+    public var emptyItem:TableRowItem? {
+        didSet {
+            if let _ = emptyView {
+                updateEmpties()
+            }
+        }
+    }
     private var emptyView:TableRowView?
     
     public func addScroll(listener:TableScrollListener) {
@@ -351,7 +359,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let table = TGFlipableTableView.init(frame:frameRect);
         table.flip = isFlipped
         
-        //self.tableView.
         self.tableView = table
         self.tableView.wantsLayer = true
         
@@ -395,11 +402,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    func layoutIfNeeded(with range:NSRange) {
+    func layoutIfNeeded(with range:NSRange, oldWidth:CGFloat) {
         for i in range.min ..< range.max {
             let item = self.item(at: i)
             let before = item.height
-            let updated = item.makeSize(tableView.frame.width)
+            let updated = item.makeSize(tableView.frame.width, oldWidth: oldWidth)
             let after = item.height
             if (before != after && updated) || item.instantlyResize {
                 reloadData(row: i, animated: false)
@@ -1166,6 +1173,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     func updateEmpties() {
         if let emptyItem = emptyItem {
             if isEmpty {
+                if let empt = emptyView, !empt.isKind(of: emptyItem.viewClass()) || empt.item != emptyItem {
+                    emptyView?.removeFromSuperview()
+                    emptyView = nil
+                }
                 if emptyView == nil {
                     let vz = emptyItem.viewClass() as! TableRowView.Type
                     emptyView = vz.init(frame:bounds)

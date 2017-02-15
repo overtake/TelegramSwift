@@ -170,11 +170,15 @@ open class Control: View {
     }
     
     public func removeLastHandler() -> Void {
-        handlers.removeLast()
+        if !handlers.isEmpty {
+            handlers.removeLast()
+        }
     }
     
     public func removeLastStateHandler() -> Void {
-        stateHandlers.removeLast()
+        if !stateHandlers.isEmpty {
+            stateHandlers.removeLast()
+        }
     }
     
     public func removeAllHandlers() ->Void {

@@ -55,10 +55,10 @@ public func ==(lhs:SearchState, rhs:SearchState) -> Bool {
 }
 
 public final class SearchInteractions {
-    public let stateModified:(SearchFieldState) -> Void
-    public let textModified:(String?) -> Void
+    public let stateModified:(SearchState) -> Void
+    public let textModified:(SearchState) -> Void
     
-    public init(_ state:@escaping(SearchFieldState)->Void, _ text:@escaping(String?)->Void) {
+    public init(_ state:@escaping(SearchState)->Void, _ text:@escaping(SearchState)->Void) {
         stateModified = state
         textModified = text
     }
@@ -164,7 +164,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     public func textDidChange(_ notification: Notification) {
         input.string = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
         if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r")))
+            searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
         }
         placeholder.isHidden = input.string != nil && !input.string!.isEmpty
     }
@@ -178,7 +178,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     }
 
     public func didResignResponder() {
-        change(state: .None, true)
+        if let s = input.string, s.isEmpty {
+            change(state: .None, true)
+        }
     }
     
     public func didBecomeResponder() {
@@ -196,7 +198,8 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             self.state = state
             
             if let searchInteractions = searchInteractions {
-                searchInteractions.stateModified(state)
+                let text = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+                searchInteractions.stateModified(SearchState(state: state, request: state == .None ? nil : text))
             }
             
             lock = true

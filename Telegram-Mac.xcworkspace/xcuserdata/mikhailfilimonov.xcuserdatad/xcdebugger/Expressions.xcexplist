@@ -89,6 +89,14 @@
          contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #5):ChatController.swift">
       </ContextState>
       <ContextState
+         contextName = "Control.removeLastStateHandler() -&gt; ():Control.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "stateHandlers">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(init(account : Account, peerId : PeerId, message : Message?, navigation : NavigationViewController) -&gt; ChatController).(closure #4):ChatController.swift">
       </ContextState>
       <ContextState
@@ -488,7 +496,12 @@
          contextName = "GeneralTextRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralTextRowItem.swift">
       </ContextState>
       <ContextState
-         contextName = "GeneralInputRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralInputRow.swift">
+         contextName = "PeerMediaWebpageRowItem.init(CGSize, ChatInteraction, Account, PeerMediaSharedEntry) -&gt; PeerMediaWebpageRowItem:PeerMediaWebpageRowContent.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.message">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;ChatTableTransaction, ()&gt;).(closure #1):ChatController.swift">
@@ -497,6 +510,9 @@
                value = "toView.filteredEntries">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GeneralInputRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralInputRow.swift">
       </ContextState>
       <ContextState
          contextName = "ChatVoiceRowItem.init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatVoiceRowItem:ChatVoiceRowItem.swift">
@@ -625,9 +641,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #4):ChatController.swift">
-      </ContextState>
-      <ContextState
          contextName = "UnsentMessageHistoryView.replay([IntermediateMessageHistoryUnsentOperation]) -&gt; Bool:UnsentMessageHistoryView.swift">
       </ContextState>
       <ContextState
@@ -729,6 +742,9 @@
          contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
       </ContextState>
       <ContextState
+         contextName = "PeerMediaMusicRowItem.init(CGSize, ChatInteraction, Account, PeerMediaSharedEntry) -&gt; PeerMediaMusicRowItem:PeerMediaMusicRowContent.swift">
+      </ContextState>
+      <ContextState
          contextName = "Layer.willChangeValue(forKey : String) -&gt; ():Layer.swift">
          <PersistentStrings>
             <PersistentString
@@ -750,6 +766,9 @@
       </ContextState>
       <ContextState
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ExpandedPreviewRowItem.init(CGSize, account : Account, url : URL, onDelete : (ExpandedPreviewRowItem) -&gt; ()) -&gt; ExpandedPreviewRowItem:PreviewSenderItems.swift">
       </ContextState>
       <ContextState
          contextName = "GridRowView.layout(items : [GridItem], parent : GridRowItem, animated : Bool) -&gt; ():GridRowView.swift">
@@ -999,6 +1018,9 @@
          contextName = "stringStatus(for : PeerView, theme : PeerStatusStringTheme) -&gt; PeerStatusStringResult:TextUtils.swift">
       </ContextState>
       <ContextState
+         contextName = "Popover.hide() -&gt; ():Popover.swift">
+      </ContextState>
+      <ContextState
          contextName = "static ChatRowItem.item(from : ChatHistoryEntry, with : Account) -&gt; ChatRowItem:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -1029,6 +1051,9 @@
                value = "self.item(at: row)">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ShareMessageObject.init(Account, Message) -&gt; ShareMessageObject:ShareModalController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.(init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem).(closure #1):ChatRowItem.swift">

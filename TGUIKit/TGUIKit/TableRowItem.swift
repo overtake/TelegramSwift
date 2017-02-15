@@ -67,11 +67,7 @@ open class TableRowItem: NSObject {
     
    
     open func menuItems() -> [ContextMenuItem]? {
-        
-        return [ContextMenuItem("item", handler: { 
-            
-        })];
-        
+        return nil
     }
     
     public func redraw()->Void {
@@ -90,7 +86,7 @@ open class TableRowItem: NSObject {
         return TableRowView.self;
     }
     
-    open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude) -> Bool {
+    open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {
         return true;
     }
 }

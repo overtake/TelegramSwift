@@ -72,8 +72,15 @@ public final class NavigationHeader {
                     let contentInset = navigation.controller.bar.height + height
                     view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, height)
                     navigation.containerView.addSubview(view, positioned: .below, relativeTo: navigation.navigationBar)
-                    navigation.controller.view.change(size: NSMakeSize(navigation.frame.width, navigation.frame.height - contentInset), animated: false)
-                    navigation.controller.view.change(pos: NSMakePoint(0, contentInset), animated: false)
+                    
+                    NSAnimationContext.runAnimationGroup({ [weak navigation] (ctx) in
+                        if let navigation = navigation {
+                            let cView = animated ? navigation.controller.view.animator() : navigation.controller.view
+                            cView.frame = NSMakeRect(0, contentInset, navigation.frame.width, navigation.frame.height - contentInset)
+                        }
+    
+                    }, completionHandler: nil)
+
                     if animated {
                         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
@@ -102,7 +109,8 @@ public final class NavigationHeader {
                 view.removeFromSuperview()
                 _view = nil
             }
-            navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, navigation.frame.height - navigation.controller.bar.height)
+            let cView = animated ? navigation.controller.view.animator() : navigation.controller.view
+            cView.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, navigation.frame.height - navigation.controller.bar.height)
         }
         
     }

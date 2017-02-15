@@ -42,9 +42,7 @@ public class MajorNavigationController: NavigationViewController {
    
     override public func push(_ controller: ViewController, _ animated: Bool, style:ViewControllerStyle? = nil) {
         
-        if isLocked {
-            return
-        }
+
         
         assertOnMainThread()
         

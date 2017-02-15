@@ -11,6 +11,7 @@ import Cocoa
 public protocol GridListItem {
     var section: GridSection? { get }
     func node(layout: GridNodeLayout, gridNode:GridNode) -> GridItemNode
+    func update(node: GridItemNode)
 }
 
 
@@ -300,10 +301,10 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         }
         
         for updatedItem in transaction.updateItems {
-            self.items[updatedItem.index] = updatedItem.item
-          //  if let itemNode = self.itemNodes[updatedItem.index] {
-                //update node
-          //  }
+            //self.items[updatedItem.index] = updatedItem.item
+            if let itemNode = self.itemNodes[updatedItem.index] {
+                updatedItem.item.update(node: itemNode)
+            }
         }
         
         var removedNodes: [GridItemNode] = []

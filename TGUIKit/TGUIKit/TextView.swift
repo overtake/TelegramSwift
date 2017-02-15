@@ -16,9 +16,9 @@ public final class TextViewInteractions {
     }
 }
 
-private final class TextViewLine {
-    let line: CTLine
-    let frame: NSRect
+public final class TextViewLine {
+    public let line: CTLine
+    public let frame: NSRect
     
     init(line: CTLine, frame: CGRect) {
         self.line = line
@@ -56,8 +56,8 @@ public final class TextViewLayout : Equatable {
     public var selectedRange:TextSelectedRange = TextSelectedRange()
     public var penFlush:CGFloat
     public var insets:NSSize = NSZeroSize
-    fileprivate var lines:[TextViewLine] = []
-    
+    public fileprivate(set) var lines:[TextViewLine] = []
+    public fileprivate(set) var isPerfectSized:Bool = true
     public let maximumNumberOfLines:Int32
     public let truncationType:CTLineTruncationType
     public var cutout:TextViewCutout?
@@ -65,7 +65,7 @@ public final class TextViewLayout : Equatable {
     public fileprivate(set) var lineSpacing:CGFloat?
     
     public private(set) var layoutSize:NSSize = NSZeroSize
-    
+    public private(set) var perfectSize:NSSize = NSZeroSize
     public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
@@ -85,6 +85,9 @@ public final class TextViewLayout : Equatable {
     }
     
     func calculateLayout() -> Void {
+        
+        isPerfectSized = true
+        
         let font: CTFont
         if attributedString.length != 0 {
             if let stringFont = attributedString.attribute(kCTFontAttributeName as String, at: 0, effectiveRange: nil) {
@@ -174,6 +177,7 @@ public final class TextViewLayout : Equatable {
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
                     
                     coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedWidth), truncationType, truncationToken) ?? truncationToken
+                    isPerfectSized = false
                 }
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))

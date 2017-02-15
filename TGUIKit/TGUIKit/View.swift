@@ -275,28 +275,7 @@ open class View : NSView,CALayerDelegate {
         return copy
     }
     
-    public func mouseInside() -> Bool {
-        if let window = self.window {
-            var location:NSPoint = window.mouseLocationOutsideOfEventStream
-            location = self.convert(location, from: nil)
-            
-            if let view = window.contentView!.hitTest(window.mouseLocationOutsideOfEventStream) {
-                if view == self {
-                    return NSPointInRect(location, self.bounds)
-                } else {
-                    var s = view.superview
-                    while let sv = s {
-                        if sv == self {
-                            return NSPointInRect(location, self.bounds)
-                        }
-                        s = sv.superview
-                    }
-                }
-            }
-
-        }
-        return false
-    }
+ 
     
     open var kitWindow: Window? {
         return super.window as? Window
