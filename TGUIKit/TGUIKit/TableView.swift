@@ -382,7 +382,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
         self.tableView.sdelegate = self
-
+        self.tableView.allowsColumnReordering = true
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         
@@ -784,6 +784,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.removeRows(at: IndexSet(integersIn:range), withAnimation: animation)
         }
     }
+    
+
     
     public func removeAll(redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         let count:Int = self.count;

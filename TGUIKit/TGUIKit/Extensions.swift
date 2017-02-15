@@ -354,7 +354,7 @@ public extension NSView {
     }
     
     
-    public func change(pos position: NSPoint, animated: Bool, _ save:Bool = true) -> Void {
+    public func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) -> Void {
         if animated {
             
             var presentX = NSMinX(self.frame)
@@ -365,7 +365,7 @@ public extension NSView {
                 presentX = NSMinX(presentation.frame)
             }
             
-            self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut, removeOnCompletion: true)
+            self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
         } else {
             self.layer?.removeAnimation(forKey: "position")
         }
