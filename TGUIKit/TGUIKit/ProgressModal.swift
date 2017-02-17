@@ -8,22 +8,20 @@
 
 import Cocoa
 import SwiftSignalKitMac
-public class ProgressModalController<T>: ModalViewController {
+class ProgressModalController: ModalViewController {
 
-    private(set) var promise:Promise<T>? = Promise()
-    let afterDisposable:MetaDisposable = MetaDisposable()
     private var progressView:RadialProgressView?
     private var timer:SwiftSignalKitMac.Timer?
     private var progress:Float = 0.2
-    override public var background: NSColor {
+    override var background: NSColor {
         return .clear
     }
     
-    override public var containerBackground: NSColor {
+    override var containerBackground: NSColor {
         return .clear
     }
     
-    override public func loadView() {
+    override func loadView() {
         super.loadView()
    
         progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
@@ -35,20 +33,16 @@ public class ProgressModalController<T>: ModalViewController {
         viewDidLoad()
     }
     
-    public override func viewDidResized(_ size: NSSize) {
+    override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
     }
     
-    deinit {
-        afterDisposable.dispose()
-    }
-    
-    override public func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         readyOnce()
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         
@@ -65,43 +59,50 @@ public class ProgressModalController<T>: ModalViewController {
         
     }
     
-    public override func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         timer?.invalidate()
         timer = nil
-        promise = nil
-        afterDisposable.dispose()
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     }
     
-    public init(_ signal:Signal<T,Void>) {
+    override init() {
         super.init(frame:NSMakeRect(0,0,100,100))
-        
-        let modified = signal |> deliverOnMainQueue
-        afterDisposable.set(modified.start(next: {[weak self] (result) in
-            self?.promise?.set(.single(result))
-        }))
     }
+    
     
 }
 
 public func showModalProgress<T>(signal:Signal<T,Void>, for window:Window) -> Signal<T,Void> {
-    let modal = ProgressModalController(signal)
-    let beforeModal:Signal<Void,Void> = .single() |> delay(0.15, queue: Queue.mainQueue())
+    return Signal { subscriber in
+        
+        let signal = signal |> deliverOnMainQueue
+        
+        let modal = ProgressModalController()
+        let beforeModal:Signal<Void,Void> = .single() |> delay(0.25, queue: Queue.mainQueue())
+        
+        let beforeDisposable:DisposableSet = DisposableSet()
+        
+        beforeDisposable.add(beforeModal.start(completed: {
+            showModal(with: modal, for: window)
+        }))
+        
+        
+        beforeDisposable.add(signal.start(next: { next in
+            subscriber.putNext(next)
+        }, error: {
+            subscriber.putError()
+        }, completed: {
+            subscriber.putCompletion()
+            beforeDisposable.dispose()
+            modal.close()
+        }))
+        
+        return beforeDisposable
+    }
     
-    let beforeDisposable:MetaDisposable = MetaDisposable()
-    
-    beforeDisposable.set(beforeModal.start(next: {
-        showModal(with: modal, for: window)
-    }))
-    
-    _ = modal.promise?.get().start(next: { (result) in
-        beforeDisposable.dispose()
-        modal.modal?.close()
-    })
-    
-    return modal.promise!.get()
+
 }

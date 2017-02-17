@@ -108,6 +108,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "parseTextEntities(String) -&gt; (String, [MessageTextEntity]):TextUtils.swift">
+      </ContextState>
+      <ContextState
          contextName = "ImageView.image.didset:ImageView.swift">
          <PersistentStrings>
             <PersistentString
@@ -526,12 +529,7 @@
          contextName = "ChatRightView.draw(CALayer, in : CGContext) -&gt; ():ChatRightView.swift">
       </ContextState>
       <ContextState
-         contextName = "LinearProgressControl.set(progress : CGFloat, animated : Bool) -&gt; ():LinearProgressControl.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "progressView">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "__34-[TGGrowingTextView menuForEvent:]_block_invoke:TGModernGrowingTextView.m">
       </ContextState>
       <ContextState
          contextName = "TableView.insert(item : TableRowItem, at : Int, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; Bool:TableView.swift">
@@ -545,16 +543,32 @@
          contextName = "__48-[TGOpusAudioRecorder prepareRecord:completion:]_block_invoke:TGOpusAudioRecorder.m">
       </ContextState>
       <ContextState
-         contextName = "ValuePipe.putNext(A) -&gt; ():ValuePipe.swift">
+         contextName = "LinearProgressControl.set(progress : CGFloat, animated : Bool) -&gt; ():LinearProgressControl.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "progressView">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "SearchController.(loadView() -&gt; ()).(closure #3):SearchController.swift">
+         contextName = "ValuePipe.putNext(A) -&gt; ():ValuePipe.swift">
       </ContextState>
       <ContextState
          contextName = "GridItem.resize(size : CGSize) -&gt; ():GridRowItem.swift">
          <PersistentStrings>
             <PersistentString
                value = "originalSize.aspectFilled(size)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "SearchController.(loadView() -&gt; ()).(closure #3):SearchController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TitleButton.apply(state : ControlState) -&gt; ():TitleButton.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "style.font">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -567,14 +581,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TitleButton.apply(state : ControlState) -&gt; ():TitleButton.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "style.font">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "APController.(init(account : Account, peerId : PeerId, message : Message?, isVoice : Bool) -&gt; APController).(closure #4):AudioPlayerController.swift">
       </ContextState>
       <ContextState
@@ -582,14 +588,6 @@
          <PersistentStrings>
             <PersistentString
                value = "fullSizeImage.width">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.contentNode!.content">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -609,6 +607,17 @@
       </ContextState>
       <ContextState
          contextName = "MajorNavigationController.back(Int) -&gt; ():MajorNavigationController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentNode!.content">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatTextInputState.init(decoder : Decoder) -&gt; ChatTextInputState:ChatInterfaceState.swift">
       </ContextState>
       <ContextState
          contextName = "TabBarView.setSelectedIndex(Int, respondToDelegate : Bool) -&gt; ():TabBarView.swift">
@@ -766,6 +775,14 @@
       </ContextState>
       <ContextState
          contextName = "GalleryControls.init(View?) -&gt; GalleryControls:GalleryControls.swift">
+      </ContextState>
+      <ContextState
+         contextName = "EBlockRowView.update(with : CGPoint) -&gt; Bool:EBlockRowView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.lineAttr">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ExpandedPreviewRowItem.init(CGSize, account : Account, url : URL, onDelete : (ExpandedPreviewRowItem) -&gt; ()) -&gt; ExpandedPreviewRowItem:PreviewSenderItems.swift">
@@ -980,6 +997,14 @@
       </ContextState>
       <ContextState
          contextName = "ChatListController.(loadView() -&gt; ()).(closure #1).(closure #2).(closure #1):ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "__34-[TGGrowingTextView menuForEvent:]_block_invoke_2:TGModernGrowingTextView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "item">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "(chatMessagePhotoDatas(account : Account, photo : TelegramMediaImage) -&gt; Signal&lt;(Data?, Data?, Int), ()&gt;).(closure #1):MediaUtils.swift">

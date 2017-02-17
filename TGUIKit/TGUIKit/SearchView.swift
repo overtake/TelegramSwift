@@ -276,8 +276,6 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     func updateLoading() {
-        assert(state == .Focus)
-        
         if isLoading {
             if progressIndicator.superview == nil {
                 addSubview(progressIndicator)

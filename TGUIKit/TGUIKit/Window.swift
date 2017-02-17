@@ -117,6 +117,20 @@ public class Window: NSWindow {
 
     }
     
+    public func removeAllHandlers(for object:NSObject) {
+        for (key, handlers) in keyHandlers {
+            var copy:[KeyHandler] = []
+            for handle in handlers {
+                copy.append(handle)
+            }
+            for i in stride(from: copy.count - 1, to: -1, by: -1) {
+                if copy[i].object.value == object  {
+                    keyHandlers[key]?.remove(at: i)
+                }
+            }
+        }
+    }
+    
     public func remove(object:NSObject, for key:KeyboardKey) {
         let handlers = keyHandlers[key]
         if let handlers = handlers {
@@ -130,6 +144,21 @@ public class Window: NSWindow {
                 }
             }
         }
+    }
+    
+    private func cleanUndefinedHandlers() {
+        for (key, handlers) in keyHandlers {
+            var copy:[KeyHandler] = []
+            for handle in handlers {
+                copy.append(handle)
+            }
+            for i in stride(from: copy.count - 1, to: -1, by: -1) {
+                if copy[i].object.value == nil  {
+                    keyHandlers[key]?.remove(at: i)
+                }
+            }
+        }
+        
     }
     
     public func set(mouseHandler:@escaping() -> KeyHandlerResult, with object:NSObject, for type:NSEventType, priority:HandlerPriority = .low) -> Void {
@@ -216,6 +245,8 @@ public class Window: NSWindow {
                 if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape {
                     applyResponderIfNeeded()
                 }
+                
+                cleanUndefinedHandlers()
                 
                 if let globalHandler = keyHandlers[.All]?.sorted(by: >).first, let keyCode = KeyboardKey(rawValue:event.keyCode) {
                     

@@ -9,7 +9,7 @@
 import Cocoa
 import SwiftSignalKitMac
 
-class PopoverBackground: View {
+class PopoverBackground: Control {
    
 }
 
@@ -169,15 +169,7 @@ open class Popover: NSObject {
                         
                         let nHandler:(Control) -> Void = { [weak self] _ in
                             
-                            let s = Signal<Void,NoError>({ (subscriber) -> Disposable in
-                                
-                                subscriber.putNext()
-                                
-                                return ActionDisposable(action: {
-                                    
-                                });
-                                
-                            }) |> delay(0.2, queue: Queue.mainQueue())
+                            let s = Signal<Void,NoError>.single() |> delay(0.2, queue: Queue.mainQueue())
                             
                             self?.disposable.set(s.start(next: {[weak strongSelf] () in
                                 
@@ -197,8 +189,8 @@ open class Popover: NSObject {
                             
                         }
                         
-                        overlay.set(handler: nHandler, for: .Normal)
-                        overlay.set(handler: hHandler, for: .Hover)
+                        strongSelf.background.set(handler: nHandler, for: .Normal)
+                        strongSelf.background.set(handler: hHandler, for: .Hover)
                         
                         
                         control.set(handler: nHandler, for: .Normal)
@@ -238,6 +230,7 @@ open class Popover: NSObject {
     deinit {
         self.disposable.dispose()
         self.readyDisposable.dispose()
+        overlay?.kitWindow?.remove(object: self, for: .All)
     }
     
     public func hide() -> Void {
