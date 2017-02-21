@@ -180,11 +180,26 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     public func didResignResponder() {
         if let s = input.string, s.isEmpty {
             change(state: .None, true)
+        } else {
+            self.kitWindow?.remove(object: self, for: .Escape)
+            self.kitWindow?.removeObserver(for: self)
         }
     }
     
     public func didBecomeResponder() {
         change(state: .Focus, true)
+        
+        self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
+            if let strongSelf = self {
+                return strongSelf.changeResponder() ? .invoked : .rejected
+            }
+            return .rejected
+            
+            }, with: self, priority: .high)
+        
+        self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
+            return self?.input
+        }, with: self, priority: .high)
     }
     
     
@@ -192,7 +207,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         super.draw(layer, in: ctx)
     }
     
-    func change(state:SearchFieldState, _ animated:Bool) -> Void {
+
+    
+    public func change(state:SearchFieldState, _ animated:Bool) -> Void {
         
         if state != self.state && !lock {
             self.state = state
@@ -206,17 +223,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             
             if state == .Focus {
                 
-                self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
-                    if let strongSelf = self {
-                        return strongSelf.changeResponder() ? .invoked : .rejected
-                    }
-                    return .rejected
-                    
-                }, with: self, priority: .high)
-                
-                self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
-                    return self?.input
-                }, with: self, priority: .high)
+               
                 
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 5
                 
@@ -250,6 +257,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 
                 self.kitWindow?.remove(object: self, for: .Escape)
                 self.kitWindow?.removeObserver(for: self)
+               
                 self.input.isHidden = true
                 self.input.string = ""
                 self.window?.makeFirstResponder(nil)
@@ -288,7 +296,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             progressIndicator.stopAnimation(self)
             progressIndicator.removeFromSuperview()
             progressIndicator.isHidden = true
-            clear.isHidden = false
+            clear.isHidden = self.state == .Focus && (self.input.string ?? "").length == 0
         }
     }
     
@@ -309,6 +317,11 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     public func changeResponder(_ animated:Bool = true) -> Bool {
         change(state: state == .None ? .Focus : .None, animated)
         return true
+    }
+    
+    deinit {
+        self.kitWindow?.remove(object: self, for: .Escape)
+        self.kitWindow?.removeObserver(for: self)
     }
     
     public var query:String {

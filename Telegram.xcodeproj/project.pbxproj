@@ -135,6 +135,8 @@
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
+		C24949121E5B704900D7ED5D /* AccountsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24949111E5B704900D7ED5D /* AccountsListViewController.swift */; };
+		C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24949131E5B763F00D7ED5D /* ApplicationContext.swift */; };
 		C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */; };
 		C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC31E24FFF3002CD3F3 /* PasscodeLockController.swift */; };
 		C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC61E2500AC002CD3F3 /* PasscodeSettingsViewController.swift */; };
@@ -289,7 +291,7 @@
 		C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187ED1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift */; };
 		C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */; };
 		C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */; };
-		C2DEC87F1DECB8C800F6544A /* ApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */; };
+		C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DEC87E1DECB8C800F6544A /* TelegramApplicationContext.swift */; };
 		C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */; };
 		C2DF47BA1DE79574003AA6C0 /* bitwise.c in Sources */ = {isa = PBXBuildFile; fileRef = C2DF479B1DE79574003AA6C0 /* bitwise.c */; };
 		C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */ = {isa = PBXBuildFile; fileRef = C2DF479C1DE79574003AA6C0 /* framing.c */; };
@@ -328,7 +330,7 @@
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
 		D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D098C71C1D7E175A007784E4 /* MainMenu.xib */; };
-		D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthorizationSequence.swift */; };
+		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -485,6 +487,8 @@
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
+		C24949111E5B704900D7ED5D /* AccountsListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountsListViewController.swift; sourceTree = "<group>"; };
+		C24949131E5B763F00D7ED5D /* ApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationContext.swift; sourceTree = "<group>"; };
 		C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorBackNavigationBar.swift; sourceTree = "<group>"; };
 		C24D9FC31E24FFF3002CD3F3 /* PasscodeLockController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasscodeLockController.swift; sourceTree = "<group>"; };
 		C24D9FC61E2500AC002CD3F3 /* PasscodeSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasscodeSettingsViewController.swift; sourceTree = "<group>"; };
@@ -666,7 +670,7 @@
 		C2D187ED1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareInlineResultNavigationAction.swift; sourceTree = "<group>"; };
 		C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextSwitchPeerRowItem.swift; sourceTree = "<group>"; };
 		C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatSwitchInlineController.swift; sourceTree = "<group>"; };
-		C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationContext.swift; sourceTree = "<group>"; };
+		C2DEC87E1DECB8C800F6544A /* TelegramApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramApplicationContext.swift; sourceTree = "<group>"; };
 		C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFContainerView.swift; sourceTree = "<group>"; };
 		C2DF47971DE79540003AA6C0 /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopus.a; path = "thrid-party/opus/lib/libopus.a"; sourceTree = "<group>"; };
 		C2DF479B1DE79574003AA6C0 /* bitwise.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bitwise.c; sourceTree = "<group>"; };
@@ -727,7 +731,7 @@
 		D098C71D1D7E175A007784E4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		D098C71F1D7E175A007784E4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D098C7381D7E1A62007784E4 /* Telegram-Mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Telegram-Mac.entitlements"; sourceTree = "<group>"; };
-		D098C7391D7E1C40007784E4 /* AuthorizationSequence.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthorizationSequence.swift; sourceTree = "<group>"; };
+		D098C7391D7E1C40007784E4 /* AuthController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -942,6 +946,7 @@
 				C2A71CE41DDB2ED400C69F73 /* PrivacySettingsViewController.swift */,
 				C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */,
 				C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */,
+				C24949111E5B704900D7ED5D /* AccountsListViewController.swift */,
 			);
 			name = "settings-controllers";
 			sourceTree = "<group>";
@@ -1873,7 +1878,7 @@
 		C2DF47EA1DE9A17A003AA6C0 /* auth */ = {
 			isa = PBXGroup;
 			children = (
-				D098C7391D7E1C40007784E4 /* AuthorizationSequence.swift */,
+				D098C7391D7E1C40007784E4 /* AuthController.swift */,
 				C2A72D8E1DEC66E200C3B945 /* views */,
 				C27AAFE71DE9DA51009B9629 /* utils */,
 				C2DF47EC1DE9A18E003AA6C0 /* register */,
@@ -1952,7 +1957,8 @@
 				C22E062F1D80439800A11C88 /* ui */,
 				D098C7381D7E1A62007784E4 /* Telegram-Mac.entitlements */,
 				D098C7181D7E175A007784E4 /* AppDelegate.swift */,
-				C2DEC87E1DECB8C800F6544A /* ApplicationContext.swift */,
+				C2DEC87E1DECB8C800F6544A /* TelegramApplicationContext.swift */,
+				C24949131E5B763F00D7ED5D /* ApplicationContext.swift */,
 				D098C71A1D7E175A007784E4 /* Assets.xcassets */,
 				D098C71C1D7E175A007784E4 /* MainMenu.xib */,
 				D098C71F1D7E175A007784E4 /* Info.plist */,
@@ -2183,7 +2189,7 @@
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */,
-				C2DEC87F1DECB8C800F6544A /* ApplicationContext.swift in Sources */,
+				C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */,
 				C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
 				C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */,
@@ -2251,6 +2257,7 @@
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
+				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
 				C24DABBD1E0834B7005EE404 /* XCDYouTubeClient.m in Sources */,
@@ -2269,7 +2276,7 @@
 				C2DF47C41DE79574003AA6C0 /* opusfile.c in Sources */,
 				C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */,
 				C2DF47C21DE79574003AA6C0 /* info.c in Sources */,
-				D098C73A1D7E1C40007784E4 /* AuthorizationSequence.swift in Sources */,
+				D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */,
 				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */,
@@ -2393,6 +2400,7 @@
 				C29C3E711E43881500193A7E /* StickerPreviewModalController.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,
+				C24949121E5B704900D7ED5D /* AccountsListViewController.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
 				C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */,
 				C2271DC61DAE5E5A001792B6 /* TextAndLabelRowView.swift in Sources */,

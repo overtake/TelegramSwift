@@ -86,10 +86,10 @@ public class MajorNavigationController: NavigationViewController {
     }
     
     public override func back(animated:Bool = true) -> Void {
-        if stackCount > 1 && !isLocked {
+        if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
             let ncontroller = stack[stackCount - 2]
             let removeAnimateFlag = ncontroller == defaultEmpty || !animated
-            stack.last?.didRemovedFromStack()
+            last.didRemovedFromStack()
             stack.removeLast()
             
             show(ncontroller, removeAnimateFlag ? .none : .pop)

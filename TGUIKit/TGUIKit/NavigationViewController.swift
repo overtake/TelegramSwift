@@ -135,7 +135,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 controller = empty
                 oldValue.removeFromSuperview()
                 empty.view.frame = self.bounds
-                self.addSubview(empty.view)
+                containerView.addSubview(empty.view)
             }
         }
     }
@@ -349,10 +349,17 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     }
     
     public func back(animated:Bool = true) -> Void {
-        if stackCount > 1 && !isLocked {
+        if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
             let controller = stack[stackCount - 2]
-            stack.last?.didRemovedFromStack()
+            last.didRemovedFromStack()
             stack.removeLast()
+            show(controller, animated ? .pop : .none)
+        }
+    }
+    
+    public func gotoEmpty(_ animated:Bool = true) -> Void {
+        if controller != empty {
+            stack.removeSubrange(1 ..< stackCount - 1)
             show(controller, animated ? .pop : .none)
         }
     }

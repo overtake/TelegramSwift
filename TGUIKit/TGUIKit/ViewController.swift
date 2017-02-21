@@ -207,6 +207,10 @@ open class ViewController : NSObject {
         _ = atomicSize.swap(size)
     }
     
+    open func invokeNavigationBack() -> Bool {
+        return true
+    }
+    
     open func getLeftBarViewOnce() -> BarView {
         return enableBack ? BackNavigationBar(self) : BarView()
     }

@@ -108,7 +108,7 @@ public enum SplitViewState : Int {
 }
 
 
-public protocol SplitControllerDelegate : class {
+public protocol SplitViewDelegate : class {
     func splitViewDidNeedSwapToLayout(state:SplitViewState) -> Void
     func splitViewDidNeedMinimisize(controller:ViewController) -> Void
     func splitViewDidNeedFullsize(controller:ViewController) -> Void
@@ -132,7 +132,7 @@ public class SplitView : View {
     
     
     public var canChangeState:Bool = true;
-    public weak var delegate:SplitControllerDelegate?
+    public weak var delegate:SplitViewDelegate?
     
     
     private var _proportions:[Int:SplitProportion] = [Int:SplitProportion]()
