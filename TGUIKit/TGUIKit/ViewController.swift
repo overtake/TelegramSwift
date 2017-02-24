@@ -215,12 +215,16 @@ open class ViewController : NSObject {
         return enableBack ? BackNavigationBar(self) : BarView()
     }
     
+    open var defaultBarTitle:String {
+        return localizedString(self.className)
+    }
+    
     open func getCenterBarViewOnce() -> TitledBarView {
-        return TitledBarView(NSAttributedString.initialize(string: localizedString(self.className), font: .medium(.title)))
+        return TitledBarView(.initialize(string: defaultBarTitle, font: .medium(.title)))
     }
     
     public func setCenterTitle(_ text:String) {
-        self.centerBarView.text = NSAttributedString.initialize(string: text, font: systemMediumFont(TGFont.titleSize))
+        self.centerBarView.text = .initialize(string: text, font: .medium(.title))
     }
     
     open func getRightBarViewOnce() -> BarView {

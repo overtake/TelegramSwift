@@ -371,6 +371,9 @@ public extension NSView {
         }
         if save {
             self.setFrameOrigin(position)
+            if let completion = completion, !animated {
+                completion(true)
+            }
         }
       
     }

@@ -73,13 +73,13 @@ public class TitleButton: ImageButton {
         
         
         if let stateFont = stateFont[state] {
-            text.font = stateFont.fontName as! CFTypeRef
+            text.font = stateFont.fontName as CFTypeRef
             text.fontSize = stateFont.pointSize
         } else if let stateFont = stateFont[.Normal] {
-            text.font = stateFont.fontName as! CFTypeRef
+            text.font = stateFont.fontName as CFTypeRef
             text.fontSize = stateFont.pointSize
         } else {
-            text.font = style.font.fontName as! CFTypeRef
+            text.font = style.font.fontName as CFTypeRef
             text.fontSize = style.font.pointSize
         }
         
@@ -99,7 +99,7 @@ public class TitleButton: ImageButton {
             }
         }
        
-        var maxWidth:CGFloat = maxSize.width > 0 ? maxSize.width : msize.width
+        let maxWidth:CGFloat = maxSize.width > 0 ? maxSize.width : msize.width
 
         var textSize:CGFloat = maxWidth
         
@@ -126,9 +126,9 @@ public class TitleButton: ImageButton {
     public override func updateLayout() {
         super.updateLayout()
         
-        var textFocus:NSRect = focus(self.text.frame.size)
-        if let image = imageView.image {
-            var imageFocus:NSRect = focus(self.imageView.frame.size)
+        let textFocus:NSRect = focus(self.text.frame.size)
+        if let _ = imageView.image {
+            let imageFocus:NSRect = focus(self.imageView.frame.size)
             
             self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
             self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
@@ -143,7 +143,7 @@ public class TitleButton: ImageButton {
         if font == nil || string == nil {
             return NSZeroSize
         }
-        var attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
+        let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
         var size:NSSize = attributedString.CTSize(CGFloat.greatestFiniteMagnitude, framesetter: nil).1
         size.width = ceil(size.width) + 10
         size.height = ceil(size.height)

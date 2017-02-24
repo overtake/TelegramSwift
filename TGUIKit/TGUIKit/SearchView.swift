@@ -181,7 +181,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         if let s = input.string, s.isEmpty {
             change(state: .None, true)
         } else {
-            self.kitWindow?.remove(object: self, for: .Escape)
+            self.kitWindow?.removeAllHandlers(for: self)
             self.kitWindow?.removeObserver(for: self)
         }
     }
@@ -255,7 +255,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             
             if state == .None {
                 
-                self.kitWindow?.remove(object: self, for: .Escape)
+                self.kitWindow?.removeAllHandlers(for: self)
                 self.kitWindow?.removeObserver(for: self)
                
                 self.input.isHidden = true
@@ -320,7 +320,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     deinit {
-        self.kitWindow?.remove(object: self, for: .Escape)
+        self.kitWindow?.removeAllHandlers(for: self)
         self.kitWindow?.removeObserver(for: self)
     }
     

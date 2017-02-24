@@ -91,11 +91,9 @@ public class ModalInteractions {
 private class ModalInteractionsContainer : View {
     let acceptView:TitleButton
     let cancelView:TitleButton?
-    let modal:Modal
     let interactions:ModalInteractions
     let borderView:View?
     init(interactions:ModalInteractions, modal:Modal) {
-        self.modal = modal
         self.interactions = interactions
         acceptView = TitleButton()
         acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
@@ -127,19 +125,18 @@ private class ModalInteractionsContainer : View {
                 cancel()
             }, for: .Click)
         } else {
-            cancelView?.set(handler: { _ in
-                modal.close()
+            cancelView?.set(handler: { [weak modal] _ in
+                modal?.close()
             }, for: .Click)
         }
         
         if let accept = interactions.accept {
             acceptView.set(handler: { _ in
                 accept()
-                modal.close()
             }, for: .Click)
         } else {
-            acceptView.set(handler: { _ in
-                modal.close()
+            acceptView.set(handler: { [weak modal] _ in
+                modal?.close()
             }, for: .Click)
 
         }
@@ -180,11 +177,19 @@ private class ModalInteractionsContainer : View {
     
 }
 
+private class ModalContainerView: View {
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+}
+
 public class Modal: NSObject {
     
     private var background:ModalBackground
     private var controller:ModalViewController?
-    private var container:View!
+    private var container:ModalContainerView!
     private var window:Window
     private let disposable:MetaDisposable = MetaDisposable()
     private var interactionsView:ModalInteractionsContainer?
@@ -207,7 +212,7 @@ public class Modal: NSObject {
             controller._frameRect = window.contentView!.bounds
         }
         
-        container = View(frame: containerRect)
+        container = ModalContainerView(frame: containerRect)
         container.layer?.cornerRadius = .cornerRadius
         container.backgroundColor = controller.containerBackground
         container.addSubview(controller.view)
@@ -275,9 +280,7 @@ public class Modal: NSObject {
     }
     
     public func close(_ callAcceptInteraction:Bool = false) ->Void {
-        window.remove(object: self, for: .All)
-        window.remove(object: self, for: .Escape)
-        window.remove(object: self, for: .Return)
+        window.removeAllHandlers(for: self)
         controller?.viewWillDisappear(true)
         
         if callAcceptInteraction, let interactionsView = interactionsView {

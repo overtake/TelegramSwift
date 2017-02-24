@@ -28,6 +28,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         self.layer?.delegate = self
         self.layer?.drawsAsynchronously = System.drawAsync
+        autoresizesSubviews = false
     }
     
 

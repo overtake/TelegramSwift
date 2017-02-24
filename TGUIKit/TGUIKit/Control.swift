@@ -13,6 +13,7 @@ public enum ControlState {
     case Normal
     case Hover
     case Highlight
+    case Other
 }
 
 public enum ControlEvent {

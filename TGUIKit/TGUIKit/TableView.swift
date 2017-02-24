@@ -224,7 +224,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
-        super.setFrameSize(NSMakeSize(newSize.width, newSize.height + bottomInset + 10))
+        let addition = bottomInset > 0 ? bottomInset + 10 : 0
+        super.setFrameSize(NSMakeSize(newSize.width, newSize.height + addition))
         
         if inLiveResize {
             if let table = table {
@@ -293,6 +294,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var previousScroll:ScrollPosition?
     public var needUpdateVisibleAfterScroll:Bool = false
     private var scrollHandler:(_ scrollPosition:ScrollPosition) ->Void = {_ in}
+    
     
     private var scrollListeners:[TableScrollListener] = []
     
@@ -975,7 +977,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let view:TableRowView = self.rowView(item: item);
         
         
-        view.set(item: item, animated:false)
+        view.set(item: item, animated: false)
         
         return view
     }
@@ -1048,6 +1050,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let oldEmpty = self.isEmpty
         self.beginUpdates()
+        
         
         let visibleItems = self.visibleItems()
         if transition.grouping {

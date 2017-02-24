@@ -58,9 +58,9 @@ open class EditableViewController<T>: GenericViewController<T> where T: NSView {
     open func changeState() ->Void {
        
         if case .Normal = state {
-            self.state = ViewControllerState.Edit
+            self.state = .Edit
         } else {
-            self.state = ViewControllerState.Normal
+            self.state = .Normal
         }
         
         update(with:state)

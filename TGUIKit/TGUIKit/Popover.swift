@@ -65,7 +65,7 @@ open class Popover: NSObject {
             }
             self.readyDisposable.set(signal.start(next: {[weak self, weak controller, weak parentView] (ready) in
                 
-                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || control.controlState == .Hover || control.controlState == .Highlight) {
+                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight) || !control.userInteractionEnabled) {
                     
                     control.isSelected = true
                     

@@ -43,6 +43,10 @@ public extension NSColor {
         return colorFromRGB(rgbValue: 0xf4f4f4, alpha: 0.4)
     }
     
+    public static var lightGray:NSColor {
+        return colorFromRGB(rgbValue: 0xe4e4e4, alpha: 1.0)
+    }
+    
     public static var darkGrayText:NSColor {
         return NSColor(0x333333)
     }
