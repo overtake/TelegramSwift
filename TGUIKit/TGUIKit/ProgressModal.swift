@@ -76,7 +76,7 @@ class ProgressModalController: ModalViewController {
     
 }
 
-public func showModalProgress<T>(signal:Signal<T,Void>, for window:Window) -> Signal<T,Void> {
+public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window) -> Signal<T,E> {
     return Signal { subscriber in
         
         let signal = signal |> deliverOnMainQueue
@@ -93,8 +93,8 @@ public func showModalProgress<T>(signal:Signal<T,Void>, for window:Window) -> Si
         
         beforeDisposable.add(signal.start(next: { next in
             subscriber.putNext(next)
-        }, error: {
-            subscriber.putError()
+        }, error: { error in
+            subscriber.putError(error)
         }, completed: {
             subscriber.putCompletion()
             beforeDisposable.dispose()

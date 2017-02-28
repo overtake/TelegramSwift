@@ -283,6 +283,14 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
   
     }
     
+    public override func viewDidMoveToSuperview() {
+        guard let _ = superview else {
+            return
+        }
+        self.kitWindow?.removeAllHandlers(for: self)
+        self.kitWindow?.removeObserver(for: self)
+    }
+    
     func updateLoading() {
         if isLoading {
             if progressIndicator.superview == nil {

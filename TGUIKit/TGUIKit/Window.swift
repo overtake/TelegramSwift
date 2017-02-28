@@ -350,7 +350,8 @@ public class Window: NSWindow {
        
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
-        
+        self.canHide = true
+
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidMove, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidResize, object: self)
 

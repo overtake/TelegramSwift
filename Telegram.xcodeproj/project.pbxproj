@@ -132,6 +132,7 @@
 		C232EAC91E1D536200C4D38C /* SEModalProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C232EAC81E1D536200C4D38C /* SEModalProgressView.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
+		C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */; };
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
@@ -297,6 +298,8 @@
 		C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187ED1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift */; };
 		C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */; };
 		C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */; };
+		C2D2CAED1E64579700939968 /* StickersPackPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEC1E64579700939968 /* StickersPackPreviewModalController.swift */; };
+		C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */; };
 		C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DEC87E1DECB8C800F6544A /* TelegramApplicationContext.swift */; };
 		C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */; };
 		C2DF47BA1DE79574003AA6C0 /* bitwise.c in Sources */ = {isa = PBXBuildFile; fileRef = C2DF479B1DE79574003AA6C0 /* bitwise.c */; };
@@ -490,6 +493,7 @@
 		C232EAC81E1D536200C4D38C /* SEModalProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SEModalProgressView.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PostboxMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
+		C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginOthersAccountModal.swift; sourceTree = "<group>"; };
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
@@ -682,6 +686,8 @@
 		C2D187ED1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareInlineResultNavigationAction.swift; sourceTree = "<group>"; };
 		C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextSwitchPeerRowItem.swift; sourceTree = "<group>"; };
 		C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatSwitchInlineController.swift; sourceTree = "<group>"; };
+		C2D2CAEC1E64579700939968 /* StickersPackPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickersPackPreviewModalController.swift; sourceTree = "<group>"; };
+		C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackGridItem.swift; sourceTree = "<group>"; };
 		C2DEC87E1DECB8C800F6544A /* TelegramApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramApplicationContext.swift; sourceTree = "<group>"; };
 		C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFContainerView.swift; sourceTree = "<group>"; };
 		C2DF47971DE79540003AA6C0 /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopus.a; path = "thrid-party/opus/lib/libopus.a"; sourceTree = "<group>"; };
@@ -1798,6 +1804,15 @@
 			name = utils;
 			sourceTree = "<group>";
 		};
+		C2D2CAEE1E6486CE00939968 /* stickers */ = {
+			isa = PBXGroup;
+			children = (
+				C2D2CAEC1E64579700939968 /* StickersPackPreviewModalController.swift */,
+				C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */,
+			);
+			name = stickers;
+			sourceTree = "<group>";
+		};
 		C2DF47991DE79574003AA6C0 /* ogg */ = {
 			isa = PBXGroup;
 			children = (
@@ -1927,6 +1942,7 @@
 				C2DF47ED1DE9A1F3003AA6C0 /* LoginViewController.swift */,
 				C27AAFEA1DEA01C4009B9629 /* InputAuthCodeViewController.swift */,
 				C27AAFF01DEB3437009B9629 /* PasswordViewController.swift */,
+				C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */,
 			);
 			name = login;
 			sourceTree = "<group>";
@@ -1950,6 +1966,7 @@
 		C2FBC1E51DC631620063A23B /* overlay */ = {
 			isa = PBXGroup;
 			children = (
+				C2D2CAEE1E6486CE00939968 /* stickers */,
 				C24D9FDA1E267550002CD3F3 /* preview-sender */,
 				C230B8F71DD3714D0057F596 /* popover */,
 				C2FBC1E61DC631980063A23B /* SPPreviewController.swift */,
@@ -2246,11 +2263,13 @@
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
 				C2D1839D1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift in Sources */,
+				C2D2CAED1E64579700939968 /* StickersPackPreviewModalController.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
+				C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
@@ -2261,6 +2280,7 @@
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */,
+				C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */,
 				C22674411DC13165000BA9ED /* GridHoleItem.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
