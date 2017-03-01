@@ -53,7 +53,7 @@ public class ControllerToaster {
     }
     
     public init(text:String, height:CGFloat = 30.0) {
-        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: .textColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: .text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
         self.height = height
     }
     

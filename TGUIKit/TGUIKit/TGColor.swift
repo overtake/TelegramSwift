@@ -51,6 +51,10 @@ public extension NSColor {
         return NSColor(0x333333)
     }
     
+    public static var text:NSColor {
+        return NSColor.black
+    }
+    
     
     public static var blueText:NSColor  {
         get {

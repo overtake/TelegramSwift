@@ -93,6 +93,14 @@ private class ModalInteractionsContainer : View {
     let cancelView:TitleButton?
     let interactions:ModalInteractions
     let borderView:View?
+    
+    override func mouseUp(with event: NSEvent) {
+        
+    }
+    override func mouseDown(with event: NSEvent) {
+        
+    }
+    
     init(interactions:ModalInteractions, modal:Modal) {
         self.interactions = interactions
         acceptView = TitleButton()

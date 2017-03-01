@@ -113,7 +113,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
         
         input.font = .normal(.text)
-        input.textColor = .textColor
+        input.textColor = .text
         input.isHidden = true
 
         

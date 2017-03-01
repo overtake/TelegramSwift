@@ -22,7 +22,7 @@ class NavigationModalView: Control {
         self.action = action
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: action.reason, color: .textColor, font: .normal(.custom(20)))
+        _ = attr.append(string: action.reason, color: .text, font: .normal(.custom(20)))
         _ = attr.append(string: "\n")
         _ = attr.append(string: action.desc, color: .grayText, font: .normal(.text))
         

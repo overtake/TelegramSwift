@@ -143,9 +143,8 @@ public extension NSMutableAttributedString {
         if let f = font {
             if coreText {
                  self.setCTFont(font: f, range: range)
-            } else {
-                 self.setFont(font: f, range: range)
             }
+            self.setFont(font: f, range: range)
         }
         
         

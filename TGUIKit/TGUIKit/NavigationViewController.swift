@@ -213,6 +213,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.pushDisposable.dispose()
     }
     
+    public func stackInsert(_ controller:ViewController, at: Int) -> Void {
+        stack.insert(controller, at: at)
+    }
+    
     public func push(_ controller:ViewController, _ animated:Bool = true, style: ViewControllerStyle? = nil) -> Void {
         
 //        if isLocked {

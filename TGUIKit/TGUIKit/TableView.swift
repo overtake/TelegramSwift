@@ -958,7 +958,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        return self.item(at: row).height
+        return max(self.item(at: row).height, 1)
     }
     
     public func tableView(_ tableView: NSTableView, isGroupRow row: Int) -> Bool {

@@ -10,7 +10,7 @@ import Cocoa
 
 public struct ControlStyle: Equatable {
     public var font:NSFont = .normal(.text)
-    public var foregroundColor:NSColor = .textColor
+    public var foregroundColor:NSColor = .text
     public var backgroundColor:NSColor = .clear
     public var highlightColor:NSColor = .blueIcon
     
@@ -73,7 +73,7 @@ public struct ControlStyle: Equatable {
 }
 
 
-public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.textColor)
+public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.text)
 
 public let headerTextStyle = ControlStyle(font:.normal(.header), highlightColor:.white)
 public let titleTextStyle = ControlStyle(font:.normal(.title), highlightColor:.white)
