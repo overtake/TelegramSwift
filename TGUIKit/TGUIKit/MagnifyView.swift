@@ -43,6 +43,7 @@ public class MagnifyView : NSView {
         containerView.wantsLayer = true
         addSubview(containerView)
         containerView.addSubview(contentView)
+        contentView.background = NSColor.white
         smartUpdater.set(.single(contentSize))
     }
     
