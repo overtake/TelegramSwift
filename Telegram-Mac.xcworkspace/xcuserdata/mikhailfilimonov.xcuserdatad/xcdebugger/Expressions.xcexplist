@@ -6,6 +6,12 @@
          contextName = "ChatPresentationInterfaceState.state.getter:ChatPresentationInterfaceState.swift">
       </ContextState>
       <ContextState
+         contextName = "MGalleryPeerPhotoItem.(request(immediately : Bool) -&gt; ()).(closure #3):MGalleryPeerPhotoItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CachedUserData.withUpdatedIsBlocked(Bool) -&gt; CachedUserData:CachedUserData.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatRowItem.init(TableView, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem:ChatRowItem.swift">
       </ContextState>
       <ContextState
@@ -453,6 +459,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "MGalleryPeerPhotoItem.sizeValue.getter:MGalleryPeerPhotoItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.updateNavigation(NavigationViewController?) -&gt; ():ChatController.swift">
          <PersistentStrings>
             <PersistentString
@@ -684,7 +693,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -696,7 +705,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1101,6 +1110,14 @@
       </ContextState>
       <ContextState
          contextName = "ShareMessageObject.init(Account, Message) -&gt; ShareMessageObject:ShareModalController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "(finalStateWithUpdates(account : Account, state : AccountMutableState, updates : [Api.Update], shouldPoll : Bool, missingUpdates : Bool) -&gt; Signal&lt;AccountFinalState, ()&gt;).(closure #9):AccountStateManagementUtils.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "update">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.(init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem).(closure #1):ChatRowItem.swift">

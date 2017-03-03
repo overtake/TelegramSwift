@@ -55,11 +55,13 @@ public struct RadialProgressTheme : Equatable {
     public let foregroundColor: NSColor
     public let icon: CGImage?
     public let iconInset:EdgeInsets
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage?, iconInset:EdgeInsets = EdgeInsets()) {
+    public let diameter:CGFloat?
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage?, iconInset:EdgeInsets = EdgeInsets(), diameter: CGFloat? = nil) {
         self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.icon = icon
+        self.diameter = diameter
     }
 }
 
@@ -123,7 +125,7 @@ private class RadialProgressOverlayLayer: Layer {
     
     
     var parameters:RadialProgressParameters {
-        return RadialProgressParameters(theme: self.theme, diameter: NSWidth(self.frame), state: self.state)
+        return RadialProgressParameters(theme: self.theme, diameter: theme.diameter ?? frame.width, state: self.state)
     }
     
     var state: RadialProgressState = .None {
@@ -208,6 +210,9 @@ public class RadialProgressView: Control {
     private var parameters:RadialProgressParameters {
         return RadialProgressParameters(theme: self.theme, diameter: NSWidth(self.frame), state: self.state)
     }
+    
+    
+    
     
     public var state: RadialProgressState = .None {
         didSet {

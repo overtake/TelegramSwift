@@ -332,6 +332,10 @@
 		C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; };
 		C2FBC1DF1DC61B580063A23B /* MtProtoKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */; };
 		C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FBC1E61DC631980063A23B /* SPPreviewController.swift */; };
+		C2FD33E91E696A86008D13D4 /* GroupsInCommonViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E81E696A86008D13D4 /* GroupsInCommonViewController.swift */; };
+		C2FD33EE1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */; };
+		C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */; };
+		C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33F11E69CF6D008D13D4 /* ChatUrlPreviewModel.swift */; };
 		C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */; };
 		C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */; };
 		C2FF14601E532C0A007B7B14 /* SearchEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */; };
@@ -738,6 +742,10 @@
 		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftSignalKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2FBC1E61DC631980063A23B /* SPPreviewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPPreviewController.swift; sourceTree = "<group>"; };
+		C2FD33E81E696A86008D13D4 /* GroupsInCommonViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupsInCommonViewController.swift; sourceTree = "<group>"; };
+		C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformOutgoingMessageMedia.swift; sourceTree = "<group>"; };
+		C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
+		C2FD33F11E69CF6D008D13D4 /* ChatUrlPreviewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUrlPreviewModel.swift; sourceTree = "<group>"; };
 		C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderController.swift; sourceTree = "<group>"; };
 		C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInputRow.swift; sourceTree = "<group>"; };
 		C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchEmptyRowItem.swift; sourceTree = "<group>"; };
@@ -767,6 +775,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */,
 				C2DF47D51DE82524003AA6C0 /* libc++.1.tbd in Frameworks */,
 				C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */,
@@ -1650,6 +1659,7 @@
 				C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */,
 				C20CB7281E60886E00C992AC /* LinkInvationController.swift */,
 				C22EE61D1E67506800334C38 /* ChannelMembersViewController.swift */,
+				C2FD33E81E696A86008D13D4 /* GroupsInCommonViewController.swift */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -1692,6 +1702,7 @@
 				C26A71981DC9FA5100F69385 /* EditMessageModel.swift */,
 				C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */,
 				C29C3E5A1E421F1700193A7E /* ChatAccessoryModel.swift */,
+				C2FD33F11E69CF6D008D13D4 /* ChatUrlPreviewModel.swift */,
 			);
 			name = models;
 			sourceTree = "<group>";
@@ -1764,6 +1775,7 @@
 				C201C2311E3B2D1C0026C21E /* FastSettings.swift */,
 				C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */,
 				C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */,
+				C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -1987,6 +1999,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */,
 				C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */,
 				C2DF47D41DE82524003AA6C0 /* libc++.1.tbd */,
 				C2DF47971DE79540003AA6C0 /* libopus.a */,
@@ -2267,6 +2280,7 @@
 				C2DF47D01DE82475003AA6C0 /* OpusAudioPlayer.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
+				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
@@ -2297,6 +2311,7 @@
 				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
 				C2DF47C41DE79574003AA6C0 /* opusfile.c in Sources */,
 				C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */,
+				C2FD33E91E696A86008D13D4 /* GroupsInCommonViewController.swift in Sources */,
 				C2DF47C21DE79574003AA6C0 /* info.c in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */,
 				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
@@ -2363,6 +2378,7 @@
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
 				C29A65051E0845B80071BCEF /* ExternalVideoLoader.swift in Sources */,
+				C2FD33EE1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */,

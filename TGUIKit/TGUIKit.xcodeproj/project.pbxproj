@@ -89,6 +89,7 @@
 		C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E0DEB61D7EF58200EF1C8D /* TGSplitView.swift */; };
 		C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E0DEB81D7EF7F300EF1C8D /* ViewController.swift */; };
 		C2E0DEBB1D7F05AB00EF1C8D /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E0DEBA1D7F05AB00EF1C8D /* View.swift */; };
+		C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -180,6 +181,7 @@
 		C2E0DEB61D7EF58200EF1C8D /* TGSplitView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGSplitView.swift; sourceTree = "<group>"; };
 		C2E0DEB81D7EF7F300EF1C8D /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		C2E0DEBA1D7F05AB00EF1C8D /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
+		C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressContainerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -432,6 +434,7 @@
 				C2167E5C1DC2534300F98E03 /* SelectingControl.swift */,
 				C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */,
 				C265058F1E02EBEE001954DC /* MagnifyView.swift */,
+				C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -541,6 +544,7 @@
 				C2303E6F1D9950E000098E12 /* Button.swift in Sources */,
 				C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */,
 				C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */,
+				C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */,
 				C219E1F31D8B02FA0042F0C8 /* CAAnimationUtils.swift in Sources */,
 				C291ED991DB35BC5008C6B2A /* Window.swift in Sources */,
 				C296AF841D8D9D7D001DBB59 /* RadialProgressView.swift in Sources */,

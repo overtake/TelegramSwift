@@ -405,7 +405,7 @@ public extension NSView {
     }
     
 
-    public func change(opacity to: CGFloat, animated: Bool, _ save:Bool = true) {
+    public func change(opacity to: CGFloat, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
         if animated {
             if let layer = self.layer {
                 var opacity:CGFloat = CGFloat(layer.opacity)
@@ -413,7 +413,7 @@ public extension NSView {
                     opacity = CGFloat(presentation.opacity)
                 }
                 
-                layer.animateAlpha(from: opacity, to: to, duration:0.2)
+                layer.animateAlpha(from: opacity, to: to, duration:0.2, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
             }
            
             
@@ -422,6 +422,9 @@ public extension NSView {
         }
         if save {
             self.layer?.opacity = Float(to)
+            if let completion = completion, !animated {
+                completion(true)
+            }
         }
     }
     
@@ -503,7 +506,7 @@ public extension NSImage {
     
     func precomposed(_ color:NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext.init(size: self.size, scale: 2.0, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
         
         let image:NSImage = self
         
