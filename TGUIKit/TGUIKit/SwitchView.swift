@@ -71,7 +71,7 @@ public class SwitchView: Control {
         if animates {
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
         }
-        backgroundLayer.backgroundColor = isOn ? NSColor.greenUI.cgColor : NSColor.white.cgColor
+        backgroundLayer.backgroundColor = isOn ? NSColor.blueUI.cgColor : NSColor.white.cgColor
         backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
         buble.borderWidth = isOn ? 0.0 : 1.0
         //  buble.backgroundColor = !isOn ? .border.cgColor : .white.cgColor

@@ -124,7 +124,6 @@ open class View : NSView,CALayerDelegate {
             ctx.fill(layer.bounds)
             
             if let border = border {
-                
                 ctx.setFillColor(NSColor.border.cgColor)
                 
                 if border.contains(.Top) {
@@ -149,18 +148,18 @@ open class View : NSView,CALayerDelegate {
         assertOnMainThread()
     }
     
-    
+ 
     
     open override var isFlipped: Bool {
         return flip
     }
     
-
     public init() {
         super.init(frame: NSZeroRect)
         assertOnMainThread()
         self.wantsLayer = true
-        self.layer?.delegate = self
+       // self.layer?.delegate = self
+      //  self.layer?.isOpaque = false
        // self.autoresizesSubviews = false
        // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
@@ -170,7 +169,8 @@ open class View : NSView,CALayerDelegate {
         super.init(frame: frameRect)
         assertOnMainThread()
         self.wantsLayer = true
-        self.layer?.delegate = self
+     //   self.layer?.delegate = self
+      //  self.layer?.isOpaque = false
         //self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }

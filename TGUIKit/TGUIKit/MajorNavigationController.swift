@@ -171,7 +171,16 @@ public class MajorNavigationController: NavigationViewController {
     }
     
     public override func returnKeyAction() -> KeyHandlerResult {
-        return .rejected
+        let status:KeyHandlerResult = .rejected
+        
+        let cInvoke = self.controller.returnKeyAction()
+        
+        if cInvoke == .invokeNext {
+            return .invokeNext
+        } else if cInvoke == .invoked {
+            return .invoked
+        }
+        return status
     }
     
     public func add(listener:WeakReference<ViewController>) -> Void {

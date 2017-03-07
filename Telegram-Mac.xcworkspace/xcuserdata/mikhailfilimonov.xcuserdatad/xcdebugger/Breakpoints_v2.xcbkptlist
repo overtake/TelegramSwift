@@ -25,13 +25,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/SenderController.swift"
-            timestampString = "510256264.269206"
+            filePath = "Telegram-Mac/ApplicationContext.swift"
+            timestampString = "510523940.960025"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "93"
-            endingLineNumber = "93"
-            landmarkName = "generateMedia(for:)"
+            startingLineNumber = "188"
+            endingLineNumber = "188"
+            landmarkName = "init(window:shouldOnlineKeeper:account:accountManager:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

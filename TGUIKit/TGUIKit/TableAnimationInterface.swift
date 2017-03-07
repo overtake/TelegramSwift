@@ -34,23 +34,27 @@ open class TableAnimationInterface: NSObject {
         
         let scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
         
-        if scrollBelow {
-            contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
-        }
+
         
         if bounds.minY > height, scrollBelow {
-            height = bounds.minY
+//            height = bounds.minY
+//            
+//            let presentation = contentView.layer?.presentation()
+//            if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
+//                height += presentation.bounds.minY
+//            }
+//            
             
-            let presentation = contentView.layer?.presentation()
-            if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
-                height += presentation.bounds.minY
-            }
+            table.scroll(to: .down(true))
             
-            
-            contentView.layer?.animateBounds(from: NSMakeRect(0, height, contentView.bounds.width, contentView.bounds.height), to: contentView.bounds, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+         //   contentView.layer?.animateBounds(from: NSMakeRect(0, height, contentView.bounds.width, contentView.bounds.height), to: contentView.bounds, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
             
             
         } else if height - bounds.height < table.frame.height, scrollBelow {
+            
+            if scrollBelow {
+                contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
+            }
             
             let range:NSRange = table.visibleRows(height)
             

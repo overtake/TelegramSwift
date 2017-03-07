@@ -73,7 +73,7 @@ public struct ControlStyle: Equatable {
 }
 
 
-public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.text)
+public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.blueSelect)
 
 public let headerTextStyle = ControlStyle(font:.normal(.header), highlightColor:.white)
 public let titleTextStyle = ControlStyle(font:.normal(.title), highlightColor:.white)

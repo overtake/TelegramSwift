@@ -211,7 +211,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
             
             if let documentView = documentView, !(self is HorizontalTableView) {
                 
-                if frame.minY < origin.y && deltaScrollY != 0 {
+                if frame.minY < origin.y - frame.height - 50 && deltaScrollY != 0 {
                     if origin.y > documentView.frame.maxY + dynamic {
                         clipView.scroll(to: NSMakePoint(origin.x, documentView.frame.minY))
                     }

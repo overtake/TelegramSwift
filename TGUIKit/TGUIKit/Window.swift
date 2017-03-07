@@ -249,7 +249,6 @@ public class Window: NSWindow {
                 cleanUndefinedHandlers()
                 
                 if let globalHandler = keyHandlers[.All]?.sorted(by: >).first, let keyCode = KeyboardKey(rawValue:event.keyCode) {
-                    
                     if let handle = keyHandlers[keyCode]?.sorted(by: >).first {
                         if globalHandler.object.value != handle.object.value {
                             if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {

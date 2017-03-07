@@ -169,6 +169,9 @@
 		C250B0351DB78A0A004E9FBE /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C250B0341DB78A0A004E9FBE /* Quartz.framework */; };
 		C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */ = {isa = PBXBuildFile; fileRef = C250B0361DB7BB09004E9FBE /* mime-types.txt */; };
 		C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */; };
+		C250BA8F1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */; };
+		C250BA921E6E81BF0057CD96 /* TGVTVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = C250BA911E6E81BF0057CD96 /* TGVTVideoView.m */; };
+		C250BA941E6E84880057CD96 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C250BA931E6E84880057CD96 /* VideoToolbox.framework */; };
 		C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */; };
 		C252532A1DF03F9600ADBC98 /* TGAudioWaveform.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */; };
 		C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */ = {isa = PBXBuildFile; fileRef = C252532C1DF0440300ADBC98 /* begin_record.caf */; };
@@ -336,6 +339,11 @@
 		C2FD33EE1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */; };
 		C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */; };
 		C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33F11E69CF6D008D13D4 /* ChatUrlPreviewModel.swift */; };
+		C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33F51E6C1486008D13D4 /* SSKeychain.m */; };
+		C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33F71E6C1486008D13D4 /* SSKeychainQuery.m */; };
+		C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FD33FA1E6C169C008D13D4 /* Security.framework */; };
+		C2FD34131E6C2503008D13D4 /* LegacyImportAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */; };
+		C2FD34151E6C9003008D13D4 /* BaseApplicationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD34141E6C9003008D13D4 /* BaseApplicationSettings.swift */; };
 		C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */; };
 		C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */; };
 		C2FF14601E532C0A007B7B14 /* SearchEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */; };
@@ -548,6 +556,10 @@
 		C250B0341DB78A0A004E9FBE /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = System/Library/Frameworks/Quartz.framework; sourceTree = SDKROOT; };
 		C250B0361DB7BB09004E9FBE /* mime-types.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "mime-types.txt"; sourceTree = "<group>"; };
 		C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MimeTypes.swift; sourceTree = "<group>"; };
+		C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageThrottledProcessingManager.swift; sourceTree = "<group>"; };
+		C250BA901E6E81BF0057CD96 /* TGVTVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGVTVideoView.h; sourceTree = "<group>"; };
+		C250BA911E6E81BF0057CD96 /* TGVTVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGVTVideoView.m; sourceTree = "<group>"; };
+		C250BA931E6E84880057CD96 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		C25253251DF03F5700ADBC98 /* TGOpusAudioRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGOpusAudioRecorder.h; sourceTree = "<group>"; };
 		C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGOpusAudioRecorder.m; sourceTree = "<group>"; };
 		C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGAudioWaveform.h; sourceTree = "<group>"; };
@@ -746,6 +758,13 @@
 		C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformOutgoingMessageMedia.swift; sourceTree = "<group>"; };
 		C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		C2FD33F11E69CF6D008D13D4 /* ChatUrlPreviewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUrlPreviewModel.swift; sourceTree = "<group>"; };
+		C2FD33F41E6C1486008D13D4 /* SSKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSKeychain.h; sourceTree = "<group>"; };
+		C2FD33F51E6C1486008D13D4 /* SSKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSKeychain.m; sourceTree = "<group>"; };
+		C2FD33F61E6C1486008D13D4 /* SSKeychainQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSKeychainQuery.h; sourceTree = "<group>"; };
+		C2FD33F71E6C1486008D13D4 /* SSKeychainQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSKeychainQuery.m; sourceTree = "<group>"; };
+		C2FD33FA1E6C169C008D13D4 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LegacyImportAuthorization.swift; sourceTree = "<group>"; };
+		C2FD34141E6C9003008D13D4 /* BaseApplicationSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseApplicationSettings.swift; sourceTree = "<group>"; };
 		C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderController.swift; sourceTree = "<group>"; };
 		C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInputRow.swift; sourceTree = "<group>"; };
 		C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchEmptyRowItem.swift; sourceTree = "<group>"; };
@@ -775,6 +794,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C250BA941E6E84880057CD96 /* VideoToolbox.framework in Frameworks */,
+				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */,
 				C2DF47D51DE82524003AA6C0 /* libc++.1.tbd in Frameworks */,
@@ -1313,6 +1334,8 @@
 				C2DF47CD1DE79751003AA6C0 /* ATQueue.m */,
 				C2DF47C91DE79719003AA6C0 /* TGDataItem.h */,
 				C2DF47CA1DE79719003AA6C0 /* TGDataItem.m */,
+				C250BA901E6E81BF0057CD96 /* TGVTVideoView.h */,
+				C250BA911E6E81BF0057CD96 /* TGVTVideoView.m */,
 			);
 			path = objc;
 			sourceTree = "<group>";
@@ -1353,6 +1376,7 @@
 				C29B5F3D1DC74DB400D13E65 /* SenderController.swift */,
 				C2203EA11DDE2AB8001E6AB6 /* ChatSelectText.swift */,
 				C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */,
+				C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -1382,6 +1406,7 @@
 		C253A9531D9164CE00CDC850 /* thrid-party */ = {
 			isa = PBXGroup;
 			children = (
+				C2FD33F31E6C1486008D13D4 /* sskeychain */,
 				C24DAB971E082FDF005EE404 /* objc */,
 				C2DF47991DE79574003AA6C0 /* ogg */,
 				C2DF479F1DE79574003AA6C0 /* opus */,
@@ -1454,6 +1479,7 @@
 			children = (
 				C25F71471E410DEE0046AF4E /* InAppNotificationSettings.swift */,
 				C25F71491E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift */,
+				C2FD34141E6C9003008D13D4 /* BaseApplicationSettings.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -1776,6 +1802,7 @@
 				C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */,
 				C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */,
 				C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */,
+				C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -1956,6 +1983,18 @@
 			name = overlay;
 			sourceTree = "<group>";
 		};
+		C2FD33F31E6C1486008D13D4 /* sskeychain */ = {
+			isa = PBXGroup;
+			children = (
+				C2FD33F41E6C1486008D13D4 /* SSKeychain.h */,
+				C2FD33F51E6C1486008D13D4 /* SSKeychain.m */,
+				C2FD33F61E6C1486008D13D4 /* SSKeychainQuery.h */,
+				C2FD33F71E6C1486008D13D4 /* SSKeychainQuery.m */,
+			);
+			name = sskeychain;
+			path = objc/sskeychain;
+			sourceTree = "<group>";
+		};
 		D098C70C1D7E175A007784E4 = {
 			isa = PBXGroup;
 			children = (
@@ -1999,6 +2038,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C250BA931E6E84880057CD96 /* VideoToolbox.framework */,
+				C2FD33FA1E6C169C008D13D4 /* Security.framework */,
 				C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */,
 				C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */,
 				C2DF47D41DE82524003AA6C0 /* libc++.1.tbd */,
@@ -2239,6 +2280,7 @@
 				C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */,
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
+				C250BA8F1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift in Sources */,
 				C24DABC11E0834B7005EE404 /* XCDYouTubeVideoOperation.m in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
@@ -2275,6 +2317,7 @@
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
 				C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */,
 				C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */,
+				C2FD34131E6C2503008D13D4 /* LegacyImportAuthorization.swift in Sources */,
 				C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */,
 				C2DF47BE1DE79574003AA6C0 /* opus_header.c in Sources */,
 				C2DF47D01DE82475003AA6C0 /* OpusAudioPlayer.swift in Sources */,
@@ -2297,6 +2340,7 @@
 				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
+				C250BA921E6E81BF0057CD96 /* TGVTVideoView.m in Sources */,
 				C24DABBD1E0834B7005EE404 /* XCDYouTubeClient.m in Sources */,
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */,
@@ -2398,6 +2442,7 @@
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
 				C230B8F61DD371430057F596 /* SPopoverViewController.swift in Sources */,
 				C22674331DBF665A000BA9ED /* EStickerPackEntries.swift in Sources */,
+				C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */,
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
@@ -2413,8 +2458,10 @@
 				C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */,
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
+				C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
 				C2271F4F1D9C38F500424F7B /* SPopoverRowItem.swift in Sources */,
+				C2FD34151E6C9003008D13D4 /* BaseApplicationSettings.swift in Sources */,
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C2777B661DCFC649008B69DD /* Localizable.swift in Sources */,
@@ -2565,10 +2612,10 @@
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
@@ -2585,7 +2632,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos.TelegramShare;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
@@ -2602,7 +2649,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos.TelegramShare;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
@@ -2619,7 +2666,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos.TelegramShare;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
@@ -2748,9 +2795,9 @@
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
@@ -2789,9 +2836,9 @@
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";

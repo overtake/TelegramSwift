@@ -302,7 +302,7 @@ public final class TextViewLayout : Equatable {
     }
     
     public func inSelectedRange(_ location:NSPoint) -> Bool {
-        let index = findIndex(location: location)
+        let index = findCharacterIndex(at: location)
         return selectedRange.range.location < index && selectedRange.range.location + selectedRange.range.length > index
     }
     
@@ -467,6 +467,8 @@ public class TextView: Control {
     public override init() {
         super.init();
         self.style = ControlStyle(backgroundColor:.white)
+//        wantsLayer = false
+//        self.layer?.delegate = nil
     }
 
     public override var isFlipped: Bool {
@@ -476,10 +478,12 @@ public class TextView: Control {
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
         self.style = ControlStyle(backgroundColor:.white)
-        self.layer?.isOpaque = true
+//        wantsLayer = false
+//        self.layer?.delegate = nil
        // self.layer?.drawsAsynchronously = System.drawAsync
     }
     
+
 
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         
@@ -487,11 +491,12 @@ public class TextView: Control {
 
         if let layout = layout {
             
-
+            
+            
             ctx.setAllowsAntialiasing(true)
-            ctx.setShouldAntialias(true)
-            ctx.setShouldSmoothFonts(!System.isRetina)
-            ctx.setAllowsFontSmoothing(!System.isRetina)
+           // ctx.setShouldAntialias(true)
+           // ctx.setShouldSmoothFonts(true)
+            ctx.setAllowsFontSmoothing(true)
             
            
             
@@ -556,9 +561,6 @@ public class TextView: Control {
                         ctx.fill(rect)
                     }
 
-
-                  
-                    
                     i +=  isReversed ? -1 : 1
                     
                 }
@@ -569,6 +571,7 @@ public class TextView: Control {
             let textPosition = ctx.textPosition
             let startPosition = focus(layout.layoutSize).origin
             
+     
             
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             
@@ -589,6 +592,7 @@ public class TextView: Control {
         
     }
     
+    private var contextMenu:ContextMenu?
 
     public override func menu(for event: NSEvent) -> NSMenu? {
         if let layout = layout, self.isSelectable {
@@ -597,13 +601,14 @@ public class TextView: Control {
             }
             self.setNeedsDisplayLayer()
             if layout.selectedRange.hasSelectText {
-                let menu = ContextMenu()
-                menu.addItem(ContextMenuItem(localizedString("Text.Copy"), handler: { [weak self] in
+                 contextMenu = ContextMenu()
+                 let text = localizedString("Text.Copy")
+                 contextMenu?.addItem(ContextMenuItem(text.isEmpty ? "Copy" : text, handler: { [weak self] in
                     if let strongSelf = self {
                         strongSelf.copy(strongSelf)
                     }
                 }))
-                return menu
+                return contextMenu
             }
             
         }
@@ -708,7 +713,7 @@ public class TextView: Control {
                 layout.selectedRange = TextSelectedRange(range: NSMakeRange(0,layout.attributedString.length), color: .selectText, def: true)
             } else if event.clickCount == 2 || (event.type == .rightMouseUp  && !layout.selectedRange.hasSelectText) {
                 layout.selectWord(at : point)
-            } else if !layout.selectedRange.hasSelectText || !isSelectable {
+            } else if !layout.selectedRange.hasSelectText || !isSelectable && event.clickCount == 1 {
                 if let (link,_) = layout.link(at: point) {
                     layout.interactions.processURL(link)
                 }

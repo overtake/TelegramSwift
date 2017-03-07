@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKitMac
 
 class PopoverBackground: Control {
-   
+    fileprivate weak var popover:Popover?
 }
 
 open class Popover: NSObject {
@@ -41,9 +41,9 @@ open class Popover: NSObject {
         self.background.layer?.isOpaque = true
         self.background.layer?.shadowOffset = NSMakeSize(0, -1)
 
-       // self.background.wantsLayer = false
-       
         super.init()
+        
+        background.popover = self
     }
     
  
@@ -55,8 +55,10 @@ open class Popover: NSObject {
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
             
-            while let view = parentView.subviews.last, view.isKind(of: PopoverBackground.self) {
-                view.removeFromSuperview()
+            for subview in parentView.subviews {
+                if let view = subview  as? PopoverBackground {
+                    view.popover?.hide(false)
+                }
             }
             
             var signal = controller.ready.get() |> take(1)
@@ -233,18 +235,22 @@ open class Popover: NSObject {
         overlay?.kitWindow?.remove(object: self, for: .All)
     }
     
-    public func hide() -> Void {
+    public func hide(_ removeHandlers:Bool = true) -> Void {
         
         isShown = false
         control?.isSelected = false
         overlay?.kitWindow?.remove(object: self, for: .Escape)
         overlay?.kitWindow?.remove(object: self, for: .All)
-        overlay?.removeLastStateHandler()
-        overlay?.removeLastStateHandler()
         
-        control?.removeLastStateHandler()
-        control?.removeLastStateHandler()
+        if removeHandlers {
+            overlay?.removeLastStateHandler()
+            overlay?.removeLastStateHandler()
+            
+            control?.removeLastStateHandler()
+            control?.removeLastStateHandler()
         
+        }
+     
         self.disposable.dispose()
         self.readyDisposable.dispose()
         controller?.viewWillDisappear(true)

@@ -388,5 +388,8 @@ public class RadialProgressView: Control {
 
     }
     
+    public override func apply(state: ControlState) {
+        
+    }
  
 }

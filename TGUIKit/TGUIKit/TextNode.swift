@@ -241,10 +241,19 @@ public class TextNode: NSObject {
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort
         let context:CGContext = ctx //unsafeBitCast(contextPtr, to: CGContext.self)
         
-        context.setAllowsAntialiasing(true)
-        context.setShouldSmoothFonts(!System.isRetina)
-        context.setAllowsFontSmoothing(!System.isRetina)
+        ctx.setShouldAntialias(true)
+        // ctx.setShouldSmoothFonts(true)
+        ctx.setAllowsFontSmoothing(true)
         
+//        context.setAllowsAntialiasing(true)
+//        context.setShouldSmoothFonts(!System.isRetina)
+//        context.setAllowsFontSmoothing(!System.isRetina)
+        
+        if #available(OSX 10.11, *) {
+            
+        } else {
+            context.setBlendMode(.hardLight)
+        }
         
         if let layout = self.currentLayout {
             let textMatrix = context.textMatrix

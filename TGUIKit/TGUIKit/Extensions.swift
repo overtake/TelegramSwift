@@ -239,6 +239,14 @@ public extension NSView {
         return false
     }
     
+    public var backingScaleFactor: CGFloat {
+        if let window = window {
+            return window.backingScaleFactor
+        } else {
+            return System.backingScale
+        }
+    }
+    
     public func removeAllSubviews() -> Void {
         while (self.subviews.count > 0) {
             self.subviews[0].removeFromSuperview();
@@ -273,9 +281,9 @@ public extension NSView {
                 return view.backgroundColor
             }
             if let backgroundColor = layer?.backgroundColor {
-                return NSColor(cgColor: backgroundColor) ?? .clear
+                return NSColor(cgColor: backgroundColor) ?? .white
             }
-            return .clear
+            return .white
         }
         set {
             if let view = self as? View {
