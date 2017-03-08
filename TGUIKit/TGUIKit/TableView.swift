@@ -1392,14 +1392,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         super.setFrameSize(newSize)
         
         if let visible = visible.last, !tableView.isFlipped {
-
-            if let item = self.item(stableId: visible.0.stableId) {
-                let nrect = rectOf(item: item)
-
-                let y:CGFloat = nrect.minY - (frame.height - visible.1) + nrect.height
-                
-                self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
-                reflectScrolledClipView(clipView)
+            if let keys = layer?.animationKeys(), keys.isEmpty {
+                if let item = self.item(stableId: visible.0.stableId) {
+                    let nrect = rectOf(item: item)
+                    
+                    let y:CGFloat = nrect.minY - (frame.height - visible.1) + nrect.height
+                    
+                    self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                    reflectScrolledClipView(clipView)
+                }
             }
             
         } else {
