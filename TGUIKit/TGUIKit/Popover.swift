@@ -38,9 +38,10 @@ open class Popover: NSObject {
         self.background.layer?.shadowOpacity = 0.35
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
-        self.background.layer?.isOpaque = true
+        self.background.layer?.isOpaque = false
+        //self.background.layer?.backgroundColor = NSColor.white.cgColor
         self.background.layer?.shadowOffset = NSMakeSize(0, -1)
-
+        self.background.layer?.cornerRadius = 4
         super.init()
         
         background.popover = self
@@ -129,7 +130,14 @@ open class Popover: NSObject {
                     strongSelf.overlay = OverlayControl(frame: NSMakeRect(contentRect.minX, contentRect.minY, controller.frame.width , controller.frame.height ))
                     strongSelf.overlay.backgroundColor = .white
                     strongSelf.overlay.layer?.cornerRadius = .cornerRadius
+                    strongSelf.overlay.layer?.opacity = 0.99
                     
+
+                    let bg = View(frame: strongSelf.overlay.frame)
+                    bg.layer?.cornerRadius = .cornerRadius
+                    bg.backgroundColor = .white
+                    
+                    strongSelf.background.addSubview(bg)
                     
                     strongSelf.background.addSubview(strongSelf.overlay)
 
@@ -162,7 +170,7 @@ open class Popover: NSObject {
                                     
                                     })
                                 
-                                sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
+                             //   sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
                             }
                             
                             
