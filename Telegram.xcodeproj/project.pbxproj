@@ -138,6 +138,7 @@
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
+		C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */; };
 		C24949121E5B704900D7ED5D /* AccountsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24949111E5B704900D7ED5D /* AccountsListViewController.swift */; };
 		C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24949131E5B763F00D7ED5D /* ApplicationContext.swift */; };
 		C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */; };
@@ -510,6 +511,7 @@
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
+		C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatGameContentView.swift; sourceTree = "<group>"; };
 		C24949111E5B704900D7ED5D /* AccountsListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountsListViewController.swift; sourceTree = "<group>"; };
 		C24949131E5B763F00D7ED5D /* ApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationContext.swift; sourceTree = "<group>"; };
 		C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorBackNavigationBar.swift; sourceTree = "<group>"; };
@@ -1591,6 +1593,7 @@
 				C253A9601D917ACD00CDC850 /* ChatStickerContentView.swift */,
 				C230B91E1DD4BEBC0057F596 /* ChatGIFContentView.swift */,
 				C22EBCB91DFAB64F0034C435 /* ChatMapContentView.swift */,
+				C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */,
 			);
 			name = content;
 			sourceTree = "<group>";
@@ -2229,6 +2232,7 @@
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
+				C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */,
 				C253A92D1D8EE1A600CDC850 /* ChatMediaView.swift in Sources */,
 				C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */,
 				C2DF47C51DE79574003AA6C0 /* stream.c in Sources */,
@@ -2600,6 +2604,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
@@ -2672,6 +2677,106 @@
 				SWIFT_VERSION = 3.0;
 			};
 			name = Hockeyapp;
+		};
+		C248BD1D1E6ECB24004B9106 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = AppStore;
+		};
+		C248BD1E1E6ECB24004B9106 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = NO;
+				CLANG_WARN_SUSPICIOUS_MOVE = NO;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = "APP_STORE=1";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
+				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/thrid-party/ogg";
+				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Telegram-Mac/libwebp/lib",
+					"$(SDKROOT)/usr/lib/system",
+					"$(PROJECT_DIR)/thrid-party/opus/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
+			};
+			name = AppStore;
+		};
+		C248BD1F1E6ECB24004B9106 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				INFOPLIST_FILE = TelegramShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+			};
+			name = AppStore;
 		};
 		D098C7201D7E175A007784E4 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -2824,6 +2929,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
@@ -2854,6 +2960,7 @@
 			buildConfigurations = (
 				C232EAA11E1D07E700C4D38C /* Debug */,
 				C232EAA21E1D07E700C4D38C /* Release */,
+				C248BD1F1E6ECB24004B9106 /* AppStore */,
 				C232EAA31E1D07E700C4D38C /* Hockeyapp */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -2864,6 +2971,7 @@
 			buildConfigurations = (
 				D098C7201D7E175A007784E4 /* Debug */,
 				D098C7211D7E175A007784E4 /* Release */,
+				C248BD1D1E6ECB24004B9106 /* AppStore */,
 				C232EA251E1BC1A100C4D38C /* Hockeyapp */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -2874,6 +2982,7 @@
 			buildConfigurations = (
 				D098C7231D7E175A007784E4 /* Debug */,
 				D098C7241D7E175A007784E4 /* Release */,
+				C248BD1E1E6ECB24004B9106 /* AppStore */,
 				C232EA261E1BC1A100C4D38C /* Hockeyapp */,
 			);
 			defaultConfigurationIsVisible = 0;

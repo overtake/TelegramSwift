@@ -200,7 +200,7 @@ extern NSString *const kSSKeychainWhereKey;
  
  @see passwordDataForService:account:error:
  */
-+ (NSData *)passwordDataForService:(NSString *)serviceName account:(NSString *)account;
++ (NSData *  __nullable)passwordDataForService:(NSString *)serviceName account:(NSString *)account;
 
 /**
  Returns the password data for a given account and service, or `nil` if the Keychain doesn't have data 
@@ -217,7 +217,7 @@ extern NSString *const kSSKeychainWhereKey;
  
  @see passwordDataForService:account:
  */
-+ (NSData *)passwordDataForService:(NSString *)serviceName account:(NSString *)account error:(NSError **)error;
++ (NSData *  __nullable)passwordDataForService:(NSString *)serviceName account:(NSString *)account error:(NSError **)error;
 
 
 ///-------------------------

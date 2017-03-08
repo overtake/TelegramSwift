@@ -391,6 +391,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "__105-[MTProto transportReadyForTransaction:transportSpecificTransaction:forceConfirmations:transactionReady:]_block_invoke:MTProto.m">
+      </ContextState>
+      <ContextState
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
@@ -474,6 +477,9 @@
                value = "item.account">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Network.(request&lt;A&gt; ((CustomStringConvertible, Buffer, (Buffer) -&gt; A?), tag : NetworkRequestDependencyTag?, automaticFloodWait : Bool) -&gt; Signal&lt;A, MTRpcError&gt;).(closure #1):Network.swift">
       </ContextState>
       <ContextState
          contextName = "MediaBox.(fetchedResource(MediaResource) -&gt; Signal&lt;(), ()&gt;).(closure #1).(closure #1):MediaBox.swift">
@@ -635,16 +641,24 @@
          contextName = "ChannelTypeSettingsViewController.restart(with : ComposeState&lt;CreateChannelResult&gt;) -&gt; ():ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
-         contextName = "MessageHistoryTable.internalStoreMessages([StoreMessage]) -&gt; [InternalStoreMessage]:MessageHistoryTable.swift">
+         contextName = "ViewTracker.(unsentMessageIdsViewSignal() -&gt; Signal&lt;UnsentMessageIdsView, ()&gt;).(closure #1).(closure #1).(closure #1):ViewTracker.swift">
       </ContextState>
       <ContextState
-         contextName = "ViewTracker.(unsentMessageIdsViewSignal() -&gt; Signal&lt;UnsentMessageIdsView, ()&gt;).(closure #1).(closure #1).(closure #1):ViewTracker.swift">
+         contextName = "MessageHistoryTable.internalStoreMessages([StoreMessage]) -&gt; [InternalStoreMessage]:MessageHistoryTable.swift">
       </ContextState>
       <ContextState
          contextName = "ChatMapContentView.update(with : Media, size : CGSize, account : Account, parent : Message?, table : TableView?, parameters : ChatMediaLayoutParameters?) -&gt; ():ChatMapContentView.swift">
          <PersistentStrings>
             <PersistentString
                value = "updated">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "InputContextViewController.layout(Bool) -&gt; ():InputContextHelper.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "view">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -775,7 +789,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -787,7 +801,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

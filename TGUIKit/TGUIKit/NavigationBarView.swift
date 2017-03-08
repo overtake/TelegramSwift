@@ -9,8 +9,8 @@
 import Cocoa
 
 public struct NavigationBarStyle {
-    let height:CGFloat
-    let enableBorder:Bool
+    public let height:CGFloat
+    public let enableBorder:Bool
     public init(height:CGFloat, enableBorder:Bool = true) {
         self.height = height
         self.enableBorder = enableBorder

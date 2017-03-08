@@ -25,13 +25,29 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ApplicationContext.swift"
-            timestampString = "510523940.960025"
+            filePath = "submodules/MtProtoKit/MTProtoKit/MTTimeSyncMessageService.m"
+            timestampString = "510587744.414941"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "188"
-            endingLineNumber = "188"
-            landmarkName = "init(window:shouldOnlineKeeper:account:accountManager:)"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
+            landmarkName = "-mtProtoMessageTransaction:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/InputContextHelper.swift"
+            timestampString = "510589448.782356"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "442"
+            endingLineNumber = "442"
+            landmarkName = "context(with:for:animated:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

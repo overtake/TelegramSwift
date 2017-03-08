@@ -372,6 +372,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         table.table = self
         
         self.bottomInset = bottomInset
+        table.bottomInset = bottomInset
         
         self.clipView.border = BorderType([.Right])
         self.tableView.border = BorderType([.Right])
@@ -1321,6 +1322,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
             }
         
+        let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
+        
         if let item = item {
             var rowRect = self.rectOf(item: item)
             
@@ -1382,6 +1385,26 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             
         } 
+    }
+    
+    open override func setFrameSize(_ newSize: NSSize) {
+        let visible = visibleItems()
+        super.setFrameSize(newSize)
+        
+        if let visible = visible.last, !tableView.isFlipped {
+
+            if let item = self.item(stableId: visible.0.stableId) {
+                let nrect = rectOf(item: item)
+
+                let y:CGFloat = nrect.minY - (frame.height - visible.1) + nrect.height
+                
+                self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                reflectScrolledClipView(clipView)
+            }
+            
+        } else {
+            //TODO
+        }
     }
     
     public func setScrollHandler(_ handler: @escaping (_ scrollPosition:ScrollPosition) ->Void) -> Void {

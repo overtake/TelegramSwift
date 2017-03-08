@@ -96,12 +96,12 @@ CFTypeRef SSKeychainAccessibilityType = NULL;
 }
 
 
-+ (NSData *)passwordDataForService:(NSString *)service account:(NSString *)account {
++ (NSData * __nullable)passwordDataForService:(NSString *)service account:(NSString *)account {
     return [self passwordDataForService:service account:account error:nil];
 }
 
 
-+ (NSData *)passwordDataForService:(NSString *)service account:(NSString *)account error:(NSError **)error {
++ (NSData * __nullable)passwordDataForService:(NSString *)service account:(NSString *)account error:(NSError **)error {
     OSStatus status = SSKeychainErrorBadArguments;
 	if (!service || !account) {
 		if (error) {
@@ -130,7 +130,11 @@ CFTypeRef SSKeychainAccessibilityType = NULL;
 	}
 	
 #if __has_feature(objc_arc)
-	return (__bridge_transfer NSData *)result;
+    if (result != nil) {
+        return (__bridge_transfer NSData *)result;
+    } else {
+        return nil;
+    }
 #else
     return [(NSData *)result autorelease];
 #endif

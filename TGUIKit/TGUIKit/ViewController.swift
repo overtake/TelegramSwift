@@ -447,7 +447,8 @@ open class GenericViewController<T> : ViewController where T:NSView {
 
     open func initializer() -> T {
         let vz = T.self as NSView.Type
-        return vz.init(frame: _frameRect) as! T;
+        //controller.bar.height
+        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - self.bar.height)) as! T;
     }
     
     
