@@ -297,6 +297,10 @@ open class Control: View {
         self.isSelected = false
         super.init(frame: frameRect)
         animates = true
+        guard #available(OSX 10.12, *) else {
+            layer?.opacity = 0.99
+            return
+        }
         //self.wantsLayer = true
         //self.layer?.isOpaque = true
     }
@@ -305,6 +309,11 @@ open class Control: View {
         self.isSelected = false
         super.init(frame: NSZeroRect)
         animates = true
+        
+        guard #available(OSX 10.12, *) else {
+            layer?.opacity = 0.99
+            return
+        }
         //self.wantsLayer = true
         //self.layer?.isOpaque = true
     }
