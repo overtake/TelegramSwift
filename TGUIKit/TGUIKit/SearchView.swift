@@ -304,7 +304,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             progressIndicator.stopAnimation(self)
             progressIndicator.removeFromSuperview()
             progressIndicator.isHidden = true
-            clear.isHidden = self.state == .Focus && (self.input.string ?? "").length == 0
+            clear.isHidden = self.state == .None
         }
     }
     

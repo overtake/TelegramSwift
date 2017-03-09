@@ -14,11 +14,7 @@ public enum ScrollDirection {
     case none;
 }
 
-private class Scroller : NSScroller {
-    fileprivate override func sendAction(on mask: NSEventMask) -> Int {
-        return super.sendAction(on: mask)
-    }
-}
+
 
 public struct ScrollPosition : Equatable {
     public private(set) var rect:NSRect
@@ -37,7 +33,6 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
 open class ScrollView: NSScrollView, CALayerDelegate{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
-    private var scroller:Scroller?
 
     public var scrollPosition:ScrollPosition {
         
@@ -99,7 +94,6 @@ open class ScrollView: NSScrollView, CALayerDelegate{
      override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        scroller = Scroller(frame: self.bounds)
         self.wantsLayer = true;
 
         self.layer?.delegate = self
@@ -118,12 +112,24 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         
         
         
+        self.horizontalScroller?.scrollerStyle = .overlay
+        self.verticalScroller?.scrollerStyle = .overlay
+        
       //  verticalScrollElasticity = .automatic
         //allowsMagnification = true
         //self.hasVerticalScroller = false
         
        // self.scrollerStyle = .overlay
  
+    }
+    
+    open override var scrollerStyle: NSScrollerStyle {
+        set {
+            super.scrollerStyle = .overlay
+        }
+        get {
+            return .overlay
+        }
     }
     
   

@@ -1233,52 +1233,68 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let s = self.frame.size
         
-        if animated {
+        if animated && !tableView.isFlipped {
 
             
             //if !tableView.isFlipped {
                 
-                let y =  (s.height - size.height)
-                
-                CATransaction.begin()
-
-              //  if y < 0 {
-                    
-                var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
-                var presentation = self.layer?.presentation()
-                if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
+            
+            
+            CATransaction.begin()
+            
+            //  if y < 0 {
+            
+            var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
+            var presentation = self.layer?.presentation()
+            if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
+                presentBounds = presentation.bounds
+            }
+            
+            self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+            
+            
+            var y = (size.height - presentBounds.height)
+            
+        //    if (y > 0) {
+                presentBounds = contentView.layer?.bounds ?? contentView.bounds
+                if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds") != nil {
                     presentBounds = presentation.bounds
                 }
                 
-                self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-                
-                
-            
-                if (y > 0) {
-                    var presentBounds:NSRect = contentView.layer?.bounds ?? contentView.bounds
-                    presentation = contentView.layer?.presentation()
-                    if let presentation = presentation, contentView.layer?.animation(forKey:"bounds") != nil {
-                        presentBounds = presentation.bounds
-                    }
+                if y > 0 {
+                    presentBounds.origin.y -= y
                     presentBounds.size.height += y
-                    contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-                    
-                }
-         //   }
-            if !tableView.isFlipped {
-                var currentY:CGFloat = 0
-                
-                presentation = contentView.layer?.presentation()
-                if let presentation = presentation, contentView.layer?.animation(forKey:"position") != nil {
-                    currentY = presentation.position.y
+                } else {
+                    presentBounds.origin.y += y
+                    presentBounds.size.height -= y
                 }
                 
-                let pos = contentView.layer?.position ?? NSZeroPoint
-                contentView.layer?.animatePosition(from: NSMakePoint(0,currentY + (y > 0 ? -y : y)), to: pos, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-            }
+                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+                
+        //    }
+//            else if !tableView.isFlipped {
+//                var currentY:CGFloat = 0
+//                
+//                presentation = contentView.layer?.presentation()
+//                if let presentation = presentation, contentView.layer?.animation(forKey:"position") != nil {
+//                    currentY = presentation.position.y
+//                }
+//                
+//                //let realY = abs(size.height - )
+//                
+//                let pos = contentView.layer?.position ?? NSZeroPoint
+//                
+//                NSLog("\(currentY) y: \(y)")
+//                //                if currentY == 0 {
+//                //                    currentY
+//                //                } else {
+//                //
+//                //                }
+//                contentView.layer?.animatePosition(from: NSMakePoint(0, -y), to: pos, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+//            }
             
                 
-                CATransaction.commit()
+            CATransaction.commit()
             
           //  }
         }

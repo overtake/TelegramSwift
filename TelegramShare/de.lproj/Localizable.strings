@@ -1,0 +1,10 @@
+/* 
+  Localizable.strings
+  TelegramMac
+
+  Created by keepcoder on 04/01/2017.
+  Copyright © 2017 Telegram. All rights reserved.
+*/
+"ShareExtension.Share" = "Share";
+"ShareExtension.Cancel" = "Cancel";
+"ShareExtension.Search" = "Search";
