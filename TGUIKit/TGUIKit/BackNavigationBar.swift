@@ -21,11 +21,9 @@ open class BackNavigationBar: TextButtonBarView {
             button.set(image: image, for: .Normal)
         }
         
-        button.set (handler:{ [weak self] _ in
-            
+        button.set(handler: { [weak self] _ in
             self?.controller?.executeReturn()
-            
-        }, for:.Click)
+        }, for: .SingleClick)
     }
     
     public func requestUpdate() {

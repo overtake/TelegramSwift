@@ -11,6 +11,7 @@ import Cocoa
 
 public protocol TabViewDelegate : class {
     func didChange(selected item:TabItem, index:Int)
+    func scrollup()
 }
 
 public class TabBarView: View {
@@ -144,7 +145,11 @@ public class TabBarView: View {
         
         for subview in subviews {
             if subview.hitTest(point) != nil {
-                setSelectedIndex(idx, respondToDelegate:true)
+                if selectedIndex == idx {
+                    self.delegate?.scrollup()
+                } else {
+                    setSelectedIndex(idx, respondToDelegate:true)
+                }
                 return
             }
             idx += 1

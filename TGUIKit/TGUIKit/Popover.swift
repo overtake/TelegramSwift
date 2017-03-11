@@ -81,6 +81,10 @@ open class Popover: NSObject {
                         return .invokeNext
                     }, with: strongSelf, for: .All)
                     
+                    control.kitWindow?.set(mouseHandler: { () -> KeyHandlerResult in
+                        return .invokeNext
+                    },  with: strongSelf, for: .leftMouseUp, priority: .high)
+                    
                     strongSelf.control = control
                     strongSelf.background.flip = false
                     var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
@@ -133,7 +137,7 @@ open class Popover: NSObject {
                     strongSelf.overlay.layer?.opacity = 0.99
                     
 
-                    let bg = View(frame: strongSelf.overlay.frame)
+                    let bg = View(frame: NSMakeRect(strongSelf.overlay.frame.minX + 2, strongSelf.overlay.frame.minY + 2, strongSelf.overlay.frame.width - 4, strongSelf.overlay.frame.height - 4))
                     bg.layer?.cornerRadius = .cornerRadius
                     bg.backgroundColor = .white
                     
@@ -247,8 +251,7 @@ open class Popover: NSObject {
         
         isShown = false
         control?.isSelected = false
-        overlay?.kitWindow?.remove(object: self, for: .Escape)
-        overlay?.kitWindow?.remove(object: self, for: .All)
+        overlay?.kitWindow?.removeAllHandlers(for: self)
         
         if removeHandlers {
             overlay?.removeLastStateHandler()

@@ -110,6 +110,15 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         input.backgroundColor = NSColor.clear
         input.delegate = self
         input.isRichText = false
+        
+        input.textContainer?.widthTracksTextView = true
+        input.textContainer?.heightTracksTextView = false
+        
+      //  input.maxSize = NSMakeSize(100, .greatestFiniteMagnitude)
+        input.isHorizontallyResizable = false
+        input.isVerticallyResizable = false
+
+        
         //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
         
         input.font = .normal(.text)
@@ -161,8 +170,19 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         }, for: .Click)
     }
     
+    public func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        if let replacementString = replacementString {
+            return !replacementString.contains("\n") && !replacementString.contains("\r")
+        }
+        return false
+    }
+    
     public func textDidChange(_ notification: Notification) {
-        input.string = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+        
+        //input.string = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+        
+       //r input.setSelectedRange(<#T##charRange: NSRange##NSRange#>)
+        
         if let searchInteractions = searchInteractions {
             searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
         }
@@ -231,7 +251,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 animateContainer.centerY(x: leftInset)
 
                 
-                self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset, NSHeight(placeholder.frame))
+                self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset - clear.frame.width, NSHeight(placeholder.frame))
                 
                 if  animated {
                     animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in

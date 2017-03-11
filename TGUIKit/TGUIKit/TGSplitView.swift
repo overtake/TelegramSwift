@@ -31,14 +31,18 @@ fileprivate class SplitMinimisizeView : Control {
     }
     
     func checkCursor() {
-        if mouseInside(), let splitView = splitView {
-            if splitView.state == .minimisize {
-                NSCursor.resizeRight().set()
-            } else {
-                NSCursor.resizeLeft().set()
+        if let splitView = splitView {
+            if let minimisize = splitView.delegate?.splitViewIsCanMinimisize(), minimisize {
+                if mouseInside() {
+                    if splitView.state == .minimisize {
+                        NSCursor.resizeRight().set()
+                    } else {
+                        NSCursor.resizeLeft().set()
+                    }
+                } else {
+                    NSCursor.arrow().set()
+                }
             }
-        } else {
-            NSCursor.arrow().set()
         }
     }
     
@@ -58,22 +62,25 @@ fileprivate class SplitMinimisizeView : Control {
         super.mouseDragged(with: event)
         
         if let splitView = splitView {
-            if splitView.state == .minimisize {
-                NSCursor.resizeRight().set()
-            } else {
-                NSCursor.resizeLeft().set()
+            if let minimisize = splitView.delegate?.splitViewIsCanMinimisize(), minimisize {
+                if splitView.state == .minimisize {
+                    NSCursor.resizeRight().set()
+                } else {
+                    NSCursor.resizeLeft().set()
+                }
+                
+                let current = splitView.convert(event.locationInWindow, from: nil)
+                
+                
+                if startPoint.x - current.x >= 100, splitView.state != .minimisize {
+                    splitView.needMinimisize()
+                    startPoint = current
+                } else if current.x - startPoint.x >= 100, splitView.state == .minimisize {
+                    splitView.needFullsize()
+                    startPoint = current
+                }
             }
             
-            let current = splitView.convert(event.locationInWindow, from: nil)
-            
-            
-            if startPoint.x - current.x >= 100, splitView.state != .minimisize {
-                splitView.needMinimisize()
-                startPoint = current
-            } else if current.x - startPoint.x >= 100, splitView.state == .minimisize {
-                splitView.needFullsize()
-                startPoint = current
-            }
         }
     }
     
@@ -85,7 +92,17 @@ fileprivate class SplitMinimisizeView : Control {
         if let splitView = splitView {
             startPoint = splitView.convert(event.locationInWindow, from: nil)
         }
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
         
+        if let splitView = splitView {
+            if let drawBorder = splitView.delegate?.splitViewDrawBorder(), drawBorder {
+                ctx.setFillColor(NSColor.border.cgColor)
+                ctx.fill(NSMakeRect(floorToScreenPixels(frame.width / 2), 0, .borderSize, frame.height))
+            }
+        }
     }
 }
 
@@ -112,7 +129,8 @@ public protocol SplitViewDelegate : class {
     func splitViewDidNeedSwapToLayout(state:SplitViewState) -> Void
     func splitViewDidNeedMinimisize(controller:ViewController) -> Void
     func splitViewDidNeedFullsize(controller:ViewController) -> Void
-    func splitViewIsMinimisize(controller:ViewController) -> Bool
+    func splitViewIsCanMinimisize() -> Bool
+    func splitViewDrawBorder() -> Bool
 }
 
 
@@ -330,6 +348,7 @@ public class SplitView : View {
         }
 
     }
+    
     
     
     public func needFullsize() {

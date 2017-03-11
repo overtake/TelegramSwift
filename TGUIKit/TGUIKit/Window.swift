@@ -129,6 +129,17 @@ public class Window: NSWindow {
                 }
             }
         }
+        for (key, handlers) in mouseHandlers {
+            var copy:[MouseObserver] = []
+            for handle in handlers {
+                copy.append(handle)
+            }
+            for i in stride(from: copy.count - 1, to: -1, by: -1) {
+                if copy[i].object.value == object  {
+                    mouseHandlers[key]?.remove(at: i)
+                }
+            }
+        }
     }
     
     public func remove(object:NSObject, for key:KeyboardKey) {
@@ -155,6 +166,17 @@ public class Window: NSWindow {
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == nil  {
                     keyHandlers[key]?.remove(at: i)
+                }
+            }
+        }
+        for (key, handlers) in mouseHandlers {
+            var copy:[MouseObserver] = []
+            for handle in handlers {
+                copy.append(handle)
+            }
+            for i in stride(from: copy.count - 1, to: -1, by: -1) {
+                if copy[i].object.value == nil  {
+                    mouseHandlers[key]?.remove(at: i)
                 }
             }
         }

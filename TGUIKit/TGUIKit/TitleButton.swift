@@ -99,8 +99,10 @@ public class TitleButton: ImageButton {
             }
         }
        
-        let maxWidth:CGFloat = maxSize.width > 0 ? maxSize.width : msize.width
+        let maxWidth:CGFloat = !thatFit ? ( maxSize.width > 0 ? maxSize.width : msize.width ) : min(maxSize.width, size.width)
 
+        
+        
         var textSize:CGFloat = maxWidth
         
         if let image = imageView.image {

@@ -175,7 +175,6 @@
 		C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */ = {isa = PBXBuildFile; fileRef = C250B0361DB7BB09004E9FBE /* mime-types.txt */; };
 		C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */; };
 		C250BA8F1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */; };
-		C250BA921E6E81BF0057CD96 /* TGVTVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = C250BA911E6E81BF0057CD96 /* TGVTVideoView.m */; };
 		C250BA941E6E84880057CD96 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C250BA931E6E84880057CD96 /* VideoToolbox.framework */; };
 		C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */; };
 		C252532A1DF03F9600ADBC98 /* TGAudioWaveform.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */; };
@@ -529,6 +528,7 @@
 		C23CF9711E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/ShareViewController.strings; sourceTree = "<group>"; };
 		C23CF9721E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C23CF9731E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C23CF97D1E713AB20009CD06 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
 		C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatGameContentView.swift; sourceTree = "<group>"; };
 		C248BD231E706104004B9106 /* BlockedPeersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlockedPeersViewController.swift; sourceTree = "<group>"; };
@@ -581,8 +581,6 @@
 		C250B0361DB7BB09004E9FBE /* mime-types.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "mime-types.txt"; sourceTree = "<group>"; };
 		C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MimeTypes.swift; sourceTree = "<group>"; };
 		C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageThrottledProcessingManager.swift; sourceTree = "<group>"; };
-		C250BA901E6E81BF0057CD96 /* TGVTVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGVTVideoView.h; sourceTree = "<group>"; };
-		C250BA911E6E81BF0057CD96 /* TGVTVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGVTVideoView.m; sourceTree = "<group>"; };
 		C250BA931E6E84880057CD96 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		C25253251DF03F5700ADBC98 /* TGOpusAudioRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGOpusAudioRecorder.h; sourceTree = "<group>"; };
 		C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGOpusAudioRecorder.m; sourceTree = "<group>"; };
@@ -1367,8 +1365,6 @@
 				C2DF47CD1DE79751003AA6C0 /* ATQueue.m */,
 				C2DF47C91DE79719003AA6C0 /* TGDataItem.h */,
 				C2DF47CA1DE79719003AA6C0 /* TGDataItem.m */,
-				C250BA901E6E81BF0057CD96 /* TGVTVideoView.h */,
-				C250BA911E6E81BF0057CD96 /* TGVTVideoView.m */,
 			);
 			path = objc;
 			sourceTree = "<group>";
@@ -1559,6 +1555,14 @@
 				C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */,
 			);
 			name = panels;
+			sourceTree = "<group>";
+		};
+		C279824C1E72C83500262BFD /* legacy */ = {
+			isa = PBXGroup;
+			children = (
+				C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */,
+			);
+			name = legacy;
 			sourceTree = "<group>";
 		};
 		C27AAFE71DE9DA51009B9629 /* utils */ = {
@@ -1836,7 +1840,6 @@
 				C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */,
 				C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */,
 				C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */,
-				C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -2051,6 +2054,7 @@
 		D098C7171D7E175A007784E4 /* Telegram-Mac */ = {
 			isa = PBXGroup;
 			children = (
+				C279824C1E72C83500262BFD /* legacy */,
 				C25F71461E410DD50046AF4E /* inapp-settings */,
 				C253E22F1DE34FA20022A29F /* audio */,
 				C253A9531D9164CE00CDC850 /* thrid-party */,
@@ -2380,7 +2384,6 @@
 				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
-				C250BA921E6E81BF0057CD96 /* TGVTVideoView.m in Sources */,
 				C24DABBD1E0834B7005EE404 /* XCDYouTubeClient.m in Sources */,
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */,
@@ -2591,6 +2594,7 @@
 				C23CF9681E70BCFB0009CD06 /* de */,
 				C23CF96C1E70BD020009CD06 /* it */,
 				C23CF9701E70BD0B0009CD06 /* nl */,
+				C23CF97D1E713AB20009CD06 /* en */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";

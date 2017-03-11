@@ -520,7 +520,7 @@ public extension NSImage {
         
         let make:(CGContext) -> Void = { (ctx) in
             let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
-            
+            ctx.interpolationQuality = .high
             let cimage = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithData(image.tiffRepresentation! as CFData, nil)!, 0, nil)
             ctx.clip(to: rect, mask: cimage!)
             

@@ -182,6 +182,10 @@ open class Control: View {
         }
     }
     
+    public func removeAllStateHandler() -> Void {
+        stateHandlers.removeAll()
+    }
+    
     public func removeAllHandlers() ->Void {
         handlers.removeAll()
     }

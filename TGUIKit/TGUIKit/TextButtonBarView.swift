@@ -26,7 +26,7 @@ open class TextButtonBarView: BarView {
         button = TitleButton(frame:NSZeroRect)
         button.style = style
         button.set(text: text, for: .Normal)
-
+        
         super.init()
         
         self.alignment = alignment
@@ -43,13 +43,14 @@ open class TextButtonBarView: BarView {
         case .Left:
             button.sizeToFit(NSZeroSize,NSMakeSize(frame.width, frame.height - .borderSize))
         case .Right:
-            button.sizeToFit()
+            button.sizeToFit(NSZeroSize,NSMakeSize(frame.width - 20, frame.height - .borderSize), thatFit: true)
             let f = focus(button.frame.size)
-            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 20.0, f.minY))
-            
+            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
         }
         super.layout()
     }
+    
+    
     
     
     required public init?(coder: NSCoder) {

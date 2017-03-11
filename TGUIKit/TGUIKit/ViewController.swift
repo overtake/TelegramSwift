@@ -317,12 +317,12 @@ open class ViewController : NSObject {
         return .rejected
     }
     
-    open func nextKeyAction() -> KeyHandlerResult {
-        return .invoked
+    open func backKeyAction() -> KeyHandlerResult {
+        return .invokeNext
     }
     
-    open func backKeyAction() -> KeyHandlerResult {
-        return .rejected
+    open func nextKeyAction() -> KeyHandlerResult {
+        return .invokeNext
     }
     
     open func returnKeyAction() -> KeyHandlerResult {

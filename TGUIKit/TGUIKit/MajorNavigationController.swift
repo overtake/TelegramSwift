@@ -131,10 +131,7 @@ public class MajorNavigationController: NavigationViewController {
     
     public override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        self.window?.remove(object: self, for: .Escape)
-        self.window?.remove(object: self, for: .Return)
-        self.window?.remove(object: self, for: .LeftArrow)
-        self.window?.remove(object: self, for: .RightArrow)
+        self.window?.removeAllHandlers(for: self)
     }
     
     public override func backKeyAction() -> KeyHandlerResult {

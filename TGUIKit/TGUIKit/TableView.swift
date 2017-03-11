@@ -211,9 +211,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
 
     
-    
-    
-    
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
@@ -224,8 +221,13 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
-        let addition = bottomInset > 0 ? bottomInset + 10 : 0
-        super.setFrameSize(NSMakeSize(newSize.width, newSize.height + addition))
+        if let table = table {
+            let addition = bottomInset > 0 ? bottomInset + 10 : 0
+            super.setFrameSize(NSMakeSize(newSize.width, table.listHeight + addition))
+        } else {
+            super.setFrameSize(newSize)
+        }
+        
         
         if inLiveResize {
             if let table = table {
@@ -244,12 +246,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func viewDidEndLiveResize() {
 
-        if liveWidth != frame.width && liveWidth != 0 {
-            liveWidth = 0
-            if let table = table {
-                table.layoutIfNeeded(with: NSMakeRange(0, table.count), oldWidth: frame.width)
-            }
-        }
+       table?.layoutItems()
         
     }
     
@@ -353,10 +350,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     convenience override init(frame frameRect: NSRect) {
-        self.init(frame:frameRect, isFlipped:true)
+        self.init(frame:frameRect, isFlipped:true, drawBorder: true)
     }
     
-    public init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0) {
+    public init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
 
         let table = TGFlipableTableView.init(frame:frameRect);
         table.flip = isFlipped
@@ -374,8 +371,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.bottomInset = bottomInset
         table.bottomInset = bottomInset
         
-        self.clipView.border = BorderType([.Right])
-        self.tableView.border = BorderType([.Right])
+        if drawBorder {
+            self.clipView.border = BorderType([.Right])
+            self.tableView.border = BorderType([.Right])
+        }
+     
         self.hasVerticalScroller = true;
 
         self.documentView = self.tableView;
@@ -519,6 +519,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     func optionalItem(at:Int) -> TableRowItem? {
         return at < count ? self.item(at: at) : nil
+    }
+    
+    public func layoutItems() {
+        for item in list {
+            _ = item.makeSize(frame.width, oldWidth: item.width)
+        }
+       enumerateViews(with: { view in
+            if let item = view.item {
+                view.set(item: item, animated: false)
+            }
+        })
     }
     
     func updateStickAfterScroll() -> Void {
@@ -1231,31 +1242,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public override func change(size: NSSize, animated: Bool, _ save:Bool = true) {
         
-        let s = self.frame.size
-        
-        if animated && !tableView.isFlipped {
+        if animated {
 
-            
-            //if !tableView.isFlipped {
+            if !tableView.isFlipped {
                 
-            
-            
-            CATransaction.begin()
-            
-            //  if y < 0 {
-            
-            var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
-            var presentation = self.layer?.presentation()
-            if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
-                presentBounds = presentation.bounds
-            }
-            
-            self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-            
-            
-            var y = (size.height - presentBounds.height)
-            
-        //    if (y > 0) {
+                CATransaction.begin()
+                var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
+                let presentation = self.layer?.presentation()
+                if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
+                    presentBounds = presentation.bounds
+                }
+                
+                self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+                let y = (size.height - presentBounds.height)
+                
                 presentBounds = contentView.layer?.bounds ?? contentView.bounds
                 if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds") != nil {
                     presentBounds = presentation.bounds
@@ -1270,36 +1270,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
                 
                 contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-                
-        //    }
-//            else if !tableView.isFlipped {
-//                var currentY:CGFloat = 0
-//                
-//                presentation = contentView.layer?.presentation()
-//                if let presentation = presentation, contentView.layer?.animation(forKey:"position") != nil {
-//                    currentY = presentation.position.y
-//                }
-//                
-//                //let realY = abs(size.height - )
-//                
-//                let pos = contentView.layer?.position ?? NSZeroPoint
-//                
-//                NSLog("\(currentY) y: \(y)")
-//                //                if currentY == 0 {
-//                //                    currentY
-//                //                } else {
-//                //
-//                //                }
-//                contentView.layer?.animatePosition(from: NSMakePoint(0, -y), to: pos, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
-//            }
-            
-                
-            CATransaction.commit()
-            
-          //  }
+                CATransaction.commit()
+            } else {
+                super.change(size: size, animated: animated)
+                return
+            }
         }
         self.setFrameSize(size)
-       // self.tableView.setFrameSize(size.width,max(listHeight,size.height))
     }
     
     

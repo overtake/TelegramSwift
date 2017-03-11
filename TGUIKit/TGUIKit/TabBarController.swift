@@ -12,7 +12,7 @@ public class TabBarController: ViewController, TabViewDelegate {
 
     private var tabView:TabBarView?
     
-    private weak var current:ViewController? {
+    public weak var current:ViewController? {
         didSet {
             current?.navigationController = self.navigationController
         }
@@ -43,9 +43,11 @@ public class TabBarController: ViewController, TabViewDelegate {
                 item.controller.viewDidAppear(false)
                 current = item.controller
             }
-        } else {
-            current?.scrollup()
         }
+    }
+    
+    public override func scrollup() {
+        current?.scrollup()
     }
     
     public func hideTabView(_ hide:Bool) {

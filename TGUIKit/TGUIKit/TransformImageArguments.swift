@@ -20,6 +20,15 @@ public enum ImageCorner: Equatable {
             return CGSize()
         }
     }
+    
+    var corner:CGFloat {
+        switch self {
+        case let .Corner(corner):
+            return corner
+        default:
+            return 0
+        }
+    }
 }
 
 public func ==(lhs: ImageCorner, rhs: ImageCorner) -> Bool {
@@ -101,8 +110,9 @@ public struct TransformImageArguments: Equatable {
     
     public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:EdgeInsets) {
         self.corners = corners
-        self.imageSize = imageSize
-        self.boundingSize = boundingSize
+        let min = corners.topLeft.corner + corners.topRight.corner
+        self.imageSize = NSMakeSize(max(imageSize.width, min), max(imageSize.height, min))
+        self.boundingSize = NSMakeSize(max(boundingSize.width, min), max(boundingSize.height, min))
         self.intrinsicInsets = intrinsicInsets
     }
 }

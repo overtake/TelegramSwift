@@ -34,6 +34,8 @@ open class TableRowItem: NSObject {
         return NSMakeSize(width, height)
     }
     
+    public var oldWidth:CGFloat = 0
+    
     public var width:CGFloat  {
         if let table = table {
             return table.frame.width
@@ -87,6 +89,7 @@ open class TableRowItem: NSObject {
     }
     
     open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {
+        self.oldWidth = width
         return true;
     }
 }

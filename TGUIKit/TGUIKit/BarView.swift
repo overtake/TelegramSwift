@@ -8,9 +8,8 @@
 
 import Cocoa
 
-open class BarView: View {
+open class BarView: OverlayControl {
     
-    var overlay:OverlayControl = OverlayControl()
     
     public var clickHandler:()->Void = {}
     
@@ -22,26 +21,23 @@ open class BarView: View {
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        self.overlay.setFrameSize(newSize)
         self.setNeedsDisplay()
     }
     
     override init() {
         super.init()
         frame = NSMakeRect(0, 0, minWidth, 50)
-        addSubview(overlay)
         overlayInitEvent()
     }
     
     func overlayInitEvent() -> Void {
-        self.overlay.set(handler: { [weak self] control in
+        set(handler: { [weak self] control in
             self?.clickHandler()
         }, for: .Click)
     }
     
     required public init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
-        self.addSubview(overlay)
         overlayInitEvent()
     }
     

@@ -74,7 +74,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
             }
             if border.contains(.Right) {
-                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
+                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize + 2, NSHeight(self.frame)))
             }
             
         }

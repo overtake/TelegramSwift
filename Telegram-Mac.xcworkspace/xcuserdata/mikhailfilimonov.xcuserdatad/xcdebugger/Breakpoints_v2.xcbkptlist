@@ -41,13 +41,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/InputContextHelper.swift"
-            timestampString = "510589448.782356"
+            filePath = "submodules/TelegramCore/TelegramCore/MacosLegacy.swift"
+            timestampString = "510841886.873018"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "442"
-            endingLineNumber = "442"
-            landmarkName = "context(with:for:animated:)"
+            startingLineNumber = "1217"
+            endingLineNumber = "1217"
+            landmarkName = "parse_user(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

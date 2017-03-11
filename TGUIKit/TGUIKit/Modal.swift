@@ -31,6 +31,7 @@ open class ModalViewController : ViewController {
         return false
     }
     
+    
     open func measure(size:NSSize) {
         
     }
@@ -202,9 +203,11 @@ public class Modal: NSObject {
     private let disposable:MetaDisposable = MetaDisposable()
     private var interactionsView:ModalInteractionsContainer?
     public let interactions:ModalInteractions?
-    public init(controller:ModalViewController, for window:Window) {
+    fileprivate let animated: Bool
+    public init(controller:ModalViewController, for window:Window, animated: Bool = true) {
         self.controller = controller
         self.window = window
+        self.animated = animated
         background = ModalBackground()
         background.backgroundColor = controller.background
         background.layer?.disableActions()
@@ -233,21 +236,21 @@ public class Modal: NSObject {
         
         window.set(handler: { () -> KeyHandlerResult in
             return .invokeNext
-        }, with: self, for: .All)
+        }, with: self, for: .All, priority: .modal)
         
         window.set(escape: {[weak self] () -> KeyHandlerResult in
             if self?.controller?.escapeKeyAction() == .rejected {
                 self?.close()
             }
             return .invoked
-        }, with: self, priority: .high)
+        }, with: self, priority: .modal)
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             if let controller = self?.controller {
                 return controller.returnKeyAction()
             }
             return .invokeNext
-        }, with: self, for: .Return, priority: .high)
+        }, with: self, for: .Return, priority: .modal)
         
         background.set(handler: { [weak self] _ in
             self?.close()
@@ -318,21 +321,35 @@ public class Modal: NSObject {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : .blackTransparent
-                    if !controller.isFullScreen {
-                        strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
-                    } else {
-                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.3)
-                        
+                    if strongSelf.animated {
+                        if !controller.isFullScreen {
+                            strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                        } else {
+                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.3)
+                        }
                     }
-                    strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
-                        strongSelf?.controller?.viewDidAppear(true)
-                    })
+                    
                     strongSelf.background.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
                     strongSelf.background.customHandler.layout = { [weak strongSelf] view in
                         strongSelf?.container.center()
                     }
-                    view.addSubview(strongSelf.background)
                     
+                    if controller.isFullScreen {
+                        strongSelf.background.customHandler.size = { [weak strongSelf] size in
+                            strongSelf?.container.setFrameSize(size)
+                        }
+                    }
+                    
+                    
+                    view.addSubview(strongSelf.background)
+                 
+                    if strongSelf.animated {
+                        strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
+                            strongSelf?.controller?.viewDidAppear(true)
+                        })
+                    } else {
+                        strongSelf.controller?.viewDidAppear(false)
+                    }                    
                 }
             }))
         }
