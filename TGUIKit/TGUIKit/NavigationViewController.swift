@@ -67,23 +67,17 @@ public final class NavigationHeader {
         if let navigation = navigation {
             let view = self.view
             let height = self.height
+            view.frame = NSMakeRect(0, 0, navigation.frame.width, height)
+
             disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
                 if let navigation = navigation, let view = view {
                     let contentInset = navigation.controller.bar.height + height
-                    view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, height)
                     navigation.containerView.addSubview(view, positioned: .below, relativeTo: navigation.navigationBar)
                     
-                    NSAnimationContext.runAnimationGroup({ [weak navigation] (ctx) in
-                        if let navigation = navigation {
-                            let cView = animated ? navigation.controller.view.animator() : navigation.controller.view
-                            cView.frame = NSMakeRect(0, contentInset, navigation.frame.width, navigation.frame.height - contentInset)
-                        }
-    
-                    }, completionHandler: nil)
-
-                    if animated {
-                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
+                    view.change(pos: NSMakePoint(0, navigation.controller.bar.height), animated: animated)
+                    
+                    let cView = animated ? navigation.controller.view.animator() : navigation.controller.view
+                    cView.frame = NSMakeRect(0, contentInset, navigation.frame.width, navigation.frame.height - contentInset)
                 }
             }))
         }
@@ -100,8 +94,7 @@ public final class NavigationHeader {
         
         if let navigation = navigation {
             if animated {
-                view.layer?.zPosition = 10
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
+                view.change(pos: NSMakePoint(0, 0), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
                     self?._view?.removeFromSuperview()
                     self?._view = nil
                 })

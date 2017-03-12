@@ -229,7 +229,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         }
         
         
-        if inLiveResize {
+        if inLiveResize, oldWidth != frame.width {
             if let table = table {
                 table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
             }
@@ -708,7 +708,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             if let viewItem = view.item {
                 if viewItem.height != item.height {
-                    NSAnimationContext.current().duration = 0.2
+                    NSAnimationContext.current().duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 
@@ -1093,7 +1093,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         for (index,item) in transition.updated {
-            replace(item:item, at:index, animated: transition.animated)
+            let animated:Bool
+            if case .none = transition.state {
+                animated = true
+            } else {
+                animated = false
+            }
+            replace(item:item, at:index, animated: animated)
         }
 
         if transition.grouping {
