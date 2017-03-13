@@ -245,9 +245,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
     
     override func viewDidEndLiveResize() {
-
-       table?.layoutItems()
-        
+        if liveWidth > 0 {
+            liveWidth = 0
+            table?.layoutItems()
+        }
     }
     
     
@@ -525,11 +526,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for item in list {
             _ = item.makeSize(frame.width, oldWidth: item.width)
         }
-       enumerateViews(with: { view in
+        
+        beginTableUpdates()
+        enumerateViews(with: { view in
             if let item = view.item {
-                view.set(item: item, animated: false)
+                reloadData(row: item.index, animated: false)
+                NSAnimationContext.current().duration =  0.0
+                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             }
         })
+        endTableUpdates()
     }
     
     func updateStickAfterScroll() -> Void {
@@ -715,8 +721,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             
             view.set(item: item, animated: animated)
-            view.layer?.setNeedsDisplay()
-            view.needsLayout = true
+            view.needsDisplay = true
+            //view.needsLayout = true
         }
         //self.moveItem(from: row, to: row)
     }

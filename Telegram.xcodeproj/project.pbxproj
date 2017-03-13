@@ -179,6 +179,7 @@
 		C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253261DF03F5700ADBC98 /* TGOpusAudioRecorder.m */; };
 		C252532A1DF03F9600ADBC98 /* TGAudioWaveform.m in Sources */ = {isa = PBXBuildFile; fileRef = C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */; };
 		C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */ = {isa = PBXBuildFile; fileRef = C252532C1DF0440300ADBC98 /* begin_record.caf */; };
+		C2538E521E770B4600B21DF0 /* GroupAdminsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2538E511E770B4600B21DF0 /* GroupAdminsController.swift */; };
 		C253A92D1D8EE1A600CDC850 /* ChatMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A92C1D8EE1A600CDC850 /* ChatMediaView.swift */; };
 		C253A9451D90303200CDC850 /* FastBlur.m in Sources */ = {isa = PBXBuildFile; fileRef = C253A9441D90303200CDC850 /* FastBlur.m */; };
 		C253A95C1D9165A400CDC850 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C253A95B1D9165A400CDC850 /* libwebp.a */; };
@@ -587,6 +588,7 @@
 		C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGAudioWaveform.h; sourceTree = "<group>"; };
 		C25253291DF03F9600ADBC98 /* TGAudioWaveform.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGAudioWaveform.m; sourceTree = "<group>"; };
 		C252532C1DF0440300ADBC98 /* begin_record.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = begin_record.caf; sourceTree = "<group>"; };
+		C2538E511E770B4600B21DF0 /* GroupAdminsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupAdminsController.swift; sourceTree = "<group>"; };
 		C253A92C1D8EE1A600CDC850 /* ChatMediaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaView.swift; sourceTree = "<group>"; };
 		C253A9431D90303200CDC850 /* FastBlur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FastBlur.h; sourceTree = "<group>"; };
 		C253A9441D90303200CDC850 /* FastBlur.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FastBlur.m; sourceTree = "<group>"; };
@@ -1724,6 +1726,7 @@
 				C20CB7281E60886E00C992AC /* LinkInvationController.swift */,
 				C22EE61D1E67506800334C38 /* ChannelMembersViewController.swift */,
 				C2FD33E81E696A86008D13D4 /* GroupsInCommonViewController.swift */,
+				C2538E511E770B4600B21DF0 /* GroupAdminsController.swift */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -2256,6 +2259,7 @@
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
 				C2DF47CB1DE79719003AA6C0 /* TGDataItem.m in Sources */,
+				C2538E521E770B4600B21DF0 /* GroupAdminsController.swift in Sources */,
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,

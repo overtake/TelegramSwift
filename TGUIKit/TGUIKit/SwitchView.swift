@@ -51,14 +51,17 @@ public class SwitchView: Control {
         layer?.addSublayer(buble)
         
         self.set(handler: { [weak self] control in
-            let control = control as! SwitchView
-            let animates = control.animates
-            control.animates = true
-            control.isOn = !control.isOn
-            control.animates = animates
-            if let stateChanged = self?.stateChanged {
-                stateChanged()
+            if let strongSelf = self {
+                let control = control as! SwitchView
+                let animates = control.animates
+                control.animates = true
+                control.isOn = !control.isOn
+                control.animates = animates
+                if let stateChanged = strongSelf.stateChanged, strongSelf.isEnabled  {
+                    stateChanged()
+                }
             }
+            
         }, for: .Click)
         
         let animates = self.animates
@@ -67,19 +70,18 @@ public class SwitchView: Control {
         self.animates = animates
     }
     
+    public override func apply(state: ControlState) {
+        super.apply(state: state)
+        afterChanged()
+    }
+    
     func afterChanged() -> Void {
         if animates {
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
         }
-        backgroundLayer.backgroundColor = isOn ? NSColor.blueUI.cgColor : NSColor.white.cgColor
+        backgroundLayer.backgroundColor = isEnabled ? ( isOn ? NSColor.blueUI.cgColor : NSColor.white.cgColor ) : NSColor(0x4ba3e2, 0.7).cgColor
         backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
         buble.borderWidth = isOn ? 0.0 : 1.0
-        //  buble.backgroundColor = !isOn ? .border.cgColor : .white.cgColor
-        
-        //            buble.shadowColor = .blueUI.cgColor
-        //            buble.shadowOpacity = 1.0
-        //            buble.shadowRadius = 2.0
-        //            buble.shadowOffset = NSMakeSize(0, 3.0)
         
         if animates {
             backgroundLayer.animateBackground()
