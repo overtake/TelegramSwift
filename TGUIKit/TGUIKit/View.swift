@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import SwiftSignalKitMac
 public let kUIKitAnimationBackground = "UIKitAnimationBackground"
 
 class ViewLayer : CALayer {
@@ -158,6 +158,7 @@ open class View : NSView,CALayerDelegate {
         super.init(frame: NSZeroRect)
         assertOnMainThread()
         self.wantsLayer = true
+
        // self.layer?.delegate = self
       //  self.layer?.isOpaque = false
        // self.autoresizesSubviews = false
@@ -169,16 +170,28 @@ open class View : NSView,CALayerDelegate {
         super.init(frame: frameRect)
         assertOnMainThread()
         self.wantsLayer = true
+        
+        
+        
      //   self.layer?.delegate = self
       //  self.layer?.isOpaque = false
         //self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     
+    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+        get {
+            return true
+        }
+        set {
+            
+        }
+    }
+    
     open override func viewDidMoveToSuperview() {
         if superview != nil {
             guard #available(OSX 10.12, *) else {
-                needsLayout = true
+           //     self.needsLayout = true
                 return
             }
         }
@@ -191,7 +204,7 @@ open class View : NSView,CALayerDelegate {
             size(newSize)
         }
         guard #available(OSX 10.12, *) else {
-            needsLayout = true
+            self.needsLayout = true
             return
         }
     }
@@ -207,10 +220,13 @@ open class View : NSView,CALayerDelegate {
             super.needsLayout = newValue
             if newValue {
                 notifySubviewsToLayout(self)
+                
                 guard #available(OSX 10.12, *) else {
                     layout()
+                   
                     return
                 }
+
             }
         }
         get {
@@ -219,13 +235,17 @@ open class View : NSView,CALayerDelegate {
     }
     
     
+    @objc func layoutInRunLoop() {
+        layout()
+    }
+    
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)
         if let origin = customHandler.origin {
             origin(newOrigin)
         }
         guard #available(OSX 10.12, *) else {
-            needsLayout = true
+            self.needsLayout = true
             return
         }
     }
