@@ -192,6 +192,16 @@ private class ModalContainerView: View {
         var bp:Int = 0
         bp += 1
     }
+    
+    
+    
+    fileprivate override func mouseDown(with event: NSEvent) {
+        
+    }
+    
+    fileprivate override func mouseUp(with event: NSEvent) {
+        
+    }
 }
 
 public class Modal: NSObject {
@@ -225,7 +235,10 @@ public class Modal: NSObject {
         
         container = ModalContainerView(frame: containerRect)
         container.layer?.cornerRadius = .cornerRadius
+        container.layer?.shouldRasterize = true
+        container.layer?.rasterizationScale = CGFloat(System.backingScale)
         container.backgroundColor = controller.containerBackground
+        
         container.addSubview(controller.view)
         
         if let interactionsView = interactionsView {
@@ -233,6 +246,7 @@ public class Modal: NSObject {
         }
         
         background.addSubview(container)
+        
         
         window.set(handler: { () -> KeyHandlerResult in
             return .invokeNext
@@ -320,6 +334,7 @@ public class Modal: NSObject {
                 if let strongSelf = self, let view = self?.window.contentView, let controller = controller {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
+                    strongSelf.container.center()
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : .blackTransparent
                     if strongSelf.animated {
                         if !controller.isFullScreen {
