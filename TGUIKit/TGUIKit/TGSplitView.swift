@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import SwiftSignalKitMac
 fileprivate class SplitMinimisizeView : Control {
     
     private var startPoint:NSPoint = NSZeroPoint
@@ -249,11 +249,15 @@ public class SplitView : View {
     }
     
     public func update() -> Void {
-        needsLayout = true
+        Queue.mainQueue().justDispatch {
+            self.needsLayout = true
+        }
     }
     
     public override func layout() {
         super.layout()
+        
+        //assert(!_controllers.isEmpty)
         
         let single:SplitProportion! = _layoutProportions[.single]
         let dual:SplitProportion! = _layoutProportions[.dual]
