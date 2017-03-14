@@ -274,7 +274,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         controller.view.removeFromSuperview()
         controller.view.frame = NSMakeRect(0, contentInset , NSWidth(containerView.frame), NSHeight(containerView.frame) - contentInset)
-        
+        if #available(OSX 10.12, *) {
+            
+        } else {
+            controller.view.needsLayout = true
+        }
         
         
         var pfrom:CGFloat = 0, pto:CGFloat = 0, nto:CGFloat = 0, nfrom:CGFloat = 0;
