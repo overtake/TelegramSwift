@@ -595,7 +595,7 @@ public class TextView: Control {
     private var contextMenu:ContextMenu?
 
     public override func menu(for event: NSEvent) -> NSMenu? {
-        if let layout = layout, self.isSelectable {
+        if let layout = layout, self.isSelectable, userInteractionEnabled {
             if !layout.selectedRange.hasSelectText || !layout.inSelectedRange(convert(event.locationInWindow, from: nil)) {
                 layout.selectWord(at : self.convert(event.locationInWindow, from: nil))
             }

@@ -193,6 +193,11 @@ open class Control: View {
     override open func mouseDown(with event: NSEvent) {
         mouseIsDown = true
         
+        if event.modifierFlags.contains(.control) {
+            super.mouseDown(with: event)
+            return
+        }
+        
         if userInteractionEnabled {
             send(event: .Down)
             updateState()
@@ -214,7 +219,7 @@ open class Control: View {
         
         mouseIsDown = false
         
-        if userInteractionEnabled {
+        if userInteractionEnabled && !event.modifierFlags.contains(.control) {
             if isEnabled {
                 send(event: .Up)
                 

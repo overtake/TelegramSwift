@@ -8,6 +8,8 @@
 
 import Cocoa
 
+
+
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open private(set) weak var item:TableRowItem?
@@ -80,6 +82,16 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open var firstResponder:NSResponder? {
         return self
     }
+
+    open override func mouseDown(with event: NSEvent) {
+        if event.modifierFlags.contains(.control) && event.clickCount == 1 {
+            if let menu = self.menu(for: event)  {
+                NSMenu.popUpContextMenu(menu, with: event, for: self)
+            }
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
     
     open override func mouseUp(with event: NSEvent) {
         if event.clickCount == 2 {
@@ -112,6 +124,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
         return nil
     }
+    
+    
     
     
     open func onShowContextMenu() ->Void {

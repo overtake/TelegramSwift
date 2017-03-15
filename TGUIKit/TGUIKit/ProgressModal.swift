@@ -95,6 +95,8 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window) -> Si
             subscriber.putNext(next)
         }, error: { error in
             subscriber.putError(error)
+            //beforeDisposable.dispose()
+            modal.close()
         }, completed: {
             subscriber.putCompletion()
             beforeDisposable.dispose()

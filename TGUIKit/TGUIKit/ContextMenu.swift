@@ -44,7 +44,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     
     public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void, onClose:@escaping()->Void) -> Void {
         
-        var menu = ContextMenu.init()
+        let menu = ContextMenu.init()
         menu.onShow = onShow
         menu.onClose = onClose
         menu.view = view
@@ -56,6 +56,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
         menu.delegate = menu
         NSMenu.popUpContextMenu(menu, with: event, for: view)
     }
+    
     
     public override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         return true

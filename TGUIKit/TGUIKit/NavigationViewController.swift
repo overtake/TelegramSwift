@@ -268,7 +268,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         if let header = header, header.needShown {
             header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
-            containerView.addSubview(header.view)
+            containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
             contentInset += header.height
         }
         
