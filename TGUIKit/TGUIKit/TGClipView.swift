@@ -100,6 +100,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
         CVDisplayLinkSetOutputCallback(displayLink, callback, userInfo)
     }
     
+    deinit {
+        endScroll()
+    }
+    
     
     func beginScroll() -> Void {
         if let displayLink = displayLink {
@@ -204,16 +208,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
-        
-        if self.window?.screen != nil {
-            CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, CGMainDisplayID());
-        } else {
-            let dictionary:[String:Any] = (NSScreen.main()?.deviceDescription)!
-            let screenId = dictionary["NSScreenNumber"] as! NSNumber
-            let displayID:CGDirectDisplayID = screenId.uint32Value
-            CVDisplayLinkSetCurrentCGDisplay(self.displayLink!, displayID);
+        if let displayLink = displayLink, let _ = NSScreen.main() {
+            CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
         }
-        
     }
     
     

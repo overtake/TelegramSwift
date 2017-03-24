@@ -34,6 +34,14 @@ open class OverlayControl: Control {
         }
         return false
     }
+    
+    open override func rightMouseDown(with event: NSEvent) {
+        if userInteractionEnabled {
+            updateState()
+        } else {
+            super.rightMouseDown(with: event)
+        }
+    }
 
     
 }

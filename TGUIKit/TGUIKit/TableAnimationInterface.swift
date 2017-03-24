@@ -46,8 +46,7 @@ open class TableAnimationInterface: NSObject {
 //            
             
             table.scroll(to: .down(true))
-            
-         //   contentView.layer?.animateBounds(from: NSMakeRect(0, height, contentView.bounds.width, contentView.bounds.height), to: contentView.bounds, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+
             
             
         } else if height - bounds.height < table.frame.height, scrollBelow {

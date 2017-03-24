@@ -518,17 +518,22 @@ public extension NSImage {
         
         let image:NSImage = self
         
-        let make:(CGContext) -> Void = { (ctx) in
+        let make:(CGContext) -> Void = { ctx in
             let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
-            ctx.interpolationQuality = .high
-            let cimage = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithData(image.tiffRepresentation! as CFData, nil)!, 0, nil)
-            ctx.clip(to: rect, mask: cimage!)
+            //ctx.interpolationQuality = .high
+            
+            
+            var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
+
+            let cimage = image.cgImage(forProposedRect: &imageRect, context: nil, hints: nil)
+            //CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithData(image.tiffRepresentation! as CFData, nil)!, 0, nil)
             
             if let color = color {
+                ctx.clip(to: rect, mask: cimage!)
                 ctx.setFillColor(color.cgColor)
                 ctx.fill(rect)
             } else {
-                ctx.draw(cimage!, in: rect)
+                ctx.draw(cimage!, in: imageRect)
             }
 
         }

@@ -399,6 +399,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     open override func layout() {
         super.layout()
         emptyView?.frame = bounds
+        if needsLayouItemsOnNextTransition {
+            layoutItems()
+        }
     }
     
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -522,6 +525,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return at < count ? self.item(at: at) : nil
     }
     
+    private var needsLayouItemsOnNextTransition:Bool = false
+   
+    public func layouItemsOnNextTransition() {
+        needsLayouItemsOnNextTransition = true
+    }
+    
     public func layoutItems() {
         for item in list {
             _ = item.makeSize(frame.width, oldWidth: item.width)
@@ -536,6 +545,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         })
         endTableUpdates()
+        needsLayouItemsOnNextTransition = false
     }
     
     func updateStickAfterScroll() -> Void {
@@ -717,12 +727,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     NSAnimationContext.current().duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
-                
+            } else {
+                NSAnimationContext.current().duration = animated ? 0.2 : 0.0
+                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
             }
             
             view.set(item: item, animated: animated)
             view.needsDisplay = true
             //view.needsLayout = true
+        } else {
+            NSAnimationContext.current().duration = 0.0
+            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
         //self.moveItem(from: row, to: row)
     }
@@ -895,7 +910,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func row(at point:NSPoint) -> Int {
-        return tableView.row(at: point)
+        return tableView.row(at: NSMakePoint(point.x, point.y - bottomInset))
     }
     
     public func viewNecessary(at row:Int) -> TableRowView? {
@@ -957,7 +972,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     func rowView(item:TableRowItem) -> TableRowView {
-        let identifier:String = NSStringFromClass(item.viewClass())
+        let identifier:String = item.identifier
         var view = self.tableView.make(withIdentifier: identifier, owner: self.tableView)
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
@@ -966,7 +981,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             view?.identifier = identifier
             
-        }
+        } 
         
         return view as! TableRowView;
     }
@@ -1072,7 +1087,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let visibleItems = self.visibleItems()
         if transition.grouping {
-            self.tableView.beginUpdates()
+            //self.tableView.beginUpdates()
         }
         
         var inserted:[TableRowItem] = []
@@ -1097,6 +1112,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 inserted.append(item)
             }
         }
+       
+        
         
         for (index,item) in transition.updated {
             let animated:Bool
@@ -1108,12 +1125,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             replace(item:item, at:index, animated: animated)
         }
 
+        
         if transition.grouping {
-            self.tableView.endUpdates()
+            //self.tableView.endUpdates()
         }
         
-        
-        reflectScrolledClipView(clipView)
+        //reflectScrolledClipView(clipView)
         
         switch transition.state {
         case let .none(animation):
@@ -1375,7 +1392,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
             if clipView.bounds.minY != rowRect.minY {
-                clipView.scroll(to: NSMakePoint(0, min(max(rowRect.minY,0), documentSize.height - height) + inset.top), animated:animate, completion:{ [weak self] _ in
+                clipView.scroll(to: NSMakePoint(0, round(min(max(rowRect.minY,0), documentSize.height - height) + inset.top)), animated:animate, completion:{ [weak self] _ in
                     //if animate {
                     self?.viewNecessary(at: item.index)?.focusAnimation()
                     // }

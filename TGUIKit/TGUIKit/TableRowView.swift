@@ -122,7 +122,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
             }
             return menu
         }
-        return nil
+        return NSMenu()
     }
     
     

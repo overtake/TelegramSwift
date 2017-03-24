@@ -247,6 +247,9 @@ public class Modal: NSObject {
         
         background.addSubview(container)
         
+        window.set(responder: { [weak controller] () -> NSResponder? in
+            return controller?.firstResponder()
+        }, with: self, priority: .modal)
         
         window.set(handler: { () -> KeyHandlerResult in
             return .invokeNext

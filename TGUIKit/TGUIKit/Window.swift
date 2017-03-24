@@ -365,7 +365,7 @@ public class Window: NSWindow {
         NotificationCenter.default.removeObserver(self)
     }
     
-    
+    	
 
     public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)

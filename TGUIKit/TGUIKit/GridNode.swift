@@ -675,7 +675,20 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         
         if let stationarySection = presentationLayoutTransition.layout.stationarySection {
             if self.stationarySection.0 == WrappedGridSection(stationarySection.section) {
-                self.stationarySection.1?.frame = stationarySection.frame
+                var updated:Bool = false
+                for section in presentationLayoutTransition.layout.sections {
+                    if section.frame.minY > clipView.bounds.minY {
+                        let difference = section.frame.minY - clipView.bounds.minY
+                        if difference > 0 && difference < section.frame.height {
+                            self.stationarySection.1?.frame = NSMakeRect(stationarySection.frame.minX, stationarySection.frame.minY - (stationarySection.frame.height - difference), stationarySection.frame.width, stationarySection.frame.height)
+                            updated = true
+                            break
+                        }
+                    }
+                }
+                if !updated {
+                    self.stationarySection.1?.frame = stationarySection.frame
+                }
             } else {
                 removeStationarySectionNode()
                 let stationary = stationarySection.section.node()

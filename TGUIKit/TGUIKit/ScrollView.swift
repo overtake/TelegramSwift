@@ -173,6 +173,8 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         
         deltaCorner = max(Int64(floorToScreenPixels(frame.height / 6.0)),40)
         
+
+        
         let deltaScrollY = min(max(Int64(event.scrollingDeltaY),-deltaCorner),deltaCorner)
 
         
@@ -212,12 +214,12 @@ open class ScrollView: NSScrollView, CALayerDelegate{
         }
         
         
-        if origin == clipView.bounds.origin
+        if origin == clipView.bounds.origin, abs(deltaScrollY) >= deltaCorner
         {
             
             if let documentView = documentView, !(self is HorizontalTableView) {
                 
-                if frame.minY < origin.y - frame.height - 50 && deltaScrollY != 0 {
+                if frame.minY < origin.y - frame.height - 50 {
                     if origin.y > documentView.frame.maxY + dynamic {
                         clipView.scroll(to: NSMakePoint(origin.x, documentView.frame.minY))
                     }

@@ -153,6 +153,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     public func set(header:NavigationHeader?) {
         self.header?.hide(false)
         header?.navigation = self
+        
         self.header = header
     }
     
@@ -194,7 +195,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.empty = empty
         self.controller = empty
         self.stack.append(controller)
+        
         super.init()
+        bar = .init(height: 0)
     }
     
     public var stackCount:Int {

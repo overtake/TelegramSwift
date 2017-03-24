@@ -251,7 +251,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 animateContainer.centerY(x: leftInset)
 
                 
-                self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame) - 1, NSWidth(self.frame) - inputInset - inset - clear.frame.width, NSHeight(placeholder.frame))
+                self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame), NSWidth(self.frame) - inputInset - inset - clear.frame.width, NSHeight(placeholder.frame))
                 
                 if  animated {
                     animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in

@@ -206,6 +206,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "(prepareEntries(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1):ChatController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatMediaView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatMediaView.swift">
          <PersistentStrings>
             <PersistentString
@@ -218,6 +226,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatInteraction.init() -&gt; ChatInteraction:ChatInterfaceInteraction.swift">
+      </ContextState>
+      <ContextState
+         contextName = "APChatController.(start() -&gt; ()).(closure #4):AudioPlayerController.swift">
       </ContextState>
       <ContextState
          contextName = "PeerMediaGridController.(enqueueHistoryViewTransition(ChatHistoryGridTransition) -&gt; Signal&lt;(), ()&gt;).(closure #1):PeerMediaGridController.swift">
@@ -537,9 +548,6 @@
       </ContextState>
       <ContextState
          contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #4):ShareModalController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "TableView.merge(with : TableUpdateTransition) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
          contextName = "TitleButton.sizeToFit(CGSize, CGSize) -&gt; ():TitleButton.swift">
@@ -1093,6 +1101,9 @@
          contextName = "ChatController.loadChat(account : Account, peerId : PeerId, message : Message?) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
+         contextName = "-[TGModernGrowingTextView textDidChange:]:TGModernGrowingTextView.m">
+      </ContextState>
+      <ContextState
          contextName = "ChatListController.(loadView() -&gt; ()).(closure #8):ChatListController.swift">
          <PersistentStrings>
             <PersistentString
@@ -1100,6 +1111,14 @@
             </PersistentString>
             <PersistentString
                value = "previousChatList.modify({$0})">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListRowItem.makeSize(CGFloat, oldWidth : CGFloat) -&gt; Bool:ChatListRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "messageText.string">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1307,6 +1326,9 @@
       </ContextState>
       <ContextState
          contextName = "TableView.scroll(to : TableScrollState, inset : EdgeInsets) -&gt; ():TableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MessageHistoryTable.anchorIndex(MessageId) -&gt; MessageHistoryAnchorIndex?:MessageHistoryTable.swift">
       </ContextState>
       <ContextState
          contextName = "GridRowView.layout(items : [GridItem], parent : GridRowItem, animated : Bool) -&gt; ():GridRowView.swift">

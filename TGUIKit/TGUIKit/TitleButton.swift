@@ -203,6 +203,11 @@ public class TitleButton: ImageButton {
         
     }
     
+    public func disableActions() {
+        self.text.disableActions()
+        self.layer?.disableActions()
+    }
+    
     public override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
     }

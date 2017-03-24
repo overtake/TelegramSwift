@@ -53,6 +53,14 @@ public class MagnifyView : NSView {
         contentView.center()
     }
     
+    public func zoomIn() {
+        add(magnify: 0.5, for: NSMakePoint(containerView.frame.width/2, containerView.frame.height/2), animated: true)
+    }
+    
+    public func zoomOut() {
+        add(magnify: -0.5, for: NSMakePoint(containerView.frame.width/2, containerView.frame.height/2), animated: true)
+    }
+    
     public override func layout() {
         super.layout()
         containerView.setFrameSize(frame.size)

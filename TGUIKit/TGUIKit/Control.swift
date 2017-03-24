@@ -284,6 +284,8 @@ open class Control: View {
         }
     }
     
+    
+    
     override open func mouseDragged(with event: NSEvent) {
         if userInteractionEnabled {
              send(event: .MouseDragging)

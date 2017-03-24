@@ -241,10 +241,10 @@ public class TextNode: NSObject {
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort
         let context:CGContext = ctx //unsafeBitCast(contextPtr, to: CGContext.self)
         
-        ctx.setShouldAntialias(true)
+       // ctx.setShouldAntialias(true)
         // ctx.setShouldSmoothFonts(true)
         ctx.setAllowsFontSmoothing(true)
-        
+        ctx.setAllowsAntialiasing(true)
 //        context.setAllowsAntialiasing(true)
 //        context.setShouldSmoothFonts(!System.isRetina)
 //        context.setAllowsFontSmoothing(!System.isRetina)

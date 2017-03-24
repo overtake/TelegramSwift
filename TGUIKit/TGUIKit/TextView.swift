@@ -10,9 +10,10 @@ import Cocoa
 
 public final class TextViewInteractions {
     public var processURL:(Any!)->Void // link, isPresent
-    
-    public init(processURL:@escaping (Any!)->Void = {_ in}) {
+    public var copy:()->Void
+    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:@escaping()-> Void = {}) {
         self.processURL = processURL
+        self.copy = copy
     }
 }
 
@@ -103,7 +104,9 @@ public final class TextViewLayout : Equatable {
         
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
+       
         let fontLineHeight = floor(fontAscent + fontDescent)
+        
         
         let fontLineSpacing:CGFloat
         if let lineSpacing = lineSpacing {
@@ -153,9 +156,23 @@ public final class TextViewLayout : Equatable {
                 }
             }
             
+            
+            
             let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, lastLineCharacterIndex, Double(lineConstrainedWidth))
             
-            if maximumNumberOfLines != 0 && lines.count == maximumNumberOfLines - 1 && lineCharacterCount > 0 {
+            let fontLineSpacing = fontLineSpacing
+            
+            var lineHeight = fontLineHeight
+            
+            let lineString = attributedString.attributedSubstring(from: NSMakeRange(lastLineCharacterIndex, lineCharacterCount))
+            if !lineString.string.emojiString.isEmpty {
+                lineHeight += floor(fontDescent)
+                if first {
+                    lineOriginY += floor(fontDescent)
+                }
+            }
+            
+            if maximumNumberOfLines != 0 && lines.count == (maximumNumberOfLines - 1) && lineCharacterCount > 0 {
                 if first {
                     first = false
                 } else {
@@ -181,8 +198,8 @@ public final class TextViewLayout : Equatable {
                 }
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
-                let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: fontLineHeight)
-                layoutSize.height += fontLineHeight + fontLineSpacing
+                let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
+                layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
                 lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
@@ -190,18 +207,25 @@ public final class TextViewLayout : Equatable {
                 break
             } else {
                 if lineCharacterCount > 0 {
+                    
+                    
                     if first {
                         first = false
                     } else {
                         layoutSize.height += fontLineSpacing
                     }
                     
+                    
+                    
                     let coreTextLine = CTTypesetterCreateLineWithOffset(typesetter, CFRangeMake(lastLineCharacterIndex, lineCharacterCount), 100.0)
                     lastLineCharacterIndex += lineCharacterCount
                     
+                  
+                    
+                    
                     let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
-                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: fontLineHeight)
-                    layoutSize.height += fontLineHeight
+                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
+                    layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
                     
@@ -592,26 +616,36 @@ public class TextView: Control {
         
     }
     
-    private var contextMenu:ContextMenu?
-
-    public override func menu(for event: NSEvent) -> NSMenu? {
+    
+    public override func rightMouseDown(with event: NSEvent) {
         if let layout = layout, self.isSelectable, userInteractionEnabled {
             if !layout.selectedRange.hasSelectText || !layout.inSelectedRange(convert(event.locationInWindow, from: nil)) {
                 layout.selectWord(at : self.convert(event.locationInWindow, from: nil))
             }
             self.setNeedsDisplayLayer()
             if layout.selectedRange.hasSelectText {
-                 contextMenu = ContextMenu()
-                 let text = localizedString("Text.Copy")
-                 contextMenu?.addItem(ContextMenuItem(text.isEmpty ? "Copy" : text, handler: { [weak self] in
-                    if let strongSelf = self {
-                        strongSelf.copy(strongSelf)
-                    }
-                }))
-                return contextMenu
+                let menu = NSMenu()
+                let copy = NSMenuItem(title: localizedString("Text.Copy"), action: #selector(copy(_:)), keyEquivalent: "")
+                menu.addItem(copy)
+                NSMenu.popUpContextMenu(menu, with: event, for: self)
+                
+            } else {
+                super.rightMouseDown(with: event)
             }
-            
         }
+    }
+    
+    /*
+     var view: NSTextView? = (self.window?.fieldEditor(true, forObject: self) as? NSTextView)
+     view?.isEditable = false
+     view?.isSelectable = true
+     view?.string = layout.attributedString.string
+     view?.selectedRange = NSRange(location: 0, length: view?.string?.length)
+     NSMenu.popUpContextMenu(view?.menu(for: event), with: event, for: view)
+ */
+    
+    public override func menu(for event: NSEvent) -> NSMenu? {
+        
         return nil
     }
     
@@ -703,6 +737,8 @@ public class TextView: Control {
         super.mouseMoved(with: event)
         checkCursor(event)
     }
+    
+    
     
     public override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)

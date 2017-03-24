@@ -217,6 +217,7 @@
 		C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A71981DC9FA5100F69385 /* EditMessageModel.swift */; };
 		C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */; };
 		C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */; };
+		C26E82D11E83EFFE0046DF2F /* TimeObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = C26E82D01E83EFFE0046DF2F /* TimeObserver.m */; };
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
 		C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C276248B1D95AF7600FE5B2B /* ObjcUtils.m */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
@@ -301,6 +302,11 @@
 		C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */; };
 		C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
+		C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */; };
+		C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B9281E8011B000380D79 /* IOKit.framework */; };
+		C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
+		C2C9B9341E8016C400380D79 /* NSObject+SPInvocationGrabbing.m in Sources */ = {isa = PBXBuildFile; fileRef = C2C9B9331E8016C400380D79 /* NSObject+SPInvocationGrabbing.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		C2C9B9371E8016D400380D79 /* SPMediaKeyTap.m in Sources */ = {isa = PBXBuildFile; fileRef = C2C9B9361E8016D400380D79 /* SPMediaKeyTap.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		C2CBCAC01D81528700142EC0 /* System.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABF1D81528700142EC0 /* System.swift */; };
 		C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */; };
 		C2D1839D1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D1839C1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift */; };
@@ -337,6 +343,7 @@
 		C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E40A1A1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift */; };
 		C2EA177F1E2FD50000887153 /* TransformImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA177E1E2FD50000887153 /* TransformImageView.swift */; };
 		C2EA17811E2FD50A00887153 /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
+		C2F6190D1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */; };
 		C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */; };
 		C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; };
 		C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; };
@@ -638,6 +645,8 @@
 		C26A71981DC9FA5100F69385 /* EditMessageModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditMessageModel.swift; sourceTree = "<group>"; };
 		C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputPasteboardParser.swift; sourceTree = "<group>"; };
 		C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JoinLinkPreviewModalController.swift; sourceTree = "<group>"; };
+		C26E82CF1E83EFFE0046DF2F /* TimeObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeObserver.h; sourceTree = "<group>"; };
+		C26E82D01E83EFFE0046DF2F /* TimeObserver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TimeObserver.m; sourceTree = "<group>"; };
 		C275932D1DF6E1CE00A0807A /* AboutModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutModalController.swift; sourceTree = "<group>"; };
 		C276248A1D95AF7600FE5B2B /* ObjcUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcUtils.h; sourceTree = "<group>"; };
 		C276248B1D95AF7600FE5B2B /* ObjcUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcUtils.m; sourceTree = "<group>"; };
@@ -726,6 +735,13 @@
 		C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatActivitiesModel.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClearUserNotifies.swift; sourceTree = "<group>"; };
+		C2C9B9281E8011B000380D79 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		C2C9B92A1E8011CD00380D79 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		C2C9B9321E8016C400380D79 /* NSObject+SPInvocationGrabbing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+SPInvocationGrabbing.h"; sourceTree = "<group>"; };
+		C2C9B9331E8016C400380D79 /* NSObject+SPInvocationGrabbing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+SPInvocationGrabbing.m"; sourceTree = "<group>"; };
+		C2C9B9351E8016D400380D79 /* SPMediaKeyTap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPMediaKeyTap.h; sourceTree = "<group>"; };
+		C2C9B9361E8016D400380D79 /* SPMediaKeyTap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPMediaKeyTap.m; sourceTree = "<group>"; };
 		C2CBCABF1D81528700142EC0 /* System.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = System.swift; sourceTree = "<group>"; };
 		C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListRowView.swift; sourceTree = "<group>"; };
 		C2D1839C1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryPeerPhotoItem.swift; sourceTree = "<group>"; };
@@ -781,6 +797,7 @@
 		C2E40A1A1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaEmptyRowItem.swift; sourceTree = "<group>"; };
 		C2EA177E1E2FD50000887153 /* TransformImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformImageView.swift; sourceTree = "<group>"; };
 		C2EA17801E2FD50A00887153 /* ImageUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageUtils.swift; sourceTree = "<group>"; };
+		C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramAccountAuxiliaryMethods.swift; sourceTree = "<group>"; };
 		C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteboardUtils.swift; sourceTree = "<group>"; };
 		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = TelegramCoreMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftSignalKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -826,6 +843,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */,
+				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */,
@@ -1373,6 +1392,8 @@
 		C24DAB971E082FDF005EE404 /* objc */ = {
 			isa = PBXGroup;
 			children = (
+				C26E82CF1E83EFFE0046DF2F /* TimeObserver.h */,
+				C26E82D01E83EFFE0046DF2F /* TimeObserver.m */,
 				C24DAB961E082EB4005EE404 /* vimeo */,
 				C24DAB951E082971005EE404 /* youtube */,
 				C25253281DF03F9600ADBC98 /* TGAudioWaveform.h */,
@@ -1456,6 +1477,7 @@
 		C253A9531D9164CE00CDC850 /* thrid-party */ = {
 			isa = PBXGroup;
 			children = (
+				C2C9B90B1E800F0C00380D79 /* media-key-tap */,
 				C2FD33F31E6C1486008D13D4 /* sskeychain */,
 				C24DAB971E082FDF005EE404 /* objc */,
 				C2DF47991DE79574003AA6C0 /* ogg */,
@@ -1822,6 +1844,26 @@
 			name = "pretty-grid-inline";
 			sourceTree = "<group>";
 		};
+		C2C9B90B1E800F0C00380D79 /* media-key-tap */ = {
+			isa = PBXGroup;
+			children = (
+				C2C9B9351E8016D400380D79 /* SPMediaKeyTap.h */,
+				C2C9B9361E8016D400380D79 /* SPMediaKeyTap.m */,
+				C2C9B9311E8016C400380D79 /* SPInvocationGrabbing */,
+			);
+			name = "media-key-tap";
+			sourceTree = "<group>";
+		};
+		C2C9B9311E8016C400380D79 /* SPInvocationGrabbing */ = {
+			isa = PBXGroup;
+			children = (
+				C2C9B9321E8016C400380D79 /* NSObject+SPInvocationGrabbing.h */,
+				C2C9B9331E8016C400380D79 /* NSObject+SPInvocationGrabbing.m */,
+			);
+			name = SPInvocationGrabbing;
+			path = objc/SPInvocationGrabbing;
+			sourceTree = "<group>";
+		};
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1864,6 +1906,7 @@
 				C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */,
 				C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */,
 				C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */,
+				C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -2087,6 +2130,7 @@
 				C22E062F1D80439800A11C88 /* ui */,
 				D098C7381D7E1A62007784E4 /* Telegram-Mac.entitlements */,
 				D098C7181D7E175A007784E4 /* AppDelegate.swift */,
+				C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */,
 				C2DEC87E1DECB8C800F6544A /* TelegramApplicationContext.swift */,
 				C24949131E5B763F00D7ED5D /* ApplicationContext.swift */,
 				D098C71A1D7E175A007784E4 /* Assets.xcassets */,
@@ -2101,6 +2145,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C2C9B92A1E8011CD00380D79 /* Carbon.framework */,
+				C2C9B9281E8011B000380D79 /* IOKit.framework */,
 				C250BA931E6E84880057CD96 /* VideoToolbox.framework */,
 				C2FD33FA1E6C169C008D13D4 /* Security.framework */,
 				C2FD33EF1E697EC2008D13D4 /* QuickLook.framework */,
@@ -2341,6 +2387,7 @@
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
 				C250B0271DB69694004E9FBE /* WPArticleLayout.swift in Sources */,
 				C232EA131E16552900C4D38C /* WebGameViewController.swift in Sources */,
+				C2F6190D1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift in Sources */,
 				C2DF47C01DE79574003AA6C0 /* picture.c in Sources */,
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
 				C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */,
@@ -2402,6 +2449,7 @@
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C24D9FDC1E267932002CD3F3 /* PreviewSenderItems.swift in Sources */,
 				C2271F511D9C392400424F7B /* SPopoverRowView.swift in Sources */,
+				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,
 				C2B1B1201E5F170A00895E0D /* ValidateAddressNameInteractive.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
@@ -2437,6 +2485,7 @@
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
 				C2DF47CE1DE79751003AA6C0 /* ATQueue.m in Sources */,
+				C2C9B9341E8016C400380D79 /* NSObject+SPInvocationGrabbing.m in Sources */,
 				C2B1B1261E5F840B00895E0D /* PeerInfoUtils.swift in Sources */,
 				C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */,
 				C24DABA21E083185005EE404 /* YTVimeoExtractor.m in Sources */,
@@ -2474,6 +2523,7 @@
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */,
+				C2C9B9371E8016D400380D79 /* SPMediaKeyTap.m in Sources */,
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
 				C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */,
 				C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */,
@@ -2521,6 +2571,7 @@
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
+				C26E82D11E83EFFE0046DF2F /* TimeObserver.m in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
 				C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
@@ -2694,7 +2745,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
+				GCC_PREPROCESSOR_DEFINITIONS = "BETA=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
@@ -2709,7 +2760,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "";
-				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D BETA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2843,7 +2894,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D APP_STORE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2982,6 +3033,11 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"BETA=1",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
@@ -2995,7 +3051,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D BETA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -3038,7 +3094,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D STABLE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

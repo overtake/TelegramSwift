@@ -21,6 +21,9 @@ public class MajorNavigationController: NavigationViewController {
     private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
     
+    public override func loadView() {
+        super.loadView()
+    }
     
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
         self.majorClass = majorClass

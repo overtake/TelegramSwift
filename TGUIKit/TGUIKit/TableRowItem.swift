@@ -84,6 +84,10 @@ open class TableRowItem: NSObject {
         }
     }
     
+    open var identifier:String {
+        return NSStringFromClass(viewClass())
+    }
+    
     open func viewClass() ->AnyClass {
         return TableRowView.self;
     }

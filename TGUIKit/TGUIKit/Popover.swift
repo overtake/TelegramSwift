@@ -109,6 +109,8 @@ open class Popover: NSObject {
                         
                     }
                     
+                    
+                    
                     if inset.x != 0 {
                         point.x += (inset.x)
 
@@ -117,12 +119,16 @@ open class Popover: NSObject {
                         point.y += inset.y
                     }
                     
+                    
                     controller.viewWillAppear(strongSelf.animates)
                     
                     var rect = controller.bounds
                     if !NSIsEmptyRect(contentRect) {
                         rect = contentRect
                     }
+                    
+                    point.x = min(max(10, point.x), (parentView.frame.width - rect.width - 14) - 10)
+
                     
                     parentView.layer?.isOpaque = true
                     
