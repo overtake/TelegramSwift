@@ -62,7 +62,7 @@ open class Popover: NSObject {
                 }
             }
             
-            var signal = controller.ready.get() |> take(1)
+            var signal = controller.ready.get() |> filter {$0} |> take(1)
             if control.controlState == .Hover {
                 signal = signal |> delay(0.2, queue: Queue.mainQueue())
             }
@@ -120,7 +120,7 @@ open class Popover: NSObject {
                     }
                     
                     
-                    controller.viewWillAppear(strongSelf.animates)
+                    controller.viewDidAppear(strongSelf.animates)
                     
                     var rect = controller.bounds
                     if !NSIsEmptyRect(contentRect) {

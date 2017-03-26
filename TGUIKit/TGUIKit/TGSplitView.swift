@@ -184,7 +184,7 @@ public class SplitView : View {
     
     
     public func addController(controller:ViewController, proportion:SplitProportion) ->Void {
-        controller._frameRect = NSMakeRect(0, 0, proportion.min, proportion.min)
+        controller._frameRect = NSMakeRect(0, 0, proportion.min, frame.height)
         controller.viewWillAppear(false)
         container.addSubview(controller.view);
         _controllers.append(controller);

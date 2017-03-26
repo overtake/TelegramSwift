@@ -360,14 +360,14 @@ open class ViewController : NSObject {
     
     public var frame:NSRect {
         get {
-            return self.view.frame
+            return isLoaded() ? self.view.frame : _frameRect
         }
         set {
             self.view.frame = newValue
         }
     }
     public var bounds:NSRect {
-        return self.view.bounds
+        return isLoaded() ? self.view.bounds : NSMakeRect(0, 0, _frameRect.width, _frameRect.height)
     }
     
     public func addSubview(_ subview:NSView) -> Void {

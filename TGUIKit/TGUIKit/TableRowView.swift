@@ -89,18 +89,15 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                 NSMenu.popUpContextMenu(menu, with: event, for: self)
             }
         } else {
+            if event.clickCount == 2 {
+                doubleClick(in: convert(event.locationInWindow, from: nil))
+                return
+            }
             super.mouseDown(with: event)
         }
     }
     
-    open override func mouseUp(with event: NSEvent) {
-        if event.clickCount == 2 {
-            doubleClick(in: convert(event.locationInWindow, from: nil))
-            return
-        }
-        super.mouseUp(with: event)
-    }
-    
+
     open func doubleClick(in location:NSPoint) -> Void {
         
     }

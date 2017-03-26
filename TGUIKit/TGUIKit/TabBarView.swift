@@ -90,6 +90,7 @@ public class TabBarView: View {
         }
         
         self.setSelectedIndex(self.selectedIndex, respondToDelegate: false)
+        setFrameSize(frame.size)
     }
     
     

@@ -684,7 +684,11 @@ public extension Int {
         let d = Double((n / 100)) / 10.0
         let isRound:Bool = (Int(d) * 10) % 10 == 0
         if d < 1000 {
-            return "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)\(keys[iteration])"
+            if d == 1 {
+                return "\(Int(d))\(keys[iteration])"
+            } else {
+                return "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)\(keys[iteration])"
+            }
         }
         else {
             return self.prettyFormatter(Int(d), iteration: iteration + 1)

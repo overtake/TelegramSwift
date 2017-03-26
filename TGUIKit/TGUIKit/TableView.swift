@@ -245,7 +245,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
     
     override func viewDidEndLiveResize() {
-        if liveWidth > 0 {
+        if liveWidth  != frame.width {
             liveWidth = 0
             table?.layoutItems()
         }
@@ -1087,7 +1087,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let visibleItems = self.visibleItems()
         if transition.grouping {
-            //self.tableView.beginUpdates()
+            self.tableView.beginUpdates()
         }
         
         var inserted:[TableRowItem] = []
@@ -1127,7 +1127,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         
         if transition.grouping {
-            //self.tableView.endUpdates()
+            self.tableView.endUpdates()
         }
         
         //reflectScrolledClipView(clipView)

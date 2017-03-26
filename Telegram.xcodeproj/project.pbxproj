@@ -301,6 +301,7 @@
 		C2B1B1261E5F840B00895E0D /* PeerInfoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */; };
 		C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */; };
 		C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */; };
+		C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
 		C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */; };
 		C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B9281E8011B000380D79 /* IOKit.framework */; };
@@ -733,6 +734,7 @@
 		C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoUtils.swift; sourceTree = "<group>"; };
 		C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrettyGridUtils.swift; sourceTree = "<group>"; };
 		C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatActivitiesModel.swift; sourceTree = "<group>"; };
+		C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentGIFRowItem.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClearUserNotifies.swift; sourceTree = "<group>"; };
@@ -1657,6 +1659,7 @@
 			isa = PBXGroup;
 			children = (
 				C2271F3B1DB4D0630045E719 /* GIFViewController.swift */,
+				C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */,
 			);
 			name = gifs;
 			sourceTree = "<group>";
@@ -2435,6 +2438,7 @@
 				C2EA17811E2FD50A00887153 /* ImageUtils.swift in Sources */,
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
 				C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */,
+				C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */,
 				C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */,
 				C2FD34131E6C2503008D13D4 /* LegacyImportAuthorization.swift in Sources */,
 				C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */,
