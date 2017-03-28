@@ -56,11 +56,7 @@ open class Popover: NSObject {
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
             
-            for subview in parentView.subviews {
-                if let view = subview  as? PopoverBackground {
-                    view.popover?.hide(false)
-                }
-            }
+            
             
             var signal = controller.ready.get() |> filter {$0} |> take(1)
             if control.controlState == .Hover {
@@ -68,7 +64,15 @@ open class Popover: NSObject {
             }
             self.readyDisposable.set(signal.start(next: {[weak self, weak controller, weak parentView] (ready) in
                 
+                
+                
                 if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight) || !control.userInteractionEnabled) {
+                    
+                    for subview in parentView.subviews {
+                        if let view = subview  as? PopoverBackground {
+                            view.popover?.hide(false)
+                        }
+                    }
                     
                     control.isSelected = true
                     

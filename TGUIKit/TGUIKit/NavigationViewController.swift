@@ -129,7 +129,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 oldValue.removeFromSuperview()
                 empty.view.frame = self.bounds
                 containerView.addSubview(empty.view)
+                if let header = header {
+                    header.view.removeFromSuperview()
+                    controller.addSubview(header.view)
+                }
             }
+            
         }
     }
     
@@ -361,10 +366,22 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
+    public func to( index:Int? = nil) -> Void {
+        if stackCount > 1, let index = index {
+            if index < 0 {
+                gotoEmpty(false)
+            } else {
+                let controller = stack[index]
+                stack.removeSubrange(max(1, index) ..< stackCount)
+                show(controller, .none)
+            }
+        }
+    }
+    
     public func gotoEmpty(_ animated:Bool = true) -> Void {
         if controller != empty {
             stack.removeSubrange(1 ..< stackCount - 1)
-            show(controller, animated ? .pop : .none)
+            show(empty, animated ? .pop : .none)
         }
     }
     
@@ -394,5 +411,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.modalAction = nil
     }
     
+    public func enumerateControllers(_ f:(ViewController, Int)->Bool) {
+        for i in stride(from: stack.count - 1, to: -1, by: -1) {
+            if f(stack[i], i) {
+                break
+            }
+        }
+    }
     
 }

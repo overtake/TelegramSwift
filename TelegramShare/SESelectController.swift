@@ -13,7 +13,8 @@ import TelegramCoreMac
 import PostboxMac
 
 
-let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), tr(.shareExtensionSearch))
+let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), NSLocalizedString("ShareExtension.Search", comment: ""))
+
 class ShareModalView : View {
     let searchView:SearchView = SearchView(frame: NSZeroRect, theme:searchTheme)
     let tableView:TableView = TableView()
@@ -26,11 +27,11 @@ class ShareModalView : View {
         borderView.backgroundColor = .border
         
         acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
-        acceptView.set(text: tr(.shareExtensionShare), for: .Normal)
+        acceptView.set(text: localizedString("ShareExtension.Share"), for: .Normal)
         acceptView.sizeToFit()
         
         cancelView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
-        cancelView.set(text: tr(.shareExtensionCancel), for: .Normal)
+        cancelView.set(text: localizedString("ShareExtension.Cancel"), for: .Normal)
         cancelView.sizeToFit()
         
         addSubview(acceptView)
@@ -93,7 +94,8 @@ class ShareObject {
     }
     
     private func sendText(_ text:String, to peerId:PeerId) -> Signal<Void,Void> {
-        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: text, attributes: [], media: nil, replyToMessageId: nil)])
+        return standaloneSendMessage(account: account, peerId: peerId, text: text, attributes: [], replyToMessageId: nil)
+        //return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: text, attributes: [], media: nil, replyToMessageId: nil)])
     }
     
     private func sendMedia(_ text:String, to peerId:PeerId) -> Signal<Void,Void> {
@@ -110,13 +112,10 @@ class ShareObject {
 
 enum SelectablePeersEntry : Comparable, Identifiable {
     case plain(Peer,MessageIndex)
-    case other(MessageIndex)
     var stableId: Int64 {
         switch self {
         case let .plain(peer,_):
             return peer.id.toInt64()
-        case let .other(index):
-            return Int64(index.id.id)
         }
     }
     
@@ -124,8 +123,6 @@ enum SelectablePeersEntry : Comparable, Identifiable {
         switch self {
         case let .plain(_,id):
             return id
-        case let .other(index):
-            return index
         }
     }
 }
@@ -142,13 +139,6 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
         } else {
             return false
         }
-    case let .other(lhsIndex):
-        if case let .other(rhsIndex) = rhs {
-            return lhsIndex == rhsIndex
-        } else {
-            return false
-        }
-        
     }
 }
 
@@ -162,8 +152,6 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             switch entry {
             case let .plain(peer, _):
                 return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), inset:EdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
-            case let .other(index):
-                return ChatListNothingItem(initialSize,index)
             }
             
             
@@ -248,18 +236,16 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                     
                     for entry in value.0.entries {
                         switch entry {
-                        case let .HoleEntry(hole):
-                            entries.append(.other(hole.index))
-                        case let .MessageEntry(id, message, _, _, _):
-                            if let peer = messageMainPeer(message) {
+                        case let .MessageEntry(index, message, _, _, _, renderedPeer):
+                            if let peer = renderedPeer.chatMainPeer {
                                 if !fromSetIds.contains(peer.id) {
-                                    entries.append(.plain(peer,id))
+                                    entries.append(.plain(peer,index.messageIndex))
                                 } else {
                                     fromPeers[peer.id] = peer
                                 }
                             }
-                        case let .Nothing(index):
-                            entries.append(.other(index))
+                        default:
+                            break
                         }
                     }
                     
@@ -299,13 +285,13 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         }))
         
         self.genericView.searchView.searchInteractions = SearchInteractions({ state in
-            search.set(SearchState(state: state, request: searchView.input.string))
-        }, { (text) in
-            search.set(SearchState(state: searchView.state, request: text))
+            //search.set(state)
+        }, { state in
+            //search.set(state)
         })
         
         self.genericView.acceptView.set(handler: { [weak self] _ in
-            self?.share.perform(to: selectInteraction.presentation.list.map{$0.id})
+            self?.share.perform(to: Array(selectInteraction.presentation.selected))
         }, for: .Click)
         
         self.genericView.cancelView.set(handler: { [weak self] _ in

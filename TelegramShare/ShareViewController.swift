@@ -19,11 +19,12 @@ class ShareViewController: NSViewController {
         return "ShareViewController"
     }
     
+    private let accountManagerPromise = Promise<AccountManager>()
+    private var contextValue: ShareApplicationContext?
+    private let context = Promise<ShareApplicationContext?>()
+    private let contextDisposable = MetaDisposable()
     
-    fileprivate let authorization:Promise<Either<UnauthorizedAccount, Account>> = Promise()
-    fileprivate let disposable = MetaDisposable()
-    fileprivate let readyDisposable = MetaDisposable()
-    fileprivate let ready:Promise<Bool> = Promise()
+    
     override func loadView() {
         super.loadView()
     
@@ -32,33 +33,38 @@ class ShareViewController: NSViewController {
             return
         }
         
-        authorization.set(accountWithId(currentAccountId(appGroupPath: containerUrl.path, testingEnvironment:false), appGroupPath: containerUrl.path, testingEnvironment: false))
+        let logger = Logger(basePath: containerUrl.path + "/logs")
+        logger.logToConsole = false
+        logger.logToFile = false
+        Logger.setSharedLogger(logger)
         
-        disposable.set((authorization.get() |> deliverOnMainQueue).start(next: { (auth) in
-            switch auth {
-            case .left(_):
-                assertionFailure()
-            case let .right(account):
-                setupAccount(account)
-                account.shouldBeServiceTaskMaster.set(.single(.now))
-                account.stateManager.reset()
-                self.start(with: account)
+        let extensionContext = self.extensionContext!
+        
+        self.accountManagerPromise.set(accountManager(basePath: containerUrl.path + "/accounts-metadata"))
+        self.context.set(self.accountManagerPromise.get() |> deliverOnMainQueue |> mapToSignal { accountManager -> Signal<ShareApplicationContext?, NoError> in
+            return applicationContext(accountManager: accountManager, appGroupPath: containerUrl.path, extensionContext: extensionContext)
+        })
+        
+        self.contextDisposable.set(self.context.get().start(next: { context in
+            assert(Queue.mainQueue().isCurrent())
+            self.contextValue = context
+            self.view.removeAllSubviews()
+            if let rootView = context?.rootView {
+                rootView.frame = self.view.bounds
+                self.view.addSubview(rootView)
             }
         }))
+        
     }
     
-    func start(with account:Account) {
+  /*  func start(with account:Account) {
         let share = SESelectController(ShareObject(account, extensionContext!))
         share.loadViewIfNeeded()
         readyDisposable.set((share.ready.get() |> deliverOnMainQueue).start(next: { (loaded) in
             self.view.addSubview(share.view)
         }))
     }
-    
-    deinit {
-        disposable.dispose()
-        readyDisposable.dispose()
-    }
+    */
 
 }
 

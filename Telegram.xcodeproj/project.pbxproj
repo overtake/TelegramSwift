@@ -205,6 +205,10 @@
 		C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */; };
 		C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */; };
 		C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C259ED1D1DB956C1008E6712 /* QuartzCore.framework */; };
+		C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */; };
+		C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C132E1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift */; };
+		C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C13301E8A406D00AE26A1 /* FeaturedStickerPacksController.swift */; };
+		C25C13331E8A433700AE26A1 /* TableUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C13321E8A433700AE26A1 /* TableUtils.swift */; };
 		C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25F71471E410DEE0046AF4E /* InAppNotificationSettings.swift */; };
 		C25F714A1E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25F71491E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift */; };
 		C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25FC7FA1D86FEA90041E303 /* ChatListHoleRowItem.swift */; };
@@ -221,6 +225,7 @@
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
 		C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C276248B1D95AF7600FE5B2B /* ObjcUtils.m */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
+		C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */; };
 		C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */; };
 		C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B5F1DCF4766008B69DD /* CoreExtension.swift */; };
 		C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B611DCFB4C9008B69DD /* ChatServiceItem.swift */; };
@@ -240,6 +245,10 @@
 		C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB281DF981320027CE3A /* AudioWaveform.swift */; };
 		C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */; };
 		C291942F1DCC6E2200359491 /* DeclareEncodables.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291942E1DCC6E2200359491 /* DeclareEncodables.swift */; };
+		C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */; };
+		C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
+		C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
+		C291E27C1E8B098500D397BA /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */; };
 		C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF851D8DB178001DBB59 /* MediaUtils.swift */; };
 		C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */; };
@@ -368,6 +377,16 @@
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		C291E27A1E8B097F00D397BA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
+			remoteInfo = TelegramShare;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -391,6 +410,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				C291E27C1E8B098500D397BA /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -634,6 +654,10 @@
 		C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputRecordingView.swift; sourceTree = "<group>"; };
 		C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatNavigateScroller.swift; sourceTree = "<group>"; };
 		C259ED1D1DB956C1008E6712 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstalledStickerPacksController.swift; sourceTree = "<group>"; };
+		C25C132E1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArchivedStickerPacksController.swift; sourceTree = "<group>"; };
+		C25C13301E8A406D00AE26A1 /* FeaturedStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeaturedStickerPacksController.swift; sourceTree = "<group>"; };
+		C25C13321E8A433700AE26A1 /* TableUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableUtils.swift; sourceTree = "<group>"; };
 		C25F71471E410DEE0046AF4E /* InAppNotificationSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InAppNotificationSettings.swift; sourceTree = "<group>"; };
 		C25F71491E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationSpecificPreferencesKeys.swift; sourceTree = "<group>"; };
 		C25FC7FA1D86FEA90041E303 /* ChatListHoleRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListHoleRowItem.swift; sourceTree = "<group>"; };
@@ -652,6 +676,7 @@
 		C276248A1D95AF7600FE5B2B /* ObjcUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcUtils.h; sourceTree = "<group>"; };
 		C276248B1D95AF7600FE5B2B /* ObjcUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcUtils.m; sourceTree = "<group>"; };
 		C276248D1D95B4F300FE5B2B /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerSetTableRowItem.swift; sourceTree = "<group>"; };
 		C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SendingClockProgress.swift; sourceTree = "<group>"; };
 		C2777B5F1DCF4766008B69DD /* CoreExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreExtension.swift; sourceTree = "<group>"; };
 		C2777B611DCFB4C9008B69DD /* ChatServiceItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatServiceItem.swift; sourceTree = "<group>"; };
@@ -672,6 +697,7 @@
 		C28BAB2A1DF9C2790027CE3A /* DateUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DateUtils.h; sourceTree = "<group>"; };
 		C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DateUtils.mm; sourceTree = "<group>"; };
 		C291942E1DCC6E2200359491 /* DeclareEncodables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeclareEncodables.swift; sourceTree = "<group>"; };
+		C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareApplicationContext.swift; sourceTree = "<group>"; };
 		C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowView.swift; sourceTree = "<group>"; };
 		C296AF851D8DB178001DBB59 /* MediaUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaUtils.swift; sourceTree = "<group>"; };
 		C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaContentView.swift; sourceTree = "<group>"; };
@@ -1046,6 +1072,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				C25C132B1E8A403100AE26A1 /* stickers */,
 				C24D9FC81E250328002CD3F3 /* privacy */,
 				C2B0722C1DFEDE290082939D /* elements */,
 				C275932F1DF6E1D200A0807A /* modal */,
@@ -1256,6 +1283,7 @@
 				C232EAB11E1D113C00C4D38C /* ui */,
 				C232EA971E1D07E700C4D38C /* ShareViewController.swift */,
 				C232EA931E1D07E700C4D38C /* Supporting Files */,
+				C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */,
 			);
 			path = TelegramShare;
 			sourceTree = "<group>";
@@ -1548,6 +1576,17 @@
 			name = "inline-audio-player";
 			sourceTree = "<group>";
 		};
+		C25C132B1E8A403100AE26A1 /* stickers */ = {
+			isa = PBXGroup;
+			children = (
+				C276383C1E8A9A70009E7839 /* table */,
+				C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */,
+				C25C132E1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift */,
+				C25C13301E8A406D00AE26A1 /* FeaturedStickerPacksController.swift */,
+			);
+			name = stickers;
+			sourceTree = "<group>";
+		};
 		C25F71461E410DD50046AF4E /* inapp-settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -1584,6 +1623,14 @@
 				C275932D1DF6E1CE00A0807A /* AboutModalController.swift */,
 			);
 			name = modal;
+			sourceTree = "<group>";
+		};
+		C276383C1E8A9A70009E7839 /* table */ = {
+			isa = PBXGroup;
+			children = (
+				C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */,
+			);
+			name = table;
 			sourceTree = "<group>";
 		};
 		C2777B561DCE1174008B69DD /* controls */ = {
@@ -1910,6 +1957,7 @@
 				C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */,
 				C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */,
 				C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */,
+				C25C13321E8A433700AE26A1 /* TableUtils.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -2208,6 +2256,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				C291E27B1E8B097F00D397BA /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -2310,10 +2359,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */,
+				C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */,
 				C232EABF1E1D13F500C4D38C /* ChatListNothingItem.swift in Sources */,
 				C232EABC1E1D134C00C4D38C /* AvatarLayer.swift in Sources */,
 				C232EABA1E1D12B100C4D38C /* GeneralRowItem.swift in Sources */,
 				C232EABB1E1D12B100C4D38C /* GeneralRowView.swift in Sources */,
+				C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */,
 				C232EAB81E1D12A300C4D38C /* ShortPeerRowItem.swift in Sources */,
 				C232EAB91E1D12A300C4D38C /* ShortPeerRowView.swift in Sources */,
 				C232EAC91E1D536200C4D38C /* SEModalProgressView.swift in Sources */,
@@ -2431,8 +2483,10 @@
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				C2271F3A1DB4D0540045E719 /* EStickersViewController.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
+				C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */,
 				C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
+				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
 				C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
 				C2EA17811E2FD50A00887153 /* ImageUtils.swift in Sources */,
@@ -2462,6 +2516,7 @@
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
+				C25C13331E8A433700AE26A1 /* TableUtils.swift in Sources */,
 				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
@@ -2488,6 +2543,7 @@
 				C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */,
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
+				C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */,
 				C2DF47CE1DE79751003AA6C0 /* ATQueue.m in Sources */,
 				C2C9B9341E8016C400380D79 /* NSObject+SPInvocationGrabbing.m in Sources */,
 				C2B1B1261E5F840B00895E0D /* PeerInfoUtils.swift in Sources */,
@@ -2497,6 +2553,7 @@
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
 				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
+				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				C2DF47C31DE79574003AA6C0 /* internal.c in Sources */,
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C2A16E571E118AB000585A85 /* ChannelTypeSettingsViewController.swift in Sources */,
@@ -2633,6 +2690,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C291E27B1E8B097F00D397BA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
+			targetProxy = C291E27A1E8B097F00D397BA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {
@@ -2777,13 +2842,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 			};
@@ -2798,9 +2866,10 @@
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 			};
@@ -2815,9 +2884,10 @@
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 			};
@@ -2916,9 +2986,10 @@
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 			};

@@ -12,6 +12,8 @@ public class TabBarController: ViewController, TabViewDelegate {
 
     private var tabView:TabBarView?
     
+    public var didChangedIndex:(Int)->Void = {_ in}
+    
     public weak var current:ViewController? {
         didSet {
             current?.navigationController = self.navigationController
@@ -43,6 +45,7 @@ public class TabBarController: ViewController, TabViewDelegate {
                 item.controller.viewDidAppear(false)
                 current = item.controller
             }
+            didChangedIndex(index)
         }
     }
     

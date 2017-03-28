@@ -382,6 +382,9 @@
          contextName = "GridTableView.refill() -&gt; [GridRowItem]:GridTableView.swift">
       </ContextState>
       <ContextState
+         contextName = "ContextMediaRowItem.init(CGSize, ChatContextResultCollection, InputMediaContextRow, Int64, Account, ChatInteraction) -&gt; ContextMediaRowItem:ContextMediaRowItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "fitPrettyDimensions([CGSize], perSize : CGSize) -&gt; [[CGSize]]:PrettyGridUtils.swift">
       </ContextState>
       <ContextState
@@ -485,6 +488,14 @@
       </ContextState>
       <ContextState
          contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SearchView.changeResponder(Bool) -&gt; Bool:SearchView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "state">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatListController.insertItems([(Int, ChatListEntry, Int?)]) -&gt; ():ChatListController.swift">
@@ -805,7 +816,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -817,7 +828,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -861,6 +872,9 @@
          contextName = "ChatController.openChat(account : Account, peerId : PeerId, message : Message?, tagMask : MessageTags?) -&gt; ():ChatController.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #4):ChatController.swift">
+      </ContextState>
+      <ContextState
          contextName = "ManagedAudioRecorderContext.start() -&gt; ():AudioRecorder.swift">
       </ContextState>
       <ContextState
@@ -870,9 +884,6 @@
                value = "self.item(at: row)">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #5):ChatController.swift">
       </ContextState>
       <ContextState
          contextName = "GalleryControls.animateIn() -&gt; ():GalleryControls.swift">
@@ -1378,6 +1389,9 @@
                value = "value(item)">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "StickersViewController.(init(account : Account) -&gt; StickersViewController).(closure #1):EStickersViewController.swift">
       </ContextState>
       <ContextState
          contextName = "MGalleryPeerPhotoItem.(request(immediately : Bool) -&gt; ()).(closure #3):MGalleryPeerPhotoItem.swift">
