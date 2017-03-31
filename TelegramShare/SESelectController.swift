@@ -100,7 +100,7 @@ class ShareObject {
     
     func perform(to entries:[PeerId], view: NSView) {
         
-        var signals:[Signal<Bool, Void>] = []
+        var signals:[Signal<Float, Void>] = []
         
        
         
@@ -127,8 +127,12 @@ class ShareObject {
                     let signal = combineLatest(signals) |> deliverOnMainQueue
                     
                     let disposable = signal.start(next: { states in
-                        let current = CGFloat(states.filter({$0}).count)
-                        self.progressView.set(progress: min(current / CGFloat(total), 1))
+                        
+                        let progress = states.reduce(0, { (current, value) -> Float in
+                            return current + value
+                        })
+                        
+                        self.progressView.set(progress: CGFloat(min(progress / Float(total), 1)))
                      }, completed: {
                         self.context.completeRequest(returningItems: nil, completionHandler: nil)
                      })
@@ -171,8 +175,8 @@ class ShareObject {
         
     }
     
-    private func sendText(_ text:String, to peerId:PeerId) -> Signal<Bool,Void> {
-        return Signal<Bool, Void>.single(false) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> map {_ in return true})
+    private func sendText(_ text:String, to peerId:PeerId) -> Signal<Float,Void> {
+        return Signal<Float, Void>.single(0) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> map {_ in return 1})
     }
     
     private let queue:Queue = Queue(name: "proccessShareFilesQueue", target: nil)
@@ -214,9 +218,9 @@ class ShareObject {
     
     
     
-    private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Bool,Void> {
-        return Signal<Bool, Void>.single(false) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Bool, Void> in
-            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> map {_ in return true}
+    private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Float,Void> {
+        return Signal<Float, Void>.single(0) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Float, Void> in
+            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil)
         })
     }
     
