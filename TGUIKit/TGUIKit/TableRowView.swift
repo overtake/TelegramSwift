@@ -157,11 +157,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open override func setFrameSize(_ newSize: NSSize) {
-        let update = self.frame.size != newSize
         super.setFrameSize(newSize)
-        if update {
-            self.layer?.setNeedsDisplay()
-        }
         guard #available(OSX 10.12, *) else {
             needsLayout = true
             return
@@ -169,11 +165,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
-        var inset:CGFloat = 0
-        if let addition = item?.table?.bottomInset {
-            inset += addition
-        }
-        super.setFrameOrigin(NSMakePoint(newOrigin.x, newOrigin.y + inset))
+        super.setFrameOrigin(newOrigin)
         guard #available(OSX 10.12, *) else {
             needsLayout = true
             return

@@ -23,7 +23,7 @@ open class BackNavigationBar: TextButtonBarView {
         
         button.set(handler: { [weak self] _ in
             self?.controller?.executeReturn()
-        }, for: .SingleClick)
+        }, for: .Up)
     }
     
     public func requestUpdate() {

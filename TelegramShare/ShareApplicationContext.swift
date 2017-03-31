@@ -26,7 +26,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
         if let either = either {
             switch either {
             case let .left(account):
-                return .single(.unauthorized(UnauthorizedApplicationContext(account: account)))
+                return .single(.unauthorized(UnauthorizedApplicationContext(account: account, context: extensionContext)))
             case let .right(account):
                 let paslock:Signal<PostboxAccessChallengeData, Void> = account.postbox.modify { modifier -> PostboxAccessChallengeData in
                     return modifier.getAccessChallengeData()
@@ -42,7 +42,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                         promise.set(.single())
                         return auth
                     default:
-                        return .single(.postboxAccess(PasscodeAccessContext(promise: promise, account: account))) |> then(auth)
+                        return .single(.postboxAccess(PasscodeAccessContext(promise: promise, account: account, context: extensionContext))) |> then(auth)
                     }
                 }
             }
@@ -50,7 +50,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
         }
         
         return .single(nil)
-    }
+    } |> deliverOnMainQueue
 
 }
 
@@ -60,11 +60,13 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     
-    let rootController: ViewController
-    init( account: UnauthorizedAccount) {
+    let rootController: SEUnauthorizedViewController
+    init( account: UnauthorizedAccount, context: NSExtensionContext) {
         self.account = account
-        self.rootController = ViewController()
-        
+        self.rootController = SEUnauthorizedViewController(cancelImpl: {
+            let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
+            context.cancelRequest(withError: cancelError)
+        })
     }
     
 }
@@ -75,17 +77,22 @@ class AuthorizedApplicationContext {
     init(account: Account, context: NSExtensionContext) {
         self.account = account
         self.rootController = SESelectController(ShareObject(account, context))
+        account.network.shouldKeepConnection.set(.single(true))
     }
 }
 
 class PasscodeAccessContext {
     let account: Account
     let promise:Promise<Void>
-    let rootController: ModalViewController
-    init(promise:Promise<Void>, account: Account) {
+    let rootController: SEPasslockController
+    init(promise:Promise<Void>, account: Account, context:NSExtensionContext) {
         self.account = account
         self.promise = promise
-        self.rootController = ModalViewController()
+        self.rootController = SEPasslockController(account, .login, cancelImpl: {
+            let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
+            context.cancelRequest(withError: cancelError)
+        })
+        promise.set(rootController.doneValue |> filter {$0} |> map {_ in})
     }
 }
 

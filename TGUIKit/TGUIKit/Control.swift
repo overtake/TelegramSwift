@@ -156,7 +156,7 @@ open class Control: View {
     }
    
     
-
+    public var canHighlight: Bool = true
     
     public func set(handler:@escaping (Control) -> Void, for event:ControlEvent) -> Void {
         handlers.append((event,handler))
@@ -256,7 +256,7 @@ open class Control: View {
     
     public func updateState() -> Void {
         if mouseInside() {
-            if mouseIsDown {
+            if mouseIsDown && canHighlight {
                 self.controlState = .Highlight
             } else {
                 self.controlState = .Hover

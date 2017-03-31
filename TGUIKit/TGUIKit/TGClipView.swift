@@ -257,7 +257,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         } else {
             self.endScroll()
             super.scroll(to: newOrigin)
-            handleCompletionIfNeeded(withSuccess: true)
+            Queue.mainQueue().justDispatch {
+                self.handleCompletionIfNeeded(withSuccess: true)
+            }
         }
         
     }

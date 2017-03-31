@@ -421,7 +421,7 @@ public extension NSView {
                     opacity = CGFloat(presentation.opacity)
                 }
                 
-                layer.animateAlpha(from: opacity, to: to, duration:0.2, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+                layer.animateAlpha(from: opacity, to: to, duration:duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
             }
            
             

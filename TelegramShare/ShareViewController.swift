@@ -33,7 +33,7 @@ class ShareViewController: NSViewController {
             return
         }
         
-        let logger = Logger(basePath: containerUrl.path + "/logs")
+        let logger = Logger(basePath: containerUrl.path + "/sharelogs")
         logger.logToConsole = false
         logger.logToFile = false
         Logger.setSharedLogger(logger)
@@ -56,15 +56,5 @@ class ShareViewController: NSViewController {
         }))
         
     }
-    
-  /*  func start(with account:Account) {
-        let share = SESelectController(ShareObject(account, extensionContext!))
-        share.loadViewIfNeeded()
-        readyDisposable.set((share.ready.get() |> deliverOnMainQueue).start(next: { (loaded) in
-            self.view.addSubview(share.view)
-        }))
-    }
-    */
-
 }
 

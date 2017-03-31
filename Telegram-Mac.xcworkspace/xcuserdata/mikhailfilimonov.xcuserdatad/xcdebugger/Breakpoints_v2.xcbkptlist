@@ -90,7 +90,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "512429571.677415"
+                  timestampString = "512664635.999837"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -105,7 +105,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "512429571.680202"
+                  timestampString = "512664636.003257"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -120,7 +120,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "512429571.683477"
+                  timestampString = "512664636.006894"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -152,14 +152,14 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ChatHistoryViewForLocation.swift"
-            timestampString = "512065660.10989"
+            filePath = "TGUIKit/TGUIKit/Popover.swift"
+            timestampString = "512652979.679923"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "120"
-            endingLineNumber = "120"
-            landmarkName = "chatHistoryViewForLocation(_:account:peerId:fixedCombinedReadState:tagMask:)"
-            landmarkType = "9">
+            startingLineNumber = "303"
+            endingLineNumber = "303"
+            landmarkName = "hide(_:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -349,9 +349,12 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             }
             
             var remappedInsertionItemNodes: [Int: GridItemNode] = [:]
+            
+            let sortedInsertItems = transaction.insertItems.sorted(by: { $0.index < $1.index })
+            
             for (index, itemNode) in remappedDeletionItemNodes {
                 var indexOffset = 0
-                for insertedItem in transaction.insertItems {
+                for insertedItem in sortedInsertItems {
                     if insertedItem.index <= index + indexOffset {
                         indexOffset += 1
                     }
@@ -359,6 +362,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
                 
                 remappedInsertionItemNodes[index + indexOffset] = itemNode
             }
+
             
             self.itemNodes = remappedInsertionItemNodes
         }

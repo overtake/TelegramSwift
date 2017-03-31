@@ -532,19 +532,33 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func layoutItems() {
-        for item in list {
-            _ = item.makeSize(frame.width, oldWidth: item.width)
-        }
+
+        let visible = visibleItems()
         
         beginTableUpdates()
-        enumerateViews(with: { view in
-            if let item = view.item {
-                reloadData(row: item.index, animated: false)
-                NSAnimationContext.current().duration =  0.0
-                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
-            }
-        })
+        enumerateItems { item in
+            _ = item.makeSize(frame.width, oldWidth: item.width)
+            reloadData(row: item.index, animated: false)
+            NSAnimationContext.current().duration =  0.0
+            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
+
+        }
         endTableUpdates()
+        
+        if let visible = visible.last, !tableView.isFlipped {
+            if let keys = layer?.animationKeys(), keys.isEmpty {
+                if let item = self.item(stableId: visible.0.stableId) {
+                    let nrect = rectOf(item: item)
+                    
+                    let y:CGFloat = nrect.minY - (frame.height - visible.1) + nrect.height
+                    
+                    self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                    reflectScrolledClipView(clipView)
+                }
+            }
+            
+        }
+        
         needsLayouItemsOnNextTransition = false
     }
     
@@ -886,7 +900,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public var isEmpty:Bool {
-        return self.list.isEmpty
+        return self.list.isEmpty || (!tableView.isFlipped && list.count == 1)
     }
     
     public func reloadData() -> Void {
@@ -1068,6 +1082,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func stopMerge() {
         mergeDisposable.set(nil)
+        mergePromise.set(.single(TableUpdateTransition(deleted: [], inserted: [], updated: [])))
+    }
+    
+    public func startMerge() {
+        mergeDisposable.set((mergePromise.get() |> deliverOnMainQueue).start(next: { [weak self] transition in
+            self?.merge(with: transition)
+        }))
     }
     
     public func merge(with transition:Signal<TableUpdateTransition, Void>) {
@@ -1313,6 +1334,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func scroll(to state:TableScrollState, inset:EdgeInsets = EdgeInsets(), _ toVisible:Bool = false) {
        // if let index = self.index(of: item) {
         
+
+        
             var item:TableRowItem?
             var animate:Bool = false
 
@@ -1392,14 +1415,37 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
             if clipView.bounds.minY != rowRect.minY {
+                
+                var applied = false
+                let scrollListener = TableScrollListener({ [weak self, weak item] position in
+                    if let item = item, !applied, let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                        applied = true
+                        view.focusAnimation()
+                    }
+                })
+                
+                addScroll(listener: scrollListener)
+                
                 clipView.scroll(to: NSMakePoint(0, round(min(max(rowRect.minY,0), documentSize.height - height) + inset.top)), animated:animate, completion:{ [weak self] _ in
-                    //if animate {
-                    self?.viewNecessary(at: item.index)?.focusAnimation()
-                    // }
+                    
                     if let strongSelf = self {
                         strongSelf.reflectScrolledClipView(strongSelf.clipView)
                     }
+                    
+                    if !applied {
+                        applied = true
+                        if let view = self?.viewNecessary(at: item.index) {
+                            applied = true
+                            view.focusAnimation()
+                        }
+                    }
+                    
+                    
+                    self?.removeScroll(listener: scrollListener)
                 })
+                
+                
+                
             } else {
                 viewNecessary(at: item.index)?.focusAnimation()
             }

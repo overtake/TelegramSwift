@@ -618,7 +618,7 @@ public class TextView: Control {
     
     
     public override func rightMouseDown(with event: NSEvent) {
-        if let layout = layout, self.isSelectable, userInteractionEnabled {
+        if let layout = layout, userInteractionEnabled {
             if !layout.selectedRange.hasSelectText || !layout.inSelectedRange(convert(event.locationInWindow, from: nil)) {
                 layout.selectWord(at : self.convert(event.locationInWindow, from: nil))
             }

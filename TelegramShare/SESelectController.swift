@@ -13,6 +13,37 @@ import TelegramCoreMac
 import PostboxMac
 
 
+extension Peer {
+    
+    var canSendMessage: Bool {
+        if let channel = self as? TelegramChannel {
+            if case .broadcast(_) = channel.info {
+                return channel.role == .creator || channel.role == .editor
+            } else if case .group(_) = channel.info  {
+                switch channel.participationStatus {
+                case .kicked, .left:
+                    return false
+                case .member:
+                    break
+                }
+            }
+        } else if let group = self as? TelegramGroup {
+            return group.membership == .Member
+        } else if let secret = self as? TelegramSecretChat {
+            switch secret.embeddedState {
+            case .terminated:
+                return false
+            case .handshake:
+                return false
+            default:
+                return true
+            }
+        }
+        
+        return true
+    }
+}
+
 let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), NSLocalizedString("ShareExtension.Search", comment: ""))
 
 class ShareModalView : View {
@@ -65,24 +96,72 @@ class ShareObject {
         self.context = context
     }
     
-    func perform(to entries:[PeerId]) {
-                
+    private let progressView = SEModalProgressView()
+    
+    func perform(to entries:[PeerId], view: NSView) {
+        
+        var signals:[Signal<Bool, Void>] = []
+        
+       
+        
+        var needWaitAsync = false
+        var k:Int = 0
+        let total = context.inputItems.reduce(0) { (current, item) -> Int in
+            if let item = item as? NSExtensionItem {
+                if let _ = item.attributedContentText?.string {
+                    return current + 1
+                } else if let attachments = item.attachments as? [NSItemProvider] {
+                    return current + attachments.count
+                }
+            }
+            return current
+        }
+        
+        func requestIfNeeded() {
+            Queue.mainQueue().async {
+                if k == total {
+                    self.progressView.frame = view.bounds
+                    view.addSubview(self.progressView)
+                    
+                    
+                    let signal = combineLatest(signals) |> deliverOnMainQueue
+                    
+                    let disposable = signal.start(next: { states in
+                        let current = CGFloat(states.filter({$0}).count)
+                        self.progressView.set(progress: min(current / CGFloat(total), 1))
+                     }, completed: {
+                        self.context.completeRequest(returningItems: nil, completionHandler: nil)
+                     })
+                    
+                    self.progressView.cancelImpl = {
+                        self.cancel()
+                        disposable.dispose()
+                    }
+ 
+                }
+            }
+        }
+        
         for peerId in entries {
-            for item in context.inputItems {
-                if let item = item as? NSExtensionItem {
+            for j in 0 ..< context.inputItems.count {
+                if let item = context.inputItems[j] as? NSExtensionItem {
                     if let text = item.attributedContentText?.string {
-                        _ = sendText(text, to:peerId).start()
+                        signals.append(sendText(text, to:peerId))
+                        k += 1
+                        requestIfNeeded()
                     } else if let attachments = item.attachments as? [NSItemProvider] {
-                        for attach in attachments {
-                            attach.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil, completionHandler: { (coding, error) in
-
+                        
+                        for i in 0 ..< attachments.count {
+                            attachments[i].loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil, completionHandler: { (coding, error) in
                                 if let url = coding as? URL {
                                     if !url.isFileURL {
-                                        _ = self.sendText(url.absoluteString, to:peerId).start()
+                                        signals.append(self.sendText(url.absoluteString, to:peerId))
                                     } else {
-                                        _ = self.sendMedia(url.absoluteString, to:peerId).start()
+                                        signals.append(self.sendMedia(url, to:peerId))
                                     }
                                 }
+                                k += 1
+                                requestIfNeeded()
                             })
                         }
                     }
@@ -90,16 +169,55 @@ class ShareObject {
             }
         }
         
-        context.completeRequest(returningItems: nil, completionHandler: nil)
     }
     
-    private func sendText(_ text:String, to peerId:PeerId) -> Signal<Void,Void> {
-        return standaloneSendMessage(account: account, peerId: peerId, text: text, attributes: [], replyToMessageId: nil)
-        //return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: text, attributes: [], media: nil, replyToMessageId: nil)])
+    private func sendText(_ text:String, to peerId:PeerId) -> Signal<Bool,Void> {
+        return Signal<Bool, Void>.single(false) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> map {_ in return true})
     }
     
-    private func sendMedia(_ text:String, to peerId:PeerId) -> Signal<Void,Void> {
-        return .single()
+    private let queue:Queue = Queue(name: "proccessShareFilesQueue", target: nil)
+    
+    private func prepareMedia(_ path: URL) -> Signal<StandaloneMedia, Void> {
+        return Signal { subscriber in
+            if let data = try? Data(contentsOf: path) {
+                
+                let mimeType = MIMEType(path.absoluteString.nsstring.pathExtension.lowercased())
+                if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif") {
+                    
+                    let options = NSMutableDictionary()
+                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+                    options.setValue(1280 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+
+                    if let imageSource = CGImageSourceCreateWithData(data as CFData, nil) {
+                        let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options)
+                        if let image = image {
+                            let imageRep = NSBitmapImageRep(cgImage: image)
+                            let options: [String: Float] = [NSImageCompressionFactor: 0.83]
+                            let data = imageRep.representation(using: NSJPEGFileType, properties: options)
+                            if let data = data {
+                                subscriber.putNext(StandaloneMedia.image(data))
+                            }
+                        }
+                    }
+
+                } else {
+                    subscriber.putNext(StandaloneMedia.file(data: data, mimeType: mimeType, attributes: []))
+                }
+                
+            }
+            
+            subscriber.putCompletion()
+            return EmptyDisposable
+        } |> runOn(queue)
+    }
+    
+    
+    
+    private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Bool,Void> {
+        return Signal<Bool, Void>.single(false) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Bool, Void> in
+            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> map {_ in return true}
+        })
     }
     
     func cancel() {
@@ -110,19 +228,55 @@ class ShareObject {
 
 
 
-enum SelectablePeersEntry : Comparable, Identifiable {
-    case plain(Peer,MessageIndex)
-    var stableId: Int64 {
+enum SelectablePeersEntryStableId : Hashable {
+    case plain(Peer)
+    case emptySearch
+    
+    var hashValue: Int {
         switch self {
-        case let .plain(peer,_):
-            return peer.id.toInt64()
+        case let .plain(peer):
+            return peer.id.hashValue
+        case .emptySearch:
+            return 0
         }
     }
     
-    var index:MessageIndex {
+    static func ==(lhs:SelectablePeersEntryStableId, rhs:SelectablePeersEntryStableId) -> Bool {
+        switch lhs {
+        case let .plain(lhsPeer):
+            if case let .plain(rhsPeer) = rhs {
+                return lhsPeer.isEqual(rhsPeer)
+            } else {
+                return false
+            }
+        case .emptySearch:
+            if case .emptySearch = rhs {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+}
+
+enum SelectablePeersEntry : Comparable, Identifiable {
+    case plain(Peer, ChatListIndex)
+    case emptySearch
+    var stableId: SelectablePeersEntryStableId {
+        switch self {
+        case let .plain(peer,_):
+            return .plain(peer)
+        case .emptySearch:
+            return .emptySearch
+        }
+    }
+    
+    var index:ChatListIndex {
         switch self {
         case let .plain(_,id):
             return id
+        case .emptySearch:
+            return ChatListIndex(pinningIndex: nil, messageIndex: MessageIndex.absoluteLowerBound())
         }
     }
 }
@@ -139,6 +293,12 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
         } else {
             return false
         }
+    case .emptySearch:
+        if case .emptySearch = rhs {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
@@ -152,6 +312,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             switch entry {
             case let .plain(peer, _):
                 return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), inset:EdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+            case .emptySearch:
+                return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }
             
             
@@ -209,69 +371,80 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let search = self.search
         search.set(SearchState(state: .None, request: nil))
-        let searchView = genericView.searchView
-        
         
         let previous:Atomic<[SelectablePeersEntry]?> = Atomic(value: nil)
-        let initialSize = self.atomicSize
+        let initialSize = self.atomicSize.modify({$0})
         let account = share.account
         let table = genericView.tableView
         let selectInteraction = self.selectInteractions
-        let inSearch = self.inSearchSelected
         selectInteraction.add(observer: self)
         
-        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> = search.get() |> distinctUntilChanged |> mapToSignal { search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> in
+        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> in
             
             if search.state == .None {
+                let signal:Signal<(ChatListView,ViewUpdateType),Void> = account.postbox.tailChatListView(100)
                 
-                return account.postbox.tailChatListView(150) |> deliverOn(prepareQueue) |> mapToQueue { (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
-                    var entries:[SelectablePeersEntry] = []
-                    
-                    let fromSearch = inSearch.modify({$0})
-                    let fromSetIds:Set<PeerId> = Set(fromSearch)
-                    var fromPeers:[PeerId:Peer] = [:]
-                    
-                    
-                    for entry in value.0.entries {
-                        switch entry {
-                        case let .MessageEntry(index, message, _, _, _, renderedPeer):
-                            if let peer = renderedPeer.chatMainPeer {
-                                if !fromSetIds.contains(peer.id) {
-                                    entries.append(.plain(peer,index.messageIndex))
-                                } else {
-                                    fromPeers[peer.id] = peer
+                
+                return signal |> deliverOn(prepareQueue) |> mapToQueue { [weak self] (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
+                    if let strongSelf = self {
+                        var entries:[SelectablePeersEntry] = []
+                        
+                        let fromSearch = strongSelf.inSearchSelected.modify({$0})
+                        let fromSetIds:Set<PeerId> = Set(fromSearch)
+                        var fromPeers:[PeerId:Peer] = [:]
+                        var contains:[PeerId:Peer] = [:]
+                        
+                        for entry in value.0.entries {
+                            switch entry {
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer):
+                                if let peer = renderedPeer.chatMainPeer {
+                                    if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
+                                        if peer.canSendMessage {
+                                            entries.append(.plain(peer,id))
+                                            contains[peer.id] = peer
+                                        }
+                                    } else {
+                                        fromPeers[peer.id] = peer
+                                    }
                                 }
+                            default:
+                                break
                             }
-                        default:
-                            break
                         }
-                    }
-                    
-                    var i:Int32 = Int32.max
-                    for peerId in fromSearch {
-                        if let peer = fromPeers[peerId] {
-                            let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
-                            entries.append(.plain(peer, index))
+                        
+                        var i:Int32 = Int32.max
+                        for peerId in fromSearch {
+                            if let peer = fromPeers[peerId] , contains[peer.id] == nil {
+                                let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
+                                entries.append(.plain(peer, ChatListIndex(pinningIndex: nil, messageIndex: index)))
+                                contains[peer.id] = peer
+                            }
+                            i -= 1
                         }
-                        i -= 1
+                        entries.sort(by: <)
+                        
+                        return prepareEntries(from: previous.modify({$0}), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction) |> deliverOnMainQueue
                     }
-                    entries.sort(by: <)
-                    
-                    return prepareEntries(from: previous.modify({$0}), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: true, selectInteraction:selectInteraction) |> deliverOnMainQueue
+                    return .never()
                 }
             } else {
-                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased())) |> deliverOn(prepareQueue) |> mapToSignal { (peers) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
+                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased())) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
                     var entries:[SelectablePeersEntry] = []
                     var i:Int32 = Int32.max
                     for peer in peers {
-                        let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
-                        entries.append(.plain(peer, index))
-                        i -= 1
+                        if peer.canSendMessage {
+                            let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
+                            entries.append(.plain(peer, ChatListIndex(pinningIndex: nil, messageIndex: index)))
+                            i -= 1
+                        }
+                        
+                    }
+                    if entries.isEmpty {
+                        entries.append(.emptySearch)
                     }
                     entries.sort(by: <)
-                    return  prepareEntries(from: previous.modify({$0}), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: true, selectInteraction:selectInteraction) |> deliverOnMainQueue
+                    return prepareEntries(from: previous.modify({$0}), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction) |> deliverOnMainQueue
                 }
             }
             
@@ -285,13 +458,13 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         }))
         
         self.genericView.searchView.searchInteractions = SearchInteractions({ state in
-            //search.set(state)
+            self.search.set(SearchState(state: state.state, request: state.request))
         }, { state in
-            //search.set(state)
+            self.search.set(SearchState(state: state.state, request: state.request))
         })
         
-        self.genericView.acceptView.set(handler: { [weak self] _ in
-            self?.share.perform(to: Array(selectInteraction.presentation.selected))
+        self.genericView.acceptView.set(handler: { _ in
+            self.share.perform(to: Array(selectInteraction.presentation.selected), view: self.view)
         }, for: .Click)
         
         self.genericView.cancelView.set(handler: { [weak self] _ in

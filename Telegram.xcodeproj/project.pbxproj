@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C200018A1E8C09B000B80D8F /* SEPasslockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20001891E8C09B000B80D8F /* SEPasslockController.swift */; };
+		C200018D1E8C127700B80D8F /* SEUnauthorizedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200018C1E8C127700B80D8F /* SEUnauthorizedViewController.swift */; };
+		C20001931E8D638A00B80D8F /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C250B0381DB7BB2D004E9FBE /* MimeTypes.swift */; };
+		C20001941E8D658000B80D8F /* SearchEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */; };
+		C20001971E8D689A00B80D8F /* mime-types.txt in Resources */ = {isa = PBXBuildFile; fileRef = C250B0361DB7BB09004E9FBE /* mime-types.txt */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
@@ -16,7 +21,6 @@
 		C20CB7291E60886F00C992AC /* LinkInvationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20CB7281E60886E00C992AC /* LinkInvationController.swift */; };
 		C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB01DA996480042616A /* EBlockItem.swift */; };
 		C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB21DA9965B0042616A /* EBlockRowView.swift */; };
-		C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB41DAA4E460042616A /* EntertainmentPopover.swift */; };
 		C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */ = {isa = PBXBuildFile; fileRef = C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */; };
 		C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
 		C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E4E1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift */; };
@@ -248,7 +252,6 @@
 		C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */; };
 		C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
 		C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
-		C291E27C1E8B098500D397BA /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */; };
 		C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF851D8DB178001DBB59 /* MediaUtils.swift */; };
 		C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */; };
@@ -377,16 +380,6 @@
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		C291E27A1E8B097F00D397BA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
-			remoteInfo = TelegramShare;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -410,7 +403,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				C291E27C1E8B098500D397BA /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -427,6 +419,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C20001891E8C09B000B80D8F /* SEPasslockController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SEPasslockController.swift; sourceTree = "<group>"; };
+		C200018C1E8C127700B80D8F /* SEUnauthorizedViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SEUnauthorizedViewController.swift; sourceTree = "<group>"; };
 		C201C2311E3B2D1C0026C21E /* FastSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FastSettings.swift; sourceTree = "<group>"; };
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
@@ -436,7 +430,6 @@
 		C20CB7281E60886E00C992AC /* LinkInvationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkInvationController.swift; sourceTree = "<group>"; };
 		C20D5AB01DA996480042616A /* EBlockItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EBlockItem.swift; sourceTree = "<group>"; };
 		C20D5AB21DA9965B0042616A /* EBlockRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EBlockRowView.swift; sourceTree = "<group>"; };
-		C20D5AB41DAA4E460042616A /* EntertainmentPopover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntertainmentPopover.swift; sourceTree = "<group>"; };
 		C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dsa_pub_prod.pem; sourceTree = "<group>"; };
 		C21074251E77F79A006EE5EF /* Beta.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Beta.xcconfig; sourceTree = "<group>"; };
 		C21074261E77F7A3006EE5EF /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -1305,6 +1298,8 @@
 			children = (
 				C232EAAF1E1D110500C4D38C /* SESelectController.swift */,
 				C232EAC81E1D536200C4D38C /* SEModalProgressView.swift */,
+				C20001891E8C09B000B80D8F /* SEPasslockController.swift */,
+				C200018C1E8C127700B80D8F /* SEUnauthorizedViewController.swift */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -1673,7 +1668,6 @@
 				C2844AD91DA907F2009308DC /* stickers */,
 				C2844AD81DA907ED009308DC /* emoji */,
 				C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */,
-				C20D5AB41DAA4E460042616A /* EntertainmentPopover.swift */,
 			);
 			name = entertainment;
 			sourceTree = "<group>";
@@ -2256,7 +2250,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				C291E27B1E8B097F00D397BA /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -2327,6 +2320,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C20001971E8D689A00B80D8F /* mime-types.txt in Resources */,
 				C232EA9B1E1D07E700C4D38C /* ShareViewController.xib in Resources */,
 				C232EAC51E1D4BD700C4D38C /* Localizable.strings in Resources */,
 				C232EAC21E1D448C00C4D38C /* Assets.xcassets in Resources */,
@@ -2359,6 +2353,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C20001941E8D658000B80D8F /* SearchEmptyRowItem.swift in Sources */,
+				C20001931E8D638A00B80D8F /* MimeTypes.swift in Sources */,
+				C200018A1E8C09B000B80D8F /* SEPasslockController.swift in Sources */,
 				C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */,
 				C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */,
 				C232EABF1E1D13F500C4D38C /* ChatListNothingItem.swift in Sources */,
@@ -2372,6 +2369,7 @@
 				C232EAB71E1D123800C4D38C /* System.swift in Sources */,
 				C232EAB61E1D11CA00C4D38C /* InterfaceObserver.swift in Sources */,
 				C232EA981E1D07E700C4D38C /* ShareViewController.swift in Sources */,
+				C200018D1E8C127700B80D8F /* SEUnauthorizedViewController.swift in Sources */,
 				C232EAB01E1D110500C4D38C /* SESelectController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2431,7 +2429,6 @@
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
-				C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */,
 				C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */,
 				C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
@@ -2690,14 +2687,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		C291E27B1E8B097F00D397BA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = C291E27A1E8B097F00D397BA /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {
