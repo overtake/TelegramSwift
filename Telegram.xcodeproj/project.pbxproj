@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		69A538C91E914946006BC7A8 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69A538C81E914946006BC7A8 /* libtgvoip.framework */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
@@ -427,6 +428,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		69A538C51E91487E006BC7A8 /* libtgvoip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libtgvoip.framework; path = "submodules/libtgvoip/build/Debug-iphoneos/libtgvoip.framework"; sourceTree = "<group>"; };
+		69A538C81E914946006BC7A8 /* libtgvoip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libtgvoip.framework; path = submodules/libtgvoip/build/Debug/libtgvoip.framework; sourceTree = "<group>"; };
 		C201C2311E3B2D1C0026C21E /* FastSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FastSettings.swift; sourceTree = "<group>"; };
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
@@ -871,6 +874,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69A538C91E914946006BC7A8 /* libtgvoip.framework in Frameworks */,
 				C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
@@ -2196,6 +2200,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				69A538C81E914946006BC7A8 /* libtgvoip.framework */,
+				69A538C51E91487E006BC7A8 /* libtgvoip.framework */,
 				C2C9B92A1E8011CD00380D79 /* Carbon.framework */,
 				C2C9B9281E8011B000380D79 /* IOKit.framework */,
 				C250BA931E6E84880057CD96 /* VideoToolbox.framework */,
@@ -2813,6 +2819,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug",
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = "BETA=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -2845,6 +2852,10 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -2864,6 +2875,10 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -2882,6 +2897,10 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -2953,6 +2972,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug",
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = "APP_STORE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -2984,6 +3004,10 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -3107,6 +3131,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug",
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -3154,6 +3179,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug",
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
