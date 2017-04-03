@@ -17,7 +17,6 @@
 		C20CB7291E60886F00C992AC /* LinkInvationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20CB7281E60886E00C992AC /* LinkInvationController.swift */; };
 		C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB01DA996480042616A /* EBlockItem.swift */; };
 		C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB21DA9965B0042616A /* EBlockRowView.swift */; };
-		C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB41DAA4E460042616A /* EntertainmentPopover.swift */; };
 		C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */ = {isa = PBXBuildFile; fileRef = C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */; };
 		C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
 		C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E4E1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift */; };
@@ -249,7 +248,6 @@
 		C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */; };
 		C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
 		C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
-		C291E27C1E8B098500D397BA /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */; };
 		C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF851D8DB178001DBB59 /* MediaUtils.swift */; };
 		C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */; };
@@ -378,16 +376,6 @@
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		C291E27A1E8B097F00D397BA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
-			remoteInfo = TelegramShare;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -411,7 +399,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				C291E27C1E8B098500D397BA /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2262,7 +2249,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				C291E27B1E8B097F00D397BA /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -2437,7 +2423,6 @@
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
-				C20D5AB51DAA4E460042616A /* EntertainmentPopover.swift in Sources */,
 				C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */,
 				C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
@@ -2696,14 +2681,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		C291E27B1E8B097F00D397BA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = C291E27A1E8B097F00D397BA /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {
