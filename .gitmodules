@@ -13,3 +13,6 @@
 [submodule "submodules/MtProtoKit"]
 	path = submodules/MtProtoKit
 	url = https://github.com/peter-iakovlev/MtProtoKit.git
+[submodule "submodules/libtgvoip"]
+	path = submodules/libtgvoip
+	url = https://github.com/grishka/libtgvoip
