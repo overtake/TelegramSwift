@@ -40,11 +40,11 @@
 		C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */; };
 		C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */; };
 		C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2203EA11DDE2AB8001E6AB6 /* ChatSelectText.swift */; };
-		C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C22E06251D7F16C000A11C88 /* TGUIKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C22E06251D7F16C000A11C88 /* TGUIKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */; };
 		C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */; };
 		C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674201DBCECCC000BA9ED /* EStickerGridItem.swift */; };
@@ -143,6 +143,11 @@
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */; };
+		C239E4A81E9188D300F139B8 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C239E4AD1E926D0900F139B8 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CDB1DDA0FCF00C69F73 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C239E4AE1E926D0900F139B8 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C239E4AF1E926D0C00F139B8 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CDB1DDA0FCF00C69F73 /* Sparkle.framework */; };
+		C239E4B01E926D0C00F139B8 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
@@ -376,19 +381,32 @@
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		C239E4A61E9188CC00F139B8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
+			remoteInfo = TelegramShare;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
-		C20D5AB61DAA94500042616A /* CopyFiles */ = {
+		C20D5AB61DAA94500042616A /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in CopyFiles */,
-				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in CopyFiles */,
-				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in CopyFiles */,
-				C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in CopyFiles */,
-				C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in CopyFiles */,
+				C239E4AD1E926D0900F139B8 /* Sparkle.framework in Copy Files */,
+				C239E4AE1E926D0900F139B8 /* HockeySDK.framework in Copy Files */,
+				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
+				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
+				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
+				C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in Copy Files */,
+				C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		C232EA661E1D041B00C4D38C /* Embed App Extensions */ = {
@@ -397,6 +415,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				C239E4A81E9188D300F139B8 /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -876,6 +895,8 @@
 				C2DF47BC1DE79574003AA6C0 /* libopus.a in Frameworks */,
 				C22E06261D7F16C000A11C88 /* TGUIKit.framework in Frameworks */,
 				C253A95C1D9165A400CDC850 /* libwebp.a in Frameworks */,
+				C239E4AF1E926D0C00F139B8 /* Sparkle.framework in Frameworks */,
+				C239E4B01E926D0C00F139B8 /* HockeySDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2234,7 +2255,7 @@
 			buildConfigurationList = D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Telegram" */;
 			buildPhases = (
 				D098C7121D7E175A007784E4 /* Frameworks */,
-				C20D5AB61DAA94500042616A /* CopyFiles */,
+				C20D5AB61DAA94500042616A /* Copy Files */,
 				D098C7111D7E175A007784E4 /* Sources */,
 				D098C7131D7E175A007784E4 /* Resources */,
 				C232EA661E1D041B00C4D38C /* Embed App Extensions */,
@@ -2242,6 +2263,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				C239E4A71E9188CC00F139B8 /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -2679,6 +2701,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C239E4A71E9188CC00F139B8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
+			targetProxy = C239E4A61E9188CC00F139B8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {
