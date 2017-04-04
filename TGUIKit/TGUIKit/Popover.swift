@@ -76,7 +76,7 @@ open class Popover: NSObject {
                
                 if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight) || !control.userInteractionEnabled) {
                     
-                   control.isSelected = true
+                    control.isSelected = true
                     
                     control.kitWindow?.set(escape: {[weak strongSelf] () -> KeyHandlerResult in
                         strongSelf?.hide()
@@ -90,6 +90,8 @@ open class Popover: NSObject {
                     control.kitWindow?.set(mouseHandler: { () -> KeyHandlerResult in
                         return .invokeNext
                     },  with: strongSelf, for: .leftMouseUp, priority: .high)
+                    
+                   
                     
                     strongSelf.control = control
                     strongSelf.background.flip = false
@@ -199,8 +201,8 @@ open class Popover: NSObject {
                             
                             self?.disposable.set(s.start(next: {[weak strongSelf] () in
                                 
-                                if let strongSelf = strongSelf, control.controlState == .Normal {
-                                    if !strongSelf.inside() {
+                                if let strongSelf = strongSelf {
+                                    if !strongSelf.inside() && !control.mouseInside() {
                                         strongSelf.hide()
                                     }
                                 }
@@ -208,6 +210,11 @@ open class Popover: NSObject {
                             }))
                             
                         }
+                        
+                        control.kitWindow?.set(mouseHandler: {  () -> KeyHandlerResult in
+                            nHandler(control)
+                            return .invokeNext
+                        },  with: strongSelf, for: .mouseMoved, priority: .high)
                         
                         let hHandler:(Control) -> Void = { [weak strongSelf] _ in
                             
