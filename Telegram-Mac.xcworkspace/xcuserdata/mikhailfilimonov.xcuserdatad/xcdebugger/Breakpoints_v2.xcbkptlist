@@ -74,12 +74,12 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "512925512.981763"
+                  timestampString = "513022201.179532"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
                   endingLineNumber = "860"
-                  offsetFromSymbolStart = "708">
+                  offsetFromSymbolStart = "718">
                </Location>
                <Location
                   shouldBeEnabled = "Yes"
@@ -89,7 +89,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "512925512.983724"
+                  timestampString = "513022201.182455"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -104,7 +104,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "512925512.985615"
+                  timestampString = "513022201.185612"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
