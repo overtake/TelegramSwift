@@ -74,7 +74,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "513022201.179532"
+                  timestampString = "513104583.179482"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -89,7 +89,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "513022201.182455"
+                  timestampString = "513104583.182626"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -104,7 +104,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "513022201.185612"
+                  timestampString = "513104583.185963"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -127,22 +127,6 @@
             startingLineNumber = "97"
             endingLineNumber = "97"
             landmarkName = "scroll(table:from:to:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "TGUIKit/TGUIKit/Popover.swift"
-            timestampString = "512652979.679923"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "303"
-            endingLineNumber = "303"
-            landmarkName = "hide(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

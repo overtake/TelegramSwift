@@ -653,12 +653,18 @@ public class TextView: Control {
         return self.layout == layout
     }
     
-    public func update(_ layout:TextViewLayout?, origin:NSPoint = NSZeroPoint) -> Void {
+    public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.layout = layout
         
         self.set(selectedRange: NSMakeRange(NSNotFound, 0))
         if let layout = layout {
-            self.frame = NSMakeRect(origin.x, origin.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
+            let point:NSPoint
+            if let origin = origin {
+                point = origin
+            } else {
+                point = frame.origin
+            }
+            self.frame = NSMakeRect(point.x, point.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
         }
         self.setNeedsDisplayLayer()
     }
