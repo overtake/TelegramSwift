@@ -1,5 +1,0 @@
-spotify:
-x-apple.systempreferences:
-skype:
-magnet:
-twitter:
