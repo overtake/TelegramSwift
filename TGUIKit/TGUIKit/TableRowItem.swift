@@ -7,6 +7,8 @@
 //
 
 import Cocoa
+import SwiftSignalKitMac
+
 open class TableRowItem: NSObject {
     public weak var table:TableView? {
         didSet {
@@ -68,8 +70,8 @@ open class TableRowItem: NSObject {
     }
     
    
-    open func menuItems() -> [ContextMenuItem]? {
-        return nil
+    open func menuItems() -> Signal<[ContextMenuItem], Void> {
+        return .single([])
     }
     
     public func redraw()->Void {

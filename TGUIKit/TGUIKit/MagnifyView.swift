@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKitMac
 public class MagnifyView : NSView {
     
-    private var magnify:CGFloat = 1.0 {
+    public private(set) var magnify:CGFloat = 1.0 {
         didSet {
             magnifyUpdater.set(magnify)
         }

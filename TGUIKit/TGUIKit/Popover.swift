@@ -15,6 +15,8 @@ class PopoverBackground: Control {
 
 open class Popover: NSObject {
     
+    private weak var window:Window?
+    
     private var disposable:MetaDisposable = MetaDisposable()
     
     public var animates:Bool = true
@@ -56,7 +58,7 @@ open class Popover: NSObject {
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
             
-            
+            self.window = control.kitWindow
             
             var signal = controller.ready.get() |> filter { result in
                 return result
@@ -74,20 +76,20 @@ open class Popover: NSObject {
                     }
                 }
                
-                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight) || !control.userInteractionEnabled) {
+                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight) || !control.userInteractionEnabled), control.window != nil, control.visibleRect != NSZeroRect {
                     
                     control.isSelected = true
                     
-                    control.kitWindow?.set(escape: {[weak strongSelf] () -> KeyHandlerResult in
+                    strongSelf.window?.set(escape: { [weak strongSelf] () -> KeyHandlerResult in
                         strongSelf?.hide()
                         return .invoked
                     }, with: strongSelf, priority: .modal)
                     
-                    control.kitWindow?.set(handler: { () -> KeyHandlerResult in
+                    strongSelf.window?.set(handler: { () -> KeyHandlerResult in
                         return .invokeNext
                     }, with: strongSelf, for: .All)
                     
-                    control.kitWindow?.set(mouseHandler: { () -> KeyHandlerResult in
+                    strongSelf.window?.set(mouseHandler: { () -> KeyHandlerResult in
                         return .invokeNext
                     },  with: strongSelf, for: .leftMouseUp, priority: .high)
                     
@@ -195,11 +197,11 @@ open class Popover: NSObject {
                             
                         }
                         
-                        let nHandler:(Control) -> Void = { [weak self] _ in
+                        let nHandler:(Control) -> Void = { [weak strongSelf] _ in
                             
                             let s = Signal<Void,NoError>.single() |> delay(0.2, queue: Queue.mainQueue())
                             
-                            self?.disposable.set(s.start(next: {[weak strongSelf] () in
+                            self?.disposable.set(s.start(next: { [weak strongSelf] () in
                                 
                                 if let strongSelf = strongSelf {
                                     if !strongSelf.inside() && !control.mouseInside() {
@@ -236,7 +238,8 @@ open class Popover: NSObject {
                     controller?.viewDidDisappear(false)
                     controller?.popover = nil
                     strongSelf.controller = nil
-                    control.kitWindow?.removeAllHandlers(for: strongSelf)
+                    strongSelf.window?.removeAllHandlers(for: strongSelf)
+                    strongSelf.window?.remove(object: strongSelf, for: .All)
                 }
 
             }))
@@ -267,14 +270,15 @@ open class Popover: NSObject {
     deinit {
         self.disposable.dispose()
         self.readyDisposable.dispose()
-        overlay?.kitWindow?.remove(object: self, for: .All)
+        window?.remove(object: self, for: .All)
     }
     
     public func hide(_ removeHandlers:Bool = true) -> Void {
         
         isShown = false
         control?.isSelected = false
-        overlay?.kitWindow?.removeAllHandlers(for: self)
+        window?.removeAllHandlers(for: self)
+        window?.remove(object: self, for: .All)
         
         overlay?.removeLastStateHandler()
         overlay?.removeLastStateHandler()
@@ -289,8 +293,10 @@ open class Popover: NSObject {
         controller?.viewWillDisappear(true)
         if animates {
             var once:Bool = false
+            background.change(opacity: 0, animated: animates)
             for sub in background.subviews {
-                sub.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, completion:{[weak self] (comple) in
+                
+                sub.change(opacity: 0, animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] complete in
                     if let strongSelf = self, !once {
                         once = true
                         strongSelf.controller?.viewDidDisappear(true)
@@ -299,12 +305,8 @@ open class Popover: NSObject {
                         strongSelf.background.removeFromSuperview()
                     }
                 })
-                sub.layer?.opacity = 0.0
 
             }
-            
-            
-            
         } else {
             controller?.viewDidDisappear(false)
             controller?.popover = nil

@@ -12,9 +12,9 @@ class TextLayerExt: CATextLayer {
     
     override func draw(in ctx: CGContext) {
         ctx.setAllowsAntialiasing(true)
-        ctx.setShouldAntialias(true)
-        ctx.setShouldSmoothFonts(false)
-        ctx.setAllowsFontSmoothing(false)
+        ctx.setAllowsFontSmoothing(!System.isRetina)
+        ctx.setShouldSmoothFonts(!System.isRetina)
+        
         super.draw(in: ctx)
     }
     

@@ -7,12 +7,13 @@
 //
 
 import Cocoa
-
+import SwiftSignalKitMac
 
 
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open private(set) weak var item:TableRowItem?
+    private let menuDisposable = MetaDisposable()
    // var selected:Bool?
     
     open var border:BorderType?
@@ -85,9 +86,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
 
     open override func mouseDown(with event: NSEvent) {
         if event.modifierFlags.contains(.control) && event.clickCount == 1 {
-            if let menu = self.menu(for: event)  {
-                NSMenu.popUpContextMenu(menu, with: event, for: self)
-            }
+            showContextMenu(event)
         } else {
             if event.clickCount == 2 {
                 doubleClick(in: convert(event.locationInWindow, from: nil))
@@ -97,28 +96,49 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    open override func rightMouseDown(with event: NSEvent) {
+        super.rightMouseDown(with: event)
+        showContextMenu(event)
+    }
+    
 
     open func doubleClick(in location:NSPoint) -> Void {
         
     }
     
-    open override func menu(for event: NSEvent) -> NSMenu? {
-        if let menuItems = item?.menuItems() {
-            let menu = ContextMenu()
-            menu.onShow = { [weak self] menu in
-                self?.contextMenu = menu
-                self?.onShowContextMenu()
-            }
-            menu.delegate = menu
-            menu.onClose = { [weak self] _ in
-                self?.contextMenu = nil
-                self?.onCloseContextMenu()
-            }
-            for item in menuItems {
-                menu.addItem(item)
-            }
-            return menu
+    open func showContextMenu(_ event:NSEvent) -> Void {
+        
+        menuDisposable.set(nil)
+        contextMenu = nil
+        
+        if let item = item {
+            menuDisposable.set((item.menuItems() |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
+                if let strongSelf = self {
+                    let menu = ContextMenu()
+                    menu.onShow = { [weak self] menu in
+                        self?.contextMenu = menu
+                        self?.onShowContextMenu()
+                    }
+                    menu.delegate = menu
+                    menu.onClose = { [weak self] _ in
+                        self?.contextMenu = nil
+                        self?.onCloseContextMenu()
+                    }
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    
+                    menu.delegate = menu
+                    NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
+                }
+            
+            }))
         }
+        
+
+    }
+    
+    open override func menu(for event: NSEvent) -> NSMenu? {
         return NSMenu()
     }
     
@@ -207,6 +227,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    deinit {
+        menuDisposable.dispose()
+    }
     
     
     open override func copy() -> Any {

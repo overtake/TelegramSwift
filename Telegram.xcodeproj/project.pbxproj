@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		69A538C91E914946006BC7A8 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69A538C81E914946006BC7A8 /* libtgvoip.framework */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
@@ -25,7 +24,6 @@
 		C2167E571DC221E600F98E03 /* PeerMediaRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E561DC221E600F98E03 /* PeerMediaRowContent.swift */; };
 		C2167E5F1DC25C6900F98E03 /* InterfaceObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E5E1DC25C6900F98E03 /* InterfaceObserver.swift */; };
 		C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21795E21E795955006A2AA3 /* SecretChatKeyViewController.swift */; };
-		C21795E51E797EDB006A2AA3 /* SignupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21795E41E797EDB006A2AA3 /* SignupViewController.swift */; };
 		C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1D61D8869F20042F0C8 /* ChatHoleRowItem.swift */; };
 		C219E1D91D886A160042F0C8 /* ChatHoleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1D81D886A160042F0C8 /* ChatHoleRowView.swift */; };
 		C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1DA1D8884290042F0C8 /* ChatHistoryEntry.swift */; };
@@ -140,6 +138,7 @@
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */; };
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
+		C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */ = {isa = PBXBuildFile; fileRef = C23BC3671E9AA03E00D79F92 /* emoji11.txt */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */; };
@@ -235,10 +234,8 @@
 		C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B691DD211E5008B69DD /* PeerPresenceStatusManager.swift */; };
 		C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */ = {isa = PBXBuildFile; fileRef = C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */; };
 		C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFE81DE9DA61009B9629 /* CountryManager.swift */; };
-		C27AAFEB1DEA01C4009B9629 /* InputAuthCodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEA1DEA01C4009B9629 /* InputAuthCodeViewController.swift */; };
 		C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */; };
 		C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */; };
-		C27AAFF11DEB3438009B9629 /* PasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFF01DEB3437009B9629 /* PasswordViewController.swift */; };
 		C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */; };
 		C2844AE01DA90C8A009308DC /* emoji.txt in Resources */ = {isa = PBXBuildFile; fileRef = C2844ADF1DA90C8A009308DC /* emoji.txt */; };
 		C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB261DF980DE0027CE3A /* AudioRecorder.swift */; };
@@ -437,7 +434,6 @@
 		C2167E561DC221E600F98E03 /* PeerMediaRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaRowContent.swift; sourceTree = "<group>"; };
 		C2167E5E1DC25C6900F98E03 /* InterfaceObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InterfaceObserver.swift; sourceTree = "<group>"; };
 		C21795E21E795955006A2AA3 /* SecretChatKeyViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecretChatKeyViewController.swift; sourceTree = "<group>"; };
-		C21795E41E797EDB006A2AA3 /* SignupViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignupViewController.swift; sourceTree = "<group>"; };
 		C219E1D61D8869F20042F0C8 /* ChatHoleRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHoleRowItem.swift; sourceTree = "<group>"; };
 		C219E1D81D886A160042F0C8 /* ChatHoleRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHoleRowView.swift; sourceTree = "<group>"; };
 		C219E1DA1D8884290042F0C8 /* ChatHistoryEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHistoryEntry.swift; sourceTree = "<group>"; };
@@ -539,6 +535,7 @@
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginOthersAccountModal.swift; sourceTree = "<group>"; };
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
+		C23BC3671E9AA03E00D79F92 /* emoji11.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji11.txt; sourceTree = "<group>"; };
 		C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupNameRowItem.swift; sourceTree = "<group>"; };
 		C23CF9641E70BCEF0009CD06 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		C23CF9651E70BCEF0009CD06 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/ShareViewController.strings; sourceTree = "<group>"; };
@@ -676,10 +673,8 @@
 		C2777B691DD211E5008B69DD /* PeerPresenceStatusManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerPresenceStatusManager.swift; sourceTree = "<group>"; };
 		C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PhoneCountries.txt; sourceTree = "<group>"; };
 		C27AAFE81DE9DA61009B9629 /* CountryManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CountryManager.swift; sourceTree = "<group>"; };
-		C27AAFEA1DEA01C4009B9629 /* InputAuthCodeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputAuthCodeViewController.swift; sourceTree = "<group>"; };
 		C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyComposeController.swift; sourceTree = "<group>"; };
-		C27AAFF01DEB3437009B9629 /* PasswordViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordViewController.swift; sourceTree = "<group>"; };
 		C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntertainmentViewController.swift; sourceTree = "<group>"; };
 		C2844ADF1DA90C8A009308DC /* emoji.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji.txt; sourceTree = "<group>"; };
 		C28BAB261DF980DE0027CE3A /* AudioRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
@@ -861,7 +856,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69A538C91E914946006BC7A8 /* libtgvoip.framework in Frameworks */,
 				C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
@@ -1481,6 +1475,7 @@
 		C252532B1DF043D800ADBC98 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				C23BC3671E9AA03E00D79F92 /* emoji11.txt */,
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
 				C252532C1DF0440300ADBC98 /* begin_record.caf */,
@@ -2089,8 +2084,6 @@
 			isa = PBXGroup;
 			children = (
 				C2DF47ED1DE9A1F3003AA6C0 /* LoginViewController.swift */,
-				C27AAFEA1DEA01C4009B9629 /* InputAuthCodeViewController.swift */,
-				C27AAFF01DEB3437009B9629 /* PasswordViewController.swift */,
 				C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */,
 			);
 			name = login;
@@ -2099,7 +2092,6 @@
 		C2DF47EC1DE9A18E003AA6C0 /* register */ = {
 			isa = PBXGroup;
 			children = (
-				C21795E41E797EDB006A2AA3 /* SignupViewController.swift */,
 			);
 			name = register;
 			sourceTree = "<group>";
@@ -2340,6 +2332,7 @@
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
+				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2384,7 +2377,6 @@
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2EA177F1E2FD50000887153 /* TransformImageView.swift in Sources */,
-				C21795E51E797EDB006A2AA3 /* SignupViewController.swift in Sources */,
 				C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */,
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
@@ -2503,7 +2495,6 @@
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
-				C27AAFEB1DEA01C4009B9629 /* InputAuthCodeViewController.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
@@ -2650,7 +2641,6 @@
 				C2AF3B821E5CD79200DFDD81 /* ConvertGroupViewController.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,
 				C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */,
-				C27AAFF11DEB3438009B9629 /* PasswordViewController.swift in Sources */,
 				C253A9611D917ACD00CDC850 /* ChatStickerContentView.swift in Sources */,
 				C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */,
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,

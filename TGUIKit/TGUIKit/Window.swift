@@ -284,8 +284,8 @@ public class Window: NSWindow {
                                     return
                                 }
                             } else {
-                                super.sendEvent(event)
-                                return
+                               // super.sendEvent(event)
+                               // return
                             }
                         }
                     }
