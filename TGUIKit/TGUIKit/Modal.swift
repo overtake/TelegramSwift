@@ -52,6 +52,10 @@ open class ModalViewController : ViewController {
         modal?.close()
     }
     
+    open var handleEvents:Bool {
+        return true
+    }
+    
     override open func loadView() {
         super.loadView()
         viewDidLoad()
@@ -72,6 +76,7 @@ public class ModalInteractions {
     let drawBorder:Bool
     let height:CGFloat
     var enables:((Bool)->Void)? = nil
+    var done:((String)->Void)? = nil
     public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50)  {
         self.drawBorder = drawBorder
         self.accept = accept
@@ -85,6 +90,10 @@ public class ModalInteractions {
         if let enables = enables {
             enables(enable)
         }
+    }
+    
+    public func updateDone(_ text:String) -> Void {
+        done?(text)
     }
     
 }
@@ -107,6 +116,7 @@ private class ModalInteractionsContainer : View {
         acceptView = TitleButton()
         acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
         acceptView.set(text: interactions.acceptTitle, for: .Normal)
+        acceptView.disableActions()
         acceptView.sizeToFit()
         if let cancelTitle = interactions.cancelTitle {
             cancelView = TitleButton()
@@ -162,7 +172,18 @@ private class ModalInteractionsContainer : View {
             self?.acceptView.isEnabled = enable
             self?.acceptView.apply(state: .Normal)
         }
+        
+        interactions.done = { [weak self] text in
+            self?.updateDone(text)
+        }
 
+    }
+    
+    public func updateDone(_ text:String) {
+        acceptView.set(text: text, for: .Normal)
+        acceptView.sizeToFit()
+        
+        needsLayout = true
     }
     
     required public init?(coder: NSCoder) {
@@ -182,6 +203,7 @@ private class ModalInteractionsContainer : View {
         }
         borderView?.frame = NSMakeRect(0, 0, frame.width, .borderSize)
     }
+    
     
     
 }
@@ -247,27 +269,33 @@ public class Modal: NSObject {
         
         background.addSubview(container)
         
-        window.set(responder: { [weak controller] () -> NSResponder? in
-            return controller?.firstResponder()
-        }, with: self, priority: .modal)
+        background.userInteractionEnabled = controller.handleEvents
         
-        window.set(handler: { () -> KeyHandlerResult in
-            return .invokeNext
-        }, with: self, for: .All, priority: .modal)
+        if controller.handleEvents {
+            window.set(responder: { [weak controller] () -> NSResponder? in
+                return controller?.firstResponder()
+                }, with: self, priority: .modal)
+            
+            window.set(handler: { () -> KeyHandlerResult in
+                return .invokeNext
+            }, with: self, for: .All, priority: .modal)
+            
+            window.set(escape: {[weak self] () -> KeyHandlerResult in
+                if self?.controller?.escapeKeyAction() == .rejected {
+                    self?.close()
+                }
+                return .invoked
+                }, with: self, priority: .modal)
+            
+            window.set(handler: { [weak self] () -> KeyHandlerResult in
+                if let controller = self?.controller {
+                    return controller.returnKeyAction()
+                }
+                return .invokeNext
+            }, with: self, for: .Return, priority: .modal)
+        }
         
-        window.set(escape: {[weak self] () -> KeyHandlerResult in
-            if self?.controller?.escapeKeyAction() == .rejected {
-                self?.close()
-            }
-            return .invoked
-        }, with: self, priority: .modal)
-        
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let controller = self?.controller {
-                return controller.returnKeyAction()
-            }
-            return .invokeNext
-        }, with: self, for: .Return, priority: .modal)
+       
         
         background.set(handler: { [weak self] _ in
             self?.close()
@@ -280,6 +308,7 @@ public class Modal: NSObject {
         }
         
     }
+    
     
     public func resize(with size:NSSize, animated:Bool = true) {
         
@@ -338,7 +367,7 @@ public class Modal: NSObject {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.container.center()
-                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : .blackTransparent
+                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : NSColor(0x000000, 0.5)
                     if strongSelf.animated {
                         if !controller.isFullScreen {
                             strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)

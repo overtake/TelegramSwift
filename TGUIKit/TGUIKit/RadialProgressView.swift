@@ -312,9 +312,8 @@ public class RadialProgressView: Control {
     public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil)) {
         self.theme = theme
         self.overlay = RadialProgressOverlayLayer(theme: theme)
-        self.overlay.contentsScale = System.backingScale
         super.init()
-        
+        self.overlay.contentsScale = backingScaleFactor
         self.frame = NSMakeRect(0, 0, 40, 40)
     
     }

@@ -50,6 +50,7 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugXPCServices = "NO"
+      enableAddressSanitizer = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES"
       queueDebuggingEnabled = "No">
@@ -64,6 +65,11 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
+         <AdditionalOption
+            key = "NSZombieEnabled"
+            value = "YES"
+            isEnabled = "YES">
+         </AdditionalOption>
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction

@@ -55,7 +55,7 @@ class NavigationModalView: Control {
         
         let f = focus(node.0.size)
         
-        node.1.draw(f, in: ctx)
+        node.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor)
     }
     
     func close() {

@@ -181,6 +181,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
        
     }
 
+    override public func setNeedsDisplay(_ invalidRect: NSRect) {
+        
+    }
     
     override func addSubview(_ view: NSView) {
         super.addSubview(view)
@@ -221,13 +224,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
-        if let table = table {
-            let addition = bottomInset > 0 ? bottomInset + 10 : 0
-            super.setFrameSize(NSMakeSize(newSize.width, table.listHeight + addition))
-        } else {
-            super.setFrameSize(newSize)
-        }
-        
+        super.setFrameSize(newSize)
         
         if inLiveResize, oldWidth != frame.width {
             if let table = table {
@@ -463,9 +460,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
  
                     }
-                    for listener in strongSelf.scrollListeners {
-                        listener.handler(strongSelf.scrollPosition)
-                    }
+                    //if !strongSelf.clipView.isAnimateScrolling {
+                        for listener in strongSelf.scrollListeners {
+                            listener.handler(strongSelf.scrollPosition)
+                        }
+                   // }
+                    
                 }
  
             })
@@ -629,7 +629,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.previousScroll = nil
     }
 
-    
+    public var topVisibleRow:Int? {
+        let visible = visibleItems()
+        if !isFlipped {
+            return visible.first?.0.index
+        } else {
+            return visible.last?.0.index
+        }
+    }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin);
@@ -793,12 +800,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updating = true
         updateScroll()
         self.previousScroll = nil
+        CATransaction.begin()
     }
     
     public func endUpdates() -> Void {
         updating = false
         updateScroll()
         self.previousScroll = nil
+        CATransaction.commit()
     }
     
     public func rectOf(item:TableRowItem) -> NSRect {
@@ -809,6 +818,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
+    public func rectOf(index:Int) -> NSRect {
+        return self.tableView.rect(ofRow: index)
+    }
     
     public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
         let item = self.item(at: at)
@@ -1038,7 +1050,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         for i in visible.location ..< visible.location + visible.length {
             let item = self.item(at: i)
-            let rect = rectOf(item: item)
+            let rect = rectOf(index: i)
             if rect.height == item.height {
                 if !tableView.isFlipped {
                     let top = frame.height - (rect.minY - documentOffset.y) - rect.height
@@ -1063,8 +1075,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     func itemRects() -> [(TableRowItem, NSRect, Int)] {
         var ilist:[(TableRowItem,NSRect,Int)] = [(TableRowItem,NSRect,Int)]()
         
-        for item in self.list {
-            ilist.append((item,self.rectOf(item: item), index(of: item)!))
+        for i in 0 ..< self.list.count {
+            ilist.append((item(at: i),self.rectOf(index: i), i))
             
         }
         
@@ -1104,6 +1116,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let oldEmpty = self.isEmpty
         self.beginUpdates()
+        
         
         
         let visibleItems = self.visibleItems()

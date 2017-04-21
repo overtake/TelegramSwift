@@ -11,7 +11,9 @@ import Cocoa
 public class LinearProgressControl: Control {
     
     private var progressView:NSView!
+    private var containerView:Control!
     private var progress:CGFloat = 0
+    public var progressHeight:CGFloat
     public var onUserChanged:((Float)->Void)?
     
     public override func mouseDragged(with event: NSEvent) {
@@ -44,39 +46,63 @@ public class LinearProgressControl: Control {
         self.addTrackingArea(self.trackingArea!)
     }
     
+    deinit {
+        if let trackingArea = self.trackingArea {
+            self.removeTrackingArea(trackingArea)
+        }
+    }
+    
     public override var style: ControlStyle {
-        didSet {
-            self.progressView.layer?.backgroundColor = style.foregroundColor.cgColor
+        set {
+            self.progressView.layer?.backgroundColor = newValue.foregroundColor.cgColor
+            containerView.style = newValue
+        }
+        get {
+            return super.style
         }
     }
     
     public func set(progress:CGFloat, animated:Bool = false) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
-        let size = NSMakeSize(floorToScreenPixels(frame.width * progress), frame.height)
+        let size = NSMakeSize(floorToScreenPixels(frame.width * progress), progressHeight)
         progressView.change(size: size, animated: animated)
+        progressView.setFrameOrigin(NSMakePoint(0, frame.height - progressHeight))
     }
     
 
-    override init() {
+    
+
+    public init(progressHeight:CGFloat = 4) {
+        self.progressHeight = progressHeight
         super.init()
+        
         initialize()
     }
     
     public override func layout() {
         super.layout()
-        progressView.setFrameSize(progressView.frame.width,frame.height)
+        progressView.setFrameSize(progressView.frame.width, progressHeight)
+        containerView.setFrameOrigin(0, frame.height - containerView.frame.height)
     }
     
 
     private func initialize() {
-        progressView = NSView(frame:NSMakeRect(0, 0, 0, frame.height))
+        
+        containerView = Control(frame:NSMakeRect(0, 0, 0, progressHeight))
+        containerView.wantsLayer = true
+        containerView.layer?.backgroundColor = style.foregroundColor.cgColor
+        addSubview(containerView)
+
+        
+        progressView = NSView(frame:NSMakeRect(0, 0, 0, progressHeight))
         progressView.wantsLayer = true
         progressView.layer?.backgroundColor = style.foregroundColor.cgColor
         addSubview(progressView)
     }
     
     required public init(frame frameRect: NSRect) {
+        self.progressHeight = frameRect.height
         super.init(frame:frameRect)
         initialize()
     }

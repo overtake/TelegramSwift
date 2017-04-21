@@ -193,7 +193,7 @@ class SEPasslockController: ModalViewController {
                     switch modifier.getAccessChallengeData() {
                     case .none:
                         return (value, nil)
-                    case let .plaintextPassword(passcode, _), let .numericalPassword(passcode, _):
+                    case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):
                         return (value, passcode)
                     }
                 }

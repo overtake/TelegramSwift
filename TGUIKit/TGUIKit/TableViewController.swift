@@ -47,6 +47,12 @@ public class TableSignaledViewController : TableViewController {
         super.init()
     }
     
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        genericView.reloadData()
+    }
+    
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         genericView.merge(with: signal)

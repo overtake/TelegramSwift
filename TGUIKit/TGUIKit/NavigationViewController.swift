@@ -372,7 +372,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 gotoEmpty(false)
             } else {
                 let controller = stack[index]
-                stack.removeSubrange(max(1, index) ..< stackCount)
+                stack.removeSubrange(min(max(1, index + 1), stackCount) ..< stackCount)
                 show(controller, .none)
             }
         }

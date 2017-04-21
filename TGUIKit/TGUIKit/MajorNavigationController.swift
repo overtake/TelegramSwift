@@ -113,7 +113,7 @@ public class MajorNavigationController: NavigationViewController {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-        }, with: self, for: .Return, priority:.low)
+        }, with: self, for: .Return, priority:.medium)
         
         
         self.window?.set(handler: { [weak self] in
@@ -121,14 +121,14 @@ public class MajorNavigationController: NavigationViewController {
                 return strongSelf.backKeyAction()
             }
             return .rejected
-        }, with: self, for: .LeftArrow, priority:.low)
+        }, with: self, for: .LeftArrow, priority:.medium)
         
         self.window?.set(handler: { [weak self] in
             if let strongSelf = self {
                 return strongSelf.nextKeyAction()
             }
             return .rejected
-        }, with: self, for: .RightArrow, priority:.low)
+        }, with: self, for: .RightArrow, priority:.medium)
         
     }
     

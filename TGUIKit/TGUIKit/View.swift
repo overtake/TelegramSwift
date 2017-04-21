@@ -121,7 +121,7 @@ open class View : NSView,CALayerDelegate {
           //  ctx.setShadow(offset: NSMakeSize(5.0, 5.0), blur: 0.0, color: .shadow.cgColor)
             
             ctx.setFillColor(self.backgroundColor.cgColor)
-            ctx.fill(layer.bounds)
+            ctx.fill(bounds)
             
             if let border = border {
                 ctx.setFillColor(NSColor.border.cgColor)
@@ -158,6 +158,7 @@ open class View : NSView,CALayerDelegate {
         super.init(frame: NSZeroRect)
         assertOnMainThread()
         self.wantsLayer = true
+        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
 
        // self.layer?.delegate = self
       //  self.layer?.isOpaque = false
@@ -175,7 +176,7 @@ open class View : NSView,CALayerDelegate {
         
      //   self.layer?.delegate = self
       //  self.layer?.isOpaque = false
-        //self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     
@@ -209,7 +210,7 @@ open class View : NSView,CALayerDelegate {
         }
     }
     
-    func notifySubviewsToLayout(_ subview:NSView) -> Void {
+    public func notifySubviewsToLayout(_ subview:NSView) -> Void {
         for sub in subview.subviews {
             sub.needsLayout = true
         }
@@ -219,7 +220,6 @@ open class View : NSView,CALayerDelegate {
         set {
             super.needsLayout = newValue
             if newValue {
-                notifySubviewsToLayout(self)
                 
                 guard #available(OSX 10.12, *) else {
                     layout()

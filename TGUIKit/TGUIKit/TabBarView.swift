@@ -24,6 +24,8 @@ public class TabBarView: View {
 
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        autoresizesSubviews = false
+        autoresizingMask = []
     }
     
     required public init?(coder: NSCoder) {
@@ -94,25 +96,28 @@ public class TabBarView: View {
     }
     
     
+    
     override public func setFrameSize(_ newSize: NSSize) {
+        let previous:CGFloat = frame.width
         super.setFrameSize(newSize)
-        let width = NSWidth(self.bounds)
-        let height = NSHeight(self.bounds) - .borderSize
-        let defWidth = width / CGFloat( max(1, self.tabs.count) )
-        var xOffset:CGFloat = 0
-        
-        var idx:Int = 0
-        
-        for subview in subviews {
-            let w = idx == subviews.count - 1 ? defWidth - .borderSize : defWidth
-            let child = subview.subviews[0]
-            subview.frame = NSMakeRect(xOffset, .borderSize, w, height)
-            child.center()
-            xOffset += w
+       // if previous != newSize.width {
+            let width = NSWidth(self.bounds)
+            let height = NSHeight(self.bounds) - .borderSize
+            let defWidth = width / CGFloat( max(1, self.tabs.count) )
+            var xOffset:CGFloat = 0
             
-            idx += 1
-        }
-        
+            var idx:Int = 0
+            
+            for subview in subviews {
+                let w = idx == subviews.count - 1 ? defWidth - .borderSize : defWidth
+                let child = subview.subviews[0]
+                subview.frame = NSMakeRect(xOffset, .borderSize, w, height)
+                child.center()
+                xOffset += w
+                
+                idx += 1
+            }
+     //   }
     }
     
     

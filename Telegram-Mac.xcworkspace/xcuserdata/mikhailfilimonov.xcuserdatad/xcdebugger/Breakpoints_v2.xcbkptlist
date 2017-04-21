@@ -74,7 +74,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "513450369.476933"
+                  timestampString = "514474691.718857"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -89,7 +89,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "513450369.479984"
+                  timestampString = "514474691.722251"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -104,7 +104,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "513450369.483064"
+                  timestampString = "514474691.725646"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "860"
@@ -127,6 +127,22 @@
             startingLineNumber = "97"
             endingLineNumber = "97"
             landmarkName = "scroll(table:from:to:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/ChatSelectText.swift"
+            timestampString = "514474612.775725"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "25"
+            endingLineNumber = "25"
+            landmarkName = "add(range:textView:text:header:stableId:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

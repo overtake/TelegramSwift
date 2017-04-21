@@ -10,8 +10,8 @@ import Cocoa
 
 public final class TextViewInteractions {
     public var processURL:(Any!)->Void // link, isPresent
-    public var copy:()->Void
-    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:@escaping()-> Void = {}) {
+    public var copy:(()->Bool)?
+    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil) {
         self.processURL = processURL
         self.copy = copy
     }
@@ -517,11 +517,9 @@ public class TextView: Control {
             
 
             ctx.setAllowsAntialiasing(true)
+            
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
-            
-
-           
             
            
             
@@ -657,8 +655,9 @@ public class TextView: Control {
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.layout = layout
         
-        self.set(selectedRange: NSMakeRange(NSNotFound, 0))
+        
         if let layout = layout {
+            self.set(selectedRange: layout.selectedRange.range, display: false)
             let point:NSPoint
             if let origin = origin {
                 point = origin
@@ -666,6 +665,8 @@ public class TextView: Control {
                 point = frame.origin
             }
             self.frame = NSMakeRect(point.x, point.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
+        } else {
+            self.set(selectedRange: NSMakeRange(NSNotFound, 0), display: false)
         }
         self.setNeedsDisplayLayer()
     }
@@ -819,11 +820,17 @@ public class TextView: Control {
     
     @objc public func copy(_ sender:Any) -> Void {
         if let layout = layout, layout.selectedRange.range.location != NSNotFound {
-            let pb = NSPasteboard.general()
-            
-            pb.declareTypes([NSStringPboardType], owner: self)
-            
-            pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: NSStringPboardType)
+            if let copy = layout.interactions.copy  {
+                if !copy() {
+                    let pb = NSPasteboard.general()
+                    pb.declareTypes([NSStringPboardType], owner: self)
+                    pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: NSStringPboardType)
+                }
+            } else {
+                let pb = NSPasteboard.general()
+                pb.declareTypes([NSStringPboardType], owner: self)
+                pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: NSStringPboardType)
+            }
         }
     }
     

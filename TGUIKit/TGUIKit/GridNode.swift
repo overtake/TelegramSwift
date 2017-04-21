@@ -92,13 +92,15 @@ public struct GridNodeScrollToItem {
     public let transition: ContainedViewLayoutTransition
     public let directionHint: GridNodePreviousItemsTransitionDirectionHint
     public let adjustForSection: Bool
+    public let adjustForTopInset: Bool
     
-    public init(index: Int, position: GridNodeScrollToItemPosition, transition: ContainedViewLayoutTransition, directionHint: GridNodePreviousItemsTransitionDirectionHint, adjustForSection: Bool) {
+    public init(index: Int, position: GridNodeScrollToItemPosition, transition: ContainedViewLayoutTransition, directionHint: GridNodePreviousItemsTransitionDirectionHint, adjustForSection: Bool, adjustForTopInset: Bool = false) {
         self.index = index
         self.position = position
         self.transition = transition
         self.directionHint = directionHint
         self.adjustForSection = adjustForSection
+        self.adjustForTopInset = adjustForTopInset
     }
 }
 
@@ -647,6 +649,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         self.documentView?.setFrameSize(presentationLayoutTransition.layout.contentSize)
         if !documentOffset.equalTo(presentationLayoutTransition.layout.contentOffset) {
             self.clipView.bounds = NSMakeRect(presentationLayoutTransition.layout.contentOffset.x, presentationLayoutTransition.layout.contentOffset.y, clipView.bounds.width, clipView.bounds.height)
+            self.reflectScrolledClipView(self.clipView)
         }
         applyingContentOffset = false
         

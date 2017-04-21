@@ -123,6 +123,12 @@ open class Control: View {
         self.addTrackingArea(self.trackingArea!)
     }
     
+    deinit {
+        if let trackingArea = self.trackingArea {
+            self.removeTrackingArea(trackingArea)
+        }
+        longHandleDisposable.dispose()
+    }
 
     
     open override var isHidden: Bool {
@@ -203,7 +209,9 @@ open class Control: View {
             updateState()
             
             let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
-                self?.send(event: .LongMouseDown)
+                if let inside = self?.mouseInside(), inside {
+                    self?.send(event: .LongMouseDown)
+                }
             })
             
             longHandleDisposable.set(disposable)
@@ -300,9 +308,7 @@ open class Control: View {
 
     }
     
-    deinit {
-        longHandleDisposable.dispose()
-    }
+
     
     required public init(frame frameRect: NSRect) {
         self.isSelected = false

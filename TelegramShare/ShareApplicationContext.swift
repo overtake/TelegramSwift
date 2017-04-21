@@ -16,18 +16,18 @@ import SwiftSignalKitMac
 
 private let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerChatInputState: { interfaceState, inputState -> PeerChatInterfaceState? in
     return nil
-}, fetchResource: { account, resource, range in
+}, fetchResource: { account, resource, range, _ in
     return nil
 })
 
 func applicationContext(accountManager: AccountManager, appGroupPath: String, extensionContext: NSExtensionContext) -> Signal<ShareApplicationContext?, NoError> {
     
-    return currentAccount(apiId: 2834, supplementary: true, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: true, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { either -> Signal<ShareApplicationContext?, Void> in
-        if let either = either {
-            switch either {
-            case let .left(account):
+    return currentAccount(apiId: 2834, supplementary: true, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: true, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, Void> in
+        if let result = result {
+            switch result {
+            case .unauthorized(let account):
                 return .single(.unauthorized(UnauthorizedApplicationContext(account: account, context: extensionContext)))
-            case let .right(account):
+            case let .authorized(account):
                 let paslock:Signal<PostboxAccessChallengeData, Void> = account.postbox.modify { modifier -> PostboxAccessChallengeData in
                     return modifier.getAccessChallengeData()
                 } |> deliverOnMainQueue
@@ -45,6 +45,8 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                         return .single(.postboxAccess(PasscodeAccessContext(promise: promise, account: account, context: extensionContext))) |> then(auth)
                     }
                 }
+            default:
+                return .complete()
             }
 
         }

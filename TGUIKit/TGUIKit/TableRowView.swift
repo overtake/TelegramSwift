@@ -205,7 +205,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         super.layout()
     }
     
-    func notifySubviewsToLayout(_ subview:NSView) -> Void {
+    public func notifySubviewsToLayout(_ subview:NSView) -> Void {
         for sub in subview.subviews {
             sub.needsLayout = true
         }

@@ -42,11 +42,12 @@ public final class TextNodeLayout: NSObject {
     fileprivate let constrainedSize: NSSize
     fileprivate let cutout: TextNodeCutout?
     fileprivate let alignment:NSTextAlignment
+    public let isPerfectSized: Bool
     public let size: NSSize
     fileprivate let lines: [TextNodeLine]
     public var selected:Bool = false
     
-    fileprivate init(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, constrainedSize: NSSize, cutout: TextNodeCutout?, size: NSSize, lines: [TextNodeLine], backgroundColor: NSColor?, alignment:NSTextAlignment = .left) {
+    fileprivate init(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, constrainedSize: NSSize, cutout: TextNodeCutout?, size: NSSize, lines: [TextNodeLine], backgroundColor: NSColor?, alignment:NSTextAlignment = .left, isPerfectSized: Bool) {
         self.attributedString = attributedString
         self.maximumNumberOfLines = maximumNumberOfLines
         self.truncationType = truncationType
@@ -56,6 +57,7 @@ public final class TextNodeLayout: NSObject {
         self.lines = lines
         self.backgroundColor = backgroundColor
         self.alignment = alignment
+        self.isPerfectSized = isPerfectSized
     }
     
     var numberOfLines: Int {
@@ -74,6 +76,7 @@ public final class TextNodeLayout: NSObject {
 public class TextNode: NSObject {
     private var currentLayout: TextNodeLayout?
     public var backgroundColor:NSColor
+    
     public override init() {
         self.backgroundColor = NSColor.red
         super.init()
@@ -83,7 +86,7 @@ public class TextNode: NSObject {
     private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool, alignment:NSTextAlignment) -> TextNodeLayout {
         
         var attr = attributedString
-        
+        var isPerfectSized = true
         if let a = attr {
             if (selected && a.length > 0) {
                 
@@ -126,7 +129,7 @@ public class TextNode: NSObject {
             var maybeTypesetter: CTTypesetter?
             maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)
             if maybeTypesetter == nil {
-                return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment)
+                return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment, isPerfectSized: isPerfectSized)
             }
             
             let typesetter = maybeTypesetter!
@@ -191,6 +194,8 @@ public class TextNode: NSObject {
                         let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
                         
                         coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedSize.width), truncationType, truncationToken) ?? truncationToken
+                        
+                        isPerfectSized = false
                     }
                     
                     let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
@@ -229,21 +234,21 @@ public class TextNode: NSObject {
                 }
             }
             
-            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(width: ceil(layoutSize.width), height: ceil(layoutSize.height)), lines: lines, backgroundColor: backgroundColor, alignment:alignment)
+            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(width: ceil(layoutSize.width), height: ceil(layoutSize.height)), lines: lines, backgroundColor: backgroundColor, alignment:alignment, isPerfectSized: isPerfectSized)
         } else {
-            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment)
+            return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment, isPerfectSized: isPerfectSized)
         }
     }
     
 
-    open func draw(_ dirtyRect: NSRect, in ctx: CGContext) {
+    open func draw(_ dirtyRect: NSRect, in ctx: CGContext, backingScaleFactor: CGFloat) {
        
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort
         let context:CGContext = ctx //unsafeBitCast(contextPtr, to: CGContext.self)
         
         ctx.setAllowsAntialiasing(true)
-        ctx.setAllowsFontSmoothing(!System.isRetina)
-        ctx.setShouldSmoothFonts(!System.isRetina)
+        ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
+        ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
         
 
        // ctx.setAllowsFontSmoothing(true)

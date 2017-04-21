@@ -32,6 +32,13 @@ public class TGClipView: NSClipView,CALayerDelegate {
     var scrollCompletion:((_ success:Bool) ->Void)?
     public var decelerationRate:CGFloat = 0.78
     
+    
+    var isScrolling: Bool {
+        if let displayLink = displayLink {
+            return CVDisplayLinkIsRunning(displayLink)
+        }
+        return false
+    }
 
     override init(frame frameRect: NSRect) {
         

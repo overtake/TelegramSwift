@@ -25,13 +25,16 @@ public class BadgeNode: Node {
     
     override public func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        ctx.setFillColor(fillColor.cgColor)
+        if let view = view {
+            ctx.setFillColor(fillColor.cgColor)
+            
+            ctx.round(self.size, self.size.height/2.0)
+            ctx.fill(layer.bounds)
+            
+            let focus = view.focus(textLayout.0.size)
+            textLayout.1.draw(focus, in: ctx, backingScaleFactor: view.backingScaleFactor)
+        }
         
-        ctx.round(self.size, self.size.height/2.0)
-        ctx.fill(layer.bounds)
-
-        let focus = view?.focus(textLayout.0.size) ?? NSZeroRect
-        textLayout.1.draw(focus, in: ctx)
     }
     
     public init(_ attributedString:NSAttributedString, _ fillColor:NSColor) {

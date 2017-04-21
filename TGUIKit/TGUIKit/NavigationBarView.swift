@@ -51,19 +51,24 @@ class NavigationBarView: View {
 //        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
     }
     
+    override func layout() {
+        super.layout()
+        self.bottomBorder.setNeedsDisplay()
+    }
 
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         self.bottomBorder.frame = NSMakeRect(0, newSize.height - .borderSize, newSize.width, .borderSize)
-        self.bottomBorder.setNeedsDisplay()
         self.layout(left: leftView, center: centerView, right: rightView)
     }
     
     
     func layout(left:BarView, center:BarView, right:BarView) -> Void {
-        left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - .borderSize);
-        center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - .borderSize);
-        right.frame = NSMakeRect(center.frame.maxX, 0, NSWidth(right.frame), frame.height - .borderSize);
+        if frame.height > 0 {
+            left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - .borderSize);
+            center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - .borderSize);
+            right.frame = NSMakeRect(center.frame.maxX, 0, NSWidth(right.frame), frame.height - .borderSize);
+        }
     }
     
     // ! PUSH !
