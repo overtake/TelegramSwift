@@ -324,8 +324,8 @@ public class Window: NSWindow {
                 }
             }
             super.sendEvent(event)
-        } else if let sheet = sheets.last {
-            sheet.sendEvent(event)
+        } else {
+            super.sendEvent(event)
         }
         
         

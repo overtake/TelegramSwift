@@ -223,7 +223,7 @@ open class View : NSView,CALayerDelegate {
                 
                 guard #available(OSX 10.12, *) else {
                     layout()
-                   
+                    notifySubviewsToLayout(self)
                     return
                 }
 

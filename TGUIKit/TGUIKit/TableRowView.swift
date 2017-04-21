@@ -215,9 +215,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         set {
             super.needsLayout = newValue
             if newValue {
-                notifySubviewsToLayout(self)
                 guard #available(OSX 10.12, *) else {
                     layout()
+                    notifySubviewsToLayout(self)
                     return
                 }
             }

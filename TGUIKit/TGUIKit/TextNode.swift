@@ -86,7 +86,7 @@ public class TextNode: NSObject {
     private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool, alignment:NSTextAlignment) -> TextNodeLayout {
         
         var attr = attributedString
-        var isPerfectSized = true
+        let isPerfectSized = false
         if let a = attr {
             if (selected && a.length > 0) {
                 
@@ -129,7 +129,7 @@ public class TextNode: NSObject {
             var maybeTypesetter: CTTypesetter?
             maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)
             if maybeTypesetter == nil {
-                return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment, isPerfectSized: isPerfectSized)
+                return TextNodeLayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, constrainedSize: constrainedSize, cutout: cutout, size: NSSize(), lines: [], backgroundColor: backgroundColor, alignment:alignment, isPerfectSized: true)
             }
             
             let typesetter = maybeTypesetter!
@@ -195,7 +195,6 @@ public class TextNode: NSObject {
                         
                         coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedSize.width), truncationType, truncationToken) ?? truncationToken
                         
-                        isPerfectSized = false
                     }
                     
                     let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))

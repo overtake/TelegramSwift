@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
@@ -431,6 +432,11 @@
 /* Begin PBXFileReference section */
 		69A538C51E91487E006BC7A8 /* libtgvoip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libtgvoip.framework; path = "submodules/libtgvoip/build/Debug-iphoneos/libtgvoip.framework"; sourceTree = "<group>"; };
 		69A538C81E914946006BC7A8 /* libtgvoip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libtgvoip.framework; path = submodules/libtgvoip/build/Debug/libtgvoip.framework; sourceTree = "<group>"; };
+		C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerRowItem.swift; sourceTree = "<group>"; };
+		C2016F421EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/MainMenu.strings"; sourceTree = "<group>"; };
+		C2016F431EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/ShareViewController.strings"; sourceTree = "<group>"; };
+		C2016F441EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		C2016F451EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		C201C2311E3B2D1C0026C21E /* FastSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FastSettings.swift; sourceTree = "<group>"; };
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
@@ -1146,6 +1152,7 @@
 				C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */,
 				C230B9121DD392EB0057F596 /* SearchRowItem.swift */,
 				C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */,
+				C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */,
 			);
 			name = "table-elements";
 			sourceTree = "<group>";
@@ -2349,6 +2356,7 @@
 				de,
 				it,
 				nl,
+				"pt-BR",
 			);
 			mainGroup = D098C70C1D7E175A007784E4;
 			productRefGroup = D098C7161D7E175A007784E4 /* Products */;
@@ -2534,6 +2542,7 @@
 				C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
 				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
+				C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */,
 				C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
 				C2EA17811E2FD50A00887153 /* ImageUtils.swift in Sources */,
@@ -2753,6 +2762,7 @@
 				C23CF9691E70BCFC0009CD06 /* de */,
 				C23CF96D1E70BD020009CD06 /* it */,
 				C23CF9711E70BD0B0009CD06 /* nl */,
+				C2016F431EAA4967003AF981 /* pt-BR */,
 			);
 			name = ShareViewController.xib;
 			sourceTree = "<group>";
@@ -2765,6 +2775,7 @@
 				C23CF96B1E70BCFC0009CD06 /* de */,
 				C23CF96F1E70BD030009CD06 /* it */,
 				C23CF9731E70BD0B0009CD06 /* nl */,
+				C2016F451EAA4967003AF981 /* pt-BR */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -2777,6 +2788,7 @@
 				C23CF96A1E70BCFC0009CD06 /* de */,
 				C23CF96E1E70BD030009CD06 /* it */,
 				C23CF9721E70BD0B0009CD06 /* nl */,
+				C2016F441EAA4967003AF981 /* pt-BR */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -2790,6 +2802,7 @@
 				C23CF96C1E70BD020009CD06 /* it */,
 				C23CF9701E70BD0B0009CD06 /* nl */,
 				C23CF97D1E713AB20009CD06 /* en */,
+				C2016F421EAA4967003AF981 /* pt-BR */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
