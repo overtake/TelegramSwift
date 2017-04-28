@@ -21,10 +21,10 @@ public class DragItem {
         self.handler = handler
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: title, color: .grayText, font: .normal(.title))
+        _ = attr.append(string: title, color: .grayText, font: .normal(.huge))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: desc, color: .text, font: .medium(.header))
+        _ = attr.append(string: desc, color: .text, font: .medium(.custom(16)))
         
         self.attr = attr.copy() as! NSAttributedString
     }
@@ -110,14 +110,14 @@ public class DraggingView: SplitView {
     func layoutItems(with items:[DragItem]) {
         container.removeAllSubviews()
         
-        let itemSize = NSMakeSize(frame.width - 20.0, ceil((frame.height - 20 - (10 * (CGFloat(items.count) - 1))) / CGFloat(items.count)))
+        let itemSize = NSMakeSize(frame.width - 10, ceil((frame.height - 10 - (5 * (CGFloat(items.count) - 1))) / CGFloat(items.count)))
         
-        var y:CGFloat = 10.0
+        var y:CGFloat = 5
         for item in items {
             let view:DragView = DragView(item:item)
-            view.frame = NSMakeRect(10, y, itemSize.width, itemSize.height)
+            view.frame = NSMakeRect(5, y, itemSize.width, itemSize.height)
             container.addSubview(view)
-            y += itemSize.height + 10
+            y += itemSize.height + 5
             
         }
         

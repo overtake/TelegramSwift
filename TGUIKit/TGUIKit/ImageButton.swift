@@ -32,10 +32,9 @@ open class ImageButton: Button {
             if highlightHovered {
                 set(image: style.highlight(image: image), for: .Hover)
             }
-        } else {
-            apply(state: self.controlState)
+            
         }
-        
+        apply(state: self.controlState)
     }
     
     open override func viewDidChangeBackingProperties() {

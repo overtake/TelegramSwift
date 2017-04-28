@@ -72,12 +72,15 @@ public final class NavigationHeader {
             disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
                 if let navigation = navigation, let view = view {
                     let contentInset = navigation.controller.bar.height + height
-                    navigation.containerView.addSubview(view, positioned: .below, relativeTo: navigation.navigationBar)
+                    navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     
-                    view.change(pos: NSMakePoint(0, navigation.controller.bar.height), animated: animated)
+ 
+                    view.change(pos: NSMakePoint(0, navigation.controller.bar.height), animated: animated, completion: { [weak navigation] completed in
+                        if let navigation = navigation, completed {
+                            navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.frame.width, navigation.frame.height - contentInset)
+                        }
+                    })
                     
-                    let cView = animated ? navigation.controller.view.animator() : navigation.controller.view
-                    cView.frame = NSMakeRect(0, contentInset, navigation.frame.width, navigation.frame.height - contentInset)
                 }
             }))
         }
@@ -102,8 +105,7 @@ public final class NavigationHeader {
                 view.removeFromSuperview()
                 _view = nil
             }
-            let cView = animated ? navigation.controller.view.animator() : navigation.controller.view
-            cView.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, navigation.frame.height - navigation.controller.bar.height)
+            navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, navigation.frame.height - navigation.controller.bar.height)
         }
         
     }
@@ -276,7 +278,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         if let header = header, header.needShown {
             header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
-            containerView.addSubview(header.view)
+            containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
             contentInset += header.height
         }
         
@@ -317,8 +319,18 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
             lock = false
             
+            navigationBar.removeFromSuperview()
+            containerView.addSubview(navigationBar)
+            
+            if let header = header, header.needShown {
+                header.view.removeFromSuperview()
+                containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
+            }
+            
             return // without animations
         }
+        
+        
         
         if previous.removeAfterDisapper, let index = stack.index(of: previous) {
             self.stack.remove(at: index)
@@ -327,6 +339,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.removeFromSuperview()
         containerView.addSubview(navigationBar)
         
+        if let header = header, header.needShown {
+            header.view.removeFromSuperview()
+            containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
+        }
         
         previous.viewWillDisappear(true);
         controller.viewWillAppear(true);

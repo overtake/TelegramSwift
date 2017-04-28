@@ -252,7 +252,6 @@ public class Window: NSWindow {
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
         
-        NSLog("\(firstResponder)")
         if firstResponder.responds(to: NSSelectorFromString("copy:")) {
             firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
         }
@@ -308,6 +307,7 @@ public class Window: NSWindow {
                         }
                     }
                 }
+                
             } else {
                 if  let handlers = mouseHandlers[event.type] {
                     let sorted = handlers.sorted(by: >)
@@ -322,6 +322,7 @@ public class Window: NSWindow {
                         }
                     }
                 }
+                
             }
             super.sendEvent(event)
         } else {

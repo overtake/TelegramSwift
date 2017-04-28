@@ -7,13 +7,16 @@
 //
 
 import Cocoa
+import SwiftSignalKitMac
 
 public final class TextViewInteractions {
     public var processURL:(Any!)->Void // link, isPresent
     public var copy:(()->Bool)?
-    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil) {
+    public var menuItems:(()->Signal<[ContextMenuItem], Void>)?
+    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:(()->Signal<[ContextMenuItem], Void>)? = nil) {
         self.processURL = processURL
         self.copy = copy
+        self.menuItems = menuItems
     }
 }
 
@@ -472,6 +475,8 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
 
 public class TextView: Control {
     
+    private let menuDisposable = MetaDisposable()
+    
     private(set) public var layout:TextViewLayout?
     
     private var beginSelect:NSPoint = NSZeroPoint
@@ -623,11 +628,22 @@ public class TextView: Control {
             }
             self.setNeedsDisplayLayer()
             if layout.selectedRange.hasSelectText {
-                let menu = NSMenu()
-                let copy = NSMenuItem(title: localizedString("Text.Copy"), action: #selector(copy(_:)), keyEquivalent: "")
-                menu.addItem(copy)
-                NSMenu.popUpContextMenu(menu, with: event, for: self)
-                
+                if let menuItems = layout.interactions.menuItems?() {
+                    menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
+                        if let strongSelf = self {
+                            let menu = NSMenu()
+                            for item in items {
+                                menu.addItem(item)
+                            }
+                            NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
+                        }
+                    }))
+                } else {
+                    let menu = NSMenu()
+                    let copy = NSMenuItem(title: localizedString("Text.Copy"), action: #selector(copy(_:)), keyEquivalent: "")
+                    menu.addItem(copy)
+                    NSMenu.popUpContextMenu(menu, with: event, for: self)
+                }
             } else {
                 super.rightMouseDown(with: event)
             }
@@ -646,6 +662,10 @@ public class TextView: Control {
     public override func menu(for event: NSEvent) -> NSMenu? {
         
         return nil
+    }
+    
+    deinit {
+        menuDisposable.dispose()
     }
     
     public func isEqual(to layout:TextViewLayout) -> Bool {

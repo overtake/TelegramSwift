@@ -226,7 +226,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         let oldWidth: CGFloat = frame.width
         super.setFrameSize(newSize)
         
-        if inLiveResize, oldWidth != frame.width {
+        if oldWidth != frame.width {
             if let table = table {
                 table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
             }

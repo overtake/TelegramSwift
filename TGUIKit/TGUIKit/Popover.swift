@@ -319,7 +319,7 @@ open class Popover: NSObject {
 
 public func hasPopover(_ window:Window) -> Bool {
     for subview in window.contentView!.subviews {
-        if subview.isKind(of: Popover.self) {
+        if subview is PopoverBackground {
             return true
         }
     }
