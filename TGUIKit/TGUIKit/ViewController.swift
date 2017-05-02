@@ -155,6 +155,17 @@ open class ViewController : NSObject {
         
     }
     
+    open func navigationWillChangeController() {
+        
+    }
+    
+    open var sidebar:ViewController? {
+        return nil
+    }
+    
+    open var sidebarWidth:CGFloat {
+        return 350
+    }
     
     public private(set) var internalId:Int = 0;
     

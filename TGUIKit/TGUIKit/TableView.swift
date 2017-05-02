@@ -348,10 +348,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     convenience override init(frame frameRect: NSRect) {
-        self.init(frame:frameRect, isFlipped:true, drawBorder: true)
+        self.init(frame:frameRect, isFlipped:true, drawBorder: false)
     }
     
-    public init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
+    public var border:BorderType? {
+        didSet {
+            self.clipView.border = border
+            self.tableView.border = border
+        }
+    }
+    
+    public required init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
 
         let table = TGFlipableTableView.init(frame:frameRect);
         table.flip = isFlipped

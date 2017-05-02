@@ -25,11 +25,11 @@
 		C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE371DB233F7007638C5 /* UIUtils.swift */; };
 		C21AAE3A1DB2398B007638C5 /* DisplayLinkDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE391DB2398B007638C5 /* DisplayLinkDispatcher.swift */; };
 		C21AAE3C1DB239ED007638C5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C21AAE3B1DB239ED007638C5 /* Foundation.framework */; };
+		C224A72B1EB7581500F43F3F /* MajorNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C224A72A1EB7581500F43F3F /* MajorNavigationController.swift */; };
 		C226741B1DBCD6E8000BA9ED /* GridNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741A1DBCD6E8000BA9ED /* GridNode.swift */; };
 		C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741C1DBCDBA8000BA9ED /* ContainableController.swift */; };
 		C2271DA61DAD16B4001792B6 /* BadgeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DA51DAD16B4001792B6 /* BadgeNode.swift */; };
 		C2271DC81DAEAAF9001792B6 /* SwitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC71DAEAAF9001792B6 /* SwitchView.swift */; };
-		C2271DCF1DAF6B4E001792B6 /* MajorNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */; };
 		C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD31DAF766A001792B6 /* WeakReference.swift */; };
 		C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD81DAF82D0001792B6 /* GridRowItem.swift */; };
 		C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DDA1DAF82E3001792B6 /* GridRowView.swift */; };
@@ -111,11 +111,11 @@
 		C21AAE371DB233F7007638C5 /* UIUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIUtils.swift; sourceTree = "<group>"; };
 		C21AAE391DB2398B007638C5 /* DisplayLinkDispatcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayLinkDispatcher.swift; sourceTree = "<group>"; };
 		C21AAE3B1DB239ED007638C5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		C224A72A1EB7581500F43F3F /* MajorNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorNavigationController.swift; sourceTree = "<group>"; };
 		C226741A1DBCD6E8000BA9ED /* GridNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridNode.swift; sourceTree = "<group>"; };
 		C226741C1DBCDBA8000BA9ED /* ContainableController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainableController.swift; sourceTree = "<group>"; };
 		C2271DA51DAD16B4001792B6 /* BadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BadgeNode.swift; sourceTree = "<group>"; };
 		C2271DC71DAEAAF9001792B6 /* SwitchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwitchView.swift; sourceTree = "<group>"; };
-		C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MajorNavigationController.swift; sourceTree = "<group>"; };
 		C2271DD31DAF766A001792B6 /* WeakReference.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WeakReference.swift; sourceTree = "<group>"; };
 		C2271DD81DAF82D0001792B6 /* GridRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowItem.swift; sourceTree = "<group>"; };
 		C2271DDA1DAF82E3001792B6 /* GridRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridRowView.swift; sourceTree = "<group>"; };
@@ -214,7 +214,7 @@
 			children = (
 				C219E1F41D8BEA1F0042F0C8 /* bar */,
 				C219E1EA1D8AD1470042F0C8 /* NavigationViewController.swift */,
-				C2271DCE1DAF6B4E001792B6 /* MajorNavigationController.swift */,
+				C224A72A1EB7581500F43F3F /* MajorNavigationController.swift */,
 				C2E0DEB81D7EF7F300EF1C8D /* ViewController.swift */,
 				C2B1A1311DA57E8300ACB1DD /* EditableViewController.swift */,
 				C2A71CEA1DDB382F00C69F73 /* TableViewController.swift */,
@@ -580,11 +580,11 @@
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,
 				C253A9521D9147A400CDC850 /* Layer.swift in Sources */,
-				C2271DCF1DAF6B4E001792B6 /* MajorNavigationController.swift in Sources */,
 				C22E06371D804D3B00A11C88 /* TableRowItem.swift in Sources */,
 				C2303E711D9956C400098E12 /* Style.swift in Sources */,
 				C2271DC81DAEAAF9001792B6 /* SwitchView.swift in Sources */,
 				C2B1A1251DA2F3DC00ACB1DD /* ContextMenu.swift in Sources */,
+				C224A72B1EB7581500F43F3F /* MajorNavigationController.swift in Sources */,
 				C2271DEA1DAFCE69001792B6 /* GridTableView.swift in Sources */,
 				C2B1A1301DA53E7D00ACB1DD /* BackNavigationBar.swift in Sources */,
 				C2303E761D996E6300098E12 /* ImageButton.swift in Sources */,

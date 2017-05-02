@@ -67,7 +67,7 @@ public final class NavigationHeader {
         if let navigation = navigation {
             let view = self.view
             let height = self.height
-            view.frame = NSMakeRect(0, 0, navigation.frame.width, height)
+            view.frame = NSMakeRect(0, 0, navigation.containerView.frame.width, height)
 
             disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
                 if let navigation = navigation, let view = view {
@@ -150,13 +150,17 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
-    fileprivate var navigationBar:NavigationBarView = NavigationBarView()
+    func _setController(_ controller:ViewController) {
+        self.controller = controller
+    }
+    
+    var navigationBar:NavigationBarView = NavigationBarView()
     
     var pushDisposable:MetaDisposable = MetaDisposable()
     var popDisposable:MetaDisposable = MetaDisposable()
     
     private(set) public var header:NavigationHeader?
-    fileprivate let containerView:View = View()
+    var containerView:View = View()
     public func set(header:NavigationHeader?) {
         self.header?.hide(false)
         header?.navigation = self
@@ -166,6 +170,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     open override func loadView() {
         super.loadView();
+        viewDidLoad()
+    }
+    
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+        
         containerView.frame = bounds
         self.view.autoresizesSubviews = true
         containerView.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
@@ -180,15 +190,15 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
         
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle)
-
+        
         containerView.addSubview(controller.view)
         Queue.mainQueue().justDispatch {
             self.controller.viewDidAppear(false)
         }
-        
-        viewDidLoad()
-        
+
     }
+    
+    
     
     
     open override var canBecomeResponder: Bool {
@@ -220,7 +230,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         stack.insert(controller, at: at)
     }
     
-    public func push(_ controller:ViewController, _ animated:Bool = true, style: ViewControllerStyle? = nil) -> Void {
+    open func push(_ controller:ViewController, _ animated:Bool = true, style: ViewControllerStyle? = nil) -> Void {
         
 //        if isLocked {
 //            return
@@ -373,7 +383,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
     }
     
-    public func back(animated:Bool = true) -> Void {
+    open func back(animated:Bool = true) -> Void {
         if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
             let controller = stack[stackCount - 2]
             last.didRemovedFromStack()

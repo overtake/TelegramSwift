@@ -15,14 +15,52 @@ public protocol MajorControllerListener : class {
     func navigationWillShowMajorController(_ controller:ViewController);
 }
 
-public class MajorNavigationController: NavigationViewController {
+open class MajorNavigationController: NavigationViewController, SplitViewDelegate {
     
     private var majorClass:AnyClass
     private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
     
-    public override func loadView() {
+    private let container:GenericViewController<View> = GenericViewController<View>()
+    
+    override var containerView:View {
+        get {
+            return container.genericView
+        }
+        set {
+            super.containerView = newValue
+        }
+    }
+    
+    
+    
+    open override func loadView() {
         super.loadView()
+        
+        genericView.setProportion(proportion: SplitProportion(min:380, max: .greatestFiniteMagnitude), state: .single)
+
+        controller._frameRect = bounds
+        controller.viewWillAppear(false)
+        controller.navigationController = self
+        
+        containerView.addSubview(navigationBar)
+        
+        navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
+        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
+        
+        navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle)
+        
+        containerView.addSubview(controller.view)
+        Queue.mainQueue().justDispatch {
+            self.controller.viewDidAppear(false)
+        }
+        
+    }
+    
+    public func closeSidebar() {
+        genericView.removeProportion(state: .dual)
+        genericView.setProportion(proportion: SplitProportion(min:380, max: .greatestFiniteMagnitude), state: .single)
+        genericView.layout()
     }
     
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
@@ -33,24 +71,71 @@ public class MajorNavigationController: NavigationViewController {
         super.init(empty)
     }
     
-    public override func currentControllerDidChange() {
+    open override func currentControllerDidChange() {
         if let view = view as? DraggingView {
             view.controller = controller
         }
+        for listener in listeners {
+            listener.value?.navigationWillChangeController()
+        }
     }
     
-    public override func viewClass() ->AnyClass {
+    open override func viewDidLoad() {
+        //super.viewDidLoad()
+        
+        genericView.delegate = self
+        genericView.update()
+
+    }
+    
+    public func splitViewDidNeedSwapToLayout(state: SplitViewState) {
+        genericView.removeAllControllers();
+        
+        switch state {
+        case .dual:
+            genericView.addController(controller: container, proportion: SplitProportion(min: 800, max: .greatestFiniteMagnitude))
+            if let sidebar = sidebar {
+                genericView.addController(controller: sidebar, proportion: SplitProportion(min:350, max: 350))
+            }
+        case .single:
+            genericView.addController(controller: container, proportion: SplitProportion(min: 800, max: .greatestFiniteMagnitude))
+        default:
+            break
+        }
+    }
+    
+    public func splitViewDidNeedMinimisize(controller: ViewController) {
+        
+    }
+    
+    public func splitViewDidNeedFullsize(controller: ViewController) {
+        
+    }
+    
+    public func splitViewIsCanMinimisize() -> Bool {
+        return false;
+    }
+    
+    public func splitViewDrawBorder() -> Bool {
+        return true
+    }
+    
+    open override func viewClass() ->AnyClass {
         return DraggingView.self
     }
+    
+    public var genericView:SplitView {
+        return view as! SplitView
+    }
    
-    override public func push(_ controller: ViewController, _ animated: Bool, style:ViewControllerStyle? = nil) {
-        
-
+    override open func push(_ controller: ViewController, _ animated: Bool, style:ViewControllerStyle? = nil) {
         
         assertOnMainThread()
         
         controller.navigationController = self
-        controller.loadViewIfNeeded(self.bounds)
+        controller.loadViewIfNeeded(self.container.bounds)
+        
+        genericView.update()
         
         pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
@@ -84,11 +169,133 @@ public class MajorNavigationController: NavigationViewController {
 
                 
                 strongSelf.show(controller, newStyle)
+                
+
             }
         }))
     }
     
-    public override func back(animated:Bool = true) -> Void {
+    override func show(_ controller:ViewController,_ style:ViewControllerStyle) -> Void {
+        
+        let previous:ViewController = self.controller;
+        _setController(controller)
+        controller.navigationController = self
+        
+        
+        if(previous == controller) {
+            previous.viewWillDisappear(false)
+            previous.viewDidDisappear(false)
+            
+            controller.viewWillAppear(false)
+            controller.viewDidAppear(false)
+            _ = controller.becomeFirstResponder()
+            
+            return;
+        }
+        
+
+        self.navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
+        
+        var contentInset = controller.bar.height
+        
+        if let header = header, header.needShown {
+            header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
+            containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
+            contentInset += header.height
+        }
+        
+        controller.view.removeFromSuperview()
+        controller.view.frame = NSMakeRect(0, contentInset , NSWidth(containerView.frame), NSHeight(containerView.frame) - contentInset)
+        if #available(OSX 10.12, *) {
+            
+        } else {
+            controller.view.needsLayout = true
+        }
+        
+        
+        var pfrom:CGFloat = 0, pto:CGFloat = 0, nto:CGFloat = 0, nfrom:CGFloat = 0;
+        
+        switch style {
+        case .push:
+            nfrom = NSWidth(containerView.frame)
+            nto = 0
+            pfrom = 0
+            pto = -100//round(NSWidth(self.frame)/3.0)
+            containerView.addSubview(controller.view, positioned: .above, relativeTo: previous.view)
+        case .pop:
+            nfrom = -round(NSWidth(containerView.frame)/3.0)
+            nto = 0
+            pfrom = 0
+            pto = NSWidth(containerView.frame)
+            previous.view.setFrameOrigin(NSMakePoint(pto, previous.frame.minY))
+            containerView.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
+        case .none:
+            previous.viewWillDisappear(false);
+            previous.view.removeFromSuperview()
+            containerView.addSubview(controller.view)
+            controller.viewWillAppear(false);
+            previous.viewDidDisappear(false);
+            controller.viewDidAppear(false);
+            _ = controller.becomeFirstResponder();
+            
+            self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
+            lock = false
+            
+            navigationBar.removeFromSuperview()
+            containerView.addSubview(navigationBar)
+            
+            if let header = header, header.needShown {
+                header.view.removeFromSuperview()
+                containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
+            }
+            
+            return // without animations
+        }
+        
+        
+        
+        if previous.removeAfterDisapper, let index = stack.index(of: previous) {
+            self.stack.remove(at: index)
+        }
+        
+        navigationBar.removeFromSuperview()
+        containerView.addSubview(navigationBar)
+        
+        if let header = header, header.needShown {
+            header.view.removeFromSuperview()
+            containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
+        }
+        
+        previous.viewWillDisappear(true);
+        controller.viewWillAppear(true);
+        
+        
+        CATransaction.begin()
+        
+        
+        self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
+        
+        previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (completed) in
+            
+            previous.view.removeFromSuperview()
+            previous.viewDidDisappear(true);
+            
+            self?.lock = false
+        });
+        
+        
+        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { (completed) in
+            
+            controller.viewDidAppear(true);
+            _ = controller.becomeFirstResponder()
+        });
+        
+        
+        CATransaction.commit()
+        
+    }
+    
+    open override func back(animated:Bool = true) -> Void {
         if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
             let ncontroller = stack[stackCount - 2]
             let removeAnimateFlag = ncontroller == defaultEmpty || !animated
@@ -99,7 +306,7 @@ public class MajorNavigationController: NavigationViewController {
         }
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.window?.set(handler: { [weak self] in
             if let strongSelf = self {
@@ -132,12 +339,12 @@ public class MajorNavigationController: NavigationViewController {
         
     }
     
-    public override func viewDidDisappear(_ animated: Bool) {
+    open override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         self.window?.removeAllHandlers(for: self)
     }
     
-    public override func backKeyAction() -> KeyHandlerResult {
+    open override func backKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
         
         let cInvoke = self.controller.backKeyAction()
@@ -151,12 +358,12 @@ public class MajorNavigationController: NavigationViewController {
         return status
     }
     
-    public override func nextKeyAction() -> KeyHandlerResult {
+    open override func nextKeyAction() -> KeyHandlerResult {
         return self.controller.nextKeyAction()
     }
     
     
-    public override func escapeKeyAction() -> KeyHandlerResult {
+    open override func escapeKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
         
         let cInvoke = self.controller.escapeKeyAction()
@@ -170,7 +377,7 @@ public class MajorNavigationController: NavigationViewController {
         return status
     }
     
-    public override func returnKeyAction() -> KeyHandlerResult {
+    open override func returnKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = .rejected
         
         let cInvoke = self.controller.returnKeyAction()
