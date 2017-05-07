@@ -66,14 +66,24 @@ open class EditableViewController<T>: GenericViewController<T> where T: NSView {
         update(with:state)
     }
     
+    open var doneString:String {
+        return localizedString("Navigation.Done")
+    }
+    open var normalString:String {
+        return localizedString("Navigation.Edit")
+    }
+    open var someString:String {
+        return localizedString("Navigation.Some")
+    }
+    
     func updateEditStateTitles() -> Void {
         switch state {
         case .Edit:
-            editBar.button.set(text: localizedString("Navigation.Done"), for: .Normal)
+            editBar.button.set(text: doneString, for: .Normal)
         case .Normal:
-            editBar.button.set(text: localizedString("Navigation.Edit"), for: .Normal)
+            editBar.button.set(text: normalString, for: .Normal)
         case .Some:
-            editBar.button.set(text: localizedString("Navigation.Some"), for: .Normal)
+            editBar.button.set(text: someString, for: .Normal)
         }
         
         self.editBar.needsLayout = true

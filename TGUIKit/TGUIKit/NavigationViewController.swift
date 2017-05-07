@@ -33,13 +33,14 @@ open class NavigationHeaderView : View {
     
 }
 
-public final class NavigationHeader {
+open class NavigationHeader {
+    fileprivate var callHeader:NavigationHeader?
     let height:CGFloat
     let initializer:(NavigationHeader)->NavigationHeaderView
     weak var navigation:NavigationViewController?
-    private var _view:NavigationHeaderView?
-    private let disposable:MetaDisposable = MetaDisposable()
-    private(set) var isShown:Bool = false
+    fileprivate var _view:NavigationHeaderView?
+    fileprivate let disposable:MetaDisposable = MetaDisposable()
+    fileprivate var isShown:Bool = false
     public var needShown:Bool = false
     public init(_ height:CGFloat, initializer:@escaping(NavigationHeader)->NavigationHeaderView) {
         self.height = height
@@ -57,7 +58,7 @@ public final class NavigationHeader {
         disposable.dispose()
     }
     
-    public func show(_ animated:Bool) {
+    open func show(_ animated:Bool) {
         assert(navigation != nil)
         needShown = true
         if isShown {
@@ -69,15 +70,20 @@ public final class NavigationHeader {
             let height = self.height
             view.frame = NSMakeRect(0, 0, navigation.containerView.frame.width, height)
 
-            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
+            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak self, weak view] (ready) in
                 if let navigation = navigation, let view = view {
                     let contentInset = navigation.controller.bar.height + height
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     
+                    var inset:CGFloat = navigation.controller.bar.height
  
-                    view.change(pos: NSMakePoint(0, navigation.controller.bar.height), animated: animated, completion: { [weak navigation] completed in
+                    if let callHeader = self?.callHeader, callHeader.needShown {
+                        inset += callHeader.height
+                    }
+                    
+                    view.change(pos: NSMakePoint(0, inset), animated: animated, completion: { [weak navigation] completed in
                         if let navigation = navigation, completed {
-                            navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.frame.width, navigation.frame.height - contentInset)
+                            navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
                         }
                     })
                     
@@ -87,7 +93,7 @@ public final class NavigationHeader {
         
     }
     
-    public func hide(_ animated:Bool) {
+    open func hide(_ animated:Bool) {
         assert(navigation != nil)
         if !isShown {
             return
@@ -105,7 +111,79 @@ public final class NavigationHeader {
                 view.removeFromSuperview()
                 _view = nil
             }
-            navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.frame.width, navigation.frame.height - navigation.controller.bar.height)
+            
+            var inset:CGFloat = navigation.controller.bar.height
+            
+            if let callHeader = callHeader, callHeader.needShown  {
+                inset += callHeader.height
+            }
+            
+            navigation.controller.view.frame = NSMakeRect(0, inset, navigation.controller.frame.width, navigation.frame.height - inset)
+        }
+        
+    }
+}
+
+public class CallNavigationHeader : NavigationHeader {
+    fileprivate weak var simpleHeader:NavigationHeader?
+    public override func show(_ animated:Bool) {
+        assert(navigation != nil)
+        needShown = true
+        if isShown {
+            return
+        }
+        isShown = true
+        if let navigation = navigation {
+            let view = self.view
+            let height = self.height
+            view.frame = NSMakeRect(0, 0, navigation.containerView.frame.width, height)
+            
+            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
+                if let navigation = navigation, let view = view {
+                    let contentInset = navigation.controller.bar.height + height
+                    navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
+                    
+                    navigation.navigationBar.change(pos: NSMakePoint(0, height), animated: animated)
+                    
+                    self.simpleHeader?.view.change(pos: NSMakePoint(0, height + navigation.controller.bar.height), animated: animated)
+                    
+                    view.change(pos: NSMakePoint(0, 0), animated: animated, completion: { [weak navigation] completed in
+                        if let navigation = navigation, completed {
+                            navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
+                        }
+                    })
+                    
+                }
+            }))
+        }
+        
+    }
+    
+    public override func hide(_ animated:Bool) {
+        assert(navigation != nil)
+        if !isShown {
+            return
+        }
+        needShown = false
+        isShown = false
+        
+        if let navigation = navigation {
+            if animated {
+                view.change(pos: NSMakePoint(0, -height), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
+                    self?._view?.removeFromSuperview()
+                    self?._view = nil
+                })
+            } else {
+                view.removeFromSuperview()
+                _view = nil
+            }
+            
+            if let header = simpleHeader, header.needShown {
+                header.view.change(pos: NSMakePoint(0, navigation.controller.bar.height), animated: animated)
+            }
+            
+            navigation.navigationBar.change(pos: NSZeroPoint, animated: animated)
+            navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.controller.frame.width, navigation.frame.height - navigation.controller.bar.height)
         }
         
     }
@@ -121,21 +199,41 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     public var empty:ViewController {
         didSet {
             empty.navigationController = self
-            empty.loadViewIfNeeded()
+            
             let prev = self.stack.last
             self.stack.remove(at: 0)
             self.stack.insert(empty, at: 0)
             
+            
+            var controllerInset:CGFloat = 0
+            
+            if let header = header, header.needShown {
+                controllerInset += header.height
+            }
+            if let header = callHeader, header.needShown {
+                controllerInset += header.height
+            }
+            
+            empty.loadViewIfNeeded(NSMakeRect(0, controllerInset, self.bounds.width, self.bounds.height - controllerInset))
+            
             if prev == oldValue {
                 controller = empty
                 oldValue.removeFromSuperview()
-                empty.view.frame = self.bounds
                 containerView.addSubview(empty.view)
-                if let header = header {
+
+                if let header = header, header.needShown {
                     header.view.removeFromSuperview()
-                    controller.addSubview(header.view)
+                    containerView.addSubview(header.view)
                 }
+                if let header = callHeader, header.needShown {
+                    header.view.removeFromSuperview()
+                    containerView.addSubview(header.view)
+                }
+
             }
+            
+            empty.view.frame = NSMakeRect(0, controllerInset, self.bounds.width, self.bounds.height - controllerInset)
+
             
         }
     }
@@ -160,12 +258,25 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     var popDisposable:MetaDisposable = MetaDisposable()
     
     private(set) public var header:NavigationHeader?
+    private(set) public var callHeader:CallNavigationHeader?
+    
     var containerView:View = View()
+    
+    
     public func set(header:NavigationHeader?) {
         self.header?.hide(false)
         header?.navigation = self
-        
+        header?.callHeader = callHeader
+        callHeader?.simpleHeader = header
         self.header = header
+    }
+    
+    public func set(callHeader:CallNavigationHeader?) {
+        self.callHeader?.hide(false)
+        callHeader?.navigation = self
+        header?.callHeader = callHeader
+        callHeader?.simpleHeader = header
+        self.callHeader = callHeader
     }
     
     open override func loadView() {
@@ -282,9 +393,17 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             return;
         }
         
-        self.navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
-        
         var contentInset = controller.bar.height
+
+        var barInset:CGFloat = 0
+        if let header = callHeader, header.needShown {
+            header.view.frame = NSMakeRect(0, 0, containerView.frame.width, header.height)
+            contentInset += header.height
+            barInset += header.height
+        }
+        
+        self.navigationBar.frame = NSMakeRect(0, barInset, NSWidth(containerView.frame), controller.bar.height)
+        
         
         if let header = header, header.needShown {
             header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
@@ -300,6 +419,18 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             controller.view.needsLayout = true
         }
         
+        
+        let reloadHeaders = { [weak self] in
+            if let header = self?.header, header.needShown {
+                header.view.removeFromSuperview()
+                self?.containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
+            }
+            
+            if let header = self?.callHeader, header.needShown {
+                header.view.removeFromSuperview()
+                self?.containerView.addSubview(header.view, positioned: .below, relativeTo: self?.navigationBar)
+            }
+        }
         
         var pfrom:CGFloat = 0, pto:CGFloat = 0, nto:CGFloat = 0, nfrom:CGFloat = 0;
         
@@ -332,10 +463,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationBar.removeFromSuperview()
             containerView.addSubview(navigationBar)
             
-            if let header = header, header.needShown {
-                header.view.removeFromSuperview()
-                containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
-            }
+            reloadHeaders()
             
             return // without animations
         }
@@ -349,10 +477,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.removeFromSuperview()
         containerView.addSubview(navigationBar)
         
-        if let header = header, header.needShown {
-            header.view.removeFromSuperview()
-            containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
-        }
+        reloadHeaders()
         
         previous.viewWillDisappear(true);
         controller.viewWillAppear(true);

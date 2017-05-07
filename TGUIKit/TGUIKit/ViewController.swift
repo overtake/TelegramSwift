@@ -378,7 +378,7 @@ open class ViewController : NSObject {
         }
     }
     public var bounds:NSRect {
-        return isLoaded() ? self.view.bounds : NSMakeRect(0, 0, _frameRect.width, _frameRect.height)
+        return isLoaded() ? self.view.bounds : NSMakeRect(0, 0, _frameRect.width, _frameRect.height - bar.height)
     }
     
     public func addSubview(_ subview:NSView) -> Void {

@@ -8,9 +8,31 @@
 
 import Cocoa
 
+private class TabBarViewController : View {
+    let tabView:TabBarView
+
+    required init(frame frameRect: NSRect) {
+        tabView = TabBarView(frame: NSMakeRect(0, frameRect.height - 50, frameRect.width, 50))
+        super.init(frame: frameRect)
+        addSubview(tabView)
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
+    override func layout() {
+        super.layout()
+        tabView.frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
+    }
+}
+
 public class TabBarController: ViewController, TabViewDelegate {
 
-    private var tabView:TabBarView?
     
     public var didChangedIndex:(Int)->Void = {_ in}
     
@@ -20,31 +42,37 @@ public class TabBarController: ViewController, TabViewDelegate {
         }
     }
     
+    private var genericView:TabBarViewController {
+        return view as! TabBarViewController
+    }
+    
+    public override func viewClass() -> AnyClass {
+        return TabBarViewController.self
+    }
+    
+
+    
     public override func loadView() {
         super.loadView()
-        tabView = TabBarView(frame: NSMakeRect(0, NSHeight(self.bounds) - 50, NSWidth(self.bounds), 50))
-        tabView?.delegate = self
-        tabView?.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewMaxYMargin,NSAutoresizingMaskOptions.viewMinYMargin]
-        addSubview(tabView!)
+        genericView.tabView.delegate = self
+        genericView.autoresizingMask = []
     }
     
     public func didChange(selected item: TabItem, index: Int) {
         
         if current != item.controller {
-            if let tabView = tabView {
-                if let current = current {
-                    current.window?.makeFirstResponder(nil)
-                    current.viewWillDisappear(false)
-                    current.view.removeFromSuperview()
-                    current.viewDidDisappear(false)
-                }
-                item.controller._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height - tabView.frame.height)
-                item.controller.view.frame = item.controller._frameRect
-                item.controller.viewWillAppear(false)
-                addSubview(item.controller.view)
-                item.controller.viewDidAppear(false)
-                current = item.controller
+            if let current = current {
+                current.window?.makeFirstResponder(nil)
+                current.viewWillDisappear(false)
+                current.view.removeFromSuperview()
+                current.viewDidDisappear(false)
             }
+            item.controller._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height - genericView.tabView.frame.height)
+            item.controller.view.frame = item.controller._frameRect
+            item.controller.viewWillAppear(false)
+            view.addSubview(item.controller.view)
+            item.controller.viewDidAppear(false)
+            current = item.controller
             didChangedIndex(index)
         }
     }
@@ -54,19 +82,17 @@ public class TabBarController: ViewController, TabViewDelegate {
     }
     
     public func hideTabView(_ hide:Bool) {
-        if let tabView = tabView {
-            tabView.isHidden = hide
-            current?.view.frame = hide ? bounds : NSMakeRect(0, 0, bounds.width, bounds.height - tabView.frame.height)
-        }
+        genericView.tabView.isHidden = hide
+        current?.view.frame = hide ? bounds : NSMakeRect(0, 0, bounds.width, bounds.height - genericView.tabView.frame.height)
         
     }
     
     public func select(index:Int) -> Void {
-        tabView?.setSelectedIndex(index, respondToDelegate: true)
+        genericView.tabView.setSelectedIndex(index, respondToDelegate: true)
     }
     
     public func add(tab:TabItem) -> Void {
-        self.tabView?.addTab(tab)
+        genericView.tabView.addTab(tab)
     }
     
 }

@@ -66,6 +66,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
         self.majorClass = majorClass
         self.defaultEmpty = empty
+        container.bar = .init(height: 0)
         assert(majorClass is ViewController.Type)
         
         super.init(empty)
@@ -173,126 +174,6 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
 
             }
         }))
-    }
-    
-    override func show(_ controller:ViewController,_ style:ViewControllerStyle) -> Void {
-        
-        let previous:ViewController = self.controller;
-        _setController(controller)
-        controller.navigationController = self
-        
-        
-        if(previous == controller) {
-            previous.viewWillDisappear(false)
-            previous.viewDidDisappear(false)
-            
-            controller.viewWillAppear(false)
-            controller.viewDidAppear(false)
-            _ = controller.becomeFirstResponder()
-            
-            return;
-        }
-        
-
-        self.navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
-        
-        var contentInset = controller.bar.height
-        
-        if let header = header, header.needShown {
-            header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
-            containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
-            contentInset += header.height
-        }
-        
-        controller.view.removeFromSuperview()
-        controller.view.frame = NSMakeRect(0, contentInset , NSWidth(containerView.frame), NSHeight(containerView.frame) - contentInset)
-        if #available(OSX 10.12, *) {
-            
-        } else {
-            controller.view.needsLayout = true
-        }
-        
-        
-        var pfrom:CGFloat = 0, pto:CGFloat = 0, nto:CGFloat = 0, nfrom:CGFloat = 0;
-        
-        switch style {
-        case .push:
-            nfrom = NSWidth(containerView.frame)
-            nto = 0
-            pfrom = 0
-            pto = -100//round(NSWidth(self.frame)/3.0)
-            containerView.addSubview(controller.view, positioned: .above, relativeTo: previous.view)
-        case .pop:
-            nfrom = -round(NSWidth(containerView.frame)/3.0)
-            nto = 0
-            pfrom = 0
-            pto = NSWidth(containerView.frame)
-            previous.view.setFrameOrigin(NSMakePoint(pto, previous.frame.minY))
-            containerView.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
-        case .none:
-            previous.viewWillDisappear(false);
-            previous.view.removeFromSuperview()
-            containerView.addSubview(controller.view)
-            controller.viewWillAppear(false);
-            previous.viewDidDisappear(false);
-            controller.viewDidAppear(false);
-            _ = controller.becomeFirstResponder();
-            
-            self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
-            lock = false
-            
-            navigationBar.removeFromSuperview()
-            containerView.addSubview(navigationBar)
-            
-            if let header = header, header.needShown {
-                header.view.removeFromSuperview()
-                containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
-            }
-            
-            return // without animations
-        }
-        
-        
-        
-        if previous.removeAfterDisapper, let index = stack.index(of: previous) {
-            self.stack.remove(at: index)
-        }
-        
-        navigationBar.removeFromSuperview()
-        containerView.addSubview(navigationBar)
-        
-        if let header = header, header.needShown {
-            header.view.removeFromSuperview()
-            containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
-        }
-        
-        previous.viewWillDisappear(true);
-        controller.viewWillAppear(true);
-        
-        
-        CATransaction.begin()
-        
-        
-        self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
-        
-        previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (completed) in
-            
-            previous.view.removeFromSuperview()
-            previous.viewDidDisappear(true);
-            
-            self?.lock = false
-        });
-        
-        
-        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { (completed) in
-            
-            controller.viewDidAppear(true);
-            _ = controller.becomeFirstResponder()
-        });
-        
-        
-        CATransaction.commit()
-        
     }
     
     open override func back(animated:Bool = true) -> Void {
