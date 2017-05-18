@@ -76,6 +76,16 @@ open class EditableViewController<T>: GenericViewController<T> where T: NSView {
         return localizedString("Navigation.Some")
     }
     
+    open var doneImage:CGImage? {
+        return nil
+    }
+    open var normalImage:CGImage? {
+        return nil
+    }
+    open var someImage:CGImage? {
+        return nil
+    }
+    
     func updateEditStateTitles() -> Void {
         switch state {
         case .Edit:

@@ -865,7 +865,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func selectNext(_ scroll:Bool = false, _ animated:Bool = false) -> Void {
+    public func selectNext(_ scroll:Bool = true, _ animated:Bool = false) -> Void {
         
         if let hash = selectedhash.modify({$0}) {
             let selectedItem = self.item(stableId: hash)
@@ -876,22 +876,38 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if selectedIndex == count  {
                    selectedIndex = 0
                 }
+                if let delegate = delegate {
+                    let sIndex = selectedIndex
+                    for i in sIndex ..< list.count {
+                        if delegate.selectionWillChange(row: i, item: item(at: i)) {
+                            selectedIndex = i
+                            break
+                        }
+                    }
+                }
+                
                 
                  _ = select(item: item(at: selectedIndex))
             }
             
             
         } else {
-            if let firstItem = firstItem {
-                _ = self.select(item: firstItem)
+            if let delegate = delegate {
+                for item in list {
+                    if delegate.selectionWillChange(row: item.index, item: item) {
+                        _ = self.select(item: item)
+                        break
+                    }
+                }
             }
+            
         }
-        if let hash = selectedhash.modify({$0}) {
+        if let hash = selectedhash.modify({$0}), scroll {
             self.scroll(to: .top(hash, animated), inset: EdgeInsets(), true)
         }
     }
     
-    public func selectPrev(_ scroll:Bool = false, _ animated:Bool = false) -> Void {
+    public func selectPrev(_ scroll:Bool = true, _ animated:Bool = false) -> Void {
         
         if let hash = selectedhash.modify({$0}) {
             let selectedItem = self.item(stableId: hash)
@@ -903,17 +919,34 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     selectedIndex = count - 1
                 }
                 
+                if let delegate = delegate {
+                    let sIndex = selectedIndex
+                    for i in stride(from: sIndex, to: -1, by: -1) {
+                        if delegate.selectionWillChange(row: i, item: item(at: i)) {
+                            selectedIndex = i
+                            break
+                        }
+                    }
+                }
+
+                
                 _ = select(item: item(at: selectedIndex))
             }
             
             
         } else {
-            if let lastItem = lastItem {
-                _ = self.select(item: lastItem)
+            if let delegate = delegate {
+                for i in stride(from: list.count - 1, to: -1, by: -1) {
+                    if delegate.selectionWillChange(row: i, item: item(at: i)) {
+                        _ = self.select(item: item(at: i))
+                        break
+                    }
+                }
             }
+
         }
         
-        if let hash = selectedhash.modify({$0}) {
+        if let hash = selectedhash.modify({$0}), scroll {
             self.scroll(to: .bottom(hash, animated), inset: EdgeInsets(), true)
         }
     }

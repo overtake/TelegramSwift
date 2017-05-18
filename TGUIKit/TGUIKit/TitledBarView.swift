@@ -18,6 +18,8 @@ private class TitledContainerView : View {
         }
     }
     
+    var inset:CGFloat = 50
+    
     var text:NSAttributedString? {
         didSet {
             if text != oldValue {
@@ -40,31 +42,37 @@ private class TitledContainerView : View {
         }
     }
     
+    var textInset:CGFloat? = nil {
+        didSet {
+            self.setNeedsDisplay()
+        }
+    }
+    
     fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
         if let text = text {
-            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
+            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - inset, NSHeight(layer.bounds)), nil,false, .left)
             var tY = NSMinY(focus(textLayout.size))
             
             if let status = status {
                 
-                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - 50, NSHeight(layer.bounds)), nil,false, .left)
+                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - inset, NSHeight(layer.bounds)), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
                 tY = (NSHeight(self.frame) - t) / 2.0
                 
                 let sY = tY + textLayout.size.height + 2.0
                 if !hiddenStatus {
-                    statusApply.draw(NSMakeRect(floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0), sY, statusLayout.size.width, statusLayout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    statusApply.draw(NSMakeRect(textInset == nil ? floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0) : textInset!, sY, statusLayout.size.width, statusLayout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
                 }
             }
             
-            var textRect = NSMakeRect(floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0), tY, textLayout.size.width, textLayout.size.height)
+            var textRect = NSMakeRect(textInset == nil ? floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0) : textInset!, tY, textLayout.size.width, textLayout.size.height)
             
             if let titleImage = titleImage {
-                ctx.draw(titleImage, in: NSMakeRect(textRect.minX - titleImage.backingSize.width, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
-                textRect.origin.x += floorToScreenPixels(titleImage.backingSize.width/2)
+                ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
+                textRect.origin.x += floorToScreenPixels(titleImage.backingSize.width) + 4
             }
             
             textApply.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor)
@@ -83,6 +91,7 @@ open class TitledBarView: BarView {
     public var text:NSAttributedString? {
         didSet {
             if text != oldValue {
+                _containerView.inset = inset
                 _containerView.text = text
             }
         }
@@ -91,6 +100,7 @@ open class TitledBarView: BarView {
     public var status:NSAttributedString? {
         didSet {
             if status != oldValue {
+                _containerView.inset = inset
                 _containerView.status = status
             }
         }
@@ -107,20 +117,30 @@ open class TitledBarView: BarView {
         }
     }
     
+    open var inset:CGFloat {
+        return 50
+    }
 
+    public var textInset:CGFloat? {
+        didSet {
+            _containerView.textInset = textInset
+        }
+    }
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         containerView.setFrameSize(newSize)
         containerView.setNeedsDisplay()
     }
-    public init(_ text:NSAttributedString?, _ status:NSAttributedString? = nil) {
+    public init(_ text:NSAttributedString?, _ status:NSAttributedString? = nil, textInset:CGFloat? = nil) {
         self.text = text
         self.status = status
+        self.textInset = textInset
         super.init()
         addSubview(containerView)
         _containerView.text = text
         _containerView.status = status
+        _containerView.textInset = textInset
     }
     
     open override func draw(_ dirtyRect: NSRect) {

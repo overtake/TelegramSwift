@@ -138,7 +138,8 @@ public class SplitView : View {
     
     private let minimisizeOverlay:SplitMinimisizeView = SplitMinimisizeView()
     private let container:View
-    fileprivate(set) var state: SplitViewState = .none {
+    private var forceNotice:Bool = false
+    public var state: SplitViewState = .none {
         didSet {
             let notify:Bool = state != oldValue;
             assert(notify);
@@ -248,8 +249,9 @@ public class SplitView : View {
 
     }
     
-    public func update() -> Void {
+    public func update(_ forceNotice:Bool = false) -> Void {
         Queue.mainQueue().justDispatch {
+            self.forceNotice = forceNotice
             self.needsLayout = true
         }
     }
@@ -286,7 +288,11 @@ public class SplitView : View {
                 }
                 
             }
-            
+        }
+        
+        if forceNotice {
+            forceNotice = false
+            self.delegate?.splitViewDidNeedSwapToLayout(state: state)
         }
         
         var x:CGFloat = 0;
@@ -363,6 +369,7 @@ public class SplitView : View {
     public func needMinimisize() {
         self.state = .minimisize
         self.needsLayout = true
+        
     }
     
 

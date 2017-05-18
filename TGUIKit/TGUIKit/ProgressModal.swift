@@ -71,6 +71,7 @@ class ProgressModalController: ModalViewController {
     
     override init() {
         super.init(frame:NSMakeRect(0,0,100,100))
+        self.bar = .init(height: 0)
     }
     
     

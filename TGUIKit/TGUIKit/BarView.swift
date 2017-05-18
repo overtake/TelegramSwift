@@ -24,6 +24,13 @@ open class BarView: OverlayControl {
         self.setNeedsDisplay()
     }
     
+    public init(_ width:CGFloat) {
+        self.minWidth = width
+        super.init()
+        frame = NSMakeRect(0, 0, minWidth, 50)
+        overlayInitEvent()
+    }
+    
     override init() {
         super.init()
         frame = NSMakeRect(0, 0, minWidth, 50)

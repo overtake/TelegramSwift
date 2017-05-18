@@ -68,6 +68,8 @@ private class ModalBackground : Control {
     }
 }
 
+private var activeModals:[WeakReference<Modal>] = []
+
 public class ModalInteractions {
     let accept:(()->Void)?
     let cancel:(()->Void)?
@@ -229,7 +231,7 @@ private class ModalContainerView: View {
 public class Modal: NSObject {
     
     private var background:ModalBackground
-    private var controller:ModalViewController?
+    fileprivate var controller:ModalViewController?
     private var container:ModalContainerView!
     private var window:Window
     private let disposable:MetaDisposable = MetaDisposable()
@@ -237,6 +239,7 @@ public class Modal: NSObject {
     public let interactions:ModalInteractions?
     fileprivate let animated: Bool
     public init(controller:ModalViewController, for window:Window, animated: Bool = true) {
+        
         self.controller = controller
         self.window = window
         self.animated = animated
@@ -306,7 +309,7 @@ public class Modal: NSObject {
                 self?.controller?.measure(size: size)
             }
         }
-        
+        activeModals.append(WeakReference(value: self))
     }
     
     
@@ -357,6 +360,14 @@ public class Modal: NSObject {
     
     deinit {
         disposable.dispose()
+        var index:Int32? = nil
+        for i in 0 ..< activeModals.count {
+            if activeModals[i].value == self {
+                activeModals.remove(at: i)
+                break
+            }
+        }
+
     }
     
     func show() -> Void {
@@ -407,6 +418,11 @@ public class Modal: NSObject {
 
 public func showModal(with controller:ModalViewController, for window:Window) -> Void {
     assert(controller.modal == nil)
+    for weakModal in activeModals {
+        if weakModal.value?.controller?.className == controller.className {
+            weakModal.value?.close()
+        }
+    }
     
     controller.modal = Modal(controller: controller, for: window)
     controller.modal?.show()

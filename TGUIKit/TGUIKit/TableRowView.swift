@@ -60,16 +60,16 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
             ctx.setFillColor(NSColor.border.cgColor)
             
             if border.contains(.Top) {
-                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
+                ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
             }
             if border.contains(.Bottom) {
-                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
+                ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
             }
             if border.contains(.Left) {
-                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
+                ctx.fill(NSMakeRect(0, 0, .borderSize, frame.height))
             }
             if border.contains(.Right) {
-                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
+                ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
             }
             
         }
