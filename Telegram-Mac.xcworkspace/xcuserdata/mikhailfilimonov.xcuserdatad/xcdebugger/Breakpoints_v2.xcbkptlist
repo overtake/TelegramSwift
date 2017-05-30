@@ -58,11 +58,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "TGUIKit/TGUIKit/Extensions.swift"
-            timestampString = "512131589.60986"
+            timestampString = "517572684.178955"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "860"
-            endingLineNumber = "860"
+            startingLineNumber = "863"
+            endingLineNumber = "863"
             landmarkName = "emojis"
             landmarkType = "24">
             <Locations>
@@ -74,11 +74,11 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "516800529.313544"
+                  timestampString = "517852638.531428"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "860"
-                  endingLineNumber = "860"
+                  startingLineNumber = "863"
+                  endingLineNumber = "863"
                   offsetFromSymbolStart = "718">
                </Location>
                <Location
@@ -89,11 +89,11 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "516800529.317569"
+                  timestampString = "517852638.535737"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "860"
-                  endingLineNumber = "860"
+                  startingLineNumber = "863"
+                  endingLineNumber = "863"
                   offsetFromSymbolStart = "48">
                </Location>
                <Location
@@ -104,11 +104,11 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "516800529.321659"
+                  timestampString = "517852638.538689"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "860"
-                  endingLineNumber = "860"
+                  startingLineNumber = "863"
+                  endingLineNumber = "863"
                   offsetFromSymbolStart = "11">
                </Location>
             </Locations>

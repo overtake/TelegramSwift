@@ -20,7 +20,7 @@ open class BackNavigationBar: TextButtonBarView {
         if let image = backSettings.1 {
             button.set(image: image, for: .Normal)
         }
-        
+        button.disableActions()
         button.set(handler: { [weak self] _ in
             self?.controller?.executeReturn()
         }, for: .Up)

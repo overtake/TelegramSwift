@@ -271,6 +271,7 @@ open class Popover: NSObject {
         self.disposable.dispose()
         self.readyDisposable.dispose()
         window?.remove(object: self, for: .All)
+        background.removeFromSuperview()
     }
     
     public func hide(_ removeHandlers:Bool = true) -> Void {

@@ -326,7 +326,7 @@ public class Window: NSWindow {
             }
             super.sendEvent(event)
         } else {
-            super.sendEvent(event)
+            //super.sendEvent(event)
         }
         
         

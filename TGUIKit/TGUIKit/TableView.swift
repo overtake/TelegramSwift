@@ -645,6 +645,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
+    public var bottomVisibleRow:Int? {
+        let visible = visibleItems()
+        if isFlipped {
+            return visible.first?.0.index
+        } else {
+            return visible.last?.0.index
+        }
+    }
+    
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin);
         self.updateTrackingAreas();
@@ -1288,6 +1297,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         first = false
+        performScrollEvent()
     }
     
     func updateEmpties() {
@@ -1555,8 +1565,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func enumerateViews(with callback:(TableRowView)->Void) {
-        for item in list {
-            if let view = viewNecessary(at: item.index) {
+        for index in 0 ..< list.count {
+            if let view = viewNecessary(at: index) {
+                callback(view)
+            }
+        }
+    }
+    
+    public func enumerateVisibleViews(with callback:(TableRowView)->Void) {
+        let visibleRows = self.visibleRows()
+        for index in visibleRows.location ..< visibleRows.location + visibleRows.length {
+            if let view = viewNecessary(at: index) {
                 callback(view)
             }
         }

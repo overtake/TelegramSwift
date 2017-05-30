@@ -187,6 +187,11 @@ open class ViewController : NSObject {
         }
     }
     
+    open func updateLocalizationAndTheme() {
+        (view as? AppearanceViewProtocol)?.updateLocalizationAndTheme()
+        self.navigationController?.updateLocalizationAndTheme()
+    }
+    
     open func loadView() -> Void {
         if(_view == nil) {
             
@@ -204,10 +209,18 @@ open class ViewController : NSObject {
         }
     }
     
-    public func requestUpdateBackBar() {
+    open func requestUpdateBackBar() {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
             leftBarView.requestUpdate()
         }
+    }
+    
+    open func requestUpdateCenterBar() {
+        setCenterTitle(defaultBarTitle)
+    }
+    
+    open func requestUpdateRightBar() {
+    
     }
     
     @objc func viewFrameChanged(_ notification:Notification) {
@@ -357,7 +370,7 @@ open class ViewController : NSObject {
         return false
     }
     
-    public var window:Window? {
+    open var window:Window? {
         return _view?.window as? Window
     }
     

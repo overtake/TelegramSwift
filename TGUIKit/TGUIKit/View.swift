@@ -10,6 +10,10 @@ import Foundation
 import SwiftSignalKitMac
 public let kUIKitAnimationBackground = "UIKitAnimationBackground"
 
+public protocol AppearanceViewProtocol {
+     func updateLocalizationAndTheme()
+}
+
 class ViewLayer : CALayer {
     override init(layer: Any) {
         super.init(layer: layer)
@@ -83,7 +87,7 @@ public class CustomViewHandlers {
 
 
 
-open class View : NSView,CALayerDelegate {
+open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public var animates:Bool = false
     
@@ -186,6 +190,14 @@ open class View : NSView,CALayerDelegate {
         }
         set {
             
+        }
+    }
+    
+    open func updateLocalizationAndTheme() {
+        for subview in subviews {
+            if let subview = subview as? AppearanceViewProtocol {
+                subview.updateLocalizationAndTheme()
+            }
         }
     }
     

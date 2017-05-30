@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "49B3A1C3A9D5357B430E343381715378E6D84AE5",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "49B3A1C3A9D5357B430E343381715378E6D84AE5" : 9223372036854775807,
+    "6ABFB2FD24741C175496F6D5113243F3A0174779" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "3F3FF42C-1083-4519-832B-6598B435533D",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "49B3A1C3A9D5357B430E343381715378E6D84AE5" : "Telegram-Mac\/",
+    "6ABFB2FD24741C175496F6D5113243F3A0174779" : "Telegram-Mac\/submodules\/libtgvoip\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Telegram",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Telegram.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:peter-iakovlev\/Telegram-Mac.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "49B3A1C3A9D5357B430E343381715378E6D84AE5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/grishka\/libtgvoip",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "6ABFB2FD24741C175496F6D5113243F3A0174779"
+    }
+  ]
+}

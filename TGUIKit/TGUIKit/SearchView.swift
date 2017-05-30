@@ -12,8 +12,8 @@ import Cocoa
 public struct SearchTheme {
     let searchImage:CGImage
     let clearImage:CGImage
-    let placeholder:String
-    public init(_ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:String) {
+    let placeholder:()->String
+    public init(_ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:@escaping()->String) {
         self.searchImage = searchImage
         self.clearImage = clearImage
         self.placeholder = placeholder
@@ -83,7 +83,22 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     private let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
-    private let theme:SearchTheme
+    public var theme:SearchTheme {
+        didSet {
+            placeholder.attributedString = NSAttributedString.initialize(string: theme.placeholder(), color: .grayText, font: .normal(.text), coreText: true)
+            placeholder.backgroundColor = .grayBackground
+            placeholder.sizeToFit()
+            search.frame = NSMakeRect(0, 0, theme.searchImage.backingSize.width, theme.searchImage.backingSize.height)
+            search.image = theme.searchImage
+            animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
+            
+            placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
+            search.centerY()
+
+            
+            needsLayout = true
+        }
+    }
     
     public var isLoading:Bool = false {
         didSet {
@@ -92,6 +107,8 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             }
         }
     }
+    
+    
     
     required public init(frame frameRect: NSRect, theme:SearchTheme) {
         self.theme = theme
@@ -128,7 +145,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
         animateContainer.backgroundColor = .clear
         
-        placeholder.attributedString = NSAttributedString.initialize(string: theme.placeholder, color: .grayText, font: .normal(.text), coreText: true)
+        placeholder.attributedString = NSAttributedString.initialize(string: theme.placeholder(), color: .grayText, font: .normal(.text), coreText: true)
         placeholder.backgroundColor = .grayBackground
         placeholder.sizeToFit()
         animateContainer.addSubview(placeholder)
@@ -354,6 +371,18 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     public var query:String {
         return self.input.string ?? ""
+    }
+    
+    public override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        let theme = self.theme
+        self.theme = theme
+    }
+    
+    public func setStirng(_ string:String) {
+        self.input.string = string
+        textDidChange(Notification(name:Notification.Name.NSTextDidChange))
+        needsLayout = true
     }
     
     public func cancel(_ animated:Bool) -> Void {

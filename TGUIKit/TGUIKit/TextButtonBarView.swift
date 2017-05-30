@@ -26,7 +26,7 @@ open class TextButtonBarView: BarView {
         button = TitleButton(frame:NSZeroRect)
         button.style = style
         button.set(text: text, for: .Normal)
-        
+        button.disableActions()
         super.init()
         
         self.alignment = alignment

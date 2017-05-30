@@ -84,6 +84,7 @@ open class NavigationHeader {
                     view.change(pos: NSMakePoint(0, inset), animated: animated, completion: { [weak navigation] completed in
                         if let navigation = navigation, completed {
                             navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
+                            navigation.controller.view.needsLayout = true
                         }
                     })
                     
@@ -117,8 +118,8 @@ open class NavigationHeader {
             if let callHeader = callHeader, callHeader.needShown  {
                 inset += callHeader.height
             }
-            
-            navigation.controller.view.frame = NSMakeRect(0, inset, navigation.controller.frame.width, navigation.frame.height - inset)
+            navigation.controller.view.setFrameSize(NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset))
+            navigation.controller.view.setFrameOrigin(NSMakePoint(0, inset))
         }
         
     }
@@ -150,6 +151,7 @@ public class CallNavigationHeader : NavigationHeader {
                     view.change(pos: NSMakePoint(0, 0), animated: animated, completion: { [weak navigation] completed in
                         if let navigation = navigation, completed {
                             navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
+                            navigation.controller.view.needsLayout = true
                         }
                     })
                     
@@ -184,6 +186,7 @@ public class CallNavigationHeader : NavigationHeader {
             
             navigation.navigationBar.change(pos: NSZeroPoint, animated: animated)
             navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.controller.frame.width, navigation.frame.height - navigation.controller.bar.height)
+            navigation.controller.view.needsLayout = true
         }
         
     }

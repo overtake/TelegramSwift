@@ -301,7 +301,9 @@ public class Modal: NSObject {
        
         
         background.set(handler: { [weak self] _ in
-            self?.close()
+            if let closable = self?.controller?.closable, closable {
+                self?.close()
+            }
         }, for: .Click)
         
         if controller.dynamicSize {

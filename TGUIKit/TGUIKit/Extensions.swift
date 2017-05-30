@@ -214,6 +214,7 @@ public extension String {
     }
 }
 
+
 public extension NSView {
     
     public func mouseInside() -> Bool {
@@ -457,6 +458,8 @@ public extension NSView {
     }
 
 }
+
+
 
 
 public extension NSTableViewAnimationOptions {

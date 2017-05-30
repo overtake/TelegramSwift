@@ -142,6 +142,9 @@
          contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, initialSize : CGSize, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewUpdateType, animationInterface : TableAnimationInterface) -&gt; Signal&lt;TableUpdateTransition, ()&gt;).(closure #1):ChatController.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatServiceItem.init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatServiceItem:ChatServiceItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "TextViewLayout.calculateLayout() -&gt; ():TextView.swift">
       </ContextState>
       <ContextState
@@ -477,6 +480,11 @@
       </ContextState>
       <ContextState
          contextName = "ChatPresentationInterfaceState.state.getter:ChatPresentationInterfaceState.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.historyCount">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TabBarView.setSelectedIndex(Int, respondToDelegate : Bool) -&gt; ():TabBarView.swift">
@@ -559,6 +567,9 @@
       </ContextState>
       <ContextState
          contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #4):ShareModalController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableView.merge(with : TableUpdateTransition) -&gt; ():TableView.swift">
       </ContextState>
       <ContextState
          contextName = "TitleButton.sizeToFit(CGSize, CGSize) -&gt; ():TitleButton.swift">
@@ -816,7 +827,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -828,7 +839,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1248,6 +1259,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatListController.checkList() -&gt; ():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PhoneCallWindowController.(init(PCallSession) -&gt; PhoneCallWindowController).(closure #6).(closure #1):PhoneCallWindowController.swift">
       </ContextState>
       <ContextState
          contextName = "TableView.apply(transition : TableTransition) -&gt; ():TableView.swift">
