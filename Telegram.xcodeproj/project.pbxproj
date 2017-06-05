@@ -32,6 +32,7 @@
 		C21656E21EE56A990041A6BA /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C21656E31EE56AA10041A6BA /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
 		C21656E41EE56AA10041A6BA /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		C21656E81EE576FA0041A6BA /* ChatUserPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21656E71EE576F90041A6BA /* ChatUserPopover.swift */; };
 		C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E4E1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift */; };
 		C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E501DC220E900F98E03 /* PeerMediaMusicRowContent.swift */; };
 		C2167E531DC220F600F98E03 /* PeerMediaFileRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E521DC220F600F98E03 /* PeerMediaFileRowContent.swift */; };
@@ -503,6 +504,7 @@
 		C21656D61EE4A8430041A6BA /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		C21656D81EE4A8470041A6BA /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		C21656DA1EE4A8490041A6BA /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/MainMenu.strings"; sourceTree = "<group>"; };
+		C21656E71EE576F90041A6BA /* ChatUserPopover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUserPopover.swift; sourceTree = "<group>"; };
 		C2167E4E1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaWebpageRowContent.swift; sourceTree = "<group>"; };
 		C2167E501DC220E900F98E03 /* PeerMediaMusicRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaMusicRowContent.swift; sourceTree = "<group>"; };
 		C2167E521DC220F600F98E03 /* PeerMediaFileRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaFileRowContent.swift; sourceTree = "<group>"; };
@@ -1021,6 +1023,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				C21656E61EE576650041A6BA /* popover */,
 				C24616161ED33F850026D5BC /* instant-pip */,
 				C2379D281DDCCBD00063AD30 /* bot */,
 				C250B02C1DB78041004E9FBE /* utils */,
@@ -1050,6 +1053,14 @@
 				C210742B1E780CC1006EE5EF /* PhotoCache.swift */,
 			);
 			name = cache;
+			sourceTree = "<group>";
+		};
+		C21656E61EE576650041A6BA /* popover */ = {
+			isa = PBXGroup;
+			children = (
+				C21656E71EE576F90041A6BA /* ChatUserPopover.swift */,
+			);
+			name = popover;
 			sourceTree = "<group>";
 		};
 		C2167E541DC220F900F98E03 /* content */ = {
@@ -2975,6 +2986,7 @@
 				C253E2341DE3776A0022A29F /* InlineAudioPlayerView.swift in Sources */,
 				C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */,
 				C2E52A0D1EB8C386009AF87D /* SelectivePrivacySettingsController.swift in Sources */,
+				C21656E81EE576FA0041A6BA /* ChatUserPopover.swift in Sources */,
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
 				C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */,
