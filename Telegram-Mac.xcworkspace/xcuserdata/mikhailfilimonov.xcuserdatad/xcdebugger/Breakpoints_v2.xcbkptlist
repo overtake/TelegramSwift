@@ -74,42 +74,27 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "518351952.204989"
+                  timestampString = "518358936.531279"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "863"
                   endingLineNumber = "863"
-                  offsetFromSymbolStart = "718">
+                  offsetFromSymbolStart = "2561">
                </Location>
                <Location
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "(extension in TGUIKit):Swift.String.(emojis.getter : Swift.Array&lt;Swift.String&gt;).(closure #1)"
+                  symbolName = "function signature specialization &lt;Arg[0] = Owned To Guaranteed&gt; of (extension in TGUIKit):Swift.String.(emojis.getter : Swift.Array&lt;Swift.String&gt;).(closure #1)"
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "518351952.209787"
+                  timestampString = "518358936.53441"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "863"
                   endingLineNumber = "863"
-                  offsetFromSymbolStart = "48">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(extension in TGUIKit):Swift.String.(emojis.getter : Swift.Array&lt;Swift.String&gt;).(closure #1).(closure #1)"
-                  moduleName = "TGUIKit"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "518351952.213207"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "863"
-                  endingLineNumber = "863"
-                  offsetFromSymbolStart = "11">
+                  offsetFromSymbolStart = "1957">
                </Location>
             </Locations>
          </BreakpointContent>
