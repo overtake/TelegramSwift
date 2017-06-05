@@ -29,7 +29,7 @@ public class UpdateTransition<T> {
         self.deleted = deleted
     }
     
-    var isEmpty:Bool {
+    public var isEmpty:Bool {
         return inserted.isEmpty && updated.isEmpty && deleted.isEmpty
     }
 }
@@ -221,7 +221,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
     
     
-    
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
         super.setFrameSize(newSize)
@@ -394,11 +393,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         
+        
+        
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
             self?.merge(with: transition)
         }))
         
     }
+    
     
     open override func layout() {
         super.layout()
@@ -1164,12 +1166,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assert(!updating)
         
         let oldEmpty = self.isEmpty
+        
         self.beginUpdates()
         
         
         
         let visibleItems = self.visibleItems()
-        if transition.grouping {
+        if transition.grouping && !transition.isEmpty {
             self.tableView.beginUpdates()
         }
         
@@ -1209,12 +1212,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
 
         
-        if transition.grouping {
+        if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
         
         //reflectScrolledClipView(clipView)
-        
         switch transition.state {
         case let .none(animation):
             // print("scroll do nothing")
@@ -1226,7 +1228,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to: transition.state)
         case let .saveVisible(side):
             
-            
+            if transition.isEmpty {
+                break
+            }
 
             var nrect:NSRect = NSZeroRect
             

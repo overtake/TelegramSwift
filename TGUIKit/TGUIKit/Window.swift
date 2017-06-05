@@ -60,12 +60,12 @@ func <(lhs: ResponderObserver, rhs: ResponderObserver) -> Bool {
 }
 
 class MouseObserver : Comparable {
-    let handler:()->KeyHandlerResult
+    let handler:(NSEvent)->KeyHandlerResult
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let type:NSEventType?
     
-    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ type:NSEventType) {
+    init(_ handler:@escaping(NSEvent)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ type:NSEventType) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -90,6 +90,7 @@ public class Window: NSWindow {
     private var responsders:[ResponderObserver] = []
     private var mouseHandlers:[NSEventType:[MouseObserver]] = [:]
     private var saver:WindowSaver?
+    public  var initFromSaver:Bool = false
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -183,7 +184,7 @@ public class Window: NSWindow {
         
     }
     
-    public func set(mouseHandler:@escaping() -> KeyHandlerResult, with object:NSObject, for type:NSEventType, priority:HandlerPriority = .low) -> Void {
+    public func set(mouseHandler:@escaping(NSEvent) -> KeyHandlerResult, with object:NSObject, for type:NSEventType, priority:HandlerPriority = .low) -> Void {
         var handlers:[MouseObserver]? = mouseHandlers[type]
         if handlers == nil {
             handlers = []
@@ -312,7 +313,7 @@ public class Window: NSWindow {
                 if  let handlers = mouseHandlers[event.type] {
                     let sorted = handlers.sorted(by: >)
                     loop: for handle in sorted {
-                        switch handle.handler() {
+                        switch handle.handler(event) {
                         case .invoked:
                             return
                         case .rejected:
@@ -351,6 +352,7 @@ public class Window: NSWindow {
     }
     
     public func initSaver() {
+        self.initFromSaver = true
         self.saver = .find(for: self)
         if let saver = saver {
             self.setFrame(saver.rect, display: true)

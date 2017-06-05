@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import SwiftSignalKitMac
 
 private let progressInteractiveThumb:CGImage = {
     
@@ -151,8 +152,8 @@ private class RadialProgressOverlayLayer: Layer {
         case let .Fetching(progress), let .ImpossibleFetching(progress):
             
 
-            let startAngle = 2.0 * (CGFloat(M_PI)) * CGFloat(progress) - CGFloat(M_PI_2)
-            let endAngle = -CGFloat(M_PI_2)
+            let startAngle = 2.0 * (CGFloat.pi) * CGFloat(progress) - CGFloat.pi / 2
+            let endAngle = -(CGFloat.pi / 2)
             
             let pathDiameter = parameters.diameter - 2.0 - 2.0 * 2.0
             
@@ -169,12 +170,12 @@ private class RadialProgressOverlayLayer: Layer {
         
         super.layerMoved(to: superlayer)
         
-        if let superlayer = superlayer {
+        if let _ = superlayer {
             let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
             basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
             basicAnimation.duration = 2.0
             basicAnimation.fromValue = NSNumber(value: Float(0.0))
-            basicAnimation.toValue = NSNumber(value: Float(M_PI * 2.0))
+            basicAnimation.toValue = NSNumber(value: Float.pi * 2.0)
             basicAnimation.repeatCount = Float.infinity
             basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
             self.add(basicAnimation, forKey: "progressRotation")

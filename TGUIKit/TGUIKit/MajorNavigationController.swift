@@ -138,6 +138,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         
         genericView.update()
         
+
         pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
                 strongSelf.lock = true

@@ -285,6 +285,7 @@ open class ViewController : NSObject {
     
     deinit {
         self.window?.removeObserver(for: self)
+        window?.removeAllHandlers(for: self)
         NotificationCenter.default.removeObserver(self)
         assertOnMainThread()
     }
@@ -382,6 +383,8 @@ open class ViewController : NSObject {
         return .low
     }
     
+    
+    
     public var frame:NSRect {
         get {
             return isLoaded() ? self.view.frame : _frameRect
@@ -473,6 +476,72 @@ open class GenericViewController<T> : ViewController where T:NSView {
         let vz = T.self as NSView.Type
         //controller.bar.height
         return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)) as! T;
+    }
+    
+}
+
+
+open class ModalViewController : ViewController {
+    
+    open var closable:Bool {
+        return true
+    }
+    
+    open var background:NSColor {
+        return .blackTransparent
+    }
+    
+    
+    open var isFullScreen:Bool {
+        return false
+    }
+    
+    open var containerBackground: NSColor {
+        return .white
+    }
+    
+    open var dynamicSize:Bool {
+        return false
+    }
+    
+    
+    
+    open func measure(size:NSSize) {
+        
+    }
+    
+    open var modalInteractions:ModalInteractions? {
+        return nil
+    }
+    
+    open override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    open override func firstResponder() -> NSResponder? {
+        return self.view
+    }
+    
+    open func close() {
+        modal?.close()
+    }
+    
+    open var handleEvents:Bool {
+        return true
+    }
+    
+    override open func loadView() -> Void {
+        if(_view == nil) {
+            
+            let vz = viewClass() as! NSView.Type
+            _view = vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height));
+            _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
+            
+            _ = atomicSize.swap(_view!.frame.size)
+        }
+        viewDidLoad()
     }
     
     

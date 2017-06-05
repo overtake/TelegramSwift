@@ -89,7 +89,7 @@ open class Popover: NSObject {
                         return .invokeNext
                     }, with: strongSelf, for: .All)
                     
-                    strongSelf.window?.set(mouseHandler: { () -> KeyHandlerResult in
+                    strongSelf.window?.set(mouseHandler: { (_) -> KeyHandlerResult in
                         return .invokeNext
                     },  with: strongSelf, for: .leftMouseUp, priority: .high)
                     
@@ -197,24 +197,32 @@ open class Popover: NSObject {
                             
                         }
                         
-                        let nHandler:(Control) -> Void = { [weak strongSelf] _ in
-                            
-                            let s = Signal<Void,NoError>.single() |> delay(0.2, queue: Queue.mainQueue())
-                            
-                            self?.disposable.set(s.start(next: { [weak strongSelf] () in
+                        let nHandler:(Control) -> Void = { [weak strongSelf] control in
+                            if let strongSelf = strongSelf {
+                                let s = Signal<Void,NoError>.single() |> delay(0.2, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single() |> delay(0.1, queue: Queue.mainQueue()) |> restart)
                                 
-                                if let strongSelf = strongSelf {
-                                    if !strongSelf.inside() && !control.mouseInside() {
-                                        strongSelf.hide()
+                                strongSelf.disposable.set(s.start(next: { [weak strongSelf] () in
+                                    if let strongSelf = strongSelf {
+                                        if !strongSelf.inside() && !control.mouseInside() {
+                                            strongSelf.hide()
+                                        }
                                     }
-                                }
-                                
-                            }))
+                                    
+                                }))
+                            }
+                            
                             
                         }
                         
-                        control.kitWindow?.set(mouseHandler: {  () -> KeyHandlerResult in
-                            nHandler(control)
+                        var first: Bool = true
+                        
+                        control.kitWindow?.set(mouseHandler: { [weak strongSelf, weak control] _ -> KeyHandlerResult in
+                            if let strongSelf = strongSelf, first, let control = control {
+                                if !strongSelf.inside() && !control.mouseInside() {
+                                    first = false
+                                    nHandler(control)
+                                }
+                            }
                             return .invokeNext
                         },  with: strongSelf, for: .mouseMoved, priority: .high)
                         

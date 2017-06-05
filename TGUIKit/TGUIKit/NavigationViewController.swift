@@ -353,7 +353,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)
-        
         self.pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
                 strongSelf.lock = true
@@ -385,7 +384,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         controller.navigationController = self
 
         
-        if(previous == controller) {
+        if(previous === controller) {
             previous.viewWillDisappear(false)
             previous.viewDidDisappear(false)
             
@@ -492,18 +491,21 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
         
          previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (completed) in
-            
-            previous.view.removeFromSuperview()
-            previous.viewDidDisappear(true);
-
+            if completed {
+                previous.view.removeFromSuperview()
+                previous.viewDidDisappear(true);
+            }
+        
             self?.lock = false
         });
         
 
         controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { (completed) in
-            
-            controller.viewDidAppear(true);
-            _ = controller.becomeFirstResponder()
+            if completed {
+                controller.viewDidAppear(true);
+                _ = controller.becomeFirstResponder()
+            }
+
         });
         
         

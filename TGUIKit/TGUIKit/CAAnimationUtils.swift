@@ -220,34 +220,66 @@ public extension CALayer {
     }
     
     public func animateRotateCenter(from: CGFloat, to: CGFloat, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
-        let animation = CABasicAnimation(keyPath: "transform")
-        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        
+        
+        let animation = makeSpringAnimation("transform")
+        
         var fr = CATransform3DIdentity
         fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
         fr = CATransform3DRotate(fr, from * CGFloat.pi / 180, 0, 0, 1.0)
         fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
+
         animation.isRemovedOnCompletion = removeOnCompletion
-       // animation.fillMode = kCAFillModeForwards
+        animation.fillMode = kCAFillModeForwards
         if let completion = completion {
             animation.delegate = CALayerAnimationDelegate(completion: completion)
         }
         
-        let speed: Float = 1.0
+        var speed: Float = 1.0
         
         
         animation.speed = speed * Float(animation.duration / duration)
         animation.isAdditive = additive
         
         var tr = CATransform3DIdentity
-       // tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
         tr = CATransform3DRotate(fr, to * CGFloat.pi / 180, 0, 0, 1.0)
-        //tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
         animation.toValue = NSValue(caTransform3D: tr)
         
         
         self.add(animation, forKey: "transform")
+        
+//        let animation = CABasicAnimation(keyPath: "transform")
+//        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+//        var fr = CATransform3DIdentity
+//        fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+//        fr = CATransform3DRotate(fr, from * CGFloat.pi / 180, 0, 0, 1.0)
+//        fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+//        
+//        animation.fromValue = NSValue(caTransform3D: fr)
+//        animation.isRemovedOnCompletion = removeOnCompletion
+//       // animation.fillMode = kCAFillModeForwards
+//        if let completion = completion {
+//            animation.delegate = CALayerAnimationDelegate(completion: completion)
+//        }
+//        
+//        let speed: Float = 1.0
+//        
+//        
+//        animation.speed = speed * Float(animation.duration / duration)
+//        animation.isAdditive = additive
+//        
+//        var tr = CATransform3DIdentity
+//       // tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+//        tr = CATransform3DRotate(fr, to * CGFloat.pi / 180, 0, 0, 1.0)
+//        //tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+//        animation.toValue = NSValue(caTransform3D: tr)
+//        
+//        
+//        self.add(animation, forKey: "transform")
     }
 
     

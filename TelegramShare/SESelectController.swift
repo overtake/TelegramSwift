@@ -44,7 +44,7 @@ extension Peer {
     }
 }
 
-let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), NSLocalizedString("ShareExtension.Search", comment: ""))
+let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), {NSLocalizedString("ShareExtension.Search", comment: "")})
 
 class ShareModalView : View {
     let searchView:SearchView = SearchView(frame: NSZeroRect, theme:searchTheme)

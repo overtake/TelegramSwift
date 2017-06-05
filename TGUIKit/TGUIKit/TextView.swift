@@ -647,6 +647,8 @@ public class TextView: Control {
             } else {
                 super.rightMouseDown(with: event)
             }
+        } else {
+            super.rightMouseDown(with: event)
         }
     }
     

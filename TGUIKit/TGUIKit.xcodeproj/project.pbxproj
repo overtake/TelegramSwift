@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
+		C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21656C51EE0A7050041A6BA /* SegmentedControl.swift */; };
 		C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E5C1DC2534300F98E03 /* SelectingControl.swift */; };
 		C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */; };
 		C219E1D51D87F4A00042F0C8 /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C219E1D41D87F4A00042F0C8 /* SwiftSignalKitMac.framework */; };
@@ -95,6 +96,7 @@
 /* Begin PBXFileReference section */
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
+		C21656C51EE0A7050041A6BA /* SegmentedControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
 		C2167E5C1DC2534300F98E03 /* SelectingControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectingControl.swift; sourceTree = "<group>"; };
 		C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinearProgressControl.swift; sourceTree = "<group>"; };
 		C219E1D41D87F4A00042F0C8 /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSignalKitMac.framework; path = "../../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/SwiftSignalKitMac.framework"; sourceTree = "<group>"; };
@@ -435,6 +437,7 @@
 				C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */,
 				C265058F1E02EBEE001954DC /* MagnifyView.swift */,
 				C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */,
+				C21656C51EE0A7050041A6BA /* SegmentedControl.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -483,7 +486,7 @@
 					C2E0DEA61D7EF51C00EF1C8D = {
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = 6N38VWS5BX;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0830;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -542,6 +545,7 @@
 				C2303E8C1D9A8B3000098E12 /* SearchView.swift in Sources */,
 				C234CA971D981F00003023F7 /* Control.swift in Sources */,
 				C2303E6F1D9950E000098E12 /* Button.swift in Sources */,
+				C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */,
 				C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */,
 				C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */,
 				C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */,
