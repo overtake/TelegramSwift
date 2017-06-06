@@ -25,6 +25,7 @@ public enum ControlEvent {
     case MouseDragging
     case LongMouseDown
     case LongMouseUp
+    case LongOver
 }
 
 open class Control: View {
@@ -39,7 +40,7 @@ open class Control: View {
     open var hideAnimated:Bool = false
     
     private let longHandleDisposable = MetaDisposable()
-    
+    private let longOverHandleDisposable = MetaDisposable()
     public var isSelected:Bool {
         didSet {
             if isSelected != oldValue {
@@ -128,6 +129,7 @@ open class Control: View {
             self.removeTrackingArea(trackingArea)
         }
         longHandleDisposable.dispose()
+        longOverHandleDisposable.dispose()
     }
 
     
@@ -199,6 +201,8 @@ open class Control: View {
     override open func mouseDown(with event: NSEvent) {
         mouseIsDown = true
         
+        longOverHandleDisposable.set(nil)
+        
         if event.modifierFlags.contains(.control) {
             super.mouseDown(with: event)
             return
@@ -224,7 +228,7 @@ open class Control: View {
     override open func mouseUp(with event: NSEvent) {
         
         longHandleDisposable.set(nil)
-        
+        longOverHandleDisposable.set(nil)
         mouseIsDown = false
         
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
@@ -276,6 +280,13 @@ open class Control: View {
     
     override open func mouseEntered(with event: NSEvent) {
         if userInteractionEnabled {
+            
+            let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+                if let strongSelf = self, strongSelf.mouseInside(), strongSelf.controlState == .Hover {
+                    strongSelf.send(event: .LongOver)
+                }
+            })
+            longOverHandleDisposable.set(disposable)
             
             updateState()
         } else {
