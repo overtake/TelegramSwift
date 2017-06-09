@@ -26,7 +26,11 @@ public class ModalInteractions {
     let drawBorder:Bool
     let height:CGFloat
     var enables:((Bool)->Void)? = nil
-    var done:((String)->Void)? = nil
+    
+    
+    var doneUpdatable:(((TitleButton)->Void)->Void)? = nil
+    var cancelUpdatable:(((TitleButton)->Void)->Void)? = nil
+    
     public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50)  {
         self.drawBorder = drawBorder
         self.accept = accept
@@ -42,8 +46,11 @@ public class ModalInteractions {
         }
     }
     
-    public func updateDone(_ text:String) -> Void {
-        done?(text)
+    public func updateDone(_ f:@escaping (TitleButton) -> Void) -> Void {
+        doneUpdatable?(f)
+    }
+    public func updateCancel(_ f:@escaping(TitleButton) -> Void) -> Void {
+        cancelUpdatable?(f)
     }
     
 }
@@ -123,13 +130,32 @@ private class ModalInteractionsContainer : View {
             self?.acceptView.apply(state: .Normal)
         }
         
-        interactions.done = { [weak self] text in
-            self?.updateDone(text)
+        interactions.doneUpdatable = { [weak self] f in
+            if let strongSelf = self {
+                f(strongSelf.acceptView)
+            }
+            self?.updateDone()
         }
+        interactions.cancelUpdatable = { [weak self] f in
+            if let strongSelf = self, let cancelView = strongSelf.cancelView {
+                f(cancelView)
+            }
+            self?.updateCancel()
+        }
+
 
     }
     
-    public func updateDone(_ text:String) {
+    public func updateDone() {
+        acceptView.sizeToFit()
+        needsLayout = true
+    }
+    
+    public func updateCancel() {
+        cancelView?.sizeToFit()
+        needsLayout = true
+    }
+    public func updateThrid(_ text:String) {
         acceptView.set(text: text, for: .Normal)
         acceptView.sizeToFit()
         

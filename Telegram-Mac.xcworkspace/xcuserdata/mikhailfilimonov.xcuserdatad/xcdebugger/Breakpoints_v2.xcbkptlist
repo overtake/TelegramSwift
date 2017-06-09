@@ -74,7 +74,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "518447486.919413"
+                  timestampString = "518651354.921523"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "863"
@@ -89,7 +89,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "518447486.922654"
+                  timestampString = "518651354.924764"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "863"
@@ -104,7 +104,7 @@
                   moduleName = "TGUIKit"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/Extensions.swift"
-                  timestampString = "518447486.925802"
+                  timestampString = "518651354.928173"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "863"
@@ -175,22 +175,6 @@
             startingLineNumber = "727"
             endingLineNumber = "727"
             landmarkName = "sendMessage(postbox:network:messageId:file:tagLocalIndex:wasDelivered:layer:)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "submodules/TelegramCore/TelegramCore/ChannelMembers.swift"
-            timestampString = "518447628.695376"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "33"
-            endingLineNumber = "33"
-            landmarkName = "channelMembers(account:peerId:filter:)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

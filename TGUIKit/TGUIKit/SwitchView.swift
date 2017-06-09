@@ -7,7 +7,35 @@
 //
 
 import Cocoa
+public struct SwitchViewAppearance {
+    let backgroundColor: NSColor
+    let disabledColor: NSColor
+    let stateOnColor: NSColor
+    let stateOffColor: NSColor
+    let borderColor: NSColor
+    public init(backgroundColor: NSColor, stateOnColor: NSColor, stateOffColor: NSColor, disabledColor: NSColor, borderColor: NSColor) {
+        self.backgroundColor = backgroundColor
+        self.stateOnColor = stateOnColor
+        self.stateOffColor = stateOffColor
+        self.disabledColor = disabledColor
+        self.borderColor = borderColor
+        
+    }
+}
+
+public let defaultSwitchViewAppearance = SwitchViewAppearance(backgroundColor: .white, stateOnColor: .blueUI, stateOffColor: .white, disabledColor: NSColor(0x4ba3e2, 0.7), borderColor: .border)
+
 public class SwitchView: Control {
+    
+    public var presentation: SwitchViewAppearance = defaultSwitchViewAppearance {
+        didSet {
+            let animates = self.animates
+            self.animates = false
+            afterChanged()
+            resize()
+            self.animates = animates
+        }
+    }
     
     public func setIsOn(_ isOn:Bool, animated:Bool = true) {
         self.animates = animated
@@ -79,9 +107,10 @@ public class SwitchView: Control {
         if animates {
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
         }
-        backgroundLayer.backgroundColor = isEnabled ? ( isOn ? NSColor.blueUI.cgColor : NSColor.white.cgColor ) : NSColor(0x4ba3e2, 0.7).cgColor
+        backgroundLayer.backgroundColor = isEnabled ? ( isOn ? presentation.stateOnColor.cgColor : presentation.stateOffColor.cgColor ) : presentation.disabledColor.cgColor
         backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
         buble.borderWidth = isOn ? 0.0 : 1.0
+        buble.backgroundColor = presentation.backgroundColor.cgColor
         
         if animates {
             backgroundLayer.animateBackground()
@@ -110,7 +139,7 @@ public class SwitchView: Control {
         backgroundLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
         backgroundLayer.cornerRadius = frame.height / 2.0
         backgroundLayer.borderWidth = 1.0
-        backgroundLayer.borderColor = NSColor.border.cgColor
+        backgroundLayer.borderColor = presentation.borderColor.cgColor
         
         buble.frame = bubleRect
         buble.cornerRadius = bubleRect.height/2.0

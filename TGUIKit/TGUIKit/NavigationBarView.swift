@@ -162,17 +162,23 @@ class NavigationBarView: View {
             
             // old
             pLeft.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: false, completion:{ [weak pLeft] (completed) in
-                pLeft?.removeFromSuperview()
+                if completed {
+                    pLeft?.removeFromSuperview()
+                }
             })
             pLeft.layer?.animate(from: pLeft_from as NSNumber, to: pLeft_to as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration)
             
             pCenter.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration, removeOnCompletion: false, completion:{ [weak pCenter] (completed) in
-                pCenter?.removeFromSuperview()
+                if completed {
+                    pCenter?.removeFromSuperview()
+                }
             })
             pCenter.layer?.animate(from: pCenter_from as NSNumber, to: pCenter_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
             
             pRight.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration, removeOnCompletion: false, completion:{ [weak pRight] (completed) in
-                pRight?.removeFromSuperview()
+                if completed {
+                    pRight?.removeFromSuperview()
+                }
             })
             pRight.layer?.animate(from: pRight_from as NSNumber, to: pRight_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
             

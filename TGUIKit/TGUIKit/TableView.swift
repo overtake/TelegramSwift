@@ -550,7 +550,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             reloadData(row: item.index, animated: false)
             NSAnimationContext.current().duration =  0.0
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
-
+            return true
         }
         endTableUpdates()
         
@@ -702,7 +702,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
         
-        assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
+        //assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
         self.listhash[item.stableId] = item;
         self.list.insert(item, at: at);
         item.table = self;
@@ -1562,16 +1562,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func enumerateItems(with callback:(TableRowItem)->Void) {
+    public func enumerateItems(with callback:(TableRowItem)->Bool) {
         for item in list {
-            callback(item)
+            if !callback(item) {
+                break
+            }
         }
     }
     
-    public func enumerateViews(with callback:(TableRowView)->Void) {
+    public func enumerateViews(with callback:(TableRowView)->Bool) {
         for index in 0 ..< list.count {
             if let view = viewNecessary(at: index) {
-                callback(view)
+                if !callback(view) {
+                    break
+                }
             }
         }
     }

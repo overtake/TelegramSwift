@@ -165,7 +165,7 @@
          contextName = "TableView.insert(item : TableRowItem, at : Int, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; Bool:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.item(stableId:item.stableId)">
+               value = "self.item(stableId:item.stableId) as? ShortPeerRowItem">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -517,6 +517,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "(channelMembers(account : Account, peerId : PeerId, filter : ChannelMembersFilter) -&gt; Signal&lt;[RenderedChannelParticipant], ()&gt;).(closure #1).(closure #1):ChannelMembers.swift">
+      </ContextState>
+      <ContextState
          contextName = "Network.(request&lt;A&gt; ((CustomStringConvertible, Buffer, (Buffer) -&gt; A?), tag : NetworkRequestDependencyTag?, automaticFloodWait : Bool) -&gt; Signal&lt;A, MTRpcError&gt;).(closure #1):Network.swift">
       </ContextState>
       <ContextState
@@ -827,7 +830,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -839,7 +842,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
