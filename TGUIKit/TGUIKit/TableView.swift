@@ -702,7 +702,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
         
-        //assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
+        assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
         self.listhash[item.stableId] = item;
         self.list.insert(item, at: at);
         item.table = self;
@@ -735,7 +735,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if(current != 0 && redraw) {
-            self.tableView.insertRows(at: IndexSet(integersIn: at..<current), withAnimation: animation)
+            self.tableView.insertRows(at: IndexSet(integersIn: at ..< current + at), withAnimation: animation)
         }
         
     }

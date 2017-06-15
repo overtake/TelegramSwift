@@ -544,6 +544,28 @@ open class ModalViewController : ViewController {
         viewDidLoad()
     }
     
+}
+
+open class TableModalViewController : ModalViewController {
+    override open var dynamicSize: Bool {
+        return true
+    }
     
+    override open func measure(size: NSSize) {
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.listHeight)), animated: false)
+    }
     
+    override open func viewClass() -> AnyClass {
+        return TableView.self
+    }
+    
+    public var genericView:TableView {
+        return self.view as! TableView
+    }
+    
+    public func updateSize(_ animated: Bool) {
+        if let contentSize = self.modal?.window.contentView?.frame.size {
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, genericView.listHeight)), animated: animated)
+        }
+    }
 }

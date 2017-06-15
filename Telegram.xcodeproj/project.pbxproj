@@ -171,6 +171,7 @@
 		C234A7FE1ED725C300EBBECE /* LanguageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234A7FD1ED725C300EBBECE /* LanguageViewController.swift */; };
 		C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234A7FF1ED73A3300EBBECE /* LanguageRowItem.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
+		C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234D4111EEDE6990017DC25 /* LoadingTableItem.swift */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */; };
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
@@ -364,6 +365,7 @@
 		C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */; };
 		C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
+		C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */; };
 		C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */; };
 		C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B9281E8011B000380D79 /* IOKit.framework */; };
 		C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
@@ -638,6 +640,7 @@
 		C234A7FD1ED725C300EBBECE /* LanguageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LanguageViewController.swift; sourceTree = "<group>"; };
 		C234A7FF1ED73A3300EBBECE /* LanguageRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LanguageRowItem.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PostboxMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C234D4111EEDE6990017DC25 /* LoadingTableItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingTableItem.swift; sourceTree = "<group>"; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginOthersAccountModal.swift; sourceTree = "<group>"; };
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
@@ -872,6 +875,7 @@
 		C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerExtension.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelEventFilterModalController.swift; sourceTree = "<group>"; };
 		C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClearUserNotifies.swift; sourceTree = "<group>"; };
 		C2C9B9281E8011B000380D79 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		C2C9B92A1E8011CD00380D79 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -1294,6 +1298,7 @@
 				C230B9121DD392EB0057F596 /* SearchRowItem.swift */,
 				C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */,
 				C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */,
+				C234D4111EEDE6990017DC25 /* LoadingTableItem.swift */,
 			);
 			name = "table-elements";
 			sourceTree = "<group>";
@@ -1465,6 +1470,7 @@
 			children = (
 				C230BEB11EE97B290029586C /* ChannelEventLogController.swift */,
 				C230BEB91EE9AEB80029586C /* ChannelEventLogItem.swift */,
+				C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */,
 			);
 			name = logs;
 			sourceTree = "<group>";
@@ -2943,6 +2949,7 @@
 				C2DF47BA1DE79574003AA6C0 /* bitwise.c in Sources */,
 				C250B01F1DB67B42004E9FBE /* WPLayout.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,
+				C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */,
 				C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */,
 				C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */,
 				C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */,
@@ -3006,6 +3013,7 @@
 				C253E22E1DE33A7C0022A29F /* ChatMusicRowItem.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
+				C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */,
 				C230B8F61DD371430057F596 /* SPopoverViewController.swift in Sources */,
 				C22674331DBF665A000BA9ED /* EStickerPackEntries.swift in Sources */,
 				C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */,

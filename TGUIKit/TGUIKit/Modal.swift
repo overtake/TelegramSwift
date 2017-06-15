@@ -207,7 +207,7 @@ public class Modal: NSObject {
     private var background:ModalBackground
     fileprivate var controller:ModalViewController?
     private var container:ModalContainerView!
-    private var window:Window
+    let window:Window
     private let disposable:MetaDisposable = MetaDisposable()
     private var interactionsView:ModalInteractionsContainer?
     public let interactions:ModalInteractions?
