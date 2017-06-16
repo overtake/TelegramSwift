@@ -19,7 +19,6 @@
 		C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2CFCABC1EBB4A2200843F6A /* voip_ringback.caf */; };
 		C2057FAA1EBC6A3C000423DC /* ChatCallRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2057FA91EBC6A3C000423DC /* ChatCallRowItem.swift */; };
 		C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB971EE71127003711DF /* ChannelAdminController.swift */; };
-		C205DB9B1EE8010B003711DF /* RestrictionSwitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB9A1EE8010B003711DF /* RestrictionSwitchView.swift */; };
 		C205DB9D1EE88765003711DF /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB9C1EE88762003711DF /* Views.swift */; };
 		C205FEA61EB39DE400455808 /* SidebarCapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205FEA51EB39DE400455808 /* SidebarCapViewController.swift */; };
 		C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */; };
@@ -492,7 +491,6 @@
 		C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
 		C2057FA91EBC6A3C000423DC /* ChatCallRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatCallRowItem.swift; sourceTree = "<group>"; };
 		C205DB971EE71127003711DF /* ChannelAdminController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelAdminController.swift; sourceTree = "<group>"; };
-		C205DB9A1EE8010B003711DF /* RestrictionSwitchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RestrictionSwitchView.swift; sourceTree = "<group>"; };
 		C205DB9C1EE88762003711DF /* Views.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		C205FEA51EB39DE400455808 /* SidebarCapViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SidebarCapViewController.swift; sourceTree = "<group>"; };
 		C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatEmptyPeerItem.swift; sourceTree = "<group>"; };
@@ -1058,7 +1056,6 @@
 		C205DB991EE800E9003711DF /* ui-controls */ = {
 			isa = PBXGroup;
 			children = (
-				C205DB9A1EE8010B003711DF /* RestrictionSwitchView.swift */,
 				C205DB9C1EE88762003711DF /* Views.swift */,
 			);
 			name = "ui-controls";
@@ -2733,7 +2730,6 @@
 				C2DF47CB1DE79719003AA6C0 /* TGDataItem.m in Sources */,
 				C2538E521E770B4600B21DF0 /* GroupAdminsController.swift in Sources */,
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
-				C205DB9B1EE8010B003711DF /* RestrictionSwitchView.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				C253A95F1D9165CD00CDC850 /* webp.m in Sources */,
