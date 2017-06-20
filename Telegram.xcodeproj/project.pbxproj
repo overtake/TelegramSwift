@@ -363,6 +363,7 @@
 		C2B648901EB25B1700BA574B /* MediaResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6488F1EB25B1700BA574B /* MediaResources.swift */; };
 		C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */; };
 		C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */; };
+		C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
 		C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */; };
 		C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */; };
@@ -872,6 +873,7 @@
 		C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentGIFRowItem.swift; sourceTree = "<group>"; };
 		C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerExtension.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxySettingsViewController.swift; sourceTree = "<group>"; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelEventFilterModalController.swift; sourceTree = "<group>"; };
 		C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClearUserNotifies.swift; sourceTree = "<group>"; };
@@ -1248,6 +1250,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				C2C5C2031EF8228C00AEA252 /* proxy */,
 				C221ED521EA6849D00471C65 /* data-and-storage */,
 				C25C132B1E8A403100AE26A1 /* stickers */,
 				C24D9FC81E250328002CD3F3 /* privacy */,
@@ -2178,6 +2181,14 @@
 			name = "parent-controllers";
 			sourceTree = "<group>";
 		};
+		C2C5C2031EF8228C00AEA252 /* proxy */ = {
+			isa = PBXGroup;
+			children = (
+				C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */,
+			);
+			name = proxy;
+			sourceTree = "<group>";
+		};
 		C2C9B90B1E800F0C00380D79 /* media-key-tap */ = {
 			isa = PBXGroup;
 			children = (
@@ -2894,6 +2905,7 @@
 				C2A315B91E2E695800D89000 /* TwoStepVerificationMainViewController.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
+				C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,

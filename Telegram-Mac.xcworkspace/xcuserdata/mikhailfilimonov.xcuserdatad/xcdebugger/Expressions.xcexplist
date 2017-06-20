@@ -414,6 +414,9 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
+               value = "self.listhash">
+            </PersistentString>
+            <PersistentString
                value = "stableId">
             </PersistentString>
          </PersistentStrings>
@@ -545,6 +548,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.rightSize.getter:ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SuggestionLocalizationViewController.viewDidLoad() -&gt; ():SuggestionLocalizationViewController.swift">
       </ContextState>
       <ContextState
          contextName = "ImageView.viewDidChangeBackingProperties() -&gt; ():ImageView.swift">
@@ -830,7 +836,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -842,7 +848,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1332,6 +1338,9 @@
       </ContextState>
       <ContextState
          contextName = "(migrationData(accountManager : AccountManager, appGroupPath : String) -&gt; Signal&lt;ApplicationContext?, ()&gt;).(closure #1).(closure #4):ApplicationContext.swift">
+      </ContextState>
+      <ContextState
+         contextName = "AuthorizedApplicationContext.init(window : Window, shouldOnlineKeeper : Signal&lt;Bool, ()&gt;, account : Account, accountManager : AccountManager, localization : LocalizationSettings?) -&gt; AuthorizedApplicationContext:ApplicationContext.swift">
       </ContextState>
       <ContextState
          contextName = "ChatContactRowItem.init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatContactRowItem:ChatContactRowItem.swift">
