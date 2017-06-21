@@ -414,10 +414,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -571,6 +571,14 @@
          <PersistentStrings>
             <PersistentString
                value = "chatState == .normal">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(channelMembersEntries([RenderedChannelParticipant], users : [TemporaryPeer]?, remote : [TemporaryPeer], account : Account, isLoading : Bool) -&gt; [SelectPeerEntry]).(closure #1):SelectPeersController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "result">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -836,7 +844,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -848,7 +856,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
