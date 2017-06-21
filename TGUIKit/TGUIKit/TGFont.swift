@@ -47,6 +47,10 @@ public extension NSFont {
         }
     }
     
+    public static func italic(_ size: FontSize) -> NSFont {
+        return NSFontManager.shared().convert(.normal(size), toHaveTrait: .italicFontMask)
+    }
+    
     public static func medium(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {

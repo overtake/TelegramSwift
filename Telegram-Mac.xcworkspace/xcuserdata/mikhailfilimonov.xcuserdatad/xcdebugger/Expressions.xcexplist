@@ -165,7 +165,7 @@
          contextName = "TableView.insert(item : TableRowItem, at : Int, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; Bool:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.item(stableId:item.stableId)">
+               value = "self.item(stableId:item.stableId) as? ShortPeerRowItem">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -416,6 +416,9 @@
             <PersistentString
                value = "stableId">
             </PersistentString>
+            <PersistentString
+               value = "self.listhash">
+            </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
@@ -517,6 +520,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "(channelMembers(account : Account, peerId : PeerId, filter : ChannelMembersFilter) -&gt; Signal&lt;[RenderedChannelParticipant], ()&gt;).(closure #1).(closure #1):ChannelMembers.swift">
+      </ContextState>
+      <ContextState
          contextName = "Network.(request&lt;A&gt; ((CustomStringConvertible, Buffer, (Buffer) -&gt; A?), tag : NetworkRequestDependencyTag?, automaticFloodWait : Bool) -&gt; Signal&lt;A, MTRpcError&gt;).(closure #1):Network.swift">
       </ContextState>
       <ContextState
@@ -544,6 +550,9 @@
          contextName = "ChatRowItem.rightSize.getter:ChatRowItem.swift">
       </ContextState>
       <ContextState
+         contextName = "SuggestionLocalizationViewController.viewDidLoad() -&gt; ():SuggestionLocalizationViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "ImageView.viewDidChangeBackingProperties() -&gt; ():ImageView.swift">
          <PersistentStrings>
             <PersistentString
@@ -562,6 +571,14 @@
          <PersistentStrings>
             <PersistentString
                value = "chatState == .normal">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "(channelMembersEntries([RenderedChannelParticipant], users : [TemporaryPeer]?, remote : [TemporaryPeer], account : Account, isLoading : Bool) -&gt; [SelectPeerEntry]).(closure #1):SelectPeersController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "result">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -827,7 +844,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -839,7 +856,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1329,6 +1346,9 @@
       </ContextState>
       <ContextState
          contextName = "(migrationData(accountManager : AccountManager, appGroupPath : String) -&gt; Signal&lt;ApplicationContext?, ()&gt;).(closure #1).(closure #4):ApplicationContext.swift">
+      </ContextState>
+      <ContextState
+         contextName = "AuthorizedApplicationContext.init(window : Window, shouldOnlineKeeper : Signal&lt;Bool, ()&gt;, account : Account, accountManager : AccountManager, localization : LocalizationSettings?) -&gt; AuthorizedApplicationContext:ApplicationContext.swift">
       </ContextState>
       <ContextState
          contextName = "ChatContactRowItem.init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatContactRowItem:ChatContactRowItem.swift">

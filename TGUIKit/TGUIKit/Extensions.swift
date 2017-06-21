@@ -152,9 +152,9 @@ public extension NSMutableAttributedString {
         
     }
     
-    public func add(link:Any, for range:NSRange)  {
+    public func add(link:Any, for range:NSRange, color: NSColor = .link)  {
         self.addAttribute(NSLinkAttributeName, value: link, range: range)
-        self.addAttribute(NSForegroundColorAttributeName, value: NSColor.link, range: range)
+        self.addAttribute(NSForegroundColorAttributeName, value: color, range: range)
     }
     
     public func setCTFont(font:NSFont, range:NSRange) -> Void {

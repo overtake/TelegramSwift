@@ -91,6 +91,7 @@ public class Window: NSWindow {
     private var mouseHandlers:[NSEventType:[MouseObserver]] = [:]
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
+    public  var copyhandler:(()->Void)? = nil
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -252,10 +253,14 @@ public class Window: NSWindow {
     }
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
-        
-        if firstResponder.responds(to: NSSelectorFromString("copy:")) {
-            firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
+        if let copyhandler = copyhandler {
+            copyhandler()
+        } else {
+            if firstResponder.responds(to: NSSelectorFromString("copy:")) {
+                firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
+            }
         }
+        
     }
     
     public override func sendEvent(_ event: NSEvent) {

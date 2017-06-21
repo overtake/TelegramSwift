@@ -550,7 +550,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             reloadData(row: item.index, animated: false)
             NSAnimationContext.current().duration =  0.0
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
-
+            return true
         }
         endTableUpdates()
         
@@ -735,7 +735,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if(current != 0 && redraw) {
-            self.tableView.insertRows(at: IndexSet(integersIn: at..<current), withAnimation: animation)
+            self.tableView.insertRows(at: IndexSet(integersIn: at ..< current + at), withAnimation: animation)
         }
         
     }
@@ -1562,16 +1562,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func enumerateItems(with callback:(TableRowItem)->Void) {
+    public func enumerateItems(with callback:(TableRowItem)->Bool) {
         for item in list {
-            callback(item)
+            if !callback(item) {
+                break
+            }
         }
     }
     
-    public func enumerateViews(with callback:(TableRowView)->Void) {
+    public func enumerateViews(with callback:(TableRowView)->Bool) {
         for index in 0 ..< list.count {
             if let view = viewNecessary(at: index) {
-                callback(view)
+                if !callback(view) {
+                    break
+                }
             }
         }
     }
