@@ -841,15 +841,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
-        let item = self.item(at: at)
-        let animation = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current().duration = animation == .none ? 0.0 : NSAnimationContext.current().duration
-        
-        self.list.remove(at: at);
-        self.listhash.removeValue(forKey: item.stableId)
-        
-        if(redraw) {
-            self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation)
+        if at < count {
+            let item = self.item(at: at)
+            let animation = animation != .none ? item.animatable ? animation : .none : .none
+            NSAnimationContext.current().duration = animation == .none ? 0.0 : NSAnimationContext.current().duration
+            
+            self.list.remove(at: at);
+            self.listhash.removeValue(forKey: item.stableId)
+            
+            if(redraw) {
+                self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation)
+            }
         }
     }
     
