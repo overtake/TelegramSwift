@@ -83,6 +83,8 @@
 		C2B1A12E1DA5148B00ACB1DD /* TextButtonBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A12D1DA5148B00ACB1DD /* TextButtonBarView.swift */; };
 		C2B1A1301DA53E7D00ACB1DD /* BackNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A12F1DA53E7D00ACB1DD /* BackNavigationBar.swift */; };
 		C2B1A1321DA57E8300ACB1DD /* EditableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1311DA57E8300ACB1DD /* EditableViewController.swift */; };
+		C2B9BE861EFC373D00D6B96F /* PresentationTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B9BE841EFC373D00D6B96F /* PresentationTheme.swift */; };
+		C2B9BE871EFC373D00D6B96F /* PresentationResourceCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B9BE851EFC373D00D6B96F /* PresentationResourceCache.swift */; };
 		C2CBCABB1D80AD1F00142EC0 /* TGFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABA1D80AD1F00142EC0 /* TGFont.swift */; };
 		C2CBCABD1D814D4B00142EC0 /* System.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCABC1D814D4B00142EC0 /* System.swift */; };
 		C2CBCAC31D81595900142EC0 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CBCAC21D81595900142EC0 /* Extensions.swift */; };
@@ -174,6 +176,8 @@
 		C2B1A12D1DA5148B00ACB1DD /* TextButtonBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextButtonBarView.swift; sourceTree = "<group>"; };
 		C2B1A12F1DA53E7D00ACB1DD /* BackNavigationBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackNavigationBar.swift; sourceTree = "<group>"; };
 		C2B1A1311DA57E8300ACB1DD /* EditableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditableViewController.swift; sourceTree = "<group>"; };
+		C2B9BE841EFC373D00D6B96F /* PresentationTheme.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PresentationTheme.swift; sourceTree = "<group>"; };
+		C2B9BE851EFC373D00D6B96F /* PresentationResourceCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PresentationResourceCache.swift; sourceTree = "<group>"; };
 		C2CBCABA1D80AD1F00142EC0 /* TGFont.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TGFont.swift; sourceTree = "<group>"; };
 		C2CBCABC1D814D4B00142EC0 /* System.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = System.swift; sourceTree = "<group>"; };
 		C2CBCAC21D81595900142EC0 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -358,6 +362,15 @@
 			name = tabbar;
 			sourceTree = "<group>";
 		};
+		C2B9BE831EFC373200D6B96F /* presentation */ = {
+			isa = PBXGroup;
+			children = (
+				C2B9BE841EFC373D00D6B96F /* PresentationTheme.swift */,
+				C2B9BE851EFC373D00D6B96F /* PresentationResourceCache.swift */,
+			);
+			name = presentation;
+			sourceTree = "<group>";
+		};
 		C2CBCAC11D81593B00142EC0 /* extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -388,6 +401,7 @@
 		C2E0DEA91D7EF51C00EF1C8D /* TGUIKit */ = {
 			isa = PBXGroup;
 			children = (
+				C2B9BE831EFC373200D6B96F /* presentation */,
 				C2271DA71DAD1728001792B6 /* nodes */,
 				C2303E801D9A691300098E12 /* tabbar */,
 				C2303E7D1D99881500098E12 /* overlay */,
@@ -539,6 +553,7 @@
 				C2271DED1DAFE4D0001792B6 /* TransformImageArguments.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
 				C2B1A1291DA3DDED00ACB1DD /* Node.swift in Sources */,
+				C2B9BE861EFC373D00D6B96F /* PresentationTheme.swift in Sources */,
 				C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */,
 				C219E1E01D8A71820042F0C8 /* SImageLayer.swift in Sources */,
 				C2B1A11E1DA26BA400ACB1DD /* TransactionHandler.swift in Sources */,
@@ -572,6 +587,7 @@
 				C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */,
 				C21AAE3A1DB2398B007638C5 /* DisplayLinkDispatcher.swift in Sources */,
 				C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */,
+				C2B9BE871EFC373D00D6B96F /* PresentationResourceCache.swift in Sources */,
 				C2271F451DB4EE3C0045E719 /* TableStickView.swift in Sources */,
 				C25FC7F71D86DC370041E303 /* TGClipView.swift in Sources */,
 				C2CBCAC31D81595900142EC0 /* Extensions.swift in Sources */,

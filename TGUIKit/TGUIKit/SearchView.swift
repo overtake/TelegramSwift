@@ -9,16 +9,7 @@
 import Cocoa
 
 
-public struct SearchTheme {
-    let searchImage:CGImage
-    let clearImage:CGImage
-    let placeholder:()->String
-    public init(_ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:@escaping()->String) {
-        self.searchImage = searchImage
-        self.clearImage = clearImage
-        self.placeholder = placeholder
-    }
-}
+
 
 class SearchTextField: NSTextView {
 
@@ -83,22 +74,8 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     private let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
-    public var theme:SearchTheme {
-        didSet {
-            placeholder.attributedString = NSAttributedString.initialize(string: theme.placeholder(), color: .grayText, font: .normal(.text), coreText: true)
-            placeholder.backgroundColor = .grayBackground
-            placeholder.sizeToFit()
-            search.frame = NSMakeRect(0, 0, theme.searchImage.backingSize.width, theme.searchImage.backingSize.height)
-            search.image = theme.searchImage
-            animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
-            
-            placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
-            search.centerY()
 
-            
-            needsLayout = true
-        }
-    }
+    
     
     public var isLoading:Bool = false {
         didSet {
@@ -108,15 +85,34 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
+    override public func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        
+        input.textColor = presentation.search.textColor
+        placeholder.attributedString = NSAttributedString.initialize(string: presentation.search.placeholder, color: presentation.search.textColor, font: .normal(.text))
+        placeholder.backgroundColor = presentation.search.backgroundColor
+        self.backgroundColor = presentation.search.backgroundColor
+        placeholder.sizeToFit()
+        search.frame = NSMakeRect(0, 0, presentation.search.searchImage.backingSize.width, presentation.search.searchImage.backingSize.height)
+        search.image = presentation.search.searchImage
+        animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
+        
+        clear.set(image: presentation.search.clearImage, for: .Normal)
+        clear.sizeToFit()
+        
+        placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
+        search.centerY()
+        
+        
+        needsLayout = true
+
+    }
     
-    
-    required public init(frame frameRect: NSRect, theme:SearchTheme) {
-        self.theme = theme
+    required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
         self.layer?.cornerRadius = .cornerRadius
         progressIndicator.style = .spinningStyle
-        progressIndicator.setFrameSize(theme.clearImage.backingSize)
         progressIndicator.wantsLayer = true
         progressIndicator.isHidden = true
        // input.isBordered = false
@@ -145,13 +141,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
         animateContainer.backgroundColor = .clear
         
-        placeholder.attributedString = NSAttributedString.initialize(string: theme.placeholder(), color: .grayText, font: .normal(.text), coreText: true)
-        placeholder.backgroundColor = .grayBackground
         placeholder.sizeToFit()
         animateContainer.addSubview(placeholder)
         
-        search.frame = NSMakeRect(0, 0, theme.searchImage.backingSize.width, theme.searchImage.backingSize.height)
-        search.image = theme.searchImage
         animateContainer.addSubview(search)
         
         self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
@@ -162,8 +154,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         addSubview(animateContainer)
         addSubview(input)
         
-        
-        clear.set(image: theme.clearImage, for: .Normal)
+
         clear.backgroundColor = .clear
         
         
@@ -173,7 +164,6 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             
         }, for: .Click)
         
-        clear.frame = NSMakeRect(NSWidth(self.frame) - inset - theme.clearImage.backingSize.width, 0, theme.clearImage.backingSize.width, theme.clearImage.backingSize.height)
         addSubview(clear)
         
         clear.isHidden = true
@@ -195,10 +185,6 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     public func textDidChange(_ notification: Notification) {
-        
-        //input.string = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
-        
-       //r input.setSelectedRange(<#T##charRange: NSRange##NSRange#>)
         
         if let searchInteractions = searchInteractions {
             searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
@@ -354,8 +340,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         case .Focus:
             animateContainer.centerY(x: leftInset)
         }
-        clear.frame = NSMakeRect(frame.width - inset - theme.clearImage.backingSize.width, clear.frame.minY, theme.clearImage.backingSize.width, theme.clearImage.backingSize.height)
-        clear.centerY()
+        clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.setFrameOrigin(clear.frame.origin)
     }
 
@@ -373,11 +358,6 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         return self.input.string ?? ""
     }
     
-    public override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        let theme = self.theme
-        self.theme = theme
-    }
     
     public func setStirng(_ string:String) {
         self.input.string = string
@@ -391,10 +371,6 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    required public init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
     }
     
 }
