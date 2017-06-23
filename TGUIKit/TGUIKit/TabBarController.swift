@@ -50,7 +50,9 @@ public class TabBarController: ViewController, TabViewDelegate {
         return TabBarViewController.self
     }
     
-
+    public override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+    }
     
     public override func loadView() {
         super.loadView()
@@ -93,6 +95,15 @@ public class TabBarController: ViewController, TabViewDelegate {
     
     public func add(tab:TabItem) -> Void {
         genericView.tabView.addTab(tab)
+    }
+    public func tab(at index:Int) -> TabItem {
+        return genericView.tabView.tab(at: index)
+    }
+    public func replace(tab: TabItem, at index:Int) -> Void {
+        genericView.tabView.replaceTab(tab, at: index)
+    }
+    public var isEmpty:Bool {
+        return genericView.tabView.isEmpty
     }
     
 }

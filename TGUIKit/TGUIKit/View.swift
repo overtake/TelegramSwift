@@ -102,6 +102,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
             }
         }
     }
+
     
     public var flip:Bool = true
     
@@ -128,7 +129,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
             ctx.fill(bounds)
             
             if let border = border {
-                ctx.setFillColor(NSColor.border.cgColor)
+                ctx.setFillColor(presentation.colors.border.cgColor)
                 
                 if border.contains(.Top) {
                     ctx.fill(NSMakeRect(0, !self.isFlipped ? NSHeight(self.frame) - .borderSize : 0, NSWidth(self.frame), .borderSize))

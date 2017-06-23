@@ -35,13 +35,17 @@ public class TabBarView: View {
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        ctx.setFillColor(NSColor.border.cgColor)
-        
+        ctx.setFillColor(presentation.colors.border.cgColor)
         ctx.fill(self.bounds)
     }
     
     func addTab(_ tab: TabItem) {
         self.tabs.append(tab)
+        self.redraw()
+    }
+    func replaceTab(_ tab: TabItem, at index:Int) {
+        self.tabs.remove(at: index)
+        self.tabs.insert(tab, at: index)
         self.redraw()
     }
     
@@ -59,6 +63,12 @@ public class TabBarView: View {
         self.tabs.remove(at: index)
         self.redraw()
     }
+    public var isEmpty:Bool {
+        return tabs.isEmpty
+    }
+    public func tab(at index:Int) -> TabItem {
+        return self.tabs[index]
+    }
     
     func redraw() {
         let width = NSWidth(self.bounds)
@@ -71,12 +81,14 @@ public class TabBarView: View {
         for tab in tabs {
             let itemWidth = defWidth
             let view = View(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
+            view.backgroundColor = presentation.colors.background
             let container = View(frame: view.bounds)
             view.autoresizingMask = [.viewMinXMargin, .viewMaxXMargin, .viewWidthSizable]
             view.autoresizesSubviews = true
             let imageView = ImageView(frame: NSMakeRect(0, 0, tab.image.backingSize.width, tab.image.backingSize.height))
             imageView.image = tab.image
             container.addSubview(imageView)
+            container.backgroundColor = presentation.colors.background
             container.setFrameSize(NSMakeSize(NSWidth(imageView.frame), NSHeight(container.frame)))
             view.addSubview(container)
             
@@ -95,10 +107,19 @@ public class TabBarView: View {
         setFrameSize(frame.size)
     }
     
+    public override func updateLocalizationAndTheme() {
+        for subview in subviews {
+            subview.background = presentation.colors.background
+            for container in subview.subviews {
+                container.background = presentation.colors.background
+            }
+        }
+        needsDisplay = true
+        super.updateLocalizationAndTheme()
+    }
     
     
     override public func setFrameSize(_ newSize: NSSize) {
-        let previous:CGFloat = frame.width
         super.setFrameSize(newSize)
        // if previous != newSize.width {
             let width = NSWidth(self.bounds)

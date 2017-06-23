@@ -23,4 +23,8 @@ open class TabItem: NSObject {
         self.subNode = subNode
         super.init()
     }
+    
+    public func withUpdatedImages(_ image: CGImage, _ selectedImage: CGImage) -> TabItem {
+        return TabItem(image: image, selectedImage: selectedImage, controller: self.controller, subNode: self.subNode)
+    }
 }

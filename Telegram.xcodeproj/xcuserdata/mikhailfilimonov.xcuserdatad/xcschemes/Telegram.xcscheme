@@ -51,6 +51,7 @@
       debugDocumentVersioning = "YES"
       stopOnEveryThreadSanitizerIssue = "YES"
       debugServiceExtension = "internal"
+      enableGPUValidationMode = "1"
       allowLocationSimulation = "YES">
       <PreActions>
          <ExecutionAction

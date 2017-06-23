@@ -60,16 +60,16 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     override public func setNeedsDisplay(_ invalidRect: NSRect) {
-         
+        
     }
     
     public func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(NSColor.white.cgColor)
+        ctx.setFillColor(presentation.colors.background.cgColor)
         ctx.fill(self.bounds)
 
         if let border = border {
             
-            ctx.setFillColor(NSColor.border.cgColor)
+            ctx.setFillColor(presentation.colors.border.cgColor)
             
             if border.contains(.Top) {
                 ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))

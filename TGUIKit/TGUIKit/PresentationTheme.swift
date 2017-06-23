@@ -7,8 +7,6 @@
 //
 
 import Cocoa
-import TGUIKit
-import SwiftSignalKitMac
 
 public enum PresentationThemeParsingError: Error {
     case generic
@@ -23,27 +21,6 @@ public enum PresentationThemeParsingError: Error {
 //}
 
 
-//
-//    public let link:NSColor
-//    public let blueUI:NSColor
-//    public let redUI:NSColor
-//    public let greenUI:NSColor
-//    public let blackTransparent:NSColor
-//    public let grayTransparent:NSColor
-//    public let grayUI:NSColor
-//    public let darkGrayText:NSColor
-//    public let text:NSColor
-//    public let blueText:NSColor
-//    public let blueSelect:NSColor
-//    public let selectText:NSColor
-//    public let blueFill:NSColor
-//    public let border:NSColor
-//    public let grayBackground:NSColor
-//    public let grayForeground:NSColor
-//    public let grayIcon:NSColor
-//    public let blueIcon:NSColor
-//    public let badgeMuted:NSColor
-//    public let badge:NSColor
 
 
 public struct SearchTheme {
@@ -61,17 +38,52 @@ public struct SearchTheme {
     }
 }
 
-public struct ColorTheme {
-    public let backgroundColor: NSColor
-    public let textColor: NSColor
-    public let grayTextColor:NSColor
-    public let linkColor:NSColor
-    
-    init(backgroundColor:NSColor, textColor: NSColor, grayTextColor: NSColor, linkColor: NSColor) {
-        self.backgroundColor = backgroundColor
-        self.textColor = textColor
-        self.grayTextColor = grayTextColor
-        self.linkColor = linkColor
+public struct ColorPallete {
+    public let background: NSColor
+    public let text: NSColor
+    public let grayText:NSColor
+    public let link:NSColor
+    public let blueUI:NSColor
+    public let redUI:NSColor
+    public let greenUI:NSColor
+    public let blackTransparent:NSColor
+    public let grayTransparent:NSColor
+    public let grayUI:NSColor
+    public let darkGrayText:NSColor
+    public let blueText:NSColor
+    public let blueSelect:NSColor
+    public let selectText:NSColor
+    public let blueFill:NSColor
+    public let border:NSColor
+    public let grayBackground:NSColor
+    public let grayForeground:NSColor
+    public let grayIcon:NSColor
+    public let blueIcon:NSColor
+    public let badgeMuted:NSColor
+    public let badge:NSColor
+    init(background:NSColor, text: NSColor, grayText: NSColor, link: NSColor, blueUI:NSColor, redUI:NSColor, greenUI:NSColor, blackTransparent:NSColor, grayTransparent:NSColor, grayUI:NSColor, darkGrayText:NSColor, blueText:NSColor, blueSelect:NSColor, selectText:NSColor, blueFill:NSColor, border:NSColor, grayBackground:NSColor, grayForeground:NSColor, grayIcon:NSColor, blueIcon:NSColor, badgeMuted:NSColor, badge:NSColor) {
+        self.background = background
+        self.text = text
+        self.grayText = grayText
+        self.link = link
+        self.blueUI = blueUI
+        self.redUI = redUI
+        self.greenUI = greenUI
+        self.blackTransparent = blackTransparent
+        self.grayTransparent = grayTransparent
+        self.grayUI = grayUI
+        self.darkGrayText = darkGrayText
+        self.blueText = blueText
+        self.blueSelect = blueSelect
+        self.selectText = selectText
+        self.blueFill = blueFill
+        self.border = border
+        self.grayBackground = grayBackground
+        self.grayForeground = grayForeground
+        self.grayIcon = grayIcon
+        self.blueIcon = blueIcon
+        self.badgeMuted = badgeMuted
+        self.badge = badge
     }
 }
 
@@ -79,12 +91,12 @@ public struct ColorTheme {
 
 open class PresentationTheme : Equatable {
     
-    public let colors:ColorTheme
+    public let colors:ColorPallete
     public let search: SearchTheme
     
     public let resourceCache = PresentationsResourceCache()
     
-    public init(colors: ColorTheme, search: SearchTheme) {
+    public init(colors: ColorPallete, search: SearchTheme) {
         self.colors = colors
         self.search = search
     }
@@ -112,25 +124,24 @@ open class PresentationTheme : Equatable {
         return lhs === rhs
     }
     
-    public func image(_ key: Int32, _ generate: (PresentationTheme) -> CGImage?) -> CGImage? {
-        return self.resourceCache.image(key, self, generate)
-    }
-    
-    public func object(_ key: Int32, _ generate: (PresentationTheme) -> AnyObject?) -> AnyObject? {
-        return self.resourceCache.object(key, self, generate)
-    }
+//    public func image(_ key: Int32, _ generate: (PresentationTheme) -> CGImage?) -> CGImage? {
+//        return self.resourceCache.image(key, self, generate)
+//    }
+//    
+//    public func object(_ key: Int32, _ generate: (PresentationTheme) -> AnyObject?) -> AnyObject? {
+//        return self.resourceCache.object(key, self, generate)
+//    }
 }
 
 
+public let whitePallete = ColorPallete(background: .white, text: NSColor(0x000000), grayText: NSColor(0x999999), link: NSColor(0x2481cc), blueUI: NSColor(0x2481cc), redUI: NSColor(0xff3b30), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x4ba3e2), blueSelect:NSColor(0x4c91c7), selectText:NSColor(0xeaeaea), blueFill:NSColor(0x4ba3e2), border:NSColor(0xeaeaea), grayBackground:NSColor(0xf4f4f4), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x9e9e9e), blueIcon:NSColor(0x0f8fe4), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2))
 
-public let whiteAppearanceColor = ColorTheme(backgroundColor: .white, textColor: NSColor(0x000000), grayTextColor: .grayText, linkColor: .link)
-
-public let blackAppearanceColor = ColorTheme(backgroundColor: NSColor(0x252526), textColor: NSColor(0x000000), grayTextColor: .grayText, linkColor: .link)
+public let darkPallete = ColorPallete(background: NSColor(0x121212), text: .white, grayText: NSColor(0x999999), link: NSColor(0x2481cc), blueUI: NSColor(0x2481cc), redUI: NSColor(0xff3b30), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x4ba3e2), blueSelect:NSColor(0x4c91c7), selectText:NSColor(0xeaeaea), blueFill: NSColor(0x4ba3e2), border: NSColor(0x252526), grayBackground:NSColor(0xf4f4f4), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x9e9e9e), blueIcon:NSColor(0x0f8fe4), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2))
 
 
 private var _theme:PresentationTheme = whiteTheme
 
-public let whiteTheme = PresentationTheme(colors: whiteAppearanceColor, search: SearchTheme(.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), localizedString("SearchField.Search"), .grayText))
+public let whiteTheme = PresentationTheme(colors: whitePallete, search: SearchTheme(.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), localizedString("SearchField.Search"), .grayText))
 
 
 

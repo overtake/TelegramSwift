@@ -164,6 +164,19 @@ public extension NSColor {
         
         return (UInt32(alpha * 255.0) << 24) | (UInt32(red * 255.0) << 16) | (UInt32(green * 255.0) << 8) | (UInt32(blue * 255.0))
     }
+    
+    var rgb: UInt32 {
+        
+        let color = self.usingColorSpaceName(NSCalibratedRGBColorSpace)
+        if let color = color {
+            let red: CGFloat = color.redComponent
+            let green: CGFloat = color.greenComponent
+            let blue: CGFloat = color.blueComponent
+            
+            return (UInt32(red * 255.0) << 16) | (UInt32(green * 255.0) << 8) | (UInt32(blue * 255.0))
+        }
+        return 0x000000
+    }
 }
 
 public extension CGFloat {
