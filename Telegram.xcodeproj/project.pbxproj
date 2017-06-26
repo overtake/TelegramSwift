@@ -343,6 +343,7 @@
 		C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */; };
 		C2AC9C151E1E627F0085C7DE /* TabBadgeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */; };
 		C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */; };
+		C2AF01131F01543200D8AC1D /* ExportProxyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */; };
 		C2AF3B821E5CD79200DFDD81 /* ConvertGroupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AF3B811E5CD79200DFDD81 /* ConvertGroupViewController.swift */; };
 		C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B0722D1DFEDE430082939D /* UsernameInputRowItem.swift */; };
 		C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */; };
@@ -851,6 +852,7 @@
 		C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginErrorStateView.swift; sourceTree = "<group>"; };
 		C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBadgeItem.swift; sourceTree = "<group>"; };
 		C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalBadgeNode.swift; sourceTree = "<group>"; };
+		C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExportProxyModalController.swift; sourceTree = "<group>"; };
 		C2AF3B811E5CD79200DFDD81 /* ConvertGroupViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConvertGroupViewController.swift; sourceTree = "<group>"; };
 		C2B0722D1DFEDE430082939D /* UsernameInputRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UsernameInputRowItem.swift; sourceTree = "<group>"; };
 		C2B1A0EE1D9D94CE00ACB1DD /* SeparatorRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SeparatorRowItem.swift; sourceTree = "<group>"; };
@@ -2185,6 +2187,7 @@
 			isa = PBXGroup;
 			children = (
 				C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */,
+				C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */,
 			);
 			name = proxy;
 			sourceTree = "<group>";
@@ -2803,6 +2806,7 @@
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
 				C250B0271DB69694004E9FBE /* WPArticleLayout.swift in Sources */,
 				C232EA131E16552900C4D38C /* WebGameViewController.swift in Sources */,
+				C2AF01131F01543200D8AC1D /* ExportProxyModalController.swift in Sources */,
 				C2F6190D1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift in Sources */,
 				C2DF47C01DE79574003AA6C0 /* picture.c in Sources */,
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
