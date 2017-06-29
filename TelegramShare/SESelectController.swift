@@ -18,14 +18,9 @@ extension Peer {
     var canSendMessage: Bool {
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
-                return channel.role == .creator || channel.role == .editor
+                return channel.hasAdminRights(.canPostMessages)
             } else if case .group(_) = channel.info  {
-                switch channel.participationStatus {
-                case .kicked, .left:
-                    return false
-                case .member:
-                    break
-                }
+                return !channel.hasBannedRights(.banSendMessages)
             }
         } else if let group = self as? TelegramGroup {
             return group.membership == .Member
@@ -433,7 +428,8 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                     return .never()
                 }
             } else {
-                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased())) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
+                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased()) |> map {
+                    return $0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
                     var entries:[SelectablePeersEntry] = []
                     var i:Int32 = Int32.max
                     for peer in peers {
