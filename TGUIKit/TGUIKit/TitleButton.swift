@@ -203,7 +203,8 @@ public class TitleButton: ImageButton {
         
     }
     
-    public func disableActions() {
+    public override func disableActions() {
+        super.disableActions()
         self.text.disableActions()
         self.layer?.disableActions()
     }

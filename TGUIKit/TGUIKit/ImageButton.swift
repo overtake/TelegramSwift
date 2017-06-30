@@ -62,6 +62,11 @@ open class ImageButton: Button {
         }
     }
     
+    public func disableActions() {
+        animates = false
+        self.layer?.disableActions()
+        imageView.animates = false
+    }
     
     
     override public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) {

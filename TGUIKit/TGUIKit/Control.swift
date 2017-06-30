@@ -78,6 +78,7 @@ open class Control: View {
         didSet {
             if style != oldValue {
                 apply(style:style)
+                
             }
         }
     }
@@ -315,8 +316,8 @@ open class Control: View {
     }
     
     func apply(style:ControlStyle) -> Void {
+        self.backgroundColor = style.backgroundColor
         self.setNeedsDisplayLayer()
-
     }
     
 
