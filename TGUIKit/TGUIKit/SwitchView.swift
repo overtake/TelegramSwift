@@ -144,7 +144,7 @@ public class SwitchView: Control {
         buble.frame = bubleRect
         buble.cornerRadius = bubleRect.height/2.0
         buble.borderWidth = 1.0
-        buble.borderColor = NSColor.border.cgColor
+        buble.borderColor = presentation.borderColor.cgColor
 
     }
     

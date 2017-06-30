@@ -43,7 +43,7 @@ class DragView : OverlayControl {
         self.layer?.cornerRadius = .cornerRadius
         self.layer?.borderWidth = 2.0
         self.layer?.backgroundColor = NSColor.white.cgColor
-        self.layer?.borderColor = NSColor.border.cgColor
+        self.layer?.borderColor = presentation.colors.border.cgColor
         self.backgroundColor = .white
         self.set(handler: { control in
             control.layer?.borderColor = NSColor.blueUI.cgColor
@@ -51,7 +51,7 @@ class DragView : OverlayControl {
         }, for: .Hover)
         
         self.set(handler: { control in
-            control.layer?.borderColor = NSColor.border.cgColor
+            control.layer?.borderColor = presentation.colors.border.cgColor
             control.layer?.animateBorder()
         }, for: .Normal)
         

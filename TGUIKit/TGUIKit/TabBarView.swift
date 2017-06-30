@@ -59,6 +59,14 @@ public class TabBarView: View {
         self.redraw()
     }
     
+    func enumerateItems(_ f:(TabItem)->Bool) {
+        for item in tabs {
+            if f(item) {
+                break
+            }
+        }
+    }
+    
     func removeTab(at index: Int) {
         self.tabs.remove(at: index)
         self.redraw()

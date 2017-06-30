@@ -109,7 +109,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        ctx.setFillColor(NSColor.border.cgColor)
+        ctx.setFillColor(theme.colors.border.cgColor)
         ctx.fill(NSMakeRect(input.frame.minX, input.frame.maxY + 10, input.frame.width, .borderSize))
     }
     

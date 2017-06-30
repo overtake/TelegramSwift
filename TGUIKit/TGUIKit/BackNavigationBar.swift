@@ -35,6 +35,7 @@ open class BackNavigationBar: TextButtonBarView {
             button.removeImage(for: .Normal)
             button.removeImage(for: .Highlight)
         }
+        button.set(color: presentation.colors.blueUI, for: .Normal)
         needsLayout = true
     }
     

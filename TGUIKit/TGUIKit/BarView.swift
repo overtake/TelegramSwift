@@ -19,6 +19,7 @@ open class BarView: OverlayControl {
         super.draw(layer, in: ctx)
     }
     
+    
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         self.setNeedsDisplay()
@@ -29,6 +30,11 @@ open class BarView: OverlayControl {
         super.init()
         frame = NSMakeRect(0, 0, minWidth, 50)
         overlayInitEvent()
+    }
+    
+    override open func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        set(background: presentation.colors.background, for: .Normal)
     }
     
     override init() {

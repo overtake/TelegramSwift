@@ -52,6 +52,12 @@ public class TabBarController: ViewController, TabViewDelegate {
     
     public override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
+        genericView.tabView.enumerateItems({ item in
+            if item.controller.isLoaded() {
+                item.controller.updateLocalizationAndTheme()
+            }
+            return false
+        })
     }
     
     public override func loadView() {

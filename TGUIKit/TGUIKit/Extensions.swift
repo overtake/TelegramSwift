@@ -152,7 +152,7 @@ public extension NSMutableAttributedString {
         
     }
     
-    public func add(link:Any, for range:NSRange, color: NSColor = .link)  {
+    public func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
         self.addAttribute(NSLinkAttributeName, value: link, range: range)
         self.addAttribute(NSForegroundColorAttributeName, value: color, range: range)
     }
@@ -709,8 +709,10 @@ public extension Int {
 
 public extension NSProgressIndicator {
     public func set(color:NSColor) {
+        let color = color.usingColorSpace(NSColorSpace.sRGB)
+
         let colorPoly = CIFilter(name: "CIColorPolynomial")
-        if let colorPoly = colorPoly {
+        if let colorPoly = colorPoly, let color = color {
             colorPoly.setDefaults()
             let redVector = CIVector(x: color.redComponent, y: 0, z: 0, w: 0)
             let greenVector = CIVector(x: color.greenComponent, y: 0, z: 0, w: 0)

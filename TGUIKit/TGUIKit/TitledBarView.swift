@@ -48,9 +48,14 @@ private class TitledContainerView : View {
         }
     }
     
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        backgroundColor = presentation.colors.background
+    }
+    
     fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
+        ctx.setFillColor(presentation.colors.background.cgColor)
+        ctx.fill(bounds)
         if let text = text {
             let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - inset, NSHeight(layer.bounds)), nil,false, .left)
             var tY = NSMinY(focus(textLayout.size))
@@ -85,6 +90,12 @@ open class TitledBarView: BarView {
     public var titleImage:CGImage? {
         didSet {
             _containerView.titleImage = titleImage
+        }
+    }
+    
+    open override var backgroundColor: NSColor {
+        didSet {
+            containerView.backgroundColor = backgroundColor
         }
     }
     

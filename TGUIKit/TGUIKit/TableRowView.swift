@@ -57,7 +57,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
        
         if let border = border {
             
-            ctx.setFillColor(NSColor.border.cgColor)
+            ctx.setFillColor(presentation.colors.border.cgColor)
             
             if border.contains(.Top) {
                 ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))

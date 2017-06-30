@@ -37,6 +37,12 @@ class NavigationBarView: View {
         self.autoresizingMask = [.viewWidthSizable]
     }
     
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        bottomBorder.backgroundColor = presentation.colors.border
+        backgroundColor = presentation.colors.background
+    }
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -47,7 +53,7 @@ class NavigationBarView: View {
 //        ctx.setFillColor(NSColor.white.cgColor)
 //        ctx.fill(self.bounds)
 //
-//        ctx.setFillColor(NSColor.border.cgColor)
+//        ctx.setFillColor(theme.colors.border.cgColor)
 //        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
     }
     

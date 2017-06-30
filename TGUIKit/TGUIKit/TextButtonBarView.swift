@@ -36,6 +36,11 @@ open class TextButtonBarView: BarView {
         
     }
     
+    override open func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        button.set(background: presentation.colors.background, for: .Normal)
+    }
+    
     open override func layout() {
         switch alignment {
         case .Center:

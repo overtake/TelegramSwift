@@ -244,11 +244,11 @@ open class ViewController : NSObject {
     }
     
     open func getCenterBarViewOnce() -> TitledBarView {
-        return TitledBarView(.initialize(string: defaultBarTitle, font: .medium(.title)))
+        return TitledBarView(.initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
     }
     
     public func setCenterTitle(_ text:String) {
-        self.centerBarView.text = .initialize(string: text, font: .medium(.title))
+        self.centerBarView.text = .initialize(string: text, color: presentation.colors.text, font: .medium(.title))
     }
     
     open func getRightBarViewOnce() -> BarView {
@@ -405,10 +405,9 @@ open class ViewController : NSObject {
         self.view.removeFromSuperview()
     }
     
-    public let backImage:CGImage? = #imageLiteral(resourceName: "Icon_NavigationBack").precomposed()
     
     open func backSettings() -> (String,CGImage?) {
-        return (localizedString("Navigation.back"),backImage)
+        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(presentation.colors.blueIcon))
     }
     
     open var popoverClass:AnyClass {
@@ -451,6 +450,11 @@ open class ViewController : NSObject {
 open class GenericViewController<T> : ViewController where T:NSView {
     public var genericView:T {
         return super.view as! T
+    }
+    
+    open override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        genericView.background = presentation.colors.background
     }
     
     override open func loadView() -> Void {
