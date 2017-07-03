@@ -75,15 +75,6 @@ public struct ControlStyle: Equatable {
 
 public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.blueSelect)
 
-public let headerTextStyle = ControlStyle(font:.normal(.header), highlightColor:.white)
-public let titleTextStyle = ControlStyle(font:.normal(.title), highlightColor:.white)
-public let textStyle = ControlStyle(font:.normal(.text), highlightColor:.white)
-public let shortTextStyle = ControlStyle(font:.normal(.short), highlightColor:.white)
-
-public let headerTextGrayStyle = ControlStyle(font:.normal(.header), foregroundColor:.grayText, highlightColor:.white)
-public let titleTextGrayStyle = ControlStyle(font:.normal(.title), foregroundColor:.grayText, highlightColor:.white)
-public let textGrayStyle = ControlStyle(font:.normal(.text), foregroundColor:.grayText, highlightColor:.white)
-public let shortGrayStyle = ControlStyle(font:.normal(.short), foregroundColor:.grayText, highlightColor:.white)
 
 public func ==(lhs:ControlStyle, rhs:ControlStyle) -> Bool {
     return lhs.font == rhs.font && lhs.foregroundColor == rhs.foregroundColor && rhs.backgroundColor == lhs.backgroundColor
