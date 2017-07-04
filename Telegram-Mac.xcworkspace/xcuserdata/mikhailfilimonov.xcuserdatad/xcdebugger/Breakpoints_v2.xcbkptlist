@@ -154,7 +154,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "520784793.592274"
+                  timestampString = "520873467.282163"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -169,7 +169,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "520784793.595628"
+                  timestampString = "520873467.28616"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -224,70 +224,6 @@
             startingLineNumber = "244"
             endingLineNumber = "244"
             landmarkName = "checkState()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ChannelEventLogController.swift"
-            timestampString = "520518107.625476"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "460"
-            endingLineNumber = "460"
-            landmarkName = "viewDidLoad()"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Telegram.ChannelEventLogController.(viewDidLoad () -&gt; ()).(closure #8)"
-                  moduleName = "Telegram"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/Telegram-Mac/ChannelEventLogController.swift"
-                  timestampString = "520784793.451375"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "460"
-                  endingLineNumber = "460"
-                  offsetFromSymbolStart = "1535">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Telegram.ChannelEventLogController.(viewDidLoad () -&gt; ()).(closure #8).(implicit closure #1).(closure #2)"
-                  moduleName = "Telegram"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/Telegram-Mac/ChannelEventLogController.swift"
-                  timestampString = "520784793.455092"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "460"
-                  endingLineNumber = "460"
-                  offsetFromSymbolStart = "44">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/AddContactTableItem.swift"
-            timestampString = "520538125.899227"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "27"
-            endingLineNumber = "27"
-            landmarkName = "makeSize(_:oldWidth:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
