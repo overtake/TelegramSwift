@@ -204,6 +204,8 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
         }
         placeholder.isHidden = input.string != nil && !input.string!.isEmpty
+        input.isHidden = !(state == .Focus && !input.string!.isEmpty)
+        window?.makeFirstResponder(input)
     }
     
     public func textDidEndEditing(_ notification: Notification) {
@@ -260,7 +262,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             
             if state == .Focus {
                 
-               
+               window?.makeFirstResponder(input)
                 
                 let inputInset = leftInset + NSWidth(search.frame) + inset - 5
                 
@@ -342,6 +344,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             progressIndicator.removeFromSuperview()
             progressIndicator.isHidden = true
             clear.isHidden = self.state == .None
+        }
+        if window?.firstResponder == input {
+            window?.makeFirstResponder(input)
         }
     }
     

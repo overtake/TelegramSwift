@@ -154,7 +154,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "520713624.542025"
+                  timestampString = "520865909.782911"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -169,7 +169,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "520713624.545817"
+                  timestampString = "520865909.787438"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -233,13 +233,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ChannelEventLogController.swift"
-            timestampString = "520518107.625476"
+            filePath = "Telegram-Mac/LocalizableExtension.swift"
+            timestampString = "520850287.335463"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "460"
-            endingLineNumber = "460"
-            landmarkName = "viewDidLoad()"
+            startingLineNumber = "18"
+            endingLineNumber = "18"
+            landmarkName = "description()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -249,14 +249,14 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/AddContactTableItem.swift"
-            timestampString = "520538125.899227"
+            filePath = "Telegram-Mac/LocalizableExtension.swift"
+            timestampString = "520850832.036489"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "27"
-            endingLineNumber = "27"
-            landmarkName = "makeSize(_:oldWidth:)"
-            landmarkType = "7">
+            startingLineNumber = "24"
+            endingLineNumber = "24"
+            landmarkName = "description"
+            landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
