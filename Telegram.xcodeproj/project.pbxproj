@@ -179,6 +179,10 @@
 		C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23BC37D1E9BB28F00D79F92 /* AddContactModalController.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
+		C24499FD1F0C01EB00DF5650 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
+		C24499FE1F0C01EB00DF5650 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		C24499FF1F0C01ED00DF5650 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C2449A001F0C01ED00DF5650 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */; };
 		C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */; };
 		C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */; };
@@ -326,10 +330,6 @@
 		C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B31E2E65C600D89000 /* CalendarUtils.m */; };
 		C2A315B91E2E695800D89000 /* TwoStepVerificationMainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */; };
 		C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */; };
-		C2A418701F0BDFEE00C736F1 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
-		C2A418711F0BDFEE00C736F1 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
-		C2A418721F0BDFF500C736F1 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C2A418731F0BDFF600C736F1 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506741DF438B900971A93 /* AudioWaveformView.swift */; };
 		C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506761DF5664F00971A93 /* ForwardChatListController.swift */; };
 		C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506781DF59C9700971A93 /* PicturePicker.swift */; };
@@ -449,8 +449,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C2A418721F0BDFF500C736F1 /* Sparkle.framework in Copy Files */,
-				C2A418731F0BDFF600C736F1 /* HockeySDK.framework in Copy Files */,
+				C24499FF1F0C01ED00DF5650 /* Sparkle.framework in Copy Files */,
+				C2449A001F0C01ED00DF5650 /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -1000,8 +1000,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C2A418701F0BDFEE00C736F1 /* Sparkle.framework in Frameworks */,
-				C2A418711F0BDFEE00C736F1 /* HockeySDK.framework in Frameworks */,
+				C24499FD1F0C01EB00DF5650 /* Sparkle.framework in Frameworks */,
+				C24499FE1F0C01EB00DF5650 /* HockeySDK.framework in Frameworks */,
 				C271EB971EB916870034792D /* libtgvoip.framework in Frameworks */,
 				C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
