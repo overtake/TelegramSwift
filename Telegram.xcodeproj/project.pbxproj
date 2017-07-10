@@ -179,6 +179,10 @@
 		C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23BC37D1E9BB28F00D79F92 /* AddContactModalController.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
+		C2449A041F0D066000DF5650 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
+		C2449A051F0D066000DF5650 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		C2449A061F0D066400DF5650 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C2449A071F0D066400DF5650 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */; };
 		C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */; };
 		C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */; };
@@ -297,8 +301,6 @@
 		C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */; };
 		C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
 		C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
-		C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29670781F0FAAC800884DA2 /* AppearanceViewController.swift */; };
-		C296707B1F0FBFB500884DA2 /* ThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */; };
 		C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */; };
 		C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF851D8DB178001DBB59 /* MediaUtils.swift */; };
 		C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */; };
@@ -362,7 +364,6 @@
 		C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6488D1EB25A5300BA574B /* FetchVideoMediaResource.swift */; };
 		C2B648901EB25B1700BA574B /* MediaResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6488F1EB25B1700BA574B /* MediaResources.swift */; };
 		C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */; };
-		C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B9BE881EFC5E7000D6B96F /* Appearance.swift */; };
 		C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */; };
 		C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
@@ -434,10 +435,6 @@
 		C2FD34151E6C9003008D13D4 /* BaseApplicationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD34141E6C9003008D13D4 /* BaseApplicationSettings.swift */; };
 		C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */; };
 		C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */; };
-		C2FDE3091F054F3600D399D0 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C2FDE30A1F054F3600D399D0 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C2FDE30B1F054F3B00D399D0 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
-		C2FDE30C1F054F3B00D399D0 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		C2FF14601E532C0A007B7B14 /* SearchEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */; };
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
@@ -452,8 +449,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C2FDE3091F054F3600D399D0 /* Sparkle.framework in Copy Files */,
-				C2FDE30A1F054F3600D399D0 /* HockeySDK.framework in Copy Files */,
+				C2449A061F0D066400DF5650 /* Sparkle.framework in Copy Files */,
+				C2449A071F0D066400DF5650 /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -808,8 +805,6 @@
 		C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DateUtils.mm; sourceTree = "<group>"; };
 		C291942E1DCC6E2200359491 /* DeclareEncodables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeclareEncodables.swift; sourceTree = "<group>"; };
 		C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareApplicationContext.swift; sourceTree = "<group>"; };
-		C29670781F0FAAC800884DA2 /* AppearanceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppearanceViewController.swift; sourceTree = "<group>"; };
-		C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThemeSettings.swift; sourceTree = "<group>"; };
 		C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowView.swift; sourceTree = "<group>"; };
 		C296AF851D8DB178001DBB59 /* MediaUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaUtils.swift; sourceTree = "<group>"; };
 		C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaContentView.swift; sourceTree = "<group>"; };
@@ -879,7 +874,6 @@
 		C2B6488D1EB25A5300BA574B /* FetchVideoMediaResource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FetchVideoMediaResource.swift; sourceTree = "<group>"; };
 		C2B6488F1EB25B1700BA574B /* MediaResources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaResources.swift; sourceTree = "<group>"; };
 		C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentGIFRowItem.swift; sourceTree = "<group>"; };
-		C2B9BE881EFC5E7000D6B96F /* Appearance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Appearance.swift; sourceTree = "<group>"; };
 		C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerExtension.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxySettingsViewController.swift; sourceTree = "<group>"; };
@@ -1006,8 +1000,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C2FDE30B1F054F3B00D399D0 /* Sparkle.framework in Frameworks */,
-				C2FDE30C1F054F3B00D399D0 /* HockeySDK.framework in Frameworks */,
+				C2449A041F0D066000DF5650 /* Sparkle.framework in Frameworks */,
+				C2449A051F0D066000DF5650 /* HockeySDK.framework in Frameworks */,
 				C271EB971EB916870034792D /* libtgvoip.framework in Frameworks */,
 				C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
@@ -1345,7 +1339,6 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
-				C235A47A1EFBDC6400D463FD /* appearance */,
 				C205DB991EE800E9003711DF /* ui-controls */,
 				C2BB12081ED87C3800BDE46A /* parent-controllers */,
 				C234A7FC1ED724D900EBBECE /* localization */,
@@ -1412,7 +1405,6 @@
 				C2271DD01DAF6DD9001792B6 /* settings-controllers */,
 				C2271DA81DAD867E001792B6 /* PeerInfo */,
 				C20232A61D81D178007C9ADE /* chat */,
-				C29670781F0FAAC800884DA2 /* AppearanceViewController.swift */,
 			);
 			name = right;
 			sourceTree = "<group>";
@@ -1546,14 +1538,6 @@
 				C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */,
 			);
 			name = localization;
-			sourceTree = "<group>";
-		};
-		C235A47A1EFBDC6400D463FD /* appearance */ = {
-			isa = PBXGroup;
-			children = (
-				C2B9BE881EFC5E7000D6B96F /* Appearance.swift */,
-			);
-			name = appearance;
 			sourceTree = "<group>";
 		};
 		C2379D281DDCCBD00063AD30 /* bot */ = {
@@ -1859,7 +1843,6 @@
 				C221ED551EA6877300471C65 /* GeneratedMediaStoreSettings.swift */,
 				C221ED571EA687B600471C65 /* AutomaticMediaDownloadCategoryPeers.swift */,
 				C221ED591EA6896400471C65 /* VoiceCallSettings.swift */,
-				C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -2773,7 +2756,6 @@
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
-				C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
@@ -2897,7 +2879,6 @@
 				C21B24651EDB115700FC6CDA /* StringPluralization.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				C2DF47BE1DE79574003AA6C0 /* opus_header.c in Sources */,
-				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C2DF47D01DE82475003AA6C0 /* OpusAudioPlayer.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
@@ -3038,7 +3019,6 @@
 				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
-				C296707B1F0FBFB500884DA2 /* ThemeSettings.swift in Sources */,
 				C248BD241E706104004B9106 /* BlockedPeersViewController.swift in Sources */,
 				C230B9111DD3866A0057F596 /* ComposeActions.swift in Sources */,
 				C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */,
@@ -3244,7 +3224,6 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
-				HEADERMAP_USES_VFS = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
@@ -3404,7 +3383,6 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
-				HEADERMAP_USES_VFS = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
@@ -3572,7 +3550,6 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
-				HEADERMAP_USES_VFS = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
@@ -3620,7 +3597,6 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
-				HEADERMAP_USES_VFS = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
