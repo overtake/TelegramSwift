@@ -27,14 +27,14 @@ class NavigationBarView: View {
     
     override init() {
         super.init()
-        bottomBorder.backgroundColor = .border
         self.autoresizingMask = [.viewWidthSizable]
+        updateLocalizationAndTheme()
     }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        bottomBorder.backgroundColor = .border
         self.autoresizingMask = [.viewWidthSizable]
+        updateLocalizationAndTheme()
     }
     
     override func updateLocalizationAndTheme() {

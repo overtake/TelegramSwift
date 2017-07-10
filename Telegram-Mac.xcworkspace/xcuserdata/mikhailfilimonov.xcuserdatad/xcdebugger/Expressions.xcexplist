@@ -414,10 +414,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -443,14 +443,6 @@
          <PersistentStrings>
             <PersistentString
                value = "ditem.displayName">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "_NSLocalizedString(String) -&gt; String:LocalizableExtension.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "language.strings">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -852,7 +844,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -864,7 +856,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
