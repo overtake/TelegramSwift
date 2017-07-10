@@ -264,7 +264,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
     public override init(frame frameRect: NSRect) {
         document = View(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
-        
+        document.backgroundColor = .clear
         deltaCorner = 45
         self.autoresizesSubviews = true;
         self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
@@ -673,6 +673,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             
             if let sectionNode = self.sectionNodes[wrappedSection] {
                 sectionNode.frame = section.frame
+                sectionNode.updateLocalizationAndTheme()
             } else {
                 let sectionNode = section.section.node()
                 sectionNode.frame = section.frame
@@ -695,6 +696,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
                 }
                 if !updated {
                     self.stationarySection.1?.frame = stationarySection.frame
+                    self.stationarySection.1?.updateLocalizationAndTheme()
                 }
             } else {
                 removeStationarySectionNode()
@@ -952,6 +954,10 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         self.itemLayout = generateItemLayout()
         
         applyPresentaionLayoutTransition(generatePresentationLayoutTransition(), removedNodes: [])
+    }
+    
+    public var isEmpty: Bool {
+        return items.isEmpty
     }
     
     public func forEachItemNode(_ f: (GridItemNode) -> Void) {

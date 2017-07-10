@@ -31,6 +31,7 @@ open class HorizontalRowView: TableRowView {
     
     open override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
+        container.backgroundColor = backdorColor
     }
     
     open override func draw(_ dirtyRect: NSRect) {

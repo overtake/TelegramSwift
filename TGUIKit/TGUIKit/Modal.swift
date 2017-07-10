@@ -71,13 +71,13 @@ private class ModalInteractionsContainer : View {
     init(interactions:ModalInteractions, modal:Modal) {
         self.interactions = interactions
         acceptView = TitleButton()
-        acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
+        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
         acceptView.set(text: interactions.acceptTitle, for: .Normal)
         acceptView.disableActions()
         acceptView.sizeToFit()
         if let cancelTitle = interactions.cancelTitle {
             cancelView = TitleButton()
-            cancelView?.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
+            cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
             cancelView?.set(text: cancelTitle, for: .Normal)
             cancelView?.sizeToFit()
             
@@ -87,7 +87,7 @@ private class ModalInteractionsContainer : View {
         
         if interactions.drawBorder {
             borderView = View()
-            borderView?.backgroundColor = .border
+            borderView?.backgroundColor = presentation.colors.border
         } else {
             borderView = nil
         }
@@ -95,7 +95,7 @@ private class ModalInteractionsContainer : View {
        
         
         super.init()
-        
+        self.backgroundColor = presentation.colors.background
         if let cancel = interactions.cancel {
             cancelView?.set(handler: { _ in
                 cancel()
@@ -336,8 +336,7 @@ public class Modal: NSObject {
     
     deinit {
         disposable.dispose()
-        var index:Int32? = nil
-        for i in 0 ..< activeModals.count {
+        for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
             if activeModals[i].value == self {
                 activeModals.remove(at: i)
                 break

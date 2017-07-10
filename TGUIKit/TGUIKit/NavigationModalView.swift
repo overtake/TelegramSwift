@@ -10,8 +10,8 @@ import Cocoa
 
 class NavigationModalView: Control {
     
-    private let textNode:TextNode = TextNode()
-    private let attributeString:NSAttributedString
+    private var textNode:TextNode = TextNode()
+    private var attributeString:NSAttributedString
 
     let action:NavigationModalAction
     weak var viewController:NavigationViewController?
@@ -22,9 +22,9 @@ class NavigationModalView: Control {
         self.action = action
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: action.reason, color: .text, font: .normal(.custom(20)))
+        _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(.custom(20)))
         _ = attr.append(string: "\n")
-        _ = attr.append(string: action.desc, color: .grayText, font: .normal(.text))
+        _ = attr.append(string: action.desc, color: presentation.colors.grayText, font: .normal(.text))
         
         self.attributeString = attr.copy() as! NSAttributedString
         
@@ -34,7 +34,7 @@ class NavigationModalView: Control {
         
         super.init()
         self.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
-        self.backgroundColor = NSColor(0xffffff,0.8)
+        self.backgroundColor = presentation.colors.background.withAlphaComponent(0.75) //NSColor(0xffffff,0.8)
         
         set(handler: { control in
             let control = control as! NavigationModalView
@@ -42,6 +42,18 @@ class NavigationModalView: Control {
                 control.close()
             }
         }, for: .Click)
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        let attr:NSMutableAttributedString = NSMutableAttributedString()
+        _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(.custom(20)))
+        _ = attr.append(string: "\n")
+        _ = attr.append(string: action.desc, color: presentation.colors.grayText, font: .normal(.text))
+        
+        self.attributeString = attr.copy() as! NSAttributedString
+        self.backgroundColor = presentation.colors.background.withAlphaComponent(0.75) 
+        needsDisplay = true
     }
     
     override func scrollWheel(with event: NSEvent) {

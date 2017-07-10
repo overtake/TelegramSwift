@@ -34,13 +34,17 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         autoresizesSubviews = false
     }
     
+    
+    open func updateColors() {
+        
+    }
 
     open func layerClass() ->AnyClass {
         return CALayer.self;
     }
     
     open var backdorColor: NSColor {
-        return .white
+        return presentation.colors.background
     }
     
     open var isSelect: Bool {
@@ -240,6 +244,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open func set(item:TableRowItem, animated:Bool = false) -> Void {
         self.item = item;
+        updateColors()
     }
     
     open func focusAnimation() {

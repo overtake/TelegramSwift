@@ -23,11 +23,10 @@ public struct SwitchViewAppearance {
     }
 }
 
-public let defaultSwitchViewAppearance = SwitchViewAppearance(backgroundColor: .white, stateOnColor: .blueUI, stateOffColor: .white, disabledColor: NSColor(0x4ba3e2, 0.7), borderColor: .border)
 
 public class SwitchView: Control {
     
-    public var presentation: SwitchViewAppearance = defaultSwitchViewAppearance {
+    public var presentation: SwitchViewAppearance = switchViewAppearance {
         didSet {
             let animates = self.animates
             self.animates = false

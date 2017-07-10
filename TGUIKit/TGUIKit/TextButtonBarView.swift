@@ -27,6 +27,7 @@ open class TextButtonBarView: BarView {
         button.style = style
         button.set(text: text, for: .Normal)
         button.disableActions()
+        
         super.init()
         
         self.alignment = alignment
@@ -38,6 +39,7 @@ open class TextButtonBarView: BarView {
     
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
+        
         button.set(background: presentation.colors.background, for: .Normal)
     }
     

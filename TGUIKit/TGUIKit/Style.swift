@@ -12,11 +12,14 @@ public struct ControlStyle: Equatable {
     public var font:NSFont = .normal(.text)
     public var foregroundColor:NSColor = .text
     public var backgroundColor:NSColor = .clear
-    public var highlightColor:NSColor = .blueIcon
+    
+    private var _highlightColor: NSColor?
+    
+    public var highlightColor:NSColor {
+        return _highlightColor ?? presentation.colors.blueUI
+    }
     
     public func highlight(image:CGImage) -> CGImage {
-        
-       // var img:NSImage = NSImage.init(cgImage: image, size: image.size)
         
         let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
         
@@ -33,20 +36,6 @@ public struct ControlStyle: Equatable {
         
         return context.generateImage() ?? image
         
-//        img.lockFocus()
-//        highlightColor.set()
-//        var imageRect = NSMakeRect(0, 0, image.size.width , image.size.height)
-//        NSRectFillUsingOperation(imageRect, NSCompositeSourceAtop)
-//        img.unlockFocus()
-        
-     //   return img.precomposed(highlightColor)
-
-//        
-
-//        
-//
-//        
-//        return img
     }
     
     public init(font:NSFont? = nil, foregroundColor:NSColor? = nil,backgroundColor:NSColor? = nil, highlightColor:NSColor? = nil) {
@@ -60,9 +49,7 @@ public struct ControlStyle: Equatable {
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         }
-        if let highlightColor = highlightColor {
-            self.highlightColor = highlightColor
-        }
+        _highlightColor = highlightColor
     }
  
     
@@ -73,7 +60,6 @@ public struct ControlStyle: Equatable {
 }
 
 
-public let navigationButtonStyle = ControlStyle(font:systemMediumFont(TGFont.titleSize), foregroundColor:.link, highlightColor:.blueSelect)
 
 
 public func ==(lhs:ControlStyle, rhs:ControlStyle) -> Bool {

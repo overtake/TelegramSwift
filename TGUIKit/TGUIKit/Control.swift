@@ -78,9 +78,13 @@ open class Control: View {
         didSet {
             if style != oldValue {
                 apply(style:style)
-                
             }
         }
+    }
+    
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        apply(state: self.controlState)
     }
     
     public private(set) var controlState:ControlState = .Normal {
@@ -177,6 +181,8 @@ open class Control: View {
     
     public func set(background:NSColor, for state:ControlState) -> Void {
         backgroundState[state] = background
+        apply(state: self.controlState)
+        self.setNeedsDisplayLayer()
     }
     
     public func removeLastHandler() -> Void {
@@ -316,6 +322,7 @@ open class Control: View {
     }
     
     func apply(style:ControlStyle) -> Void {
+        set(background: style.backgroundColor, for: .Normal)
         self.backgroundColor = style.backgroundColor
         self.setNeedsDisplayLayer()
     }

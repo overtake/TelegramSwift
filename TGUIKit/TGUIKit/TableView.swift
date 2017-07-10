@@ -181,9 +181,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
        
     }
 
-    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-        
-    }
+//    override public func setNeedsDisplay(_ invalidRect: NSRect) {
+//        
+//    }
     
     override func addSubview(_ view: NSView) {
         super.addSubview(view)
@@ -359,7 +359,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     open override var backgroundColor: NSColor {
         didSet {
+            documentView?.background = backgroundColor
+            self.clipView.backgroundColor = backgroundColor
             self.clipView.needsDisplay = true
+            documentView?.needsDisplay = true
         }
     }
     

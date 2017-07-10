@@ -143,6 +143,15 @@ open class ViewController : NSObject {
        
     }
     
+    public var backgroundColor: NSColor {
+        set {
+            self.view.background = newValue
+        }
+        get {
+            return self.view.background
+        }
+    }
+    
     open var enableBack:Bool {
         return false
     }
@@ -213,6 +222,7 @@ open class ViewController : NSObject {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
             leftBarView.requestUpdate()
         }
+        self.leftBarView.style = navigationButtonStyle
     }
     
     open func requestUpdateCenterBar() {
@@ -220,8 +230,10 @@ open class ViewController : NSObject {
     }
     
     open func requestUpdateRightBar() {
-    
+        (self.rightBarView as? TextButtonBarView)?.button.style = navigationButtonStyle
+        self.rightBarView.style = navigationButtonStyle
     }
+    
     
     @objc func viewFrameChanged(_ notification:Notification) {
         viewDidResized(frame.size)
@@ -492,7 +504,7 @@ open class ModalViewController : ViewController {
     }
     
     open var background:NSColor {
-        return .blackTransparent
+        return presentation.colors.blackTransparent
     }
     
     
@@ -501,7 +513,7 @@ open class ModalViewController : ViewController {
     }
     
     open var containerBackground: NSColor {
-        return .white
+        return presentation.colors.background
     }
     
     open var dynamicSize:Bool {

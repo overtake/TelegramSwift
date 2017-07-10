@@ -68,7 +68,7 @@ public class TitleButton: ImageButton {
                 text.foregroundColor = style.foregroundColor.cgColor
             }
         } else {
-            text.foregroundColor = NSColor.grayText.cgColor
+            text.foregroundColor = presentation.colors.grayText.cgColor
         }
         
         
@@ -205,6 +205,7 @@ public class TitleButton: ImageButton {
     
     public override func disableActions() {
         super.disableActions()
+        
         self.text.disableActions()
         self.layer?.disableActions()
     }

@@ -28,6 +28,7 @@ open class BarView: OverlayControl {
     public init(_ width:CGFloat) {
         self.minWidth = width
         super.init()
+        animates = false
         frame = NSMakeRect(0, 0, minWidth, 50)
         overlayInitEvent()
     }
@@ -35,10 +36,12 @@ open class BarView: OverlayControl {
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         set(background: presentation.colors.background, for: .Normal)
+        backgroundColor = presentation.colors.background
     }
     
     override init() {
         super.init()
+        animates = false
         frame = NSMakeRect(0, 0, minWidth, 50)
         overlayInitEvent()
     }

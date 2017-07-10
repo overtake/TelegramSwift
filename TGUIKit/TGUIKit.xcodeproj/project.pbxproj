@@ -61,6 +61,7 @@
 		C234CA8E1D97DF26003023F7 /* DrawingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8B1D97DF26003023F7 /* DrawingContext.swift */; };
 		C234CA8F1D97DF26003023F7 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA8C1D97DF26003023F7 /* Image.swift */; };
 		C234CA971D981F00003023F7 /* Control.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234CA961D981F00003023F7 /* Control.swift */; };
+		C2449A151F0E490C00DF5650 /* ProgressIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2449A141F0E490C00DF5650 /* ProgressIndicator.swift */; };
 		C253A9521D9147A400CDC850 /* Layer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9511D9147A400CDC850 /* Layer.swift */; };
 		C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9641D91B24100CDC850 /* TextViewLabel.swift */; };
 		C253A9761D9430A900CDC850 /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253A9751D9430A900CDC850 /* ImageView.swift */; };
@@ -153,6 +154,7 @@
 		C234CA921D97E151003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PostboxMac.framework; path = "../../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/PostboxMac.framework"; sourceTree = "<group>"; };
 		C234CA941D97E163003023F7 /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TelegramCoreMac.framework; path = "../../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/TelegramCoreMac.framework"; sourceTree = "<group>"; };
 		C234CA961D981F00003023F7 /* Control.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Control.swift; sourceTree = "<group>"; };
+		C2449A141F0E490C00DF5650 /* ProgressIndicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProgressIndicator.swift; sourceTree = "<group>"; };
 		C253A9511D9147A400CDC850 /* Layer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Layer.swift; sourceTree = "<group>"; };
 		C253A9641D91B24100CDC850 /* TextViewLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextViewLabel.swift; sourceTree = "<group>"; };
 		C253A9751D9430A900CDC850 /* ImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageView.swift; sourceTree = "<group>"; };
@@ -362,6 +364,13 @@
 			name = tabbar;
 			sourceTree = "<group>";
 		};
+		C2449A0F1F0E475200DF5650 /* thrid-party */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "thrid-party";
+			sourceTree = "<group>";
+		};
 		C2B9BE831EFC373200D6B96F /* presentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -401,6 +410,7 @@
 		C2E0DEA91D7EF51C00EF1C8D /* TGUIKit */ = {
 			isa = PBXGroup;
 			children = (
+				C2449A0F1F0E475200DF5650 /* thrid-party */,
 				C2B9BE831EFC373200D6B96F /* presentation */,
 				C2271DA71DAD1728001792B6 /* nodes */,
 				C2303E801D9A691300098E12 /* tabbar */,
@@ -452,6 +462,7 @@
 				C265058F1E02EBEE001954DC /* MagnifyView.swift */,
 				C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */,
 				C21656C51EE0A7050041A6BA /* SegmentedControl.swift */,
+				C2449A141F0E490C00DF5650 /* ProgressIndicator.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -585,6 +596,7 @@
 				C2303E7C1D99880B00098E12 /* Modal.swift in Sources */,
 				C219E1E21D8A93050042F0C8 /* TextView.swift in Sources */,
 				C2271DDB1DAF82E3001792B6 /* GridRowView.swift in Sources */,
+				C2449A151F0E490C00DF5650 /* ProgressIndicator.swift in Sources */,
 				C21AAE3A1DB2398B007638C5 /* DisplayLinkDispatcher.swift in Sources */,
 				C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */,
 				C2B9BE871EFC373D00D6B96F /* PresentationResourceCache.swift in Sources */,
@@ -687,6 +699,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TGUIKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 3.0;
 			};
 			name = AppStore;
@@ -755,6 +768,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TGUIKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Hockeyapp;
@@ -875,6 +889,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TGUIKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
@@ -900,6 +915,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TGUIKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;

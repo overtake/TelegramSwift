@@ -411,7 +411,7 @@ public final class TextViewLayout : Equatable {
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
         let check = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange)
         if check != nil && effectiveRange.location != NSNotFound {
-            self.selectedRange = TextSelectedRange(range: effectiveRange, color: .selectText, def: true)
+            self.selectedRange = TextSelectedRange(range: effectiveRange, color: presentation.colors.selectText, def: true)
             return
         }
         if char == "" {
@@ -448,7 +448,7 @@ public final class TextViewLayout : Equatable {
             }
         }
         
-        self.selectedRange = TextSelectedRange(range: range, color: .selectText, def: true)
+        self.selectedRange = TextSelectedRange(range: range, color: presentation.colors.selectText, def: true)
     }
     
 
@@ -460,7 +460,7 @@ public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
 
 public struct TextSelectedRange: Equatable {
     public var range:NSRange = NSMakeRange(NSNotFound, 0)
-    public var color:NSColor = .selectText
+    public var color:NSColor = presentation.colors.selectText
     public var def:Bool = true
     
     public var hasSelectText:Bool {
@@ -583,7 +583,7 @@ public class TextView: Control {
                         rect.origin.x = startOffset
                         rect.origin.y = rect.minY - rect.height
                         rect.size.height += ceil(descent - leading)
-                        let color:NSColor = .selectText
+                        let color:NSColor = presentation.colors.selectText
                         
                         ctx.setFillColor(color.cgColor)
                         ctx.fill(rect)

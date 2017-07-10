@@ -156,11 +156,13 @@ public extension NSColor {
     }
     
     var argb: UInt32 {
+        
+        let color = self.usingColorSpaceName(NSCalibratedRGBColorSpace)!
         var red: CGFloat = 0.0
         var green: CGFloat = 0.0
         var blue: CGFloat = 0.0
         var alpha: CGFloat = 0.0
-        self.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         
         return (UInt32(alpha * 255.0) << 24) | (UInt32(red * 255.0) << 16) | (UInt32(green * 255.0) << 8) | (UInt32(blue * 255.0))
     }

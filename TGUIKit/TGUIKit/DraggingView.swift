@@ -21,10 +21,10 @@ public class DragItem {
         self.handler = handler
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: title, color: .grayText, font: .normal(.huge))
+        _ = attr.append(string: title, color: presentation.colors.grayText, font: .normal(.huge))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: desc, color: .text, font: .medium(.custom(16)))
+        _ = attr.append(string: desc, color: presentation.colors.text, font: .medium(.custom(16)))
         
         self.attr = attr.copy() as! NSAttributedString
     }
@@ -40,13 +40,14 @@ class DragView : OverlayControl {
         super.init(frame: NSZeroRect)
         
         addSubview(textView)
+        textView.backgroundColor = presentation.colors.background
         self.layer?.cornerRadius = .cornerRadius
         self.layer?.borderWidth = 2.0
-        self.layer?.backgroundColor = NSColor.white.cgColor
+        self.layer?.backgroundColor = presentation.colors.background.cgColor
         self.layer?.borderColor = presentation.colors.border.cgColor
-        self.backgroundColor = .white
+        self.backgroundColor = presentation.colors.background
         self.set(handler: { control in
-            control.layer?.borderColor = NSColor.blueUI.cgColor
+            control.layer?.borderColor = presentation.colors.blueUI.cgColor
             control.layer?.animateBorder()
         }, for: .Hover)
         

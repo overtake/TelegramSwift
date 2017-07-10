@@ -65,7 +65,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var clear:ImageButton = ImageButton()
     private var search:ImageView = ImageView()
-    private let progressIndicator:NSProgressIndicator = NSProgressIndicator()
+    private let progressIndicator:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 18, 18))
     private var placeholder:TextViewLabel = TextViewLabel()
     
     private var animateContainer:View = View()
@@ -81,6 +81,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         didSet {
             if oldValue != isLoading {
                 self.updateLoading()
+                needsLayout = true
             }
         }
     }
@@ -89,7 +90,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         super.updateLocalizationAndTheme()
         
         input.textColor = presentation.search.textColor
-        placeholder.attributedString = NSAttributedString.initialize(string: presentation.search.placeholder, color: presentation.search.textColor, font: .normal(.text))
+        placeholder.attributedString = NSAttributedString.initialize(string: presentation.search.placeholder, color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
         placeholder.sizeToFit()
@@ -102,7 +103,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
         placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
         search.centerY()
-        
+        input.insertionPointColor = presentation.search.textColor
         
         needsLayout = true
 
@@ -112,9 +113,12 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
         self.layer?.cornerRadius = .cornerRadius
-        progressIndicator.style = .spinningStyle
-        progressIndicator.wantsLayer = true
+
         progressIndicator.isHidden = true
+        progressIndicator.numberOfLines = 8
+        progressIndicator.innerMargin = 3;
+        progressIndicator.widthOfLine = 3;
+        progressIndicator.lengthOfLine = 6;
        // input.isBordered = false
        // input.isBezeled = false
         input.focusRingType = .none
@@ -175,6 +179,8 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 strongSelf.change(state:strongSelf.state == .None ? .Focus : .None,true)
             }
         }, for: .Click)
+        
+        updateLocalizationAndTheme()
     }
     
     public func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
@@ -320,11 +326,10 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 addSubview(progressIndicator)
             }
             progressIndicator.isHidden = false
-            progressIndicator.layer?.removeAllAnimations()
             clear.isHidden = true
-            progressIndicator.startAnimation(self)
+            progressIndicator.animates = true
         } else {
-            progressIndicator.stopAnimation(self)
+            progressIndicator.animates = false
             progressIndicator.removeFromSuperview()
             progressIndicator.isHidden = true
             clear.isHidden = self.state == .None
@@ -341,7 +346,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             animateContainer.centerY(x: leftInset)
         }
         clear.centerY(x: frame.width - inset - clear.frame.width)
-        progressIndicator.setFrameOrigin(clear.frame.origin)
+        progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width)
     }
 
     public func changeResponder(_ animated:Bool = true) -> Bool {

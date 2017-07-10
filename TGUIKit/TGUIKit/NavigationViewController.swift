@@ -322,6 +322,16 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
     }
     
+    public override var backgroundColor: NSColor {
+        set {
+            self.view.background = newValue
+            containerView.backgroundColor = newValue
+        }
+        get {
+            return self.view.background
+        }
+    }
+    
     public init(_ empty:ViewController) {
         self.empty = empty
         self.controller = empty

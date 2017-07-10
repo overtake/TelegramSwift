@@ -148,14 +148,14 @@ open class Popover: NSObject {
                     strongSelf.background.layer?.cornerRadius = .cornerRadius
                     
                     strongSelf.overlay = OverlayControl(frame: NSMakeRect(contentRect.minX, contentRect.minY, controller.frame.width , controller.frame.height ))
-                    strongSelf.overlay.backgroundColor = .white
+                    strongSelf.overlay.backgroundColor = presentation.colors.background
                     strongSelf.overlay.layer?.cornerRadius = .cornerRadius
                     strongSelf.overlay.layer?.opacity = 0.99
                     
 
                     let bg = View(frame: NSMakeRect(strongSelf.overlay.frame.minX + 2, strongSelf.overlay.frame.minY + 2, strongSelf.overlay.frame.width - 4, strongSelf.overlay.frame.height - 4))
                     bg.layer?.cornerRadius = .cornerRadius
-                    bg.backgroundColor = .white
+                    bg.backgroundColor = presentation.colors.background
                     
                     strongSelf.background.addSubview(bg)
                     

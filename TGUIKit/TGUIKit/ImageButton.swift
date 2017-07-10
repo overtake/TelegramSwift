@@ -25,23 +25,11 @@ open class ImageButton: Button {
         
         images[state] = image
         
-        if state == .Normal  {
-            if autohighlight {
-                set(image: style.highlight(image: image), for: .Highlight)
-            }
-            if highlightHovered {
-                set(image: style.highlight(image: image), for: .Hover)
-            }
-            
-        }
         apply(state: self.controlState)
     }
     
     open override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
-        if autohighlight, let _ = images[.Highlight], let image = images[.Normal] {
-            set(image: style.highlight(image: image), for: .Highlight)
-        }
     }
     
     override func prepare() {
@@ -57,6 +45,10 @@ open class ImageButton: Button {
 
         if let image = images[state] {
             imageView.image = image
+        } else if state == .Highlight && autohighlight, let image = images[.Normal] {
+            imageView.image = style.highlight(image: image)
+        } else if state == .Hover && highlightHovered, let image = images[.Normal] {
+            imageView.image = style.highlight(image: image)
         } else {
             imageView.image = images[.Normal]
         }

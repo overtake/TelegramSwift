@@ -297,6 +297,8 @@
 		C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */; };
 		C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
 		C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
+		C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29670781F0FAAC800884DA2 /* AppearanceViewController.swift */; };
+		C296707B1F0FBFB500884DA2 /* ThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */; };
 		C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */; };
 		C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF851D8DB178001DBB59 /* MediaUtils.swift */; };
 		C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */; };
@@ -806,6 +808,8 @@
 		C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DateUtils.mm; sourceTree = "<group>"; };
 		C291942E1DCC6E2200359491 /* DeclareEncodables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeclareEncodables.swift; sourceTree = "<group>"; };
 		C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareApplicationContext.swift; sourceTree = "<group>"; };
+		C29670781F0FAAC800884DA2 /* AppearanceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppearanceViewController.swift; sourceTree = "<group>"; };
+		C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThemeSettings.swift; sourceTree = "<group>"; };
 		C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowView.swift; sourceTree = "<group>"; };
 		C296AF851D8DB178001DBB59 /* MediaUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaUtils.swift; sourceTree = "<group>"; };
 		C296AF871D8DB2A7001DBB59 /* ChatMediaContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaContentView.swift; sourceTree = "<group>"; };
@@ -1408,6 +1412,7 @@
 				C2271DD01DAF6DD9001792B6 /* settings-controllers */,
 				C2271DA81DAD867E001792B6 /* PeerInfo */,
 				C20232A61D81D178007C9ADE /* chat */,
+				C29670781F0FAAC800884DA2 /* AppearanceViewController.swift */,
 			);
 			name = right;
 			sourceTree = "<group>";
@@ -1854,6 +1859,7 @@
 				C221ED551EA6877300471C65 /* GeneratedMediaStoreSettings.swift */,
 				C221ED571EA687B600471C65 /* AutomaticMediaDownloadCategoryPeers.swift */,
 				C221ED591EA6896400471C65 /* VoiceCallSettings.swift */,
+				C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -2767,6 +2773,7 @@
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
+				C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
@@ -3031,6 +3038,7 @@
 				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
+				C296707B1F0FBFB500884DA2 /* ThemeSettings.swift in Sources */,
 				C248BD241E706104004B9106 /* BlockedPeersViewController.swift in Sources */,
 				C230B9111DD3866A0057F596 /* ComposeActions.swift in Sources */,
 				C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */,
