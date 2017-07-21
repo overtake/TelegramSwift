@@ -414,10 +414,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -844,7 +844,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -856,7 +856,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1291,6 +1291,17 @@
       </ContextState>
       <ContextState
          contextName = "GridNode.applyPresentaionLayout(GridNodePresentationLayout) -&gt; ():GridNode.swift">
+      </ContextState>
+      <ContextState
+         contextName = "telegramUpdateTheme(TelegramPresentationTheme, window : Window) -&gt; ():Appearance.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "window.contentView">
+            </PersistentString>
+            <PersistentString
+               value = "window.contentView?.subviews">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "__48-[TGOpusAudioRecorder prepareRecord:completion:]_block_invoke:TGOpusAudioRecorder.m">

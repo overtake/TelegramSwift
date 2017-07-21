@@ -39,7 +39,6 @@ extension Peer {
     }
 }
 
-let searchTheme = SearchTheme(#imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), {NSLocalizedString("ShareExtension.Search", comment: "")})
 
 class ShareModalView : View {
     let searchView:SearchView = SearchView(frame: NSZeroRect)
@@ -49,15 +48,15 @@ class ShareModalView : View {
     let borderView:View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.backgroundColor = theme.colors.background
+        borderView.backgroundColor = theme.colors.border
         
-        borderView.backgroundColor = .border
-        
-        acceptView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
-        acceptView.set(text: localizedString("ShareExtension.Share"), for: .Normal)
+        acceptView.style = ControlStyle(font: .medium(.text),foregroundColor: theme.colors.blueUI)
+        acceptView.set(text: tr(.shareExtensionShare), for: .Normal)
         acceptView.sizeToFit()
         
-        cancelView.style = ControlStyle(font:.medium(.text),foregroundColor:.blueUI)
-        cancelView.set(text: localizedString("ShareExtension.Cancel"), for: .Normal)
+        cancelView.style = ControlStyle(font:.medium(.text),foregroundColor: theme.colors.blueUI)
+        cancelView.set(text: tr(.shareExtensionCancel), for: .Normal)
         cancelView.sizeToFit()
         
         addSubview(acceptView)
@@ -171,7 +170,7 @@ class ShareObject {
     }
     
     private func sendText(_ text:String, to peerId:PeerId) -> Signal<Float,Void> {
-        return Signal<Float, Void>.single(0) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> map {_ in return 1})
+        return Signal<Float, Void>.single(0) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> mapError {_ in} |> map {_ in return 1})
     }
     
     private let queue:Queue = Queue(name: "proccessShareFilesQueue", target: nil)
@@ -215,7 +214,7 @@ class ShareObject {
     
     private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Float,Void> {
         return Signal<Float, Void>.single(0) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Float, Void> in
-            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil)
+            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> mapError {_ in}
         })
     }
     

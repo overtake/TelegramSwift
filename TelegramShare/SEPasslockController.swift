@@ -29,7 +29,7 @@ enum PasscodeViewState {
 }
 
 private class PasscodeLockView : Control, NSTextFieldDelegate {
-    fileprivate let photoView:AvatarControl = AvatarControl(font: .medium(.custom(23)))
+    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(.custom(23)))
     fileprivate let nameView:TextView = TextView()
     fileprivate let input:NSSecureTextField
     private let nextButton:TitleButton = TitleButton()
@@ -42,16 +42,17 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input = NSSecureTextField(frame: NSZeroRect)
         super.init(frame: frameRect)
         photoView.setFrameSize(NSMakeSize(80, 80))
-        self.backgroundColor = .white
-        nextButton.set(color: .blueUI, for: .Normal)
+        self.backgroundColor = theme.colors.background
+        nextButton.set(color: theme.colors.blueUI, for: .Normal)
         nextButton.set(font: .normal(.title), for: .Normal)
-        nextButton.set(text: localizedString("ShareExtension.Passcode.Next"), for: .Normal)
+        nextButton.set(text: tr(.shareExtensionPasscodeNext), for: .Normal)
         nextButton.sizeToFit()
         
-        cancel.set(image: #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(), for: .Normal)
+        cancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
         cancel.sizeToFit()
 
         
+        nameView.backgroundColor = theme.colors.background
         addSubview(photoView)
         addSubview(nameView)
         addSubview(input)
@@ -65,11 +66,13 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: localizedString("ShareExtension.Passcode.Placeholder"), color: .grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: tr(.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
+        input.backgroundColor = theme.colors.background
         input.font = NSFont.normal(FontSize.text)
-        input.textColor = .text
+        input.textColor = theme.colors.text
+        input.textView?.insertionPointColor = theme.colors.text
         input.sizeToFit()
         
         input.target = self
@@ -94,7 +97,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         self.state = state
         
         photoView.setPeer(account: account, peer: peer)
-        let layout = TextViewLayout(.initialize(string:peer.displayTitle, font:.normal(.title)))
+        let layout = TextViewLayout(.initialize(string:peer.displayTitle, color: theme.colors.text, font:.normal(.title)))
         layout.measure(width: frame.width - 40)
         nameView.update(layout)
         

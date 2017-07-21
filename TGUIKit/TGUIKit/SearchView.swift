@@ -195,9 +195,16 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         if let searchInteractions = searchInteractions {
             searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
         }
-        placeholder.isHidden = input.string != nil && !input.string!.isEmpty
-        input.isHidden = !(state == .Focus && !input.string!.isEmpty)
-        window?.makeFirstResponder(input)
+        let pHidden = input.string != nil && !input.string!.isEmpty
+        if placeholder.isHidden != pHidden {
+            placeholder.isHidden = pHidden
+        }
+        let iHidden = !(state == .Focus && !input.string!.isEmpty)
+        if input.isHidden != iHidden {
+          //  input.isHidden = iHidden
+            window?.makeFirstResponder(input)
+        }
+        
     }
     
     public func textDidEndEditing(_ notification: Notification) {
@@ -211,10 +218,9 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     public func didResignResponder() {
         if let s = input.string, s.isEmpty {
             change(state: .None, true)
-        } else {
-            self.kitWindow?.removeAllHandlers(for: self)
-            self.kitWindow?.removeObserver(for: self)
         }
+        self.kitWindow?.removeAllHandlers(for: self)
+        self.kitWindow?.removeObserver(for: self)
     }
     
     public func didBecomeResponder() {

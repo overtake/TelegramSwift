@@ -11,10 +11,16 @@ import Cocoa
 private class TabBarViewController : View {
     let tabView:TabBarView
 
+    
     required init(frame frameRect: NSRect) {
         tabView = TabBarView(frame: NSMakeRect(0, frameRect.height - 50, frameRect.width, 50))
         super.init(frame: frameRect)
         addSubview(tabView)
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        self.background = presentation.colors.background
     }
     
     required public init?(coder: NSCoder) {

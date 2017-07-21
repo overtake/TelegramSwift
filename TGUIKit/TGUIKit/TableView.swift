@@ -32,6 +32,10 @@ public class UpdateTransition<T> {
     public var isEmpty:Bool {
         return inserted.isEmpty && updated.isEmpty && deleted.isEmpty
     }
+    
+    public var description: String {
+        return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count)"
+    }
 }
 
 
@@ -46,7 +50,6 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
         self.grouping = grouping
         super.init(deleted: deleted, inserted: inserted, updated: updated)
     }
-    
     
 }
 
@@ -360,6 +363,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     open override var backgroundColor: NSColor {
         didSet {
             documentView?.background = backgroundColor
+            contentView.background = backgroundColor
             self.clipView.backgroundColor = backgroundColor
             self.clipView.needsDisplay = true
             documentView?.needsDisplay = true
@@ -402,7 +406,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         
-        
+        let tableColumn = NSTableColumn(identifier: "column")
+        tableColumn.width = frame.width
+        self.tableView.addTableColumn(tableColumn)
+
         
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
             self?.merge(with: transition)
@@ -713,7 +720,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
         self.listhash[item.stableId] = item;
-        self.list.insert(item, at: at);
+        self.list.insert(item, at: min(at, list.count));
         item.table = self;
         
         let animation = animation != .none ? item.animatable ? animation : .none : .none
@@ -769,20 +776,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func reloadData(row:Int, animated:Bool = false) -> Void {
         if let view = self.viewNecessary(at: row) {
             let item = self.item(at: row)
-            
-            if let viewItem = view.item {
-                if viewItem.height != item.height {
+            if view.isKind(of: item.viewClass()) {
+                if let viewItem = view.item {
+                    if viewItem.height != item.height {
+                        NSAnimationContext.current().duration = animated ? 0.2 : 0.0
+                        tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+                    }
+                } else {
                     NSAnimationContext.current().duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
+                
+                view.set(item: item, animated: animated)
+                view.needsDisplay = true
             } else {
-                NSAnimationContext.current().duration = animated ? 0.2 : 0.0
-                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+                self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : .effectFade)
+                self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  .effectFade)
             }
-            
-            view.set(item: item, animated: animated)
-            view.needsDisplay = true
-            //view.needsLayout = true
         } else {
             NSAnimationContext.current().duration = 0.0
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
@@ -1061,6 +1071,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     func rowView(item:TableRowItem) -> TableRowView {
         let identifier:String = item.identifier
+        
         var view = self.tableView.make(withIdentifier: identifier, owner: self.tableView)
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
@@ -1070,7 +1081,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             view?.identifier = identifier
             
         } 
-        
         return view as! TableRowView;
     }
     
@@ -1183,18 +1193,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         let visibleItems = self.visibleItems()
+        let visibleRange = self.visibleRows()
         if transition.grouping && !transition.isEmpty {
             self.tableView.beginUpdates()
         }
         
         var inserted:[TableRowItem] = []
-        
+        var removed:[TableRowItem] = []
+
         for rdx in transition.deleted.reversed() {
             let effect:NSTableViewAnimationOptions
             if case let .none(interface) = transition.state, interface != nil {
-                effect = .effectFade
+                effect = visibleRange.indexIn(rdx) ? .effectFade : .none
             } else {
-                effect = transition.animated ? .effectFade : .none
+                effect = transition.animated && visibleRange.indexIn(rdx) ? .effectFade : .none
+            }
+            if rdx < visibleRange.location {
+                removed.append(item(at: rdx))
             }
             self.remove(at: rdx, redraw: true, animation:effect)
         }
@@ -1204,7 +1219,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         
         for (idx,item) in transition.inserted {
-            _ = self.insert(item: item, at:idx, redraw: true, animation: transition.animated ? .effectFade : .none)
+            let effect:NSTableViewAnimationOptions = transition.animated ? .effectFade : .none
+            _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
             if item.animatable {
                 inserted.append(item)
             }
@@ -1231,7 +1247,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         switch transition.state {
         case let .none(animation):
             // print("scroll do nothing")
-            animation?.animate(table:self, added: inserted, removed:[])
+            animation?.animate(table:self, added: inserted, removed:removed)
             
         case .bottom(_,_), .top(_,_), .center(_,_):
             self.scroll(to: transition.state)
@@ -1576,6 +1592,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func enumerateItems(with callback:(TableRowItem)->Bool) {
         for item in list {
             if !callback(item) {
+                break
+            }
+        }
+    }
+    
+    public func enumerateVisibleItems(with callback:(TableRowItem)->Bool) {
+        let visible = visibleRows()
+        for i in visible.location ..< visible.location + visible.length {
+            if !callback(list[i]) {
                 break
             }
         }

@@ -51,6 +51,15 @@ public extension NSFont {
         return NSFontManager.shared().convert(.normal(size), toHaveTrait: .italicFontMask)
     }
     
+    public static func avatar(_ size: FontSize) -> NSFont {
+        
+        if let font = NSFont(name: ".SFCompactRounded-Semibold", size: convert(from:size)) {
+            return font
+        } else {
+            return .medium(size)
+        }
+    }
+    
     public static func medium(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {

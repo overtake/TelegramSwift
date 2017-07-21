@@ -1,5 +1,4 @@
 import Foundation
-import SwiftSignalKitMac
 import ImageIO
 import Accelerate
 

@@ -39,6 +39,8 @@ public class TabBarView: View {
         ctx.fill(self.bounds)
     }
     
+    
+    
     func addTab(_ tab: TabItem) {
         self.tabs.append(tab)
         self.redraw()
@@ -122,6 +124,7 @@ public class TabBarView: View {
                 container.background = presentation.colors.background
             }
         }
+        self.backgroundColor = presentation.colors.background
         needsDisplay = true
         super.updateLocalizationAndTheme()
     }

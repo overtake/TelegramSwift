@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
+		C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21178011F17E78E00AC706D /* TimableProgressView.swift */; };
 		C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21656C51EE0A7050041A6BA /* SegmentedControl.swift */; };
 		C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E5C1DC2534300F98E03 /* SelectingControl.swift */; };
 		C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */; };
@@ -99,6 +100,7 @@
 /* Begin PBXFileReference section */
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
+		C21178011F17E78E00AC706D /* TimableProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimableProgressView.swift; sourceTree = "<group>"; };
 		C21656C51EE0A7050041A6BA /* SegmentedControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
 		C2167E5C1DC2534300F98E03 /* SelectingControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectingControl.swift; sourceTree = "<group>"; };
 		C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinearProgressControl.swift; sourceTree = "<group>"; };
@@ -463,6 +465,7 @@
 				C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */,
 				C21656C51EE0A7050041A6BA /* SegmentedControl.swift */,
 				C2449A141F0E490C00DF5650 /* ProgressIndicator.swift */,
+				C21178011F17E78E00AC706D /* TimableProgressView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -584,6 +587,7 @@
 				C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */,
 				C2271DD91DAF82D0001792B6 /* GridRowItem.swift in Sources */,
 				C230B9181DD3A6350057F596 /* ProgressModal.swift in Sources */,
+				C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */,
 				C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */,
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
@@ -635,7 +639,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		C22069D21E8EB4D700E82730 /* AppStore */ = {
+		C22069D21E8EB4D700E82730 /* Release Hockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -677,9 +681,9 @@
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = AppStore;
+			name = "Release Hockeyapp";
 		};
-		C22069D31E8EB4D700E82730 /* AppStore */ = {
+		C22069D31E8EB4D700E82730 /* Release Hockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -702,9 +706,9 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 3.0;
 			};
-			name = AppStore;
+			name = "Release Hockeyapp";
 		};
-		C232EA391E1BCFDE00C4D38C /* Hockeyapp */ = {
+		C232EA391E1BCFDE00C4D38C /* Release AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -746,9 +750,9 @@
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Hockeyapp;
+			name = "Release AppStore";
 		};
-		C232EA3A1E1BCFDE00C4D38C /* Hockeyapp */ = {
+		C232EA3A1E1BCFDE00C4D38C /* Release AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -771,9 +775,9 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 3.0;
 			};
-			name = Hockeyapp;
+			name = "Release AppStore";
 		};
-		C2E0DEAD1D7EF51C00EF1C8D /* Debug */ = {
+		C2E0DEAD1D7EF51C00EF1C8D /* Debug Hockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -823,9 +827,9 @@
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Debug;
+			name = "Debug Hockeyapp";
 		};
-		C2E0DEAE1D7EF51C00EF1C8D /* Release */ = {
+		C2E0DEAE1D7EF51C00EF1C8D /* Debug AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -867,9 +871,9 @@
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Release;
+			name = "Debug AppStore";
 		};
-		C2E0DEB01D7EF51C00EF1C8D /* Debug */ = {
+		C2E0DEB01D7EF51C00EF1C8D /* Debug Hockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -893,9 +897,9 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
-			name = Debug;
+			name = "Debug Hockeyapp";
 		};
-		C2E0DEB11D7EF51C00EF1C8D /* Release */ = {
+		C2E0DEB11D7EF51C00EF1C8D /* Debug AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -918,7 +922,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 3.0;
 			};
-			name = Release;
+			name = "Debug AppStore";
 		};
 /* End XCBuildConfiguration section */
 
@@ -926,24 +930,24 @@
 		C2E0DEA11D7EF51C00EF1C8D /* Build configuration list for PBXProject "TGUIKit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C2E0DEAD1D7EF51C00EF1C8D /* Debug */,
-				C2E0DEAE1D7EF51C00EF1C8D /* Release */,
-				C22069D21E8EB4D700E82730 /* AppStore */,
-				C232EA391E1BCFDE00C4D38C /* Hockeyapp */,
+				C2E0DEAD1D7EF51C00EF1C8D /* Debug Hockeyapp */,
+				C2E0DEAE1D7EF51C00EF1C8D /* Debug AppStore */,
+				C22069D21E8EB4D700E82730 /* Release Hockeyapp */,
+				C232EA391E1BCFDE00C4D38C /* Release AppStore */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = "Debug AppStore";
 		};
 		C2E0DEAF1D7EF51C00EF1C8D /* Build configuration list for PBXNativeTarget "TGUIKit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C2E0DEB01D7EF51C00EF1C8D /* Debug */,
-				C2E0DEB11D7EF51C00EF1C8D /* Release */,
-				C22069D31E8EB4D700E82730 /* AppStore */,
-				C232EA3A1E1BCFDE00C4D38C /* Hockeyapp */,
+				C2E0DEB01D7EF51C00EF1C8D /* Debug Hockeyapp */,
+				C2E0DEB11D7EF51C00EF1C8D /* Debug AppStore */,
+				C22069D31E8EB4D700E82730 /* Release Hockeyapp */,
+				C232EA3A1E1BCFDE00C4D38C /* Release AppStore */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = "Debug AppStore";
 		};
 /* End XCConfigurationList section */
 	};

@@ -219,7 +219,29 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             return .rejected
         }, with: self, for: .RightArrow, priority:.medium)
         
+        self.window?.add(swipe: { [weak self] direction -> KeyHandlerResult in
+            if let strongSelf = self, let window = strongSelf.window, !hasPopover(window) && !hasModals() && !strongSelf.isLocked {
+                switch direction {
+                case .left:
+                    return strongSelf.backKeyAction()
+                case .right:
+                    return strongSelf.nextKeyAction()
+                case .none:
+                    var nextResult = strongSelf.nextKeyAction()
+                    if nextResult != .rejected {
+                        nextResult = strongSelf.backKeyAction()
+                    }
+                    return nextResult
+                }
+            }
+            
+            return .invokeNext
+        }, with: self)
+        
+        
     }
+    
+    
     
     open override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)

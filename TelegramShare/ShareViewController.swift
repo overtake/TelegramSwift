@@ -27,6 +27,8 @@ class ShareViewController: NSViewController {
     
     override func loadView() {
         super.loadView()
+        
+        declareEncodable(ThemePalleteSettings.self, f: { ThemePalleteSettings(decoder: $0) })
     
         let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
         guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {

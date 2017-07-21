@@ -5,10 +5,3 @@
   Created by keepcoder on 04/01/2017.
   Copyright © 2017 Telegram. All rights reserved.
 */
-"ShareExtension.Share" = "Share";
-"ShareExtension.Cancel" = "Cancel";
-"ShareExtension.Search" = "Search";
-"ShareExtension.Passcode.Placeholder" = "passcode";
-"ShareExtension.Passcode.Next" = "Next";
-"ShareExtension.Unauthorized.OK" = "OK";
-"ShareExtension.Unauthorized.Description" = "To share via Telegram, please open the Telegam app and log in.";

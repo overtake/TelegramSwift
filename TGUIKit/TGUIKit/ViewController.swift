@@ -19,8 +19,13 @@ class ControllerToasterView : View {
         textView.isSelectable = false
         self.autoresizingMask = [.viewWidthSizable]
         self.border = [.Bottom]
+        updateLocalizationAndTheme()
     }
-    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        self.backgroundColor = presentation.colors.background
+        self.textView.backgroundColor = presentation.colors.background
+    }
    
     
     func update(with toaster:ControllerToaster) {
@@ -53,7 +58,7 @@ public class ControllerToaster {
     }
     
     public init(text:String, height:CGFloat = 30.0) {
-        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: .text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: presentation.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
         self.height = height
     }
     
@@ -355,7 +360,7 @@ open class ViewController : NSObject {
     }
     
     open func backKeyAction() -> KeyHandlerResult {
-        return .invokeNext
+        return .rejected
     }
     
     open func nextKeyAction() -> KeyHandlerResult {

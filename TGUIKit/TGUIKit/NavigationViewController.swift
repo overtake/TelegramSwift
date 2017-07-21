@@ -326,6 +326,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         set {
             self.view.background = newValue
             containerView.backgroundColor = newValue
+            navigationBar.backgroundColor = newValue
         }
         get {
             return self.view.background

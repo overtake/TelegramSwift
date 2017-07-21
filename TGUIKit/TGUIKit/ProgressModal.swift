@@ -25,7 +25,7 @@ class ProgressModalController: ModalViewController {
         super.loadView()
    
         progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
-        progressView?.state = .ImpossibleFetching(progress: progress)
+        progressView?.state = .ImpossibleFetching(progress: progress, force: false)
         view.background = NSColor(0x000000,0.8)
         view.addSubview(progressView!)
         progressView?.center()
@@ -49,7 +49,7 @@ class ProgressModalController: ModalViewController {
         self.timer = SwiftSignalKitMac.Timer(timeout: 0.05, repeat: true, completion: { [weak self] in
             if let strongSelf = self {
                 strongSelf.progress += 0.05
-                strongSelf.progressView?.state = .ImpossibleFetching(progress: strongSelf.progress)
+                strongSelf.progressView?.state = .ImpossibleFetching(progress: strongSelf.progress, force: false)
                 if strongSelf.progress >= 0.8 {
                     strongSelf.timer?.invalidate()
                 }

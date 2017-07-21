@@ -626,6 +626,9 @@ public extension NSRange {
     public var max:Int {
         return self.location + self.length
     }
+    public func indexIn(_ index: Int) -> Bool {
+        return index >= min && index < max
+    }
 }
 
 public extension NSBezierPath {
@@ -822,7 +825,6 @@ public extension String {
     }
     
     public var isSingleEmoji: Bool {
-        
         return glyphCount == 1 && containsEmoji
     }
     

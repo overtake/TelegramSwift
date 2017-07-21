@@ -26,7 +26,11 @@ open class TableAnimationInterface: NSObject {
             height += item.height
         }
         
-        if added.count == 0 {
+        for item in removed {
+            height -= item.height
+        }
+        
+        if added.isEmpty && removed.isEmpty {
             return
         }
         
@@ -89,6 +93,7 @@ open class TableAnimationInterface: NSObject {
             
         } else if !scrollBelow {
             contentView.bounds = NSMakeRect(0, bounds.minY + height, contentView.bounds.width, contentView.bounds.height)
+            table.reflectScrolledClipView(contentView)
         }
 
     }

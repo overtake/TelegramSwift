@@ -19,13 +19,13 @@ class SEUnauthorizedView : View {
         
         imageView.image = #imageLiteral(resourceName: "Icon_TelegramLogin").precomposed()
         imageView.sizeToFit()
-        
+        self.backgroundColor = theme.colors.background
         cancel.set(font: .medium(.title), for: .Normal)
-        cancel.set(color: .blueUI, for: .Normal)
-        cancel.set(text: localizedString("ShareExtension.Unauthorized.OK"), for: .Normal)
+        cancel.set(color: theme.colors.blueUI, for: .Normal)
+        cancel.set(text: tr(.shareExtensionUnauthorizedOK), for: .Normal)
         
-        let layout = TextViewLayout(.initialize(string: localizedString("ShareExtension.Unauthorized.Description"), color: .text, font: .normal(.text)), alignment: .center)
-        
+        let layout = TextViewLayout(.initialize(string: tr(.shareExtensionUnauthorizedDescription), color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        textView.backgroundColor = theme.colors.background
         textView.update(layout)
         
         addSubview(cancel)

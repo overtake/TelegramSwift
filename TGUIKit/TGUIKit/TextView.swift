@@ -511,7 +511,6 @@ public class TextView: Control {
 //        self.layer?.delegate = nil
        // self.layer?.drawsAsynchronously = System.drawAsync
     }
-    
 
 
     public override func draw(_ layer: CALayer, in ctx: CGContext) {

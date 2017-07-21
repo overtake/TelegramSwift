@@ -40,6 +40,30 @@ func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
     return lhs.priority < rhs.priority
 }
 
+public enum SwipeDirection {
+    case left
+    case right
+    case none
+}
+
+class SwipeHandler : Comparable {
+    let handler:(SwipeDirection)->KeyHandlerResult
+    let object:WeakReference<NSObject>
+    let priority:HandlerPriority
+    
+    init(_ handler:@escaping(SwipeDirection)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority) {
+        self.handler = handler
+        self.object = WeakReference(value: object)
+        self.priority = priority
+    }
+}
+func ==(lhs: SwipeHandler, rhs: SwipeHandler) -> Bool {
+    return lhs.priority == rhs.priority
+}
+func <(lhs: SwipeHandler, rhs: SwipeHandler) -> Bool {
+    return lhs.priority < rhs.priority
+}
+
 
 class ResponderObserver : Comparable {
     let handler:()->NSResponder?
@@ -87,8 +111,10 @@ public enum KeyHandlerResult {
 
 public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
+    private var swipeHandlers:[SwipeHandler] = []
     private var responsders:[ResponderObserver] = []
     private var mouseHandlers:[NSEventType:[MouseObserver]] = [:]
+    private var swipePoints:[NSPoint] = []
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
@@ -119,7 +145,18 @@ public class Window: NSWindow {
 
     }
     
+    public func add(swipe handler:@escaping(SwipeDirection) -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low) -> Void {
+        swipeHandlers.append(SwipeHandler(handler, object, priority))
+    }
+    
+    
     public func removeAllHandlers(for object:NSObject) {
+        
+        var newKeyHandlers:[KeyboardKey:[KeyHandler]] = [:]
+        for (key, handlers) in keyHandlers {
+            newKeyHandlers[key] = handlers
+        }
+        
         for (key, handlers) in keyHandlers {
             var copy:[KeyHandler] = []
             for handle in handlers {
@@ -127,10 +164,17 @@ public class Window: NSWindow {
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == object  {
-                    keyHandlers[key]?.remove(at: i)
+                    newKeyHandlers[key]?.remove(at: i)
                 }
             }
         }
+        self.keyHandlers = newKeyHandlers
+        
+        var newMouseHandlers:[NSEventType:[MouseObserver]] = [:]
+        for (key, handlers) in mouseHandlers {
+            newMouseHandlers[key] = handlers
+        }
+        
         for (key, handlers) in mouseHandlers {
             var copy:[MouseObserver] = []
             for handle in handlers {
@@ -138,10 +182,23 @@ public class Window: NSWindow {
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == object  {
-                    mouseHandlers[key]?.remove(at: i)
+                    newMouseHandlers[key]?.remove(at: i)
                 }
             }
         }
+        self.mouseHandlers = newMouseHandlers
+
+        
+        var copyGesture:[SwipeHandler] = []
+        for gesture in swipeHandlers {
+            copyGesture.append(gesture)
+        }
+        for i in stride(from: swipeHandlers.count - 1, to: -1 , by: -1) {
+            if copyGesture[i].object.value == object {
+                copyGesture.remove(at: i)
+            }
+        }
+        self.swipeHandlers = copyGesture
     }
     
     public func remove(object:NSObject, for key:KeyboardKey) {
@@ -160,6 +217,11 @@ public class Window: NSWindow {
     }
     
     private func cleanUndefinedHandlers() {
+        var newKeyHandlers:[KeyboardKey:[KeyHandler]] = [:]
+        for (key, handlers) in keyHandlers {
+            newKeyHandlers[key] = handlers
+        }
+        
         for (key, handlers) in keyHandlers {
             var copy:[KeyHandler] = []
             for handle in handlers {
@@ -167,10 +229,17 @@ public class Window: NSWindow {
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == nil  {
-                    keyHandlers[key]?.remove(at: i)
+                    newKeyHandlers[key]?.remove(at: i)
                 }
             }
         }
+        self.keyHandlers = newKeyHandlers
+        
+        var newMouseHandlers:[NSEventType:[MouseObserver]] = [:]
+        for (key, handlers) in mouseHandlers {
+            newMouseHandlers[key] = handlers
+        }
+        
         for (key, handlers) in mouseHandlers {
             var copy:[MouseObserver] = []
             for handle in handlers {
@@ -178,10 +247,22 @@ public class Window: NSWindow {
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == nil  {
-                    mouseHandlers[key]?.remove(at: i)
+                    newMouseHandlers[key]?.remove(at: i)
                 }
             }
         }
+        self.mouseHandlers = newMouseHandlers
+        
+        var copyGesture:[SwipeHandler] = []
+        for gesture in swipeHandlers {
+            copyGesture.append(gesture)
+        }
+        for i in stride(from: swipeHandlers.count - 1, to: -1 , by: -1) {
+            if copyGesture[i].object.value == nil {
+                copyGesture.remove(at: i)
+            }
+        }
+        self.swipeHandlers = copyGesture
         
     }
     
@@ -209,6 +290,7 @@ public class Window: NSWindow {
             }
         }
     }
+
     
     public func applyResponderIfNeeded() ->Void {
         let sorted = responsders.sorted(by: >)
@@ -314,6 +396,35 @@ public class Window: NSWindow {
                     }
                 }
                 
+            } else if event.type == .scrollWheel {
+                
+//                loop: switch event.phase {
+//                case NSEventPhase.began:
+//                    swipePoints = []
+//                    swipePoints.append(NSMakePoint(event.scrollingDeltaX, event.scrollingDeltaY))
+//                case NSEventPhase.changed:
+//                    swipePoints.append(NSMakePoint(event.scrollingDeltaX, event.scrollingDeltaY))
+//                case NSEventPhase.ended:
+//                    let deltaX = swipePoints.reduce(0, { (current, point) -> CGFloat in
+//                        return current + point.x
+//                    })
+//                    let deltaY = swipePoints.max(by: {$0.0.y < $0.1.y}).map({$0.y}) ?? 0
+//                    
+//                    if deltaX != 0 && deltaY == 0 {
+//                        let sorted = swipeHandlers.sorted(by: >)
+//                        for handle in sorted {
+//                            switch handle.handler(deltaX > 0 ? .left : .right) {
+//                            default:
+//                                break loop
+//                            }
+//                        }
+//                    }
+//                default:
+//                    break loop
+//                }
+                
+                
+                
             } else {
                 if  let handlers = mouseHandlers[event.type] {
                     let sorted = handlers.sorted(by: >)
@@ -330,6 +441,7 @@ public class Window: NSWindow {
                 }
                 
             }
+            
             super.sendEvent(event)
         } else {
             //super.sendEvent(event)
@@ -373,7 +485,7 @@ public class Window: NSWindow {
         NotificationCenter.default.removeObserver(self)
     }
     
-    	
+    
 
     public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
@@ -381,9 +493,12 @@ public class Window: NSWindow {
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
         self.canHide = true
+        
 
+        self.contentView?.acceptsTouchEvents = true
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidMove, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidResize, object: self)
+        
 
         
       //  self.contentView?.canDrawSubviewsIntoLayer = true

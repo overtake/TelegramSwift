@@ -40,13 +40,14 @@ public struct FetchControls {
 private class RadialProgressParameters: NSObject {
     let theme: RadialProgressTheme
     let diameter: CGFloat
+    let twist: Bool
     let state: RadialProgressState
     
-    init(theme: RadialProgressTheme, diameter: CGFloat, state: RadialProgressState) {
+    init(theme: RadialProgressTheme, diameter: CGFloat, state: RadialProgressState, twist: Bool = true) {
         self.theme = theme
         self.diameter = diameter
         self.state = state
-        
+        self.twist = twist
         super.init()
     }
 }
@@ -57,12 +58,14 @@ public struct RadialProgressTheme : Equatable {
     public let icon: CGImage?
     public let iconInset:EdgeInsets
     public let diameter:CGFloat?
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage?, iconInset:EdgeInsets = EdgeInsets(), diameter: CGFloat? = nil) {
+    public let lineWidth: CGFloat
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, iconInset:EdgeInsets = EdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2) {
         self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.icon = icon
         self.diameter = diameter
+        self.lineWidth = lineWidth
     }
 }
 
@@ -73,8 +76,8 @@ public func ==(lhs:RadialProgressTheme, rhs:RadialProgressTheme) -> Bool {
 public enum RadialProgressState: Equatable {
     case None
     case Remote
-    case Fetching(progress: Float)
-    case ImpossibleFetching(progress: Float)
+    case Fetching(progress: Float, force: Bool)
+    case ImpossibleFetching(progress: Float, force: Bool)
     case Play
     case Icon(image:CGImage, mode:CGBlendMode)
 }
@@ -123,21 +126,59 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
 
 private class RadialProgressOverlayLayer: Layer {
     let theme: RadialProgressTheme
-    
-    
+    let twist: Bool
+    private var timer: SwiftSignalKitMac.Timer?
+    private var _progress: Float = 0
+    private var progress: Float = 0
     var parameters:RadialProgressParameters {
-        return RadialProgressParameters(theme: self.theme, diameter: theme.diameter ?? frame.width, state: self.state)
+        return RadialProgressParameters(theme: self.theme, diameter: theme.diameter ?? frame.width, state: self.state, twist: twist)
     }
+
     
     var state: RadialProgressState = .None {
         didSet {
+            switch state {
+            case .None, .Play, .Remote, .Icon:
+                self.progress = 0
+                self._progress = 0
+            case let .Fetching(progress, f), let  .ImpossibleFetching(progress, f):
+                self.progress = progress
+                if f {
+                    _progress = progress
+                }
+            }
+            let fps: Float = 60
+            let difference = progress - _progress
+            let tick: Float = Float(difference / (fps * 0.2))
+            if difference > 0 {
+                timer = SwiftSignalKitMac.Timer(timeout: TimeInterval(1 / fps), repeat: true, completion: { [weak self] in
+                    if let strongSelf = self {
+                        strongSelf._progress += tick
+                        strongSelf.setNeedsDisplay()
+                        if strongSelf._progress == strongSelf.progress || strongSelf._progress < 0 || strongSelf._progress > strongSelf.progress {
+                            strongSelf.stopAnimation()
+                        }
+                    }
+                }, queue: Queue.mainQueue())
+                timer?.start()
+            } else {
+                stopAnimation()
+                _progress = progress
+            }
+           
             self.setNeedsDisplay()
         }
     }
     
-    init(theme: RadialProgressTheme) {
+    func stopAnimation() {
+        timer?.invalidate()
+        timer = nil
+        self.setNeedsDisplay()
+    }
+    
+    init(theme: RadialProgressTheme, twist: Bool) {
         self.theme = theme
-        
+        self.twist = twist
         super.init()
         
         self.isOpaque = false
@@ -146,31 +187,22 @@ private class RadialProgressOverlayLayer: Layer {
     fileprivate override func draw(in ctx: CGContext) {
         ctx.setStrokeColor(parameters.theme.foregroundColor.cgColor)
         
-        switch parameters.state {
-        case .None, .Remote, .Play, .Icon:
-            break
-        case let .Fetching(progress), let .ImpossibleFetching(progress):
-            
-
-            let startAngle = 2.0 * (CGFloat.pi) * CGFloat(progress) - CGFloat.pi / 2
-            let endAngle = -(CGFloat.pi / 2)
-            
-            let pathDiameter = parameters.diameter - 2.0 - 2.0 * 2.0
-            
-            ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, parameters.diameter / 2.0), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-            
-            ctx.setLineWidth(2.0);
-            ctx.setLineCap(.round);
-            ctx.strokePath()
-            
-        }
+        let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2
+        let endAngle = -(CGFloat.pi / 2)
+        
+        let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
+        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+        
+        ctx.setLineWidth(parameters.theme.lineWidth);
+        ctx.setLineCap(.round);
+        ctx.strokePath()
     }
     
     override func layerMoved(to superlayer: CALayer?) {
         
         super.layerMoved(to: superlayer)
         
-        if let _ = superlayer {
+        if let _ = superlayer, parameters.twist {
             let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
             basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
             basicAnimation.duration = 2.0
@@ -190,6 +222,7 @@ private class RadialProgressOverlayLayer: Layer {
 
 
 public class RadialProgressView: Control {
+    
     
     public var fetchControls:FetchControls? {
         didSet {
@@ -310,9 +343,9 @@ public class RadialProgressView: Control {
         }
     }
     
-    public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil)) {
+    public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil), twist: Bool = true) {
         self.theme = theme
-        self.overlay = RadialProgressOverlayLayer(theme: theme)
+        self.overlay = RadialProgressOverlayLayer(theme: theme, twist: twist)
         super.init()
         self.overlay.contentsScale = backingScaleFactor
         self.frame = NSMakeRect(0, 0, 40, 40)

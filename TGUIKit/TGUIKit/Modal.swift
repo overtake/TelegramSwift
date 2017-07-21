@@ -391,6 +391,10 @@ public class Modal: NSObject {
     
 }
 
+public func hasModals() -> Bool {
+    return !activeModals.isEmpty
+}
+
 public func showModal(with controller:ModalViewController, for window:Window) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {

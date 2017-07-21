@@ -163,6 +163,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         super.init(frame: NSZeroRect)
         assertOnMainThread()
         self.wantsLayer = true
+        acceptsTouchEvents = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
 
        // self.layer?.delegate = self
@@ -175,6 +176,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     override required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         assertOnMainThread()
+        acceptsTouchEvents = true
         self.wantsLayer = true
         
         
@@ -192,6 +194,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         set {
             
         }
+    }
+    
+    open override func swipe(with event: NSEvent) {
+        super.swipe(with: event)
+    }
+    
+    open override func beginGesture(with event: NSEvent) {
+        super.beginGesture(with: event)
     }
     
     open func updateLocalizationAndTheme() {

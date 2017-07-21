@@ -50,6 +50,7 @@ open class BarView: OverlayControl {
         set(handler: { [weak self] control in
             self?.clickHandler()
         }, for: .Click)
+        updateLocalizationAndTheme()
     }
     
     required public init(frame frameRect: NSRect) {
