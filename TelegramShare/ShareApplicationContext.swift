@@ -22,7 +22,7 @@ private let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeer
 
 func applicationContext(accountManager: AccountManager, appGroupPath: String, extensionContext: NSExtensionContext) -> Signal<ShareApplicationContext?, NoError> {
     
-    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: ""), supplementary: true, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, Void> in
+    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos"), supplementary: true, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, Void> in
         if let result = result {
             switch result {
             case .unauthorized(let account):
@@ -74,7 +74,7 @@ final class UnauthorizedApplicationContext {
             applyShareUILocalization(localization)
         }
         if let themeSettings = theme {
-            updateTheme(with: themeSettings, for: nil)
+            updateTheme(with: themeSettings)
         } else {
             setDefaultTheme(for: nil)
         }
@@ -98,9 +98,9 @@ class AuthorizedApplicationContext {
         }
         
         if let themeSettings = theme {
-            updateTheme(with: themeSettings, for: nil)
+            updateTheme(with: themeSettings)
         } else {
-            setDefaultTheme(for: nil)
+            setDefaultTheme()
         }
         
         self.rootController = SESelectController(ShareObject(account, context))
@@ -119,9 +119,9 @@ class PasscodeAccessContext {
             applyShareUILocalization(localization)
         }
         if let themeSettings = theme {
-            updateTheme(with: themeSettings, for: nil)
+            updateTheme(with: themeSettings)
         } else {
-            setDefaultTheme(for: nil)
+            setDefaultTheme()
         }
         
         self.rootController = SEPasslockController(account, .login, cancelImpl: {

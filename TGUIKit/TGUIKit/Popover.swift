@@ -36,13 +36,11 @@ open class Popover: NSObject {
     
     required public init(controller:ViewController) {
         self.controller = controller
-       // self.background.layer?.backgroundColor = .blueUI.cgColor
-        self.background.layer?.shadowOpacity = 0.35
+        self.background.layer?.shadowOpacity = 0.4
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
         self.background.layer?.isOpaque = false
-        //self.background.layer?.backgroundColor = NSColor.white.cgColor
-        self.background.layer?.shadowOffset = NSMakeSize(0, -1)
+        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
         self.background.layer?.cornerRadius = 4
         super.init()
         
@@ -60,9 +58,7 @@ open class Popover: NSObject {
             
             self.window = control.kitWindow
             
-            var signal = controller.ready.get() |> filter { result in
-                return result
-            } |> take(1)
+            var signal = controller.ready.get() |> filter {$0} |> take(1)
             if control.controlState == .Hover && delayBeforeShown > 0.0 {
                 signal = signal |> delay(delayBeforeShown, queue: Queue.mainQueue())
             }
@@ -137,7 +133,7 @@ open class Popover: NSObject {
                         rect = contentRect
                     }
                     
-                    point.x = min(max(10, point.x), (parentView.frame.width - rect.width - 14) - 10)
+                    point.x = min(max(5, point.x), (parentView.frame.width - rect.width - 12) - 5)
 
                     
                     parentView.layer?.isOpaque = true

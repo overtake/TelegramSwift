@@ -8,6 +8,11 @@
 
 import Cocoa
 
+public enum TitleButtonImageDirection {
+    case left
+    case right
+}
+
 class TextLayerExt: CATextLayer {
     
     override func draw(in ctx: CGContext) {
@@ -28,6 +33,15 @@ public class TitleButton: ImageButton {
     private var stateText:[ControlState:String] = [:]
     private var stateColor:[ControlState:NSColor] = [:]
     private var stateFont:[ControlState:NSFont] = [:]
+    
+    
+    public var direction: TitleButtonImageDirection = .left {
+        didSet {
+            if direction != oldValue {
+                updateLayout()
+            }
+        }
+    }
     
     public override init() {
         super.init()
@@ -131,9 +145,15 @@ public class TitleButton: ImageButton {
         let textFocus:NSRect = focus(self.text.frame.size)
         if let _ = imageView.image {
             let imageFocus:NSRect = focus(self.imageView.frame.size)
+            switch direction {
+            case .left:
+                self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
+                self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
+            case .right:
+                self.imageView.frame = NSMakeRect(round(frame.width - imageFocus.width - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
+                self.text.frame = NSMakeRect(0, textFocus.minY, textFocus.width, textFocus.height)
+            }
             
-            self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
-            self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
         } else {
             self.text.frame = textFocus
         }
@@ -156,11 +176,11 @@ public class TitleButton: ImageButton {
     public override var style: ControlStyle {
         set {
             super.style = newValue
-            
-            self.set(color: style.foregroundColor, for: .Normal)
-            self.set(color: style.highlightColor, for: .Highlight)
-            self.set(font: style.font, for: .Normal)
-            self.backgroundColor = style.backgroundColor
+//            
+//            self.set(color: style.foregroundColor, for: .Normal)
+//            self.set(color: style.highlightColor, for: .Highlight)
+//            self.set(font: style.font, for: .Normal)
+//            self.backgroundColor = style.backgroundColor
         }
         get {
             return super.style

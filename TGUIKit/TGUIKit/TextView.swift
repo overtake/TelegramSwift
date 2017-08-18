@@ -418,13 +418,13 @@ public final class TextViewLayout : Equatable {
             self.selectedRange = TextSelectedRange()
             return
         }
-        let valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
+        let valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || char == "_"
         let string:NSString = attributedString.string.nsstring
         while valid {
             let prevChar = string.substring(with: NSMakeRange(prev, 1))
             let nextChar = string.substring(with: NSMakeRange(next, 1))
-            var prevValid:Bool = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
-            var nextValid:Bool = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == ""
+            var prevValid:Bool = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || prevChar == "_"
+            var nextValid:Bool = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || nextChar == "_"
             if (prevValid && prev > 0) {
                 prev -= 1
             }

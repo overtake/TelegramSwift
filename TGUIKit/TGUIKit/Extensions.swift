@@ -177,7 +177,7 @@ public extension CALayer {
     
     public func disableActions() -> Void {
         
-        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull()]
+        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]
 
     }
     
@@ -216,6 +216,15 @@ public extension String {
 
 
 public extension NSView {
+    
+    public var snapshot: NSImage {
+        guard let bitmapRep = bitmapImageRepForCachingDisplay(in: bounds) else { return NSImage() }
+        cacheDisplay(in: bounds, to: bitmapRep)
+        let image = NSImage()
+        image.addRepresentation(bitmapRep)
+        bitmapRep.size = bounds.size
+        return NSImage(data: dataWithPDF(inside: bounds))!
+    }
     
     public func mouseInside() -> Bool {
         if let window = self.window {
@@ -300,9 +309,9 @@ public extension NSView {
         var x:CGFloat = 0
         
         if let sv = superView {
-            x = CGFloat(roundf(Float(NSWidth(sv.frame) - NSWidth(self.frame))/2.0))
+            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
         } else if let sv = self.superview {
-            x = CGFloat(roundf(Float(NSWidth(sv.frame) - NSWidth(self.frame))/2.0))
+            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
         }
         
         self.setFrameOrigin(NSMakePoint(x, y == nil ? NSMinY(self.frame) : y!))
@@ -312,21 +321,16 @@ public extension NSView {
         var x:CGFloat = 0
         var y:CGFloat = 0
         
-        x = CGFloat(roundf(Float(NSWidth(self.frame) - size.width)/2.0))
-        y = CGFloat(roundf(Float(NSHeight(self.frame) - size.height)/2.0))
+        x = CGFloat(roundf(Float((frame.width - size.width)/2.0)))
+        y = CGFloat(roundf(Float((frame.height - size.height)/2.0)))
 
         
         return NSMakeRect(x, y, size.width, size.height)
     }
     
     public func focus(_ size:NSSize, inset:EdgeInsets) -> NSRect {
-        var x:CGFloat = 0
-        var y:CGFloat = 0
-        
-        x = CGFloat(roundf(Float(NSWidth(self.frame) - size.width + (inset.left + inset.right))/2.0))
-        y = CGFloat(roundf(Float(NSHeight(self.frame) - size.height + (inset.top + inset.bottom))/2.0))
-        
-        
+        let x:CGFloat = CGFloat(roundf(Float((frame.width - size.width + (inset.left + inset.right))/2.0)))
+        let y:CGFloat = CGFloat(roundf(Float((frame.height - size.height + (inset.top + inset.bottom))/2.0)))
         return NSMakeRect(x, y, size.width, size.height)
     }
     
@@ -335,9 +339,9 @@ public extension NSView {
         var y:CGFloat = 0
         
         if let sv = superView {
-            y = CGFloat(roundf(Float(NSHeight(sv.frame) - NSHeight(self.frame))/2.0))
+            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
         } else if let sv = self.superview {
-            y = CGFloat(roundf(Float(NSHeight(sv.frame) - NSHeight(self.frame))/2.0))
+            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
         }
         
         self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y))
@@ -350,11 +354,11 @@ public extension NSView {
         var y:CGFloat = 0
         
         if let sv = superView {
-            x = CGFloat(roundf(Float(NSWidth(sv.frame) - NSWidth(self.frame))/2.0))
-            y = CGFloat(roundf(Float(NSHeight(sv.frame) - NSHeight(self.frame))/2.0))
+            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
+            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
         } else if let sv = self.superview {
-            x = CGFloat(roundf(Float(NSWidth(sv.frame) - NSWidth(self.frame))/2.0))
-            y = CGFloat(roundf(Float(NSHeight(sv.frame) - NSHeight(self.frame))/2.0))
+            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
+            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
         }
         
         self.setFrameOrigin(NSMakePoint(x, y))
@@ -394,7 +398,7 @@ public extension NSView {
         NSBeep()
     }
     
-    public func change(size: NSSize, animated: Bool, _ save:Bool = true) {
+    public func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()
@@ -403,7 +407,7 @@ public extension NSView {
                 presentBounds.size.height = NSHeight(presentation.bounds)
             }
             
-            self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+            self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
             
         } else {
             self.layer?.removeAnimation(forKey: "bounds")
@@ -482,6 +486,26 @@ public extension CGSize {
         return fittedSize
     }
     
+    func fit(_ maxSize: CGSize) -> CGSize {
+        var size = self
+        if self.width < 1.0 {
+            return CGSize()
+        }
+        if self.height < 1.0 {
+            return CGSize()
+        }
+    
+        if size.width > maxSize.width {
+            size.height = floor((size.height * maxSize.width / size.width));
+            size.width = maxSize.width;
+        }
+        if size.height > maxSize.height {
+            size.width = floor((size.width * maxSize.height / size.height));
+            size.height = maxSize.height;
+        }
+        return size;
+    }
+    
     public func fittedToArea(_ area: CGFloat) -> CGSize {
         if self.height < 1.0 || self.width < 1.0 {
             return CGSize()
@@ -541,16 +565,9 @@ public extension NSImage {
 
         }
         
-        if flipVertical {
-            drawContext.withFlippedContext(make)
-        } else {
-            if flipHorizontal {
-                drawContext.withFlippedHorizontalContext(make)
-            } else {
-                drawContext.withContext(make)
-            }
-        }
+        drawContext.withFlippedContext(horizontal: flipHorizontal, vertical: flipVertical, make)
         
+
         
         
         return drawContext.generateImage()!
@@ -599,6 +616,12 @@ extension Array {
             }
         }
         return result
+    }
+}
+
+public extension NSScrollView {
+    var contentOffset: NSPoint {
+        return contentView.bounds.origin
     }
 }
 
@@ -786,7 +809,7 @@ public extension NSTextField {
 
 
 public extension String {
-    var emojiSkinToneModifiers: [String] {
+    public var emojiSkinToneModifiers: [String] {
         return [ "🏻", "🏼", "🏽", "🏾", "🏿" ]
     }
     
@@ -805,6 +828,16 @@ public extension String {
         
         
         let range = Range<String.Index>(uncheckedBounds: (self.startIndex, self.index(after: self.startIndex)))
+        return self[range]
+    }
+    
+    public var emojiSkin: String {
+        if self.characters.count < 2 {
+            return ""
+        }
+        
+        
+        let range = Range<String.Index>(uncheckedBounds: (self.index(after: self.startIndex), self.endIndex))
         return self[range]
     }
     

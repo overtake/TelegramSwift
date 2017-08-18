@@ -15,6 +15,10 @@ open class TableStickItem: TableRowItem {
         return _stableId
     }
     
+    open var headerHeight: CGFloat {
+        return height
+    }
+    
     open override var height: CGFloat {
         return 30.0
     }

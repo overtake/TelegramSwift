@@ -95,7 +95,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public let customHandler:CustomViewHandlers = CustomViewHandlers()
     
-    open var backgroundColor:NSColor = .white {
+    open var backgroundColor:NSColor = presentation.colors.background {
         didSet {
             if oldValue != backgroundColor {
                 setNeedsDisplay()

@@ -353,7 +353,7 @@ public class Modal: NSObject {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.container.center()
-                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : NSColor(0x000000, 0.5)
+                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : NSColor(0x000000, 0.27)
                     if strongSelf.animated {
                         if !controller.isFullScreen {
                             strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)

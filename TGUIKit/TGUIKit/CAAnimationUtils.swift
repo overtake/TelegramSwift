@@ -66,12 +66,12 @@ public func makeSpringAnimation(_ path:String) -> CABasicAnimation {
    
 }
 
-public func makeSpringBounceAnimation(_ path:String, _ initialVelocity:CGFloat) -> CABasicAnimation {
+public func makeSpringBounceAnimation(_ path:String, _ initialVelocity:CGFloat, _ damping: CGFloat = 88.0) -> CABasicAnimation {
     if #available(OSX 10.11, *) {
         let springAnimation:CASpringAnimation = CASpringAnimation(keyPath: path)
         springAnimation.mass = 5.0
         springAnimation.stiffness = 900.0
-        springAnimation.damping = 88.0
+        springAnimation.damping = damping
         springAnimation.initialVelocity = initialVelocity
         springAnimation.duration = springAnimation.settlingDuration
         springAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
@@ -287,11 +287,38 @@ public extension CALayer {
         self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "opacity", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)
     }
     
+    public func animateSpring(from: AnyObject, to: AnyObject, keyPath: String, duration: Double, initialVelocity: CGFloat = 0.0, damping: CGFloat = 88.0, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let animation: CABasicAnimation
+        if #available(iOS 9.0, *) {
+            animation = makeSpringBounceAnimation(keyPath, initialVelocity, damping)
+        } else {
+            animation = makeSpringAnimation(keyPath)
+        }
+        animation.fromValue = from
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = kCAFillModeForwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        let k = Float(1)
+        var speed: Float = 1.0
+        if k != 0 && k != 1 {
+            speed = Float(1.0) / k
+        }
+        
+        animation.speed = speed * Float(animation.duration / duration)
+        animation.isAdditive = additive
+        
+        self.add(animation, forKey: keyPath)
+    }
+    
     public func animateScale(from: CGFloat, to: CGFloat, duration: Double, timingFunction: String = kCAMediaTimingFunctionEaseInEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
         self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "transform.scale", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)
     }
     
-    func animatePosition(from: NSPoint, to: NSPoint, duration: Double, timingFunction: String = kCAMediaTimingFunctionEaseOut, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+    func animatePosition(from: NSPoint, to: NSPoint, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
         if from == to {
             if let completion = completion {
                 completion(true)

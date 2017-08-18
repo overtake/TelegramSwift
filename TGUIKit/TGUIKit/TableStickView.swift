@@ -13,10 +13,14 @@ open class TableStickView: TableRowView {
     public var header:Bool = false {
         didSet {
             if header != oldValue {
-                self.layer?.setNeedsDisplay()
+                needsDisplay = true
             }
         }
     }
     
+    
+    open override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
     
 }

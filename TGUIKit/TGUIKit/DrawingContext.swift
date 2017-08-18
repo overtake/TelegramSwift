@@ -73,7 +73,7 @@ public class DrawingContext {
         }
     }
     
-    public func withFlippedContext(_ f: (CGContext) -> ()) {
+    public func withFlippedContext(horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {
         if self._context == nil {
             if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
                 c.scaleBy(x: scale, y: scale)
@@ -83,34 +83,13 @@ public class DrawingContext {
         
         if let _context = self._context {
             _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-            _context.scaleBy(x: 1.0, y: -1.0)
+            _context.scaleBy(x: horizontal ? -1.0 : 1.0, y: vertical ? -1.0 : 1.0)
             _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
             
             f(_context)
             
             _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-            _context.scaleBy(x: 1.0, y: -1.0)
-            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
-        }
-    }
-    
-    public func withFlippedHorizontalContext(_ f: (CGContext) -> ()) {
-        if self._context == nil {
-            if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
-                c.scaleBy(x: scale, y: scale)
-                self._context = c
-            }
-        }
-        
-        if let _context = self._context {
-            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-            _context.scaleBy(x: -1.0, y: 1.0)
-            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
-            
-            f(_context)
-            
-            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-            _context.scaleBy(x: -1.0, y: 1.0)
+            _context.scaleBy(x: horizontal ? -1.0 : 1.0, y: vertical ? -1.0 : 1.0)
             _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
         }
     }

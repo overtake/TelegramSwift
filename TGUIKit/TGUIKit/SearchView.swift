@@ -16,12 +16,12 @@ class SearchTextField: NSTextView {
     
     
     override func resignFirstResponder() -> Bool {
-        self.delegate?.textDidEndEditing!(Notification(name: Notification.Name.NSControlTextDidChange))
+        self.delegate?.textDidEndEditing?(Notification(name: Notification.Name.NSControlTextDidChange))
         return super.resignFirstResponder()
     }
     
     override func becomeFirstResponder() -> Bool {
-        self.delegate?.textDidBeginEditing!(Notification(name: Notification.Name.NSControlTextDidChange))
+        self.delegate?.textDidBeginEditing?(Notification(name: Notification.Name.NSControlTextDidChange))
         return super.becomeFirstResponder()
     }
     
@@ -55,7 +55,7 @@ public final class SearchInteractions {
     }
 }
 
-public class SearchView: OverlayControl, NSTextViewDelegate {
+open class SearchView: OverlayControl, NSTextViewDelegate {
     
     public private(set) var state:SearchFieldState = .None
 
@@ -63,18 +63,19 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var lock:Bool = false
     
-    private var clear:ImageButton = ImageButton()
-    private var search:ImageView = ImageView()
+    private let clear:ImageButton = ImageButton()
+    private let search:ImageView = ImageView()
     private let progressIndicator:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 18, 18))
-    private var placeholder:TextViewLabel = TextViewLabel()
+    private let placeholder:TextViewLabel = TextViewLabel()
     
-    private var animateContainer:View = View()
+    private let animateContainer:View = View()
     
-    private let inset:CGFloat = 6
-    private let leftInset:CGFloat = 10.0
+    public let inset:CGFloat = 6
+    public let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
 
+    
     
     
     public var isLoading:Bool = false {
@@ -86,7 +87,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
-    override public func updateLocalizationAndTheme() {
+    override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
         input.textColor = presentation.search.textColor
@@ -96,17 +97,25 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.sizeToFit()
         search.frame = NSMakeRect(0, 0, presentation.search.searchImage.backingSize.width, presentation.search.searchImage.backingSize.height)
         search.image = presentation.search.searchImage
-        animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
+        animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(placeholder.frame.height, search.frame.height)))
         
         clear.set(image: presentation.search.clearImage, for: .Normal)
         clear.sizeToFit()
         
-        placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
+        placeholder.centerY(x: placeholderTextInset)
         search.centerY()
         input.insertionPointColor = presentation.search.textColor
         
         needsLayout = true
 
+    }
+    
+    open var startTextInset: CGFloat {
+        return search.frame.width + inset
+    }
+    
+    open var placeholderTextInset: CGFloat {
+        return startTextInset
     }
     
     required public init(frame frameRect: NSRect) {
@@ -162,10 +171,8 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         clear.backgroundColor = .clear
         
         
-        clear.set(handler: {[weak self] (event) in
-            
-            self?.change(state: .None, true)
-            
+        clear.set(handler: { [weak self] _ in
+            self?.cancelSearch()
         }, for: .Click)
         
         addSubview(clear)
@@ -176,21 +183,29 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
         self.set(handler: {[weak self] (event) in
             if let strongSelf = self {
-                strongSelf.change(state:strongSelf.state == .None ? .Focus : .None,true)
+                if strongSelf.isEmpty {
+                    strongSelf.change(state:strongSelf.state == .None ? .Focus : .None,true)
+                }
             }
         }, for: .Click)
         
         updateLocalizationAndTheme()
     }
     
-    public func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+    open func cancelSearch() {
+        change(state: .None, true)
+    }
+    
+    open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
         if let replacementString = replacementString {
             return !replacementString.contains("\n") && !replacementString.contains("\r")
         }
         return false
     }
     
-    public func textDidChange(_ notification: Notification) {
+    
+    
+    open func textDidChange(_ notification: Notification) {
         
         if let searchInteractions = searchInteractions {
             searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
@@ -207,23 +222,27 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         
     }
     
-    public func textDidEndEditing(_ notification: Notification) {
+    open func textDidEndEditing(_ notification: Notification) {
         didResignResponder()
     }
     
-    public func textDidBeginEditing(_ notification: Notification) {
+    open func textDidBeginEditing(_ notification: Notification) {
         didBecomeResponder()
     }
 
-    public func didResignResponder() {
-        if let s = input.string, s.isEmpty {
+    open var isEmpty: Bool {
+        return query.isEmpty
+    }
+    
+    open func didResignResponder() {
+        if isEmpty {
             change(state: .None, true)
         }
         self.kitWindow?.removeAllHandlers(for: self)
         self.kitWindow?.removeObserver(for: self)
     }
     
-    public func didBecomeResponder() {
+    open func didBecomeResponder() {
         change(state: .Focus, true)
         
         self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
@@ -246,7 +265,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
     
 
     
-    public func change(state:SearchFieldState, _ animated:Bool) -> Void {
+    open func change(state:SearchFieldState, _ animated:Bool) -> Void {
         
         if state != self.state && !lock {
             self.state = state
@@ -262,7 +281,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
                 
                window?.makeFirstResponder(input)
                 
-                let inputInset = leftInset + NSWidth(search.frame) + inset - 5
+                let inputInset = placeholderTextInset + 5
                 
                 let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
@@ -320,7 +339,7 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
   
     }
     
-    public override func viewDidMoveToSuperview() {
+    open override func viewDidMoveToSuperview() {
         guard let _ = superview else {
             return
         }
@@ -335,20 +354,32 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
             }
             progressIndicator.isHidden = false
             clear.isHidden = true
+            rightAccessory.isHidden = true
             progressIndicator.animates = true
         } else {
             progressIndicator.animates = false
             progressIndicator.removeFromSuperview()
             progressIndicator.isHidden = true
-            clear.isHidden = self.state == .None
+            clear.isHidden = self.state == .None || !clearVisibility
+            rightAccessory.isHidden = self.state == .None
         }
         if window?.firstResponder == input {
             window?.makeFirstResponder(input)
         }
     }
+    private var clearVisibility: Bool = true
+    
+    public func updateClearVisibility(_ visible: Bool) {
+        clearVisibility = visible
+        clear.isHidden = !visible || isLoading
+    }
+    
+    open var rightAccessory: NSView {
+        return clear
+    }
     
     
-    public override func layout() {
+    open override func layout() {
         super.layout()
         switch state {
         case .None:
@@ -358,10 +389,17 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         }
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width)
+        
+        self.input.setFrameOrigin(placeholderTextInset + 5, animateContainer.frame.minY)
+        
     }
 
     public func changeResponder(_ animated:Bool = true) -> Bool {
-        change(state: state == .None ? .Focus : .None, animated)
+        if state == .Focus {
+            cancelSearch()
+        } else {
+            change(state: .Focus, animated)
+        }
         return true
     }
     
@@ -374,8 +412,13 @@ public class SearchView: OverlayControl, NSTextViewDelegate {
         return self.input.string ?? ""
     }
     
+    public override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion: ((Bool) -> Void)? = nil) {
+        super.change(size: size, animated: animated, save, duration: duration, timingFunction: timingFunction)
+        clear.change(pos: NSMakePoint(frame.width - inset - clear.frame.width, clear.frame.minY), animated: animated)
+    }
     
-    public func setStirng(_ string:String) {
+
+    public func setString(_ string:String) {
         self.input.string = string
         textDidChange(Notification(name:Notification.Name.NSTextDidChange))
         needsLayout = true

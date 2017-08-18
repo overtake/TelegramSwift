@@ -16,12 +16,12 @@ import SwiftSignalKitMac
 
 
 public struct SearchTheme {
-    let backgroundColor: NSColor
-    let searchImage:CGImage
-    let clearImage:CGImage
-    let placeholder:String
-    let textColor: NSColor
-    let placeholderColor: NSColor
+    public let backgroundColor: NSColor
+    public let searchImage:CGImage
+    public let clearImage:CGImage
+    public let placeholder:String
+    public let textColor: NSColor
+    public let placeholderColor: NSColor
     public init(_ backgroundColor: NSColor, _ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:String, _ textColor: NSColor, _ placeholderColor: NSColor) {
         self.backgroundColor = backgroundColor
         self.searchImage = searchImage
@@ -56,7 +56,8 @@ public struct ColorPallete {
     public let badgeMuted:NSColor
     public let badge:NSColor
     public let indicatorColor: NSColor
-    public init(background:NSColor, text: NSColor, grayText: NSColor, link: NSColor, blueUI:NSColor, redUI:NSColor, greenUI:NSColor, blackTransparent:NSColor, grayTransparent:NSColor, grayUI:NSColor, darkGrayText:NSColor, blueText:NSColor, blueSelect:NSColor, selectText:NSColor, blueFill:NSColor, border:NSColor, grayBackground:NSColor, grayForeground:NSColor, grayIcon:NSColor, blueIcon:NSColor, badgeMuted:NSColor, badge:NSColor, indicatorColor: NSColor) {
+    public let selectMessage: NSColor
+    public init(background:NSColor, text: NSColor, grayText: NSColor, link: NSColor, blueUI:NSColor, redUI:NSColor, greenUI:NSColor, blackTransparent:NSColor, grayTransparent:NSColor, grayUI:NSColor, darkGrayText:NSColor, blueText:NSColor, blueSelect:NSColor, selectText:NSColor, blueFill:NSColor, border:NSColor, grayBackground:NSColor, grayForeground:NSColor, grayIcon:NSColor, blueIcon:NSColor, badgeMuted:NSColor, badge:NSColor, indicatorColor: NSColor, selectMessage: NSColor) {
         self.background = background
         self.text = text
         self.grayText = grayText
@@ -80,6 +81,7 @@ public struct ColorPallete {
         self.badgeMuted = badgeMuted
         self.badge = badge
         self.indicatorColor = indicatorColor
+        self.selectMessage = selectMessage
     }
 }
 
@@ -119,12 +121,12 @@ public var navigationButtonStyle:ControlStyle {
 public var switchViewAppearance: SwitchViewAppearance {
     return SwitchViewAppearance(backgroundColor: presentation.colors.background, stateOnColor: presentation.colors.blueUI, stateOffColor: presentation.colors.grayBackground, disabledColor: presentation.colors.grayTransparent, borderColor: presentation.colors.border)
 }
-
-public let whitePallete = ColorPallete(background: .white, text: NSColor(0x000000), grayText: NSColor(0x999999), link: NSColor(0x2481cc), blueUI: NSColor(0x2481cc), redUI: NSColor(0xff3b30), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x4ba3e2), blueSelect:NSColor(0x4c91c7), selectText:NSColor(0xeaeaea), blueFill:NSColor(0x4ba3e2), border:NSColor(0xeaeaea), grayBackground:NSColor(0xf4f4f4), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x9e9e9e), blueIcon:NSColor(0x0f8fe4), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2), indicatorColor: .black)
+//0xE3EDF4
+public let whitePallete = ColorPallete(background: .white, text: NSColor(0x000000), grayText: NSColor(0x999999), link: NSColor(0x2481cc), blueUI: NSColor(0x2481cc), redUI: NSColor(0xff3b30), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x2481CC), blueSelect:NSColor(0x4c91c7), selectText:NSColor(0xeaeaea), blueFill:NSColor(0x4ba3e2), border:NSColor(0xeaeaea), grayBackground:NSColor(0xf4f4f4), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x9e9e9e), blueIcon:NSColor(0x0f8fe4), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2), indicatorColor: .black, selectMessage: NSColor(0xE3EDF4))
 
 //04afc8
 //282b35
-public let darkPallete = ColorPallete(background: NSColor(0x292b36), text: NSColor(0xe9e9e9), grayText: NSColor(0x8699a3), link: NSColor(0x04afc8), blueUI: NSColor(0x04afc8), redUI: NSColor(0xec6657), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0x2f313d, 0.5), grayUI: NSColor(0x292b36), darkGrayText:NSColor(0x8699a3), blueText:NSColor(0x04afc8), blueSelect:NSColor(0x20889a), selectText: NSColor(0x464a57), blueFill: NSColor(0x04afc8), border: NSColor(0x464a57), grayBackground:NSColor(0x464a57), grayForeground:NSColor(0x3d414d), grayIcon: NSColor(0x8699a3), blueIcon: NSColor(0x04afc8), badgeMuted:NSColor(0x8699a3), badge:NSColor(0x04afc8), indicatorColor: .white)
+public let darkPallete = ColorPallete(background: NSColor(0x292b36), text: NSColor(0xe9e9e9), grayText: NSColor(0x8699a3), link: NSColor(0x04afc8), blueUI: NSColor(0x04afc8), redUI: NSColor(0xec6657), greenUI:NSColor(0x49ad51), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0x2f313d, 0.5), grayUI: NSColor(0x292b36), darkGrayText:NSColor(0x8699a3), blueText:NSColor(0x04afc8), blueSelect:NSColor(0x20889a), selectText: NSColor(0x464a57), blueFill: NSColor(0x04afc8), border: NSColor(0x464a57), grayBackground:NSColor(0x464a57), grayForeground:NSColor(0x3d414d), grayIcon: NSColor(0x8699a3), blueIcon: NSColor(0x04afc8), badgeMuted:NSColor(0x8699a3), badge:NSColor(0x04afc8), indicatorColor: .white, selectMessage: NSColor(0x3d414d))
 
 /*
  public let darkPallete = ColorPallete(background: NSColor(0x282e33), text: NSColor(0xe9e9e9), grayText: NSColor(0x999999), link: NSColor(0x20eeda), blueUI: NSColor(0x20eeda), redUI: NSColor(0xec6657), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x009687), blueSelect:NSColor(0x009687), selectText:NSColor(0xeaeaea), blueFill: NSColor(0x20eeda), border: NSColor(0x3d444b), grayBackground:NSColor(0x3d444b), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x757676), blueIcon: NSColor(0x20eeda), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2), indicatorColor: .white)

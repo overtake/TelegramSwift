@@ -47,7 +47,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "157"
             endingLineNumber = "157"
-            landmarkName = "dispose()"
+            landmarkName = "remove(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -138,7 +138,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "522335994.422903"
+                  timestampString = "524761089.604932"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -153,7 +153,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "522335994.42642"
+                  timestampString = "524761089.608882"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -240,6 +240,118 @@
             startingLineNumber = "204"
             endingLineNumber = "204"
             landmarkName = "beginGesture(with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/Postbox/Postbox/IpcPipe.swift"
+            timestampString = "522848261.234989"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "49"
+            endingLineNumber = "49"
+            landmarkName = "ipcNotifications(basePath:)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/Postbox/Postbox/IpcPipe.swift"
+            timestampString = "522848263.855288"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "15"
+            endingLineNumber = "15"
+            landmarkName = "ipcNotify(basePath:data:)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/Postbox/Postbox/MappedFile.swift"
+            timestampString = "522848299.281462"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "20"
+            endingLineNumber = "20"
+            landmarkName = "deinit"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/Account.swift"
+            timestampString = "522966623.032132"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "128"
+            endingLineNumber = "128"
+            landmarkName = "init(networkArguments:id:appGroupPath:basePath:testingEnvironment:postbox:network:shouldKeepAutoConnection:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/Account.swift"
+            timestampString = "522966623.915875"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "130"
+            endingLineNumber = "130"
+            landmarkName = "init(networkArguments:id:appGroupPath:basePath:testingEnvironment:postbox:network:shouldKeepAutoConnection:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/ApplicationContext.swift"
+            timestampString = "523386544.984451"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "627"
+            endingLineNumber = "627"
+            landmarkName = "queryUpdated(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/ApplicationContext.swift"
+            timestampString = "523386596.972199"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "625"
+            endingLineNumber = "625"
+            landmarkName = "queryUpdated(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

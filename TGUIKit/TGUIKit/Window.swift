@@ -396,50 +396,18 @@ public class Window: NSWindow {
                     }
                 }
                 
-            } else if event.type == .scrollWheel {
-                
-//                loop: switch event.phase {
-//                case NSEventPhase.began:
-//                    swipePoints = []
-//                    swipePoints.append(NSMakePoint(event.scrollingDeltaX, event.scrollingDeltaY))
-//                case NSEventPhase.changed:
-//                    swipePoints.append(NSMakePoint(event.scrollingDeltaX, event.scrollingDeltaY))
-//                case NSEventPhase.ended:
-//                    let deltaX = swipePoints.reduce(0, { (current, point) -> CGFloat in
-//                        return current + point.x
-//                    })
-//                    let deltaY = swipePoints.max(by: {$0.0.y < $0.1.y}).map({$0.y}) ?? 0
-//                    
-//                    if deltaX != 0 && deltaY == 0 {
-//                        let sorted = swipeHandlers.sorted(by: >)
-//                        for handle in sorted {
-//                            switch handle.handler(deltaX > 0 ? .left : .right) {
-//                            default:
-//                                break loop
-//                            }
-//                        }
-//                    }
-//                default:
-//                    break loop
-//                }
-                
-                
-                
-            } else {
-                if  let handlers = mouseHandlers[event.type] {
-                    let sorted = handlers.sorted(by: >)
-                    loop: for handle in sorted {
-                        switch handle.handler(event) {
-                        case .invoked:
-                            return
-                        case .rejected:
-                            continue
-                        case .invokeNext:
-                            break loop
-                        }
+            } else if let handlers = mouseHandlers[event.type] {
+                let sorted = handlers.sorted(by: >)
+                loop: for handle in sorted {
+                    switch handle.handler(event) {
+                    case .invoked:
+                        return
+                    case .rejected:
+                        continue
+                    case .invokeNext:
+                        break loop
                     }
                 }
-                
             }
             
             super.sendEvent(event)

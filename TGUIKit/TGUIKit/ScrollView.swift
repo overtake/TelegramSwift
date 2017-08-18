@@ -18,54 +18,48 @@ public enum ScrollDirection {
 
 public struct ScrollPosition : Equatable {
     public private(set) var rect:NSRect
-
+    public private(set) var visibleRows: NSRange
     public private(set) var direction:ScrollDirection
-    public init(_ rect:NSRect = NSZeroRect, _ direction:ScrollDirection = .none) {
+    public init(_ rect:NSRect = NSZeroRect, _ direction:ScrollDirection = .none, _ visibleRows: NSRange = NSMakeRange(NSNotFound, 0)) {
         self.rect = rect
+        self.visibleRows = visibleRows
         self.direction = direction
     }
 }
 
 public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
-    return NSEqualRects(lhs.rect, rhs.rect) && lhs.direction == rhs.direction
+    return NSEqualRects(lhs.rect, rhs.rect) && lhs.direction == rhs.direction && NSEqualRanges(lhs.visibleRows, rhs.visibleRows)
 }
 
 open class ScrollView: NSScrollView, CALayerDelegate{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
 
-    public var scrollPosition:ScrollPosition {
+    public func scrollPosition(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0))  -> (current: ScrollPosition, previous: ScrollPosition) {
         
-//        if self.contentView.bounds.minY < 0 {
-//            return ScrollPosition(currentpos.rect,.none)
-//        }
-        
-        let rect = NSMakeRect(NSMinX(self.contentView.bounds), NSMaxY(self.contentView.bounds),NSWidth(self.contentView.documentRect),NSHeight(self.contentView.documentRect))
+        let rect = NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height)
         
         var d:ScrollDirection = .none
         
         
         if abs(currentpos.rect.minY - rect.minY) < 5 {
-            return currentpos
+            return (currentpos, currentpos)
         }
         
-       // if(rect.origin.y < rect.size.height && rect.origin.y > 0) {
-            if(currentpos.rect.minY > rect.minY) {
-                d = .top
-            } else if(currentpos.rect.minY < rect.minY) {
-                d = .bottom
-            }
-      //  }
+        if(currentpos.rect.minY > rect.minY) {
+            d = .top
+        } else if(currentpos.rect.minY < rect.minY) {
+            d = .bottom
+        }
         
-        
-        let n = ScrollPosition(rect,d)
+        let n = ScrollPosition(rect, d, visibleRange)
+        let previous = currentpos
         currentpos = n
-        return n
+        return (n, previous)
     }
     
-    func updateScroll() -> Void {
-        self.currentpos = ScrollPosition(NSMakeRect(NSMinX(self.contentView.bounds), NSMaxY(self.contentView.bounds),NSWidth(self.contentView.documentRect),NSHeight(self.contentView.documentRect))
-, .none)
+    func updateScroll(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
+        self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), .none, visibleRange)
     }
     
     public var documentOffset:NSPoint {
@@ -82,7 +76,7 @@ open class ScrollView: NSScrollView, CALayerDelegate{
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(NSColor.white.cgColor)
+        ctx.setFillColor(presentation.colors.background.cgColor)
         ctx.fill(bounds)
     }
     

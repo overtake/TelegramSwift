@@ -293,7 +293,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         containerView.frame = bounds
         self.view.autoresizesSubviews = true
         containerView.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
-        addSubview(containerView)
+        self.view.addSubview(containerView, positioned: .below, relativeTo: self.view.subviews.first)
         controller._frameRect = bounds
         controller.viewWillAppear(false)
         controller.navigationController = self

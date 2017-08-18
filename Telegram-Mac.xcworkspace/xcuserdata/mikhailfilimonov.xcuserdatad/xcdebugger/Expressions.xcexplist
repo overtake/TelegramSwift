@@ -165,6 +165,9 @@
          contextName = "TableView.insert(item : TableRowItem, at : Int, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; Bool:TableView.swift">
          <PersistentStrings>
             <PersistentString
+               value = "self.item(stableId:item.stableId)">
+            </PersistentString>
+            <PersistentString
                value = "self.item(stableId:item.stableId) as? ShortPeerRowItem">
             </PersistentString>
          </PersistentStrings>
@@ -371,14 +374,6 @@
          contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)]):System.swift">
       </ContextState>
       <ContextState
-         contextName = "ShareModalController.(viewDidLoad() -&gt; ()).(closure #2):ShareModalController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "transition.entries">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "GeneralTextRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralTextRowItem.swift">
       </ContextState>
       <ContextState
@@ -404,6 +399,14 @@
          <PersistentStrings>
             <PersistentString
                value = "centerBarView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TableView.replace(item : TableRowItem, at : Int, animated : Bool) -&gt; ():TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "list">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1366,6 +1369,14 @@
          <PersistentStrings>
             <PersistentString
                value = " message.media[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TokenSearchView.updateLocalizationAndTheme() -&gt; ():TokenSearchView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "fromView">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

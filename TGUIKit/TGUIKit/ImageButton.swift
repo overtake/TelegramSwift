@@ -41,7 +41,6 @@ open class ImageButton: Button {
     override public func apply(state: ControlState) {
         let state:ControlState = self.isSelected ? .Highlight : state
         super.apply(state: state)
-        updateLayout()
 
         if let image = images[state] {
             imageView.image = image
@@ -52,6 +51,7 @@ open class ImageButton: Button {
         } else {
             imageView.image = images[.Normal]
         }
+        updateLayout()
     }
     
     public func disableActions() {
