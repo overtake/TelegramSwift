@@ -110,6 +110,7 @@ public enum KeyHandlerResult {
 }
 
 public class Window: NSWindow {
+    public var name: String = "TGUIKit.Window"
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeHandler] = []
     private var responsders:[ResponderObserver] = []
@@ -118,6 +119,7 @@ public class Window: NSWindow {
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
+    public var closeInterceptor:(()->Void)? = nil
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -318,6 +320,10 @@ public class Window: NSWindow {
     
     
     public override func close() {
+        if let closeInterceptor = closeInterceptor {
+            closeInterceptor()
+            return
+        }
         if isReleasedWhenClosed {
             super.close()
         } else {

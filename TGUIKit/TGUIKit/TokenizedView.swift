@@ -79,6 +79,7 @@ private class TokenView : Control {
     override func layout() {
         super.layout()
         nameView.centerY(x: 5)
+        nameView.setFrameOrigin(5, nameView.frame.minY - 1)
         dismiss.centerY(x: frame.width - 5 - dismiss.frame.width)
     }
     

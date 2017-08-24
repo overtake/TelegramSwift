@@ -17,6 +17,7 @@ public protocol MajorControllerListener : class {
 
 open class MajorNavigationController: NavigationViewController, SplitViewDelegate {
     
+    public var alwaysAnimate: Bool = false
     private var majorClass:AnyClass
     private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
@@ -44,9 +45,9 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         controller.navigationController = self
         
         containerView.addSubview(navigationBar)
-        
-        navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
-        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
+        containerView.frame = bounds
+        navigationBar.frame = NSMakeRect(0, 0, containerView.frame.width, controller.bar.height)
+        controller.view.frame = NSMakeRect(0, controller.bar.height , containerView.frame.width, containerView.frame.height - controller.bar.height)
         
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle)
         
@@ -143,7 +144,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             if let strongSelf = self {
                 strongSelf.lock = true
                 let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)
-                let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController
+                let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController && !strongSelf.alwaysAnimate
                 
                 if isMajorController {
                     for controller in strongSelf.stack {
@@ -180,7 +181,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     open override func back(animated:Bool = true) -> Void {
         if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
             let ncontroller = stack[stackCount - 2]
-            let removeAnimateFlag = ncontroller == defaultEmpty || !animated
+            let removeAnimateFlag = (ncontroller == defaultEmpty || !animated) && !alwaysAnimate
             last.didRemovedFromStack()
             stack.removeLast()
             

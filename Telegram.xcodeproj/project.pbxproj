@@ -346,6 +346,7 @@
 		C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E6E1E4352C100193A7E /* ContextStickerRowItem.swift */; };
 		C29C3E711E43881500193A7E /* StickerPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E701E43881500193A7E /* StickerPreviewModalController.swift */; };
 		C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */; };
+		C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */; };
 		C29EA1E91F2F2C0000567426 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C29EA1EA1F2F2C0000567426 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C29EA1EB1F2F2C0400567426 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
@@ -374,6 +375,7 @@
 		C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */; };
 		C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */; };
 		C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */; };
+		C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */; };
 		C2AC9C151E1E627F0085C7DE /* TabBadgeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */; };
 		C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */; };
 		C2AF01131F01543200D8AC1D /* ExportProxyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */; };
@@ -912,6 +914,7 @@
 		C29C3E6E1E4352C100193A7E /* ContextStickerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextStickerRowItem.swift; sourceTree = "<group>"; };
 		C29C3E701E43881500193A7E /* StickerPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPreviewModalController.swift; sourceTree = "<group>"; };
 		C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPreviewHandler.swift; sourceTree = "<group>"; };
+		C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewAppearance.swift; sourceTree = "<group>"; };
 		C29F4C741F45F58B00DBFC00 /* MIHSliderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIHSliderView.h; sourceTree = "<group>"; };
 		C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIHSliderView.m; sourceTree = "<group>"; };
 		C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageSlideshowItem.swift; sourceTree = "<group>"; };
@@ -939,6 +942,7 @@
 		C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationSettingsViewController.swift; sourceTree = "<group>"; };
 		C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHeaderController.swift; sourceTree = "<group>"; };
 		C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginErrorStateView.swift; sourceTree = "<group>"; };
+		C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewWindow.swift; sourceTree = "<group>"; };
 		C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBadgeItem.swift; sourceTree = "<group>"; };
 		C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalBadgeNode.swift; sourceTree = "<group>"; };
 		C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExportProxyModalController.swift; sourceTree = "<group>"; };
@@ -1723,6 +1727,7 @@
 				C218FF9B1F4204C400DD7D35 /* InstantPageChannelView.swift */,
 				C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */,
 				C29F4C7C1F47283600DBFC00 /* InstantPageBrowser.swift */,
+				C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */,
 			);
 			name = instantpage;
 			sourceTree = "<group>";
@@ -2012,6 +2017,7 @@
 				C221ED591EA6896400471C65 /* VoiceCallSettings.swift */,
 				C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */,
 				C24FD40F1F20FBFB00A97196 /* RecentUsedEmoji.swift */,
+				C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -3242,6 +3248,7 @@
 				C24DABA31E083185005EE404 /* YTVimeoExtractorOperation.m in Sources */,
 				C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
+				C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
@@ -3284,6 +3291,7 @@
 				C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */,
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
+				C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				C26E82D11E83EFFE0046DF2F /* TimeObserver.m in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,

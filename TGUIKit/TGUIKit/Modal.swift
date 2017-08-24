@@ -212,11 +212,13 @@ public class Modal: NSObject {
     private var interactionsView:ModalInteractionsContainer?
     public let interactions:ModalInteractions?
     fileprivate let animated: Bool
-    public init(controller:ModalViewController, for window:Window, animated: Bool = true) {
+    private let isOverlay: Bool
+    public init(controller:ModalViewController, for window:Window, animated: Bool = true, isOverlay: Bool) {
         
         self.controller = controller
         self.window = window
         self.animated = animated
+        self.isOverlay = isOverlay
         background = ModalBackground()
         background.backgroundColor = controller.background
         background.layer?.disableActions()
@@ -348,8 +350,8 @@ public class Modal: NSObject {
     func show() -> Void {
         // if let view
         if let controller = controller {
-            disposable.set((controller.ready.get() |> take(1)).start(next: {[weak self, weak controller] (ready) in
-                if let strongSelf = self, let view = self?.window.contentView, let controller = controller {
+            disposable.set((controller.ready.get() |> take(1)).start(next: { [weak self, weak controller] ready in
+                if let strongSelf = self, let view = (strongSelf.isOverlay ? strongSelf.window.contentView?.superview : strongSelf.window.contentView), let controller = controller {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.container.center()
@@ -372,8 +374,7 @@ public class Modal: NSObject {
                             strongSelf?.container.setFrameSize(size)
                         }
                     }
-                    
-                    
+    
                     view.addSubview(strongSelf.background)
                  
                     if strongSelf.animated {
@@ -395,7 +396,13 @@ public func hasModals() -> Bool {
     return !activeModals.isEmpty
 }
 
-public func showModal(with controller:ModalViewController, for window:Window) -> Void {
+public func closeAllModals() {
+    for modal in activeModals {
+        modal.value?.close()
+    }
+}
+
+public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
         if weakModal.value?.controller?.className == controller.className {
@@ -403,7 +410,7 @@ public func showModal(with controller:ModalViewController, for window:Window) ->
         }
     }
     
-    controller.modal = Modal(controller: controller, for: window)
+    controller.modal = Modal(controller: controller, for: window, isOverlay: isOverlay)
     controller.modal?.show()
 }
 

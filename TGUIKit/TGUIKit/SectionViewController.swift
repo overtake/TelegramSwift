@@ -88,7 +88,7 @@ public class SectionControllerView : View {
             let nfrom: NSPoint
             
           
-            if previousIndex > index {
+            if previousIndex < index {
                 pto = NSMakePoint(-container.frame.width, 0)
                 nfrom = NSMakePoint(container.frame.width, 0)
             } else {

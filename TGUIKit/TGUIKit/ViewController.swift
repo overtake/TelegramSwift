@@ -117,6 +117,7 @@ open class ViewController : NSObject {
         }
     }
     
+    public var noticeResizeWhenLoaded: Bool = true
     
     public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:kCAMediaTimingFunctionSpring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
@@ -293,7 +294,9 @@ open class ViewController : NSObject {
     }
     
     open func viewDidLoad() -> Void {
-        viewDidResized(view.frame.size)
+        if noticeResizeWhenLoaded {
+            viewDidResized(view.frame.size)
+        }
     }
     
     open func viewWillAppear(_ animated:Bool) -> Void {
@@ -554,8 +557,7 @@ open class ModalViewController : ViewController {
     override open func loadView() -> Void {
         if(_view == nil) {
             
-            let vz = viewClass() as! NSView.Type
-            _view = vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height));
+            _view = initializer()
             _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
             
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
@@ -564,6 +566,12 @@ open class ModalViewController : ViewController {
         }
         viewDidLoad()
     }
+    
+    open func initializer() -> NSView {
+        let vz = viewClass() as! NSView.Type
+        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height));
+    }
+
     
 }
 
