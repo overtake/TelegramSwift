@@ -138,7 +138,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "525253626.05825"
+                  timestampString = "526142784.855794"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -153,7 +153,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "525253626.063411"
+                  timestampString = "526142784.858913"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "260"
@@ -288,70 +288,6 @@
             startingLineNumber = "20"
             endingLineNumber = "20"
             landmarkName = "deinit"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "submodules/TelegramCore/TelegramCore/Account.swift"
-            timestampString = "522966623.032132"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "128"
-            endingLineNumber = "128"
-            landmarkName = "init(networkArguments:id:appGroupPath:basePath:testingEnvironment:postbox:network:shouldKeepAutoConnection:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "submodules/TelegramCore/TelegramCore/Account.swift"
-            timestampString = "522966623.915875"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "130"
-            endingLineNumber = "130"
-            landmarkName = "init(networkArguments:id:appGroupPath:basePath:testingEnvironment:postbox:network:shouldKeepAutoConnection:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ApplicationContext.swift"
-            timestampString = "523386544.984451"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "627"
-            endingLineNumber = "627"
-            landmarkName = "queryUpdated(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ApplicationContext.swift"
-            timestampString = "523386596.972199"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "625"
-            endingLineNumber = "625"
-            landmarkName = "queryUpdated(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

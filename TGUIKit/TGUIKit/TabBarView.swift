@@ -88,11 +88,25 @@ public class TabBarView: View {
         var xOffset:CGFloat = 0
         
         
-        for tab in tabs {
+        for i in 0 ..< tabs.count {
+            let tab = tabs[i]
             let itemWidth = defWidth
-            let view = View(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
+            let view = Control(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
             view.backgroundColor = presentation.colors.background
             let container = View(frame: view.bounds)
+            view.set(handler: { [weak tab] control in
+                tab?.longHoverHandler?(control)
+            }, for: .LongOver)
+            
+            view.set(handler: { [weak self] control in
+                if let strongSelf = self {
+                    if strongSelf.selectedIndex == i {
+                        strongSelf.delegate?.scrollup()
+                    } else {
+                        strongSelf.setSelectedIndex(i, respondToDelegate:true)
+                    }
+                }
+            }, for: .Click)
             view.autoresizingMask = [.viewMinXMargin, .viewMaxXMargin, .viewWidthSizable]
             view.autoresizesSubviews = true
             let imageView = ImageView(frame: NSMakeRect(0, 0, tab.image.backingSize.width, tab.image.backingSize.height))
@@ -175,24 +189,6 @@ public class TabBarView: View {
     }
     
     
-    
-    public override func mouseDown(with event: NSEvent) {
-        let point:NSPoint = self.convert(event.locationInWindow, from: nil)
-        
-        var idx:Int = 0
-        
-        for subview in subviews {
-            if subview.hitTest(point) != nil {
-                if selectedIndex == idx {
-                    self.delegate?.scrollup()
-                } else {
-                    setSelectedIndex(idx, respondToDelegate:true)
-                }
-                return
-            }
-            idx += 1
-        }
-    }
     
     
 }

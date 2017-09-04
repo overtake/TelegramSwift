@@ -35,7 +35,7 @@ public class TimableProgressView: View {
     public var theme: TimableProgressTheme = TimableProgressTheme() {
         didSet {
             self._progress = theme.start
-            progress = Int32(theme.start)
+            progress = Int32(round(theme.start))
             stopAnimation()
             needsDisplay = true
         }

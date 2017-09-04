@@ -15,9 +15,10 @@ open class TabItem: NSObject {
     let selectedImage: CGImage
     let controller:ViewController
     let subNode:Node?
-    
-    public init(image: CGImage, selectedImage: CGImage, controller:ViewController, subNode:Node? = nil) {
+    let longHoverHandler:((Control)->Void)?
+    public init(image: CGImage, selectedImage: CGImage, controller:ViewController, subNode:Node? = nil, longHoverHandler:((Control)->Void)? = nil) {
         self.image = image
+        self.longHoverHandler = longHoverHandler
         self.selectedImage = selectedImage
         self.controller = controller
         self.subNode = subNode
@@ -25,6 +26,6 @@ open class TabItem: NSObject {
     }
     
     public func withUpdatedImages(_ image: CGImage, _ selectedImage: CGImage) -> TabItem {
-        return TabItem(image: image, selectedImage: selectedImage, controller: self.controller, subNode: self.subNode)
+        return TabItem(image: image, selectedImage: selectedImage, controller: self.controller, subNode: self.subNode, longHoverHandler: self.longHoverHandler)
     }
 }

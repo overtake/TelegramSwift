@@ -116,7 +116,7 @@ open class PresentationTheme : Equatable {
 
 
 public var navigationButtonStyle:ControlStyle {
-    return ControlStyle(font: .medium(.title), foregroundColor: presentation.colors.link, backgroundColor: presentation.colors.background, highlightColor: presentation.colors.blueUI)
+    return ControlStyle(font: .normal(.title), foregroundColor: presentation.colors.link, backgroundColor: presentation.colors.background, highlightColor: presentation.colors.blueUI)
 }
 public var switchViewAppearance: SwitchViewAppearance {
     return SwitchViewAppearance(backgroundColor: presentation.colors.background, stateOnColor: presentation.colors.blueUI, stateOffColor: presentation.colors.grayBackground, disabledColor: presentation.colors.grayTransparent, borderColor: presentation.colors.border)

@@ -296,7 +296,12 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     }
     
     public func add(listener:WeakReference<ViewController>) -> Void {
-        listeners.append(listener)
+        let index = listeners.index(where: { (weakView) -> Bool in
+            return listener.value == weakView.value
+        })
+        if index == nil {
+            listeners.append(listener)
+        }
     }
     
     public func remove(listener:WeakReference<ViewController>) -> Void {

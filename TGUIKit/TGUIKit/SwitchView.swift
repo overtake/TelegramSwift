@@ -7,6 +7,8 @@
 //
 
 import Cocoa
+import SwiftSignalKitMac
+
 public struct SwitchViewAppearance {
     let backgroundColor: NSColor
     let disabledColor: NSColor
@@ -25,7 +27,7 @@ public struct SwitchViewAppearance {
 
 
 public class SwitchView: Control {
-    
+    private let disposable = MetaDisposable()
     public var presentation: SwitchViewAppearance = switchViewAppearance {
         didSet {
             let animates = self.animates
@@ -56,7 +58,7 @@ public class SwitchView: Control {
     private var backgroundLayer:CALayer = CALayer()
     
     override convenience init() {
-        self.init(frame:NSMakeRect(0, 0, 38, 20))
+        self.init(frame:NSMakeRect(0, 0, 30, 20))
     }
     
     public required init(frame frameRect: NSRect) {
@@ -79,14 +81,17 @@ public class SwitchView: Control {
         
         self.set(handler: { [weak self] control in
             if let strongSelf = self {
+                strongSelf.disposable.set((Signal<Void, Void>.single() |> delay(0.1, queue: Queue.mainQueue())).start(next: { [weak strongSelf] in
+                    if let strongSelf = strongSelf, let stateChanged = strongSelf.stateChanged, strongSelf.isEnabled  {
+                        stateChanged()
+                    }
+                }))
+                
                 let control = control as! SwitchView
                 let animates = control.animates
                 control.animates = true
                 control.isOn = !control.isOn
                 control.animates = animates
-                if let stateChanged = strongSelf.stateChanged, strongSelf.isEnabled  {
-                    stateChanged()
-                }
             }
             
         }, for: .Click)
@@ -103,6 +108,8 @@ public class SwitchView: Control {
     }
     
     func afterChanged() -> Void {
+        
+        CATransaction.begin()
         if animates {
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
         }
@@ -121,6 +128,8 @@ public class SwitchView: Control {
         backgroundLayer.setNeedsDisplay()
         buble.setNeedsDisplay()
         self.buble.frame = bubleRect
+        CATransaction.commit()
+        needsDisplay = true
     }
     
 
@@ -137,14 +146,19 @@ public class SwitchView: Control {
         
         backgroundLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
         backgroundLayer.cornerRadius = frame.height / 2.0
-        backgroundLayer.borderWidth = 1.0
+        backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
         backgroundLayer.borderColor = presentation.borderColor.cgColor
         
         buble.frame = bubleRect
         buble.cornerRadius = bubleRect.height/2.0
-        buble.borderWidth = 1.0
+        buble.borderWidth = isOn ? 0.0 : 1.0
         buble.borderColor = presentation.borderColor.cgColor
 
+    }
+    
+    
+    deinit {
+        disposable.dispose()
     }
     
     public override func setFrameSize(_ newSize: NSSize) {

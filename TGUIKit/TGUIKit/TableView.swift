@@ -1050,9 +1050,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                     return true;
                 }
-                
             }
-            
         }
         return false;
         

@@ -501,20 +501,20 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle)
         
-         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak self, weak previous] completed in
+         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak self] completed in
             if completed {
-                previous?.view.removeFromSuperview()
-                previous?.viewDidDisappear(true);
+                previous.view.removeFromSuperview()
+                previous.viewDidDisappear(true);
             }
         
             self?.lock = false
         });
         
 
-        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak controller] completed in
+        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { completed in
             if completed {
-                controller?.viewDidAppear(true);
-                _ = controller?.becomeFirstResponder()
+                controller.viewDidAppear(true);
+                _ = controller.becomeFirstResponder()
             }
 
         });
@@ -522,6 +522,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         CATransaction.commit()
         
+    }
+    
+    open override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        navigationBar.updateLocalizationAndTheme()
     }
     
     open func back(animated:Bool = true) -> Void {

@@ -19,9 +19,9 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.1.2</string>
+	<string>3.2</string>
 	<key>CFBundleVersion</key>
-	<string>103658</string>
+	<string>104070</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSExtension</key>

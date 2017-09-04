@@ -459,6 +459,9 @@ public class Window: NSWindow {
         NotificationCenter.default.removeObserver(self)
     }
     
+    public func windowImageShot() -> CGImage? {
+        return CGWindowListCreateImage(CGRect.null, [.optionIncludingWindow], CGWindowID(windowNumber), [.boundsIgnoreFraming])
+    }
     
 
     public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {

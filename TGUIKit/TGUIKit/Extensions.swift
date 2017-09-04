@@ -896,8 +896,8 @@ public extension String {
         }
         
         scalars.append(currentScalarSet)
-        
-        return scalars.map { $0.map{ String($0) } .reduce("", +) }
+        let result = scalars.map { $0.map{ String($0) } .reduce("", +) }
+        return result
     }
     
     fileprivate var emojiScalars: [UnicodeScalar] {

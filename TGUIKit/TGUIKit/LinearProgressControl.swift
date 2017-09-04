@@ -36,14 +36,19 @@ public class LinearProgressControl: Control {
     open override func updateTrackingAreas() {
         super.updateTrackingAreas();
         
+        
         if let trackingArea = trackingArea {
             self.removeTrackingArea(trackingArea)
         }
         
-        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.enabledDuringMouseDrag, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
-        self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
+        trackingArea = nil
         
-        self.addTrackingArea(self.trackingArea!)
+        if let _ = window {
+            let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.enabledDuringMouseDrag, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
+            self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
+            
+            self.addTrackingArea(self.trackingArea!)
+        }
     }
     
     deinit {

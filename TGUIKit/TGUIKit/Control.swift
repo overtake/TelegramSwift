@@ -123,10 +123,20 @@ open class Control: View {
             self.removeTrackingArea(trackingArea)
         }
         
-        let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
-        self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
+        trackingArea = nil
         
-        self.addTrackingArea(self.trackingArea!)
+        if let _ = window {
+            let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
+            self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
+            
+            self.addTrackingArea(self.trackingArea!)
+        }
+        
+    }
+    
+    open override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateTrackingAreas()
     }
     
     deinit {
@@ -137,6 +147,9 @@ open class Control: View {
         longOverHandleDisposable.dispose()
     }
 
+    public var controlIsHidden: Bool {
+        return super.isHidden || layer!.opacity < Float(1.0)
+    }
     
     open override var isHidden: Bool {
         get {

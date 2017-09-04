@@ -135,7 +135,7 @@ public class SectionControllerView : View {
     public override func layout() {
         super.layout()
         header.setFrameSize(NSMakeSize(frame.width, 50))
-        let width = floorToScreenPixels(frame.width / CGFloat(header.subviews.count))
+        let width = floorToScreenPixels(frame.width / CGFloat(max(header.subviews.count, 3)))
         
         selector.frame = NSMakeRect(CGFloat(selectorIndex) * width, 50 - .borderSize, width, .borderSize)
         container.frame = NSMakeRect(0, header.frame.maxY, frame.width, frame.height - header.frame.height)

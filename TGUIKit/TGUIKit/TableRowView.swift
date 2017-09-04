@@ -48,7 +48,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open var isSelect: Bool {
-        return false
+        return item?.isSelected ?? false
     }
     
     open override func draw(_ dirtyRect: NSRect) {
