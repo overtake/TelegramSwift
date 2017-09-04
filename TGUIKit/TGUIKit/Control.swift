@@ -232,7 +232,7 @@ open class Control: View {
             send(event: .Down)
             updateState()
             
-            let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+            let disposable = (Signal<Void,Void>.single() |> delay(0.6, queue: Queue.mainQueue())).start(next: { [weak self] in
                 if let inside = self?.mouseInside(), inside {
                     self?.send(event: .LongMouseDown)
                 }

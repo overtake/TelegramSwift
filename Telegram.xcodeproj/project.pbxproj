@@ -21,6 +21,7 @@
 		C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB971EE71127003711DF /* ChannelAdminController.swift */; };
 		C205DB9D1EE88765003711DF /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB9C1EE88762003711DF /* Views.swift */; };
 		C205FEA61EB39DE400455808 /* SidebarCapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205FEA51EB39DE400455808 /* SidebarCapViewController.swift */; };
+		C2084F041F5D5C6F004713C4 /* ChatReplyPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2084F031F5D5C6F004713C4 /* ChatReplyPreviewController.swift */; };
 		C209C3731F262537009231FE /* emoji_suggestions_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C209C36F1F262537009231FE /* emoji_suggestions_data.cpp */; };
 		C209C3741F262537009231FE /* emoji_suggestions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C209C3711F262537009231FE /* emoji_suggestions.cpp */; };
 		C209C3771F26271B009231FE /* EmojiSuggestionBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = C209C3761F26271B009231FE /* EmojiSuggestionBridge.mm */; };
@@ -559,6 +560,7 @@
 		C205DB971EE71127003711DF /* ChannelAdminController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelAdminController.swift; sourceTree = "<group>"; };
 		C205DB9C1EE88762003711DF /* Views.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		C205FEA51EB39DE400455808 /* SidebarCapViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SidebarCapViewController.swift; sourceTree = "<group>"; };
+		C2084F031F5D5C6F004713C4 /* ChatReplyPreviewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatReplyPreviewController.swift; sourceTree = "<group>"; };
 		C209C36F1F262537009231FE /* emoji_suggestions_data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = emoji_suggestions_data.cpp; sourceTree = "<group>"; };
 		C209C3701F262537009231FE /* emoji_suggestions_data.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = emoji_suggestions_data.h; sourceTree = "<group>"; };
 		C209C3711F262537009231FE /* emoji_suggestions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = emoji_suggestions.cpp; sourceTree = "<group>"; };
@@ -1893,6 +1895,7 @@
 				C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */,
 				C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */,
 				C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */,
+				C2084F031F5D5C6F004713C4 /* ChatReplyPreviewController.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -3324,6 +3327,7 @@
 				C21656E81EE576FA0041A6BA /* ChatUserPopover.swift in Sources */,
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
+				C2084F041F5D5C6F004713C4 /* ChatReplyPreviewController.swift in Sources */,
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
 				C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
