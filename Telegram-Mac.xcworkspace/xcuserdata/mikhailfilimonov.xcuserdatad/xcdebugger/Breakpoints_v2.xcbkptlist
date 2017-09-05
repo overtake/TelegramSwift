@@ -129,38 +129,6 @@
             endingLineNumber = "260"
             landmarkName = "checkState()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "TelegramCoreMac.(MultipartUploadManager in _2747B6D00C0C42F67BE662C7A33C9A57).(checkState () -&gt; ()).(closure #1)"
-                  moduleName = "TelegramCoreMac"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "526142784.855794"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "260"
-                  endingLineNumber = "260"
-                  offsetFromSymbolStart = "19">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "TelegramCoreMac.(MultipartUploadManager in _2747B6D00C0C42F67BE662C7A33C9A57).(checkState () -&gt; ()).(closure #1)"
-                  moduleName = "TelegramCoreMac"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-                  timestampString = "526142784.858913"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "260"
-                  endingLineNumber = "260"
-                  offsetFromSymbolStart = "51">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -177,6 +145,38 @@
             endingLineNumber = "252"
             landmarkName = "checkState()"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TelegramCoreMac.(MultipartUploadManager in _2747B6D00C0C42F67BE662C7A33C9A57).checkState () -&gt; ()"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
+                  timestampString = "526289618.62386"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "252"
+                  endingLineNumber = "252"
+                  offsetFromSymbolStart = "5885">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TelegramCoreMac.(MultipartUploadManager in _2747B6D00C0C42F67BE662C7A33C9A57).checkState () -&gt; ()"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
+                  timestampString = "526289618.627669"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "252"
+                  endingLineNumber = "252"
+                  offsetFromSymbolStart = "6035">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -193,6 +193,38 @@
             endingLineNumber = "250"
             landmarkName = "checkState()"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TelegramCoreMac.(MultipartUploadManager in _2747B6D00C0C42F67BE662C7A33C9A57).checkState () -&gt; ()"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
+                  timestampString = "526289618.632619"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "252"
+                  endingLineNumber = "252"
+                  offsetFromSymbolStart = "5885">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TelegramCoreMac.(MultipartUploadManager in _2747B6D00C0C42F67BE662C7A33C9A57).checkState () -&gt; ()"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
+                  timestampString = "526289618.636374"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "252"
+                  endingLineNumber = "252"
+                  offsetFromSymbolStart = "6035">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -225,6 +257,38 @@
             endingLineNumber = "200"
             landmarkName = "swipe(with:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TGUIKit.View.swipe (with : __ObjC.NSEvent) -&gt; () with unmangled suffix &quot;_merged&quot;"
+                  moduleName = "TGUIKit"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/View.swift"
+                  timestampString = "526289618.654924"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "200"
+                  endingLineNumber = "200"
+                  offsetFromSymbolStart = "53">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "@objc TGUIKit.View.swipe (with : __ObjC.NSEvent) -&gt; ()"
+                  moduleName = "TGUIKit"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/TGUIKit/TGUIKit/View.swift"
+                  timestampString = "526289618.658312"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "200"
+                  endingLineNumber = "200"
+                  offsetFromSymbolStart = "48">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -289,6 +353,38 @@
             endingLineNumber = "20"
             landmarkName = "deinit"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "PostboxMac.MappedFile.__deallocating_deinit"
+                  moduleName = "PostboxMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/Postbox/Postbox/MappedFile.swift"
+                  timestampString = "526289618.646625"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "20"
+                  endingLineNumber = "20"
+                  offsetFromSymbolStart = "22">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "PostboxMac.MappedFile.deinit"
+                  moduleName = "PostboxMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram-Mac/submodules/Postbox/Postbox/MappedFile.swift"
+                  timestampString = "526289618.649686"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "20"
+                  endingLineNumber = "20"
+                  offsetFromSymbolStart = "22">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

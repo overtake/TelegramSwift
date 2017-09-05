@@ -194,6 +194,10 @@
 		C23D0D7D1F1A692100AF5151 /* SFCompactRounded-Semibold.otf in CopyFiles */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2423A531F2235080041907F /* InstantPageViewController.swift */; };
+		C242A34C1F5E8FBF005D5780 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
+		C242A34D1F5E8FBF005D5780 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		C242A34E1F5E8FC4005D5780 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C242A34F1F5E8FC4005D5780 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */; };
 		C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */; };
 		C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */; };
@@ -349,10 +353,6 @@
 		C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */; };
 		C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */; };
 		C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EE11F4EFB5100C0C7A8 /* GroupStickerSetController.swift */; };
-		C29EA1E91F2F2C0000567426 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C29EA1EA1F2F2C0000567426 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C29EA1EB1F2F2C0400567426 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
-		C29EA1EC1F2F2C0400567426 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		C29F4C761F45F58B00DBFC00 /* MIHSliderView.m in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */; };
 		C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */; };
 		C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C7C1F47283600DBFC00 /* InstantPageBrowser.swift */; };
@@ -502,8 +502,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C29EA1E91F2F2C0000567426 /* Sparkle.framework in Copy Files */,
-				C29EA1EA1F2F2C0000567426 /* HockeySDK.framework in Copy Files */,
+				C242A34E1F5E8FC4005D5780 /* Sparkle.framework in Copy Files */,
+				C242A34F1F5E8FC4005D5780 /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -1115,8 +1115,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C29EA1EB1F2F2C0400567426 /* Sparkle.framework in Frameworks */,
-				C29EA1EC1F2F2C0400567426 /* HockeySDK.framework in Frameworks */,
+				C242A34C1F5E8FBF005D5780 /* Sparkle.framework in Frameworks */,
+				C242A34D1F5E8FBF005D5780 /* HockeySDK.framework in Frameworks */,
 				C209C3881F262D48009231FE /* libstdc++.tbd in Frameworks */,
 				C271EB971EB916870034792D /* libtgvoip.framework in Frameworks */,
 				C2C9B92D1E80166400380D79 /* Carbon.framework in Frameworks */,

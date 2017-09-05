@@ -381,7 +381,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> in
             
             if search.state == .None {
-                let signal:Signal<(ChatListView,ViewUpdateType),Void> = account.postbox.tailChatListView(100)
+                let signal:Signal<(ChatListView,ViewUpdateType),Void> = account.viewTracker.tailChatListView(count: 100)
                 
                 
                 return signal |> deliverOn(prepareQueue) |> mapToQueue { [weak self] (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
@@ -395,7 +395,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _):
                                 if let peer = renderedPeer.chatMainPeer {
                                     if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
                                         if peer.canSendMessage {
