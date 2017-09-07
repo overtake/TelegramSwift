@@ -327,7 +327,7 @@ public class Window: NSWindow {
         if isReleasedWhenClosed {
             super.close()
         } else {
-            NSApp.hide(self)
+            super.close()
         }
     }
     
@@ -469,9 +469,8 @@ public class Window: NSWindow {
        
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
-        self.canHide = true
-        
 
+        
         self.contentView?.acceptsTouchEvents = true
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidMove, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidResize, object: self)

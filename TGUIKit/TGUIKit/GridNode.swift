@@ -1163,6 +1163,13 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         return nil
     }
     
+    open override func layout() {
+        super.layout()
+        gridLayout = GridNodeLayout(size: frame.size, insets: gridLayout.insets, scrollIndicatorInsets:gridLayout.scrollIndicatorInsets, preloadSize: gridLayout.preloadSize, type: gridLayout.type)
+        self.itemLayout = generateItemLayout()
+        applyPresentaionLayoutTransition(generatePresentationLayoutTransition(layoutTransactionOffset: 0), removedNodes: [], updateLayoutTransition: nil, itemTransition: .immediate, completion: {_ in})
+    }
+    
     public func removeAllItems() ->Void {
         self.items.removeAll()
         self.itemLayout = generateItemLayout()

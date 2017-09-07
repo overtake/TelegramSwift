@@ -20,5 +20,5 @@
 #import "SUVersionComparisonProtocol.h"
 #import "SUVersionDisplayProtocol.h"
 #import "SUErrors.h"
-#import "SULocalizationWrapper.h"
+
 #endif
