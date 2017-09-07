@@ -32,8 +32,6 @@ SU_EXPORT @interface SUUpdater : NSObject
 
 @property (unsafe_unretained) IBOutlet id<SUUpdaterDelegate> delegate;
 
-
-
 /*!
  The shared updater for the main bundle.
  
@@ -144,9 +142,6 @@ SU_EXPORT @interface SUUpdater : NSObject
  The host bundle that is being updated.
  */
 @property (readonly, strong) NSBundle *hostBundle;
-
-
-
 
 /*!
  The bundle this class (SUUpdater) is loaded into.

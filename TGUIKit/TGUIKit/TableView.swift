@@ -879,13 +879,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if at < count {
             let item = self.item(at: at)
             let animation = animation != .none ? item.animatable ? animation : .none : .none
-            NSAnimationContext.current().duration = animation == .none ? 0.0 : NSAnimationContext.current().duration
+            NSAnimationContext.current().duration = animation == .none ? 0.0 : 0.2
             
             self.list.remove(at: at);
             self.listhash.removeValue(forKey: item.stableId)
             
             if(redraw) {
-                self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation)
+                self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation != .none ? .effectFade : .none)
             }
         }
     }
@@ -897,7 +897,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if(redraw) {
-            self.tableView.removeRows(at: IndexSet(integersIn:range), withAnimation: animation)
+            self.tableView.removeRows(at: IndexSet(integersIn:range), withAnimation:  animation != .none ? .effectFade : .none)
         }
     }
     
@@ -909,7 +909,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.listhash.removeAll()
         
         if(redraw) {
-            self.tableView.removeRows(at: IndexSet(integersIn: 0 ..< count), withAnimation: animation)
+            self.tableView.removeRows(at: IndexSet(integersIn: 0 ..< count), withAnimation:  animation != .none ? .effectFade : .none)
         }
     }
     
