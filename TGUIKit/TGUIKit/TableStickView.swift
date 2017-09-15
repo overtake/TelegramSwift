@@ -10,12 +10,16 @@ import Cocoa
 
 open class TableStickView: TableRowView {
 
-    public var header:Bool = false {
+    open var header:Bool = false {
         didSet {
             if header != oldValue {
                 needsDisplay = true
             }
         }
+    }
+    
+    open func updateIsVisible(_ visible: Bool, animated: Bool) {
+        
     }
     
     

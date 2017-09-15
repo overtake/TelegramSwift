@@ -61,8 +61,7 @@ open class Control: View {
     private var stateHandlers:[(ControlState,(Control) -> Void)] = []
     
     private var backgroundState:[ControlState:NSColor] = [:]
-    private var mouseEntered: Bool = false
-    private var mouseMovedInside: Bool = false
+    private var mouseMovedInside: Bool = true
     open override var backgroundColor: NSColor {
         get{
             return self.style.backgroundColor
@@ -280,11 +279,6 @@ open class Control: View {
     }
     
     override open func mouseMoved(with event: NSEvent) {
-        if mouseEntered {
-            mouseMovedInside = mouseInside()
-        } else {
-            mouseMovedInside = false
-        }
         if userInteractionEnabled {
             updateState()
         } else {
@@ -315,7 +309,6 @@ open class Control: View {
     }
     
     override open func mouseEntered(with event: NSEvent) {
-        mouseEntered = true
         if userInteractionEnabled {
             
             let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
@@ -332,7 +325,6 @@ open class Control: View {
     }
     
     override open func mouseExited(with event: NSEvent) {
-        mouseEntered = false
         if userInteractionEnabled {
             
             updateState()

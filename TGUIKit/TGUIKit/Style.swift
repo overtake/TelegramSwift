@@ -23,7 +23,8 @@ public struct ControlStyle: Equatable {
         
         let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
         
-        context.withContext { (ctx) in
+        context.withContext { ctx in
+            ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
             let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
             ctx.setFillColor(backgroundColor.cgColor)
             ctx.fill(imageRect)

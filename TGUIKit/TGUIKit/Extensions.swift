@@ -232,6 +232,11 @@ public extension NSView {
             location = self.convert(location, from: nil)
             
             if let view = window.contentView!.hitTest(window.mouseLocationOutsideOfEventStream) {
+                if let view = view as? View {
+                    if view.isEventLess {
+                        return NSPointInRect(location, self.bounds)
+                    }
+                }
                 if view == self {
                     return NSPointInRect(location, self.bounds)
                 } else {
@@ -586,6 +591,34 @@ public extension NSImage {
     
 }
 
+public extension CGRect {
+    public var topLeft: CGPoint {
+        return self.origin
+    }
+    
+    public var topRight: CGPoint {
+        return CGPoint(x: self.maxX, y: self.minY)
+    }
+    
+    public var bottomLeft: CGPoint {
+        return CGPoint(x: self.minX, y: self.maxY)
+    }
+    
+    public var bottomRight: CGPoint {
+        return CGPoint(x: self.maxX, y: self.maxY)
+    }
+    
+    public var center: CGPoint {
+        return CGPoint(x: self.midX, y: self.midY)
+    }
+}
+
+public extension CGPoint {
+    public func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
+        return CGPoint(x: self.x + dx, y: self.y + dy)
+    }
+}
+
 public extension CGImage {
     
     var backingSize:NSSize {
@@ -650,7 +683,7 @@ public extension NSRange {
         return self.location + self.length
     }
     public func indexIn(_ index: Int) -> Bool {
-        return index >= min && index < max
+        return NSLocationInRange(index, self)
     }
 }
 
