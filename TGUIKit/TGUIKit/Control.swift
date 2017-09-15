@@ -52,16 +52,16 @@ open class Control: View {
     open var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:kCAMediaTimingFunctionSpring)
     
     var trackingArea:NSTrackingArea?
-
+    
     public var interactionStateForRestore:Bool? = nil
     
     public var userInteractionEnabled:Bool = true
     
     private var handlers:[(ControlEvent,(Control) -> Void)] = []
     private var stateHandlers:[(ControlState,(Control) -> Void)] = []
-
+    
     private var backgroundState:[ControlState:NSColor] = [:]
-
+    private var mouseMovedInside: Bool = true
     open override var backgroundColor: NSColor {
         get{
             return self.style.backgroundColor
@@ -146,7 +146,7 @@ open class Control: View {
         longHandleDisposable.dispose()
         longOverHandleDisposable.dispose()
     }
-
+    
     public var controlIsHidden: Bool {
         return super.isHidden || layer!.opacity < Float(1.0)
     }
@@ -180,7 +180,7 @@ open class Control: View {
     private func updateHiddenState(_ value:Bool) -> Void {
         super.isHidden = value
     }
-   
+    
     
     public var canHighlight: Bool = true
     
@@ -232,7 +232,7 @@ open class Control: View {
             send(event: .Down)
             updateState()
             
-            let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+            let disposable = (Signal<Void,Void>.single() |> delay(0.6, queue: Queue.mainQueue())).start(next: { [weak self] in
                 if let inside = self?.mouseInside(), inside {
                     self?.send(event: .LongMouseDown)
                 }
@@ -280,9 +280,17 @@ open class Control: View {
     
     override open func mouseMoved(with event: NSEvent) {
         if userInteractionEnabled {
-           updateState()
+            updateState()
         } else {
             super.mouseMoved(with: event)
+        }
+    }
+    
+    open override func rightMouseDown(with event: NSEvent) {
+        if userInteractionEnabled {
+            updateState()
+        } else {
+            super.rightMouseDown(with: event)
         }
     }
     
@@ -290,8 +298,10 @@ open class Control: View {
         if mouseInside() {
             if mouseIsDown && canHighlight {
                 self.controlState = .Highlight
-            } else {
+            } else if mouseMovedInside {
                 self.controlState = .Hover
+            } else {
+                self.controlState = .Normal
             }
         } else {
             self.controlState = .Normal
@@ -317,7 +327,7 @@ open class Control: View {
     override open func mouseExited(with event: NSEvent) {
         if userInteractionEnabled {
             
-             updateState()
+            updateState()
         } else {
             super.mouseExited(with: event)
         }
@@ -327,8 +337,8 @@ open class Control: View {
     
     override open func mouseDragged(with event: NSEvent) {
         if userInteractionEnabled {
-             send(event: .MouseDragging)
-             updateState()
+            send(event: .MouseDragging)
+            updateState()
         } else {
             super.mouseDragged(with: event)
         }
@@ -340,7 +350,7 @@ open class Control: View {
         self.setNeedsDisplayLayer()
     }
     
-
+    
     
     required public init(frame frameRect: NSRect) {
         self.isSelected = false

@@ -432,6 +432,10 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             
             switch gridLayout.type {
             case let .fixed(itemSize, lineSpacing):
+                
+                let s = floorToScreenPixels(gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
+                let itemSize = NSMakeSize(s, s)
+                
                 let itemsInRow = Int(gridLayout.size.width / itemSize.width)
                 let itemsInRowWidth = CGFloat(itemsInRow) * itemSize.width
                 let remainingWidth = max(0.0, gridLayout.size.width - itemsInRowWidth)

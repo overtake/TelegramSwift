@@ -15,6 +15,7 @@ open class TableStickItem: TableRowItem {
         return _stableId
     }
     
+    
     open var headerHeight: CGFloat {
         return height
     }
@@ -23,7 +24,7 @@ open class TableStickItem: TableRowItem {
         return 30.0
     }
     
-    public override init(_ initialSize:NSSize) {
+    public required override init(_ initialSize:NSSize) {
         super.init(initialSize)
     }
     

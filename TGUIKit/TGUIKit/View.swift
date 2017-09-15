@@ -91,6 +91,8 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public var animates:Bool = false
     
+    public var isEventLess: Bool = false
+    
     public weak var displayDelegate:ViewDisplayDelegate?
     
     public let customHandler:CustomViewHandlers = CustomViewHandlers()

@@ -14,7 +14,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open private(set) weak var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
-   // var selected:Bool?
+    // var selected:Bool?
     
     open var border:BorderType?
     public var animates:Bool = true
@@ -25,9 +25,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     required public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-       // self.layer = (self.layerClass() as! CALayer.Type).init()
+        // self.layer = (self.layerClass() as! CALayer.Type).init()
         self.wantsLayer = true
-
+        
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         self.layer?.delegate = self
         self.layer?.drawsAsynchronously = System.drawAsync
@@ -38,7 +38,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open func updateColors() {
         
     }
-
+    
     open func layerClass() ->AnyClass {
         return CALayer.self;
     }
@@ -58,7 +58,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(backdorColor.cgColor)
         ctx.fill(layer.bounds)
-       
+        
         if let border = border {
             
             ctx.setFillColor(presentation.colors.border.cgColor)
@@ -87,7 +87,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open var firstResponder:NSResponder? {
         return self
     }
-
+    
     open override func mouseDown(with event: NSEvent) {
         if event.modifierFlags.contains(.control) && event.clickCount == 1 {
             showContextMenu(event)
@@ -105,7 +105,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         showContextMenu(event)
     }
     
-
+    
     open func doubleClick(in location:NSPoint) -> Void {
         
     }
@@ -119,14 +119,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
             menuDisposable.set((item.menuItems() |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
                 if let strongSelf = self {
                     let menu = ContextMenu()
-                    menu.onShow = { [weak self] menu in
-                        self?.contextMenu = menu
-                        self?.onShowContextMenu()
+                    menu.onShow = { [weak strongSelf] menu in
+                        strongSelf?.contextMenu = menu
+                        strongSelf?.onShowContextMenu()
                     }
                     menu.delegate = menu
-                    menu.onClose = { [weak self] _ in
-                        self?.contextMenu = nil
-                        self?.onCloseContextMenu()
+                    menu.onClose = { [weak strongSelf] _ in
+                        strongSelf?.contextMenu = nil
+                        strongSelf?.onCloseContextMenu()
                     }
                     for item in items {
                         menu.addItem(item)
@@ -135,11 +135,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                     menu.delegate = menu
                     NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
                 }
-            
+                
             }))
         }
         
-
+        
     }
     
     open override func menu(for event: NSEvent) -> NSMenu? {
@@ -156,11 +156,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open func onCloseContextMenu() ->Void {
         self.layer?.setNeedsDisplay()
     }
-        
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     open func updateMouse() {
         
     }

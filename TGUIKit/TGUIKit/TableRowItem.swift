@@ -16,7 +16,7 @@ open class TableRowItem: NSObject {
         }
     }
     public let initialSize:NSSize
-
+    
     open func tableViewDidUpdated() {
         
     }
@@ -58,7 +58,7 @@ open class TableRowItem: NSObject {
                 return -1
             }
         }
-
+        
     }
     
     public init(_ initialSize:NSSize) {
@@ -69,7 +69,15 @@ open class TableRowItem: NSObject {
         
     }
     
-   
+    open var isVisible: Bool {
+        if let table = table {
+            let visible = table.visibleRows()
+            return visible.indexIn(index)
+        }
+        return false
+    }
+    
+    
     open func menuItems() -> Signal<[ContextMenuItem], Void> {
         return .single([])
     }
@@ -77,7 +85,7 @@ open class TableRowItem: NSObject {
     public func redraw()->Void {
         table?.reloadData(row: index)
     }
- 
+    
     public var isSelected:Bool {
         if let table = table {
             return table.isSelected(self)

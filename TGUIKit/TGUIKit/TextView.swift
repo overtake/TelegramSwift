@@ -9,6 +9,163 @@
 import Cocoa
 import SwiftSignalKitMac
 
+public let TGPreformatteCodeAttributeName: String = "TGPreformatteCodeAttributeName"
+public let TGPreformattePreAttributeName: String = "TGPreformattePreAttributeName"
+
+public let TGLineSpacingAttributeName: String = "TGLineSpacingAttributeName"
+
+private enum CornerType {
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
+}
+
+private func drawFullCorner(context: CGContext, color: NSColor, at point: CGPoint, type: CornerType, radius: CGFloat) {
+    context.setFillColor(color.cgColor)
+    switch type {
+    case .topLeft:
+        context.clear(CGRect(origin: point, size: CGSize(width: radius, height: radius)))
+        context.fillEllipse(in: CGRect(origin: point, size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    case .topRight:
+        context.clear(CGRect(origin: CGPoint(x: point.x - radius, y: point.y), size: CGSize(width: radius, height: radius)))
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x - radius * 2.0, y: point.y), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    case .bottomLeft:
+        context.clear(CGRect(origin: CGPoint(x: point.x, y: point.y - radius), size: CGSize(width: radius, height: radius)))
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x, y: point.y - radius * 2.0), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    case .bottomRight:
+        context.clear(CGRect(origin: CGPoint(x: point.x - radius, y: point.y - radius), size: CGSize(width: radius, height: radius)))
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x - radius * 2.0, y: point.y - radius * 2.0), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    }
+}
+
+private func drawConnectingCorner(context: CGContext, color: NSColor, at point: CGPoint, type: CornerType, radius: CGFloat) {
+    context.setFillColor(color.cgColor)
+    switch type {
+    case .topLeft:
+        context.fill(CGRect(origin: CGPoint(x: point.x - radius, y: point.y), size: CGSize(width: radius, height: radius)))
+        context.setFillColor(NSColor.clear.cgColor)
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x - radius * 2.0, y: point.y), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    case .topRight:
+        context.fill(CGRect(origin: CGPoint(x: point.x, y: point.y), size: CGSize(width: radius, height: radius)))
+        context.setFillColor(NSColor.clear.cgColor)
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x, y: point.y), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    case .bottomLeft:
+        context.fill(CGRect(origin: CGPoint(x: point.x - radius, y: point.y - radius), size: CGSize(width: radius, height: radius)))
+        context.setFillColor(NSColor.clear.cgColor)
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x - radius * 2.0, y: point.y - radius * 2.0), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    case .bottomRight:
+        context.fill(CGRect(origin: CGPoint(x: point.x, y: point.y - radius), size: CGSize(width: radius, height: radius)))
+        context.setFillColor(NSColor.clear.cgColor)
+        context.fillEllipse(in: CGRect(origin: CGPoint(x: point.x, y: point.y - radius * 2.0), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
+    }
+}
+
+private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat, outerRadius: CGFloat, innerRadius: CGFloat) -> (CGPoint, CGImage?) {
+    if rects.isEmpty {
+        return (CGPoint(), nil)
+    }
+    
+    var topLeft = rects[0].origin
+    var bottomRight = CGPoint(x: rects[0].maxX, y: rects[0].maxY)
+    for i in 1 ..< rects.count {
+        topLeft.x = min(topLeft.x, rects[i].origin.x)
+        topLeft.y = min(topLeft.y, rects[i].origin.y)
+        bottomRight.x = max(bottomRight.x, rects[i].maxX)
+        bottomRight.y = max(bottomRight.y, rects[i].maxY)
+    }
+    
+    topLeft.x -= inset
+    topLeft.y -= inset
+    bottomRight.x += inset
+    bottomRight.y += inset 
+    
+    return (topLeft, generateImage(CGSize(width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y), contextGenerator: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+        context.setFillColor(color.cgColor)
+        
+        context.setBlendMode(.copy)
+        
+        for i in 0 ..< rects.count {
+            let rect = rects[i].insetBy(dx: -inset, dy: -inset)
+            context.fill(rect.offsetBy(dx: -topLeft.x, dy: -topLeft.y))
+        }
+        
+        for i in 0 ..< rects.count {
+            let rect = rects[i].insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y)
+            
+            var previous: CGRect?
+            if i != 0 {
+                previous = rects[i - 1].insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y)
+            }
+            
+            var next: CGRect?
+            if i != rects.count - 1 {
+                next = rects[i + 1].insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y)
+            }
+            
+            if let previous = previous {
+                if previous.contains(rect.topLeft) {
+                    if abs(rect.topLeft.x - previous.minX) >= innerRadius {
+                        var radius = innerRadius
+                        if let next = next {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.topLeft.x, y: previous.maxY), type: .topLeft, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.topLeft, type: .topLeft, radius: outerRadius)
+                }
+                if previous.contains(rect.topRight.offsetBy(dx: -1.0, dy: 0.0)) {
+                    if abs(rect.topRight.x - previous.maxX) >= innerRadius {
+                        var radius = innerRadius
+                        if let next = next {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.topRight.x, y: previous.maxY), type: .topRight, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.topRight, type: .topRight, radius: outerRadius)
+                }
+            } else {
+                drawFullCorner(context: context, color: color, at: rect.topLeft, type: .topLeft, radius: outerRadius)
+                drawFullCorner(context: context, color: color, at: rect.topRight, type: .topRight, radius: outerRadius)
+            }
+            
+            if let next = next {
+                if next.contains(rect.bottomLeft) {
+                    if abs(rect.bottomRight.x - next.maxX) >= innerRadius {
+                        var radius = innerRadius
+                        if let previous = previous {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.bottomLeft.x, y: next.minY), type: .bottomLeft, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.bottomLeft, type: .bottomLeft, radius: outerRadius)
+                }
+                if next.contains(rect.bottomRight.offsetBy(dx: -1.0, dy: 0.0)) {
+                    if abs(rect.bottomRight.x - next.maxX) >= innerRadius {
+                        var radius = innerRadius
+                        if let previous = previous {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.bottomRight.x, y: next.minY), type: .bottomRight, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.bottomRight, type: .bottomRight, radius: outerRadius)
+                }
+            } else {
+                drawFullCorner(context: context, color: color, at: rect.bottomLeft, type: .bottomLeft, radius: outerRadius)
+                drawFullCorner(context: context, color: color, at: rect.bottomRight, type: .bottomRight, radius: outerRadius)
+            }
+        }
+    }))
+    
+}
+
+
+
 public final class TextViewInteractions {
     public var processURL:(Any!)->Void // link, isPresent
     public var copy:(()->Bool)?
@@ -30,6 +187,7 @@ public final class TextViewLine {
     }
     
 }
+
 
 public enum TextViewCutoutPosition {
     case TopLeft
@@ -66,6 +224,8 @@ public final class TextViewLayout : Equatable {
     public let truncationType:CTLineTruncationType
     public var cutout:TextViewCutout?
     
+    fileprivate var monospacedImage:(CGPoint, CGImage?) = (CGPoint(), nil)
+
     public fileprivate(set) var lineSpacing:CGFloat?
     
     public private(set) var layoutSize:NSSize = NSZeroSize
@@ -110,13 +270,10 @@ public final class TextViewLayout : Equatable {
        
         let fontLineHeight = floor(fontAscent + fontDescent)
         
+        var monospacedRects:[NSRect] = []
         
-        let fontLineSpacing:CGFloat
-        if let lineSpacing = lineSpacing {
-            fontLineSpacing = lineSpacing
-        } else {
-            fontLineSpacing = floor(fontLineHeight * 0.12)
-        }
+        var fontLineSpacing:CGFloat = floor(fontLineHeight * 0.12)
+
         
         var maybeTypesetter: CTTypesetter?
         maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)
@@ -142,14 +299,54 @@ public final class TextViewLayout : Equatable {
         }
         
         var first = true
+        var breakInset: CGFloat = 0
+        var isWasPreformatted: Bool = false
         while true {
             var lineConstrainedWidth = constrainedWidth
-            var lineOriginY = floor(layoutSize.height + fontLineHeight - fontLineSpacing * 2.0)
+            var lineOriginY: CGFloat = 0
+            
+            var lineCutoutOffset: CGFloat = 0.0
+            var lineAdditionalWidth: CGFloat = 0.0
+
+            var isPreformattedLine: CGFloat? = nil
+            
+            fontLineSpacing = floor(fontLineHeight * 0.12)
+            
+            
+            
+            if attributedString.length > 0, let space = (attributedString.attribute(TGPreformattePreAttributeName, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber) {
+                breakInset = CGFloat(space.floatValue * 2)
+                lineCutoutOffset += CGFloat(space.floatValue)
+                lineAdditionalWidth += breakInset
+                
+                lineOriginY += CGFloat(space.floatValue/2)
+
+                if !isWasPreformatted && !first {
+                    lineOriginY += CGFloat(space.floatValue)
+                    fontLineSpacing = CGFloat(space.floatValue) - fontLineSpacing
+                } else {
+                    if isWasPreformatted || first {
+                        fontLineSpacing = -CGFloat(space.floatValue/2)
+                        lineOriginY -= (CGFloat(space.floatValue + space.floatValue/2))
+                    }
+                }
+
+                isPreformattedLine = CGFloat(space.floatValue)
+                isWasPreformatted = true
+            } else {
+                
+                if isWasPreformatted && !first {
+                    lineOriginY -= (2 - fontLineSpacing)
+                }
+                
+                isWasPreformatted = false
+            }
+            
+            lineOriginY += floor(layoutSize.height + fontLineHeight - fontLineSpacing * 2.0)
+            
             if !first {
                 lineOriginY += fontLineSpacing
             }
-            var lineCutoutOffset: CGFloat = 0.0
-            var lineAdditionalWidth: CGFloat = 0.0
             
             if cutoutEnabled {
                 if lineOriginY < cutoutMaxY && lineOriginY + fontLineHeight > cutoutMinY {
@@ -161,9 +358,8 @@ public final class TextViewLayout : Equatable {
             
             
             
-            let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, lastLineCharacterIndex, Double(lineConstrainedWidth))
+            let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, lastLineCharacterIndex, Double(lineConstrainedWidth - breakInset))
             
-            let fontLineSpacing = fontLineSpacing
             
             var lineHeight = fontLineHeight
             
@@ -175,7 +371,7 @@ public final class TextViewLayout : Equatable {
                 }
             }
             
-            if maximumNumberOfLines != 0 && lines.count == (maximumNumberOfLines - 1) && lineCharacterCount > 0 {
+            if maximumNumberOfLines != 0 && lines.count == (Int(maximumNumberOfLines) - 1) && lineCharacterCount > 0 {
                 if first {
                     first = false
                 } else {
@@ -200,6 +396,7 @@ public final class TextViewLayout : Equatable {
                     isPerfectSized = false
                 }
                 
+                
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
                 layoutSize.height += lineHeight + fontLineSpacing
@@ -218,21 +415,24 @@ public final class TextViewLayout : Equatable {
                         layoutSize.height += fontLineSpacing
                     }
                     
-                    
-                    
                     let coreTextLine = CTTypesetterCreateLineWithOffset(typesetter, CFRangeMake(lastLineCharacterIndex, lineCharacterCount), 100.0)
-                    lastLineCharacterIndex += lineCharacterCount
                     
                   
-                    
-                    
                     let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                     let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
                     layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
-                    
+                    if let space = lineString.attribute(TGPreformattePreAttributeName, at: 0, effectiveRange: nil) as? NSNumber {
+                        
+                        layoutSize.width = self.constrainedWidth
+                        let preformattedSpace = CGFloat(space.floatValue) * 2
+                        
+                        monospacedRects.append(NSMakeRect(0, lineFrame.minY - lineFrame.height, layoutSize.width, lineFrame.height + preformattedSpace))
+                    }
+
                     lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
+                    lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
                         layoutSize.height += fontLineSpacing
@@ -241,7 +441,33 @@ public final class TextViewLayout : Equatable {
                 }
             }
             
+
+            if let isPreformattedLine = isPreformattedLine {
+                layoutSize.height += isPreformattedLine * 2
+                if lastLineCharacterIndex == attributedString.length {
+                    layoutSize.height += isPreformattedLine/2
+                }
+               // fontLineSpacing = isPreformattedLine
+            }
+            
         }
+        
+        let sortedIndices = (0 ..< monospacedRects.count).sorted(by: { monospacedRects[$0].width > monospacedRects[$1].width })
+        for i in 0 ..< sortedIndices.count {
+            let index = sortedIndices[i]
+            for j in -1 ... 1 {
+                if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
+                    if abs(monospacedRects[index + j].width - monospacedRects[index].width) < 40.0 {
+                        monospacedRects[index + j].size.width = max(monospacedRects[index + j].width, monospacedRects[index].width)
+                    }
+                }
+            }
+        }
+        
+        self.monospacedImage = generateRectsImage(color: presentation.colors.grayBackground, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
+        
+        //self.monospacedStrokeImage = generateRectsImage(color: presentation.colors.border, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
+
         
         self.layoutSize = layoutSize
     }
@@ -514,7 +740,7 @@ public class TextView: Control {
 
 
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
+        //backgroundColor = .random
         super.draw(layer, in: ctx)
 
         if let layout = layout {
@@ -525,7 +751,12 @@ public class TextView: Control {
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
             
-           
+            
+            if let image = layout.monospacedImage.1 {
+                ctx.draw(image, in: NSMakeRect(layout.monospacedImage.0.x, layout.monospacedImage.0.y, image.backingSize.width, image.backingSize.height))
+            }
+            
+            
             
             if layout.selectedRange.range.location != NSNotFound && isSelectable {
                 
@@ -540,7 +771,6 @@ public class TextView: Control {
                 let isReversed = endIndex < beginIndex
                 
                 var i:Int = beginIndex
-                
                 
                 while isReversed ? i >= endIndex : i <= endIndex {
                     
@@ -588,7 +818,7 @@ public class TextView: Control {
                         ctx.fill(rect)
                     }
 
-                    i +=  isReversed ? -1 : 1
+                    i += isReversed ? -1 : 1
                     
                 }
                 
@@ -605,7 +835,7 @@ public class TextView: Control {
             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
                 
-                let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(frame.width)))
+                let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(frame.width))) + line.frame.minX
                 
                 ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY)
                 CTLineDraw(line.line, ctx)
