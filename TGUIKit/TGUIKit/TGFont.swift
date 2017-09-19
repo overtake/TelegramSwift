@@ -12,7 +12,7 @@ import Cocoa
 public func systemFont(_ size:CGFloat) ->NSFont {
     
     if #available(OSX 10.11, *) {
-        return NSFont.systemFont(ofSize: size, weight: NSFontWeightRegular)
+        return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.regular)
     } else {
         return NSFont.init(name: "HelveticaNeue", size: size)!
     }
@@ -21,7 +21,7 @@ public func systemFont(_ size:CGFloat) ->NSFont {
 public func systemMediumFont(_ size:CGFloat) ->NSFont {
     
     if #available(OSX 10.11, *) {
-        return NSFont.systemFont(ofSize: size, weight: NSFontWeightSemibold)
+        return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.semibold)
     } else {
         return NSFont.init(name: "HelveticaNeue-Medium", size: size)!
     }
@@ -31,7 +31,7 @@ public func systemMediumFont(_ size:CGFloat) ->NSFont {
 public func systemBoldFont(_ size:CGFloat) ->NSFont {
     
     if #available(OSX 10.11, *) {
-        return NSFont.systemFont(ofSize: size, weight: NSFontWeightBold)
+        return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.bold)
     } else {
         return NSFont.init(name: "HelveticaNeue-Bold", size: size)!
     }
@@ -41,14 +41,14 @@ public extension NSFont {
     public static func normal(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFontWeightRegular)
+            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.regular)
         } else {
             return NSFont(name: "HelveticaNeue", size: convert(from:size))!
         }
     }
     
     public static func italic(_ size: FontSize) -> NSFont {
-        return NSFontManager.shared().convert(.normal(size), toHaveTrait: .italicFontMask)
+        return NSFontManager.shared.convert(.normal(size), toHaveTrait: .italicFontMask)
     }
     
     public static func avatar(_ size: FontSize) -> NSFont {
@@ -63,7 +63,7 @@ public extension NSFont {
     public static func medium(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFontWeightSemibold)
+            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.semibold)
         } else {
             return NSFont(name: "HelveticaNeue-Medium", size: convert(from:size))!
         }
@@ -73,7 +73,7 @@ public extension NSFont {
     public static func bold(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFontWeightBold)
+            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.bold)
         } else {
             return NSFont(name: "HelveticaNeue-Bold", size: convert(from:size))!
         }

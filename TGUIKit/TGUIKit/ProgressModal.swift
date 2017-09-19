@@ -83,7 +83,7 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window) -> Si
         let signal = signal |> deliverOnMainQueue
         
         let modal = ProgressModalController()
-        let beforeModal:Signal<Void,Void> = .single() |> delay(0.25, queue: Queue.mainQueue())
+        let beforeModal:Signal<Void,Void> = .single(Void()) |> delay(0.25, queue: Queue.mainQueue())
         
         let beforeDisposable:DisposableSet = DisposableSet()
         

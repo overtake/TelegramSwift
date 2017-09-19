@@ -73,12 +73,12 @@ public enum GridNodeLayoutType: Equatable {
 
 public struct GridNodeLayout: Equatable {
     public let size: CGSize
-    public let insets: EdgeInsets
-    public let scrollIndicatorInsets: EdgeInsets?
+    public let insets: NSEdgeInsets
+    public let scrollIndicatorInsets: NSEdgeInsets?
     public let preloadSize: CGFloat
     public let type: GridNodeLayoutType
     
-    public init(size: CGSize, insets: EdgeInsets, scrollIndicatorInsets: EdgeInsets? = nil, preloadSize: CGFloat, type: GridNodeLayoutType) {
+    public init(size: CGSize, insets: NSEdgeInsets, scrollIndicatorInsets: NSEdgeInsets? = nil, preloadSize: CGFloat, type: GridNodeLayoutType) {
         self.size = size
         self.insets = insets
         self.scrollIndicatorInsets = scrollIndicatorInsets
@@ -251,7 +251,7 @@ private struct WrappedGridItemNode: Hashable {
 }
 
 open class GridNode: ScrollView, InteractionContentViewProtocol {
-    private var gridLayout = GridNodeLayout(size: CGSize(), insets: EdgeInsets(), preloadSize: 0.0, type: .fixed(itemSize: CGSize(), lineSpacing: 0.0))
+    private var gridLayout = GridNodeLayout(size: CGSize(), insets: NSEdgeInsets(), preloadSize: 0.0, type: .fixed(itemSize: CGSize(), lineSpacing: 0.0))
     private var firstIndexInSectionOffset: Int = 0
     private var items: [GridItem] = []
     private var itemNodes: [Int: GridItemNode] = [:]
@@ -273,7 +273,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         document.backgroundColor = .clear
         deltaCorner = 45
         self.autoresizesSubviews = true;
-       // self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
+       // self.autoresizingMask = [NSAutoresizingMaskOptions.width, NSAutoresizingMaskOptions.height]
         
         self.hasVerticalScroller = true
         
@@ -387,7 +387,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
     
     open override func viewDidMoveToSuperview() {
         if superview != nil {
-            NotificationCenter.default.addObserver(forName: NSNotification.Name.NSViewBoundsDidChange, object: self.contentView, queue: nil, using: { [weak self] notification  in
+            NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: self.contentView, queue: nil, using: { [weak self] notification  in
                 if let strongSelf = self {
                     if !strongSelf.applyingContentOffset {
                         strongSelf.applyPresentaionLayoutTransition(strongSelf.generatePresentationLayoutTransition(layoutTransactionOffset: 0.0), removedNodes: [], updateLayoutTransition: nil, itemTransition: .immediate, completion: { _ in })

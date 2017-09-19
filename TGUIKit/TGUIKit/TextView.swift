@@ -9,10 +9,7 @@
 import Cocoa
 import SwiftSignalKitMac
 
-public let TGPreformatteCodeAttributeName: String = "TGPreformatteCodeAttributeName"
-public let TGPreformattePreAttributeName: String = "TGPreformattePreAttributeName"
 
-public let TGLineSpacingAttributeName: String = "TGLineSpacingAttributeName"
 
 private enum CornerType {
     case topLeft
@@ -254,7 +251,7 @@ public final class TextViewLayout : Equatable {
         
         let font: CTFont
         if attributedString.length != 0 {
-            if let stringFont = attributedString.attribute(kCTFontAttributeName as String, at: 0, effectiveRange: nil) {
+            if let stringFont = attributedString.attribute(NSAttributedStringKey(kCTFontAttributeName as String), at: 0, effectiveRange: nil) {
                 font = stringFont as! CTFont
             } else {
                 font = defaultFont
@@ -314,7 +311,7 @@ public final class TextViewLayout : Equatable {
             
             
             
-            if attributedString.length > 0, let space = (attributedString.attribute(TGPreformattePreAttributeName, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber) {
+            if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber) {
                 breakInset = CGFloat(space.floatValue * 2)
                 lineCutoutOffset += CGFloat(space.floatValue)
                 lineAdditionalWidth += breakInset
@@ -385,9 +382,9 @@ public final class TextViewLayout : Equatable {
                 if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedWidth) {
                     coreTextLine = originalLine
                 } else {
-                    var truncationTokenAttributes: [String : AnyObject] = [:]
-                    truncationTokenAttributes[kCTFontAttributeName as String] = font
-                    truncationTokenAttributes[kCTForegroundColorFromContextAttributeName as String] = true as NSNumber
+                    var truncationTokenAttributes: [NSAttributedStringKey : Any] = [:]
+                    truncationTokenAttributes[NSAttributedStringKey(kCTFontAttributeName as String)] = font
+                    truncationTokenAttributes[NSAttributedStringKey(kCTForegroundColorFromContextAttributeName as String)] = true as NSNumber
                     let tokenString = "\u{2026}"
                     let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
@@ -423,7 +420,7 @@ public final class TextViewLayout : Equatable {
                     layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
-                    if let space = lineString.attribute(TGPreformattePreAttributeName, at: 0, effectiveRange: nil) as? NSNumber {
+                    if let space = lineString.attribute(.preformattedPre, at: 0, effectiveRange: nil) as? NSNumber {
                         
                         layoutSize.width = self.constrainedWidth
                         let preformattedSpace = CGFloat(space.floatValue) * 2
@@ -598,7 +595,7 @@ public final class TextViewLayout : Equatable {
             var range:NSRange = NSMakeRange(NSNotFound, 0)
             let attrs = attributedString.attributes(at: pos, effectiveRange: &range)
             
-            let link:Any? = attrs[NSLinkAttributeName]
+            let link:Any? = attrs[NSAttributedStringKey.link]
             
             if let link = link {
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
@@ -625,6 +622,22 @@ public final class TextViewLayout : Equatable {
         return -1
     }
     
+    public func selectAll(at point:NSPoint) -> Void {
+        
+        let startIndex = findCharacterIndex(at: point)
+        if startIndex == -1 {
+            return
+        }
+        
+        var blockRange: NSRange = NSMakeRange(NSNotFound, 0)
+        if let _ = attributedString.attribute(.preformattedPre, at: startIndex, effectiveRange: &blockRange) {
+            self.selectedRange = TextSelectedRange(range: blockRange, color: .selectText, def: true)
+        } else {
+            self.selectedRange = TextSelectedRange(range: NSMakeRange(0,attributedString.length), color: .selectText, def: true)
+        }
+        
+    }
+    
     public func selectWord(at point:NSPoint) -> Void {
         let startIndex = findCharacterIndex(at: point)
         if startIndex == -1 {
@@ -635,7 +648,7 @@ public final class TextViewLayout : Equatable {
         var range = NSMakeRange(startIndex, 1)
         let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        let check = attributedString.attribute(NSLinkAttributeName, at: range.location, effectiveRange: &effectiveRange)
+        let check = attributedString.attribute(NSAttributedStringKey.link, at: range.location, effectiveRange: &effectiveRange)
         if check != nil && effectiveRange.location != NSNotFound {
             self.selectedRange = TextSelectedRange(range: effectiveRange, color: presentation.colors.selectText, def: true)
             return
@@ -805,12 +818,14 @@ public class TextView: Control {
                         
                         width = endOffset - startOffset;
                         
+                        let blockValue:CGFloat = CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0)
+                        
                         
 
-                        rect.size.width = width
+                        rect.size.width = width - blockValue / 2
 
-                        rect.origin.x = startOffset
-                        rect.origin.y = rect.minY - rect.height
+                        rect.origin.x = startOffset + blockValue
+                        rect.origin.y = rect.minY - rect.height + blockValue / 2
                         rect.size.height += ceil(descent - leading)
                         let color:NSColor = presentation.colors.selectText
                         
@@ -1005,7 +1020,7 @@ public class TextView: Control {
         if let layout = layout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
             if event.clickCount == 3 {
-                layout.selectedRange = TextSelectedRange(range: NSMakeRange(0,layout.attributedString.length), color: .selectText, def: true)
+                layout.selectAll(at: point)
             } else if event.clickCount == 2 || (event.type == .rightMouseUp  && !layout.selectedRange.hasSelectText) {
                 layout.selectWord(at : point)
             } else if !layout.selectedRange.hasSelectText || !isSelectable && event.clickCount == 1 {
@@ -1025,14 +1040,14 @@ public class TextView: Control {
         if self.mouse(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
             
             if let layout = layout, let (_, _) = layout.link(at: location) {
-                NSCursor.pointingHand().set()
+                NSCursor.pointingHand.set()
             } else if isSelectable {
-                NSCursor.iBeam().set()
+                NSCursor.iBeam.set()
             } else {
-                NSCursor.arrow().set()
+                NSCursor.arrow.set()
             }
         } else {
-            NSCursor.arrow().set()
+            NSCursor.arrow.set()
         }
     }
     
@@ -1073,14 +1088,14 @@ public class TextView: Control {
         if let layout = layout, layout.selectedRange.range.location != NSNotFound {
             if let copy = layout.interactions.copy  {
                 if !copy() {
-                    let pb = NSPasteboard.general()
-                    pb.declareTypes([NSStringPboardType], owner: self)
-                    pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: NSStringPboardType)
+                    let pb = NSPasteboard.general
+                    pb.declareTypes([.string], owner: self)
+                    pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                 }
             } else {
-                let pb = NSPasteboard.general()
-                pb.declareTypes([NSStringPboardType], owner: self)
-                pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: NSStringPboardType)
+                let pb = NSPasteboard.general
+                pb.declareTypes([.string], owner: self)
+                pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
             }
         }
     }

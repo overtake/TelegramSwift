@@ -126,7 +126,7 @@ open class Control: View {
         trackingArea = nil
         
         if let _ = window {
-            let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
+            let options:NSTrackingArea.Options = [NSTrackingArea.Options.cursorUpdate, NSTrackingArea.Options.mouseEnteredAndExited, NSTrackingArea.Options.mouseMoved, NSTrackingArea.Options.activeInKeyWindow, NSTrackingArea.Options.inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)
@@ -232,7 +232,7 @@ open class Control: View {
             send(event: .Down)
             updateState()
             
-            let disposable = (Signal<Void,Void>.single() |> delay(0.6, queue: Queue.mainQueue())).start(next: { [weak self] in
+            let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.6, queue: Queue.mainQueue())).start(next: { [weak self] in
                 if let inside = self?.mouseInside(), inside {
                     self?.send(event: .LongMouseDown)
                 }
@@ -289,6 +289,7 @@ open class Control: View {
     open override func rightMouseDown(with event: NSEvent) {
         if userInteractionEnabled {
             updateState()
+            super.rightMouseDown(with: event)
         } else {
             super.rightMouseDown(with: event)
         }
@@ -311,7 +312,7 @@ open class Control: View {
     override open func mouseEntered(with event: NSEvent) {
         if userInteractionEnabled {
             
-            let disposable = (Signal<Void,Void>.single() |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+            let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
                 if let strongSelf = self, strongSelf.mouseInside(), strongSelf.controlState == .Hover {
                     strongSelf.send(event: .LongOver)
                 }

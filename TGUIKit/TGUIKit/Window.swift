@@ -24,9 +24,9 @@ class KeyHandler : Comparable {
     let handler:()->KeyHandlerResult
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
-    let modifierFlags:NSEventModifierFlags?
+    let modifierFlags:NSEvent.ModifierFlags?
     
-    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEventModifierFlags?) {
+    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEvent.ModifierFlags?) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -87,9 +87,9 @@ class MouseObserver : Comparable {
     let handler:(NSEvent)->KeyHandlerResult
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
-    let type:NSEventType?
+    let type:NSEvent.EventType?
     
-    init(_ handler:@escaping(NSEvent)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ type:NSEventType) {
+    init(_ handler:@escaping(NSEvent)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ type:NSEvent.EventType) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -114,7 +114,7 @@ public class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeHandler] = []
     private var responsders:[ResponderObserver] = []
-    private var mouseHandlers:[NSEventType:[MouseObserver]] = [:]
+    private var mouseHandlers:[NSEvent.EventType:[MouseObserver]] = [:]
     private var swipePoints:[NSPoint] = []
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
@@ -137,7 +137,7 @@ public class Window: NSWindow {
     }
 
     
-    public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
+    public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]
         if handlers == nil {
             handlers = []
@@ -172,7 +172,7 @@ public class Window: NSWindow {
         }
         self.keyHandlers = newKeyHandlers
         
-        var newMouseHandlers:[NSEventType:[MouseObserver]] = [:]
+        var newMouseHandlers:[NSEvent.EventType:[MouseObserver]] = [:]
         for (key, handlers) in mouseHandlers {
             newMouseHandlers[key] = handlers
         }
@@ -237,7 +237,7 @@ public class Window: NSWindow {
         }
         self.keyHandlers = newKeyHandlers
         
-        var newMouseHandlers:[NSEventType:[MouseObserver]] = [:]
+        var newMouseHandlers:[NSEvent.EventType:[MouseObserver]] = [:]
         for (key, handlers) in mouseHandlers {
             newMouseHandlers[key] = handlers
         }
@@ -268,7 +268,7 @@ public class Window: NSWindow {
         
     }
     
-    public func set(mouseHandler:@escaping(NSEvent) -> KeyHandlerResult, with object:NSObject, for type:NSEventType, priority:HandlerPriority = .low) -> Void {
+    public func set(mouseHandler:@escaping(NSEvent) -> KeyHandlerResult, with object:NSObject, for type:NSEvent.EventType, priority:HandlerPriority = .low) -> Void {
         var handlers:[MouseObserver]? = mouseHandlers[type]
         if handlers == nil {
             handlers = []
@@ -278,7 +278,7 @@ public class Window: NSWindow {
         
     }
     
-    public func remove(object:NSObject, for type:NSEventType) {
+    public func remove(object:NSObject, for type:NSEvent.EventType) {
         let handlers = mouseHandlers[type]
         if let handlers = handlers {
             var copy:[MouseObserver] = []
@@ -335,7 +335,7 @@ public class Window: NSWindow {
         
         applyResponderIfNeeded()
         
-        if firstResponder.responds(to: NSSelectorFromString("paste:")) {
+        if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
             firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
         }
     }
@@ -344,7 +344,7 @@ public class Window: NSWindow {
         if let copyhandler = copyhandler {
             copyhandler()
         } else {
-            if firstResponder.responds(to: NSSelectorFromString("copy:")) {
+            if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("copy:")) {
                 firstResponder.performSelector(onMainThread: NSSelectorFromString("copy:"), with: sender, waitUntilDone: false)
             }
         }
@@ -432,7 +432,7 @@ public class Window: NSWindow {
 //        return self.set(handler: handler, for: .V, modifierFlags: [.command])
 //    }
     
-    public func set(escape handler:@escaping() -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEventModifierFlags? = nil) -> Void {
+    public func set(escape handler:@escaping() -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
         set(handler: handler, with: object, for: .Escape, priority:priority, modifierFlags:modifierFlags)
     }
 
@@ -464,7 +464,7 @@ public class Window: NSWindow {
     }
     
 
-    public override init(contentRect: NSRect, styleMask style: NSWindowStyleMask, backing bufferingType: NSBackingStoreType, defer flag: Bool) {
+    public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
        
         self.acceptsMouseMovedEvents = true
@@ -472,8 +472,8 @@ public class Window: NSWindow {
 
         
         self.contentView?.acceptsTouchEvents = true
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidMove, object: self)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSNotification.Name.NSWindowDidResize, object: self)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         
 
         

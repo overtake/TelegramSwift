@@ -65,7 +65,7 @@ public extension String {
         if factor == 0 {
             converted = 1.0
         }
-        factor = max(1,factor)
+        factor = Swift.max(1,factor)
         
         if ceil(converted) - converted != 0.0 {
             return String(format: "%.2f %@", converted, tokens[factor])
@@ -77,8 +77,26 @@ public extension String {
 
 }
 
-public let kSelectedColorAttribute:String = "kFontSelectedColorAttribute"
+public extension NSAttributedStringKey {
+    public static var preformattedCode: NSAttributedStringKey {
+        return NSAttributedStringKey(rawValue: "TGPreformattedCodeAttributeName")
+    }
+    public static var preformattedPre: NSAttributedStringKey {
+        return NSAttributedStringKey(rawValue: "TGPreformattedPreAttributeName")
+    }
+    public static var selectedColor: NSAttributedStringKey {
+        return NSAttributedStringKey(rawValue: "KSelectedColorAttributeName")
+    }
+}
 
+public extension NSPasteboard.PasteboardType {
+    public static var kUrl:NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType(kUTTypeURL as String)
+    }
+    public static var kFilenames:NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType("NSFilenamesPboardType")
+    }
+}
 
 public struct ParsingType: OptionSet {
     public var rawValue: UInt32
@@ -132,12 +150,12 @@ public extension NSMutableAttributedString {
 
         var range:NSRange
         
-        self.append(NSAttributedString.init(string: string!))
+        self.append(NSAttributedString(string: string!))
         let nlength:Int = self.length - slength
         range = NSMakeRange(self.length - nlength, nlength)
         
         if let c = color {
-            self.addAttribute(NSForegroundColorAttributeName, value: c, range:range )
+            self.addAttribute(NSAttributedStringKey.foregroundColor, value: c, range:range )
         }
         
         if let f = font {
@@ -153,21 +171,21 @@ public extension NSMutableAttributedString {
     }
     
     public func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
-        self.addAttribute(NSLinkAttributeName, value: link, range: range)
-        self.addAttribute(NSForegroundColorAttributeName, value: color, range: range)
+        self.addAttribute(NSAttributedStringKey.link, value: link, range: range)
+        self.addAttribute(NSAttributedStringKey.foregroundColor, value: color, range: range)
     }
     
     public func setCTFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(kCTFontAttributeName as String, value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
+        self.addAttribute(NSAttributedStringKey(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
     }
     
     public func setSelected(color:NSColor,range:NSRange) -> Void {
-        self.addAttribute(kSelectedColorAttribute, value: color, range: range)
+        self.addAttribute(.selectedColor, value: color, range: range)
     }
 
     
     public func setFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(NSFontAttributeName, value: font, range: range)
+        self.addAttribute(NSAttributedStringKey.font, value: font, range: range)
     }
     
 }
@@ -226,7 +244,7 @@ public extension NSView {
         return NSImage(data: dataWithPDF(inside: bounds))!
     }
     
-    public func mouseInside() -> Bool {
+    public func _mouseInside() -> Bool {
         if let window = self.window {
             var location:NSPoint = window.mouseLocationOutsideOfEventStream
             location = self.convert(location, from: nil)
@@ -333,7 +351,7 @@ public extension NSView {
         return NSMakeRect(x, y, size.width, size.height)
     }
     
-    public func focus(_ size:NSSize, inset:EdgeInsets) -> NSRect {
+    public func focus(_ size:NSSize, inset:NSEdgeInsets) -> NSRect {
         let x:CGFloat = CGFloat(roundf(Float((frame.width - size.width + (inset.left + inset.right))/2.0)))
         let y:CGFloat = CGFloat(roundf(Float((frame.height - size.height + (inset.top + inset.bottom))/2.0)))
         return NSMakeRect(x, y, size.width, size.height)
@@ -371,7 +389,7 @@ public extension NSView {
     }
     
     
-    public func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) -> Void {
+    public func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) -> Void {
         if animated {
             
             var presentX = NSMinX(self.frame)
@@ -400,10 +418,10 @@ public extension NSView {
         if let layer = layer {
             self.layer?.shake(0.04, from:NSMakePoint(-a + layer.position.x,layer.position.y), to:NSMakePoint(a + layer.position.x, layer.position.y))
         }
-        NSBeep()
+        NSSound.beep()
     }
     
-    public func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    public func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()
@@ -422,8 +440,7 @@ public extension NSView {
         }
     }
     
-
-    public func change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    public func _change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
         if animated {
             if let layer = self.layer {
                 var opacity:CGFloat = CGFloat(layer.opacity)
@@ -471,9 +488,9 @@ public extension NSView {
 
 
 
-public extension NSTableViewAnimationOptions {
-    public static var none: NSTableViewAnimationOptions { get {
-            return NSTableViewAnimationOptions(rawValue:0)
+public extension NSTableView.AnimationOptions {
+    public static var none: NSTableView.AnimationOptions { get {
+            return NSTableView.AnimationOptions(rawValue: 0)
         }
     }
 
@@ -723,7 +740,7 @@ public extension NSBezierPath {
 }
 
 
-public extension EdgeInsets {
+public extension NSEdgeInsets {
 
     public init(left:CGFloat = 0, right:CGFloat = 0, top:CGFloat = 0, bottom:CGFloat = 0) {
         self.left = left
@@ -848,7 +865,7 @@ public extension String {
     
     public var emojiVisibleLength: Int {
         var count = 0
-        enumerateSubstrings(in: startIndex..<endIndex, options: .byComposedCharacterSequences) { _ in
+        enumerateSubstrings(in: startIndex..<endIndex, options: .byComposedCharacterSequences) { _,_,_,_  in
             count += 1
         }
         return count
@@ -861,7 +878,7 @@ public extension String {
         
         
         let range = Range<String.Index>(uncheckedBounds: (self.startIndex, self.index(after: self.startIndex)))
-        return self[range]
+        return String(self[range])
     }
     
     public var emojiSkin: String {
@@ -871,7 +888,7 @@ public extension String {
         
         
         let range = Range<String.Index>(uncheckedBounds: (self.index(after: self.startIndex), self.endIndex))
-        return self[range]
+        return String(self[range])
     }
     
     public var canHaveSkinToneModifier: Bool {

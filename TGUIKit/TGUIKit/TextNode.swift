@@ -92,8 +92,8 @@ public class TextNode: NSObject {
                 
                 let c:NSMutableAttributedString = a.mutableCopy() as! NSMutableAttributedString
                 
-                if let color = c.attribute(kSelectedColorAttribute, at: 0, effectiveRange: nil) {
-                    c.addAttribute(NSForegroundColorAttributeName, value: color, range: c.range)
+                if let color = c.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                    c.addAttribute(NSAttributedStringKey.foregroundColor, value: color, range: c.range)
                 }
                 
                 attr = c
@@ -108,7 +108,7 @@ public class TextNode: NSObject {
 
             let font: CTFont
             if attributedString.length != 0 {
-                if let stringFont = attributedString.attribute(kCTFontAttributeName as String, at: 0, effectiveRange: nil) {
+                if let stringFont = attributedString.attribute(NSAttributedStringKey(kCTFontAttributeName as String), at: 0, effectiveRange: nil) {
                     font = stringFont as! CTFont
                 } else {
                     font = defaultFont
@@ -186,9 +186,9 @@ public class TextNode: NSObject {
                     if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedSize.width) {
                         coreTextLine = originalLine
                     } else {
-                        var truncationTokenAttributes: [String : AnyObject] = [:]
-                        truncationTokenAttributes[kCTFontAttributeName as String] = font
-                        truncationTokenAttributes[kCTForegroundColorFromContextAttributeName as String] = true as NSNumber
+                        var truncationTokenAttributes: [NSAttributedStringKey : Any] = [:]
+                        truncationTokenAttributes[NSAttributedStringKey(kCTFontAttributeName as String)] = font
+                        truncationTokenAttributes[NSAttributedStringKey(kCTForegroundColorFromContextAttributeName as String)] = true as NSNumber
                         let tokenString = "\u{2026}"
                         let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                         let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)

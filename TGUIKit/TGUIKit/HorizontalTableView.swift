@@ -36,13 +36,13 @@ public class HorizontalTableView: TableView {
     
     override func rowView(item:TableRowItem) -> TableRowView {
         let identifier:String = NSStringFromClass(item.viewClass())
-        var view = self.tableView.make(withIdentifier: identifier, owner: self.tableView)
+        var view = self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
             
             view = vz.init(frame:NSMakeRect(0, 0, item.height, frame.height))
             
-            view?.identifier = identifier
+            view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
             
         }
         

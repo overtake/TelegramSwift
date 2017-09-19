@@ -16,12 +16,12 @@ class SearchTextField: NSTextView {
     
     
     override func resignFirstResponder() -> Bool {
-        self.delegate?.textDidEndEditing?(Notification(name: Notification.Name.NSControlTextDidChange))
+        self.delegate?.textDidEndEditing?(Notification(name: NSControl.textDidChangeNotification))
         return super.resignFirstResponder()
     }
     
     override func becomeFirstResponder() -> Bool {
-        self.delegate?.textDidBeginEditing?(Notification(name: Notification.Name.NSControlTextDidChange))
+        self.delegate?.textDidBeginEditing?(Notification(name: NSControl.textDidChangeNotification))
         return super.becomeFirstResponder()
     }
     
@@ -132,7 +132,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
        // input.isBezeled = false
         input.focusRingType = .none
         input.frame = self.bounds
-        input.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
+        input.autoresizingMask = [.width, .height]
         input.backgroundColor = NSColor.clear
         input.delegate = self
         input.isRichText = false
@@ -208,13 +208,13 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     open func textDidChange(_ notification: Notification) {
         
         if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(SearchState(state: state, request: input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
+            searchInteractions.textModified(SearchState(state: state, request: input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
         }
-        let pHidden = input.string != nil && !input.string!.isEmpty
+        let pHidden = input.string != nil && !input.string.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
-        let iHidden = !(state == .Focus && !input.string!.isEmpty)
+        let iHidden = !(state == .Focus && !input.string.isEmpty)
         if input.isHidden != iHidden {
           //  input.isHidden = iHidden
             window?.makeFirstResponder(input)
@@ -271,7 +271,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             self.state = state
             
             if let searchInteractions = searchInteractions {
-                let text = input.string?.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+                let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
                 searchInteractions.stateModified(SearchState(state: state, request: state == .None ? nil : text))
             }
             
@@ -420,7 +420,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
     public func setString(_ string:String) {
         self.input.string = string
-        textDidChange(Notification(name:Notification.Name.NSTextDidChange))
+        textDidChange(Notification(name: NSText.didChangeNotification))
         needsLayout = true
     }
     

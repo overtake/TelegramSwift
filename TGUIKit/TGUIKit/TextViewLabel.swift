@@ -23,7 +23,7 @@ open class TextViewLabel: View {
     var needSizeToFit:Bool = false
     public var linesCount:Int = 1
     public var autosize:Bool = false
-    public var inset:EdgeInsets = EdgeInsets()
+    public var inset:NSEdgeInsets = NSEdgeInsets()
     
     public var attributedString:NSAttributedString? {
         didSet {

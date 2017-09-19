@@ -74,11 +74,11 @@ public struct ImageCorners: Equatable {
         self.init(topLeft: .Corner(0.0), topRight: .Corner(0.0), bottomLeft: .Corner(0.0), bottomRight: .Corner(0.0))
     }
     
-    public var extendedEdges: EdgeInsets {
+    public var extendedEdges: NSEdgeInsets {
         let left = self.bottomLeft.extendedInsets.width
         let right = self.bottomRight.extendedInsets.width
         
-        return EdgeInsets(top: 0.0, left: left, bottom: 0.0, right: right)
+        return NSEdgeInsets(top: 0.0, left: left, bottom: 0.0, right: right)
     }
 }
 
@@ -91,7 +91,7 @@ public struct TransformImageArguments: Equatable {
     
     public let imageSize: NSSize
     public let boundingSize: NSSize
-    public let intrinsicInsets: EdgeInsets
+    public let intrinsicInsets: NSEdgeInsets
     
     public var drawingSize: CGSize {
         let cornersExtendedEdges = self.corners.extendedEdges
@@ -103,12 +103,12 @@ public struct TransformImageArguments: Equatable {
         return CGRect(x: cornersExtendedEdges.left + self.intrinsicInsets.left, y: cornersExtendedEdges.top + self.intrinsicInsets.top, width: self.boundingSize.width, height: self.boundingSize.height);
     }
     
-    public var insets: EdgeInsets {
+    public var insets: NSEdgeInsets {
         let cornersExtendedEdges = self.corners.extendedEdges
-        return EdgeInsets(top: cornersExtendedEdges.top + self.intrinsicInsets.top, left: cornersExtendedEdges.left + self.intrinsicInsets.left, bottom: cornersExtendedEdges.bottom + self.intrinsicInsets.bottom, right: cornersExtendedEdges.right + self.intrinsicInsets.right)
+        return NSEdgeInsets(top: cornersExtendedEdges.top + self.intrinsicInsets.top, left: cornersExtendedEdges.left + self.intrinsicInsets.left, bottom: cornersExtendedEdges.bottom + self.intrinsicInsets.bottom, right: cornersExtendedEdges.right + self.intrinsicInsets.right)
     }
     
-    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:EdgeInsets) {
+    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets) {
         self.corners = corners
         let min = corners.topLeft.corner + corners.topRight.corner
         self.imageSize = NSMakeSize(max(imageSize.width, min), max(imageSize.height, min))

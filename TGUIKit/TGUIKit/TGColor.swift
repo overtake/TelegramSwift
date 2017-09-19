@@ -157,7 +157,7 @@ public extension NSColor {
     
     var argb: UInt32 {
         
-        let color = self.usingColorSpaceName(NSCalibratedRGBColorSpace)!
+        let color = self.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
         var red: CGFloat = 0.0
         var green: CGFloat = 0.0
         var blue: CGFloat = 0.0
@@ -169,7 +169,7 @@ public extension NSColor {
     
     var rgb: UInt32 {
         
-        let color = self.usingColorSpaceName(NSCalibratedRGBColorSpace)
+        let color = self.usingColorSpaceName(NSColorSpaceName.calibratedRGB)
         if let color = color {
             let red: CGFloat = color.redComponent
             let green: CGFloat = color.greenComponent

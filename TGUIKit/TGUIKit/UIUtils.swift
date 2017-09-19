@@ -10,7 +10,7 @@ import Cocoa
 
 
 public func floorToScreenPixels(_ value: CGFloat) -> CGFloat {
-    let scale = NSScreen.main()?.backingScaleFactor ?? 1.0
+    let scale = NSScreen.main?.backingScaleFactor ?? 1.0
     return floor(value * scale) / scale
 }
 

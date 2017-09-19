@@ -17,7 +17,7 @@ class ControllerToasterView : View {
         super.init(frame: frameRect)
         addSubview(textView)
         textView.isSelectable = false
-        self.autoresizingMask = [.viewWidthSizable]
+        self.autoresizingMask = [.width]
         self.border = [.Bottom]
         updateLocalizationAndTheme()
     }
@@ -72,7 +72,7 @@ public class ControllerToaster {
             view?.layer?.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2)
         }
         
-        let signal:Signal<Void,Void> = .single() |> delay(timeout, queue: Queue.mainQueue())
+        let signal:Signal<Void,Void> = .single(Void()) |> delay(timeout, queue: Queue.mainQueue())
         disposable.set(signal.start(next:{ [weak self] in
             self?.hide(true)
         }))
@@ -216,9 +216,9 @@ open class ViewController : NSObject {
             
             let vz = viewClass() as! NSView.Type
             _view = vz.init(frame: _frameRect);
-            _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+            _view?.autoresizingMask = [.width,.height]
             
-            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
             
             _ = atomicSize.swap(_view!.frame.size)
         }
@@ -315,8 +315,8 @@ open class ViewController : NSObject {
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
         }
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidBecomeKey, object: window)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidResignKey, object: window)
+        NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
+        NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
         isKeyWindow.set(.single(false))
     }
     
@@ -335,8 +335,8 @@ open class ViewController : NSObject {
             }
         }
         
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSNotification.Name.NSWindowDidBecomeKey, object: window)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSNotification.Name.NSWindowDidResignKey, object: window)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
         if let window = window {
             isKeyWindow.set(.single(window.isKeyWindow))
         }
@@ -485,9 +485,9 @@ open class GenericViewController<T> : ViewController where T:NSView {
             rightBarView = getRightBarViewOnce()
             
             _view = initializer()
-            _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+            _view?.autoresizingMask = [.width,.height]
             
-            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
             
             _ = atomicSize.swap(_view!.frame.size)
         }
@@ -558,9 +558,9 @@ open class ModalViewController : ViewController {
         if(_view == nil) {
             
             _view = initializer()
-            _view?.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+            _view?.autoresizingMask = [.width,.height]
             
-            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: Notification.Name.NSViewFrameDidChange, object: _view!)
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
             
             _ = atomicSize.swap(_view!.frame.size)
         }

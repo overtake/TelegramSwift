@@ -12,12 +12,12 @@ public struct System {
 
     public static var isRetina:Bool {
         get {
-            return NSScreen.main()?.backingScaleFactor == 2.0
+            return NSScreen.main?.backingScaleFactor == 2.0
         }
     }
     
     public static var backingScale:CGFloat {
-        return CGFloat(NSScreen.main()?.backingScaleFactor ?? 2.0)
+        return CGFloat(NSScreen.main?.backingScaleFactor ?? 2.0)
     }
     
     public static var drawAsync:Bool {

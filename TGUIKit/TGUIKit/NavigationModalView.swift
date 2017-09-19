@@ -33,7 +33,7 @@ class NavigationModalView: Control {
       //  viewController.navigationController?.lock = true
         
         super.init()
-        self.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
+        self.autoresizingMask = [.width, .height]
         self.backgroundColor = presentation.colors.background.withAlphaComponent(0.75) //NSColor(0xffffff,0.8)
         
         set(handler: { control in

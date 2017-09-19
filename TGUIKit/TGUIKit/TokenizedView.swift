@@ -147,7 +147,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         layoutContainer(animated: animated)
         _tokensUpdater.set(.single(tokens))
         input.string = ""
-        textDidChange(Notification(name: Notification.Name.NSTextDidChange))
+        textDidChange(Notification(name: NSText.didChangeNotification))
         (contentView as? TGClipView)?.scroll(to: NSMakePoint(0, container.frame.height - frame.height), animated: animated)
     }
     
@@ -244,7 +244,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
                 if let index = selectedIndex {
                     if index + 1 == tokens.count {
                         selectedIndex = nil
-                        input.setSelectedRange(NSMakeRange(input.string?.length ?? NSNotFound, 0))
+                        input.setSelectedRange(NSMakeRange(input.string.length, 0))
                     } else {
                         selectedIndex = index + 1
                     }
@@ -259,7 +259,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
                         self.selectedIndex = min(selectedIndex, tokens.count - 1)
                     } else {
                         self.selectedIndex = nil
-                        input.setSelectedRange(NSMakeRange(input.string?.length ?? NSNotFound, 0))
+                        input.setSelectedRange(NSMakeRange(input.string.length, 0))
                     }
                     
                     return true
@@ -279,11 +279,11 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     open func textDidChange(_ notification: Notification) {
         
-        let pHidden = input.string != nil && !input.string!.isEmpty
+        let pHidden = input.string != nil && !input.string.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
-        _textUpdater.set(input.string ?? "")
+        _textUpdater.set(input.string)
         selectedIndex = nil
     }
     
@@ -321,7 +321,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         
         hasVerticalScroller = true
         container.frame = bounds
-        container.autoresizingMask = [.viewWidthSizable]
+        container.autoresizingMask = [.width]
         contentView.documentView = container
         
         input.focusRingType = .none

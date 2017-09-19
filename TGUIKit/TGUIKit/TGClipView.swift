@@ -205,17 +205,17 @@ public class TGClipView: NSClipView,CALayerDelegate {
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
         if let w = newWindow {
             
-            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSNotification.Name.NSWindowDidChangeScreen, object: w)
+            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSWindow.didChangeScreenNotification, object: w)
             
         } else {
-            NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSWindowDidChangeScreen, object: self.window)
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeScreenNotification, object: self.window)
         }
         
         super.viewWillMove(toWindow: newWindow)
     }
     
-    func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
-        if let displayLink = displayLink, let _ = NSScreen.main() {
+    @objc func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
+        if let displayLink = displayLink, let _ = NSScreen.main {
             CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
         }
     }

@@ -217,7 +217,7 @@ public class TitleButton: ImageButton {
     
     public override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
-        if let screen = NSScreen.main() {
+        if let screen = NSScreen.main {
             self.text.contentsScale = screen.backingScaleFactor
         }
         

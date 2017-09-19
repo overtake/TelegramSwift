@@ -27,13 +27,13 @@ class NavigationBarView: View {
     
     override init() {
         super.init()
-        self.autoresizingMask = [.viewWidthSizable]
+        self.autoresizingMask = [.width]
         updateLocalizationAndTheme()
     }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.autoresizingMask = [.viewWidthSizable]
+        self.autoresizingMask = [.width]
         updateLocalizationAndTheme()
     }
     

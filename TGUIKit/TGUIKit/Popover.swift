@@ -204,7 +204,7 @@ open class Popover: NSObject {
                         
                         let nHandler:(Control) -> Void = { [weak strongSelf] control in
                             if let strongSelf = strongSelf {
-                                let s = Signal<Void,NoError>.single() |> delay(0.2, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single() |> delay(0.1, queue: Queue.mainQueue()) |> restart)
+                                let s = Signal<Void,NoError>.single(Void()) |> delay(0.2, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single(Void()) |> delay(0.1, queue: Queue.mainQueue()) |> restart)
                                 
                                 strongSelf.disposable.set(s.start(next: { [weak strongSelf] () in
                                     if let strongSelf = strongSelf {
@@ -271,7 +271,7 @@ open class Popover: NSObject {
         // return true
         
         if let window = control?.window {
-            let g:NSPoint = NSEvent.mouseLocation()
+            let g:NSPoint = NSEvent.mouseLocation
             let w:NSPoint = window.contentView!.convert(window.convertFromScreen(NSMakeRect(g.x, g.y, 1, 1)).origin, from: nil)
             //if w.x > background.frame.minX && background
             return NSPointInRect(w, background.frame)
@@ -312,7 +312,7 @@ open class Popover: NSObject {
             background.change(opacity: 0, animated: animates)
             for sub in background.subviews {
                 
-                sub.change(opacity: 0, animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] complete in
+                sub._change(opacity: 0, animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] complete in
                     if let strongSelf = self, !once {
                         once = true
                         strongSelf.controller?.viewDidDisappear(true)
@@ -334,6 +334,9 @@ open class Popover: NSObject {
 }
 
 public func hasPopover(_ window:Window) -> Bool {
+    if !window.sheets.isEmpty {
+        return true
+    }
     for subview in window.contentView!.subviews {
         if let subview = subview as? PopoverBackground, let popover = subview.popover {
             return popover.isShown

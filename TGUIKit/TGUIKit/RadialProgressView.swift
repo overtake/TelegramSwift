@@ -56,10 +56,10 @@ public struct RadialProgressTheme : Equatable {
     public let backgroundColor: NSColor
     public let foregroundColor: NSColor
     public let icon: CGImage?
-    public let iconInset:EdgeInsets
+    public let iconInset:NSEdgeInsets
     public let diameter:CGFloat?
     public let lineWidth: CGFloat
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, iconInset:EdgeInsets = EdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2) {
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2) {
         self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor

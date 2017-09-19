@@ -309,7 +309,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             
             switch entry {
             case let .plain(peer, _):
-                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), inset:EdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
             case .emptySearch:
                 return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }

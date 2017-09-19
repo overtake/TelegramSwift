@@ -35,12 +35,12 @@ fileprivate class SplitMinimisizeView : Control {
             if let minimisize = splitView.delegate?.splitViewIsCanMinimisize(), minimisize {
                 if mouseInside() {
                     if splitView.state == .minimisize {
-                        NSCursor.resizeRight().set()
+                        NSCursor.resizeRight.set()
                     } else {
-                        NSCursor.resizeLeft().set()
+                        NSCursor.resizeLeft.set()
                     }
                 } else {
-                    NSCursor.arrow().set()
+                    NSCursor.arrow.set()
                 }
             }
         }
@@ -64,9 +64,9 @@ fileprivate class SplitMinimisizeView : Control {
         if let splitView = splitView {
             if let minimisize = splitView.delegate?.splitViewIsCanMinimisize(), minimisize {
                 if splitView.state == .minimisize {
-                    NSCursor.resizeRight().set()
+                    NSCursor.resizeRight.set()
                 } else {
-                    NSCursor.resizeLeft().set()
+                    NSCursor.resizeLeft.set()
                 }
                 
                 let current = splitView.convert(event.locationInWindow, from: nil)
@@ -170,10 +170,10 @@ public class SplitView : View {
     required public init(frame frameRect: NSRect)  {
         container = View(frame: NSMakeRect(0,0,frameRect.width, frameRect.height))
         super.init(frame: frameRect);
-        self.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
+        self.autoresizingMask = [.width, .height]
         self.autoresizesSubviews = true
         container.autoresizesSubviews = false
-        container.autoresizingMask = [NSAutoresizingMaskOptions.viewWidthSizable, NSAutoresizingMaskOptions.viewHeightSizable]
+        container.autoresizingMask = [.width, .height]
         addSubview(container)
         minimisizeOverlay.splitView = self
 

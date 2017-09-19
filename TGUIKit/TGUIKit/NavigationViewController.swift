@@ -20,7 +20,7 @@ open class NavigationHeaderView : View {
     public init(_ header:NavigationHeader) {
         self.header = header
         super.init()
-        self.autoresizingMask = [.viewWidthSizable]
+        self.autoresizingMask = [.width]
     }
     
     required public init(frame frameRect: NSRect) {
@@ -292,7 +292,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         containerView.frame = bounds
         self.view.autoresizesSubviews = true
-        containerView.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
+        containerView.autoresizingMask = [.width, .height]
         self.view.addSubview(containerView, positioned: .below, relativeTo: self.view.subviews.first)
         controller._frameRect = bounds
         controller.viewWillAppear(false)

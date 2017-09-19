@@ -93,7 +93,7 @@ public class DraggingView: SplitView {
         super.init(frame: frameRect)
       
         container.backgroundColor = .clear
-        self.register(forDraggedTypes: [NSFilenamesPboardType,NSStringPboardType,NSTIFFPboardType,NSURLPboardType])
+        self.registerForDraggedTypes([.string, .tiff, .kUrl, .kFilenames])
     }
     
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {

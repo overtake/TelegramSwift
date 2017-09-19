@@ -107,7 +107,7 @@ public class TabBarView: View {
                     }
                 }
             }, for: .Click)
-            view.autoresizingMask = [.viewMinXMargin, .viewMaxXMargin, .viewWidthSizable]
+            view.autoresizingMask = [.minXMargin, .maxXMargin, .width]
             view.autoresizesSubviews = true
             let imageView = ImageView(frame: NSMakeRect(0, 0, tab.image.backingSize.width, tab.image.backingSize.height))
             imageView.image = tab.image

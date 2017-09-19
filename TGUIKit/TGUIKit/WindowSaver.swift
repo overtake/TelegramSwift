@@ -41,7 +41,7 @@ public class WindowSaver : NSObject, NSCoding {
     }
     
     public func save() {
-        let single:Signal<Void,Void> = .single() |> delay(1.5, queue: Queue.mainQueue())
+        let single:Signal<Void,Void> = .single(Void()) |> delay(1.5, queue: Queue.mainQueue())
         
         disposable.set(single.start(next: { [weak self] in
             if let strongSelf = self {

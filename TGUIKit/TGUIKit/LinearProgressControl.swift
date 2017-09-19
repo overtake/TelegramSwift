@@ -10,7 +10,7 @@ import Cocoa
 
 public class LinearProgressControl: Control {
     
-    private var progressView:NSView!
+    private var progressView:View!
     private var containerView:Control!
     private var progress:CGFloat = 0
     public var progressHeight:CGFloat
@@ -44,7 +44,7 @@ public class LinearProgressControl: Control {
         trackingArea = nil
         
         if let _ = window {
-            let options:NSTrackingAreaOptions = [NSTrackingAreaOptions.cursorUpdate, NSTrackingAreaOptions.mouseEnteredAndExited, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.enabledDuringMouseDrag, NSTrackingAreaOptions.activeInKeyWindow,NSTrackingAreaOptions.inVisibleRect]
+            let options:NSTrackingArea.Options = [NSTrackingArea.Options.cursorUpdate, NSTrackingArea.Options.mouseEnteredAndExited, NSTrackingArea.Options.mouseMoved, NSTrackingArea.Options.enabledDuringMouseDrag, NSTrackingArea.Options.activeInKeyWindow,NSTrackingArea.Options.inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)
@@ -100,9 +100,8 @@ public class LinearProgressControl: Control {
         addSubview(containerView)
 
         
-        progressView = NSView(frame:NSMakeRect(0, 0, 0, progressHeight))
-        progressView.wantsLayer = true
-        progressView.layer?.backgroundColor = style.foregroundColor.cgColor
+        progressView = View(frame:NSMakeRect(0, 0, 0, progressHeight))
+        progressView.backgroundColor = style.foregroundColor
         addSubview(progressView)
     }
     

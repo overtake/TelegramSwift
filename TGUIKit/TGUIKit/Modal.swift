@@ -303,7 +303,7 @@ public class Modal: NSObject {
         container.change(size: focus.size, animated: animated)
         container.change(pos: focus.origin, animated: animated)
         
-        controller?.view.change(size: size, animated: animated)
+        controller?.view._change(size: size, animated: animated)
     }
     
     private var containerRect:NSRect {
@@ -364,7 +364,7 @@ public class Modal: NSObject {
                         }
                     }
                     
-                    strongSelf.background.autoresizingMask = [.viewWidthSizable,.viewHeightSizable]
+                    strongSelf.background.autoresizingMask = [.width,.height]
                     strongSelf.background.customHandler.layout = { [weak strongSelf] view in
                         strongSelf?.container.center()
                     }

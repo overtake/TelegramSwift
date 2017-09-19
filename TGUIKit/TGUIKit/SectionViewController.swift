@@ -96,7 +96,7 @@ public class SectionControllerView : View {
                 nfrom = NSMakePoint(-container.frame.width, 0)
             }
             
-            previous?.view.change(pos: pto, animated: animated, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak previous] complete in
+            previous?.view._change(pos: pto, animated: animated, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak previous] complete in
                 if complete {
                     previous?.view.removeFromSuperview()
                     previous?.viewDidDisappear(animated)

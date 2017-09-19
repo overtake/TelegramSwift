@@ -418,7 +418,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         self.documentView = self.tableView;
         self.autoresizesSubviews = true;
-        self.autoresizingMask = [.viewWidthSizable, .viewHeightSizable]
+        self.autoresizingMask = [.width, .height]
         
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
@@ -427,7 +427,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         
-        let tableColumn = NSTableColumn(identifier: "column")
+        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
         tableColumn.width = frame.width
         self.tableView.addTableColumn(tableColumn)
 
@@ -469,7 +469,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if superview != nil {
             let clipView = self.contentView
             
-            NotificationCenter.default.addObserver(forName: NSNotification.Name.NSViewBoundsDidChange, object: clipView, queue: nil, using: { [weak self] notification  in
+            NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: clipView, queue: nil, using: { [weak self] notification  in
                 if let strongSelf = self {
                     
                     let reqCount = strongSelf.count / 6
@@ -531,10 +531,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     private var stickHandler:((TableStickItem?)->Void)?
-    
+    private var firstTime: Bool = false
     public func set(stickClass:AnyClass?, visible: Bool = true, handler:@escaping(TableStickItem?)->Void) {
         self.stickClass = stickClass
         self.stickHandler = handler
+        self.firstTime = true
         if let stickClass = stickClass as? TableStickItem.Type {
             if stickView == nil {
                 let stickItem:TableStickItem = stickClass.init(frame.size)
@@ -577,7 +578,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         enumerateItems { item in
             _ = item.makeSize(frame.width, oldWidth: item.width)
             reloadData(row: item.index, animated: false)
-            NSAnimationContext.current().duration =  0.0
+            NSAnimationContext.current.duration =  0.0
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             return true
         }
@@ -645,7 +646,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                     
                     if let item = stickItem {
-                        (viewNecessary(at: item.index) as? TableStickView)?.updateIsVisible(true, animated: false)
+                        (viewNecessary(at: item.index) as? TableStickView)?.updateIsVisible(!firstTime, animated: false)
+                        
+                        
                     }
 
                     stickItem = currentStick ?? item
@@ -673,12 +676,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         let yTopOffset:CGFloat = min(max(scrollInset - dif, 0), documentSize.height - item.height)
                         if stickView.frame.minY != yTopOffset {
                             if !animated || stickView.layer?.opacity != 0 {
-                                stickView.change(opacity: 1.0)
+                                stickView.change(opacity: firstTime ? 0 : 1, animated: !firstTime)
+                                firstTime = false
                             }
                         }
                         stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
                         stickView.header = fabs(dif) <= item.height
-                        stickTimeoutDisposable.set((Signal<Void, Void>.single() |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView, weak item] in
+                        stickTimeoutDisposable.set((Signal<Void, Void>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView, weak item] in
                             if let item = item, abs(itemRect.minY - yTopOffset) > item.height {
                                 stickView?.change(opacity: 0.0)
                             }
@@ -772,7 +776,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
-    public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
+    public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Bool {
         
         assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
         self.listhash[item.stableId] = item;
@@ -780,7 +784,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         item.table = self;
         
         let animation = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
+        NSAnimationContext.current.duration = animation != .none ? NSAnimationContext.current.duration : 0.0
         
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
@@ -790,11 +794,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    public func addItem(item:TableRowItem, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Bool {
+    public func addItem(item:TableRowItem, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Bool {
         return self.insert(item: item, at: self.count, redraw: redraw, animation:animation)
     }
     
-    public func insert(items:[TableRowItem], at:Int = 0, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+    public func insert(items:[TableRowItem], at:Int = 0, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         
         
         var current:Int = 0;
@@ -822,7 +826,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func noteHeightOfRow(_ row:Int, _ animated:Bool = true) {
         if !animated {
-            NSAnimationContext.current().duration = 0
+            NSAnimationContext.current.duration = 0
         }
         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
     }
@@ -835,11 +839,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if view.isKind(of: item.viewClass()) {
                 if let viewItem = view.item {
                     if viewItem.height != item.height {
-                        NSAnimationContext.current().duration = animated ? 0.2 : 0.0
+                        NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                     }
                 } else {
-                    NSAnimationContext.current().duration = animated ? 0.2 : 0.0
+                    NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 
@@ -850,18 +854,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  .effectFade)
             }
         } else {
-            NSAnimationContext.current().duration = 0.0
+            NSAnimationContext.current.duration = 0.0
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
         //self.moveItem(from: row, to: row)
     }
     
-    public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+    public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         
         
         var item:TableRowItem = self.item(at:from);
-        let animation = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current().duration = animation != .none ? NSAnimationContext.current().duration : 0.0
+        let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
+        NSAnimationContext.current.duration = animation != .none ? NSAnimationContext.current.duration : 0.0
        
         if let change = changeItem {
             assert(change.stableId == item.stableId)
@@ -915,11 +919,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.tableView.rect(ofRow: index)
     }
     
-    public func remove(at:Int, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+    public func remove(at:Int, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         if at < count {
             let item = self.item(at: at)
-            let animation = animation != .none ? item.animatable ? animation : .none : .none
-            NSAnimationContext.current().duration = animation == .none ? 0.0 : 0.2
+            let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
+            NSAnimationContext.current.duration = animation == .none ? 0.0 : 0.2
             
             self.list.remove(at: at);
             self.listhash.removeValue(forKey: item.stableId)
@@ -930,7 +934,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func remove(range:Range<Int>, redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+    public func remove(range:Range<Int>, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         
         for i in range.lowerBound ..< range.upperBound {
             remove(at: i, redraw: false)
@@ -943,12 +947,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
 
     
-    public func removeAll(redraw:Bool = true, animation:NSTableViewAnimationOptions = .none) -> Void {
+    public func removeAll(redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         let count:Int = self.count;
         self.list.removeAll()
         self.listhash.removeAll()
         
         if(redraw) {
+            
             self.tableView.removeRows(at: IndexSet(integersIn: 0 ..< count), withAnimation:  animation != .none ? .effectFade : .none)
         }
     }
@@ -991,7 +996,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
         }
         if let hash = selectedhash.modify({$0}), scroll {
-            self.scroll(to: .top(id: hash, animated: animated, focus: false, inset: 0), inset: EdgeInsets(), true)
+            self.scroll(to: .top(id: hash, animated: animated, focus: false, inset: 0), inset: NSEdgeInsets(), true)
         }
     }
     
@@ -1035,7 +1040,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if let hash = selectedhash.modify({$0}), scroll {
-            self.scroll(to: .bottom(id: hash, animated: animated, focus: false, inset: 0), inset: EdgeInsets(), true)
+            self.scroll(to: .bottom(id: hash, animated: animated, focus: false, inset: 0), inset: NSEdgeInsets(), true)
         }
     }
     
@@ -1126,13 +1131,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     func rowView(item:TableRowItem) -> TableRowView {
         let identifier:String = item.identifier
         
-        var view = self.tableView.make(withIdentifier: identifier, owner: self.tableView)
+        var view = self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
             
             view = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), item.height))
             
-            view?.identifier = identifier
+            view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
             
         } 
         return view as! TableRowView;
@@ -1181,11 +1186,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if !tableView.isFlipped {
                     let top = frame.height - (rect.minY - documentOffset.y) - rect.height
                     let bottom = (rect.minY - documentOffset.y)
-                    list.append(item,top,bottom)
+                    list.append((item,top,bottom))
                 } else {
                     let top = rect.minY - documentOffset.y
                     let bottom = frame.height - (rect.minY - documentOffset.y) - rect.height
-                    list.append(item,top,bottom)
+                    list.append((item,top,bottom))
                     //fatalError("not supported")
                 }
             }
@@ -1257,7 +1262,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var removed:[TableRowItem] = []
 
         for rdx in transition.deleted.reversed() {
-            let effect:NSTableViewAnimationOptions
+            let effect:NSTableView.AnimationOptions
             if case let .none(interface) = transition.state, interface != nil {
                 effect = (visibleRange.indexIn(rdx) || !transition.animateVisibleOnly) ? .effectFade : .none
             } else {
@@ -1269,12 +1274,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.remove(at: rdx, redraw: true, animation:effect)
         }
         
-        NSAnimationContext.current().duration = transition.animated ? 0.2 : 0.0
+        NSAnimationContext.current.duration = transition.animated ? 0.2 : 0.0
         
 
         
         for (idx,item) in transition.inserted {
-            let effect:NSTableViewAnimationOptions = transition.animated ? .effectFade : .none
+            let effect:NSTableView.AnimationOptions = transition.animated ? .effectFade : .none
             _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
             if item.animatable {
                 inserted.append(item)
@@ -1497,7 +1502,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     
-    public func scroll(to state:TableScrollState, inset:EdgeInsets = EdgeInsets(), _ toVisible:Bool = false) {
+    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), _ toVisible:Bool = false) {
        // if let index = self.index(of: item) {
         
 
@@ -1722,7 +1727,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func performScrollEvent() -> Void {
         self.updateScroll(visibleRows())
-        NotificationCenter.default.post(name: NSNotification.Name.NSViewBoundsDidChange, object: self.contentView)
+        NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: self.contentView)
     }
     
     deinit {
