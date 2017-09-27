@@ -63,7 +63,7 @@ public extension NSFont {
     public static func medium(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.semibold)
+            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.medium)
         } else {
             return NSFont(name: "HelveticaNeue-Medium", size: convert(from:size))!
         }

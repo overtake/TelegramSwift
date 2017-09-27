@@ -10,12 +10,10 @@ import Cocoa
 
 open class BackNavigationBar: TextButtonBarView {
 
-    private weak var controller:ViewController?
     
-    public init(_ controller:ViewController?) {
-        self.controller = controller
-        let backSettings = controller?.backSettings() ?? ("",nil)
-        super.init(text: backSettings.0, style: navigationButtonStyle)
+    public init(_ controller:ViewController) {
+        let backSettings = controller.backSettings()
+        super.init(controller: controller, text: backSettings.0, style: navigationButtonStyle)
         
         if let image = backSettings.1 {
             button.set(image: image, for: .Normal)

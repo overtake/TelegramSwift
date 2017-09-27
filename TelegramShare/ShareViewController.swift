@@ -14,11 +14,10 @@ import SwiftSignalKitMac
 
 
 class ShareViewController: NSViewController {
-    
-    override var nibName: String? {
-        return "ShareViewController"
+
+    override var nibName: NSNib.Name? {
+        return NSNib.Name(rawValue: "ShareViewController")
     }
-    
     private let accountManagerPromise = Promise<AccountManager>()
     private var contextValue: ShareApplicationContext?
     private let context = Promise<ShareApplicationContext?>()

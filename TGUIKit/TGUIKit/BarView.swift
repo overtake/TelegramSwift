@@ -14,7 +14,9 @@ open class BarView: OverlayControl {
     public var clickHandler:()->Void = {}
     
     public var minWidth:CGFloat = 80
-
+    public private(set) weak var controller: ViewController?
+    
+    
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
     }
@@ -25,8 +27,9 @@ open class BarView: OverlayControl {
         self.setNeedsDisplay()
     }
     
-    public init(_ width:CGFloat) {
+    public init(_ width:CGFloat = 80, controller: ViewController) {
         self.minWidth = width
+        self.controller = controller
         super.init()
         animates = false
         frame = NSMakeRect(0, 0, minWidth, 50)
@@ -39,13 +42,7 @@ open class BarView: OverlayControl {
         backgroundColor = presentation.colors.background
     }
     
-    override init() {
-        super.init()
-        animates = false
-        frame = NSMakeRect(0, 0, minWidth, 50)
-        overlayInitEvent()
-    }
-    
+
     func overlayInitEvent() -> Void {
         set(handler: { [weak self] control in
             self?.clickHandler()

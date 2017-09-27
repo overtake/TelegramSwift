@@ -254,7 +254,7 @@ open class ViewController : NSObject {
     }
     
     open func getLeftBarViewOnce() -> BarView {
-        return enableBack ? BackNavigationBar(self) : BarView()
+        return enableBack ? BackNavigationBar(self) : BarView(controller: self)
     }
     
     open var defaultBarTitle:String {
@@ -262,7 +262,7 @@ open class ViewController : NSObject {
     }
     
     open func getCenterBarViewOnce() -> TitledBarView {
-        return TitledBarView(.initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
+        return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
     }
     
     public func setCenterTitle(_ text:String) {
@@ -270,7 +270,7 @@ open class ViewController : NSObject {
     }
     
     open func getRightBarViewOnce() -> BarView {
-        return BarView()
+        return BarView(controller: self)
     }
     
     open func viewClass() ->AnyClass {
@@ -483,7 +483,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
             leftBarView = getLeftBarViewOnce()
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
-            
+
             _view = initializer()
             _view?.autoresizingMask = [.width,.height]
             

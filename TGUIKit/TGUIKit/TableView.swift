@@ -259,6 +259,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         liveWidth = frame.width
     }
     
+    
     override func viewDidEndLiveResize() {
         if liveWidth  != frame.width {
             liveWidth = 0
@@ -281,6 +282,7 @@ public class TableScrollListener : NSObject {
     fileprivate let uniqueId:UInt32 = arc4random()
     fileprivate let handler:(ScrollPosition)->Void
     fileprivate let dispatchWhenVisibleRangeUpdated: Bool
+    fileprivate var first: Bool = true
     public init(dispatchWhenVisibleRangeUpdated: Bool = true, _ handler:@escaping(ScrollPosition)->Void) {
         self.dispatchWhenVisibleRangeUpdated = dispatchWhenVisibleRangeUpdated
         self.handler = handler
@@ -506,8 +508,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
  
                     }
                     for listener in strongSelf.scrollListeners {
-                        if !listener.dispatchWhenVisibleRangeUpdated || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
+                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
                             listener.handler(scroll.current)
+                            listener.first = false
                         }
                     }
                 }
@@ -572,7 +575,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func layoutItems() {
 
-        let visible = visibleItems()
+        let visibleItems = self.visibleItems()
         
         beginTableUpdates()
         enumerateItems { item in
@@ -584,21 +587,43 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         endTableUpdates()
         
-        if let visible = visible.last, !tableView.isFlipped {
-            if let keys = layer?.animationKeys(), keys.isEmpty {
-                if let item = self.item(stableId: visible.0.stableId) {
-                    let nrect = rectOf(item: item)
-                    
-                    let y:CGFloat = nrect.minY - (frame.height - visible.1) + nrect.height
-                    
-                    self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
-                    reflectScrolledClipView(clipView)
-                }
-            }
-            
-        }
+        saveScrollState(visibleItems)
         
         needsLayouItemsOnNextTransition = false
+    }
+    
+    private func saveScrollState(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> Void {
+        if !visibleItems.isEmpty, clipView.bounds.minY > 0 {
+            var nrect:NSRect = NSZeroRect
+            
+            let strideTo:StrideTo<Int> = stride(from: visibleItems.count - 1, to: -1, by: -1)
+            
+            for i in strideTo {
+                let visible = visibleItems[i]
+                if let item = self.item(stableId: visible.0.stableId) {
+                    
+                    nrect = rectOf(item: item)
+                    
+                    if let view = viewNecessary(at: i) {
+                        if view.isInsertionAnimated {
+                            break
+                        }
+                    }
+                    
+                    let y:CGFloat
+                    if !tableView.isFlipped {
+                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                    } else {
+                        y = nrect.minY - visible.1
+                    }
+                    
+                    //clipView.scroll(to: NSMakePoint(0, y + frame.minY), animated: false)
+                     self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                    reflectScrolledClipView(clipView)
+                    break
+                }
+            }
+        }
     }
     
     private let stickTimeoutDisposable = MetaDisposable()
@@ -675,6 +700,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                         let yTopOffset:CGFloat = min(max(scrollInset - dif, 0), documentSize.height - item.height)
                         if stickView.frame.minY != yTopOffset {
+                            stickView.isHidden = firstTime
                             if !animated || stickView.layer?.opacity != 0 {
                                 stickView.change(opacity: firstTime ? 0 : 1, animated: !firstTime)
                                 firstTime = false
@@ -683,8 +709,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
                         stickView.header = fabs(dif) <= item.height
                         stickTimeoutDisposable.set((Signal<Void, Void>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView, weak item] in
-                            if let item = item, abs(itemRect.minY - yTopOffset) > item.height {
-                                stickView?.change(opacity: 0.0)
+                            if let item = item, abs(itemRect.minY - yTopOffset) > item.height, let stickView = stickView {
+                                stickView.change(opacity: 0.0, completion: { [weak stickView] completed in
+                                    if completed {
+                                        stickView?.isHidden = true
+                                    }
+                                })
                             }
                             
                         }))
@@ -1277,7 +1307,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         NSAnimationContext.current.duration = transition.animated ? 0.2 : 0.0
         
 
-        
         for (idx,item) in transition.inserted {
             let effect:NSTableView.AnimationOptions = transition.animated ? .effectFade : .none
             _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
@@ -1285,7 +1314,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 inserted.append(item)
             }
         }
-       
         
         
         for (index,item) in transition.updated {
@@ -1298,11 +1326,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             replace(item:item, at:index, animated: animated)
         }
 
-        
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
-        
         let state: TableScrollState
         
         if case .none = transition.state {
@@ -1328,9 +1354,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to: transition.state)
         case let .saveVisible(side):
             
-            if transition.isEmpty {
-                break
-            }
+//            if transition.isEmpty {
+//                break
+//            }
 
             var nrect:NSRect = NSZeroRect
             
@@ -1341,14 +1367,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 case .lower:
                     strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
                 case .upper:
-                    strideTo = stride(from: 0, to: visibleItems.count - 1, by: 1)
+                    strideTo = stride(from: 0, to: visibleItems.count, by: 1)
                 }
             } else {
                 switch side {
                 case .upper:
                     strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
                 case .lower:
-                    strideTo = stride(from: 0, to: visibleItems.count - 1, by: 1)
+                    strideTo = stride(from: 0, to: visibleItems.count, by: 1)
                 }
             }
 
@@ -1383,7 +1409,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                         break
                     }
-                                        
                     self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
                     reflectScrolledClipView(clipView)
                     break
@@ -1505,7 +1530,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), _ toVisible:Bool = false) {
        // if let index = self.index(of: item) {
         
-
+        var rowRect:NSRect = bounds
         
         var item:TableRowItem?
         var animate:Bool = false
@@ -1527,30 +1552,29 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             animate = _animate
             relativeInset = _inset
             focus = _focus
-        case let .down(animation):
+        case let .down(_animate):
+            animate = _animate
             if !tableView.isFlipped {
-                clipView.scroll(to: NSMakePoint(0, 0), animated:animation)
+                rowRect.origin = NSZeroPoint
             } else {
-                clipView.scroll(to: NSMakePoint(0, max(0,documentSize.height - frame.height)), animated:animation)
+                rowRect.origin = NSMakePoint(0, max(0,documentSize.height - frame.height))
             }
-            return
-        case let .up(animation):
+        case let .up(_animate):
+            animate = _animate
             if !tableView.isFlipped {
-                clipView.scroll(to: NSMakePoint(0, max(documentSize.height,frame.height)), animated:animation)
+                rowRect.origin = NSMakePoint(0, max(documentSize.height,frame.height))
             } else {
-               clipView.scroll(to: NSMakePoint(0, 0), animated:animation)
+               rowRect.origin = NSZeroPoint
             }
-            return
         default:
             fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
         }
         
         let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
-        
+        let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
+
         if let item = item {
-            var rowRect = self.rectOf(item: item)
-            
-            let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
+            rowRect = self.rectOf(item: item)
             
             switch state {
             case .bottom:
@@ -1581,82 +1605,67 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 fatalError("not implemented")
             }
             
-           
-            
             if toVisible {
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.height {
-                   // if animate {
                     if focus {
                         view.focusAnimation()
                     }
-                   // }
                     return
                 }
             }
-            if clipView.bounds.minY != rowRect.minY {
-                
-                var applied = false
-                let scrollListener = TableScrollListener({ [weak self, weak item] position in
-                    if let item = item, !applied, let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                        applied = true
-                        if focus {
-                            view.focusAnimation()
-                        }
+        }
+        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset,0), documentSize.height - height) + inset.top)
+        if clipView.bounds.minY != rowRect.minY {
+            
+            var applied = false
+            let scrollListener = TableScrollListener({ [weak self, weak item] position in
+                if let item = item, !applied, let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                    applied = true
+                    if focus {
+                        view.focusAnimation()
                     }
-                })
-                
-                addScroll(listener: scrollListener)
-                
-                clipView.scroll(to: NSMakePoint(0, round(min(max(rowRect.minY + relativeInset,0), documentSize.height - height) + inset.top)), animated:animate, completion:{ [weak self] _ in
-                    
-                    if let strongSelf = self {
-                        strongSelf.reflectScrolledClipView(strongSelf.clipView)
-                    }
-                    
-                    if !applied {
-                        applied = true
-                        if let view = self?.viewNecessary(at: item.index) {
-                            applied = true
-                            if focus {
-                                view.focusAnimation()
-                            }
-                        }
-                    }
-                    
-                    
-                    self?.removeScroll(listener: scrollListener)
-                })
-                
-                
-                
-            } else {
-                viewNecessary(at: item.index)?.focusAnimation()
+                }
+            })
+            
+            addScroll(listener: scrollListener)
+            
+            let bounds = NSMakeRect(0, rowRect.minY, clipView.bounds.width, clipView.bounds.height)
+            
+            
+            let getEdgeInset:()->CGFloat = {
+                if bounds.minY > self.clipView.bounds.minY {
+                    return height
+                } else {
+                    return -height
+                }
             }
             
-            
-            
-        } 
+            if abs(bounds.minY - clipView.bounds.minY) < height {
+                clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
+                    self?.removeScroll(listener: scrollListener)
+                })
+            } else {
+                let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
+                clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+                    self?.removeScroll(listener: scrollListener)
+                })
+            }
+        } else {
+            if let item = item, focus {
+                viewNecessary(at: item.index)?.focusAnimation()
+            }
+        }
+
     }
     
     open override func setFrameSize(_ newSize: NSSize) {
         let visible = visibleItems()
+        let oldWidth = frame.width
         super.setFrameSize(newSize)
-        
-        if let visible = visible.last, !tableView.isFlipped {
-            if let keys = layer?.animationKeys(), keys.isEmpty {
-                if let item = self.item(stableId: visible.0.stableId) {
-                    let nrect = rectOf(item: item)
-                    
-                    let y:CGFloat = nrect.minY - (frame.height - visible.1) + nrect.height
-                    
-                    self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
-                    reflectScrolledClipView(clipView)
-                }
-            }
-            
-        } else {
-            //TODO
+        //updateStickAfterScroll(false)
+        if oldWidth != newSize.width {
+            saveScrollState(visible)
         }
     }
     

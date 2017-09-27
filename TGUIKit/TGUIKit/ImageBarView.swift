@@ -28,13 +28,9 @@ public class ImageBarView: BarView {
         button.center()
     }
     
-    public override init() {
-        super.init()
-        addSubview(button)
-    }
-    
-    public init(_ image:CGImage, _ highlight:CGImage? = nil) {
-        super.init()
+
+    public init(controller: ViewController, _ image:CGImage, _ highlight:CGImage? = nil) {
+        super.init(controller: controller)
         addSubview(button)
         set(image: image, highlightImage: highlight)
     }

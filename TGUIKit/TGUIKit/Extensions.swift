@@ -96,6 +96,9 @@ public extension NSPasteboard.PasteboardType {
     public static var kFilenames:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType("NSFilenamesPboardType")
     }
+    public static var kFileUrl: NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType(kUTTypeFileURL as String)
+    }
 }
 
 public struct ParsingType: OptionSet {
@@ -437,6 +440,24 @@ public extension NSView {
         }
         if save {
             self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
+        }
+    }
+    
+    public func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+        
+        if save {
+            self.bounds = to
+        }
+        
+        if animated {
+            self.layer?.animateBounds(from: from, to: to, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+            
+        } else {
+            self.layer?.removeAnimation(forKey: "bounds")
+        }
+        
+        if !animated {
+            completion?(true)
         }
     }
     

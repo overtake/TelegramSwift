@@ -105,7 +105,7 @@ public protocol TokenizedProtocol {
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool)
 }
 
-public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelegate {
+public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDelegate {
     private var tokens:[SearchToken] = []
     private let container: View = View()
     private let input:NSTextView = SearchTextField()
@@ -218,13 +218,14 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         
         input.frame = NSMakeRect(point.x, point.y + 3, mainw - point.x - between.x, 16)
         placeholder.change(pos: NSMakePoint(point.x + 6, point.y + 3), animated: animated)
+        placeholder.change(opacity: tokens.isEmpty ? 1.0 : 0.0, animated: animated)
         let contentHeight = max(point.y + between.y + (extraLine ? 22 : 0), 30)
         container.change(size: NSMakeSize(container.frame.width, contentHeight), animated: animated)
         
         let height = min(contentHeight, 108)
         if height != frame.height {
             
-            change(size: NSMakeSize(mainw, height), animated: animated)
+            _change(size: NSMakeSize(mainw, height), animated: animated)
             delegate?.tokenizedViewDidChangedHeight(self, height: height, animated: animated)
         }
         CATransaction.commit()
@@ -279,7 +280,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     open func textDidChange(_ notification: Notification) {
         
-        let pHidden = input.string != nil && !input.string.isEmpty
+        let pHidden = !input.string.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }

@@ -143,11 +143,11 @@ open class TitledBarView: BarView {
         containerView.setFrameSize(newSize)
         containerView.setNeedsDisplay()
     }
-    public init(_ text:NSAttributedString?, _ status:NSAttributedString? = nil, textInset:CGFloat? = nil) {
+    public init(controller: ViewController, _ text:NSAttributedString? = nil, _ status:NSAttributedString? = nil, textInset:CGFloat? = nil) {
         self.text = text
         self.status = status
         self.textInset = textInset
-        super.init()
+        super.init(controller: controller)
         addSubview(containerView)
         _containerView.text = text
         _containerView.status = status
@@ -163,11 +163,7 @@ open class TitledBarView: BarView {
         bp += 1
     }
     
-    public override init() {
-        super.init()
-        addSubview(containerView)
-    }
-    
+
     required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }

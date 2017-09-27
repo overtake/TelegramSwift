@@ -20,7 +20,7 @@ open class TextButtonBarView: BarView {
     
     public var alignment:TextBarAligment = .Center
     
-    public init(text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center) {
+    public init(controller: ViewController, text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center) {
     
         
         button = TitleButton(frame:NSZeroRect)
@@ -28,7 +28,7 @@ open class TextButtonBarView: BarView {
         button.set(text: text, for: .Normal)
         button.disableActions()
         
-        super.init()
+        super.init(controller: controller)
         
         self.alignment = alignment
         

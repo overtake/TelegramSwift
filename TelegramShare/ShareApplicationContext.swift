@@ -41,7 +41,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                     }
                     switch access {
                     case .none:
-                        promise.set(.single())
+                        promise.set(.single(Void()))
                         return auth
                     default:
                         return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings, PreferencesKeys.localizationSettings]) |> take(1) |> deliverOnMainQueue |> map { value in

@@ -9,9 +9,23 @@
 import Cocoa
 
 
+public class ContextSeparatorItem : ContextMenuItem {
+    public init() {
+        super.init("", handler: {}, image: nil)
+    }
+    
+    public override var isSeparatorItem: Bool {
+        return true
+    }
+    
+    required public init(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 public class ContextMenuItem : NSMenuItem {
     
-    var handler:()->Void = {() in}
+    fileprivate var handler:()->Void = {() in}
     
     public init(_ title:String, handler:@escaping()->Void, image:NSImage? = nil) {
         self.handler = handler

@@ -21,9 +21,9 @@ class NavigationBarView: View {
     
     private var bottomBorder:View = View()
     
-    private var leftView:BarView = BarView()
-    private var centerView:BarView = BarView()
-    private var rightView:BarView = BarView()
+    private var leftView:View = View()
+    private var centerView:View = View()
+    private var rightView:View = View()
     
     override init() {
         super.init()
@@ -69,7 +69,7 @@ class NavigationBarView: View {
     }
     
     
-    func layout(left:BarView, center:BarView, right:BarView) -> Void {
+    func layout(left: View, center: View, right: View) -> Void {
         if frame.height > 0 {
             left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - .borderSize);
             center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - .borderSize);

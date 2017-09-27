@@ -235,17 +235,18 @@ public class TGClipView: NSClipView,CALayerDelegate {
         return success
     }
     
-    let maxScrollHeight:CGFloat = 1500.0
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
+        
+        
         self.shouldAnimateOriginChange = animated
         self.scrollCompletion = completion
-        if animated && abs(bounds.minY - point.y) > maxScrollHeight {
+        if animated && abs(bounds.minY - point.y) > frame.height {
             let y:CGFloat
             if bounds.minY < point.y {
-                y = point.y - maxScrollHeight
+                y = point.y - frame.height
             } else {
-                y = point.y + maxScrollHeight
+                y = point.y + frame.height
             }
             super.scroll(to: NSMakePoint(point.x,y))
         }
@@ -262,6 +263,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.destinationOrigin = newOrigin;
             self.beginScroll()
         } else {
+            self.destinationOrigin = newOrigin;
             self.endScroll()
             super.scroll(to: newOrigin)
             Queue.mainQueue().justDispatch {

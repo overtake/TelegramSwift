@@ -70,7 +70,7 @@ open class NavigationHeader {
             let height = self.height
             view.frame = NSMakeRect(0, 0, navigation.containerView.frame.width, height)
 
-            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak self, weak view] (ready) in
+            disposable.set((view.ready.get() |> filter {$0} |> take(1)).start(next: { [weak navigation, weak self, weak view] (ready) in
                 if let navigation = navigation, let view = view {
                     let contentInset = navigation.controller.bar.height + height
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
