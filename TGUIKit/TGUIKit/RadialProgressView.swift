@@ -331,7 +331,7 @@ public class RadialProgressView: Control {
     override public var frame: CGRect {
         get {
             return super.frame
-        } set(value) {
+        } set (value) {
             let redraw = value.size != self.frame.size
             super.frame = value
             

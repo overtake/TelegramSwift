@@ -19,13 +19,13 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
             if let c = cimage {
                 
                 if cornerRadius == -1 {
-                    var startAngle: Float = Float(2 * M_PI)
+                    var startAngle: Float = Float(2 * Double.pi)
                     var endAngle: Float = 0.0
                     let radius:Float = Float(size.width/2.0)
                     let center = NSMakePoint(size.width/2.0, size.height/2.0)
                     
-                    startAngle = startAngle - Float(M_PI_2)
-                    endAngle = endAngle - Float(M_PI_2)
+                    startAngle = startAngle - Float(Double.pi / 2)
+                    endAngle = endAngle - Float(Double.pi / 2)
                     ctx.addArc(center: center, radius: CGFloat(radius), startAngle: CGFloat(startAngle), endAngle: CGFloat(endAngle), clockwise: false)
                 } else if cornerRadius > 0 {
                     

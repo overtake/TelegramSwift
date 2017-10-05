@@ -511,8 +511,10 @@ open class ModalViewController : ViewController {
         return true
     }
     
+    
+    
     open var background:NSColor {
-        return presentation.colors.blackTransparent
+        return NSColor(0x000000, 0.27)
     }
     
     
@@ -551,6 +553,10 @@ open class ModalViewController : ViewController {
     }
     
     open var handleEvents:Bool {
+        return true
+    }
+    
+    open var handleAllEvents: Bool {
         return true
     }
     

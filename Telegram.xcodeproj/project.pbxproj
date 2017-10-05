@@ -57,6 +57,9 @@
 		C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1E71D8AC90B0042F0C8 /* ChatUnreadRowView.swift */; };
 		C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1F51D8C09130042F0C8 /* ChatMessageItem.swift */; };
 		C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1FB1D8D35FA0042F0C8 /* ChatMediaItem.swift */; };
+		C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */; };
+		C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */ = {isa = PBXBuildFile; fileRef = C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */; };
+		C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */ = {isa = PBXBuildFile; fileRef = C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */; };
 		C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */; };
 		C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */; };
 		C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */; };
@@ -70,12 +73,16 @@
 		C221ED5A1EA6896400471C65 /* VoiceCallSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221ED591EA6896400471C65 /* VoiceCallSettings.swift */; };
 		C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221ED5B1EA69AA300471C65 /* StorageUsageController.swift */; };
 		C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */; };
+		C22338451F823F8C004AD57C /* VideoCameraStructures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22338441F823F8C004AD57C /* VideoCameraStructures.swift */; };
 		C224A72D1EB75A3100F43F3F /* ExMajorNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C224A72C1EB75A3100F43F3F /* ExMajorNavigationController.swift */; };
 		C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C22E06251D7F16C000A11C88 /* TGUIKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C225524B1F7BE7000007944D /* VideoRecorderModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225524A1F7BE7000007944D /* VideoRecorderModalController.swift */; };
+		C225524D1F7BE8E40007944D /* VideoRecorderModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225524C1F7BE8E40007944D /* VideoRecorderModalView.swift */; };
+		C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225524E1F7C03B50007944D /* VideoRecorderPipeline.swift */; };
 		C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */; };
 		C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */; };
 		C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674201DBCECCC000BA9ED /* EStickerGridItem.swift */; };
@@ -179,6 +186,7 @@
 		C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234A7FF1ED73A3300EBBECE /* LanguageRowItem.swift */; };
 		C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C234CA901D97E117003023F7 /* PostboxMac.framework */; };
 		C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C234D4111EEDE6990017DC25 /* LoadingTableItem.swift */; };
+		C236ADDE1F7D318700E8C71A /* TGVideoCameraMovieRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = C236ADDC1F7D318600E8C71A /* TGVideoCameraMovieRecorder.m */; };
 		C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */; };
 		C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */; };
 		C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */; };
@@ -260,6 +268,7 @@
 		C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */; };
 		C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */; };
 		C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */; };
+		C2593FBF1F7D242E00F6D2B1 /* TGPaintShader.m in Sources */ = {isa = PBXBuildFile; fileRef = C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */; };
 		C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */; };
 		C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C259ED1D1DB956C1008E6712 /* QuartzCore.framework */; };
 		C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */; };
@@ -380,6 +389,9 @@
 		C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */; };
 		C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */; };
 		C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */; };
+		C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = C2A8E1461F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m */; };
+		C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C030CC1DD5097400617711 /* CoreMedia.framework */; };
+		C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */; };
 		C2AC9C151E1E627F0085C7DE /* TabBadgeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */; };
 		C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */; };
 		C2AF01131F01543200D8AC1D /* ExportProxyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */; };
@@ -616,6 +628,9 @@
 		C219E1E71D8AC90B0042F0C8 /* ChatUnreadRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUnreadRowView.swift; sourceTree = "<group>"; };
 		C219E1F51D8C09130042F0C8 /* ChatMessageItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageItem.swift; sourceTree = "<group>"; };
 		C219E1FB1D8D35FA0042F0C8 /* ChatMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMediaItem.swift; sourceTree = "<group>"; };
+		C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = VideoMessage.fsh; sourceTree = "<group>"; };
+		C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = VideoMessage.vsh; sourceTree = "<group>"; };
 		C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTitleBarView.swift; sourceTree = "<group>"; };
 		C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AvatarLayer.swift; sourceTree = "<group>"; };
 		C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SuggestionLocalizationViewController.swift; sourceTree = "<group>"; };
@@ -631,7 +646,11 @@
 		C221ED591EA6896400471C65 /* VoiceCallSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceCallSettings.swift; sourceTree = "<group>"; };
 		C221ED5B1EA69AA300471C65 /* StorageUsageController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StorageUsageController.swift; sourceTree = "<group>"; };
 		C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatStorageManagmentModalController.swift; sourceTree = "<group>"; };
+		C22338441F823F8C004AD57C /* VideoCameraStructures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCameraStructures.swift; sourceTree = "<group>"; };
 		C224A72C1EB75A3100F43F3F /* ExMajorNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExMajorNavigationController.swift; sourceTree = "<group>"; };
+		C225524A1F7BE7000007944D /* VideoRecorderModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderModalController.swift; sourceTree = "<group>"; };
+		C225524C1F7BE8E40007944D /* VideoRecorderModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderModalView.swift; sourceTree = "<group>"; };
+		C225524E1F7C03B50007944D /* VideoRecorderPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderPipeline.swift; sourceTree = "<group>"; };
 		C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHistoryViewForLocation.swift; sourceTree = "<group>"; };
 		C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerGridEntries.swift; sourceTree = "<group>"; };
 		C22674201DBCECCC000BA9ED /* EStickerGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerGridItem.swift; sourceTree = "<group>"; };
@@ -728,6 +747,8 @@
 		C234A7FF1ED73A3300EBBECE /* LanguageRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LanguageRowItem.swift; sourceTree = "<group>"; };
 		C234CA901D97E117003023F7 /* PostboxMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PostboxMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C234D4111EEDE6990017DC25 /* LoadingTableItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingTableItem.swift; sourceTree = "<group>"; };
+		C236ADDC1F7D318600E8C71A /* TGVideoCameraMovieRecorder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGVideoCameraMovieRecorder.m; sourceTree = "<group>"; };
+		C236ADDD1F7D318700E8C71A /* TGVideoCameraMovieRecorder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TGVideoCameraMovieRecorder.h; sourceTree = "<group>"; };
 		C2379D291DDCCBF10063AD30 /* ReplyMarkupNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyMarkupNode.swift; sourceTree = "<group>"; };
 		C239BE941E61F15600C2C453 /* LoginOthersAccountModal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginOthersAccountModal.swift; sourceTree = "<group>"; };
 		C23B3AEA1E338ADC009C162C /* ContextMediaRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextMediaRowItem.swift; sourceTree = "<group>"; };
@@ -837,6 +858,8 @@
 		C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextListRowItem.swift; sourceTree = "<group>"; };
 		C25692971EDD85FB009EE421 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputRecordingView.swift; sourceTree = "<group>"; };
+		C2593FBD1F7D241E00F6D2B1 /* TGPaintShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TGPaintShader.h; sourceTree = "<group>"; };
+		C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGPaintShader.m; sourceTree = "<group>"; };
 		C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatNavigateScroller.swift; sourceTree = "<group>"; };
 		C259ED1D1DB956C1008E6712 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstalledStickerPacksController.swift; sourceTree = "<group>"; };
@@ -952,6 +975,9 @@
 		C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHeaderController.swift; sourceTree = "<group>"; };
 		C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginErrorStateView.swift; sourceTree = "<group>"; };
 		C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewWindow.swift; sourceTree = "<group>"; };
+		C2A8E1461F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGVideoCameraGLRenderer.m; sourceTree = "<group>"; };
+		C2A8E1471F7D2612000FD5E3 /* TGVideoCameraGLRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TGVideoCameraGLRenderer.h; sourceTree = "<group>"; };
+		C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBadgeItem.swift; sourceTree = "<group>"; };
 		C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalBadgeNode.swift; sourceTree = "<group>"; };
 		C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExportProxyModalController.swift; sourceTree = "<group>"; };
@@ -1121,6 +1147,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
+				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
+				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C276AFC91F74F2D200DEDD8E /* Sparkle.framework in Frameworks */,
 				C276AFCA1F74F2D200DEDD8E /* HockeySDK.framework in Frameworks */,
 				C209C3881F262D48009231FE /* libstdc++.tbd in Frameworks */,
@@ -1304,6 +1333,17 @@
 			name = "data-and-storage";
 			sourceTree = "<group>";
 		};
+		C22552491F7BE6BB0007944D /* video-record */ = {
+			isa = PBXGroup;
+			children = (
+				C225524A1F7BE7000007944D /* VideoRecorderModalController.swift */,
+				C225524C1F7BE8E40007944D /* VideoRecorderModalView.swift */,
+				C225524E1F7C03B50007944D /* VideoRecorderPipeline.swift */,
+				C22338441F823F8C004AD57C /* VideoCameraStructures.swift */,
+			);
+			name = "video-record";
+			sourceTree = "<group>";
+		};
 		C22674361DC0E270000BA9ED /* table */ = {
 			isa = PBXGroup;
 			children = (
@@ -1477,6 +1517,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				C22552491F7BE6BB0007944D /* video-record */,
 				C235A47A1EFBDC6400D463FD /* appearance */,
 				C205DB991EE800E9003711DF /* ui-controls */,
 				C2BB12081ED87C3800BDE46A /* parent-controllers */,
@@ -1841,6 +1882,7 @@
 		C24DAB971E082FDF005EE404 /* objc */ = {
 			isa = PBXGroup;
 			children = (
+				C2A8E1451F7D2602000FD5E3 /* opengl */,
 				C29F4C741F45F58B00DBFC00 /* MIHSliderView.h */,
 				C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */,
 				C21B24661EDB116B00FC6CDA /* NumberPluralizationForm.h */,
@@ -1930,6 +1972,8 @@
 				C250B0361DB7BB09004E9FBE /* mime-types.txt */,
 				C21074251E77F79A006EE5EF /* Beta.xcconfig */,
 				C21074261E77F7A3006EE5EF /* Release.xcconfig */,
+				C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */,
+				C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */,
 			);
 			name = resources;
 			sourceTree = "<group>";
@@ -2269,6 +2313,19 @@
 				C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */,
 			);
 			name = views;
+			sourceTree = "<group>";
+		};
+		C2A8E1451F7D2602000FD5E3 /* opengl */ = {
+			isa = PBXGroup;
+			children = (
+				C236ADDD1F7D318700E8C71A /* TGVideoCameraMovieRecorder.h */,
+				C236ADDC1F7D318600E8C71A /* TGVideoCameraMovieRecorder.m */,
+				C2A8E1471F7D2612000FD5E3 /* TGVideoCameraGLRenderer.h */,
+				C2A8E1461F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m */,
+				C2593FBD1F7D241E00F6D2B1 /* TGPaintShader.h */,
+				C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */,
+			);
+			path = opengl;
 			sourceTree = "<group>";
 		};
 		C2AC9C161E1E68490085C7DE /* controls */ = {
@@ -2753,6 +2810,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */,
+				C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */,
 				C2D70AF11F2BFB3700AE768E /* Telegram.xcodeproj */,
 				C209C37C1F2628D7009231FE /* libc++.tbd */,
 				C209C37D1F2628D7009231FE /* libc++abi.tbd */,
@@ -2929,9 +2988,11 @@
 				C2CFCABE1EBB4A4D00843F6A /* voip_connecting.mp3 in Resources */,
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
+				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
 				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
+				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2994,11 +3055,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2593FBF1F7D242E00F6D2B1 /* TGPaintShader.m in Sources */,
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
 				C2DF47CB1DE79719003AA6C0 /* TGDataItem.m in Sources */,
 				C2538E521E770B4600B21DF0 /* GroupAdminsController.swift in Sources */,
+				C22338451F823F8C004AD57C /* VideoCameraStructures.swift in Sources */,
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C24FD4101F20FBFB00A97196 /* RecentUsedEmoji.swift in Sources */,
@@ -3090,6 +3153,7 @@
 				C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
+				C225524D1F7BE8E40007944D /* VideoRecorderModalView.swift in Sources */,
 				C2D1839D1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift in Sources */,
 				C2D2CAED1E64579700939968 /* StickersPackPreviewModalController.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
@@ -3097,6 +3161,7 @@
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
 				C234A7FB1ED7112400EBBECE /* LocalizableExtension.swift in Sources */,
+				C225524B1F7BE7000007944D /* VideoRecorderModalController.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
 				C2B648901EB25B1700BA574B /* MediaResources.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
@@ -3154,6 +3219,7 @@
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
+				C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */,
 				C2B648891EB0C48600BA574B /* PIPVideoWindow.swift in Sources */,
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
@@ -3254,6 +3320,7 @@
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
+				C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */,
@@ -3368,6 +3435,7 @@
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
 				C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */,
+				C236ADDE1F7D318700E8C71A /* TGVideoCameraMovieRecorder.m in Sources */,
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,

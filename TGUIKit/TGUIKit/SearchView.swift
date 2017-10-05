@@ -210,7 +210,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         if let searchInteractions = searchInteractions {
             searchInteractions.textModified(SearchState(state: state, request: input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
         }
-        let pHidden = input.string != nil && !input.string.isEmpty
+        let pHidden = !input.string.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
@@ -409,7 +409,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     public var query:String {
-        return self.input.string ?? ""
+        return self.input.string
     }
     
     public override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion: ((Bool) -> Void)? = nil) {

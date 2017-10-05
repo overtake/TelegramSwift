@@ -275,7 +275,6 @@ public class Window: NSWindow {
             mouseHandlers[type] = handlers
         }
         mouseHandlers[type]?.append(MouseObserver(mouseHandler, object, priority, type))
-        
     }
     
     public func remove(object:NSObject, for type:NSEvent.EventType) {
