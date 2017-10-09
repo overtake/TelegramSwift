@@ -8,7 +8,7 @@
 
 import Cocoa
 
-fileprivate let kITSpinAnimationKey: String = "spinAnimation"
+/*fileprivate let kITSpinAnimationKey: String = "spinAnimation"
 fileprivate let kITProgressPropertyKey: String = "progress"
 
 
@@ -253,49 +253,104 @@ public class ProgressIndicator: View {
         fatalError("init(coder:) has not been implemented")
     }
     
+}*/
+
+
+private class ProgressLayer : CALayer {
+    
+    fileprivate func update(_ hasAnimation: Bool) {
+        if hasAnimation {
+            var fromValue: Float = 0
+            
+            if let layer = presentation(), let from = layer.value(forKeyPath: "transform.rotation.z") as? Float {
+                fromValue = from
+            }
+            let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
+            basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+            basicAnimation.duration = 0.8
+            basicAnimation.fromValue = fromValue
+            basicAnimation.toValue = Double.pi * 2.0
+            basicAnimation.repeatCount = Float.infinity
+            basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+            add(basicAnimation, forKey: "progressRotation")
+        } else {
+            removeAllAnimations()
+        }
+    }
+    
+    
+    override func draw(in ctx: CGContext) {
+
+        ctx.setStrokeColor(PresentationTheme.current.colors.indicatorColor.cgColor)
+        
+        let startAngle = 2.0 * (CGFloat.pi) * 0.8 - CGFloat.pi / 2
+        let endAngle = -(CGFloat.pi / 2)
+        
+        let lineWidth: CGFloat = 2.0
+        let diameter = floorToScreenPixels(frame.height)
+        
+        let pathDiameter = diameter - lineWidth - lineWidth * 2
+        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+        
+        ctx.setLineWidth(lineWidth);
+        ctx.setLineCap(.round);
+        ctx.strokePath()
+    }
 }
 
+public class ProgressIndicator : View {
+    private let indicator: ProgressLayer = ProgressLayer()
+    public required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        indicator.frame = bounds
+        layer?.addSublayer(indicator)
+        indicator.isOpaque = false
+        indicator.contentsScale = System.backingScale
+    }
+    
+    public override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        indicator.frame = bounds
+        indicator.setNeedsDisplay()
+    }
+    
+    public override init() {
+        super.init(frame: NSMakeRect(0, 0, 20, 20))
+        indicator.frame = bounds
+        layer?.addSublayer(indicator)
+        indicator.isOpaque = false
+        indicator.contentsScale = System.backingScale
+    }
 
-//public class ProgressIndicator1 : View {
-//    public required init(frame frameRect: NSRect) {
-//        super.init(frame: frameRect)
-//    }
-//
-//    public override func viewDidMoveToSuperview() {
-//        updateWantsAnimation()
-//    }
-//
-//    public override func viewDidHide() {
-//        updateWantsAnimation()
-//    }
-//
-//    public override func viewDidUnhide() {
-//        updateWantsAnimation()
-//    }
-//
-//    private func updateWantsAnimation() {
-//
-//    }
-//
-//    override public func draw(_ layer: CALayer, in ctx: CGContext) {
-//        super.draw(layer, in: ctx)
-//
-//        ctx.setStrokeColor(parameters.theme.foregroundColor.cgColor)
-//
-//        let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2
-//        let endAngle = -(CGFloat.pi / 2)
-//
-//        let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
-//        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-//
-//        ctx.setLineWidth(parameters.theme.lineWidth);
-//        ctx.setLineCap(.round);
-//        ctx.strokePath()
-//
-//    }
-//
-//    required public init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//}
+    public override func viewDidMoveToSuperview() {
+        updateWantsAnimation()
+    }
+    
+    public override func viewDidMoveToWindow() {
+        updateWantsAnimation()
+    }
+
+    public override func viewDidHide() {
+        updateWantsAnimation()
+    }
+
+    public override func viewDidUnhide() {
+        updateWantsAnimation()
+    }
+
+    private func updateWantsAnimation() {
+        indicator.update(!isHidden && superview != nil && window != nil)
+        indicator.setNeedsDisplay()
+    }
+    
+
+    override public func draw(_ layer: CALayer, in ctx: CGContext) {
+        //super.draw(layer, in: ctx)
+
+    }
+
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 

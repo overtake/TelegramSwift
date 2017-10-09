@@ -124,10 +124,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         self.layer?.cornerRadius = .cornerRadius
 
         progressIndicator.isHidden = true
-        progressIndicator.numberOfLines = 8
-        progressIndicator.innerMargin = 3;
-        progressIndicator.widthOfLine = 3;
-        progressIndicator.lengthOfLine = 6;
+//        progressIndicator.numberOfLines = 8
+//        progressIndicator.innerMargin = 3;
+//        progressIndicator.widthOfLine = 3;
+//        progressIndicator.lengthOfLine = 6;
        // input.isBordered = false
        // input.isBezeled = false
         input.focusRingType = .none
