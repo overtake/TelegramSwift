@@ -826,14 +826,14 @@ public extension ProgressIndicator {
 public extension String {
     public func prefix(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
-            return self.substring(to: index)
+            return String(self[..<index])
         }
         return String(stringLiteral: self)
     }
     
     public func fromSuffix(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
-            return self.substring(from: index)
+            return String(self[index..<self.endIndex])
         }
         return String(stringLiteral: self)
     }

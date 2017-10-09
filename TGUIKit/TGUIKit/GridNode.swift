@@ -782,6 +782,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         if !documentOffset.equalTo(presentationLayoutTransition.layout.contentOffset) || self.bounds.size != presentationLayoutTransition.layout.layout.size {
             //self.scrollView.contentOffset = presentationLayoutTransition.layout.contentOffset
             self.contentView.bounds = CGRect(origin: presentationLayoutTransition.layout.contentOffset, size: self.contentView.bounds.size)
+            reflectScrolledClipView(contentView)
         }
         applyingContentOffset = false
         

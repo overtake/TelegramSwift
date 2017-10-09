@@ -62,6 +62,7 @@ open class Control: View {
     
     private var backgroundState:[ControlState:NSColor] = [:]
     private var mouseMovedInside: Bool = true
+    private var longInvoked: Bool = false
     open override var backgroundColor: NSColor {
         get{
             return self.style.backgroundColor
@@ -220,7 +221,7 @@ open class Control: View {
     
     override open func mouseDown(with event: NSEvent) {
         mouseIsDown = true
-        
+        longInvoked = false
         longOverHandleDisposable.set(nil)
         
         if event.modifierFlags.contains(.control) {
@@ -232,8 +233,9 @@ open class Control: View {
             send(event: .Down)
             updateState()
             
-            let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.6, queue: Queue.mainQueue())).start(next: { [weak self] in
+            let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
                 if let inside = self?.mouseInside(), inside {
+                    self?.longInvoked = true
                     self?.send(event: .LongMouseDown)
                 }
             })
@@ -255,7 +257,7 @@ open class Control: View {
             if isEnabled {
                 send(event: .Up)
                 
-                if mouseInside() {
+                if mouseInside() && !longInvoked {
                     if event.clickCount == 1  {
                         send(event: .SingleClick)
                     }

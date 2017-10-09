@@ -255,9 +255,12 @@ public class Modal: NSObject {
                 return controller?.firstResponder()
                 }, with: self, priority: .modal)
             
-            window.set(handler: { () -> KeyHandlerResult in
-                return .invokeNext
-            }, with: self, for: .All, priority: .modal)
+            if controller.handleAllEvents {
+                window.set(handler: { () -> KeyHandlerResult in
+                    return .invokeNext
+                }, with: self, for: .All, priority: .modal)
+            }
+           
             
             window.set(escape: {[weak self] () -> KeyHandlerResult in
                 if self?.controller?.escapeKeyAction() == .rejected {
@@ -355,7 +358,7 @@ public class Modal: NSObject {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.container.center()
-                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : NSColor(0x000000, 0.27)
+                    strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
                         if !controller.isFullScreen {
                             strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
@@ -376,7 +379,9 @@ public class Modal: NSObject {
                     }
     
                     view.addSubview(strongSelf.background)
-                    strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                    if let value = strongSelf.controller?.becomeFirstResponder(), value {
+                        strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                    }
                     
                     if strongSelf.animated {
                         strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
@@ -394,6 +399,14 @@ public class Modal: NSObject {
 }
 
 public func hasModals() -> Bool {
+    
+    for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
+        if activeModals[i].value == nil {
+            activeModals.remove(at: i)
+            break
+        }
+    }
+    
     return !activeModals.isEmpty
 }
 

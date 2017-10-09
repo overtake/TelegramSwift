@@ -172,7 +172,7 @@ public extension CALayer {
             animation.delegate = CALayerAnimationDelegate(completion: completion)
         }
         
-        var speed: Float = 1.0
+        let speed: Float = 1.0
         
         
         animation.speed = speed * Float(animation.duration / duration)
@@ -190,23 +190,24 @@ public extension CALayer {
     
     public func animateScaleCenter(from: CGFloat, to: CGFloat, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
         let animation = CABasicAnimation(keyPath: "transform")
-        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+
         var fr = CATransform3DIdentity
         fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
         fr = CATransform3DScale(fr, from, from, 1)
         fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
         animation.isRemovedOnCompletion = removeOnCompletion
         animation.fillMode = kCAFillModeForwards
         if let completion = completion {
             animation.delegate = CALayerAnimationDelegate(completion: completion)
         }
         
-        var speed: Float = 1.0
         
         
-        animation.speed = speed * Float(animation.duration / duration)
+        animation.duration = duration
         animation.isAdditive = additive
         
         var tr = CATransform3DIdentity
@@ -237,7 +238,7 @@ public extension CALayer {
             animation.delegate = CALayerAnimationDelegate(completion: completion)
         }
         
-        var speed: Float = 1.0
+        let speed: Float = 1.0
         
         
         animation.speed = speed * Float(animation.duration / duration)

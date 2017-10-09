@@ -163,14 +163,14 @@ public class DrawingContext {
             let srcLine = self.bytes.advanced(by: y * self.bytesPerRow).assumingMemoryBound(to: UInt32.self)
             let pixel = srcLine + x
             let colorValue = pixel.pointee
-            return NSColor.clear  //NSColor(UInt32(colorValue))
+            return NSColor(UInt32(colorValue))
         } else {
             return NSColor.clear
         }
     }
     
     public func blt(_ other: DrawingContext, at: CGPoint, mode: DrawingContextBltMode = .Alpha) {
-        if abs(other.scale - self.scale) < CGFloat(FLT_EPSILON) {
+        if abs(other.scale - self.scale) < CGFloat.ulpOfOne {
             let srcX = 0
             var srcY = 0
             let dstX = Int(at.x * self.scale)
@@ -248,7 +248,7 @@ public func readCGFloat(_ index: inout UnsafePointer<UInt8>, end: UnsafePointer<
         throw ParsingError.Generic
     }
     
-    if let value = NSString(bytes: UnsafePointer<Void>(begin), length: index - begin, encoding: String.Encoding.utf8.rawValue)?.floatValue {
+    if let value = NSString(bytes: UnsafeRawPointer(begin), length: index - begin, encoding: String.Encoding.utf8.rawValue)?.floatValue {
         return CGFloat(value)
     } else {
         throw ParsingError.Generic
