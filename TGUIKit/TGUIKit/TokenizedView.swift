@@ -108,8 +108,13 @@ public protocol TokenizedProtocol {
 public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDelegate {
     private var tokens:[SearchToken] = []
     private let container: View = View()
-    private let input:NSTextView = SearchTextField()
-    
+    private let input:SearchTextField = SearchTextField()
+    private(set) public var state: SearchFieldState = .None {
+        didSet {
+            stateValue.set(state)
+        }
+    }
+    public let stateValue: ValuePromise<SearchFieldState> = ValuePromise(.None, ignoreRepeated: true)
     private var selectedIndex: Int? = nil {
         didSet {
             for view in container.subviews {
@@ -291,11 +296,11 @@ public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDele
     
     
     public func textDidEndEditing(_ notification: Notification) {
-   
+        didResignResponder()
     }
     
     public func textDidBeginEditing(_ notification: Notification) {
-  
+        didBecomeResponder()
     }
 
     public override var needsLayout: Bool {
@@ -337,6 +342,9 @@ public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDele
         input.isVerticallyResizable = false
         
         
+        placeholder.set(handler: { [weak self] _ in
+            self?.window?.makeFirstResponder(self?.responder)
+        }, for: .Click)
 
         input.font = .normal(.text)
         container.addSubview(input)
@@ -348,6 +356,16 @@ public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDele
         updateLocalizationAndTheme()
     }
     
+
+    
+    open func didResignResponder() {
+        state = .None
+    }
+    
+    open func didBecomeResponder() {
+        state = .Focus
+        
+    }
     
     override public func becomeFirstResponder() -> Bool {
         window?.makeFirstResponder(input)
@@ -368,7 +386,6 @@ public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDele
         placeholderLayout.measure(width: .greatestFiniteMagnitude)
         placeholder.update(placeholderLayout)
         placeholder.backgroundColor = presentation.colors.grayBackground
-        placeholder.userInteractionEnabled = false
         placeholder.isSelectable = false
         layoutContainer(animated: false)
     }

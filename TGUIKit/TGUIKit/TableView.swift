@@ -814,7 +814,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         item.table = self;
         
         let animation = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current.duration = animation != .none ? NSAnimationContext.current.duration : 0.0
+        NSAnimationContext.current.duration = animation != .none ? 0.2 : 0.0
         
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
@@ -1279,8 +1279,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let oldEmpty = self.isEmpty
         
         self.beginUpdates()
-        
-        
         
         let visibleItems = self.visibleItems()
         let visibleRange = self.visibleRows()

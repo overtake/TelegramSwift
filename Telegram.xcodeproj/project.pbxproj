@@ -271,6 +271,7 @@
 		C2593FBF1F7D242E00F6D2B1 /* TGPaintShader.m in Sources */ = {isa = PBXBuildFile; fileRef = C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */; };
 		C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */; };
 		C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C259ED1D1DB956C1008E6712 /* QuartzCore.framework */; };
+		C25BB1691F867FEE0089ED02 /* ChatVideoAccessoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25BB1681F867FEE0089ED02 /* ChatVideoAccessoryView.swift */; };
 		C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */; };
 		C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C132E1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift */; };
 		C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25C13301E8A406D00AE26A1 /* FeaturedStickerPacksController.swift */; };
@@ -862,6 +863,7 @@
 		C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGPaintShader.m; sourceTree = "<group>"; };
 		C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatNavigateScroller.swift; sourceTree = "<group>"; };
 		C259ED1D1DB956C1008E6712 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		C25BB1681F867FEE0089ED02 /* ChatVideoAccessoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatVideoAccessoryView.swift; sourceTree = "<group>"; };
 		C25C132C1E8A404F00AE26A1 /* InstalledStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstalledStickerPacksController.swift; sourceTree = "<group>"; };
 		C25C132E1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArchivedStickerPacksController.swift; sourceTree = "<group>"; };
 		C25C13301E8A406D00AE26A1 /* FeaturedStickerPacksController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeaturedStickerPacksController.swift; sourceTree = "<group>"; };
@@ -2303,6 +2305,7 @@
 				C2A506741DF438B900971A93 /* AudioWaveformView.swift */,
 				C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */,
 				C209C38C1F276D4C009231FE /* ChatSearchView.swift */,
+				C25BB1681F867FEE0089ED02 /* ChatVideoAccessoryView.swift */,
 			);
 			name = elements;
 			sourceTree = "<group>";
@@ -3077,6 +3080,7 @@
 				C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */,
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
+				C25BB1691F867FEE0089ED02 /* ChatVideoAccessoryView.swift in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
 				C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,

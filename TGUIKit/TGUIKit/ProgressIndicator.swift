@@ -254,3 +254,48 @@ public class ProgressIndicator: View {
     }
     
 }
+
+
+//public class ProgressIndicator1 : View {
+//    public required init(frame frameRect: NSRect) {
+//        super.init(frame: frameRect)
+//    }
+//
+//    public override func viewDidMoveToSuperview() {
+//        updateWantsAnimation()
+//    }
+//
+//    public override func viewDidHide() {
+//        updateWantsAnimation()
+//    }
+//
+//    public override func viewDidUnhide() {
+//        updateWantsAnimation()
+//    }
+//
+//    private func updateWantsAnimation() {
+//
+//    }
+//
+//    override public func draw(_ layer: CALayer, in ctx: CGContext) {
+//        super.draw(layer, in: ctx)
+//
+//        ctx.setStrokeColor(parameters.theme.foregroundColor.cgColor)
+//
+//        let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2
+//        let endAngle = -(CGFloat.pi / 2)
+//
+//        let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
+//        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+//
+//        ctx.setLineWidth(parameters.theme.lineWidth);
+//        ctx.setLineCap(.round);
+//        ctx.strokePath()
+//
+//    }
+//
+//    required public init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//}
+

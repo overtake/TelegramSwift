@@ -379,7 +379,9 @@ public class Modal: NSObject {
                     }
     
                     view.addSubview(strongSelf.background)
-                    strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                    if let value = strongSelf.controller?.becomeFirstResponder(), value {
+                        strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                    }
                     
                     if strongSelf.animated {
                         strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in

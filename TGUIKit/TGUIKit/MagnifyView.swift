@@ -27,7 +27,7 @@ public class MagnifyView : NSView {
     let containerView:NSView = NSView()
     public var contentSize:NSSize = NSZeroSize {
         didSet {
-            contentView.setFrameSize(magnifiedSize)
+            contentView.frame = focus(magnifiedSize)
         }
     }
     private var magnifiedSize:NSSize {
