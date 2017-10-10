@@ -3,11 +3,7 @@
 /**
  * Helper class for accessing system information and measuring usage time
  */
-@interface BITSystemProfile : NSObject {
-@private
-  NSDate *_usageStartTimestamp;
-  NSInteger _startCounter;
-}
+@interface BITSystemProfile : NSObject
 
 ///-----------------------------------------------------------------------------
 /// @name Initialization

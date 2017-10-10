@@ -2818,7 +2818,6 @@
 			children = (
 				C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */,
 				C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */,
-				C2D70AF11F2BFB3700AE768E /* Telegram.xcodeproj */,
 				C209C37C1F2628D7009231FE /* libc++.tbd */,
 				C209C37D1F2628D7009231FE /* libc++abi.tbd */,
 				C209C37E1F2628D7009231FE /* libstdc++.6.0.9.tbd */,

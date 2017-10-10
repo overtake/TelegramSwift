@@ -23,9 +23,9 @@
 // Notification message which HockeyManager is listening to, to retry requesting updated from the server
 #define BITHockeyNetworkDidBecomeReachableNotification @"BITHockeyNetworkDidBecomeReachable"
 
-extern NSString *const __attribute__((unused)) kBITDefaultUserID;
-extern NSString *const __attribute__((unused)) kBITDefaultUserName;
-extern NSString *const __attribute__((unused)) kBITDefaultUserEmail;
+extern NSString *const kBITDefaultUserID;
+extern NSString *const kBITDefaultUserName;
+extern NSString *const kBITDefaultUserEmail;
 
 /**
  *  HockeySDK Crash Reporter error domain
@@ -48,7 +48,7 @@ typedef NS_ENUM (NSInteger, BITCrashErrorReason) {
    */
   BITCrashAPIErrorWithStatusCode
 };
-extern NSString *const __attribute__((unused)) kBITCrashErrorDomain;
+extern NSString *const kBITCrashErrorDomain;
 
 
 /**
@@ -80,7 +80,7 @@ typedef NS_ENUM(NSInteger, BITFeedbackErrorReason) {
    */
   BITFeedbackAPIClientCannotCreateConnection
 };
-extern NSString *const __attribute__((unused)) kBITFeedbackErrorDomain;
+extern NSString *const kBITFeedbackErrorDomain;
 
 
 /**

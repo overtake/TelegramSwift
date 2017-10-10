@@ -18,7 +18,7 @@
  By default this is set to the HockeyApp servers and there rarely should be a
  need to modify that.
  */
-@property (nonatomic, strong) NSString *serverURL;
+@property (nonatomic, copy) NSString *serverURL;
 
 
 @end

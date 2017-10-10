@@ -6,15 +6,15 @@
 	<dict>
 		<key>Resources/BITCrashReportUI.nib</key>
 		<data>
-		ixPz2mmKsoXeBLjSoHE8vj38UME=
+		3PMlLH/T9ihjR9hTJmlfhoYlTTo=
 		</data>
 		<key>Resources/BITFeedbackWindowController.nib</key>
 		<data>
-		zE+p4Yn2sd/zFp3wD9N4qiq2PyI=
+		U7138Kz9mVv0MYl0vqFDlXTQ50g=
 		</data>
 		<key>Resources/Info.plist</key>
 		<data>
-		q2ouI5ttlNmZnJinmuswNfWl8og=
+		h0M1SxUeldVGyV1UYD0S4nFfEAY=
 		</data>
 		<key>Resources/de.lproj/HockeySDK.strings</key>
 		<dict>
@@ -95,11 +95,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			HXo9/SI27jhwjRP5yxqtpb1piV4=
+			QJpS1iLzgJyvZ7PlJGQ92NTqraw=
 			</data>
 			<key>hash2</key>
 			<data>
-			X7x8uTZE73tZ/jwS1VSPCI8bsvd1i73vxCbK1ltEOes=
+			rCKw9nYmrVue7lxcIZogn8CRlXfKkSRnnCJXXrLd7Uo=
 			</data>
 		</dict>
 		<key>Headers/BITCrashExceptionApplication.h</key>
@@ -128,11 +128,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			nfn++ehZV7X1BrdCngODy6JHceI=
+			fdD+yyIt4Q9R92+R3VZIov5cWt8=
 			</data>
 			<key>hash2</key>
 			<data>
-			F44pA8Aw3083BvuG0z3CqSZH9GGv1mgy0b1+bCfLhWI=
+			AK1gODWZBPb7wpwt7obZ+1AhAbK+QGh40vp/JOamc3c=
 			</data>
 		</dict>
 		<key>Headers/BITCrashMetaData.h</key>
@@ -172,33 +172,33 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			c++PgapXHbVbFWAeqvIy3Xzames=
+			JSmTX4EAKu9TWU5Pd17ZAOLSjQ4=
 			</data>
 			<key>hash2</key>
 			<data>
-			g+fJt90r8EtkojvFLZKPITsg8bZsauhu+XUQGwYQwR8=
+			htj8SuvYHGyMPTPZjRG9as4KGmXDA6S0EZ29OqKeQP8=
 			</data>
 		</dict>
 		<key>Headers/BITHockeyBaseManager.h</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			sV2YnT85x1SUzSZZPutSLDixfxw=
+			SMWk+44pA/RtGH5FYoL+mVyQ8NE=
 			</data>
 			<key>hash2</key>
 			<data>
-			a0NfOilo4seHE0b/pZ25KwmypWIIXyi5Rv8uMhPh3jc=
+			HcqaPSgqBUHG/+36MBKHfBenEcRr/hzVBqOz+iIzb6A=
 			</data>
 		</dict>
 		<key>Headers/BITHockeyManager.h</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			TWfmczPR37maOXZ5QefUVmyeGVk=
+			NxzbmgJaQ8HOEFEBXT2bBQYTJRY=
 			</data>
 			<key>hash2</key>
 			<data>
-			hI2D4GiPLeUCd72544dwoW6j++oYqPwwJGBEYcsgFyk=
+			RNl/bqMwbM3tUAxNWpw1iNXwJgzo9UitWDMWlhBc9OI=
 			</data>
 		</dict>
 		<key>Headers/BITHockeyManagerDelegate.h</key>
@@ -227,22 +227,22 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			k3nrDdRgX6gu9VwXNAXDoWTupYY=
+			bJtVVlH1ZlPxJ58JIRPwfkQbusI=
 			</data>
 			<key>hash2</key>
 			<data>
-			1zeHnyVD3mLp5XI7P/KhncUA7e9+HekKKTOB0BYOBBA=
+			b24vir8WuGAEZPouNvgqNzjVp6Fszdm2PDAl4jCxmIw=
 			</data>
 		</dict>
 		<key>Headers/HockeySDK.h</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			RmN2WcA8sobCErRDhVLxc1WEL54=
+			ZkiUTj9hi/AcNU2/g6olcr6o0is=
 			</data>
 			<key>hash2</key>
 			<data>
-			O9nRO+V6fI9Z60sB6VwfjRRm7uIBkSDuqyTsHhDknc4=
+			Rp5ynNJGtmgHOXI2yG5JaKEToBNx5/MjvuVAwgT1+2k=
 			</data>
 		</dict>
 		<key>Headers/HockeySDKEnums.h</key>
@@ -293,33 +293,33 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			ixPz2mmKsoXeBLjSoHE8vj38UME=
+			3PMlLH/T9ihjR9hTJmlfhoYlTTo=
 			</data>
 			<key>hash2</key>
 			<data>
-			ulMLSgLJMtm7NY/t8ujRwPmbd4dGN53qgjyCVCeglZk=
+			BnfITmSkCJY49DaG1Z5xoaxFx1y5RvFlJ9kZzzQwJZM=
 			</data>
 		</dict>
 		<key>Resources/BITFeedbackWindowController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			zE+p4Yn2sd/zFp3wD9N4qiq2PyI=
+			U7138Kz9mVv0MYl0vqFDlXTQ50g=
 			</data>
 			<key>hash2</key>
 			<data>
-			Fb2w2SOTtHA7UKogAcQxT9lN0cXPaCeKI3a30I9Q4w4=
+			9b32gwvSUkWnc/wgCrhdawCpBEE1huzAkXqFEkUNrTE=
 			</data>
 		</dict>
 		<key>Resources/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			q2ouI5ttlNmZnJinmuswNfWl8og=
+			h0M1SxUeldVGyV1UYD0S4nFfEAY=
 			</data>
 			<key>hash2</key>
 			<data>
-			t32upIMdIAMxAPG50yw48SCuplqKE0yShs0Dc0Ia1Rg=
+			0x2hvQ5GSR082qIngDqCeYZgbHd/IYWV6tLp3kzrWjw=
 			</data>
 		</dict>
 		<key>Resources/de.lproj/HockeySDK.strings</key>
@@ -445,6 +445,11 @@
 			<key>weight</key>
 			<real>1100</real>
 		</dict>
+		<key>^Resources/Base\.lproj/</key>
+		<dict>
+			<key>weight</key>
+			<real>1010</real>
+		</dict>
 		<key>^version.plist$</key>
 		<true/>
 	</dict>
@@ -503,6 +508,11 @@
 			<true/>
 			<key>weight</key>
 			<real>1100</real>
+		</dict>
+		<key>^Resources/Base\.lproj/</key>
+		<dict>
+			<key>weight</key>
+			<real>1010</real>
 		</dict>
 		<key>^[^/]+$</key>
 		<dict>
