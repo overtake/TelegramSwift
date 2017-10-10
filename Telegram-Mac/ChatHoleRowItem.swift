@@ -13,7 +13,6 @@ import TelegramCoreMac
 
 class ChatHoleRowItem: ChatRowItem {
 
-    public var text:NSAttributedString;
     
 
     override var height: CGFloat {
@@ -25,11 +24,6 @@ class ChatHoleRowItem: ChatRowItem {
     }
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ entry:ChatHistoryEntry) {
-        
-        let titleAttr:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleAttr.append(string: tr(.chatLoadingMessages), color: theme.colors.grayText, font:.medium(.text))
-        text = titleAttr.copy() as! NSAttributedString
-        
         super.init(initialSize, chatInteraction, entry)
     }
     

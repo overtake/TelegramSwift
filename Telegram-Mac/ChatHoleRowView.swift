@@ -10,17 +10,19 @@ import Cocoa
 import TGUIKit
 class ChatHoleRowView: TableRowView {
     
-    private var text:TextNode = TextNode()
-
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-        
-        if let item = self.item as? ChatHoleRowItem {
-            let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(NSWidth(self.frame), NSHeight(self.frame)), nil,false, .left)
-            apply.draw(NSMakeRect(round((NSWidth(self.frame) - layout.size.width)/2.0), round((NSHeight(self.frame) - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
-        }
-        
+    private let progress: ProgressIndicator = ProgressIndicator()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(progress)
     }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        progress.center()
+    }
+    
 }
