@@ -17,7 +17,7 @@
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Telegram.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:peter-iakovlev\/Telegram-Mac.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:overtake\/TelegramSwift.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "49B3A1C3A9D5357B430E343381715378E6D84AE5"
     },

@@ -5,7 +5,6 @@
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "7EC1C8EA9643E5D9E5CFB7785E6B7386F88D4D5C" : 9223372036854775807,
-    "02F000CBBA65A9B2845BD9AC541781DC5D685DCA" : 9223372036854775807,
     "855C36C7CE8ED0C7A22D79CB99B54C2F8325DA6D" : 9223372036854775807,
     "E860E73EA92362394DE531098D73ED96B22811B3" : 9223372036854775807,
     "6ABFB2FD24741C175496F6D5113243F3A0174779" : 9223372036854775807,
@@ -15,7 +14,6 @@
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "C6796411-CE74-47B3-B08A-EECD96B12483",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "7EC1C8EA9643E5D9E5CFB7785E6B7386F88D4D5C" : "Telegram-Mac\/submodules\/MtProtoKit\/",
-    "02F000CBBA65A9B2845BD9AC541781DC5D685DCA" : "Telegram-iOS\/",
     "855C36C7CE8ED0C7A22D79CB99B54C2F8325DA6D" : "Telegram-Mac\/submodules\/TelegramCore\/",
     "E860E73EA92362394DE531098D73ED96B22811B3" : "Telegram-Mac\/submodules\/Signals\/",
     "6ABFB2FD24741C175496F6D5113243F3A0174779" : "Telegram-Mac\/submodules\/libtgvoip\/",
@@ -27,12 +25,7 @@
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Telegram-Mac.xcworkspace",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:peter-iakovlev\/Telegram-iOS.git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "02F000CBBA65A9B2845BD9AC541781DC5D685DCA"
-    },
-    {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:peter-iakovlev\/Telegram-Mac.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:overtake\/TelegramSwift.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "49B3A1C3A9D5357B430E343381715378E6D84AE5"
     },
