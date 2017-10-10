@@ -140,7 +140,7 @@ class MGalleryItem: NSObject {
         
         let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] image, view  in
             view.layer?.contents = image
-            view.layer?.backgroundColor = NSColor.white.cgColor
+            view.layer?.backgroundColor = theme.colors.background.cgColor
 
             if first, let slf = self, let magnify = view.superview?.superview as? MagnifyView {
                 self?.modifiedSize = image?.size

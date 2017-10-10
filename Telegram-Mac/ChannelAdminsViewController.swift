@@ -537,7 +537,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         }, addAdmin: {
             let behavior = SelectChannelMembersBehavior(peerId: peerId, limit: 1)
             
-            _ = (selectModalPeers(account: account, title: tr(.channelSelectPeersHeader), limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(account: account, title: "", limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let peerId = peerIds.first, let peerView = viewValue.modify({$0}), let channel = peerViewMainPeer(peerView) as? TelegramChannel {
                     if let participant = behavior.participants[peerId] {
                         switch participant.participant {

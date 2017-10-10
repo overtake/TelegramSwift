@@ -345,7 +345,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let item = identifiers[identifier]!
             let view = item.singleView()
             view.wantsLayer = true
-            view.background = NSColor.white
+            view.background = theme.colors.background
             controller.view = MagnifyView(view, contentSize:item.sizeValue)
             cache.setObject(controller, forKey: identifier as AnyObject)
             item.request()
@@ -440,10 +440,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         newView.wantsLayer = true
         newView.layer?.opacity = Float(newAlphaFrom)
         newView.layer?.contents = contents
-        newView.layer?.backgroundColor = NSColor.white.cgColor
+        newView.layer?.backgroundColor = theme.colors.background.cgColor
         
         let copyView = oldView.copy() as! NSView
-        copyView.layer?.backgroundColor = NSColor.white.cgColor
+        copyView.layer?.backgroundColor = theme.colors.background.cgColor
         copyView.frame = oldRect
         copyView.wantsLayer = true
         copyView.layer?.opacity = Float(oldAlphaFrom)
