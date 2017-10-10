@@ -897,9 +897,7 @@ public extension String {
             return ""
         }
         
-        
-        let range = Range<String.Index>(uncheckedBounds: (self.startIndex, self.index(after: self.startIndex)))
-        return String(self[range])
+        return nsstring.substring(to: min(nsstring.length, 2))
     }
     
     public var emojiSkin: String {
@@ -950,25 +948,32 @@ public extension String {
     
     public var emojis: [String] {
         
-        var scalars: [[UnicodeScalar]] = []
-        var currentScalarSet: [UnicodeScalar] = []
-        var previousScalar: UnicodeScalar?
+        var list:[String] = []
+     
+        let string = emojiString.nsstring
         
-        for scalar in emojiScalars {
+        let richText = NSAttributedString(string: string as String)
+        let line = CTLineCreateWithAttributedString(richText)
+        
+        let runlist:[CTRun] = CTLineGetGlyphRuns(line) as! [CTRun]
+
+        for run in runlist {
+            var indices:[CFIndex] = Array<CFIndex>(repeating: 0, count: CTRunGetGlyphCount(run))
+            CTRunGetStringIndices(run, CFRangeMake(0, 0), &indices)
             
-            if let prev = previousScalar, !prev.isZeroWidthJoiner && !scalar.isZeroWidthJoiner {
+            for i in 0 ..< indices.count {
+                let current = indices[i]
                 
-                scalars.append(currentScalarSet)
-                currentScalarSet = []
+                if i < indices.count - 1 {
+                    let next = indices[i + 1]
+                    list.append(string.substring(with: NSMakeRange(current, next - current)))
+                } else {
+                    list.append(string.substring(with: NSMakeRange(current, string.length - current)))
+                }
             }
-            currentScalarSet.append(scalar)
-            
-            previousScalar = scalar
         }
-        
-        scalars.append(currentScalarSet)
-        let result = scalars.map { $0.map{ String($0) } .reduce("", +) }
-        return result
+ 
+        return list
     }
     
     fileprivate var emojiScalars: [UnicodeScalar] {
