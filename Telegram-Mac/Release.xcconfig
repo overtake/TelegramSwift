@@ -1,0 +1,13 @@
+//
+//  Release.xcconfig
+//  Telegram
+//
+//  Created by keepcoder on 14/03/2017.
+//  Copyright © 2017 Telegram. All rights reserved.
+//
+DSA_PEM_FILE = dsa_pub_prod.pem
+
+SIMPLE_SLASH=/
+
+SFEED_URL = https:$(SIMPLE_SLASH)/osx.telegram.org/updates/versions.xml
+

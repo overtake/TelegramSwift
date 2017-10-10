@@ -1,0 +1,350 @@
+//
+//  PeerMediaListController.swift
+//  Telegram-Mac
+//
+//  Created by keepcoder on 27/10/2016.
+//  Copyright © 2016 Telegram. All rights reserved.
+//
+
+import Cocoa
+import TGUIKit
+import TelegramCoreMac
+import PostboxMac
+import SwiftSignalKitMac
+
+enum PeerMediaSharedEntryStableId : Hashable {
+    case messageId(MessageId)
+    case search
+    case emptySearch
+    
+    var hashValue: Int {
+        switch self {
+        case let .messageId(messageId):
+            return messageId.hashValue
+        case .search:
+            return 0
+        case .emptySearch:
+            return 1
+        }
+    }
+    
+    static func ==(lhs:PeerMediaSharedEntryStableId, rhs: PeerMediaSharedEntryStableId) -> Bool {
+        switch lhs {
+        case let .messageId(lhsMessageId):
+            if case let .messageId(rhsMessageId) = rhs, lhsMessageId == rhsMessageId {
+                return true
+            } else {
+                return false
+            }
+        case .search:
+            if case .search = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .emptySearch:
+            if case .emptySearch = rhs {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+}
+
+enum PeerMediaSharedEntry : Comparable, Identifiable {
+    case messageEntry(Message)
+    case searchEntry(Bool)
+    case emptySearchEntry
+    
+    var stableId: AnyHashable {
+        switch self {
+        case let .messageEntry(message):
+            return PeerMediaSharedEntryStableId.messageId(message.id)
+        case .searchEntry:
+            return PeerMediaSharedEntryStableId.search
+        case .emptySearchEntry:
+            return PeerMediaSharedEntryStableId.emptySearch
+        }
+    }
+}
+
+func <(lhs:PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
+    switch lhs {
+    case .searchEntry:
+        if case .searchEntry = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .emptySearchEntry:
+        switch rhs {
+        case .searchEntry:
+            return true
+        default:
+            return false
+        }
+    case let .messageEntry(lhsMessage):
+        switch rhs {
+        case let .messageEntry(rhsMessage):
+            return lhsMessage.id < rhsMessage.id
+        default:
+            return true
+        }
+    }
+}
+
+func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
+    switch lhs {
+    case let .messageEntry(lhsMessage):
+        if case let .messageEntry(rhsMessage) = rhs {
+            if lhsMessage.id != rhsMessage.id {
+                return false
+            }
+            
+            if lhsMessage.stableVersion != rhsMessage.stableVersion {
+                return false
+            }
+            return true
+        } else {
+            return false
+        }
+    case let .searchEntry(lhsProgress):
+        if case let .searchEntry(rhsProgress) = rhs {
+            return lhsProgress == rhsProgress
+        } else {
+            return false
+        }
+    default :
+        return lhs.stableId == rhs.stableId
+    }
+}
+
+
+func convertEntries(from update: PeerMediaUpdate) -> [PeerMediaSharedEntry] {
+    var converted:[PeerMediaSharedEntry] = []
+   
+    for message in update.messages {
+        converted.append(.messageEntry(message))
+    }
+
+    if update.updateType == .search {
+        converted.append(.searchEntry(false))
+        if update.messages.isEmpty {
+            //converted.append(.emptySearchEntry)
+        }
+    } else if update.updateType == .loading {
+         converted.append(.searchEntry(true))
+        // converted.append(.emptySearchEntry)
+    } else if update.laterId == nil {
+        if !update.messages.isEmpty {
+            converted.append(.searchEntry(false))
+        }
+    }
+   
+    return converted.sorted(by: <)
+}
+
+fileprivate func preparedMediaTransition(from fromView:[PeerMediaSharedEntry]?, to toView:[PeerMediaSharedEntry], account:Account, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scroll:TableScrollState, tags:MessageTags, searchInteractions:SearchInteractions) -> TableUpdateTransition {
+    let (removed,inserted,updated) = proccessEntries(fromView, right: toView, { (entry) -> TableRowItem in
+        
+        switch entry {
+        case .messageEntry:
+            if tags == .file {
+                return PeerMediaFileRowItem(initialSize, interaction, account, entry)
+            } else if tags == .webPage {
+                return PeerMediaWebpageRowItem(initialSize,interaction,account,entry)
+            } else if tags == .music {
+                return PeerMediaMusicRowItem(initialSize, interaction, account, entry)
+            } else {
+                return GeneralRowItem(initialSize, height: 20, stableId: entry.stableId)
+            }
+        case let .searchEntry(isLoading):
+            return SearchRowItem(initialSize, stableId: entry.stableId, searchInteractions: searchInteractions, isLoading: isLoading, inset: NSEdgeInsets(left: 10, right: 10, top: 10, bottom: 10))
+        case .emptySearchEntry:
+            return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
+        }
+        
+    })
+    
+    for item in inserted {
+        _ = item.1.makeSize(initialSize.width, oldWidth: initialSize.width)
+    }
+    for item in updated {
+        _ = item.1.makeSize(initialSize.width, oldWidth: initialSize.width)
+    }
+    
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated:updated, animated:animated, state:scroll)
+}
+
+enum PeerMediaUpdateState {
+    case search
+    case history
+    case loading
+}
+
+struct PeerMediaUpdate {
+    let messages:[Message]
+    let updateType: PeerMediaUpdateState
+    let laterId: MessageIndex?
+    let earlierId: MessageIndex?
+    init (messages: [Message] = [], updateType:PeerMediaUpdateState = .loading, laterId:MessageIndex? = nil, earlierId:MessageIndex? = nil) {
+        self.messages = messages
+        self.updateType = updateType
+        self.laterId = laterId
+        self.earlierId = earlierId
+    }
+}
+
+
+
+class PeerMediaListController: GenericViewController<TableView> {
+    
+    private var account:Account
+    private var peerId:PeerId
+    private var chatInteraction:ChatInteraction
+    private let disposable: MetaDisposable = MetaDisposable()
+    private let entires = Atomic<[PeerMediaSharedEntry]?>(value: nil)
+    private let updateView = Atomic<PeerMediaUpdate?>(value: nil)
+    private let searchState:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
+    public init(account: Account, peerId: PeerId, chatInteraction: ChatInteraction) {
+        self.account = account
+        self.peerId = peerId
+        self.chatInteraction = chatInteraction
+        super.init()
+    }
+    
+    
+    deinit {
+        disposable.dispose()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        genericView.stopMerge()
+    }
+    
+    
+    public func load(with tagMask:MessageTags) -> Void {
+     
+        
+        let location = ValuePromise<ChatHistoryLocation>(ignoreRepeated: true)
+        searchState.set(SearchState(state: .None, request: nil))
+        genericView.emptyItem = PeerMediaEmptyRowItem(atomicSize.modify {$0}, tags: tagMask)
+
+        let historyViewUpdate = combineLatest(location.get(), searchState.get()) |> deliverOnMainQueue
+         |> mapToSignal { [weak self] location, searchState -> Signal<PeerMediaUpdate, NoError> in
+            if let strongSelf = self {
+                if searchState.request.isEmpty {
+                    return chatHistoryViewForLocation(location, account: strongSelf.account, peerId: strongSelf.peerId, fixedCombinedReadState: nil, tagMask: tagMask, additionalData: []) |> mapToQueue { view -> Signal<PeerMediaUpdate, Void> in
+                        switch view {
+                        case .Loading:
+                            return .single(PeerMediaUpdate())
+                        case let .HistoryView(view: view, type: _, scrollPosition: _, initialData: _):
+                            var messages:[Message] = []
+                            for entry in view.entries {
+                                switch entry {
+                                case let .MessageEntry(message, _, _, _):
+                                    messages.append(message)
+                                default:
+                                    break
+                                }
+                            }
+                            return .single(PeerMediaUpdate(messages: messages, updateType: .history, laterId: view.laterId, earlierId: view.earlierId))
+                        }
+                    }
+                } else {
+                    return .single(PeerMediaUpdate()) |> then(searchMessages(account: strongSelf.account, peerId: strongSelf.peerId, query: searchState.request, tagMask: tagMask) |> deliverOnMainQueue |> map { messages -> PeerMediaUpdate in
+                        return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
+                    })
+                }
+            }
+           
+            return .complete()
+        }
+        
+        let animated:Atomic<Bool> = Atomic(value:true)
+        
+        let searchInteractions = SearchInteractions({ [weak self] state in
+            if let strongSelf = self {
+                strongSelf.searchState.set(state)
+            }
+        }, { [weak self] (state) in
+            if let strongSelf = self {
+                strongSelf.searchState.set(state)
+            }
+        })
+        let account = self.account
+        let chatInteraction = self.chatInteraction
+        let initialSize = self.atomicSize
+        let _updateView = self.updateView
+        let _entries = self.entires
+        
+        let historyViewTransition = historyViewUpdate |> deliverOnPrepareQueue |> map { update -> TableUpdateTransition in
+            let animated = animated.swap(true)
+            let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
+            
+            let entries = convertEntries(from: update)
+            let previous = _entries.swap(entries)
+            _ = _updateView.swap(update)
+            
+            return preparedMediaTransition(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: animated, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
+
+        } |> deliverOnMainQueue
+        
+        
+        disposable.set(historyViewTransition.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+        }))
+
+        
+        location.set(.Scroll(index: MessageIndex.upperBound(peerId: peerId), anchorIndex: MessageIndex.upperBound(peerId: peerId), sourceIndex: MessageIndex.upperBound(peerId: peerId), scrollPosition: .none(nil), animated: false))
+     
+        genericView.setScrollHandler { [weak self] scroll in
+            
+            let view = self?.updateView.modify({$0})
+            if let view = view, view.updateType == .history {
+                var messageIndex:MessageIndex?
+                switch scroll.direction {
+                case .bottom:
+                    messageIndex = view.earlierId
+                case .top:
+                    messageIndex = view.laterId
+                case .none:
+                    break
+                }
+                
+                if let messageIndex = messageIndex {
+                    let _ = animated.swap(false)
+                    location.set(.Navigation(index: messageIndex, anchorIndex: messageIndex))
+                }
+            }
+        }
+        
+    }
+    
+    
+}
+
+
+
+
+//                let view = strongSelf.messagesView.modify {$0}
+//                if let view = view {
+//                    let range = strongSelf.genericView.visibleRows()
+//                    let indexRange = (max(view.entries.count - 1 - range.max,0), max(view.entries.count - 1 - range.min,0))
+//
+//                    if indexRange.1 > 0 {
+//                        strongSelf.account.postbox.updateMessageHistoryViewVisibleRange(view.id, earliestVisibleIndex: view.entries[indexRange.0].index, latestVisibleIndex: view.entries[indexRange.1].index)
+//                    }
+//
+//                }
+                

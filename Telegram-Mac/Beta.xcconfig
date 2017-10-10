@@ -1,0 +1,12 @@
+//
+//  Beta.xcconfig
+//  Telegram
+//
+//  Created by keepcoder on 14/03/2017.
+//  Copyright © 2017 Telegram. All rights reserved.
+//
+DSA_PEM_FILE = dsa_pub.pem
+
+SIMPLE_SLASH=/
+
+SFEED_URL = https:${SIMPLE_SLASH}/rink.hockeyapp.net/api/2/apps/6ed2ac3049e1407387c2f1ffcb74e81f
