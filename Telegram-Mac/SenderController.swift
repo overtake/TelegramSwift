@@ -326,11 +326,14 @@ class Sender: NSObject {
         }
         
         return combineLatest(senders) |> deliverOnMainQueue |> mapToSignal { results -> Signal<[MessageId?], NoError> in
-            return .single(results.reduce([], { messageIds, current -> [MessageId?] in
-                return messageIds + current
-            }))
             
-        } |> afterNext { (value) -> Void in
+            let result = results.reduce([], { messageIds, current -> [MessageId?] in
+                return messageIds + current
+            })
+            
+            return .single(result)
+            
+        }  |> take(1) |> afterCompleted {
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
         }
     }

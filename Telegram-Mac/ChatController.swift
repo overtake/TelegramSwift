@@ -1269,12 +1269,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
         chatInteraction.sendMedia = { [weak self] media in
             if let strongSelf = self, let peer = strongSelf.peer, peer.canSendMessage {
                 let _ = (Sender.enqueue(media: media, account: strongSelf.account, peerId: strongSelf.peerId, chatInteraction: strongSelf.chatInteraction) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                strongSelf.nextTransaction.set(handler: {})
             }
         }
         
         chatInteraction.sendAppFile = { [weak self] file in
             if let strongSelf = self, let peer = strongSelf.peer, peer.canSendMessage {
                 let _ = (Sender.enqueue(media: file, account: strongSelf.account, peerId: strongSelf.peerId, chatInteraction: strongSelf.chatInteraction) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                strongSelf.nextTransaction.set(handler: {})
+                
             }
         }
         

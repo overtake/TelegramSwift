@@ -105,7 +105,7 @@ public protocol TokenizedProtocol {
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool)
 }
 
-public class TokenizedView: NSScrollView, AppearanceViewProtocol, NSTextViewDelegate {
+public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelegate {
     private var tokens:[SearchToken] = []
     private let container: View = View()
     private let input:SearchTextField = SearchTextField()

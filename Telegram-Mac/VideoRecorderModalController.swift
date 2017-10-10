@@ -40,7 +40,7 @@ class VideoRecorderModalController: ModalViewController {
     
     private func saveThumbnail(_ thumb: CGImage) {
         var blurred: CGImage = thumb
-        for _ in 0 ..< 100 {
+        for _ in 0 ..< 10 {
             blurred = blurred.blurred
         }
         _ = blurred.saveToFile(pathForThumbnail)
