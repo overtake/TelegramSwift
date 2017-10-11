@@ -174,6 +174,17 @@ final class GroupInfoArguments : PeerInfoArguments {
         pushViewController(setup)
     }
     
+    func preHistorySetup() {
+        let setup = PreHistorySettingsController(account, peerId: peerId)
+        _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] enabled in
+            if let strongSelf = self {
+                _ = showModalProgress(signal: updateChannelHistoryAvailabilitySettingsInteractively(postbox: strongSelf.account.postbox, network: strongSelf.account.network, peerId: strongSelf.peerId, historyAvailableForNewMembers: enabled), for: mainWindow).start()
+
+            }
+        })
+        pushViewController(setup)
+    }
+    
     func blacklist() {
         pushViewController(ChannelBlacklistViewController(account: account, peerId: peerId))
     }
@@ -564,7 +575,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case groupDescriptionSetup(section:Int, text: String)
     case groupAboutDescription(section:Int)
     case groupStickerset(section:Int, packName: String)
-
+    case preHistory(section:Int, enabled: Bool)
     case groupManagementInfoLabel(section:Int, text: String)
     case setAdmins(section:Int)
     case membersAdmins(section:Int, count: Int)
@@ -635,6 +646,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             }
         case .sharedMedia:
             if case .sharedMedia = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .preHistory(sectionId, enabled):
+            if case .preHistory(sectionId, enabled) = entry {
                 return true
             } else {
                 return false
@@ -804,30 +821,32 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 6
         case .groupTypeSetup:
             return 7
-        case .setAdmins:
+        case .preHistory:
             return 8
-        case .groupDescriptionSetup:
+        case .setAdmins:
             return 9
-        case .groupAboutDescription:
+        case .groupDescriptionSetup:
             return 10
-        case .groupStickerset:
+        case .groupAboutDescription:
             return 11
-        case .groupManagementInfoLabel:
+        case .groupStickerset:
             return 12
-        case .membersAdmins:
+        case .groupManagementInfoLabel:
             return 13
-        case .membersBlacklist:
+        case .membersAdmins:
             return 14
-        case .usersHeader:
+        case .membersBlacklist:
             return 15
-        case .addMember:
+        case .usersHeader:
             return 16
+        case .addMember:
+            return 17
         case .member:
             fatalError("no stableIndex")
         case .convertToSuperGroup:
-            return 17
-        case .leave:
             return 18
+        case .leave:
+            return 19
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -854,6 +873,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .sharedMedia(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .groupTypeSetup(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .preHistory(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .groupStickerset(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -944,6 +965,12 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupDescriptionSetup(section: _, text: text):
             return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
                 arguments.updateEditingDescriptionText(updatedText)
+            })
+        case let .preHistory(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoPreHistory), type: .context(stateback: { () -> String in
+                return enabled ? tr(.peerInfoPreHistoryVisible) : tr(.peerInfoPreHistoryHidden)
+            }), action: { () in
+                arguments.preHistorySetup()
             })
         case .groupAboutDescription:
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(.peerInfoSetAboutDescription))
@@ -1077,6 +1104,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfo
                 
                 if access.isCreator {
                     entries.append(GroupInfoEntry.groupTypeSetup(section: sectionId, isPublic: group.addressName != nil))
+                    entries.append(GroupInfoEntry.preHistory(section: sectionId, enabled: cachedChannelData.flags.contains(.preHistoryEnabled)))
                 }
                 
                 if canEditInfo {

@@ -316,9 +316,13 @@ class ChatListRowItem: TableRowItem {
                 }
                 items.append(ContextMenuItem(tr(.chatListContextDeleteAndExit), handler: deleteChat))
             } else if let peer = peer as? TelegramChannel {
+                
                 if case .broadcast = peer.info {
                     items.append(ContextMenuItem(tr(.chatListContextLeaveChannel), handler: deleteChat))
                 } else {
+                    if peer.addressName == nil {
+                        items.append(ContextMenuItem(tr(.chatListContextClearHistory), handler: clearHistory))
+                    }
                     items.append(ContextMenuItem(tr(.chatListContextLeaveGroup), handler: deleteChat))
                 }
             }

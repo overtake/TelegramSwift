@@ -189,7 +189,7 @@ class GIFContainerView: View {
                 }
                 
                 switch status {
-                case let .Fetching(progress):
+                case let .Fetching(_, progress):
                     strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
                 case .Local:
                     strongSelf.progressView?.state = .Play

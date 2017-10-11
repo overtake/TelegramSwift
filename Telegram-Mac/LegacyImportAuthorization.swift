@@ -178,9 +178,9 @@ func legacyAuthData(passcode:Data, textPasscode:String? = nil) -> AuthorizationL
                                 case let .messageMediaGeo(geo: geo):
                                     switch geo {
                                     case let .geoPoint(long, lat):
-                                        media.append(TelegramMediaMap(latitude: lat, longitude: long, geoPlace: nil, venue: nil))
+                                        media.append(TelegramMediaMap(latitude: lat, longitude: long, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil))
                                     default:
-                                        media.append(TelegramMediaMap(latitude: 0, longitude: 0, geoPlace: nil, venue: nil))
+                                        media.append(TelegramMediaMap(latitude: 0, longitude: 0, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil))
                                     }
                                 case let .messageMediaContact(phoneNumber, firstName, lastName, userId):
                                     let peerId:PeerId? = userId != 0 ? PeerId(namespace: Namespaces.Peer.CloudUser, id: userId) : nil

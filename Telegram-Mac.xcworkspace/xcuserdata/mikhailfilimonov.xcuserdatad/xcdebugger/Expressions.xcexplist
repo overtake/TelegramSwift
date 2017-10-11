@@ -417,10 +417,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -847,7 +847,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -859,7 +859,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1264,6 +1264,14 @@
       </ContextState>
       <ContextState
          contextName = "ChatController.viewWillAppear(Bool) -&gt; ():ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #3 in PreHistorySettingsController.viewDidLoad():PreHistorySettingsController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "view">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatController.(openChat(account : Account, peerId : PeerId, message : Message?, tagMask : MessageTags?) -&gt; ()).(closure #3):ChatController.swift">

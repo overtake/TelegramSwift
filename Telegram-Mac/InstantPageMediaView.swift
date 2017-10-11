@@ -86,7 +86,7 @@ final class InstantPageMediaView: View, InstantPageView {
         
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
             switch status {
-            case .Fetching(let progress):
+            case let .Fetching(_, progress):
                 self?.progressView.isHidden = false
                 self?.progressView.state = .Fetching(progress: progress, force: false)
             case .Local:

@@ -101,7 +101,7 @@ final class ChatInteraction : InterfaceObserver  {
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     func addContact() {
-        addContactDisposable.set(addContactPeerInteractively(account: account, peerId: peerId).start())
+        addContactDisposable.set(addContactPeerInteractively(account: account, peerId: peerId, phone: (presentation.peer as? TelegramUser)?.phone).start())
     }
     
     func disableProxy() {

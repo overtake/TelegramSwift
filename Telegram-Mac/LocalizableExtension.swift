@@ -104,7 +104,8 @@ func applyMainMenuLocalization(_ window: Window) {
 }
 
 private func localizeMainMenuItem(_ item:NSMenuItem) {
-    let title = item.title
+    var title = item.title
+    
     item.title = title
     item.submenu?.title = title
     if let items = item.submenu?.items {
@@ -136,7 +137,7 @@ func translate(key: String, _ args: [CVarArg]) -> String {
             let code = languageCodehash(appCurrentLanguage.languageCode)
             
             if let index = key.range(of: "_")?.lowerBound {
-                var string = key.substring(to: index)
+                var string = String(key[..<index])
                 string += "_\(presentationStringsPluralizationForm(code, Int32(count)).name)"
                 format = _NSLocalizedString(string)
                 if args.count > 1 {
@@ -205,7 +206,7 @@ public func _NSLocalizedString(_ key: String) -> String {
     
     let language = appCurrentLanguage
     
-    if let value = language.strings[key] {
+    if let value = language.strings[key], !value.isEmpty {
         return value
     } else {
         let path = Bundle.main.path(forResource: "en", ofType: "lproj")

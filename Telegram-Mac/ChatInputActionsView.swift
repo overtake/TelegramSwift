@@ -284,13 +284,6 @@ class ChatInputActionsView: View, Notifable {
                         prevView = sNew ? voice : send
                         newView = sNew ? send : voice
                     }
-                    
-                    
-                    if anim {
-                        if sNew != sOld {
-                            entertaiments.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
-                        }
-                    }
 
                     
                     newView.isHidden = false
@@ -325,7 +318,7 @@ class ChatInputActionsView: View, Notifable {
                     }
 
                 }
-                self.change(size: size, animated: animated)
+                self.change(size: size, animated: false)
                 
            
                 

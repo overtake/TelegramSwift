@@ -102,7 +102,7 @@ class ChatFileContentView: ChatMediaContentView {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         
         switch status {
-        case let .Fetching(progress):
+        case let .Fetching(_, progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                 let _ = attr.append(string: tr(.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             } else {
@@ -139,7 +139,7 @@ class ChatFileContentView: ChatMediaContentView {
                 updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus {
-                            return .Fetching(progress: pendingStatus.progress)
+                            return .Fetching(isActive: true, progress: pendingStatus.progress)
                         } else {
                             return resourceStatus
                         }
@@ -175,7 +175,7 @@ class ChatFileContentView: ChatMediaContentView {
                         }
                     }
                     switch status {
-                    case let .Fetching(progress):
+                    case let .Fetching(_, progress):
                         strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? theme.colors.blueFill : theme.colors.blackTransparent, foregroundColor: .white, icon: nil)
                         strongSelf.progressView.state = .Fetching(progress: progress, force: false)
                     case .Local:

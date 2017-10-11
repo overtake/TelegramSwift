@@ -182,8 +182,8 @@ final class GridMessageItemNode: GridItemNode {
                         strongSelf._status = status
                         
                         switch status {
-                        case let .Fetching(progress: p):
-                            strongSelf.progressView?.state = .Fetching(progress: p, force: false)
+                        case let .Fetching(_, progress):
+                            strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
                         case .Remote:
                             strongSelf.progressView?.state = .Remote
                         case .Local:

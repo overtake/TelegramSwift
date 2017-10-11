@@ -130,7 +130,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus {
-                            return .Fetching(progress: pendingStatus.progress)
+                            return .Fetching(isActive: true, progress: pendingStatus.progress)
                         } else {
                             return resourceStatus
                         }
@@ -152,7 +152,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                     strongSelf.fetchStatus = status
                     
                     switch status {
-                    case let .Fetching(progress):
+                    case let .Fetching(_, progress):
                         strongSelf.progressView.state = .Fetching(progress: progress, force: false)
                     case .Remote:
                         strongSelf.progressView.state = .Remote

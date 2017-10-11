@@ -439,8 +439,6 @@ enum L10n {
   case chatForwardActionHeader
   /// INSTANT VIEW
   case chatInstantView
-  /// Loading messages
-  case chatLoadingMessages
   /// %d of %d
   case chatSearchCount(Int, Int)
   /// from:
@@ -1397,6 +1395,8 @@ enum L10n {
   case peerInfoNotifications
   /// phone
   case peerInfoPhone
+  /// Chat History For New Members
+  case peerInfoPreHistory
   /// Report
   case peerInfoReport
   /// Send Message
@@ -1459,6 +1459,10 @@ enum L10n {
   case peerInfoGroupTypePublic
   /// Last Name
   case peerInfoLastNamePlaceholder
+  /// Hidden
+  case peerInfoPreHistoryHidden
+  /// Visible
+  case peerInfoPreHistoryVisible
   /// Add names of the admins to the messages they post.
   case peerInfoSignMessagesDesc
   /// Shared Media
@@ -1471,6 +1475,10 @@ enum L10n {
   case peerMediaPopoverSharedLinks
   /// Shared Media
   case peerMediaPopoverSharedMedia
+  /// New Members will see messages that were sent before they joined.
+  case preHistorySettingsDescription
+  /// CHAT HISTORY FOR NEW MEMBERS
+  case preHistorySettingsHeader
   /// bot
   case presenceBot
   /// Caption...
@@ -1789,6 +1797,8 @@ enum L10n {
   case telegramPasscodeSettingsViewController
   /// Info
   case telegramPeerInfoController
+  /// Chat History Settings
+  case telegramPreHistorySettingsController
   /// Privacy and Security
   case telegramPrivacyAndSecurityViewController
   /// Proxy
@@ -2407,8 +2417,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.ForwardActionHeader")
       case .chatInstantView:
         return L10n.tr(key: "Chat.InstantView")
-      case .chatLoadingMessages:
-        return L10n.tr(key: "Chat.LoadingMessages")
       case .chatSearchCount(let p1, let p2):
         return L10n.tr(key: "Chat.SearchCount", p1, p2)
       case .chatSearchFrom:
@@ -3365,6 +3373,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PeerInfo.Notifications")
       case .peerInfoPhone:
         return L10n.tr(key: "PeerInfo.Phone")
+      case .peerInfoPreHistory:
+        return L10n.tr(key: "PeerInfo.PreHistory")
       case .peerInfoReport:
         return L10n.tr(key: "PeerInfo.Report")
       case .peerInfoSendMessage:
@@ -3427,6 +3437,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PeerInfo.GroupType.Public")
       case .peerInfoLastNamePlaceholder:
         return L10n.tr(key: "PeerInfo.LastName.Placeholder")
+      case .peerInfoPreHistoryHidden:
+        return L10n.tr(key: "PeerInfo.PreHistory.Hidden")
+      case .peerInfoPreHistoryVisible:
+        return L10n.tr(key: "PeerInfo.PreHistory.Visible")
       case .peerInfoSignMessagesDesc:
         return L10n.tr(key: "PeerInfo.SignMessages.Desc")
       case .peerMediaSharedMedia:
@@ -3439,6 +3453,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PeerMedia.Popover.SharedLinks")
       case .peerMediaPopoverSharedMedia:
         return L10n.tr(key: "PeerMedia.Popover.SharedMedia")
+      case .preHistorySettingsDescription:
+        return L10n.tr(key: "PreHistorySettings.Description")
+      case .preHistorySettingsHeader:
+        return L10n.tr(key: "PreHistorySettings.Header")
       case .presenceBot:
         return L10n.tr(key: "Presence.bot")
       case .previderSenderCaptionPlaceholder:
@@ -3757,6 +3775,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Telegram.PasscodeSettingsViewController")
       case .telegramPeerInfoController:
         return L10n.tr(key: "Telegram.PeerInfoController")
+      case .telegramPreHistorySettingsController:
+        return L10n.tr(key: "Telegram.PreHistorySettingsController")
       case .telegramPrivacyAndSecurityViewController:
         return L10n.tr(key: "Telegram.PrivacyAndSecurityViewController")
       case .telegramProxySettingsViewController:

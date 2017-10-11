@@ -103,7 +103,7 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     func addContact() {
-        shareDisposable.set(addContactPeerInteractively(account: account, peerId: peerId).start())
+        shareDisposable.set(addContactPeerInteractively(account: account, peerId: peerId, phone: nil).start())
     }
     
     override func updateEditable(_ editable: Bool, peerView: PeerView) {

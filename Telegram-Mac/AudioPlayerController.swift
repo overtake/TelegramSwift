@@ -225,7 +225,7 @@ class APSongItem : APItem {
                     }
                 case .Remote:
                     return .complete()
-                case let .Fetching(progress ):
+                case let .Fetching(_, progress):
                     return .single(APResource(complete: false, progress: progress, path: ""))
                 }
 

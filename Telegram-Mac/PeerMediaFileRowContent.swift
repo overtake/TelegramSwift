@@ -319,7 +319,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                             strongSelf.downloadStatusControl?.image = theme.icons.peerMediaDownloadFileStart
                             strongSelf.actionView.update(item.actionLayout)
                             break
-                        case let .Fetching(progress):
+                        case let .Fetching(_, progress):
                             
                             initDownloadControlIfNeeded()
                             

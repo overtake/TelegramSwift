@@ -220,7 +220,7 @@ func chatGalleryPhoto(account: Account, photo: TelegramMediaImage, toRepresentat
                 return thumbnailContext.generateImage()
             }
             return generateImage(fittedSize, contextGenerator: { (size, ctx) in
-                ctx.setFillColor(NSColor.white.cgColor)
+                ctx.setFillColor(theme.colors.background.cgColor)
                 ctx.fill(NSMakeRect(0, 0, size.width, size.height))
             })
             

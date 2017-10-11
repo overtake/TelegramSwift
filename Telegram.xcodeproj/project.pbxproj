@@ -267,6 +267,8 @@
 		C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E2391DE4D3DB0022A29F /* ChatInterfaceInputContext.swift */; };
 		C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */; };
 		C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */; };
+		C258D1B41F8D385700458478 /* PreHistorySettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C258D1B31F8D385700458478 /* PreHistorySettingsController.swift */; };
+		C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C258D1B51F8D3A0D00458478 /* PreHistoryControllerStructures.swift */; };
 		C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */; };
 		C2593FBF1F7D242E00F6D2B1 /* TGPaintShader.m in Sources */ = {isa = PBXBuildFile; fileRef = C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */; };
 		C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */; };
@@ -859,6 +861,8 @@
 		C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceStateContextQueries.swift; sourceTree = "<group>"; };
 		C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextListRowItem.swift; sourceTree = "<group>"; };
 		C25692971EDD85FB009EE421 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		C258D1B31F8D385700458478 /* PreHistorySettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreHistorySettingsController.swift; sourceTree = "<group>"; };
+		C258D1B51F8D3A0D00458478 /* PreHistoryControllerStructures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreHistoryControllerStructures.swift; sourceTree = "<group>"; };
 		C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputRecordingView.swift; sourceTree = "<group>"; };
 		C2593FBD1F7D241E00F6D2B1 /* TGPaintShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TGPaintShader.h; sourceTree = "<group>"; };
 		C2593FBE1F7D241E00F6D2B1 /* TGPaintShader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGPaintShader.m; sourceTree = "<group>"; };
@@ -2357,6 +2361,8 @@
 				C21795E21E795955006A2AA3 /* SecretChatKeyViewController.swift */,
 				C205DB971EE71127003711DF /* ChannelAdminController.swift */,
 				C230BEB31EE97B6F0029586C /* RestictedModalViewController.swift */,
+				C258D1B31F8D385700458478 /* PreHistorySettingsController.swift */,
+				C258D1B51F8D3A0D00458478 /* PreHistoryControllerStructures.swift */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -3115,6 +3121,7 @@
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
+				C258D1B41F8D385700458478 /* PreHistorySettingsController.swift in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				C2A71CD71DD9EEDB00C69F73 /* WebpageModalController.swift in Sources */,
@@ -3233,6 +3240,7 @@
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C24D9FDC1E267932002CD3F3 /* PreviewSenderItems.swift in Sources */,
 				C2271F511D9C392400424F7B /* SPopoverRowView.swift in Sources */,
+				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,
 				C2B1B1201E5F170A00895E0D /* ValidateAddressNameInteractive.swift in Sources */,
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,

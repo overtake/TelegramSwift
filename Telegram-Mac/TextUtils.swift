@@ -272,6 +272,8 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             return tr(.chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency)))
         case .unknown:
             break
+        case .customText(let text):
+            return text
         }
     }
     

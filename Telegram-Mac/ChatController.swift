@@ -1875,7 +1875,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                                 }
                                 
                                 if let peer = peerViewMainPeer(peerView) {
-                                    if peer.isGroup || peer.isUser {
+                                    if peer.isGroup || peer.isUser || (peer.isSupergroup && peer.addressName == nil) {
                                         items.append(SPopoverItem(tr(.chatContextClearHistory), {
                                             confirm(for: mainWindow, with: appName, and: tr(.confirmDeleteChatUser), successHandler: { _ in
                                                 _ = clearHistoryInteractively(postbox: account.postbox, peerId: peerId).start()

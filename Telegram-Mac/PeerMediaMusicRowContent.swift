@@ -130,7 +130,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                 updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.account, file: item.file), item.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus {
-                            return .Fetching(progress: pendingStatus.progress)
+                            return .Fetching(isActive: true, progress: pendingStatus.progress)
                         } else {
                             return resourceStatus
                         }
@@ -145,7 +145,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                     if let strongSelf = self {
                         strongSelf.fetchStatus = status
                         switch status {
-                        case let .Fetching(progress):
+                        case let .Fetching(_, progress):
                             strongSelf.statusView.state = .Fetching(progress: progress, force: false)
                         case .Local, .Remote:
                             strongSelf.statusView.state = .Play
