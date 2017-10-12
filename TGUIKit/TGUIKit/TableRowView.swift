@@ -32,6 +32,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.layer?.delegate = self
         self.layer?.drawsAsynchronously = System.drawAsync
         autoresizesSubviews = false
+        pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
     }
     
     
@@ -100,13 +101,26 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    private var lastPressureEventStage = 0
+    
+    open override func pressureChange(with event: NSEvent) {
+        super.pressureChange(with: event)
+        if event.stage == 2 && lastPressureEventStage < 2 {
+            forceClick(in: convert(event.locationInWindow, from: nil))
+        }
+        lastPressureEventStage = event.stage
+    }
+    
     open override func rightMouseDown(with event: NSEvent) {
         super.rightMouseDown(with: event)
         showContextMenu(event)
     }
     
-    
     open func doubleClick(in location:NSPoint) -> Void {
+        
+    }
+    
+    open func forceClick(in location: NSPoint) {
         
     }
     
