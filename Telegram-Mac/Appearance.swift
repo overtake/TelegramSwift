@@ -431,6 +431,8 @@ struct TelegramIconsTheme {
     
     let inputChannelMute: CGImage
     let inputChannelUnmute: CGImage
+    
+    let changePhoneNumberIntro: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -727,7 +729,8 @@ private func generateIcons(from pallete: ColorPallete) -> TelegramIconsTheme {
                                                fastSettingsUnmute: #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(pallete.blueIcon),
                                                chatRecordVideo: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(pallete.grayIcon),
                                                inputChannelMute: #imageLiteral(resourceName: "Icon_InputChannelMute").precomposed(pallete.grayIcon),
-                                               inputChannelUnmute: #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(pallete.grayIcon))
+                                               inputChannelUnmute: #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(pallete.grayIcon),
+                                               changePhoneNumberIntro: #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed())
 }
 
 

@@ -402,6 +402,10 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.bio(index: 0, about: "").stableId)) {
                     _ = genericView.select(item: item)
                 }
+            } else if navigation.controller is PhoneNumberIntroController {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.phone(index: 0, phone: "").stableId)) {
+                    _ = genericView.select(item: item)
+                }
             } else {
                 genericView.cancelSelection()
             }
@@ -608,10 +612,12 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     if !(self?.navigation?.controller is BioViewController) {
                         self?.navigation?.push(BioViewController(account))
                     }
-                    }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+                }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case let  .phone(_, phone):
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: formatPhoneNumber(phone), icon: theme.icons.settingsPhoneNumber, type: .none, action: {
-                    
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: formatPhoneNumber(phone), icon: theme.icons.settingsPhoneNumber, type: .none, action: { [weak self] in
+                    if !(self?.navigation?.controller is PhoneNumberIntroController) {
+                        self?.navigation?.push(PhoneNumberIntroController(account))
+                    }
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case let .language(_, current):
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsLanguage), icon: theme.icons.settingsLanguage, type: .context(stateback: {
