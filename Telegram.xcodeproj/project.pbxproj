@@ -299,6 +299,8 @@
 		C271EBE91EBA22FE0034792D /* TGCallConnectionDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = C271EBE81EBA22FE0034792D /* TGCallConnectionDescription.m */; };
 		C271EBEB1EBA3BC90034792D /* PCallSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C271EBEA1EBA3BC90034792D /* PCallSession.swift */; };
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
+		C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */; };
+		C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */; };
 		C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C276248B1D95AF7600FE5B2B /* ObjcUtils.m */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
 		C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */; };
@@ -899,6 +901,8 @@
 		C271EBE81EBA22FE0034792D /* TGCallConnectionDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGCallConnectionDescription.m; sourceTree = "<group>"; };
 		C271EBEA1EBA3BC90034792D /* PCallSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PCallSession.swift; sourceTree = "<group>"; };
 		C275932D1DF6E1CE00A0807A /* AboutModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutModalController.swift; sourceTree = "<group>"; };
+		C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberIntroController.swift; sourceTree = "<group>"; };
+		C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmController.swift; sourceTree = "<group>"; };
 		C276248A1D95AF7600FE5B2B /* ObjcUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcUtils.h; sourceTree = "<group>"; };
 		C276248B1D95AF7600FE5B2B /* ObjcUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcUtils.m; sourceTree = "<group>"; };
 		C276248D1D95B4F300FE5B2B /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -1441,6 +1445,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				C275E9ED1F8FC99600D3D8C0 /* change-phone-number */,
 				C2C5C2031EF8228C00AEA252 /* proxy */,
 				C221ED521EA6849D00471C65 /* data-and-storage */,
 				C25C132B1E8A403100AE26A1 /* stickers */,
@@ -2130,6 +2135,15 @@
 				C275932D1DF6E1CE00A0807A /* AboutModalController.swift */,
 			);
 			name = modal;
+			sourceTree = "<group>";
+		};
+		C275E9ED1F8FC99600D3D8C0 /* change-phone-number */ = {
+			isa = PBXGroup;
+			children = (
+				C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */,
+				C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */,
+			);
+			name = "change-phone-number";
 			sourceTree = "<group>";
 		};
 		C276383C1E8A9A70009E7839 /* table */ = {
@@ -3185,6 +3199,7 @@
 				C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
+				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
 				C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
@@ -3420,6 +3435,7 @@
 				C2E52A0D1EB8C386009AF87D /* SelectivePrivacySettingsController.swift in Sources */,
 				C21656E81EE576FA0041A6BA /* ChatUserPopover.swift in Sources */,
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
+				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
 				C2084F041F5D5C6F004713C4 /* ChatReplyPreviewController.swift in Sources */,
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,

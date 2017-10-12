@@ -135,9 +135,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
         Logger.setSharedLogger(logger)
         
-        if let feedUrl = Bundle.main.infoDictionary?["SUFeedURL"] as? String, let url = URL(string: feedUrl) {
-            updater.feedURL = url
-        }
+        #if !APP_STORE
+            if let feedUrl = Bundle.main.infoDictionary?["SUFeedURL"] as? String, let url = URL(string: feedUrl) {
+                updater.feedURL = url
+            }
+        #endif
+        
         
        
         let bundleId = Bundle.main.bundleIdentifier

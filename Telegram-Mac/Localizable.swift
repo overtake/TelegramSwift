@@ -225,6 +225,10 @@ enum L10n {
   case callRecentOutgoing
   /// End Call
   case callHeaderEndCall
+  /// All your Telegram contacts will get your new number added to their address book, provided they had your old number and you haven't blocked them in Telegram.
+  case changePhoneNumberIntroAlert
+  /// You can change your Telegram number here. Your account and all your cloud data — messages, media, contacts, etc. will be moved to the new number.\n\n**Important**: all your Telegram contacts will get your **new number** added to their address book, provided they had your old number and you haven't blocked them in Telegram.
+  case changePhoneNumberIntroDescription
   /// Forever
   case channelBanForever
   /// Channel Name
@@ -2207,6 +2211,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Call.Recent.Outgoing")
       case .callHeaderEndCall:
         return L10n.tr(key: "CallHeader.EndCall")
+      case .changePhoneNumberIntroAlert:
+        return L10n.tr(key: "ChangePhoneNumber.Intro.Alert")
+      case .changePhoneNumberIntroDescription:
+        return L10n.tr(key: "ChangePhoneNumber.Intro.Description")
       case .channelBanForever:
         return L10n.tr(key: "Channel.BanForever")
       case .channelChannelNameHolder:
