@@ -474,7 +474,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
     }
     
     override func getLeftBarViewOnce() -> BarView {
-        return BarView(controller: self)
+        return BarView(68, controller: self)
     }
     
     init(_ account:Account, accountManager:AccountManager) {
