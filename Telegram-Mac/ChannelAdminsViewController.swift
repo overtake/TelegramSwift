@@ -451,6 +451,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         
         let applyAdmin:(RenderedChannelParticipant, PeerId, TelegramChannelAdminRights) -> Void =  { [weak self] participant, adminId, updatedRights in
             
+            
             let applyAdmin: Signal<Void, NoError> = combineLatest(adminsPromise.get(), account.postbox.loadedPeerWithId(adminId))
                 |> filter { $0.0 != nil }
                 |> take(1)
@@ -484,7 +485,9 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                         adminsPromise.set(.single(updatedAdmins))
                     }
                     
-                    return .complete()
+                    return account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> take(1) |> mapToSignal { _ in
+                        return Signal<Void, Void>.complete()
+                    }
             }
             self?.addAdminDisposable.set(applyAdmin.start())
         }
@@ -611,7 +614,9 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                         adminsPromise.set(.single(updatedPeers))
                     }
                     
-                    return .complete()
+                    return account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> take(1) |> mapToSignal { _ in
+                        return Signal<Void, Void>.complete()
+                    }
             }
             
             self?.removeAdminDisposable.set((removePeerAdmin(account: account, peerId: peerId, adminId: adminId)

@@ -115,14 +115,15 @@ public extension String {
         
         var string:String = self
         while !string.isEmpty, let index = string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines), index.lowerBound == string.startIndex {
-            string = string.substring(from: index.upperBound)
+            string = String(string[index.upperBound..<string.endIndex])
         }
         while !string.isEmpty, let index = string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines, options: .literal, range: string.index(string.endIndex, offsetBy: -1) ..< string.endIndex) {
-            string = string.substring(to: index.lowerBound)
+            string = String(string[..<index.lowerBound])
         }
         
         return string
     }
+    
     
     var stringEmojiReplacements:String {
         var text:NSString = self.nsstring

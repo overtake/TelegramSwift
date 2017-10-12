@@ -53,9 +53,26 @@ enum ForwardItemType {
     case Bottom;
 }
 
-enum ChatItemType {
-    case Full;
-    case Short;
+enum ChatItemType : Equatable {
+    case Full(isAdmin: Bool)
+    case Short
+}
+
+func ==(lhs: ChatItemType, rhs: ChatItemType) -> Bool {
+    switch lhs {
+    case .Full(let isAdmin):
+        if case .Full(isAdmin: isAdmin) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .Short:
+        if case .Short = rhs {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 class ChatRowItem: TableRowItem {
@@ -67,7 +84,7 @@ class ChatRowItem: TableRowItem {
     private(set) var entry:ChatHistoryEntry
     private(set) var message:Message?
     private(set) var fontSize:Int32 = 13
-    private(set) var itemType:ChatItemType = .Full
+    private(set) var itemType:ChatItemType = .Full(isAdmin: false)
 
     //right view
     private(set) var date:(TextNodeLayout,TextNode)?
@@ -344,6 +361,11 @@ class ChatRowItem: TableRowItem {
                     return false
                 }
             }
+            for media in message.media {
+                if media is TelegramMediaMap {
+                    return false
+                }
+            }
         }
         
         return !chatInteraction.isLogInteraction
@@ -364,7 +386,7 @@ class ChatRowItem: TableRowItem {
                 self.peer = peer
                 
                 if let author = message.author, author.id != peer.id, !message.flags.contains(.Unsent), !message.flags.contains(.Failed) {
-                    postAuthorAttributed = NSAttributedString.initialize(string: author.displayTitle, color: theme.colors.grayText, font: NSFont.normal(.short))
+                    postAuthorAttributed = .initialize(string: author.displayTitle, color: theme.colors.grayText, font: NSFont.normal(.short))
                 }
                 
             } else if let author = message.author {
@@ -430,7 +452,7 @@ class ChatRowItem: TableRowItem {
                 } 
             }
             
-            if itemType == .Full {
+            if case .Full(let isAdmin) = itemType {
                 
                 var titlePeer:Peer? = self.peer
                 
@@ -456,6 +478,8 @@ class ChatRowItem: TableRowItem {
                     
                     let range = attr.append(string: title, color: nameColor, font:.medium(.text))
                     attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.peerInfo(peerId:peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), range: range)
+                    
+                    
                     for attribute in message.attributes {
                         if let attribute = attribute as? InlineBotMessageAttribute, let bot = message.peers[attribute.peerId] as? TelegramUser, let address = bot.username {
                             _ = attr.append(string: " \(tr(.chatMessageVia)) ", color: theme.colors.grayText, font:.medium(.text))
@@ -465,6 +489,11 @@ class ChatRowItem: TableRowItem {
                             }), range: range)
                         }
                     }
+                    
+                    if isAdmin {
+                        _ = attr.append(string: " \(tr(.chatAdminBadge))", color: theme.colors.grayText, font: .normal(.short))
+                    }
+                    
                     authorText = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
                     
                     authorText?.interactions = globalLinkExecutor
@@ -578,15 +607,15 @@ class ChatRowItem: TableRowItem {
 
         
         if let channelViewsAttributed = channelViewsAttributed {
-            channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, .grayText, 1, .end, NSMakeSize(max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
+            channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, theme.colors.grayText, 1, .end, NSMakeSize(max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
         if let postAuthorAttributed = postAuthorAttributed {
-            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, .grayText, 1, .end, NSMakeSize((width - contentOffset.x - 44) / 2, 20), nil, false, .left)
+            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, theme.colors.grayText, 1, .end, NSMakeSize((width - contentOffset.x - 44) / 2, 20), nil, false, .left)
         }
         //let additionWidth:CGFloat = date?.0.size.width ?? 20
        // _contentSize = self.makeContentSize(width - self.contentOffset.x - rightSize.width - 44)
         
-        if itemType == .Full {
+        if case .Full = itemType {
             let additionWidth:CGFloat = date?.0.size.width ?? 20
             _contentSize = self.makeContentSize(width - self.contentOffset.x - 44 - additionWidth)
         } else {

@@ -855,11 +855,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                 return .never()
         }
         
+        
         //let autoremovingUnreadRemoved:Atomic<Bool> = Atomic(value: false)
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
-        let historyViewTransition =  combineLatest(historyViewUpdate, autoremovingUnreadMark.get(), appearanceSignal) |> deliverOnMainQueue |> mapToQueue { [weak self] update, autoremoving, appearance -> Signal<(TableUpdateTransition, ChatHistoryCombinedInitialData), NoError> in
+        let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
+
+        let historyViewTransition =  combineLatest(historyViewUpdate |> deliverOnMainQueue, autoremovingUnreadMark.get() |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> deliverOnMainQueue) |> mapToQueue { [weak self] update, autoremoving, appearance, adminIds -> Signal<(TableUpdateTransition, ChatHistoryCombinedInitialData), NoError> in
             if let strongSelf = self {
-                
                 
                 switch update {
                 case let .Loading(initialData):
@@ -874,8 +876,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                     
                     var prepareOnMainQueue = previousAppearance.swap(appearance).presentation.dark != appearance.presentation.dark
                     switch updateType {
-                    case let .Initial(fadeIn: _):
-                        prepareOnMainQueue = true
+                    case .Initial:
+                        prepareOnMainQueue = firstInitialUpdate.swap(false) || prepareOnMainQueue
                     default:
                         break
                     }
@@ -892,7 +894,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                     
                   
                     
-                    let proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
+                    let proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
                     
                     
                     return prepareEntries(from: strongSelf.previousView.swap(proccesedView), to: proccesedView, account: strongSelf.account, initialSize: strongSelf.atomicSize.modify({$0}), interaction:strongSelf.chatInteraction, animated: animated, scrollPosition:scrollPosition, reason:updateType, animationInterface:animationInterface) |> map { transition in
@@ -1975,6 +1977,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
         navigationActionDisposable.dispose()
         messageIndexDisposable.dispose()
         dateDisposable.dispose()
+        account.context.cachedAdminIds.remove(for: peerId)
     }
     
     

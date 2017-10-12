@@ -171,8 +171,12 @@ class ChatPinnedView : Control {
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         addSubview(container)
         node.view = container
-        readyDisposable.set(node.nodeReady.get().start(next: { [weak self] _ in
+        readyDisposable.set(node.nodeReady.get().start(next: { [weak self] result in
             self?.needsLayout = true
+            
+            if !result, let chatInteraction = self?.chatInteraction {
+                _ = requestUpdatePinnedMessage(account: chatInteraction.account, peerId: chatInteraction.peerId, update: .clear).start()
+            }
         }))
         updateLocalizationAndTheme()
     }

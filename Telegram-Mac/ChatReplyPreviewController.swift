@@ -20,7 +20,7 @@ class ChatReplyPreviewView : View {
     }
     
     func update(_ message: Message, account: Account, chatInteraction: ChatInteraction) {
-        let item = ChatRowItem.item(frame.size, from: .MessageEntry(message, true, .Full, .FullHeader, nil), with: account, interaction: chatInteraction)
+        let item = ChatRowItem.item(frame.size, from: .MessageEntry(message, true, .Full(isAdmin: false), .FullHeader, nil), with: account, interaction: chatInteraction)
         _ = item.makeSize(frame.width, oldWidth: 0)
         
         container?.removeFromSuperview()

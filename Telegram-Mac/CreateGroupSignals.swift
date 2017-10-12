@@ -24,3 +24,21 @@ public func removeUserPhoto(account: Account, reference: TelegramMediaRemoteImag
     }
     
 }
+
+
+func channelAdminIds(postbox: Postbox, network: Network, peerId: PeerId, hash: Int32) -> Signal<[PeerId], Void> {
+    return postbox.modify { modifier in
+        if let peer = modifier.getPeer(peerId) as? TelegramChannel, case .group = peer.info, let apiChannel = apiInputChannel(peer) {
+            let api = Api.functions.channels.getParticipants(channel: apiChannel, filter: .channelParticipantsAdmins, offset: 0, limit: 100, hash: hash)
+            return network.request(api) |> retryRequest |> mapToSignal { result in
+                switch result {
+                case let .channelParticipants(_, _, users):
+                    return .single(users.map({TelegramUser(user: $0).id}))
+                default:
+                    return .complete()
+                }
+            }
+        }
+        return .complete()
+    } |> switchToLatest
+}

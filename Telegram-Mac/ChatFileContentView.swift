@@ -115,7 +115,7 @@ class ChatFileContentView: ChatMediaContentView {
             let range = attr.append(string: tr(.messagesFileStateLocal), color: theme.colors.link, font: NSFont.normal(FontSize.text))
             attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
         case .Remote:
-            let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: .grayText, font: NSFont.normal(FontSize.text))
+            let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             let range = attr.append(string: tr(.messagesFileStateRemote), color: theme.colors.link, font: NSFont.normal(FontSize.text))
             attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
         }

@@ -67,7 +67,6 @@ class ChatInputAccessory: Node {
         
         displayNode = nil
         dismiss.removeAllHandlers()
-        
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
             displayNode = ChatUrlPreviewModel(account: account, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in
@@ -96,7 +95,7 @@ class ChatInputAccessory: Node {
         } else {
             nodeReady.set(.single(animated))
         }
-        
+        container.removeAllSubviews()
         displayNode?.view = container
     }
     
