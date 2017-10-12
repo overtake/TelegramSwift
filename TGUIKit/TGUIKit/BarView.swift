@@ -13,7 +13,7 @@ open class BarView: OverlayControl {
     
     public var clickHandler:()->Void = {}
     
-    public var minWidth:CGFloat = 80
+    public var minWidth:CGFloat = 95
     public private(set) weak var controller: ViewController?
     
     
@@ -27,7 +27,7 @@ open class BarView: OverlayControl {
         self.setNeedsDisplay()
     }
     
-    public init(_ width:CGFloat = 80, controller: ViewController) {
+    public init(_ width:CGFloat = 95, controller: ViewController) {
         self.minWidth = width
         self.controller = controller
         super.init()
