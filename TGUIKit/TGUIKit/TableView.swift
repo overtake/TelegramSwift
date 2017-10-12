@@ -1365,7 +1365,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 case .lower:
                     strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
                 case .upper:
-                    strideTo = stride(from: 0, to: visibleItems.count, by: 1)
+                    strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1) //stride(from: 0, to: visibleItems.count, by: 1)
                 }
             } else {
                 switch side {
