@@ -27,7 +27,7 @@ class ConvertGroupViewController: TableViewController {
         let initialSize = atomicSize.modify({$0})
         
         let desc = NSMutableAttributedString()
-        _ = desc.append(string: tr(.supergroupConvertDescription), color: .grayText, font: .normal(.text))
+        _ = desc.append(string: tr(.supergroupConvertDescription), color: theme.colors.grayText, font: .normal(.text))
         desc.detectBoldColorInString(with: .medium(.text))
         
         _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 16))
@@ -36,7 +36,7 @@ class ConvertGroupViewController: TableViewController {
             self?.convert()
         }))
         let undone = NSMutableAttributedString()
-        _ = undone.append(string: tr(.supergroupConvertUndone), color: .grayText, font: .normal(.text))
+        _ = undone.append(string: tr(.supergroupConvertUndone), color: theme.colors.grayText, font: .normal(.text))
         undone.detectBoldColorInString(with: .medium(.text))
         _ = genericView.addItem(item: GeneralTextRowItem(initialSize, text: undone))
         

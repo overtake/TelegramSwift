@@ -425,6 +425,8 @@ enum L10n {
   case channelVisibilityChecking
   /// Loading...
   case channelVisibilityLoading
+  /// admin
+  case chatAdminBadge
   /// Cancel
   case chatCancel
   /// without compression
@@ -1475,10 +1477,12 @@ enum L10n {
   case peerMediaPopoverSharedLinks
   /// Shared Media
   case peerMediaPopoverSharedMedia
-  /// New Members will see messages that were sent before they joined.
-  case preHistorySettingsDescription
   /// CHAT HISTORY FOR NEW MEMBERS
   case preHistorySettingsHeader
+  /// New members won't see earlier messages.
+  case preHistorySettingsDescriptionHidden
+  /// New Members will see messages that were sent before they joined.
+  case preHistorySettingsDescriptionVisible
   /// bot
   case presenceBot
   /// Caption...
@@ -2403,6 +2407,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "ChannelVisibility.Checking")
       case .channelVisibilityLoading:
         return L10n.tr(key: "ChannelVisibility.Loading")
+      case .chatAdminBadge:
+        return L10n.tr(key: "Chat.AdminBadge")
       case .chatCancel:
         return L10n.tr(key: "Chat.Cancel")
       case .chatDropAsFilesDesc:
@@ -3453,10 +3459,12 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PeerMedia.Popover.SharedLinks")
       case .peerMediaPopoverSharedMedia:
         return L10n.tr(key: "PeerMedia.Popover.SharedMedia")
-      case .preHistorySettingsDescription:
-        return L10n.tr(key: "PreHistorySettings.Description")
       case .preHistorySettingsHeader:
         return L10n.tr(key: "PreHistorySettings.Header")
+      case .preHistorySettingsDescriptionHidden:
+        return L10n.tr(key: "PreHistorySettings.Description.Hidden")
+      case .preHistorySettingsDescriptionVisible:
+        return L10n.tr(key: "PreHistorySettings.Description.Visible")
       case .presenceBot:
         return L10n.tr(key: "Presence.bot")
       case .previderSenderCaptionPlaceholder:

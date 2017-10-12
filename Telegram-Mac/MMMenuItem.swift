@@ -12,10 +12,6 @@ class MMMenuItem: NSMenuItem {
     override var title: String {
         get {
             if let identifier = identifier?.rawValue {
-                if identifier == "_NS:305" {
-                    var bp:Int = 0
-                    bp += 1
-                }
                 return _NSLocalizedString("\(identifier).title")
             }
             return super.title

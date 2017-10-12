@@ -368,7 +368,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     }
     
     func fillPhoto(_ item:ChatRowItem) -> Void {
-        if item.itemType == .Full && item.peer != nil {
+        if case .Full = item.itemType, item.peer != nil {
             
             if avatar == nil {
                 avatar = AvatarControl(font: .avatar(.text))

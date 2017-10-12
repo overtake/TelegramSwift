@@ -209,6 +209,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(ChannelAdminsViewController(account: account, peerId: peerId))
     }
     
+    func blocked() -> Void {
+        pushViewController(ChannelBlacklistViewController(account: account, peerId: peerId))
+    }
+    
     func updatePhoto(_ path:String) -> Void {
         
         let updateState:((ChannelInfoState)->ChannelInfoState)->Void = { [weak self] f in
@@ -323,6 +327,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case sharedMedia(sectionId:Int)
     case notifications(sectionId:Int, settings: PeerNotificationSettings?)
     case admins(sectionId:Int, count:Int32?)
+    case blocked(sectionId:Int, count:Int32?)
     case members(sectionId:Int, count:Int32?)
     case link(sectionId:Int, addressName:String)
     case aboutInput(sectionId:Int, description:String)
@@ -437,6 +442,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .blocked(lhsSectionId, lhsCount):
+            if case let .blocked(rhsSectionId, rhsCount) = entry {
+                return lhsSectionId == rhsSectionId && lhsCount == rhsCount
+            } else {
+                return false
+            }
         case let .members(lhsSectionId, lhsCount):
             if case let .members(rhsSectionId, rhsCount) = entry {
                 return lhsSectionId == rhsSectionId && lhsCount == rhsCount
@@ -506,22 +517,24 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 5
         case .admins:
             return 6
-        case .members:
+        case .blocked:
             return 7
-        case .link:
+        case .members:
             return 8
-        case .aboutInput:
+        case .link:
             return 9
-        case .aboutDesc:
+        case .aboutInput:
             return 10
-        case .signMessages:
+        case .aboutDesc:
             return 11
-        case .signDesc:
+        case .signMessages:
             return 12
-        case .report:
+        case .signDesc:
             return 13
-        case .leave:
+        case .report:
             return 14
+        case .leave:
+            return 15
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -542,6 +555,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .notifications(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .admins(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .blocked(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .members(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -631,6 +646,16 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 }
             }), action: { () in
                 arguments.admins()
+            })
+        case let .blocked(_, count):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoBlackList), type: .context(stateback: { () -> String in
+                if let count = count {
+                    return "\(count)"
+                } else {
+                    return ""
+                }
+            }), action: { () in
+                arguments.blocked()
             })
         case let .link(_, addressName: addressName):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoChannelType), type: .context(stateback: { () -> String in
@@ -746,12 +771,18 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
             if channel.groupAccess.canManageGroup {
                 var membersCount:Int32? = nil
                 var adminsCount:Int32? = nil
+                var blockedCount:Int32? = nil
                 if let cachedData = view.cachedData as? CachedChannelData {
                     membersCount = cachedData.participantsSummary.memberCount
                     adminsCount = cachedData.participantsSummary.adminCount
+                    blockedCount = cachedData.participantsSummary.kickedCount
                 }
                 entries.append(ChannelInfoEntry.admins(sectionId: sectionId, count: adminsCount))
                 entries.append(ChannelInfoEntry.members(sectionId: sectionId, count: membersCount))
+                
+                if let blockedCount = blockedCount {
+                    entries.append(ChannelInfoEntry.blocked(sectionId: sectionId, count: blockedCount))
+                }
                 
                 entries.append(ChannelInfoEntry.section(sectionId))
                 sectionId += 1

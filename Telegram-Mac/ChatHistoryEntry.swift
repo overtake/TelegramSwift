@@ -241,7 +241,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, includeBottom:Bool = false, timeDifference: TimeInterval = 0) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = []) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
  
     
@@ -278,8 +278,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 next = messagesEntries[i + 1]
             }
             
+            let isAdmin = adminIds.contains(message.author?.id ?? PeerId(0))
             
-            var itemType:ChatItemType = .Full
+            var itemType:ChatItemType = .Full(isAdmin: isAdmin)
             var fwdType:ForwardItemType? = nil
             
             
@@ -300,7 +301,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 
                 if message.author?.id == prevMessage.author?.id, (message.timestamp - prevMessage.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
                     if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
-                        itemType = .Full
+                        itemType = .Full(isAdmin: isAdmin)
                     } else {
                         var canShort:Bool = true
                         for attr in message.attributes {
@@ -309,19 +310,19 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                                 break
                             }
                         }
-                        itemType = !canShort ? .Full : .Short
+                        itemType = !canShort ? .Full(isAdmin: isAdmin) : .Short
                         
                     }
                 } else {
-                    itemType = .Full
+                    itemType = .Full(isAdmin: isAdmin)
                 }
             } else {
-                itemType = .Full
+                itemType = .Full(isAdmin: isAdmin)
             }
             
             
             if message.forwardInfo != nil {
-                if itemType == .Short {
+                if case .Short = itemType {
                     if let prev = prev, case let .MessageEntry(prevMessage,_, _, _) = prev {
                         if prevMessage.forwardInfo != nil, message.timestamp - prevMessage.timestamp < simpleDif  {
                             fwdType = .Inside
@@ -345,7 +346,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
             
             if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader  {
-                itemType = .Full
+                itemType = .Full(isAdmin: isAdmin)
                 if forwardType == .ShortHeader {
                     if let next = next, case let .MessageEntry(nextMessage,_, _, _) = next  {
                         if nextMessage.forwardInfo != nil && (message.author?.id == nextMessage.author?.id || nextMessage.timestamp - message.timestamp < simpleDif) {

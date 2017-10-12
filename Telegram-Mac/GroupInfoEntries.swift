@@ -1104,7 +1104,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfo
                 
                 if access.isCreator {
                     entries.append(GroupInfoEntry.groupTypeSetup(section: sectionId, isPublic: group.addressName != nil))
-                    entries.append(GroupInfoEntry.preHistory(section: sectionId, enabled: cachedChannelData.flags.contains(.preHistoryEnabled)))
+                    if group.addressName == nil {
+                        entries.append(GroupInfoEntry.preHistory(section: sectionId, enabled: cachedChannelData.flags.contains(.preHistoryEnabled)))
+                    }
                 }
                 
                 if canEditInfo {
