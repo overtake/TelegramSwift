@@ -124,6 +124,43 @@ public extension String {
         return string
     }
     
+    var fullTrimmed: String {
+        var copy: String = self
+        var index: String.Index = copy.index(after: copy.startIndex)
+        
+        var newLineIndexEnd: String.Index? = nil
+        
+        while index != copy.endIndex {
+            
+            if let idx = newLineIndexEnd {
+                let substring = copy[index..<copy.index(after: idx)]
+                let symbols = substring.filter({$0 != "\n"})
+                let newLines = substring.filter({$0 == "\n"})
+                if symbols.isEmpty {
+                    newLineIndexEnd = copy.index(after: idx)
+                } else {
+                    if newLines.utf8.count > 2 {
+                        copy = String(copy[..<index] + "\n\n" + copy[idx..<copy.endIndex])
+                        newLineIndexEnd = nil
+                        index = copy.index(after: copy.startIndex)
+                    } else {
+                        index = copy.index(after: idx)
+                        newLineIndexEnd = nil
+                    }
+                }
+            } else {
+                let first = String(copy[index..<copy.index(after: index)])
+                
+                if first == "\n" {
+                    newLineIndexEnd = copy.index(after: index)
+                } else {
+                    index = copy.index(after: index)
+                }
+            }
+            
+        }
+        return copy
+    }
     
     var stringEmojiReplacements:String {
         var text:NSString = self.nsstring
