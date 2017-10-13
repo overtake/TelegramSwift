@@ -402,7 +402,8 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.bio(index: 0, about: "").stableId)) {
                     _ = genericView.select(item: item)
                 }
-            } else if navigation.controller is PhoneNumberIntroController {
+            } else if PhoneNumberIntroController.assciatedControllerTypes.contains(where: {navigation.controller.isKind(of: $0)}) {
+                
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.phone(index: 0, phone: "").stableId)) {
                     _ = genericView.select(item: item)
                 }

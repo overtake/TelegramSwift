@@ -76,6 +76,10 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
         
     }
     
+    static var assciatedControllerTypes:[ViewController.Type] {
+        return [PhoneNumberIntroController.self, PhoneNumberConfirmController.self, PhoneNumberInputCodeController.self]
+    }
+    
     override var enableBack: Bool {
         return true
     }

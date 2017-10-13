@@ -301,6 +301,7 @@
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
 		C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */; };
 		C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */; };
+		C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */; };
 		C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C276248B1D95AF7600FE5B2B /* ObjcUtils.m */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
 		C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */; };
@@ -903,6 +904,7 @@
 		C275932D1DF6E1CE00A0807A /* AboutModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutModalController.swift; sourceTree = "<group>"; };
 		C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberIntroController.swift; sourceTree = "<group>"; };
 		C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmController.swift; sourceTree = "<group>"; };
+		C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberInputCodeController.swift; sourceTree = "<group>"; };
 		C276248A1D95AF7600FE5B2B /* ObjcUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcUtils.h; sourceTree = "<group>"; };
 		C276248B1D95AF7600FE5B2B /* ObjcUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcUtils.m; sourceTree = "<group>"; };
 		C276248D1D95B4F300FE5B2B /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -2142,6 +2144,7 @@
 			children = (
 				C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */,
 				C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */,
+				C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */,
 			);
 			name = "change-phone-number";
 			sourceTree = "<group>";
@@ -3200,6 +3203,7 @@
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
+				C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */,
 				C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,

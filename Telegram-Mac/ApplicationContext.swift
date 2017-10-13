@@ -90,9 +90,9 @@ func migrationData(accountManager: AccountManager, appGroupPath:String, testingE
                         }, peers:  {
                             return .single([])
                         })
-                        if !isDebug {
+                        //if !isDebug {
                             clearLegacyData()
-                        }
+                       // }
                         return accountWithId(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), id: accountId, supplementary: false, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods, shouldKeepAutoConnection: false) |> mapToSignal { accountResult in
                             switch accountResult {
                             case .unauthorized(let left):
