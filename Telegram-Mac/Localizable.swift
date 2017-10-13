@@ -225,6 +225,24 @@ enum L10n {
   case callRecentOutgoing
   /// End Call
   case callHeaderEndCall
+  /// You have changed your phone number to %@.
+  case changeNumberConfirmCodeSuccess(String)
+  /// Code expired.
+  case changeNumberConfirmCodeErrorCodeExpired
+  /// An error occurred.
+  case changeNumberConfirmCodeErrorGeneric
+  /// Invalid code. Please try again.
+  case changeNumberConfirmCodeErrorInvalidCode
+  /// You have entered invalid code too many times. Please try again later.
+  case changeNumberConfirmCodeErrorLimitExceeded
+  /// An error occurred. Please try again later.
+  case changeNumberSendDataErrorGeneric
+  /// The phone number you entered is not valid. Please enter the correct number along with your area code.
+  case changeNumberSendDataErrorInvalidPhoneNumber
+  /// You have requested authorization code too many times. Please try again later.
+  case changeNumberSendDataErrorLimitExceeded
+  /// The number %@ is already connected to a Telegram account. Please delete that account before migrating to the new number.
+  case changeNumberSendDataErrorPhoneNumberOccupied(String)
   /// All your Telegram contacts will get your new number added to their address book, provided they had your old number and you haven't blocked them in Telegram.
   case changePhoneNumberIntroAlert
   /// You can change your Telegram number here. Your account and all your cloud data — messages, media, contacts, etc. will be moved to the new number.\n\n**Important**: all your Telegram contacts will get your **new number** added to their address book, provided they had your old number and you haven't blocked them in Telegram.
@@ -1159,6 +1177,8 @@ enum L10n {
   case messagesFileStateLocal
   /// Download
   case messagesFileStateRemote
+  /// Broadcast...
+  case messagesPlaceholderBroadcast
   /// Write a message...
   case messagesPlaceholderSentMessage
   /// Reply
@@ -1805,6 +1825,10 @@ enum L10n {
   case telegramPasscodeSettingsViewController
   /// Info
   case telegramPeerInfoController
+  /// Change Number
+  case telegramPhoneNumberConfirmController
+  /// Change Phone Number
+  case telegramPhoneNumberIntroController
   /// Chat History Settings
   case telegramPreHistorySettingsController
   /// Privacy and Security
@@ -2211,6 +2235,24 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Call.Recent.Outgoing")
       case .callHeaderEndCall:
         return L10n.tr(key: "CallHeader.EndCall")
+      case .changeNumberConfirmCodeSuccess(let p1):
+        return L10n.tr(key: "ChangeNumber.ConfirmCode.Success", p1)
+      case .changeNumberConfirmCodeErrorCodeExpired:
+        return L10n.tr(key: "ChangeNumber.ConfirmCode.Error.codeExpired")
+      case .changeNumberConfirmCodeErrorGeneric:
+        return L10n.tr(key: "ChangeNumber.ConfirmCode.Error.Generic")
+      case .changeNumberConfirmCodeErrorInvalidCode:
+        return L10n.tr(key: "ChangeNumber.ConfirmCode.Error.invalidCode")
+      case .changeNumberConfirmCodeErrorLimitExceeded:
+        return L10n.tr(key: "ChangeNumber.ConfirmCode.Error.limitExceeded")
+      case .changeNumberSendDataErrorGeneric:
+        return L10n.tr(key: "ChangeNumber.SendData.Error.Generic")
+      case .changeNumberSendDataErrorInvalidPhoneNumber:
+        return L10n.tr(key: "ChangeNumber.SendData.Error.InvalidPhoneNumber")
+      case .changeNumberSendDataErrorLimitExceeded:
+        return L10n.tr(key: "ChangeNumber.SendData.Error.LimitExceeded")
+      case .changeNumberSendDataErrorPhoneNumberOccupied(let p1):
+        return L10n.tr(key: "ChangeNumber.SendData.Error.PhoneNumberOccupied", p1)
       case .changePhoneNumberIntroAlert:
         return L10n.tr(key: "ChangePhoneNumber.Intro.Alert")
       case .changePhoneNumberIntroDescription:
@@ -3145,6 +3187,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Messages.File.State.Local")
       case .messagesFileStateRemote:
         return L10n.tr(key: "Messages.File.State.Remote")
+      case .messagesPlaceholderBroadcast:
+        return L10n.tr(key: "Messages.Placeholder.Broadcast")
       case .messagesPlaceholderSentMessage:
         return L10n.tr(key: "Messages.Placeholder.SentMessage")
       case .messagesReplyLoadingHeader:
@@ -3791,6 +3835,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Telegram.PasscodeSettingsViewController")
       case .telegramPeerInfoController:
         return L10n.tr(key: "Telegram.PeerInfoController")
+      case .telegramPhoneNumberConfirmController:
+        return L10n.tr(key: "Telegram.PhoneNumberConfirmController")
+      case .telegramPhoneNumberIntroController:
+        return L10n.tr(key: "Telegram.PhoneNumberIntroController")
       case .telegramPreHistorySettingsController:
         return L10n.tr(key: "Telegram.PreHistorySettingsController")
       case .telegramPrivacyAndSecurityViewController:

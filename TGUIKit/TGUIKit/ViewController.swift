@@ -235,6 +235,7 @@ open class ViewController : NSObject {
         setCenterTitle(defaultBarTitle)
     }
     
+    
     open func requestUpdateRightBar() {
         (self.rightBarView as? TextButtonBarView)?.button.style = navigationButtonStyle
         self.rightBarView.style = navigationButtonStyle

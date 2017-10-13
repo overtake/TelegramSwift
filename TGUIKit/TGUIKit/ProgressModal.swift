@@ -92,6 +92,7 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window) -> Si
         }))
         
         
+        
         beforeDisposable.add(signal.start(next: { next in
             subscriber.putNext(next)
         }, error: { error in

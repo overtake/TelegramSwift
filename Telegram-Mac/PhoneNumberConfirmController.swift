@@ -23,7 +23,7 @@ private final class ChangePhoneNumberArguments {
 }
 
 class ChangePhoneNumberView : View {
-    private let container: ChangePhoneNumberContainerView = ChangePhoneNumberContainerView(frame: NSMakeRect(0, 0, 300, 300))
+	fileprivate let container: ChangePhoneNumberContainerView = ChangePhoneNumberContainerView(frame: NSMakeRect(0, 0, 300, 110))
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -32,6 +32,10 @@ class ChangePhoneNumberView : View {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        container.centerX(y: 20)
     }
 }
 
@@ -258,13 +262,17 @@ class ChangePhoneNumberView : View {
         setNeedsDisplayLayer()
     }
     
+    var number:String {
+        return codeText.stringValue + numberText.stringValue
+    }
+    
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(insertNewline(_:)) {
             if control == codeText {
                 self.window?.makeFirstResponder(self.numberText)
                 self.numberText.selectText(nil)
             } else if !numberText.stringValue.isEmpty {
-                arguments?.sendCode(codeText.stringValue + numberText.stringValue)
+                arguments?.sendCode(number)
             }
             //Queue.mainQueue().justDispatch {
             (control as? NSTextField)?.setCursorToEnd()
@@ -307,12 +315,77 @@ class ChangePhoneNumberView : View {
     
 }
 
-class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNumberContainerView> {
+class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNumberView> {
 
+    private let actionDisposable = MetaDisposable()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let account = self.account
+        
+        let arguments = ChangePhoneNumberArguments(sendCode: { [weak self] phoneNumber in
+//            let data = ChangeAccountPhoneNumberData(type: SentAuthorizationCodeType.sms(length: 6), hash: "", timeout: 10, nextType: AuthorizationCodeNextType.call)
+//
+
+            guard let strongSelf = self else {return}
+            
+            strongSelf.actionDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumberVerification(account: account, phoneNumber: phoneNumber) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak strongSelf] data in
+                
+                strongSelf?.navigationController?.push(PhoneNumberInputCodeController(account, data: data, formattedNumber: formatPhoneNumber(phoneNumber)))
+                
+            }, error: { error in
+
+                let text: String
+                switch error {
+                case .limitExceeded:
+                    text = tr(.changeNumberSendDataErrorLimitExceeded)
+                case .invalidPhoneNumber:
+                    text = tr(.changeNumberSendDataErrorInvalidPhoneNumber)
+                case .phoneNumberOccupied:
+                    text = tr(.changeNumberSendDataErrorPhoneNumberOccupied(phoneNumber))
+                case .generic:
+                    text = tr(.changeNumberSendDataErrorGeneric)
+                }
+
+                alert(for: mainWindow, header: appName, info: text)
+
+            }))
+        })
+        
+        genericView.container.arguments = arguments
+        
+        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] _ in
+            if let strongSelf = self {
+                arguments.sendCode(strongSelf.genericView.container.number)
+            }
+        }, for: .Click)
+        
         readyOnce()
+    }
+    
+    override var enableBack: Bool {
+        return true
+    }
+    
+    
+    
+    override func becomeFirstResponder() -> Bool? {
+        return true
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        if window?.firstResponder != genericView.container.numberText.textView || window?.firstResponder != genericView.container.codeText.textView {
+            if genericView.container.codeText.stringValue.isEmpty {
+                return genericView.container.codeText
+            }
+            return genericView.container.numberText
+        }
+        return window?.firstResponder
+    }
+    
+    override func getRightBarViewOnce() -> BarView {
+        return TextButtonBarView(controller: self, text: tr(.composeNext), style: navigationButtonStyle, alignment:.Right)
     }
     
 }

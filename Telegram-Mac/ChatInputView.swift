@@ -131,7 +131,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         textView.textFont = .normal(.custom(theme.fontSize))
         
         updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(),false)
-        textView.setPlaceholderAttributedString(.initialize(string: tr(.messagesPlaceholderSentMessage), color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)), coreText: false), update: false)
+        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)), coreText: false), update: false)
         
         textView.delegate = self
      
@@ -142,9 +142,18 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         ready.set(accessory.nodeReady.get() |> map {_ in return true} |> take(1) )
     }
     
+    private var textPlaceholder: String {
+        if let peer = chatInteraction.presentation.peer {
+            if peer.isChannel {
+                return tr(.messagesPlaceholderBroadcast)
+            }
+        }
+        return tr(.messagesPlaceholderSentMessage)
+    }
+    
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        textView.setPlaceholderAttributedString(.initialize(string: tr(.messagesPlaceholderSentMessage), color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)), coreText: false), update: false)
+        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)), coreText: false), update: false)
         _ts.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
         contentView.backgroundColor = theme.colors.background
