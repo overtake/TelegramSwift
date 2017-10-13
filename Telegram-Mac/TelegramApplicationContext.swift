@@ -20,6 +20,7 @@ class TelegramApplicationContext : NSObject {
     private(set) var mediaKeyTap:SPMediaKeyTap?
     let entertainment:EntertainmentViewController
     private var _recentlyPeerUsed:[PeerId] = []
+    let cachedAdminIds: CachedAdminIds = CachedAdminIds()
     private(set) var timeDifference:TimeInterval  = 0
     private(set) var recentlyPeerUsed:[PeerId] {
         set {

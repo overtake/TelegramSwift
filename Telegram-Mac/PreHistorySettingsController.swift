@@ -41,7 +41,7 @@ fileprivate func preHistoryEntries(cachedData: CachedChannelData?, state: PreHis
     entries.append(.type(sectionId: sectionId, index: index, text: tr(.peerInfoPreHistoryHidden), enabled: false, selected: !enabled))
     index += 1
     
-    entries.append(.text(sectionId: sectionId, index: index, text: tr(.preHistorySettingsDescription)))
+    entries.append(.text(sectionId: sectionId, index: index, text: enabled ? tr(.preHistorySettingsDescriptionVisible) : tr(.preHistorySettingsDescriptionHidden)))
     index += 1
     
     return entries

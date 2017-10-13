@@ -32,11 +32,11 @@ private class SuggestionControllerView : View {
     }
     
     func updateHeaderTexts(_ suggestLocalization:String) {
-        let headerLayout = TextViewLayout(.initialize(string: suggestLocalization, color: .text, font: .normal(.title)))
+        let headerLayout = TextViewLayout(.initialize(string: suggestLocalization, color: theme.colors.text, font: .normal(.title)))
         headerLayout.measure(width: frame.width - 40)
         textView.update(headerLayout)
         //
-        let suggestHeaderLayout = TextViewLayout(.initialize(string: NativeLocalization("Suggest.Localization.Header"), color: .grayText, font: .normal(.text)))
+        let suggestHeaderLayout = TextViewLayout(.initialize(string: NativeLocalization("Suggest.Localization.Header"), color: theme.colors.grayText, font: .normal(.text)))
         suggestHeaderLayout.measure(width: frame.width - 40)
         suggestTextView.update(suggestHeaderLayout)
         

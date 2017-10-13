@@ -403,7 +403,6 @@ public func hasModals() -> Bool {
     for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
         if activeModals[i].value == nil {
             activeModals.remove(at: i)
-            break
         }
     }
     

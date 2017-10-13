@@ -368,7 +368,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     }
     
     func fillPhoto(_ item:ChatRowItem) -> Void {
-        if item.itemType == .Full && item.peer != nil {
+        if case .Full = item.itemType, item.peer != nil {
             
             if avatar == nil {
                 avatar = AvatarControl(font: .avatar(.text))
@@ -541,7 +541,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             }
         }
     }
-
+    
+    override func forceClick(in location: NSPoint) {
+        guard let item = item as? ChatRowItem else { return }
+        guard let message = item.message else { return }
+        guard canEditMessage(message, account: item.account) else { return }
+        
+        let state = item.chatInteraction.presentation.state
+        if state == .normal || state == .editing {
+            let hitTestView = self.hitTest(location)
+            if hitTestView == nil || hitTestView == self || hitTestView == replyView {
+                if let avatar = avatar {
+                    if NSPointInRect(location, avatar.frame) {
+                        return
+                    }
+                }
+                item.chatInteraction.beginEditingMessage(item.message)
+            }
+        }
+    }
     
     deinit {
         if let item = self.item as? ChatRowItem {

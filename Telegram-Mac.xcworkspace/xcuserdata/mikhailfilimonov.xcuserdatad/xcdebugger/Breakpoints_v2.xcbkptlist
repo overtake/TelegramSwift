@@ -201,30 +201,46 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/MMMenuItem.swift"
-            timestampString = "529403277.83909"
+            filePath = "Telegram-Mac/ChannelAdminsViewController.swift"
+            timestampString = "529433017.660489"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "17"
-            endingLineNumber = "17"
-            landmarkName = "title"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/MMMenuItem.swift"
-            timestampString = "529403277.839234"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "21"
-            endingLineNumber = "21"
-            landmarkName = "title"
-            landmarkType = "24">
+            startingLineNumber = "628"
+            endingLineNumber = "628"
+            landmarkName = "viewDidLoad()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #6 () -&gt; () in closure #6 (PostboxMac.PeerId) -&gt; () in Telegram.ChannelAdminsViewController.viewDidLoad() -&gt; ()"
+                  moduleName = "Telegram"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/Telegram-Mac/ChannelAdminsViewController.swift"
+                  timestampString = "529511320.00211"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "628"
+                  endingLineNumber = "628"
+                  offsetFromSymbolStart = "34">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Telegram.(ChannelAdminsControllerState in _E4D63EDD1149E17291AA88D717BDA221)) -&gt; Telegram.(ChannelAdminsControllerState in _E4D63EDD1149E17291AA88D717BDA221) in closure #6 () -&gt; () in closure #6 (PostboxMac.PeerId) -&gt; () in Telegram.ChannelAdminsViewController.viewDidLoad() -&gt; ()"
+                  moduleName = "Telegram"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/Telegram-Mac/ChannelAdminsViewController.swift"
+                  timestampString = "529511320.016426"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "629"
+                  endingLineNumber = "629"
+                  offsetFromSymbolStart = "110">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

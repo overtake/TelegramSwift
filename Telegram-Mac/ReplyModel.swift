@@ -38,7 +38,7 @@ class ReplyModel: ChatAccessoryModel {
                 return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network) |> map {$0.first}
             } |> deliverOn(Queue.mainQueue().isCurrent() ? Queue.mainQueue() : prepareQueue) |> map { [weak self] message -> Bool in
                  self?.make(with: message, isLoading: false, display: true)
-                 return true
+                 return message != nil
              })
         }
     }
@@ -102,12 +102,6 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile {
-                        updatedMedia = file
-                        if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
-                            imageDimensions = representation.dimensions
-                        }
-                        break
                     }
                 }
                 
@@ -161,7 +155,9 @@ class ReplyModel: ChatAccessoryModel {
                 }
                 
                 self.previousMedia = updatedMedia
-                
+            } else {
+                self.view?.imageView?.removeFromSuperview()
+                self.view?.imageView = nil
             }
         }
     }
@@ -170,9 +166,10 @@ class ReplyModel: ChatAccessoryModel {
         self.replyMessage = message
         self.isLoading = isLoading
         
+        updateImageIfNeeded()
+
         if let message = message {
         
-            updateImageIfNeeded()
             
             var text = pullText(from:message, attachEmoji: false) as String
             if text.isEmpty {
