@@ -550,12 +550,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
         let state = item.chatInteraction.presentation.state
         if state == .normal || state == .editing {
             let hitTestView = self.hitTest(location)
-            if hitTestView == nil || hitTestView == self || hitTestView == replyView {
+            if hitTestView == nil || hitTestView == self || hitTestView == replyView || hitTestView?.isDescendant(of: contentView) == true {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {
                         return
                     }
                 }
+                focusAnimation()
                 item.chatInteraction.beginEditingMessage(item.message)
             }
         }
