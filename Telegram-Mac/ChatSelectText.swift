@@ -112,7 +112,8 @@ class ChatSelectText : NSObject {
     private var deselect:Bool = false
     private var started:Bool = false
     private var startMessageId:MessageId? = nil
-    
+    private var lastPressureEventStage = 0
+    private var inPressedState = false
     
     init(_ table:TableView) {
         self.table = table
@@ -140,6 +141,7 @@ class ChatSelectText : NSObject {
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             
             self?.started = false
+            self?.inPressedState = false
             
             if let table = self?.table, let superview = table.superview, let documentView = table.documentView {
                 let point = superview.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -214,7 +216,9 @@ class ChatSelectText : NSObject {
                     if window.firstResponder != selectManager {
                         window.makeFirstResponder(selectManager)
                     }
-                    self?.runSelector(window: window, chatInteraction: chatInteraction)
+                    if self?.inPressedState == false {
+                        self?.runSelector(window: window, chatInteraction: chatInteraction)
+                    }
                     return .invoked
                     
                 } else if chatInteraction.presentation.state == .selecting {
@@ -224,6 +228,15 @@ class ChatSelectText : NSObject {
             }
             return .invokeNext
             }, with: self, for: .leftMouseDragged, priority:.medium)
+        
+        window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
+            guard let `self` = self else { return .invokeNext }
+            if event.stage == 2 && self.lastPressureEventStage < 2 {
+                self.inPressedState = true
+            }
+            self.lastPressureEventStage = event.stage
+            return .invokeNext
+        }, with: self, for: .pressure, priority: .medium)
     }
     
     private func runSelector(_ selectingText:Bool = true, window: Window, chatInteraction:ChatInteraction) {
