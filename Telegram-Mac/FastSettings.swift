@@ -27,6 +27,12 @@ enum RecordingStateSettings : Int32 {
     case video = 1
 }
 
+enum ForceTouchAction: Int32 {
+    case edit
+    case reply
+    case forward
+}
+
 class FastSettings {
 
     private static let kSendingType = "kSendingType"
