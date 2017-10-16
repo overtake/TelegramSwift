@@ -494,6 +494,12 @@ extension ColorPallete {
     }
 }
 
+extension TelegramPresentationTheme {
+    var appearance: NSAppearance? {
+        return dark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
+    }
+}
+
 class TelegramPresentationTheme : PresentationTheme {
     let chatList:TelegramChatListTheme
     let tabBar:TelegramTabBarTheme
@@ -804,7 +810,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
         }
         window.contentView?.background = theme.colors.background
         window.contentView?.subviews.first?.background = theme.colors.background
-        window.appearance = theme.dark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
+        window.appearance = theme.appearance
         window.backgroundColor = theme.colors.grayBackground
         window.titlebarAppearsTransparent = theme.dark
     }
