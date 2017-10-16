@@ -32,5 +32,16 @@ func pickImage(for window:Window, maxSize:NSSize = NSMakeSize(640, 640), fileFir
     if fileFirst {
     }
     observer.completion = completion
+    
+    if let window = NSApp.window(withWindowNumber: taker.windowNumber) {
+        window.appearance = theme.appearance
+    }
+
+
     taker.beginSheet(for: window, withDelegate: observer, didEnd: #selector(PickerObserver.validated(_:_:_:)), contextInfo: nil)
+    
+    
+    
+        //.appearance = theme.appearance
+
 }

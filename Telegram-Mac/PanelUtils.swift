@@ -19,6 +19,11 @@ func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, for window:
     var result:[String] = []
     let panel:NSOpenPanel = NSOpenPanel()
     panel.canChooseFiles = true
+    
+    if let window = NSApp.window(withWindowNumber: panel.windowNumber) {
+        //window.appearance = theme.appearance
+    }
+    
     panel.canCreateDirectories = true
     panel.allowedFileTypes = exts
     panel.allowsMultipleSelection = true
@@ -74,6 +79,7 @@ func savePanel(file:String, named:String, for window:Window) {
 
 func alert(for window:Window, header:String = appName, info:String?) {
     let alert:NSAlert = NSAlert()
+    alert.window.appearance = theme.appearance
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = info ?? ""
@@ -91,6 +97,7 @@ enum ConfirmResult {
 
 func confirm(for window:Window, with header:String, and information:String?, okTitle:String? = nil, cancelTitle:String? = nil, thridTitle:String? = nil, successHandler:@escaping(ConfirmResult)->Void) {
     let alert:NSAlert = NSAlert()
+    alert.window.appearance = theme.appearance
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = information ?? ""
@@ -120,6 +127,7 @@ func confirmSignal(for window:Window, header:String, information:String?, okTitl
         let alert:NSAlert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = header
+        alert.window.appearance = theme.appearance
         alert.informativeText = information ?? ""
         alert.addButton(withTitle: okTitle ?? tr(.alertOK))
         alert.addButton(withTitle: cancelTitle ?? tr(.alertCancel))
