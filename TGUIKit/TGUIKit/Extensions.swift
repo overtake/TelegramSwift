@@ -801,6 +801,33 @@ public extension Int {
         }
         return self.prettyFormatter(self, iteration: 0)
     }
+    public var separatedNumber: String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        let string = "\(self)"
+        
+        let length: Int = string.length
+        var result:String = ""
+        var index:Int = 0
+        while index < length {
+            let modulo = length % 3
+            if index == 0 && modulo != 0 {
+                result = string.nsstring.substring(with: NSMakeRange(index, modulo))
+                index += modulo
+            } else {
+                let count:Int = 3
+                let value = string.nsstring.substring(with: NSMakeRange(index, count))
+                if index == 0 {
+                    result = value
+                } else {
+                    result += " " + value
+                }
+                index += count
+            }
+        }
+        return result
+    }
 }
 
 
@@ -946,34 +973,27 @@ public extension String {
         return emojiScalars.map { String($0) }.reduce("", +)
     }
     
-    public var emojis: [String] {
+    var emojis: [String] {
         
-        var list:[String] = []
-     
-        let string = emojiString.nsstring
+        var scalars: [[UnicodeScalar]] = []
+        var currentScalarSet: [UnicodeScalar] = []
+        var previousScalar: UnicodeScalar?
         
-        let richText = NSAttributedString(string: string as String)
-        let line = CTLineCreateWithAttributedString(richText)
-        
-        let runlist:[CTRun] = CTLineGetGlyphRuns(line) as! [CTRun]
-
-        for run in runlist {
-            var indices:[CFIndex] = Array<CFIndex>(repeating: 0, count: CTRunGetGlyphCount(run))
-            CTRunGetStringIndices(run, CFRangeMake(0, 0), &indices)
+        for scalar in emojiScalars {
             
-            for i in 0 ..< indices.count {
-                let current = indices[i]
+            if let prev = previousScalar, !prev.isZeroWidthJoiner && !scalar.isZeroWidthJoiner {
                 
-                if i < indices.count - 1 {
-                    let next = indices[i + 1]
-                    list.append(string.substring(with: NSMakeRange(current, next - current)))
-                } else {
-                    list.append(string.substring(with: NSMakeRange(current, string.length - current)))
-                }
+                scalars.append(currentScalarSet)
+                currentScalarSet = []
             }
+            currentScalarSet.append(scalar)
+            
+            previousScalar = scalar
         }
- 
-        return list
+        
+        scalars.append(currentScalarSet)
+        
+        return scalars.map { $0.map{ String($0) } .reduce("", +) }
     }
     
     fileprivate var emojiScalars: [UnicodeScalar] {

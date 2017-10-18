@@ -47,6 +47,7 @@ CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 +(NSString * __nonnull)stringForEmojiHashOfData:(NSData *__nonnull)data count:(NSInteger)count positionExtractor:(int32_t (^__nonnull)(uint8_t *__nonnull, int32_t, int32_t))positionExtractor;
 +(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer;
 +(NSString * __nonnull)callEmojies:(NSData *__nonnull)keySha256;
++ (NSArray<NSString *> * __nonnull)getEmojiFromString:(NSString * __nonnull)string;
 +(NSOpenPanel * __nonnull)openPanel;
 +(NSSavePanel * __nonnull)savePanel;
 +(NSEvent * __nonnull)scrollEvent:(NSEvent *__nonnull)from;

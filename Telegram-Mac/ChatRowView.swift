@@ -544,22 +544,28 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     
     override func forceClick(in location: NSPoint) {
         guard let item = item as? ChatRowItem else { return }
-        guard let message = item.message else { return }
-        guard canEditMessage(message, account: item.account) else { return }
         
-        let state = item.chatInteraction.presentation.state
-        if state == .normal || state == .editing {
-            let hitTestView = self.hitTest(location)
-            if hitTestView == nil || hitTestView == self || hitTestView == replyView || hitTestView?.isDescendant(of: contentView) == true {
-                if let avatar = avatar {
-                    if NSPointInRect(location, avatar.frame) {
-                        return
-                    }
+        let hitTestView = self.hitTest(location)
+        if hitTestView == nil || hitTestView == self || hitTestView == replyView || hitTestView?.isDescendant(of: contentView) == true {
+            if let avatar = avatar {
+                if NSPointInRect(location, avatar.frame) {
+                    return
                 }
+            }
+            let result: Bool
+            switch FastSettings.forceTouchAction {
+            case .edit:
+                result = item.editAction()
+            case .reply:
+                result = item.replyAction()
+            case .forward:
+                result = item.forwardAction()
+            }
+            if result {
                 focusAnimation()
-                item.chatInteraction.beginEditingMessage(item.message)
             }
         }
+        
     }
     
     deinit {

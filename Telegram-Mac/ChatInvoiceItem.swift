@@ -20,7 +20,7 @@ class ChatInvoiceItem: ChatRowItem {
         let message = object.message!
         self.media = message.media[0] as! TelegramMediaInvoice
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: media.description, color: .text, font: .normal(.text))
+        _ = attr.append(string: media.description, color: theme.colors.text, font: .normal(.text))
         attr.detectLinks(type: [.Links])
         
         textLayout = TextViewLayout(attr)

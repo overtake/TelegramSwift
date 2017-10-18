@@ -37,6 +37,13 @@ static const int32_t FPS = 600;
     __block size_t currentFrameNumber = 0;
     __block Float64 totalFrameDelay = 0.f;
     
+    if (sourceWidth <= 0 || sourceHeight <= 0) {
+        if(errorHandler != nil) {
+            errorHandler();
+        }
+        return;
+    }
+    
     NSURL *outFilePath = [NSURL fileURLWithPath:exportPath];
     
     AVAssetWriter* videoWriter = [[AVAssetWriter alloc] initWithURL: outFilePath

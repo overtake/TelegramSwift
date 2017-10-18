@@ -91,7 +91,7 @@ class GeneralInteractedRowView: GeneralRowView {
             textView?.backgroundColor = theme.colors.background
             
             if item.enabled {
-                overlay.set(handler:{_ in
+                overlay.set(handler:{ _ in
                     item.action()
                 }, for: .SingleClick)
             }

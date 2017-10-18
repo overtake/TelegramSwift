@@ -8,6 +8,12 @@
 
 import Cocoa
 import TGUIKit
+
+enum GeneralRowTextType {
+    case plain(String)
+    case markdown(String, linkHandler: (String)->Void)
+}
+
 class GeneralTextRowItem: GeneralRowItem {
 
     fileprivate var layout:TextViewLayout
@@ -23,7 +29,27 @@ class GeneralTextRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, type: .none, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), centerViewAlignment: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false) {
+       
+        let attributedText: NSAttributedString
+        
+        switch text {
+        case let .plain(text):
+            attributedText = .initialize(string: text, color: theme.colors.grayText, font: .normal(.custom(11.5)))
+        case let .markdown(text, handler):
+            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.custom(11.5)), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.custom(11.5)), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.custom(11.5)), textColor: theme.colors.link), linkAttribute: { contents in
+                return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, handler))
+            }))
+        }
+        self.text = attributedText
+        self.alignment = alignment
+        self.centerViewAlignment = centerViewAlignment
+        layout = TextViewLayout(attributedText, truncationType: .end, alignment: alignment)
+        layout.interactions = globalLinkExecutor
+        super.init(initialSize, height: height, stableId: stableId, type: .none, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
+    }
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false) {
         let attr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.custom(11.5))).mutableCopy() as! NSMutableAttributedString
         attr.detectBoldColorInString(with: .medium(.text))
         self.text = attr
@@ -31,7 +57,7 @@ class GeneralTextRowItem: GeneralRowItem {
         self.centerViewAlignment = centerViewAlignment
         layout = TextViewLayout(self.text, truncationType: .end, alignment: alignment)
         layout.interactions = globalLinkExecutor
-        super.init(initialSize, height: height, stableId: stableId, type: .none, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
+        super.init(initialSize, height: height, stableId: stableId, type: .none, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
     override var height: CGFloat {

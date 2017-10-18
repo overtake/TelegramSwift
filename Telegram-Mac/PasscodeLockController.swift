@@ -34,7 +34,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     
     fileprivate let logoutTextView:TextView = TextView()
     fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
-    fileprivate var logoutImpl:(Void) -> Void = {}
+    fileprivate var logoutImpl:() -> Void = {}
     required init(frame frameRect: NSRect) {
         input = NSSecureTextField(frame: NSZeroRect)
         super.init(frame: frameRect)
@@ -75,7 +75,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         logoutTextView.isSelectable = false
         
         logoutAttr.add(link: inAppLink.logout( { [weak self] in
-            self?.logoutImpl(Void())
+            self?.logoutImpl()
         } ), for: range)
         
         let logoutLayout = TextViewLayout(logoutAttr)

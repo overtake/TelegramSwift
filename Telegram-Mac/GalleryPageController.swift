@@ -22,10 +22,9 @@ fileprivate extension MagnifyView {
 }
 
 class GalleryPageView : NSView {
-    fileprivate var lockedInteractions:Bool = false
     init() {
         super.init(frame:NSZeroRect)
-        self.wantsLayer = true
+        //self.wantsLayer = true
     }
 
     
@@ -45,7 +44,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     let contentInset:NSEdgeInsets
     private(set) var lockedTransition:Bool = false {
         didSet {
-            view.lockedInteractions = lockedTransition
             if !lockedTransition {
                 _ = enqueueTransitions()
             }

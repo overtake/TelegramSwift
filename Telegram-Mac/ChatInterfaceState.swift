@@ -244,7 +244,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
     
     var attributedString:NSAttributedString {
         let string = NSMutableAttributedString()
-        _ = string.append(string: inputText, color: .text, font: .normal(.text), coreText: false)
+        _ = string.append(string: inputText, color: theme.colors.text, font: .normal(.text), coreText: false)
         for attribute in attributes {
             let attr = attribute.attribute
             string.addAttribute(NSAttributedStringKey(rawValue: attr.0), value: attr.1, range: attr.2)

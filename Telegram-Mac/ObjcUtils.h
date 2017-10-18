@@ -16,6 +16,7 @@
 + (NSString *)stringForEmojiHashOfData:(NSData *)data count:(NSInteger)count positionExtractor:(int32_t (^)(uint8_t *, int32_t, int32_t))positionExtractor;
 +(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer;
 +(NSString *)callEmojies:(NSData *)keySha256;
++ (NSArray<NSString *> *)getEmojiFromString:(NSString *)string;
 +(NSOpenPanel *)openPanel;
 +(NSSavePanel *)savePanel;
 +(NSEvent *)scrollEvent:(NSEvent *)from;

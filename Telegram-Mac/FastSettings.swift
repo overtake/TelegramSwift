@@ -43,6 +43,7 @@ class FastSettings {
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
+    private static let kForceTouchAction = "kForceTouchAction"
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -101,6 +102,14 @@ class FastSettings {
     
     static func toggleRecordingState() {
         UserDefaults.standard.set((recordingState == .voice ? RecordingStateSettings.video : RecordingStateSettings.voice).rawValue, forKey: kRecordingStateType)
+    }
+    
+    static var forceTouchAction: ForceTouchAction {
+        return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .edit
+    }
+    
+    static func toggleForceTouchAction(_ action: ForceTouchAction) {
+        UserDefaults.standard.set(action.rawValue, forKey: kForceTouchAction)
     }
     
     static func toggleSidebarShown(_ enable: Bool) {

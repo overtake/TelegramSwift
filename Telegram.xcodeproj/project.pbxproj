@@ -13,6 +13,7 @@
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
 		C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */; };
+		C20320FF1F9769BA00143395 /* TwoStepVerificationResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20320FE1F9769BA00143395 /* TwoStepVerificationResetController.swift */; };
 		C2057FA51EBBCEA7000423DC /* voip_busy.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2CFCAB91EBB4A2200843F6A /* voip_busy.caf */; };
 		C2057FA61EBBCEA7000423DC /* voip_end.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2CFCABA1EBB4A2200843F6A /* voip_end.caf */; };
 		C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2CFCABB1EBB4A2200843F6A /* voip_fail.caf */; };
@@ -201,6 +202,7 @@
 		C23D0D7A1F1A609300AF5151 /* SFCompactRounded-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Fonts */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C23D0D7D1F1A692100AF5151 /* SFCompactRounded-Semibold.otf in CopyFiles */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
+		C240E9521F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C240E9511F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2423A531F2235080041907F /* InstantPageViewController.swift */; };
 		C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */; };
@@ -381,7 +383,6 @@
 		C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315AE1E2E64BE00D89000 /* CalendarController.swift */; };
 		C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B01E2E656100D89000 /* CalendarMonthController.swift */; };
 		C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B31E2E65C600D89000 /* CalendarUtils.m */; };
-		C2A315B91E2E695800D89000 /* TwoStepVerificationMainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */; };
 		C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */; };
 		C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506741DF438B900971A93 /* AudioWaveformView.swift */; };
 		C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A506761DF5664F00971A93 /* ForwardChatListController.swift */; };
@@ -495,6 +496,9 @@
 		C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */; };
 		C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F93A2C1F3C55C500BCD48F /* EmojiToleranceController.swift */; };
 		C2F952B01F8E1C840056E586 /* CachedAdminIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F952AF1F8E1C840056E586 /* CachedAdminIds.swift */; };
+		C2F9C4481F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F9C4471F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift */; };
+		C2F9C44A1F9500C3002B2CBF /* TwoStepVerificationUnlockStructures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F9C4491F9500C3002B2CBF /* TwoStepVerificationUnlockStructures.swift */; };
+		C2F9C44C1F95FE58002B2CBF /* Markdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F9C44B1F95FE58002B2CBF /* Markdown.swift */; };
 		C2FB2FAB1EBF73D00093C8BA /* RecentCallsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FB2FAA1EBF73CF0093C8BA /* RecentCallsViewController.swift */; };
 		C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; };
 		C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; };
@@ -578,6 +582,7 @@
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
 		C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
+		C20320FE1F9769BA00143395 /* TwoStepVerificationResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationResetController.swift; sourceTree = "<group>"; };
 		C2057FA91EBC6A3C000423DC /* ChatCallRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatCallRowItem.swift; sourceTree = "<group>"; };
 		C205DB971EE71127003711DF /* ChannelAdminController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelAdminController.swift; sourceTree = "<group>"; };
 		C205DB9C1EE88762003711DF /* Views.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
@@ -775,6 +780,7 @@
 		C23CF9711E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/ShareViewController.strings; sourceTree = "<group>"; };
 		C23CF9731E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SFCompactRounded-Semibold.otf"; sourceTree = "<group>"; };
+		C240E9511F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationPasswordEntryController.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
 		C2423A531F2235080041907F /* InstantPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageViewController.swift; sourceTree = "<group>"; };
 		C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantVideoPIP.swift; sourceTree = "<group>"; };
@@ -974,7 +980,6 @@
 		C2A315B01E2E656100D89000 /* CalendarMonthController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarMonthController.swift; sourceTree = "<group>"; };
 		C2A315B21E2E65C600D89000 /* CalendarUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarUtils.h; sourceTree = "<group>"; };
 		C2A315B31E2E65C600D89000 /* CalendarUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CalendarUtils.m; sourceTree = "<group>"; };
-		C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationMainViewController.swift; sourceTree = "<group>"; };
 		C2A315BA1E2E697200D89000 /* TwoStepVerification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoStepVerification.swift; sourceTree = "<group>"; };
 		C2A506741DF438B900971A93 /* AudioWaveformView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioWaveformView.swift; sourceTree = "<group>"; };
 		C2A506761DF5664F00971A93 /* ForwardChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardChatListController.swift; sourceTree = "<group>"; };
@@ -1119,6 +1124,9 @@
 		C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteboardUtils.swift; sourceTree = "<group>"; };
 		C2F93A2C1F3C55C500BCD48F /* EmojiToleranceController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiToleranceController.swift; sourceTree = "<group>"; };
 		C2F952AF1F8E1C840056E586 /* CachedAdminIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAdminIds.swift; sourceTree = "<group>"; };
+		C2F9C4471F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationUnlockController.swift; sourceTree = "<group>"; };
+		C2F9C4491F9500C3002B2CBF /* TwoStepVerificationUnlockStructures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationUnlockStructures.swift; sourceTree = "<group>"; };
+		C2F9C44B1F95FE58002B2CBF /* Markdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markdown.swift; sourceTree = "<group>"; };
 		C2FB2FAA1EBF73CF0093C8BA /* RecentCallsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentCallsViewController.swift; sourceTree = "<group>"; };
 		C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = TelegramCoreMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftSignalKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1838,9 +1846,9 @@
 		C24D9FC81E250328002CD3F3 /* privacy */ = {
 			isa = PBXGroup;
 			children = (
+				C2F9C4461F94FFC0002B2CBF /* two-step-verification */,
 				C2E52A0B1EB8C367009AF87D /* selective-privacy */,
 				C248BD271E706DBC004B9106 /* sessions */,
-				C2A315B51E2E691300D89000 /* 2fa */,
 				C24D9FC51E250094002CD3F3 /* passcode */,
 				C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */,
 				C248BD231E706104004B9106 /* BlockedPeersViewController.swift */,
@@ -2317,14 +2325,6 @@
 			name = calendar;
 			sourceTree = "<group>";
 		};
-		C2A315B51E2E691300D89000 /* 2fa */ = {
-			isa = PBXGroup;
-			children = (
-				C2A315B81E2E695800D89000 /* TwoStepVerificationMainViewController.swift */,
-			);
-			name = 2fa;
-			sourceTree = "<group>";
-		};
 		C2A506731DF438A700971A93 /* elements */ = {
 			isa = PBXGroup;
 			children = (
@@ -2552,6 +2552,7 @@
 				C2B6488D1EB25A5300BA574B /* FetchVideoMediaResource.swift */,
 				C2B6488F1EB25B1700BA574B /* MediaResources.swift */,
 				C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */,
+				C2F9C44B1F95FE58002B2CBF /* Markdown.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -2756,6 +2757,17 @@
 				C2F93A2C1F3C55C500BCD48F /* EmojiToleranceController.swift */,
 			);
 			name = tolerance;
+			sourceTree = "<group>";
+		};
+		C2F9C4461F94FFC0002B2CBF /* two-step-verification */ = {
+			isa = PBXGroup;
+			children = (
+				C2F9C4471F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift */,
+				C2F9C4491F9500C3002B2CBF /* TwoStepVerificationUnlockStructures.swift */,
+				C240E9511F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift */,
+				C20320FE1F9769BA00143395 /* TwoStepVerificationResetController.swift */,
+			);
+			name = "two-step-verification";
 			sourceTree = "<group>";
 		};
 		C2FB2FA91EBF73AE0093C8BA /* calls */ = {
@@ -3178,6 +3190,7 @@
 				C221ED561EA6877300471C65 /* GeneratedMediaStoreSettings.swift in Sources */,
 				C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */,
 				C22EE61E1E67506800334C38 /* ChannelMembersViewController.swift in Sources */,
+				C240E9521F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift in Sources */,
 				C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */,
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
@@ -3194,6 +3207,7 @@
 				C2DE5D341F3CA94A0081EC1E /* InstantPageMediaView.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
+				C20320FF1F9769BA00143395 /* TwoStepVerificationResetController.swift in Sources */,
 				C234A7FB1ED7112400EBBECE /* LocalizableExtension.swift in Sources */,
 				C225524B1F7BE7000007944D /* VideoRecorderModalController.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
@@ -3239,6 +3253,7 @@
 				C2EA17811E2FD50A00887153 /* ImageUtils.swift in Sources */,
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
 				C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */,
+				C2F9C4481F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift in Sources */,
 				C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */,
 				C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */,
 				C271EB901EB8E6A40034792D /* SelectivePrivacySettingsPeersController.swift in Sources */,
@@ -3284,7 +3299,6 @@
 				C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */,
 				C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
-				C2A315B91E2E695800D89000 /* TwoStepVerificationMainViewController.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
 				C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */,
@@ -3450,6 +3464,8 @@
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
+				C2F9C44C1F95FE58002B2CBF /* Markdown.swift in Sources */,
+				C2F9C44A1F9500C3002B2CBF /* TwoStepVerificationUnlockStructures.swift in Sources */,
 				C2777B661DCFC649008B69DD /* Localizable.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,

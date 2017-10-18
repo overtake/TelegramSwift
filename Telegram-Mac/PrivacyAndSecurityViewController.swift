@@ -204,7 +204,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             })
         case .twoStepVerification:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsTwoStepVerification), action: {
-                arguments.openVoiceCallPrivacy()
+                arguments.openTwoStepVerification()
             })
         case .activeSessions:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsActiveSessions), action: {
@@ -271,7 +271,7 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     
     entries.append(.securityHeader(sectionId: sectionId))
     entries.append(.passcode(sectionId: sectionId))
-   // entries.append(.twoStepVerification(sectionId: sectionId))
+    entries.append(.twoStepVerification(sectionId: sectionId))
     entries.append(.activeSessions(sectionId: sectionId))
     
     entries.append(.section(sectionId: sectionId))
@@ -398,8 +398,10 @@ class PrivacyAndSecurityViewController: TableViewController {
             if let account = self?.account {
                 self?.navigationController?.push(PasscodeSettingsViewController(account))
             }
-        }, openTwoStepVerification: {
-            
+        }, openTwoStepVerification: { [weak self] in
+            if let account = self?.account {
+                self?.navigationController?.push(TwoStepVerificationUnlockController(account: account, mode: .access))
+            }
         }, openActiveSessions: { [weak self] in
             if let account = self?.account {
                 self?.navigationController?.push(RecentSessionsController(account))
