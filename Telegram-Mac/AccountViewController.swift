@@ -658,7 +658,15 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .faq:
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsFAQ), icon: theme.icons.settingsFaq, type: .none, action: {
-                    execute(inapp: .external(link: "https://telegram.org/faq", true))
+                    
+                    _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq") |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
+                        if let webpage = webpage {
+                            showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
+                        } else {
+                            execute(inapp: .external(link: "https://telegram.org/faq", true))
+                        }
+                    })
+                    
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .ask:
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAskQuestion), icon: theme.icons.settingsAskQuestion, type: .none, action: { [weak self] in

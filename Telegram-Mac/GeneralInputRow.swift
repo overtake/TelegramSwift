@@ -10,6 +10,11 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 
+enum GeneralInputRowType {
+    case plain
+    case secure
+}
+
 class GeneralInputRowItem: TableRowItem {
     
     private let textChangeHandler:(String)->Void
@@ -29,6 +34,7 @@ class GeneralInputRowItem: TableRowItem {
     
     fileprivate let textFilter:(String)->String
     fileprivate let pasteFilter:((String)->(Bool, String))?
+    fileprivate let inputType: GeneralInputRowType
     let insets:NSEdgeInsets
     let placeholder:NSAttributedString
     let limit:Int32
@@ -39,7 +45,9 @@ class GeneralInputRowItem: TableRowItem {
         return _stableId
     }
     
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), placeholder:String, text:String = "", limit:Int32 = 140, insets: NSEdgeInsets = NSEdgeInsets(left:25,right:25,top:2,bottom:3), textChangeHandler:@escaping(String)->Void = {_ in}, textFilter:@escaping(String)->String = {value in return value}, holdText:Bool = false, pasteFilter:((String)->(Bool, String))? = nil, canFastClean: Bool = false) {
+    
+    
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), placeholder:String, text:String = "", limit:Int32 = 140, insets: NSEdgeInsets = NSEdgeInsets(left:25,right:25,top:2,bottom:3), textChangeHandler:@escaping(String)->Void = {_ in}, textFilter:@escaping(String)->String = {value in return value}, holdText:Bool = false, inputType: GeneralInputRowType = .plain, pasteFilter:((String)->(Bool, String))? = nil, canFastClean: Bool = false) {
         _stableId = stableId
         self.insets = insets
         self.pasteFilter = pasteFilter
@@ -48,6 +56,7 @@ class GeneralInputRowItem: TableRowItem {
         self.textChangeHandler = textChangeHandler
         self.limit = limit
         self.text = text
+        self.inputType = inputType
         self.textFilter = textFilter
         self.placeholder = .initialize(string: placeholder, color: theme.colors.grayText, font: NSFont.normal(FontSize.text), coreText: false)
         
@@ -78,26 +87,56 @@ class GeneralInputRowItem: TableRowItem {
     
 }
 
-class GeneralInputRowView: TableRowView,TGModernGrowingDelegate {
+class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDelegate {
     
 
     
     let textView:TGModernGrowingTextView
+    
+    private let secureField: NSSecureTextField = NSSecureTextField(frame: NSMakeRect(0, 0, 100, 16))
+    
     private let cleanImage: ImageButton = ImageButton()
     required init(frame frameRect: NSRect) {
         textView = TGModernGrowingTextView(frame: frameRect)
         super.init(frame: frameRect)
-        addSubview(textView)
         textView.delegate = self
-        textView.textFont = NSFont.normal(FontSize.text)
+        textView.textFont = .normal(.text)
         
         textView.min_height = 16
         
+        secureField.isBordered = false
+        secureField.isBezeled = false
+        secureField.focusRingType = .none
+        secureField.delegate = self
+        secureField.drawsBackground = true
+        secureField.isEditable = true
+        secureField.isSelectable = true
+       // secureField.wantsLayer = true
+        
+        secureField.font = .normal(.text)
+        secureField.textView?.insertionPointColor = theme.colors.text
+        secureField.sizeToFit()
+      
         addSubview(cleanImage)
         
         cleanImage.set(handler: { [weak self] _ in
             self?.textView.setString("")
+            self?.secureField.stringValue = ""
         }, for: .Click)
+        
+    }
+    
+    override func controlTextDidChange(_ obj: Notification) {
+        if let item = item as? GeneralInputRowItem {
+            let string = secureField.stringValue
+            let updated = item.textFilter(string)
+            if updated != string {
+                secureField.stringValue = updated
+            } else {
+                item.text = string
+            }
+            cleanImage.isHidden = (!item.canFastClean || (item.holdText && updated.isEmpty))
+        }
     }
     
     override var backdorColor: NSColor {
@@ -108,6 +147,9 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate {
         super.layout()
         if let item = item as? GeneralInputRowItem {
             textView.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right,textView.frame.height)
+            
+            secureField.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right, secureField.frame.height)
+            
             cleanImage.centerY(x: frame.width - item.insets.right - cleanImage.frame.width)
         }
     }
@@ -124,27 +166,57 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate {
         super.set(item: item, animated:animated)
         textView.textColor = theme.colors.text
         textView.linkColor = theme.colors.link
+        
+        secureField.textColor = theme.colors.text
+        secureField.backgroundColor = backdorColor
+        
         if let item = item as? GeneralInputRowItem {
+            
             
             cleanImage.set(image: theme.icons.recentDismiss, for: .Normal)
             cleanImage.sizeToFit()
             cleanImage.isHidden = (!item.canFastClean || (item.holdText && item.text.isEmpty))
             
-            if item.holdText {
-                textView.defaultText = item.placeholder.string
-               // if item.text != textView.string() {
+            
+            switch item.inputType {
+            case .plain:
+                secureField.removeFromSuperview()
+                addSubview(textView, positioned: .below, relativeTo: cleanImage)
+               // secureField.isHidden = true
+               // textView.isHidden = false
+                
+                if item.holdText {
+                    textView.defaultText = item.placeholder.string
+                    // if item.text != textView.string() {
                     textView.setString(item.text, animated: false)
-               // }
-            } else {
-                if textView.placeholderAttributedString == nil || !textView.placeholderAttributedString!.isEqual(to: item.placeholder) {
-                    textView.setPlaceholderAttributedString(item.placeholder, update: false)
+                    // }
+                } else {
+                    if textView.placeholderAttributedString == nil || !textView.placeholderAttributedString!.isEqual(to: item.placeholder) {
+                        textView.setPlaceholderAttributedString(item.placeholder, update: false)
+                    }
+                    if item.text != textView.string() {
+                        textView.setString(item.text, animated: false)
+                    }
                 }
-                if item.text != textView.string() {
-                    textView.setString(item.text, animated: false)
+                
+            case .secure:
+                textView.removeFromSuperview()
+                addSubview(secureField, positioned: .below, relativeTo: cleanImage)
+                if item.text != secureField.stringValue {
+                    secureField.stringValue = item.text
                 }
+                secureField.placeholderAttributedString = item.placeholder
             }
+            
+            
+          
         }
         needsLayout = true
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        window?.makeFirstResponder(firstResponder)
     }
     
     public func maxCharactersLimit() -> Int32 {
@@ -221,8 +293,21 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var firstResponder: NSResponder? {
+        if let item = item as? GeneralInputRowItem {
+            switch item.inputType {
+            case .plain:
+                return textView
+            case .secure:
+                return secureField
+            }
+        }
+        return super.firstResponder
+    }
+    
     override func becomeFirstResponder() -> Bool {
-        return self.textView.becomeFirstResponder()
+        window?.makeFirstResponder(firstResponder)
+        return true
     }
     
 }

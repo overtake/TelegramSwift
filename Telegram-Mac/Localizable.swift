@@ -659,6 +659,8 @@ enum L10n {
   case chatListServiceCallMissed
   /// Outgoing Call (%@)
   case chatListServiceCallOutgoing(String)
+  /// views
+  case chatMessageTooltipViews
   /// channel created
   case chatServiceChannelCreated
   /// Create
@@ -915,6 +917,8 @@ enum L10n {
   case generalSettingsEmojiReplacements
   /// Sidebar
   case generalSettingsEnableSidebar
+  /// FORCE TOUCH ACTION
+  case generalSettingsForceTouchHeader
   /// GENERAL SETTINGS
   case generalSettingsGeneralSettings
   /// In-App Sounds
@@ -933,6 +937,12 @@ enum L10n {
   case generalSettingsDarkModeDescription
   /// Use large font for messages
   case generalSettingsFontDescription
+  /// Edit Message
+  case generalSettingsForceTouchEdit
+  /// Forward Message
+  case generalSettingsForceTouchForward
+  /// Reply to Message
+  case generalSettingsForceTouchReply
   /// New Group
   case groupCreateGroup
   /// New Group
@@ -1843,6 +1853,8 @@ enum L10n {
   case telegramSelectPeersController
   /// Storage Usage
   case telegramStorageUsageController
+  /// Two-Step Verification
+  case telegramTwoStepVerificationUnlockController
   /// Username
   case telegramUsernameSettingsViewController
   /// Copy
@@ -1963,6 +1975,102 @@ enum L10n {
   case timerYearsZero(Int)
   /// Data Detectors
   case tRrPd1PSTitle
+  /// Skip
+  case twoStepAuthEmailSkip
+  /// An error occured. Please try again later.
+  case twoStepAuthAnError
+  /// Change Recovery E-Mail
+  case twoStepAuthChangeEmail
+  /// Change Password
+  case twoStepAuthChangePassword
+  /// Abort Two-Step Verification Setup
+  case twoStepAuthConfirmationAbort
+  /// Please check your e-mail and click on the validation link to complete Two-Step Verification setup. Be sure to check the spam folder as well.
+  case twoStepAuthConfirmationText
+  /// E-Mail
+  case twoStepAuthEmail
+  /// Please add your valid e-mail. It is the only way to recover a forgotten password.
+  case twoStepAuthEmailHelp
+  /// Invalid e-mail address. Please try again.
+  case twoStepAuthEmailInvalid
+  /// We have sent you an e-mail to confirm your address.
+  case twoStepAuthEmailSent
+  /// No, seriously.\n\nIf you forget your password, you will lose access to your Telegram account. There will be no way to restore it.
+  case twoStepAuthEmailSkipAlert
+  /// Forgot password?
+  case twoStepAuthEnterPasswordForgot
+  /// You have enabled Two-Step Verification, so your account is protected with an additional password.
+  case twoStepAuthEnterPasswordHelp
+  /// Hint: %@
+  case twoStepAuthEnterPasswordHint(String)
+  /// Password
+  case twoStepAuthEnterPasswordPassword
+  /// Limit exceeded. Please try again later.
+  case twoStepAuthFloodError
+  /// An error occurred. Please try again later.
+  case twoStepAuthGenericError
+  /// You have enabled Two-Step verification.\nYou'll need the password you set up here to log in to your Telegram account.
+  case twoStepAuthGenericHelp
+  /// Password
+  case twoStepAuthPasswordTitle
+  /// Your recovery e-mail %@ is not yet active and pending confirmation.
+  case twoStepAuthPendingEmailHelp(String)
+  /// Code
+  case twoStepAuthRecoveryCode
+  /// Code Expired
+  case twoStepAuthRecoveryCodeExpired
+  /// Please check your e-mail and enter the 6-digit code we've sent there to deactivate your cloud password.
+  case twoStepAuthRecoveryCodeHelp
+  /// Invalid code. Please try again.
+  case twoStepAuthRecoveryCodeInvalid
+  /// Having trouble accessing your e-mail %@?
+  case twoStepAuthRecoveryEmailUnavailable(String)
+  /// Your remaining options are either to remember your password or to reset your account.
+  case twoStepAuthRecoveryFailed
+  /// We have sent a recovery code to the e-mail you provided:\n\n%@
+  case twoStepAuthRecoverySent(String)
+  /// E-Mail Code
+  case twoStepAuthRecoveryTitle
+  /// Since you haven't provided a recovery e-mail when setting up your password, your remaining options are either to remember your password or to reset your account.
+  case twoStepAuthRecoveryUnavailable
+  /// Turn Password Off
+  case twoStepAuthRemovePassword
+  /// Set Additional Password
+  case twoStepAuthSetPassword
+  /// You can set a password that will be required when you log in on a new device in addition to the code you get in the SMS.
+  case twoStepAuthSetPasswordHelp
+  /// Set Recovery E-Mail
+  case twoStepAuthSetupEmail
+  /// Recovery E-Mail
+  case twoStepAuthSetupEmailTitle
+  /// Please create a hint for your password
+  case twoStepAuthSetupHint
+  /// Password Hint
+  case twoStepAuthSetupHintTitle
+  /// Passwords don't match. Please try again.
+  case twoStepAuthSetupPasswordConfirmFailed
+  /// Please re-enter your password
+  case twoStepAuthSetupPasswordConfirmPassword
+  /// Enter a password
+  case twoStepAuthSetupPasswordEnterPassword
+  /// Please enter your new password
+  case twoStepAuthSetupPasswordEnterPasswordNew
+  /// Your Password
+  case twoStepAuthSetupPasswordTitle
+  /// Are you sure you want to disable your password?
+  case twoStepAuthConfirmDisablePassword
+  /// An error occured. Please try again later.
+  case twoStepAuthErrorGeneric
+  /// Since you haven't provided a recovery e-mail when setting up your password, your remaining options are either to remember your password or to reset your account.
+  case twoStepAuthErrorHaventEmail
+  /// Please enter valid e-mail address.
+  case twoStepAuthErrorInvalidEmail
+  /// Invalid password. Please try again.
+  case twoStepAuthErrorInvalidPassword
+  /// You have entered invalid password too many times. Please try again later.
+  case twoStepAuthErrorLimitExceeded
+  /// Passwords don't match.\nPlease try again.
+  case twoStepAuthErrorPasswordsDontMatch
   /// Capitalize
   case uezBsLqGTitle
   /// Telegram
@@ -2669,6 +2777,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "ChatList.Service.Call.Missed")
       case .chatListServiceCallOutgoing(let p1):
         return L10n.tr(key: "ChatList.Service.Call.outgoing", p1)
+      case .chatMessageTooltipViews:
+        return L10n.tr(key: "ChatMessage.Tooltip.Views")
       case .chatServiceChannelCreated:
         return L10n.tr(key: "ChatService.ChannelCreated")
       case .composeCreate:
@@ -2925,6 +3035,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "GeneralSettings.EmojiReplacements")
       case .generalSettingsEnableSidebar:
         return L10n.tr(key: "GeneralSettings.EnableSidebar")
+      case .generalSettingsForceTouchHeader:
+        return L10n.tr(key: "GeneralSettings.ForceTouchHeader")
       case .generalSettingsGeneralSettings:
         return L10n.tr(key: "GeneralSettings.GeneralSettings")
       case .generalSettingsInAppSounds:
@@ -2943,6 +3055,12 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "GeneralSettings.DarkMode.Description")
       case .generalSettingsFontDescription:
         return L10n.tr(key: "GeneralSettings.Font.Description")
+      case .generalSettingsForceTouchEdit:
+        return L10n.tr(key: "GeneralSettings.ForceTouch.Edit")
+      case .generalSettingsForceTouchForward:
+        return L10n.tr(key: "GeneralSettings.ForceTouch.Forward")
+      case .generalSettingsForceTouchReply:
+        return L10n.tr(key: "GeneralSettings.ForceTouch.Reply")
       case .groupCreateGroup:
         return L10n.tr(key: "Group.CreateGroup")
       case .groupNewGroup:
@@ -3853,6 +3971,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Telegram.SelectPeersController")
       case .telegramStorageUsageController:
         return L10n.tr(key: "Telegram.StorageUsageController")
+      case .telegramTwoStepVerificationUnlockController:
+        return L10n.tr(key: "Telegram.TwoStepVerificationUnlockController")
       case .telegramUsernameSettingsViewController:
         return L10n.tr(key: "Telegram.UsernameSettingsViewController")
       case .textCopy:
@@ -3973,6 +4093,102 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Timer.Years_zero", p1)
       case .tRrPd1PSTitle:
         return L10n.tr(key: "tRr-pd-1PS.title")
+      case .twoStepAuthEmailSkip:
+        return L10n.tr(key: "TwoStep.AuthEmailSkip")
+      case .twoStepAuthAnError:
+        return L10n.tr(key: "TwoStepAuth.AnError")
+      case .twoStepAuthChangeEmail:
+        return L10n.tr(key: "TwoStepAuth.ChangeEmail")
+      case .twoStepAuthChangePassword:
+        return L10n.tr(key: "TwoStepAuth.ChangePassword")
+      case .twoStepAuthConfirmationAbort:
+        return L10n.tr(key: "TwoStepAuth.ConfirmationAbort")
+      case .twoStepAuthConfirmationText:
+        return L10n.tr(key: "TwoStepAuth.ConfirmationText")
+      case .twoStepAuthEmail:
+        return L10n.tr(key: "TwoStepAuth.Email")
+      case .twoStepAuthEmailHelp:
+        return L10n.tr(key: "TwoStepAuth.EmailHelp")
+      case .twoStepAuthEmailInvalid:
+        return L10n.tr(key: "TwoStepAuth.EmailInvalid")
+      case .twoStepAuthEmailSent:
+        return L10n.tr(key: "TwoStepAuth.EmailSent")
+      case .twoStepAuthEmailSkipAlert:
+        return L10n.tr(key: "TwoStepAuth.EmailSkipAlert")
+      case .twoStepAuthEnterPasswordForgot:
+        return L10n.tr(key: "TwoStepAuth.EnterPasswordForgot")
+      case .twoStepAuthEnterPasswordHelp:
+        return L10n.tr(key: "TwoStepAuth.EnterPasswordHelp")
+      case .twoStepAuthEnterPasswordHint(let p1):
+        return L10n.tr(key: "TwoStepAuth.EnterPasswordHint", p1)
+      case .twoStepAuthEnterPasswordPassword:
+        return L10n.tr(key: "TwoStepAuth.EnterPasswordPassword")
+      case .twoStepAuthFloodError:
+        return L10n.tr(key: "TwoStepAuth.FloodError")
+      case .twoStepAuthGenericError:
+        return L10n.tr(key: "TwoStepAuth.GenericError")
+      case .twoStepAuthGenericHelp:
+        return L10n.tr(key: "TwoStepAuth.GenericHelp")
+      case .twoStepAuthPasswordTitle:
+        return L10n.tr(key: "TwoStepAuth.PasswordTitle")
+      case .twoStepAuthPendingEmailHelp(let p1):
+        return L10n.tr(key: "TwoStepAuth.PendingEmailHelp", p1)
+      case .twoStepAuthRecoveryCode:
+        return L10n.tr(key: "TwoStepAuth.RecoveryCode")
+      case .twoStepAuthRecoveryCodeExpired:
+        return L10n.tr(key: "TwoStepAuth.RecoveryCodeExpired")
+      case .twoStepAuthRecoveryCodeHelp:
+        return L10n.tr(key: "TwoStepAuth.RecoveryCodeHelp")
+      case .twoStepAuthRecoveryCodeInvalid:
+        return L10n.tr(key: "TwoStepAuth.RecoveryCodeInvalid")
+      case .twoStepAuthRecoveryEmailUnavailable(let p1):
+        return L10n.tr(key: "TwoStepAuth.RecoveryEmailUnavailable", p1)
+      case .twoStepAuthRecoveryFailed:
+        return L10n.tr(key: "TwoStepAuth.RecoveryFailed")
+      case .twoStepAuthRecoverySent(let p1):
+        return L10n.tr(key: "TwoStepAuth.RecoverySent", p1)
+      case .twoStepAuthRecoveryTitle:
+        return L10n.tr(key: "TwoStepAuth.RecoveryTitle")
+      case .twoStepAuthRecoveryUnavailable:
+        return L10n.tr(key: "TwoStepAuth.RecoveryUnavailable")
+      case .twoStepAuthRemovePassword:
+        return L10n.tr(key: "TwoStepAuth.RemovePassword")
+      case .twoStepAuthSetPassword:
+        return L10n.tr(key: "TwoStepAuth.SetPassword")
+      case .twoStepAuthSetPasswordHelp:
+        return L10n.tr(key: "TwoStepAuth.SetPasswordHelp")
+      case .twoStepAuthSetupEmail:
+        return L10n.tr(key: "TwoStepAuth.SetupEmail")
+      case .twoStepAuthSetupEmailTitle:
+        return L10n.tr(key: "TwoStepAuth.SetupEmailTitle")
+      case .twoStepAuthSetupHint:
+        return L10n.tr(key: "TwoStepAuth.SetupHint")
+      case .twoStepAuthSetupHintTitle:
+        return L10n.tr(key: "TwoStepAuth.SetupHintTitle")
+      case .twoStepAuthSetupPasswordConfirmFailed:
+        return L10n.tr(key: "TwoStepAuth.SetupPasswordConfirmFailed")
+      case .twoStepAuthSetupPasswordConfirmPassword:
+        return L10n.tr(key: "TwoStepAuth.SetupPasswordConfirmPassword")
+      case .twoStepAuthSetupPasswordEnterPassword:
+        return L10n.tr(key: "TwoStepAuth.SetupPasswordEnterPassword")
+      case .twoStepAuthSetupPasswordEnterPasswordNew:
+        return L10n.tr(key: "TwoStepAuth.SetupPasswordEnterPasswordNew")
+      case .twoStepAuthSetupPasswordTitle:
+        return L10n.tr(key: "TwoStepAuth.SetupPasswordTitle")
+      case .twoStepAuthConfirmDisablePassword:
+        return L10n.tr(key: "TwoStepAuth.Confirm.DisablePassword")
+      case .twoStepAuthErrorGeneric:
+        return L10n.tr(key: "TwoStepAuth.Error.Generic")
+      case .twoStepAuthErrorHaventEmail:
+        return L10n.tr(key: "TwoStepAuth.Error.HaventEmail")
+      case .twoStepAuthErrorInvalidEmail:
+        return L10n.tr(key: "TwoStepAuth.Error.InvalidEmail")
+      case .twoStepAuthErrorInvalidPassword:
+        return L10n.tr(key: "TwoStepAuth.Error.InvalidPassword")
+      case .twoStepAuthErrorLimitExceeded:
+        return L10n.tr(key: "TwoStepAuth.Error.LimitExceeded")
+      case .twoStepAuthErrorPasswordsDontMatch:
+        return L10n.tr(key: "TwoStepAuth.Error.PasswordsDontMatch")
       case .uezBsLqGTitle:
         return L10n.tr(key: "UEZ-Bs-lqG.title")
       case .uQyDDJDrTitle:

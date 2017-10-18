@@ -24,6 +24,9 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case enterBehavior(sectionId:Int, enabled: Bool)
     case cmdEnterBehavior(sectionId:Int, enabled: Bool)
     case emojiReplacements(sectionId:Int, enabled: Bool)
+    case forceTouchReply(sectionId:Int, enabled: Bool)
+    case forceTouchEdit(sectionId:Int, enabled: Bool)
+    case forceTouchForward(sectionId:Int, enabled: Bool)
     var stableId: Int {
         switch self {
         case let .header(_, uniqueId, _):
@@ -44,6 +47,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 6
         case .emojiReplacements:
             return 7
+        case .forceTouchReply:
+            return 8
+        case .forceTouchEdit:
+            return 9
+        case .forceTouchForward:
+            return 10
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -68,6 +77,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .enterBehavior(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .cmdEnterBehavior(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .forceTouchReply(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .forceTouchEdit(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .forceTouchForward(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .section(id):
             return (id + 1) * 1000 - id
@@ -128,6 +143,24 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
                 return enabled
             }), action: {
                 arguments.toggleInput(.cmdEnter)
+            })
+        case let .forceTouchEdit(sectionId: _, enabled: enabled):
+            return GeneralInteractedRowItem(initialSize, name: tr(.generalSettingsForceTouchEdit), type: .selectable(stateback: { () -> Bool in
+                return enabled
+            }), action: {
+                arguments.toggleForceTouchAction(.edit)
+            })
+        case let .forceTouchReply(sectionId: _, enabled: enabled):
+            return GeneralInteractedRowItem(initialSize, name: tr(.generalSettingsForceTouchReply), type: .selectable(stateback: { () -> Bool in
+                return enabled
+            }), action: {
+               arguments.toggleForceTouchAction(.reply)
+            })
+        case let .forceTouchForward(sectionId: _, enabled: enabled):
+            return GeneralInteractedRowItem(initialSize, name: tr(.generalSettingsForceTouchForward), type: .selectable(stateback: { () -> Bool in
+                return enabled
+            }), action: {
+                arguments.toggleForceTouchAction(.forward)
             })
         }
     }
@@ -190,6 +223,24 @@ private func ==(lhs: GeneralSettingsEntry, rhs: GeneralSettingsEntry) -> Bool {
         } else {
             return false
         }
+    case let .forceTouchReply(sectionId, enabled):
+        if case .forceTouchReply(sectionId, enabled) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .forceTouchEdit(sectionId, enabled):
+        if case .forceTouchEdit(sectionId, enabled) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .forceTouchForward(sectionId, enabled):
+        if case .forceTouchForward(sectionId, enabled) = rhs {
+            return true
+        } else {
+            return false
+        }
     case let .section(sectionId):
         if case .section(sectionId) = rhs {
             return true
@@ -211,7 +262,8 @@ private final class GeneralSettingsArguments {
     let toggleSidebar:(Bool) -> Void
     let toggleInAppSounds:(Bool) -> Void
     let toggleEmojiReplacements:(Bool) -> Void
-    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void) {
+    let toggleForceTouchAction:(ForceTouchAction) -> Void
+    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void) {
         self.account = account
         self.toggleFonts = toggleFonts
         self.toggleInAppKeys = toggleInAppKeys
@@ -219,6 +271,7 @@ private final class GeneralSettingsArguments {
         self.toggleSidebar = toggleSidebar
         self.toggleInAppSounds = toggleInAppSounds
         self.toggleEmojiReplacements = toggleEmojiReplacements
+        self.toggleForceTouchAction = toggleForceTouchAction
     }
    
 }
@@ -266,7 +319,18 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies))
     
 
-
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: tr(.generalSettingsForceTouchHeader)))
+    headerUnique -= 1
+    
+    entries.append(.forceTouchReply(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .reply))
+    entries.append(.forceTouchEdit(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .edit))
+    entries.append(.forceTouchForward(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .forward))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
     
     return entries
 }
@@ -292,6 +356,9 @@ class GeneralSettingsViewController: TableViewController {
         
         let postbox = account.postbox
         let inputPromise:ValuePromise<SendingType> = ValuePromise(FastSettings.sendingType, ignoreRepeated: true)
+        
+        let forceTouchPromise:ValuePromise<ForceTouchAction> = ValuePromise(FastSettings.forceTouchAction, ignoreRepeated: true)
+        
         let arguments = GeneralSettingsArguments(account: account, toggleFonts: { enable in
             _ = updateApplicationFontSize(postbox: postbox, fontSize: enable ? 15.0 : 13.0).start()
         }, toggleInAppKeys: { enable in
@@ -307,13 +374,16 @@ class GeneralSettingsViewController: TableViewController {
             FastSettings.toggleInAppSouds(enable)
         }, toggleEmojiReplacements: { enable in
             FastSettings.toggleAutomaticReplaceEmojies(enable)
+        }, toggleForceTouchAction: { action in
+            FastSettings.toggleForceTouchAction(action)
+            forceTouchPromise.set(action)
         })
         
         let initialSize = atomicSize
         
         let previos:Atomic<[AppearanceWrapperEntry<GeneralSettingsEntry>]> = Atomic(value: [])
         
-        genericView.merge(with: combineLatest(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue, inputPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, appearance -> TableUpdateTransition in
+        genericView.merge(with: combineLatest(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue, inputPromise.get() |> deliverOnMainQueue, forceTouchPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, _, appearance -> TableUpdateTransition in
             
             let baseSettings: BaseApplicationSettings
             if let settings = settings.values[ApplicationSpecificPreferencesKeys.baseAppSettings] as? BaseApplicationSettings {

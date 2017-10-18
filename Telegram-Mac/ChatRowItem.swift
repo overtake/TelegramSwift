@@ -522,6 +522,10 @@ class ChatRowItem: TableRowItem {
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
                     channelViewsAttributed = NSAttributedString.initialize(string: attribute.count.prettyNumber, color: theme.colors.grayText, font: NSFont.normal(.short))
+                    
+                    if attribute.count >= 1000 {
+                        fullDate = "\(attribute.count.separatedNumber) \(tr(.chatMessageTooltipViews)), \(fullDate)"
+                    }
                 }
                 if let attribute = attribute as? EditedMessageAttribute {
                     if isEditMarkVisible {
@@ -678,6 +682,32 @@ class ChatRowItem: TableRowItem {
     
     override func viewClass() -> AnyClass {
         return ChatRowView.self
+    }
+    
+    func replyAction() -> Bool {
+        if chatInteraction.presentation.state == .normal {
+            chatInteraction.setupReplyMessage(message?.id)
+            return true
+        }
+        return false
+    }
+    func editAction() -> Bool {
+         if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing {
+            if let message = message, canEditMessage(message, account: account) {
+                chatInteraction.beginEditingMessage(message)
+                return true
+            }
+        }
+        return false
+    }
+    func forwardAction() -> Bool {
+        if chatInteraction.presentation.state != .selecting, let message = message {
+            if canForwardMessage(message, account: account) {
+                chatInteraction.forwardMessages([message.id])
+                return true
+            }
+        }
+        return false
     }
     
     override func menuItems() -> Signal<[ContextMenuItem], Void> {

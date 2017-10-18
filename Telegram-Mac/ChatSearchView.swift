@@ -107,7 +107,12 @@ class ChatSearchView: SearchView {
     func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(deleteBackward(_:)) {
             if query.isEmpty {
-                cancelSearch()
+                switch tokenState {
+                case .none:
+                    break
+                default:
+                    cancelSearch()
+                }
                 return true
             }
         }
