@@ -142,6 +142,7 @@
 		C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E721D9966BD00098E12 /* ChatInputActionsView.swift */; };
 		C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E771D997C3100098E12 /* ChatInputAttachView.swift */; };
 		C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2303E891D9A76D800098E12 /* MainViewController.swift */; };
+		C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23044821F98F8B400977C51 /* MediaPreviewRowItem.swift */; };
 		C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B8EE1DD3358C0057F596 /* AccountViewController.swift */; };
 		C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B8F01DD348970057F596 /* AccountInfoItem.swift */; };
 		C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230B8F31DD368D40057F596 /* SelectPeersController.swift */; };
@@ -724,6 +725,7 @@
 		C2303E721D9966BD00098E12 /* ChatInputActionsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputActionsView.swift; sourceTree = "<group>"; };
 		C2303E771D997C3100098E12 /* ChatInputAttachView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputAttachView.swift; sourceTree = "<group>"; };
 		C2303E891D9A76D800098E12 /* MainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		C23044821F98F8B400977C51 /* MediaPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreviewRowItem.swift; sourceTree = "<group>"; };
 		C230B8EE1DD3358C0057F596 /* AccountViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		C230B8F01DD348970057F596 /* AccountInfoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountInfoItem.swift; sourceTree = "<group>"; };
 		C230B8F31DD368D40057F596 /* SelectPeersController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectPeersController.swift; sourceTree = "<group>"; };
@@ -1861,6 +1863,7 @@
 			children = (
 				C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */,
 				C24D9FDB1E267932002CD3F3 /* PreviewSenderItems.swift */,
+				C23044821F98F8B400977C51 /* MediaPreviewRowItem.swift */,
 			);
 			name = "preview-sender";
 			sourceTree = "<group>";
@@ -3152,6 +3155,7 @@
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
 				C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */,
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
+				C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
 				C258D1B41F8D385700458478 /* PreHistorySettingsController.swift in Sources */,

@@ -15,6 +15,9 @@ import AVFoundation
 
 
 func chatMessageFileStatus(account: Account, file: TelegramMediaFile) -> Signal<MediaResourceStatus, NoError> {
+    if let _ = file.resource as? LocalFileReferenceMediaResource {
+        return .single(.Local)
+    }
     return account.postbox.mediaBox.resourceStatus(file.resource)
 }
 
