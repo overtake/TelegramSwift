@@ -2065,8 +2065,6 @@ enum L10n {
   case twoStepAuthErrorHaventEmail
   /// Please enter valid e-mail address.
   case twoStepAuthErrorInvalidEmail
-  /// Invalid password. Please try again.
-  case twoStepAuthErrorInvalidPassword
   /// You have entered invalid password too many times. Please try again later.
   case twoStepAuthErrorLimitExceeded
   /// Passwords don't match.\nPlease try again.
@@ -4183,8 +4181,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "TwoStepAuth.Error.HaventEmail")
       case .twoStepAuthErrorInvalidEmail:
         return L10n.tr(key: "TwoStepAuth.Error.InvalidEmail")
-      case .twoStepAuthErrorInvalidPassword:
-        return L10n.tr(key: "TwoStepAuth.Error.InvalidPassword")
       case .twoStepAuthErrorLimitExceeded:
         return L10n.tr(key: "TwoStepAuth.Error.LimitExceeded")
       case .twoStepAuthErrorPasswordsDontMatch:

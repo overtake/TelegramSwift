@@ -267,13 +267,19 @@ class TwoStepVerificationUnlockController: TableViewController {
         
         var nextAction:(()->Void)? = nil
         
+        let shake:()->Void = { [weak self] in
+            (self?.firstResponder() as? NSTextView)?.shake()
+            (self?.firstResponder() as? NSTextView)?.selectAll(nil)
+            NSSound.beep()
+        }
+        
         let signal = combineLatest(appearanceSignal, statePromise.get(), dataPromise.get() |> deliverOnMainQueue)
             |> map { appearance, state, data -> (TableUpdateTransition, String, TwoStepVerificationUnlockSettingsControllerData) in
                 
                 
                 let entries = twoStepVerificationUnlockSettingsControllerEntries(state: state, data: data).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 
-                var title: String = ""
+                var title: String = tr(.twoStepAuthPasswordTitle)
                 switch data {
                 case let .access(configuration):
                     if let configuration = configuration {
@@ -306,16 +312,16 @@ class TwoStepVerificationUnlockController: TableViewController {
                                                 $0.withUpdatedChecking(false)
                                             }
                                             
-                                            let text: String
                                             switch error {
                                             case .limitExceeded:
-                                                text = tr(.twoStepAuthErrorLimitExceeded)
+                                                alert(for: mainWindow, info: tr(.twoStepAuthErrorLimitExceeded))
                                             case .invalidPassword:
-                                                text = tr(.twoStepAuthErrorInvalidPassword)
+                                                shake()
+                                                //text = tr(.twoStepAuthErrorInvalidPassword)
                                             case .generic:
-                                                text = tr(.twoStepAuthErrorGeneric)
+                                                 alert(for: mainWindow, info: tr(.twoStepAuthErrorGeneric))
                                             }
-                                            alert(for: mainWindow, info: text)
+                                           
                                         }))
                                     }
                                 }
@@ -343,9 +349,9 @@ class TwoStepVerificationUnlockController: TableViewController {
             
             switch mode {
             case .access:
-                self?.removeOnDisappear = true
                 switch data {
                 case let .access(configuration):
+                    self?.removeOnDisappear = false
                     if let configuration = configuration {
                         switch configuration {
                         case .notSet:
@@ -359,7 +365,8 @@ class TwoStepVerificationUnlockController: TableViewController {
                         self?.rightBarView.isHidden = true
                     }
                 case .manage:
-                    self?.rightBarView.isHidden = false
+                    self?.removeOnDisappear = false
+                    self?.rightBarView.isHidden = true
                 }
             case .manage:
                 self?.removeOnDisappear = false
@@ -387,9 +394,11 @@ class TwoStepVerificationUnlockController: TableViewController {
     
     override func firstResponder() -> NSResponder? {
         if genericView.count > 1 {
-            return (genericView.viewNecessary(at: 1) as? GeneralInputRowView)?.firstResponder
+            if !(window?.firstResponder is NSTextView) {
+                return (genericView.viewNecessary(at: 1) as? GeneralInputRowView)?.firstResponder
+            }
         }
-        return nil
+        return window?.firstResponder
     }
     
     override func getRightBarViewOnce() -> BarView {

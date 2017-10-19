@@ -60,7 +60,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
         let updatePasswordDisposable = MetaDisposable()
         actionsDisposable.add(updatePasswordDisposable)
         
-        let checkPassword: () -> Void = {
+        func checkPassword(_ skipEmail:Bool = false) {
             var passwordHintEmail: (String, String, String)?
             var invalidReentry = false
             updateState { state in
@@ -106,7 +106,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                     if case let .change(current) = mode {
                         currentPassword = current
                     }
-                    updatePasswordDisposable.set((updateTwoStepVerificationPassword(account: account, currentPassword: currentPassword, updatedPassword: .password(password: password, hint: hint, email: email)) |> deliverOnMainQueue).start(next: { update in
+                    updatePasswordDisposable.set((updateTwoStepVerificationPassword(account: account, currentPassword: currentPassword, updatedPassword: .password(password: password, hint: hint, email: skipEmail ? "" : email)) |> deliverOnMainQueue).start(next: { update in
                         updateState {
                             $0.withUpdatedUpdating(false)
                         }
@@ -196,6 +196,10 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
             }
             
             checkPassword()
+        }, skipEmail: {
+            confirm(for: mainWindow, with: appName, and: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
+                checkPassword(true)
+            })
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<TwoStepVerificationPasswordEntryEntry>]> = Atomic(value: [])
@@ -233,7 +237,12 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                     case .hint:
                         break
                     case .email(let text):
-                        nextEnabled = !text.text.isEmpty
+                        switch mode {
+                        case .setupEmail:
+                            nextEnabled = !text.text.isEmpty
+                        default:
+                            nextEnabled = true
+                        }
                     }
                    
                 }
@@ -276,9 +285,11 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
     
     override func firstResponder() -> NSResponder? {
         if genericView.count > 1 {
-            return (genericView.viewNecessary(at: 1) as? GeneralInputRowView)?.firstResponder
+            if !(window?.firstResponder is NSTextView) {
+                return (genericView.viewNecessary(at: 1) as? GeneralInputRowView)?.firstResponder
+            }
         }
-        return nil
+        return window?.firstResponder
     }
     
     override func backKeyAction() -> KeyHandlerResult {

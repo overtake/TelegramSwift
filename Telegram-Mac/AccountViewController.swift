@@ -659,11 +659,13 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             case .faq:
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsFAQ), icon: theme.icons.settingsFaq, type: .none, action: {
                     
-                    _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq") |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
+                    let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
+                    
+                    _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
                         if let webpage = webpage {
                             showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
                         } else {
-                            execute(inapp: .external(link: "https://telegram.org/faq", true))
+                            execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
                         }
                     })
                     

@@ -235,6 +235,10 @@ class GalleryViewer: NSResponder {
         window.set(handler: interactions.dismiss, with:self, for: .Space)
         window.set(handler: interactions.dismiss, with:self, for: .Escape)
         
+        window.closeInterceptor = { [weak self] in
+            _ = self?.interactions.dismiss()
+        }
+        
         window.set(handler: interactions.next, with:self, for: .RightArrow)
         window.set(handler: interactions.previous, with:self, for: .LeftArrow)
         
