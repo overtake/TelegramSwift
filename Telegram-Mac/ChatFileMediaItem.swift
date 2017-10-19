@@ -20,6 +20,10 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         self.fileName = fileName
         self.hasThumb = hasThumb
     }
+    override func makeLabelsForWidth(_ width: CGFloat) {
+        self.name = TextNode.layoutText(maybeNode: nameNode, .initialize(string: fileName , color: theme.colors.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (hasThumb ? 80 : 50), 20), nil,false, .left)
+
+    }
 }
 
 class ChatFileMediaItem: ChatMediaItem {
@@ -35,7 +39,7 @@ class ChatFileMediaItem: ChatMediaItem {
         
         let parameters = self.parameters as! ChatFileLayoutParameters
         
-        parameters.name = TextNode.layoutText(maybeNode: parameters.nameNode, NSAttributedString.initialize(string: parameters.fileName , color: theme.colors.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (parameters.hasThumb ? 80 : 50), 20), nil,false, .left)
+        parameters.makeLabelsForWidth(width)
         
         return NSMakeSize(width, parameters.hasThumb ? 70 : 40)
     }

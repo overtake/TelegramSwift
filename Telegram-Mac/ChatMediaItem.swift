@@ -82,6 +82,10 @@ class ChatMediaLayoutParameters : Equatable {
         }
     }
     
+    func makeLabelsForWidth(_ width: CGFloat) {
+        
+    }
+    
 }
 
 class ChatMediaGalleryParameters : ChatMediaLayoutParameters {

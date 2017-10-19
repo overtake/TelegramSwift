@@ -1519,8 +1519,8 @@ enum L10n {
   case preHistorySettingsDescriptionVisible
   /// bot
   case presenceBot
-  /// Caption...
-  case previderSenderCaptionPlaceholder
+  /// Add Caption
+  case previewSenderCaptionPlaceholder
   /// Send as compressed
   case previewSenderCompressFile
   /// Active Sessions
@@ -3635,8 +3635,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PreHistorySettings.Description.Visible")
       case .presenceBot:
         return L10n.tr(key: "Presence.bot")
-      case .previderSenderCaptionPlaceholder:
-        return L10n.tr(key: "PreviderSender.CaptionPlaceholder")
+      case .previewSenderCaptionPlaceholder:
+        return L10n.tr(key: "PreviewSender.CaptionPlaceholder")
       case .previewSenderCompressFile:
         return L10n.tr(key: "PreviewSender.CompressFile")
       case .privacySettingsActiveSessions:

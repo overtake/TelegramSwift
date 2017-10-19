@@ -144,7 +144,7 @@ class Sender: NSObject {
         
     }
     
-    private static func generateMedia(for container:MediaSenderContainer, account: Account) -> Signal<(Media,String),Void> {
+    static func generateMedia(for container:MediaSenderContainer, account: Account) -> Signal<(Media,String),Void> {
         return Signal { (subscriber) in
             
             let path = container.path
@@ -157,7 +157,7 @@ class Sender: NSObject {
                 let mimeType = MIMEType(path.nsstring.pathExtension)
                 let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: isMedia)
                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, size: fileSize(path))
-                media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: [], mimeType: mimeType, size: nil, attributes: attrs)
+                media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
             }
             
             if !container.isFile {
