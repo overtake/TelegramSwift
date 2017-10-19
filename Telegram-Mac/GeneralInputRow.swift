@@ -58,7 +58,7 @@ class GeneralInputRowItem: TableRowItem {
         self.text = text
         self.inputType = inputType
         self.textFilter = textFilter
-        self.placeholder = .initialize(string: placeholder, color: theme.colors.grayText, font: NSFont.normal(FontSize.text), coreText: false)
+        self.placeholder = .initialize(string: placeholder, color: theme.colors.grayText, font: .normal(.text), coreText: false)
         
         let textStorage = NSTextStorage(attributedString: .initialize(string: text))
         let textContainer = NSTextContainer(containerSize: NSMakeSize(initialSize.width - insets.left - insets.right, .greatestFiniteMagnitude))
@@ -162,6 +162,11 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         }
     }
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        _ = becomeFirstResponder()
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         textView.textColor = theme.colors.text
@@ -180,10 +185,14 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
             
             switch item.inputType {
             case .plain:
+                
+                
                 secureField.removeFromSuperview()
                 addSubview(textView, positioned: .below, relativeTo: cleanImage)
                // secureField.isHidden = true
                // textView.isHidden = false
+                
+                
                 
                 if item.holdText {
                     textView.defaultText = item.placeholder.string
@@ -199,13 +208,17 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
                     }
                 }
                 
+                
             case .secure:
+                
+                
                 textView.removeFromSuperview()
                 addSubview(secureField, positioned: .below, relativeTo: cleanImage)
                 if item.text != secureField.stringValue {
                     secureField.stringValue = item.text
                 }
                 secureField.placeholderAttributedString = item.placeholder
+                
             }
             
             
@@ -297,7 +310,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         if let item = item as? GeneralInputRowItem {
             switch item.inputType {
             case .plain:
-                return textView
+                return textView.inputView
             case .secure:
                 return secureField
             }

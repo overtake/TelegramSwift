@@ -259,10 +259,11 @@ enum TwoStepVerificationUnlockSettingsControllerData {
 final class TwoStepVerificationPasswordEntryControllerArguments {
     let updateEntryText: (String) -> Void
     let next: () -> Void
-    
-    init(updateEntryText: @escaping (String) -> Void, next: @escaping () -> Void) {
+    let skipEmail:() ->Void
+    init(updateEntryText: @escaping (String) -> Void, next: @escaping () -> Void, skipEmail:@escaping()->Void) {
         self.updateEntryText = updateEntryText
         self.next = next
+        self.skipEmail = skipEmail
     }
 }
 
@@ -357,12 +358,12 @@ enum TwoStepVerificationPasswordEntryEntry: TableItemListNodeEntry {
                 arguments.updateEntryText(updatedText)
             }, inputType: .plain)
         case let .emailEntry(_, text):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: "E-mail", text: text, limit: 30, textChangeHandler: { updatedText in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.twoStepAuthEmail), text: text, limit: 40, textChangeHandler: { updatedText in
                 arguments.updateEntryText(updatedText)
             }, inputType: .plain)
         case let .emailInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { _ in
-                arguments.next()
+                arguments.skipEmail()
             }), inset: NSEdgeInsetsMake(5, 28, 5, 28))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
