@@ -278,6 +278,12 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="eu3-7i-yIM"/>
+                            <menuItem title="Telegram" keyEquivalent="o" id="yUb-j6-EX5">
+                                <connections>
+                                    <action selector="unhide:" target="Voe-Tx-rLC" id="gvM-LN-95z"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="3wu-AK-VhN"/>
                             <menuItem title="Bring All to Front" identifier="LE2-aR-0XJ" id="LE2-aR-0XJ" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

@@ -295,7 +295,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
     
     
-  //  LocalizationWrapper.setLanguageCode("ru")
+    @IBAction func unhide(_ sender: Any) {
+         window.makeKeyAndOrderFront(sender)
+    }
+    //  LocalizationWrapper.setLanguageCode("ru")
     
     @IBAction func aboutAction(_ sender: Any) {
         window.makeKeyAndOrderFront(sender)
