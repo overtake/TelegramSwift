@@ -117,12 +117,7 @@ class ReplyModel: ChatAccessoryModel {
                     view.imageView?.centerY(x: super.leftInset)
                     
                     
-                    var mediaUpdated = false
-                    if let updatedMedia = updatedMedia, let previousMedia = self.previousMedia {
-                        mediaUpdated = !updatedMedia.isEqual(previousMedia)
-                    } else if (updatedMedia != nil) != (self.previousMedia != nil) {
-                        mediaUpdated = true
-                    }
+                    let mediaUpdated = true
                     
                     
                     var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?

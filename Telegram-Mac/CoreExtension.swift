@@ -358,6 +358,9 @@ extension TelegramMediaFile {
         if let size = size {
             return size
         }
+        if let resource = resource as? LocalFileReferenceMediaResource {
+            return Int(resource.sizeValue ?? 0)
+        }
         return 0
     }
 }

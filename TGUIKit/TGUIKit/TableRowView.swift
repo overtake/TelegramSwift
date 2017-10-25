@@ -113,7 +113,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func rightMouseDown(with event: NSEvent) {
         super.rightMouseDown(with: event)
-        showContextMenu(event)
+        if mouseInside() {
+            showContextMenu(event)
+        }
     }
     
     open func doubleClick(in location:NSPoint) -> Void {

@@ -224,7 +224,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             let item = ChatListMessageRowItem(initialSize, account: arguments.account, message: message, renderedPeer: RenderedPeer(message: message))
             return item
         case let .globalPeer(peer,_):
-            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, borderType: [.Right])
+            var status: String? = nil
+            if let addressName = peer.addressName {
+                status = "@\(addressName)"
+            }
+            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.blueText, highlightColor:.white), status: status, borderType: [.Right])
         case let .localPeer(peer, _, secretChat, drawBorder), let .recentlySearch(peer, _, secretChat, drawBorder):
             
             var canRemoveFromRecent: Bool = false

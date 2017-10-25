@@ -842,6 +842,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         if(current != 0 && redraw) {
             self.tableView.insertRows(at: IndexSet(integersIn: at ..< current + at), withAnimation: animation)
+            self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: at ..< current + at))
+
         }
         
     }

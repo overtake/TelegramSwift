@@ -256,6 +256,7 @@ class StickersControllerView : View {
     override func updateLocalizationAndTheme() {
         self.restrictedView?.updateLocalizationAndTheme()
         self.separator.backgroundColor = theme.colors.border
+        gridView.updateLocalizationAndTheme()
     }
     
     override func setFrameSize(_ newSize: NSSize) {

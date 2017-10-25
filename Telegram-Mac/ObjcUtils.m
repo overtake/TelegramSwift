@@ -947,7 +947,6 @@ NSDictionary<NSString *, NSString *> *audioTags(AVURLAsset *asset) {
         NSArray *metadata = [asset metadataForFormat:obj];
         
         for (AVMutableMetadataItem *metaItem in metadata) {
-            NSLog(@"%@ : %@", metaItem.identifier, (NSString *)metaItem.value);
             if([metaItem.identifier isEqualToString:AVMetadataIdentifierID3MetadataLeadPerformer]) {
                 artistName = (NSString *) metaItem.value;
             } else if([metaItem.identifier isEqualToString:AVMetadataIdentifierID3MetadataTitleDescription]) {

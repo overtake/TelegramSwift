@@ -16,7 +16,7 @@ class ChatHoleRowItem: ChatRowItem {
     
 
     override var height: CGFloat {
-        return 20
+        return 30
     }
     
     override open var animatable:Bool {

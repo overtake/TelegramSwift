@@ -26,6 +26,7 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
+- (void)textViewDidReachedLimit:(id __nonnull)textView;
 @end
 
 

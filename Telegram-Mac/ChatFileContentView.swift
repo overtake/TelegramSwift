@@ -110,10 +110,13 @@ class ChatFileContentView: ChatMediaContentView {
             }
         case .Local:
 
-            let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+            let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: theme.colors.grayText, font: .normal(.text))
             
-            let range = attr.append(string: tr(.messagesFileStateLocal), color: theme.colors.link, font: NSFont.normal(FontSize.text))
-            attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
+            if !(file.resource is LocalFileReferenceMediaResource) {
+                let _ = attr.append(string: " - ", color: theme.colors.grayText, font: .normal(.text))
+                let range = attr.append(string: tr(.messagesFileStateLocal), color: theme.colors.link, font: NSFont.normal(FontSize.text))
+                attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
+            }
         case .Remote:
             let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             let range = attr.append(string: tr(.messagesFileStateRemote), color: theme.colors.link, font: NSFont.normal(FontSize.text))
@@ -149,8 +152,22 @@ class ChatFileContentView: ChatMediaContentView {
             }
             
             if !file.previewRepresentations.isEmpty {
-                thumbView.setSignal(account: account, signal: chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor))
-                thumbView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 4), imageSize: file.previewRepresentations[0].dimensions, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets()))
+                
+                let arguments = TransformImageArguments(corners: ImageCorners(radius: 4), imageSize: file.previewRepresentations[0].dimensions, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
+                
+                if !animated {
+                    thumbView.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor))
+                }
+                
+                
+                thumbView.setSignal(account: account, signal: chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
+                    if let strongSelf = self {
+                        return cacheMedia(signal: image, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                    } else {
+                        return .complete()
+                    }
+                })
+                thumbView.set(arguments: arguments)
             } else {
                 thumbView.setSignal(signal: .single(nil))
             }

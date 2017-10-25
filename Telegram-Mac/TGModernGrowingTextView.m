@@ -538,6 +538,8 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
         NSString *sub = [self.string substringWithRange:NSMakeRange(_defaultText.length, limit)];
         [self setString:sub animated: notification != nil];
+        if ([self.delegate respondsToSelector:@selector(textViewDidReachedLimit:)])
+            [self.delegate textViewDidReachedLimit: self];
         return;
     }
     

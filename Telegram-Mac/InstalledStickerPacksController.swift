@@ -230,7 +230,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             })
 
         case let .packsInfo(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, height: 20, text: text)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }

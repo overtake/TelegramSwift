@@ -518,6 +518,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 let controller = PasscodeLockController(account, .login, logoutImpl: { [weak self] in
                     self?.logout()
                 })
+                closeAllModals()
                 showModal(with: controller, for: window)
                 return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
             }
@@ -957,6 +958,7 @@ class LegacyIntroView : View, NSTextFieldDelegate {
     fileprivate let legacyIntro: LegacyPasscodeHeaderView
     fileprivate var layoutWithPasscode: Bool = false {
         didSet {
+            
             self.input.isHidden = !layoutWithPasscode
             self.logoutTextView.isHidden = !layoutWithPasscode
             self.needsLayout = true
@@ -965,6 +967,7 @@ class LegacyIntroView : View, NSTextFieldDelegate {
     }
     required init(frame frameRect: NSRect) {
         input = NSSecureTextField(frame: NSZeroRect)
+        input.stringValue = ""
         legacyIntro = LegacyPasscodeHeaderView(frame: NSMakeRect(0,0, frameRect.width, 300))
         super.init(frame: frameRect)
         

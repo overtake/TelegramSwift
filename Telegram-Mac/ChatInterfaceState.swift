@@ -342,6 +342,23 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: uid))))
             }
         }
+        
+        let attr = NSMutableAttributedString(string: inputText)
+        attr.detectLinks(type: .Hashtags)
+        
+        attr.enumerateAttribute(NSAttributedStringKey.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+            if let value = value as? inAppLink {
+                switch value {
+                case let .external(link, _):
+                    if link.hasPrefix("#") {
+                        entities.append(MessageTextEntity(range: range.lowerBound ..< range.upperBound, type: .Hashtag))
+                    }
+                default:
+                    break
+                }
+            }
+        })
+        
         return entities
     }
     

@@ -35,10 +35,12 @@ class ChatLayoutUtils: NSObject {
             if file.isSticker {
                 size = contentSize.aspectFitted(NSMakeSize(180, 180))
             } else if file.isInstantVideo {
-                size = contentSize.fitted(NSMakeSize(200, 200))
+                size = NSMakeSize(200, 200)
             } else if file.isVideo || file.isAnimated {
                 size = contentSize.fitted(maxSize)
             } else if contentSize.height > 0 {
+                size = NSMakeSize(width, 70)
+            } else if !file.previewRepresentations.isEmpty {
                 size = NSMakeSize(width, 70)
             }
             

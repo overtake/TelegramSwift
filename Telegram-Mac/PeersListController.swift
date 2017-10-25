@@ -352,7 +352,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return .invoked
         }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
         
-  
+//        self.window?.set(handler: { () -> KeyHandlerResult in
+//            _ = showModalProgress(signal: Signal<Void, Void>({_ in return EmptyDisposable}), for: mainWindow).start()
+//            return .invoked
+//        }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
         
     }
     
