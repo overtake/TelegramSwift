@@ -34,6 +34,10 @@ class ReplyMarkupButtonLayout {
 }
 
 class ReplyMarkupNode: Node {
+
+    static let buttonHeight:CGFloat = 34
+    static let buttonPadding:CGFloat = 6
+    static let rowHeight = buttonHeight + buttonPadding
     
     private var width:CGFloat = 0
     private var height:CGFloat = 0
@@ -117,7 +121,7 @@ class ReplyMarkupNode: Node {
                 if j == row.count - 1 {
                     w = self.width - rect.minX
                 }
-                rect.size = NSMakeSize(w, 34)
+                rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let button:View? = view?.subviews[i] as? View
                 button?.backgroundColor = theme.colors.grayBackground
                 if let button = button {
@@ -128,11 +132,11 @@ class ReplyMarkupNode: Node {
                     }
                 }
                 
-                rect = rect.offsetBy(dx: w + 6, dy: 0)
+                rect = rect.offsetBy(dx: w + ReplyMarkupNode.buttonPadding, dy: 0)
                 i += 1
                 j += 1
             }
-            y += 40
+            y += ReplyMarkupNode.rowHeight
         }
     }
     
