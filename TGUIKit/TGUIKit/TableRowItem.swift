@@ -94,6 +94,10 @@ open class TableRowItem: NSObject {
         }
     }
     
+    open var isLast: Bool {
+        return table?.lastItem == self
+    }
+    
     open var identifier:String {
         return NSStringFromClass(viewClass())
     }

@@ -1283,6 +1283,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
             }
         }
         
+        chatInteraction.sendMedias = { [weak self] medias, caption in
+            if let strongSelf = self, let peer = strongSelf.peer, peer.canSendMessage {
+                let _ = (Sender.enqueue(media: medias, caption: caption, account: strongSelf.account, peerId: strongSelf.peerId, chatInteraction: strongSelf.chatInteraction) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                strongSelf.nextTransaction.set(handler: {})
+                
+            }
+        }
+        
         chatInteraction.shareSelfContact = { [weak self] replyId in
             if let strongSelf = self, let peer = strongSelf.peer, peer.canSendMessage {
                 strongSelf.shareContactDisposable.set((strongSelf.account.viewTracker.peerView(strongSelf.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in

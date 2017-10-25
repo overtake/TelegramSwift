@@ -642,9 +642,7 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        if lhs.inputContext != rhs.inputContext {
-            return false
-        }
+        
         
         if lhs.state != rhs.state {
             return false
@@ -721,6 +719,10 @@ struct ChatPresentationInterfaceState: Equatable {
                 return false
             }
         } else if (lhs.keyboardButtonsMessage == nil) != (rhs.keyboardButtonsMessage == nil) {
+            return false
+        }
+        
+        if lhs.inputContext != rhs.inputContext {
             return false
         }
         

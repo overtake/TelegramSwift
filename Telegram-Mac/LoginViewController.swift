@@ -74,7 +74,7 @@ private class InputPasswordContainerView : View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
+        input.stringValue = ""
         input.isBordered = false
         input.isBezeled = false
         input.focusRingType = .none

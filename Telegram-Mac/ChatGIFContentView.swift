@@ -105,6 +105,12 @@ class ChatGIFContentView: ChatMediaContentView {
         }
     }
     
+    override func willRemove() {
+        super.willRemove()
+        updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
     override func viewDidMoveToWindow() {
         updateListeners()
         updatePlayerIfNeeded()
@@ -163,7 +169,7 @@ class ChatGIFContentView: ChatMediaContentView {
                                 strongSelf.path = resource.path
                                 
                             } else {
-                                if strongSelf.progressView == nil {
+                                if strongSelf.progressView == nil, parent != nil {
                                     let progressView = RadialProgressView()
                                     progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: 40.0, height: 40.0))
                                     strongSelf.progressView = progressView

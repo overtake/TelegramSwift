@@ -250,7 +250,7 @@ private struct WrappedGridItemNode: Hashable {
     }
 }
 
-open class GridNode: ScrollView, InteractionContentViewProtocol {
+open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewProtocol {
     private var gridLayout = GridNodeLayout(size: CGSize(), insets: NSEdgeInsets(), preloadSize: 0.0, type: .fixed(itemSize: CGSize(), lineSpacing: 0.0))
     private var firstIndexInSectionOffset: Int = 0
     private var items: [GridItem] = []
@@ -282,6 +282,15 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func updateLocalizationAndTheme() {
+        guard let documentView = documentView else {return}
+        for view in documentView.subviews {
+            if let view = view as? AppearanceViewProtocol {
+                view.updateLocalizationAndTheme()
+            }
+        }
     }
     
     public func transaction(_ transaction: GridNodeTransaction, completion: (GridNodeDisplayedItemRange) -> Void) {
@@ -399,6 +408,8 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             NotificationCenter.default.removeObserver(self)
         }
     }
+    
+    
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)

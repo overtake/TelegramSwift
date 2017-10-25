@@ -32,8 +32,18 @@ class MediaPreviewRowItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
+    
+    private var overSize: CGFloat? = nil
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         parameters?.makeLabelsForWidth(width - 20)
+        
+        if let table = table, table.count == 1 {
+            if contentSize.height > table.frame.height && table.frame.height > 0 {
+                overSize = table.frame.height - 12
+            } else {
+                overSize = nil
+            }
+        }
         
         return super.makeSize(width, oldWidth: oldWidth)
     }
@@ -51,6 +61,11 @@ class MediaPreviewRowItem: TableRowItem {
     }
     
     var contentSize: NSSize {
+        let contentSize = layoutSize
+        return NSMakeSize(width - 20, overSize ?? contentSize.height)
+    }
+    
+    var layoutSize: NSSize {
         return ChatLayoutUtils.contentSize(for: media, with: initialSize.width - 20)
     }
     
@@ -108,6 +123,10 @@ fileprivate class MediaPreviewRowView : TableRowView {
         return self
     }
     
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+    }
     
     override var backgroundColor: NSColor {
         didSet {

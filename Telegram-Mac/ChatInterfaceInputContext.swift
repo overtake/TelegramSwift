@@ -99,7 +99,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         
         var possibleQueryRange: Range<String.Index>?
         
-        var possibleTypes = PossibleContextQueryTypes([.command, .mention, .emoji])
+        var possibleTypes = PossibleContextQueryTypes([.command, .mention, .emoji, .hashtag])
         //var possibleTypes = PossibleContextQueryTypes([.command, .mention])
 
 

@@ -30,9 +30,31 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     switch inputQuery {
     case .none:
         return (nil, .single({ _ in return nil }))
-    case .hashtag(_):
+    case let .hashtag(query):
         
-        return (nil, .single({ _ in return nil }))
+        var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
+        if let currentQuery = currentQuery {
+            switch currentQuery {
+            case .hashtag:
+                break
+            default:
+                signal = .single({ _ in return nil })
+            }
+        }
+        
+        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = recentlyUsedHashtags(postbox: account.postbox) |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+            let normalizedQuery = query.lowercased()
+            var result: [String] = []
+            for hashtag in hashtags {
+                if hashtag.lowercased().hasPrefix(normalizedQuery) {
+                    result.append(hashtag)
+                }
+            }
+            return { _ in return .hashtags(result) }
+        }
+        
+        return (inputQuery, signal |> then(hashtags))
+        
     case let .stickers(query):
         
         return (inputQuery, searchStickers(postbox: account.postbox, query: query) |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in

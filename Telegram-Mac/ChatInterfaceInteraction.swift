@@ -71,6 +71,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusMessageId: (MessageId?, MessageId, TableScrollState) -> Void = {_,_,_  in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
+    var sendMedias:([Media], String) -> Void = {_,_ in}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
     var requestMessageActionCallback:(MessageId, Bool, MemoryBuffer?) -> Void = {_,_,_  in}

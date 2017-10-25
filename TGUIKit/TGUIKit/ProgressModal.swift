@@ -10,9 +10,7 @@ import Cocoa
 import SwiftSignalKitMac
 class ProgressModalController: ModalViewController {
 
-    private var progressView:RadialProgressView?
-    private var timer:SwiftSignalKitMac.Timer?
-    private var progress:Float = 0.2
+    private var progressView:ProgressIndicator?
     override var background: NSColor {
         return .clear
     }
@@ -24,11 +22,11 @@ class ProgressModalController: ModalViewController {
     override func loadView() {
         super.loadView()
    
-        progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
-        progressView?.state = .ImpossibleFetching(progress: progress, force: false)
-        view.background = NSColor(0x000000,0.8)
+        progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
+        
+        view.background = presentation.colors.grayBackground.withAlphaComponent(0.8)
         view.addSubview(progressView!)
-        progressView?.center()
+        progressView!.center()
         
         viewDidLoad()
     }
@@ -44,25 +42,10 @@ class ProgressModalController: ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        
-        self.timer = SwiftSignalKitMac.Timer(timeout: 0.05, repeat: true, completion: { [weak self] in
-            if let strongSelf = self {
-                strongSelf.progress += 0.05
-                strongSelf.progressView?.state = .ImpossibleFetching(progress: strongSelf.progress, force: false)
-                if strongSelf.progress >= 0.8 {
-                    strongSelf.timer?.invalidate()
-                }
-            }
-        }, queue: Queue.mainQueue())
-        self.timer?.start()
-        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        timer?.invalidate()
-        timer = nil
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -70,7 +53,7 @@ class ProgressModalController: ModalViewController {
     }
     
     override init() {
-        super.init(frame:NSMakeRect(0,0,100,100))
+        super.init(frame:NSMakeRect(0,0,80,80))
         self.bar = .init(height: 0)
     }
     

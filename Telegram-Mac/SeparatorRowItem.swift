@@ -99,7 +99,7 @@ class SeparatorRowView: TableRowView {
         if let item = item as? SeparatorRowItem {
             self.border = item.border
         }
-        
+        needsDisplay = true
     }
 }
 

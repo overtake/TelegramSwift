@@ -171,6 +171,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     
     override init(_ account: Account) {
         super.init(account)
+        _frameRect = NSMakeRect(0, 0, 350, 300)
         self.bar = .init(height: 0)
     }
     

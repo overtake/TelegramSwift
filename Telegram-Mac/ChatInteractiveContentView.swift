@@ -102,7 +102,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         videoAccessory = ChatVideoAccessoryView(frame: NSZeroRect)
                         addSubview(videoAccessory!)
                     }
-                    videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.size ?? 0))", maxWidth: size.width - 20)
+                    videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.elapsedSize))", maxWidth: size.width - 20)
                 } else {
                     videoAccessory?.removeFromSuperview()
                     videoAccessory = nil
@@ -180,12 +180,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             
                             if let progressView = strongSelf.progressView {
                                 progressView.state = .Fetching(progress:1.0, force: false)
-                                progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion: { [weak strongSelf] (completion) in
-                                    if completion {
-                                        progressView.removeFromSuperview()
-                                        strongSelf?.progressView = nil
-                                    }
-                                })
+                                progressView.removeFromSuperview()
+                                strongSelf.progressView = nil
                             }
                         } else {
                             self?.image.animatesAlphaOnFirstTransition = true

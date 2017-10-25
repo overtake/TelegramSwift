@@ -1519,10 +1519,100 @@ enum L10n {
   case preHistorySettingsDescriptionVisible
   /// bot
   case presenceBot
-  /// Add Caption
+  /// Add Caption...
   case previewSenderCaptionPlaceholder
+  /// Add Comment...
+  case previewSenderCommentPlaceholder
   /// Send as compressed
   case previewSenderCompressFile
+  /// Send without compression
+  case previewSenderFileTooltip
+  /// Send in a quickway
+  case previewSenderMediaTooltip
+  /// %d
+  case previewSenderSendAudioCountable(Int)
+  /// Send %d Audios
+  case previewSenderSendAudioFew(Int)
+  /// Send %d Audios
+  case previewSenderSendAudioMany(Int)
+  /// Send Audio
+  case previewSenderSendAudioOne
+  /// Send %d Audios
+  case previewSenderSendAudioOther(Int)
+  /// Send %d Audios
+  case previewSenderSendAudioTwo(Int)
+  /// Send Audio
+  case previewSenderSendAudioZero
+  /// %d
+  case previewSenderSendFileCountable(Int)
+  /// Send %d Files
+  case previewSenderSendFileFew(Int)
+  /// Send %d Files
+  case previewSenderSendFileMany(Int)
+  /// Send File
+  case previewSenderSendFileOne
+  /// Send %d Files
+  case previewSenderSendFileOther(Int)
+  /// Send %d Files
+  case previewSenderSendFileTwo(Int)
+  /// Send File
+  case previewSenderSendFileZero
+  /// %d
+  case previewSenderSendGifCountable(Int)
+  /// Send %d GIFs
+  case previewSenderSendGifFew(Int)
+  /// Send %d GIFs
+  case previewSenderSendGifMany(Int)
+  /// Send GIF
+  case previewSenderSendGifOne
+  /// Send %d GIFs
+  case previewSenderSendGifOther(Int)
+  /// Send %d GIFs
+  case previewSenderSendGifTwo(Int)
+  /// Send GIF
+  case previewSenderSendGifZero
+  /// %d
+  case previewSenderSendMediaCountable(Int)
+  /// Send %d Medias
+  case previewSenderSendMediaFew(Int)
+  /// Send %d Medias
+  case previewSenderSendMediaMany(Int)
+  /// Send Media
+  case previewSenderSendMediaOne
+  /// Send %d Medias
+  case previewSenderSendMediaOther(Int)
+  /// Send %d Medias
+  case previewSenderSendMediaTwo(Int)
+  /// Send Media
+  case previewSenderSendMediaZero
+  /// %d
+  case previewSenderSendPhotoCountable(Int)
+  /// Send %d Photos
+  case previewSenderSendPhotoFew(Int)
+  /// Send %d Photos
+  case previewSenderSendPhotoMany(Int)
+  /// Send Photo
+  case previewSenderSendPhotoOne
+  /// Send %d Photos
+  case previewSenderSendPhotoOther(Int)
+  /// Send %d Photos
+  case previewSenderSendPhotoTwo(Int)
+  /// Send Photo
+  case previewSenderSendPhotoZero
+  /// %d
+  case previewSenderSendVideoCountable(Int)
+  /// Send %d Videos
+  case previewSenderSendVideoFew(Int)
+  /// Send %d Videos
+  case previewSenderSendVideoMany(Int)
+  /// Send Video
+  case previewSenderSendVideoOne
+  /// Send %d Videos
+  case previewSenderSendVideoOther(Int)
+  /// Send %d Videos
+  case previewSenderSendVideoTwo(Int)
+  /// Send Video
+  case previewSenderSendVideoZero
   /// Active Sessions
   case privacySettingsActiveSessions
   /// Blocked Users
@@ -3637,8 +3727,98 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Presence.bot")
       case .previewSenderCaptionPlaceholder:
         return L10n.tr(key: "PreviewSender.CaptionPlaceholder")
+      case .previewSenderCommentPlaceholder:
+        return L10n.tr(key: "PreviewSender.CommentPlaceholder")
       case .previewSenderCompressFile:
         return L10n.tr(key: "PreviewSender.CompressFile")
+      case .previewSenderFileTooltip:
+        return L10n.tr(key: "PreviewSender.FileTooltip")
+      case .previewSenderMediaTooltip:
+        return L10n.tr(key: "PreviewSender.MediaTooltip")
+      case .previewSenderSendAudioCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_countable", p1)
+      case .previewSenderSendAudioFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_few", p1)
+      case .previewSenderSendAudioMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_many", p1)
+      case .previewSenderSendAudioOne:
+        return L10n.tr(key: "PreviewSender.SendAudio_one")
+      case .previewSenderSendAudioOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_other", p1)
+      case .previewSenderSendAudioTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_two", p1)
+      case .previewSenderSendAudioZero:
+        return L10n.tr(key: "PreviewSender.SendAudio_zero")
+      case .previewSenderSendFileCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_countable", p1)
+      case .previewSenderSendFileFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_few", p1)
+      case .previewSenderSendFileMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_many", p1)
+      case .previewSenderSendFileOne:
+        return L10n.tr(key: "PreviewSender.SendFile_one")
+      case .previewSenderSendFileOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_other", p1)
+      case .previewSenderSendFileTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_two", p1)
+      case .previewSenderSendFileZero:
+        return L10n.tr(key: "PreviewSender.SendFile_zero")
+      case .previewSenderSendGifCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_countable", p1)
+      case .previewSenderSendGifFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_few", p1)
+      case .previewSenderSendGifMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_many", p1)
+      case .previewSenderSendGifOne:
+        return L10n.tr(key: "PreviewSender.SendGif_one")
+      case .previewSenderSendGifOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_other", p1)
+      case .previewSenderSendGifTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_two", p1)
+      case .previewSenderSendGifZero:
+        return L10n.tr(key: "PreviewSender.SendGif_zero")
+      case .previewSenderSendMediaCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_countable", p1)
+      case .previewSenderSendMediaFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_few", p1)
+      case .previewSenderSendMediaMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_many", p1)
+      case .previewSenderSendMediaOne:
+        return L10n.tr(key: "PreviewSender.SendMedia_one")
+      case .previewSenderSendMediaOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_other", p1)
+      case .previewSenderSendMediaTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_two", p1)
+      case .previewSenderSendMediaZero:
+        return L10n.tr(key: "PreviewSender.SendMedia_zero")
+      case .previewSenderSendPhotoCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_countable", p1)
+      case .previewSenderSendPhotoFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_few", p1)
+      case .previewSenderSendPhotoMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_many", p1)
+      case .previewSenderSendPhotoOne:
+        return L10n.tr(key: "PreviewSender.SendPhoto_one")
+      case .previewSenderSendPhotoOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_other", p1)
+      case .previewSenderSendPhotoTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_two", p1)
+      case .previewSenderSendPhotoZero:
+        return L10n.tr(key: "PreviewSender.SendPhoto_zero")
+      case .previewSenderSendVideoCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_countable", p1)
+      case .previewSenderSendVideoFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_few", p1)
+      case .previewSenderSendVideoMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_many", p1)
+      case .previewSenderSendVideoOne:
+        return L10n.tr(key: "PreviewSender.SendVideo_one")
+      case .previewSenderSendVideoOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_other", p1)
+      case .previewSenderSendVideoTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_two", p1)
+      case .previewSenderSendVideoZero:
+        return L10n.tr(key: "PreviewSender.SendVideo_zero")
       case .privacySettingsActiveSessions:
         return L10n.tr(key: "PrivacySettings.ActiveSessions")
       case .privacySettingsBlockedUsers:

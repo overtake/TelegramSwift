@@ -115,7 +115,13 @@ class Sender: NSObject {
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length
             
+
+            
+            
+            
             var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities)]
+
+            
             if disablePreview {
                 attributes.append(OutgoingContentInfoMessageAttribute(flags: [.disableLinkPreviews]))
             }
@@ -338,16 +344,22 @@ class Sender: NSObject {
         }
     }
     
-    public static func enqueue(media:TelegramMediaFile, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:Media, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
+        return enqueue(media: [media], caption: "", account: account, peerId: peerId, chatInteraction: chatInteraction)
+    }
+    
+    public static func enqueue(media:[Media], caption: String, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
         
         var attributes:[MessageAttribute] = []
         if FastSettings.isChannelMessagesMuted(peerId) {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: media, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)]) |> deliverOnMainQueue |> afterNext({ (value) -> Void in
+        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)})
+        
+        return enqueueMessages(account: account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
-        })
+        }
     }
     
     
