@@ -1808,3 +1808,23 @@ func synced(_ lock: Any, closure: ()->Void) {
     closure()
     objc_sync_exit(lock)
 }
+
+
+extension NSTextView {
+    
+    var selectedRangeRect: NSRect {
+
+        var rect: NSRect = firstRect(forCharacterRange: selectedRange(), actualRange: nil)
+        
+        if let window = window {
+            rect = window.convertFromScreen(rect)
+        }
+        
+        if let superview = superview {
+            rect = superview.convert(rect, from: nil)
+        }
+        rect.origin.y += 10
+        return rect
+    }
+    
+}

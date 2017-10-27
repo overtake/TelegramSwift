@@ -126,6 +126,10 @@ NSString *const TGMentionUidAttributeName = @"TGMentionUidAttributeName";
    // [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
 }
 
+-(void)addLink:(NSString *)link {
+    [self.textStorage addAttribute:NSLinkAttributeName value: link range:self.selectedRange];
+}
+
 -(void)italicWord:(id)sender {
     [self changeFontMarkdown:[[NSFontManager sharedFontManager] convertFont:[NSFont systemFontOfSize:self.font.pointSize] toHaveTrait:NSFontItalicTrait]];
     
@@ -755,6 +759,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_placeholder setHidden:!self._needShowPlaceholder];
 }
 
+-(void)setLinkColor:(NSColor *)linkColor {
+    _linkColor = linkColor;
+    
+    NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+    dict[NSFontAttributeName] = self.textView.font;
+    dict[NSForegroundColorAttributeName] = linkColor;
+    self.textView.linkTextAttributes = dict;
+}
 
 -(void)setFrameSize:(NSSize)newSize {
     [super setFrameSize:newSize];
@@ -982,6 +994,8 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 
 
+
+
 -(NSString *)string {
     if (_textView.string == nil) {
         return @"";
@@ -1047,6 +1061,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tag range:range];
 }
 
+static int64_t nextId = 0;
+
+-(void)addLink:(NSString *)link {
+    id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
+    [self addInputTextTag:tag range:self.selectedRange];
+    [self update:YES];
+}
+
 
 - (void)replaceMention:(NSString *)mention username:(bool)username userId:(int32_t)userId
 {
@@ -1089,7 +1111,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             
             [text replaceCharactersInRange:candidateMentionRange withString:replacementText];
             
-            static int64_t nextId = 0;
             nextId++;
             [text addAttributes:@{TGMentionUidAttributeName: [[TGInputTextTag alloc] initWithUniqueId:nextId attachment:@(userId) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]]} range:NSMakeRange(candidateMentionRange.location, replacementText.length - 1)];
         } else {

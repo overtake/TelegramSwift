@@ -723,7 +723,7 @@ class ChatRowItem: TableRowItem {
                 let account = self.account!
                 
                 if peer.canSendMessage {
-                    items.append(ContextMenuItem(tr(.messageContextReply), handler: {
+                    items.append(ContextMenuItem(tr(.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(.messageContextReplyHelp)))" : ""), handler: {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }

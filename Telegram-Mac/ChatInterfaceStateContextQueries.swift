@@ -294,16 +294,34 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
 func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, account: Account, currentQuery: String?) -> (String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)? {
     
     if let dataDetector = dataDetector {
-        let text = chatPresentationInterfaceState.effectiveInput.inputText
-        let utf16 = text.utf16
         
         var detectedUrl: String?
+
+        var detectedRange: NSRange = NSMakeRange(NSNotFound, 0)
+        let text = chatPresentationInterfaceState.effectiveInput.inputText
         
+        let attr = chatPresentationInterfaceState.effectiveInput.attributedString
+        
+        attr.enumerateAttribute(NSAttributedStringKey(rawValue: TGMentionUidAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+            
+            if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
+                detectedUrl = url
+                detectedRange = range
+            }
+            let s: ObjCBool = (detectedUrl != nil) ? true : false
+            stop.pointee = s
+            
+        })
+        
+        let utf16 = text.utf16
         let matches = dataDetector.matches(in: text, options: [], range: NSRange(location: 0, length: utf16.count))
         if let match = matches.first {
             let urlText = (text as NSString).substring(with: match.range)
-            detectedUrl = urlText
+            if match.range.location < detectedRange.location {
+                detectedUrl = urlText
+            }
         }
+        
         
         if detectedUrl != currentQuery {
             if let detectedUrl = detectedUrl {

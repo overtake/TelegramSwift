@@ -1878,7 +1878,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                                     }
                                 }, theme.icons.chatActionInfo))
                                 
-                                items.append(SPopoverItem(tr(.chatContextEdit),  { [weak strongSelf] in
+                                
+                                
+                                items.append(SPopoverItem(tr(.chatContextEdit1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(.chatContextEditHelp)))" : ""),  { [weak strongSelf] in
                                     strongSelf?.changeState()
                                 }, theme.icons.chatActionEdit))
                                 

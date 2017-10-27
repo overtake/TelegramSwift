@@ -60,7 +60,7 @@ fileprivate class SearchResultModalView : View {
     }
     
     func updateTitle(_ string:String) {
-        textView.set(layout: TextViewLayout(.initialize(string: string, color: .text, font: .medium(.title)), maximumNumberOfLines: 1, truncationType:.middle))
+        textView.set(layout: TextViewLayout(.initialize(string: string, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1, truncationType:.middle))
         self.needsLayout = true
     }
     
