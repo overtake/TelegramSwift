@@ -894,8 +894,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                     
                   
                     
-                    let proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
-                    
+                    let proccesedView:ChatHistoryView
+                    if let peer = strongSelf.peer, peer.isRestrictedChannel {
+                        proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
+                    } else {
+                        proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
+                    }
                     
                     return prepareEntries(from: strongSelf.previousView.swap(proccesedView), to: proccesedView, account: strongSelf.account, initialSize: strongSelf.atomicSize.modify({$0}), interaction:strongSelf.chatInteraction, animated: animated, scrollPosition:scrollPosition, reason:updateType, animationInterface:animationInterface) |> map { transition in
                         return (transition,initialData)
@@ -2008,6 +2012,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
         super.viewDidAppear(animated)
         
         
+        if let peer = peer {
+            if peer.isRestrictedChannel, let reason = peer.restrictionText {
+                alert(for: mainWindow, info: reason, completion: { [weak self] in
+                    self?.dismiss()
+                })
+            }
+        }
+        
         self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self, !hasModals() {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
@@ -2265,6 +2277,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
     
     public override func draggingItems(for pasteboard:NSPasteboard) -> [DragItem] {
         
+        
+        
         if let types = pasteboard.types, types.contains(.kFilenames) {
             let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
             
@@ -2286,11 +2300,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                 
                 if !list.isEmpty {
                     let asMediaItem = DragItem(title:tr(.chatDropTitle), desc: tr(.chatDropQuickDesc), handler:{ [weak self] in
-                        self?.chatInteraction.showPreviewSender(list.map { URL(fileURLWithPath: $0) }, true)
+                        let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
+                        if shift {
+                            self?.chatInteraction.sendMedia(list.map{MediaSenderContainer(path: $0, caption: "", isFile: false)})
+                        } else {
+                            self?.chatInteraction.showPreviewSender(list.map { URL(fileURLWithPath: $0) }, true)
+                        }
                     })
                     
                     let asFileItem = DragItem(title:tr(.chatDropTitle), desc: tr(.chatDropAsFilesDesc), handler:{ [weak self] in
-                        self?.chatInteraction.showPreviewSender(list.map { URL(fileURLWithPath: $0) }, false)
+                        let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
+                        if shift {
+                            self?.chatInteraction.sendMedia(list.map{MediaSenderContainer(path: $0, caption: "", isFile: true)})
+                        } else {
+                            self?.chatInteraction.showPreviewSender(list.map { URL(fileURLWithPath: $0) }, false)
+                        }
                     })
                     
                     items.append(asFileItem)

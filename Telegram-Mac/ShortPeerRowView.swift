@@ -256,7 +256,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         if let item = item as? ShortPeerRowItem {
             self.border = item.border
             image.setFrameSize(item.photoSize)
-            image.setPeer(account: item.account, peer: item.peer)
+            if let photo = item.photo {
+                image.setSignal(photo, animated: animated)
+            } else {
+                image.setPeer(account: item.account, peer: item.peer)
+            }
             
             self.updateInteractionType(previousType,item.interactionType, item:item, animated:animated)
             choiceControl?.removeFromSuperview()

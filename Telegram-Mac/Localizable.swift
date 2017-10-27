@@ -1249,10 +1249,8 @@ enum L10n {
   case passcodeEnterNewPlaceholder
   /// Enter a passcode
   case passcodeEnterPasscodePlaceholder
-  /// If you don't remember your passcode, you can
+  /// If you don't remember your passcode, you can [logout]()
   case passcodeLogoutDescription
-  /// logout
-  case passcodeLogoutLinkText
   /// Next
   case passcodeNext
   /// Re-enter a passcode
@@ -1271,6 +1269,8 @@ enum L10n {
   case paymentsUnsupported
   /// Deleted User
   case peerDeletedUser
+  /// Saved Messages
+  case peerSavedMessages
   /// Service Notifications
   case peerServiceNotifications
   /// %d are recording voice
@@ -1519,9 +1519,9 @@ enum L10n {
   case preHistorySettingsDescriptionVisible
   /// bot
   case presenceBot
-  /// Add Caption...
+  /// Add a caption...
   case previewSenderCaptionPlaceholder
-  /// Add Comment...
+  /// Add a comment...
   case previewSenderCommentPlaceholder
   /// Send as compressed
   case previewSenderCompressFile
@@ -1617,10 +1617,26 @@ enum L10n {
   case privacySettingsActiveSessions
   /// Blocked Users
   case privacySettingsBlockedUsers
+  /// If Away For
+  case privacySettingsDeleteAccount
+  /// If you do not log in at least once within this period, your account will be deleted along with all groups, messages and contacts.
+  case privacySettingsDeleteAccountDescription
+  /// DELETE ACCOUNT
+  case privacySettingsDeleteAccountHeader
   /// Groups
   case privacySettingsGroups
   /// Last Seen
   case privacySettingsLastSeen
+  /// My Contacts (-%@)
+  case privacySettingsLastSeenContactsMinus(String)
+  /// My Contacts (-%@, +%@)
+  case privacySettingsLastSeenContactsMinusPlus(String, String)
+  /// My Contacts (+%@)
+  case privacySettingsLastSeenContactsPlus(String)
+  /// Everybody (-%@)
+  case privacySettingsLastSeenEverybodyMinus(String)
+  /// Nobody (+%@)
+  case privacySettingsLastSeenNobodyPlus(String)
   /// Passcode
   case privacySettingsPasscode
   /// PRIVACY
@@ -3457,8 +3473,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Passcode.EnterPasscodePlaceholder")
       case .passcodeLogoutDescription:
         return L10n.tr(key: "Passcode.LogoutDescription")
-      case .passcodeLogoutLinkText:
-        return L10n.tr(key: "Passcode.LogoutLinkText")
       case .passcodeNext:
         return L10n.tr(key: "Passcode.Next")
       case .passcodeReEnterPlaceholder:
@@ -3477,6 +3491,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Payments.Unsupported")
       case .peerDeletedUser:
         return L10n.tr(key: "Peer.DeletedUser")
+      case .peerSavedMessages:
+        return L10n.tr(key: "Peer.SavedMessages")
       case .peerServiceNotifications:
         return L10n.tr(key: "Peer.ServiceNotifications")
       case .peerActivityChatMultiRecordingAudio(let p1):
@@ -3823,10 +3839,26 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PrivacySettings.ActiveSessions")
       case .privacySettingsBlockedUsers:
         return L10n.tr(key: "PrivacySettings.BlockedUsers")
+      case .privacySettingsDeleteAccount:
+        return L10n.tr(key: "PrivacySettings.DeleteAccount")
+      case .privacySettingsDeleteAccountDescription:
+        return L10n.tr(key: "PrivacySettings.DeleteAccountDescription")
+      case .privacySettingsDeleteAccountHeader:
+        return L10n.tr(key: "PrivacySettings.DeleteAccountHeader")
       case .privacySettingsGroups:
         return L10n.tr(key: "PrivacySettings.Groups")
       case .privacySettingsLastSeen:
         return L10n.tr(key: "PrivacySettings.LastSeen")
+      case .privacySettingsLastSeenContactsMinus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenContactsMinus", p1)
+      case .privacySettingsLastSeenContactsMinusPlus(let p1, let p2):
+        return L10n.tr(key: "PrivacySettings.LastSeenContactsMinusPlus", p1, p2)
+      case .privacySettingsLastSeenContactsPlus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenContactsPlus", p1)
+      case .privacySettingsLastSeenEverybodyMinus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenEverybodyMinus", p1)
+      case .privacySettingsLastSeenNobodyPlus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenNobodyPlus", p1)
       case .privacySettingsPasscode:
         return L10n.tr(key: "PrivacySettings.Passcode")
       case .privacySettingsPrivacyHeader:
@@ -4414,9 +4446,9 @@ extension L10n: CustomStringConvertible {
     }
   }
 
-    private static func tr(key: String, _ args: CVarArg...) -> String {
-        return translate(key: key, args)
-    }
+  private static func tr(key: String, _ args: CVarArg...) -> String {
+    return translate(key: key, args)
+  }
 }
 
 func tr(_ key: L10n) -> String {

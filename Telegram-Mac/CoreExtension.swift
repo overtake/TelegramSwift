@@ -793,6 +793,37 @@ extension Peer {
         return self is TelegramGroup
     }
     
+    var isRestrictedChannel: Bool {
+        if let peer = self as? TelegramChannel {
+            if let restrictionInfo = peer.restrictionInfo {
+                #if APP_STORE || DEBUG
+                    let reason = restrictionInfo.reason.components(separatedBy: ":")
+                    
+                    if reason.count == 2 {
+                        let platform = reason[0]
+                        if platform.hasSuffix("ios") || platform.hasSuffix("macos") || platform.hasSuffix("all") {
+                            return true
+                        }
+                    }
+                #endif
+            }
+        }
+        return false
+    }
+    
+    var restrictionText:String? {
+        if let peer = self as? TelegramChannel {
+            if let restrictionInfo = peer.restrictionInfo {
+                let reason = restrictionInfo.reason.components(separatedBy: ":")
+                
+                if reason.count == 2 {
+                    return reason[1]
+                }
+            }
+        }
+        return nil
+    }
+    
     var isSupergroup:Bool {
         if let peer = self as? TelegramChannel {
             switch peer.info {

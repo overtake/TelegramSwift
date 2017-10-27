@@ -433,6 +433,8 @@ struct TelegramIconsTheme {
     let inputChannelUnmute: CGImage
     
     let changePhoneNumberIntro: CGImage
+    
+    let peerSavedMessages: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -736,7 +738,8 @@ private func generateIcons(from pallete: ColorPallete) -> TelegramIconsTheme {
                                                chatRecordVideo: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(pallete.grayIcon),
                                                inputChannelMute: #imageLiteral(resourceName: "Icon_InputChannelMute").precomposed(pallete.grayIcon),
                                                inputChannelUnmute: #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(pallete.grayIcon),
-                                               changePhoneNumberIntro: #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed())
+                                               changePhoneNumberIntro: #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed(),
+                                               peerSavedMessages: #imageLiteral(resourceName: "Icon_SavedMessages").precomposed())
 }
 
 

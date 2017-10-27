@@ -77,13 +77,15 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String = appName, info:String?) {
+func alert(for window:Window, header:String = appName, info:String?, completion: (()->Void)? = nil) {
     let alert:NSAlert = NSAlert()
     alert.window.appearance = theme.appearance
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = info ?? ""
-    alert.beginSheetModal(for: window, completionHandler: { (_) in})
+    alert.beginSheetModal(for: window, completionHandler: { (_) in
+        completion?()
+    })
 }
 
 func notSupported() {

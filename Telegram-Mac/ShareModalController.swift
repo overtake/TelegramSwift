@@ -423,7 +423,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         switch entry {
         case let .plain(peer, _, presence, drawSeparator):
             let color = presence?.status.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
-            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: presence?.status.string, drawCustomSeparator: drawSeparator, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
+            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? nil : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
         case let .separator(text, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: text)
         case .emptySearch:
@@ -456,7 +456,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             let removed = oldValue.selected.subtracting(value.selected)
 
             for item in added {
-                genericView.searchView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
+                let title = item == share.account.peerId ? tr(.peerSavedMessages) : value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser)
+                genericView.searchView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
             }
             
             for item in removed {
@@ -552,7 +553,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         let list:Signal<TableUpdateTransition, Void> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue, genericView.searchView.stateValue.get() |> deliverOnPrepareQueue) |> mapToSignal { location, search, state -> Signal<TableUpdateTransition, Void> in
             
             if state == .None {
-                return combineLatest(recentPeers(account: account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { top, recent -> TableUpdateTransition in
+                return combineLatest(account.postbox.loadedPeerWithId(account.peerId), recentPeers(account: account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { user, top, recent -> TableUpdateTransition in
                     
                     var entries:[SelectablePeersEntry] = []
                     
@@ -565,6 +566,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         indexId -= 1
                         return ChatListIndex(pinningIndex: nil, messageIndex: index)
                     }
+                    
+                    entries.append(.plain(user, chatListIndex(), nil, top.isEmpty && recent.isEmpty))
+                    contains[user.id] = user.id
                     
                     if !top.isEmpty {
                         entries.insert(.separator(tr(.searchSeparatorPopular).uppercased(), chatListIndex()), at: 0)
@@ -644,7 +648,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     var entries:[SelectablePeersEntry] = []
                     
                     var contains:[PeerId:PeerId] = [:]
-                    
+                    contains[account.peerId] = account.peerId
                     for entry in value.0.entries {
                         switch entry {
                         case let .MessageEntry(id, _, _, _, _, renderedPeer, _):
