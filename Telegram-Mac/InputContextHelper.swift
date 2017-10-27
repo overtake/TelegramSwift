@@ -323,7 +323,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     let inputText = textInputState.inputText
                     
                     let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                    let replacementText = selectedItem.hashtag
+                    let replacementText = selectedItem.hashtag + " "
                     
                     let atLength = 1
                     _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
@@ -351,7 +351,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     let inputText = textInputState.inputText
                     
                     let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                    let replacementText = selectedItem.hashtag
+                    let replacementText = selectedItem.hashtag + " "
                     
                     let atLength = 1
                     _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)

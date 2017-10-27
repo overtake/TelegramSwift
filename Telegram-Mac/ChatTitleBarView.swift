@@ -323,7 +323,13 @@ class ChatTitleBarView: TitledBarView {
           //  }
             
             if let peer = peerViewMainPeer(peerView) {
-                avatarControl.setPeer(account: chatInteraction.account, peer: peer)
+                if peer.id == chatInteraction.account.peerId {
+                    let icon = theme.icons.peerSavedMessages
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: (NSColor(0x2a9ef1), NSColor(0x72d5fd)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 20, avatarControl.frame.size.height - 20)))), animated: false)
+
+                } else {
+                    avatarControl.setPeer(account: chatInteraction.account, peer: peer)
+                }
             }
             
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
@@ -334,11 +340,12 @@ class ChatTitleBarView: TitledBarView {
             
             var result = stringStatus(for: peerView, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
             if chatInteraction.account.peerId == peerView.peerId  {
-                result = PeerStatusStringResult(result.title, .initialize(string: tr(.chatTitleSelf), color: theme.colors.grayText, font: .normal(.short)), presence: result.presence)
+                result = result.withUpdatedTitle(tr(.peerSavedMessages))
             }
             
-            
-            if status == nil || !status!.isEqual(to: result.status) || force {
+            if chatInteraction.peerId == chatInteraction.account.peerId {
+                status = nil
+            } else if status == nil || !status!.isEqual(to: result.status) || force {
                 status = result.status
                 shouldUpdateLayout = true
             }

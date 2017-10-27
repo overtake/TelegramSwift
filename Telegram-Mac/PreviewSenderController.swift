@@ -49,7 +49,7 @@ fileprivate class PreviewSenderView : Control {
         }
     }
     let sendAsFile: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
-    
+    private let disposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -66,18 +66,20 @@ fileprivate class PreviewSenderView : Control {
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachPhoto), for: .Normal)
         photoButton.sizeToFit()
         
+        disposable.set(sendAsFile.get().start(next: { [weak self] value in
+            self?.fileButton.isSelected = value
+            self?.photoButton.isSelected = !value
+        }))
+        
         photoButton.isSelected = true
         
         photoButton.set(handler: { [weak self] _ in
             self?.sendAsFile.set(false)
-            self?.fileButton.isSelected = false
-            self?.photoButton.isSelected = true
+            
         }, for: .Click)
         
         fileButton.set(handler: { [weak self] _ in
             self?.sendAsFile.set(true)
-            self?.fileButton.isSelected = true
-            self?.photoButton.isSelected = false
         }, for: .Click)
         
         closeButton.set(handler: { [weak self] _ in
@@ -140,6 +142,10 @@ fileprivate class PreviewSenderView : Control {
         
         addSubview(separator)
 
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     var additionHeight: CGFloat {

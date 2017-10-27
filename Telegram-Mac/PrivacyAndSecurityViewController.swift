@@ -185,15 +185,21 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 arguments.openBlockedUsers()
             })
         case let .lastSeenPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsLastSeen), type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsLastSeen), type: .context(stateback: {
+                return text
+            }), action: {
                 arguments.openLastSeenPrivacy()
             })
         case let .groupPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsGroups), type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsGroups), type: .context(stateback: {
+                return text
+            }), action: {
                 arguments.openGroupsPrivacy()
             })
         case let .voiceCallPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsVoiceCalls), type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsVoiceCalls), type: .context(stateback: {
+                return text
+            }), action: {
                 arguments.openVoiceCallPrivacy()
             })
         case .securityHeader:
@@ -211,13 +217,15 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 arguments.openActiveSessions()
             })
         case .accountHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: "tr(.privacySettingsDeleteAccountHeader)", drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsDeleteAccountHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .accountTimeout(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "tr(.privacySettingsDeleteAccount)", action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsDeleteAccount), type: .context(stateback: {
+                return text
+            }), action: {
                 arguments.setupAccountAutoremove()
             })
         case .accountInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: "tr(.privacySettingsDeleteAccountDescription)")
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsDeleteAccountDescription))
         case .proxyHeader:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsProxyHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .proxySettings(_, text):
@@ -232,12 +240,54 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     }
 }
 
+private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> String {
+    switch settings {
+    case let .disableEveryone(enableFor):
+        if enableFor.isEmpty {
+            return tr(.privacySettingsControllerNobody)
+        } else {
+            return tr(.privacySettingsLastSeenNobodyPlus("\(enableFor.count)"))
+        }
+    case let .enableEveryone(disableFor):
+        if disableFor.isEmpty {
+            return tr(.privacySettingsControllerEverbody)
+        } else {
+            return tr(.privacySettingsLastSeenEverybodyMinus("\(disableFor.count)"))
+        }
+    case let .enableContacts(enableFor, disableFor):
+        if !enableFor.isEmpty && !disableFor.isEmpty {
+            return tr(.privacySettingsLastSeenContactsMinusPlus("\(enableFor.count)", "\(disableFor.count)"))
+        } else if !enableFor.isEmpty {
+            return tr(.privacySettingsLastSeenContactsPlus("\(enableFor.count)"))
+        } else if !disableFor.isEmpty {
+            return tr(.privacySettingsLastSeenContactsMinus("\(enableFor.count)"))
+        } else {
+            return tr(.privacySettingsControllerMyContacts)
+        }
+    }
+}
+
 private struct PrivacyAndSecurityControllerState: Equatable {
+    let updatingAccountTimeoutValue: Int32?
+    
     init() {
+        self.updatingAccountTimeoutValue = nil
+    }
+    
+    init(updatingAccountTimeoutValue: Int32?) {
+        self.updatingAccountTimeoutValue = updatingAccountTimeoutValue
     }
     
     static func ==(lhs: PrivacyAndSecurityControllerState, rhs: PrivacyAndSecurityControllerState) -> Bool {
+        if lhs.updatingAccountTimeoutValue != rhs.updatingAccountTimeoutValue {
+            return false
+        }
+        
         return true
+    }
+    
+    func withUpdatedUpdatingAccountTimeoutValue(_ updatingAccountTimeoutValue: Int32?) -> PrivacyAndSecurityControllerState {
+        return PrivacyAndSecurityControllerState(updatingAccountTimeoutValue: updatingAccountTimeoutValue)
     }
 }
 
@@ -259,9 +309,16 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     
     entries.append(.privacyHeader(sectionId: sectionId))
     entries.append(.blockedPeers(sectionId: sectionId))
-    entries.append(.lastSeenPrivacy(sectionId: sectionId, ""))
-    entries.append(.groupPrivacy(sectionId: sectionId, ""))
-    entries.append(.voiceCallPrivacy(sectionId: sectionId, ""))
+    if let privacySettings = privacySettings {
+        entries.append(.lastSeenPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.presence)))
+        entries.append(.groupPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.groupInvitations)))
+        entries.append(.voiceCallPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceCalls)))
+    } else {
+        entries.append(.lastSeenPrivacy(sectionId: sectionId, ""))
+        entries.append(.groupPrivacy(sectionId: sectionId, ""))
+        entries.append(.voiceCallPrivacy(sectionId: sectionId, ""))
+    }
+    
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -280,12 +337,26 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     entries.append(.proxyHeader(sectionId: sectionId))
     entries.append(.proxySettings(sectionId: sectionId, proxy != nil ? tr(.proxySettingsSocks5) : tr(.proxySettingsDisabled)))
     
-//    entries.append(.section(sectionId: sectionId))
-//    sectionId += 1
-//
-//    entries.append(.accountHeader(sectionId: sectionId))
-//    entries.append(.accountTimeout(sectionId: sectionId, ""))
-//    entries.append(.accountInfo(sectionId: sectionId))
+
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    entries.append(.accountHeader(sectionId: sectionId))
+
+    
+    if let privacySettings = privacySettings {
+        let value: Int32
+        if let updatingAccountTimeoutValue = state.updatingAccountTimeoutValue {
+            value = updatingAccountTimeoutValue
+        } else {
+            value = privacySettings.accountRemovalTimeout
+        }
+        entries.append(.accountTimeout(sectionId: sectionId, timeIntervalString(Int(value))))
+
+    } else {
+        entries.append(.accountTimeout(sectionId: sectionId, ""))
+    }
+    entries.append(.accountInfo(sectionId: sectionId))
     
     return entries
 }
@@ -317,6 +388,10 @@ class PrivacyAndSecurityViewController: TableViewController {
 
         let currentInfoDisposable = MetaDisposable()
         actionsDisposable.add(currentInfoDisposable)
+        
+        let updateAccountTimeoutDisposable = MetaDisposable()
+        actionsDisposable.add(updateAccountTimeoutDisposable)
+
         
         let privacySettingsPromise = Promise<AccountPrivacySettings?>()
         privacySettingsPromise.set(initialSettings)
@@ -406,7 +481,72 @@ class PrivacyAndSecurityViewController: TableViewController {
             if let account = self?.account {
                 self?.navigationController?.push(RecentSessionsController(account))
             }
-        }, setupAccountAutoremove: {
+        }, setupAccountAutoremove: { [weak self] in
+            
+            if let strongSelf = self {
+                
+                let signal = privacySettingsPromise.get()
+                    |> take(1)
+                    |> deliverOnMainQueue
+                updateAccountTimeoutDisposable.set(signal.start(next: { [weak updateAccountTimeoutDisposable, weak strongSelf] privacySettingsValue in
+                    if let _ = privacySettingsValue, let strongSelf = strongSelf {
+
+                        let timeoutAction: (Int32) -> Void = { timeout in
+                            if let updateAccountTimeoutDisposable = updateAccountTimeoutDisposable {
+                                updateState {
+                                    return $0.withUpdatedUpdatingAccountTimeoutValue(timeout)
+                                }
+                                let applyTimeout: Signal<Void, NoError> = privacySettingsPromise.get()
+                                    |> filter { $0 != nil }
+                                    |> take(1)
+                                    |> deliverOnMainQueue
+                                    |> mapToSignal { value -> Signal<Void, NoError> in
+                                        if let value = value {
+                                            privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, accountRemovalTimeout: timeout)))
+                                        }
+                                        return .complete()
+                                }
+                                updateAccountTimeoutDisposable.set((updateAccountRemovalTimeout(account: account, timeout: timeout)
+                                    |> then(applyTimeout)
+                                    |> deliverOnMainQueue).start(completed: {
+//                                        updateState {
+//                                            return $0.withUpdatedUpdatingAccountTimeoutValue(nil)
+//                                        }
+                                    }))
+                            }
+                        }
+                        let timeoutValues: [Int32] = [
+                            1 * 30 * 24 * 60 * 60,
+                            3 * 30 * 24 * 60 * 60,
+                            6 * 30 * 24 * 60 * 60,
+                            12 * 30 * 24 * 60 * 60
+                        ]
+                        var items: [SPopoverItem] = []
+                        
+                        items.append(SPopoverItem(tr(.timerMonthsCountable(1)), {
+                            timeoutAction(timeoutValues[0])
+                        }))
+                        items.append(SPopoverItem(tr(.timerMonthsCountable(3)), {
+                            timeoutAction(timeoutValues[1])
+                        }))
+                        items.append(SPopoverItem(tr(.timerMonthsCountable(6)), {
+                            timeoutAction(timeoutValues[2])
+                        }))
+                        items.append(SPopoverItem(tr(.timerYearsCountable(1)), {
+                            timeoutAction(timeoutValues[3])
+                        }))
+                        
+                        if let index = strongSelf.genericView.index(hash: PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "").stableId) {
+                            
+                            if let view = (strongSelf.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
+                                showPopover(for: view, with: SPopoverViewController(items: items))
+                            }
+                        }
+                    }
+                }))
+                
+                
+            }
             
         }, openProxySettings: { [weak self] in
             if let account = self?.account {

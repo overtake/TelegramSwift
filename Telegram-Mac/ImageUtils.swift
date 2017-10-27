@@ -94,11 +94,6 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             }
         }
         
-        
-        
-        
-        
-        
         let colorIndex: Int32
         if peer.id.namespace == Namespaces.Peer.CloudUser {
             colorIndex = colorIndexForUid(peer.id.id, account.peerId.id)
@@ -118,45 +113,7 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             if let cached = cached {
                 return .single(cached)
             } else {
-                return Signal<CGImage?, Void> { subscriber in
-                    let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
-                        ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-                        ctx.beginPath()
-                        ctx.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: size.width, height:
-                            size.height))
-                        ctx.clip()
-                        
-                        
-                        var locations: [CGFloat] = [1.0, 0.2];
-                        let colorSpace = CGColorSpaceCreateDeviceRGB()
-                        let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.bottom.cgColor, color.top.cgColor]), locations: &locations)!
-                        
-                        ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
-                        
-                        ctx.setBlendMode(.normal)
-                        
-                        let letters = letters
-                        let string = letters.count == 0 ? "" : (letters[0] + (letters.count == 1 ? "" : letters[1]))
-                        let attributedString = NSAttributedString(string: string, attributes: [NSAttributedStringKey.font: font, NSAttributedStringKey.foregroundColor: NSColor.white])
-                        
-                        let line = CTLineCreateWithAttributedString(attributedString)
-                        let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
-                        
-                        let lineOrigin = CGPoint(x: floorToScreenPixels(-lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(-lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
-                        
-                        ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-                        ctx.scaleBy(x: 1.0, y: 1.0)
-                        ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-                        //
-                        ctx.translateBy(x: lineOrigin.x, y: lineOrigin.y)
-                        CTLineDraw(line, ctx)
-                        ctx.translateBy(x: -lineOrigin.x, y: -lineOrigin.y)
-                    })
-                    
-                    subscriber.putNext(image)
-                    subscriber.putCompletion()
-                    return EmptyDisposable
-                } |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<CGImage?, Void> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<CGImage?, Void> in
                     if let image = image {
                         return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
                             return image
@@ -168,6 +125,81 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             }
         }
         
+    }
+}
+
+enum EmptyAvatartType {
+    case peer(colors:(top:NSColor, bottom: NSColor), letter: [String], font: NSFont)
+    case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize)
+}
+
+func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> Signal<CGImage?, Void> {
+    return Signal { subscriber in
+        
+        let color:(top: NSColor, bottom: NSColor)
+        let letters: [String]?
+        let icon: CGImage?
+        let iconSize: NSSize?
+        let font: NSFont?
+        switch type {
+        case let .icon(colors, _icon, _iconSize):
+            color = colors
+            icon = _icon
+            letters = nil
+            font = nil
+            iconSize = _iconSize
+        case let .peer(colors, _letters, _font):
+            color = colors
+            icon = nil
+            font = _font
+            letters = _letters
+            iconSize = nil
+        }
+        
+        let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
+            ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+            
+            ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+            ctx.beginPath()
+            ctx.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: size.width, height:
+                size.height))
+            ctx.clip()
+            
+            var locations: [CGFloat] = [1.0, 0.2];
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.bottom.cgColor, color.top.cgColor]), locations: &locations)!
+            
+            ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+            
+            ctx.setBlendMode(.normal)
+            
+            if let letters = letters, let font = font {
+                let string = letters.count == 0 ? "" : (letters[0] + (letters.count == 1 ? "" : letters[1]))
+                let attributedString = NSAttributedString(string: string, attributes: [NSAttributedStringKey.font: font, NSAttributedStringKey.foregroundColor: NSColor.white])
+                
+                let line = CTLineCreateWithAttributedString(attributedString)
+                let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
+                
+                let lineOrigin = CGPoint(x: floorToScreenPixels(-lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(-lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
+                
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: 1.0, y: 1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                //
+                ctx.translateBy(x: lineOrigin.x, y: lineOrigin.y)
+                CTLineDraw(line, ctx)
+                ctx.translateBy(x: -lineOrigin.x, y: -lineOrigin.y)
+            }
+            
+            if let icon = icon, let iconSize = iconSize {
+                let rect = NSMakeRect((displayDimensions.width - iconSize.width)/2, (displayDimensions.height - iconSize.height)/2, iconSize.width, iconSize.height)
+                ctx.draw(icon, in: rect)
+            }
+            
+        })
+        subscriber.putNext(image)
+        subscriber.putCompletion()
+        return EmptyDisposable
     }
 }
 

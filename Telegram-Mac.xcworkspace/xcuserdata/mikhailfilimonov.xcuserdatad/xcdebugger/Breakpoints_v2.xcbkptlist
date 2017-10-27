@@ -218,7 +218,7 @@
                   moduleName = "Telegram"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/Telegram-Mac/ChannelAdminsViewController.swift"
-                  timestampString = "530554921.260348"
+                  timestampString = "530779121.243678"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "628"
@@ -233,7 +233,7 @@
                   moduleName = "Telegram"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/Telegram-Mac/ChannelAdminsViewController.swift"
-                  timestampString = "530554921.263164"
+                  timestampString = "530779121.248597"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "629"
@@ -241,6 +241,22 @@
                   offsetFromSymbolStart = "110">
                </Location>
             </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/PeerAccessRestrictionInfo.swift"
+            timestampString = "530714181.562929"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "16"
+            endingLineNumber = "16"
+            landmarkName = "init(decoder:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

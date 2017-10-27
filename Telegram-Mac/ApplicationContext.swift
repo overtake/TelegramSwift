@@ -997,13 +997,13 @@ class LegacyIntroView : View, NSTextFieldDelegate {
         input.textColor = .text
         input.sizeToFit()
         
-        let logoutAttr = NSMutableAttributedString()
-        _ = logoutAttr.append(string: tr(.passcodeLogoutDescription), color: .grayText, font: .normal(.text))
-        _ = logoutAttr.append(string: " ")
-        let range = logoutAttr.append(string: tr(.passcodeLogoutLinkText), color: .link, font: .normal(.text))
-        logoutAttr.add(link: inAppLink.logout({}), for: range)
-        logoutTextView.set(layout: TextViewLayout(logoutAttr))
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLogoutDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+            return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, {_ in}))
+        }))
         
+        logoutTextView.isSelectable = false
+        
+        logoutTextView.set(layout: TextViewLayout(logoutAttr))
         
         addSubview(legacyIntro)
     }

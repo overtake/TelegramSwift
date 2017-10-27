@@ -306,6 +306,12 @@ struct PeerStatusStringResult : Equatable {
         self.status = status
         self.presence = presence
     }
+    
+    func withUpdatedTitle(_ string: String) -> PeerStatusStringResult {
+        let title = self.title.mutableCopy() as! NSMutableAttributedString
+        title.replaceCharacters(in: title.range, with: string)
+        return PeerStatusStringResult(title, self.status, presence: presence)
+    }
 }
 
 func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
@@ -472,5 +478,21 @@ func parseTextEntities(_ message:String) -> (String, [MessageTextEntity]) {
     
 }
 
-
+func timeIntervalString( _ value: Int) -> String {
+    if value < 60 {
+        return tr(.timerSecondsCountable(value))
+    } else if value < 60 * 60 {
+        return tr(.timerMinutesCountable(max(1, value / 60)))
+    } else if value < 60 * 60 * 24 {
+        return tr(.timerHoursCountable(max(1, value / (60 * 60))))
+    } else if value < 60 * 60 * 24 * 7 {
+        return tr(.timerDaysCountable(max(1, value / (60 * 60 * 24))))
+    } else if value < 60 * 60 * 24 * 30 {
+        return tr(.timerWeeksCountable(max(1, value / (60 * 60 * 24 * 7))))
+    } else if value < 60 * 60 * 24 * 360 {
+        return tr(.timerMonthsCountable(max(1, value / (60 * 60 * 24 * 30))))
+    } else {
+        return tr(.timerYearsCountable(max(1, value / (60 * 60 * 24 * 365))))
+    }
+}
 

@@ -68,19 +68,17 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.textView?.insertionPointColor = theme.colors.text
         input.sizeToFit()
         
-        let logoutAttr = NSMutableAttributedString()
-        _ = logoutAttr.append(string: tr(.passcodeLogoutDescription), color: theme.colors.grayText, font: .normal(.text))
-        _ = logoutAttr.append(string: " ")
-        let range = logoutAttr.append(string: tr(.passcodeLogoutLinkText), color: theme.colors.link, font: .normal(.text))
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLogoutDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+            return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents,  {_ in}))
+        }))
         
         logoutTextView.isSelectable = false
         
-        logoutAttr.add(link: inAppLink.logout( { [weak self] in
-            self?.logoutImpl()
-        } ), for: range)
-        
         let logoutLayout = TextViewLayout(logoutAttr)
-        logoutLayout.interactions = globalLinkExecutor
+        logoutLayout.interactions = TextViewInteractions(processURL:{ [weak self] _ in
+            self?.logoutImpl()
+        })
+        
         logoutTextView.set(layout: logoutLayout)
         
         
