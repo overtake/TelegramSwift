@@ -497,8 +497,10 @@ enum L10n {
   case chatContextCopyBlock
   /// Unmute
   case chatContextDisableNotifications
-  /// Edit (click on date)
-  case chatContextEdit
+  /// Edit
+  case chatContextEdit1
+  /// click on date
+  case chatContextEditHelp
   /// Mute
   case chatContextEnableNotifications
   /// Info
@@ -1161,8 +1163,10 @@ enum L10n {
   case messageContextGoto
   /// Pin
   case messageContextPin
-  /// Reply (double click)
-  case messageContextReply
+  /// Reply
+  case messageContextReply1
+  /// double click
+  case messageContextReplyHelp
   /// Add GIF
   case messageContextSaveGif
   /// Select
@@ -2719,8 +2723,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.Context.CopyBlock")
       case .chatContextDisableNotifications:
         return L10n.tr(key: "Chat.Context.DisableNotifications")
-      case .chatContextEdit:
-        return L10n.tr(key: "Chat.Context.Edit")
+      case .chatContextEdit1:
+        return L10n.tr(key: "Chat.Context.Edit1")
+      case .chatContextEditHelp:
+        return L10n.tr(key: "Chat.Context.EditHelp")
       case .chatContextEnableNotifications:
         return L10n.tr(key: "Chat.Context.EnableNotifications")
       case .chatContextInfo:
@@ -3383,8 +3389,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Message.Context.Goto")
       case .messageContextPin:
         return L10n.tr(key: "Message.Context.Pin")
-      case .messageContextReply:
-        return L10n.tr(key: "Message.Context.Reply")
+      case .messageContextReply1:
+        return L10n.tr(key: "Message.Context.Reply1")
+      case .messageContextReplyHelp:
+        return L10n.tr(key: "Message.Context.ReplyHelp")
       case .messageContextSaveGif:
         return L10n.tr(key: "Message.Context.SaveGif")
       case .messageContextSelect:
@@ -4448,6 +4456,7 @@ extension L10n: CustomStringConvertible {
 
   private static func tr(key: String, _ args: CVarArg...) -> String {
     return translate(key: key, args)
+
   }
 }
 

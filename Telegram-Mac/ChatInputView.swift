@@ -58,6 +58,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     private let emojiReplacementDisposable:MetaDisposable = MetaDisposable()
 
+    private var formatterPopover: InputFormatterPopover?
     
     private var replyMarkupModel:ReplyMarkupNode?
     override var isFlipped: Bool {
@@ -66,6 +67,9 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     private var standart:CGFloat = 50.0
     private var bottomHeight:CGFloat = 0
+    
+    
+    private let formatterDisposable = MetaDisposable()
     
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
@@ -523,6 +527,44 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
+        let close:()->Void = { [weak self] in
+            if let strongSelf = self {
+                strongSelf.formatterPopover?.close()
+                strongSelf.textView.setSelectedRange(NSMakeRange(strongSelf.textView.selectedRange().max, 0))
+                strongSelf.formatterPopover = nil
+            }
+        }
+        
+        if formatterPopover == nil {
+            self.formatterPopover = InputFormatterPopover(InputFormatterArguments(bold: { [weak self] in
+                self?.textView.boldWord()
+                close()
+            }, italic: {  [weak self] in
+                self?.textView.italicWord()
+                close()
+            }, code: {  [weak self] in
+                self?.textView.codeWord()
+                close()
+            }, link: { [weak self] url in
+                self?.textView.addLink(url)
+                close()
+            }), window: mainWindow)
+        }
+        
+        if range.max - range.min > 0 {
+            
+            formatterDisposable.set((Signal<Void, Void>.single(Void()) |> delay(0.4, queue: Queue.mainQueue())).start(completed: { [weak self] in
+                if let strongSelf = self {
+                    strongSelf.formatterPopover?.show(relativeTo: strongSelf.textView.inputView.selectedRangeRect, of: strongSelf.textView, preferredEdge: .maxY)
+                }
+            }))
+            
+        } else {
+            formatterPopover?.close()
+            formatterPopover = nil
+        }
+        
+        
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
         
@@ -541,6 +583,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         chatInteraction.remove(observer: self)
         self.accessoryDispose.dispose()
         emojiReplacementDisposable.dispose()
+        formatterDisposable.dispose()
     }
     
     func textViewSize() -> NSSize {

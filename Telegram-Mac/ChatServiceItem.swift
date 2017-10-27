@@ -310,7 +310,7 @@ class ChatServiceItem: ChatRowItem {
             
             if let message = message, let peer = messageMainPeer(message) {
                 if peer.canSendMessage, !message.containsSecretMedia {
-                    items.append(ContextMenuItem(tr(.messageContextReply), handler: {
+                    items.append(ContextMenuItem(tr(.messageContextReply1), handler: {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }

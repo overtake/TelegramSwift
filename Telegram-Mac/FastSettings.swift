@@ -33,6 +33,11 @@ enum ForceTouchAction: Int32 {
     case forward
 }
 
+enum ContextTextTooltip : Int32 {
+    case reply
+    case edit
+}
+
 class FastSettings {
 
     private static let kSendingType = "kSendingType"
@@ -110,6 +115,12 @@ class FastSettings {
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {
         UserDefaults.standard.set(action.rawValue, forKey: kForceTouchAction)
+    }
+    
+    static func tooltipAbility(for tooltip: ContextTextTooltip) -> Bool {
+        let value = UserDefaults.standard.integer(forKey: "tooltip:\(tooltip.rawValue)")
+        UserDefaults.standard.set(value + 1, forKey: "tooltip:\(tooltip.rawValue)")
+        return value < 10
     }
     
     static func toggleSidebarShown(_ enable: Bool) {

@@ -426,6 +426,7 @@
 		C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B9BE881EFC5E7000D6B96F /* Appearance.swift */; };
 		C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */; };
 		C2BB2DB01F8BDF6700520255 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
+		C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C415E41FA33D1A00FF36F4 /* InputFormatterPopover.swift */; };
 		C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */; };
 		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
 		C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */; };
@@ -1030,6 +1031,7 @@
 		C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerExtension.swift; sourceTree = "<group>"; };
 		C2BB2DAF1F8BDF6700520255 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		C2C415E41FA33D1A00FF36F4 /* InputFormatterPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputFormatterPopover.swift; sourceTree = "<group>"; };
 		C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxySettingsViewController.swift; sourceTree = "<group>"; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelEventFilterModalController.swift; sourceTree = "<group>"; };
@@ -2185,6 +2187,7 @@
 			isa = PBXGroup;
 			children = (
 				C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */,
+				C2C415E41FA33D1A00FF36F4 /* InputFormatterPopover.swift */,
 			);
 			name = panels;
 			sourceTree = "<group>";
@@ -3216,6 +3219,7 @@
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C2DE5D341F3CA94A0081EC1E /* InstantPageMediaView.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
+				C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
 				C20320FF1F9769BA00143395 /* TwoStepVerificationResetController.swift in Sources */,
 				C234A7FB1ED7112400EBBECE /* LocalizableExtension.swift in Sources */,

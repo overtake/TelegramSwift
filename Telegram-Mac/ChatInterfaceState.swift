@@ -46,7 +46,7 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
     case pre(Range<Int>)
     case code(Range<Int>)
     case uid(Range<Int>, Int32)
-    
+    case url(Range<Int>, String)
     init(decoder: PostboxDecoder) {
         let range = Range<Int>(Int(decoder.decodeInt32ForKey("start", orElse: 0)) ..< Int(decoder.decodeInt32ForKey("end", orElse: 0)))
         
@@ -62,6 +62,8 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
             self = .uid(range, decoder.decodeInt32ForKey("uid", orElse: 0))
         case 4:
             self = .code(range)
+        case 5:
+            self = .url(range, decoder.decodeStringForKey("url", orElse: ""))
         default:
             fatalError("input attribute not supported")
         }
@@ -82,6 +84,9 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
         case let .uid(_, uid):
             encoder.encodeInt32(3, forKey: "_rawValue")
             encoder.encodeInt32(uid, forKey: "uid")
+        case let .url(_, url):
+            encoder.encodeInt32(5, forKey: "_rawValue")
+            encoder.encodeString(url, forKey: "url")
         }
     }
     
@@ -99,6 +104,9 @@ extension ChatTextInputAttribute {
         case let .uid(range, uid):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
             return (TGMentionUidAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .url(range, url):
+            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
+            return (TGMentionUidAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
     
@@ -107,6 +115,8 @@ extension ChatTextInputAttribute {
         case let .bold(range), let .italic(range), let .pre(range), let .code(range):
             return range
         case let .uid(range, _):
+            return range
+        case let .url(range, _):
             return range
         }
     }
@@ -144,6 +154,12 @@ func ==(lhs: ChatTextInputAttribute, rhs: ChatTextInputAttribute) -> Bool {
         } else {
             return false
         }
+    case let .url(range, url):
+        if case .url(range, url) = rhs {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
@@ -161,6 +177,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.pre(entity.range))
         case let .TextMention(peerId: peerId):
             inputAttributes.append(.uid(entity.range, peerId.id))
+        case let .TextUrl(url):
+            inputAttributes.append(.url(entity.range, url))
         default:
             break
         }
@@ -192,8 +210,12 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
     }
     
     attributed.enumerateAttribute(NSAttributedStringKey(rawValue: TGMentionUidAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
-        if let tag = tag as? TGInputTextTag, let uid = tag.attachment as? NSNumber {
-            inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
+        if let tag = tag as? TGInputTextTag {
+            if let uid = tag.attachment as? NSNumber {
+                inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
+            } else if let url = tag.attachment as? String {
+                inputAttributes.append(.url(range.location ..< range.location + range.length, url))
+            }
         }
     }
     return inputAttributes
@@ -318,6 +340,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                     attributes.append(.code(newRange))
                 case let .uid(_, uid):
                     attributes.append(.uid(newRange, uid))
+                case let .url(_, url):
+                    attributes.append(.url(newRange, url))
                 }
             }
         }
@@ -340,6 +364,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 entities.append(.init(range: range, type: .Code))
             case let .uid(range, uid):
                 entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: uid))))
+            case let .url(range, url):
+                entities.append(.init(range: range, type: .TextUrl(url: url)))
             }
         }
         

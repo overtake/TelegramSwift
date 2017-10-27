@@ -88,7 +88,7 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 -(void)codeWord;
 -(void)italicWord;
 -(void)boldWord;
-
+-(void)addLink:(NSString *)link;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 
 @end
