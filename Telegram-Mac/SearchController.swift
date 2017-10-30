@@ -400,7 +400,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             } else {
                 
                 return combineLatest(account.postbox.loadedPeerWithId(account.peerId), recentPeers(account: account), recentlySearchedPeers(postbox: account.postbox), statePromise) |> map { user, top, recent, state -> ([ChatListSearchEntry], Bool) in
-                    var entries:[ChatListSearchEntry] = [.savedMessages(user)]
+                    var entries:[ChatListSearchEntry] = [] //[.savedMessages(user)]
                     var i:Int = 0
                     var ids:[PeerId:PeerId] = [:]
 

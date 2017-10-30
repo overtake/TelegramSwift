@@ -120,7 +120,7 @@ class FastSettings {
     static func tooltipAbility(for tooltip: ContextTextTooltip) -> Bool {
         let value = UserDefaults.standard.integer(forKey: "tooltip:\(tooltip.rawValue)")
         UserDefaults.standard.set(value + 1, forKey: "tooltip:\(tooltip.rawValue)")
-        return value < 10
+        return value < 12
     }
     
     static func toggleSidebarShown(_ enable: Bool) {

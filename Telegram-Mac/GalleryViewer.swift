@@ -186,7 +186,7 @@ class GalleryViewer: NSResponder {
             self.window.level = .screenSaver
             self.window.isOpaque = false
             self.window.backgroundColor = .clear
-            
+            self.window.appearance = theme.appearance
             backgroundView.backgroundColor = .blackTransparent
             backgroundView.frame = bounds
             

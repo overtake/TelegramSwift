@@ -160,9 +160,25 @@ final class GridMessageItemNode: GridItemNode {
             statusDisposable.set(nil)
             fetchingDisposable.set(nil)
             
-            if let image = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions {
+            if let media = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(media.representations)?.dimensions {
                 mediaDimensions = largestSize
-                self.imageView.setSignal(account: account, signal: mediaGridMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+                
+                
+                
+                let imageSize = largestSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
+                
+                self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
+
+                if self.imageView.layer?.contents == nil {
+                    self.imageView.setSignal(account: account, signal: mediaGridMessagePhoto(account: account, photo: media, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                        if let strongSelf = self {
+                            return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
+                        } else {
+                            return .complete()
+                        }
+                    })
+                }
+                
                 progressView?.removeFromSuperview()
                 progressView = nil
             } else if let file = media as? TelegramMediaFile {
@@ -204,7 +220,6 @@ final class GridMessageItemNode: GridItemNode {
         
         self.updateSelectionState(animated: false)
         
-        self.needsLayout = true
     }
     
     override func layout() {
@@ -215,7 +230,7 @@ final class GridMessageItemNode: GridItemNode {
         
         if let (_, _, mediaDimensions) = self.currentState {
             let imageSize = mediaDimensions.aspectFilled(imageFrame.size)
-            self.imageView.set(arguments:TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets()))
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets()))
         }
         if let selectionView = selectionView {
             selectionView.setFrameOrigin(frame.width - selectionView.frame.width - 5, 5)
