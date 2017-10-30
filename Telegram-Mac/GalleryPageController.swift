@@ -264,28 +264,39 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func pageControllerWillStartLiveTransition(_ pageController: NSPageController) {
         lockedTransition = true
+        captionView.change(opacity: 0)
         startIndex = pageController.selectedIndex
     }
     
     func pageControllerDidEndLiveTransition(_ pageController: NSPageController, force:Bool) {
         let previousView = currentController?.view as? MagnifyView
+        
+        captionView.change(opacity: 0, animated: captionView.superview != nil, completion: { [weak captionView] completed in
+            if completed {
+                captionView?.removeFromSuperview()
+            }
+        })
+        
+        let item = self.item(at: pageController.selectedIndex)
+        if let caption = item.caption {
+            caption.measure(width: item.sizeValue.width)
+            captionView.update(caption)
+            captionView.background = .blackTransparent
+            captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
+            captionView.layer?.cornerRadius = .cornerRadius
+            
+            view.addSubview(captionView)
+            captionView.change(opacity: 1.0)
+            captionView.centerX(y: 90)
+        }
+        
         if startIndex != pageController.selectedIndex {
             if startIndex > 0 && startIndex < pageController.arrangedObjects.count {
                 self.item(at: startIndex).disappear(for: previousView?.contentView)
             }
             startIndex = pageController.selectedIndex
             
-           
-//            if let caption = item.caption {
-//                caption.measure(width: item.sizeValue.width)
-//                captionView.update(caption)
-//                captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
-//                (pageController.selectedViewController?.view as? MagnifyView)?.contentView.addSubview(captionView)
-//                captionView.centerX(y: 10)
-//            } else {
-//                captionView.removeFromSuperview()
-//            }
-//            
+
             pageController.completeTransition()
             if  let controllerView = pageController.selectedViewController?.view as? MagnifyView, previousView != controllerView || force {
                 let item = self.item(at: startIndex)
@@ -479,6 +490,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func animateOut( to:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil) ->Void {
         
         lockedTransition = true
+        
+        
+        captionView.change(opacity: 0, animated: true)
+        
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true
             item.disappear(for: selectedView.contentView)

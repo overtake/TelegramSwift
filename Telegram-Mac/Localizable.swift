@@ -1529,9 +1529,9 @@ enum L10n {
   case previewSenderCommentPlaceholder
   /// Send as compressed
   case previewSenderCompressFile
-  /// Send without compression
+  /// Without compression
   case previewSenderFileTooltip
-  /// Send in a quickway
+  /// Quick way
   case previewSenderMediaTooltip
   /// %d
   case previewSenderSendAudioCountable(Int)
@@ -1577,15 +1577,15 @@ enum L10n {
   case previewSenderSendGifZero
   /// %d
   case previewSenderSendMediaCountable(Int)
-  /// Send %d Medias
+  /// Send %d Media
   case previewSenderSendMediaFew(Int)
-  /// Send %d Medias
+  /// Send %d Media
   case previewSenderSendMediaMany(Int)
   /// Send Media
   case previewSenderSendMediaOne
-  /// Send %d Medias
+  /// Send %d Media
   case previewSenderSendMediaOther(Int)
-  /// Send %d Medias
+  /// Send %d Media
   case previewSenderSendMediaTwo(Int)
   /// Send Media
   case previewSenderSendMediaZero
@@ -4456,7 +4456,6 @@ extension L10n: CustomStringConvertible {
 
   private static func tr(key: String, _ args: CVarArg...) -> String {
     return translate(key: key, args)
-
   }
 }
 

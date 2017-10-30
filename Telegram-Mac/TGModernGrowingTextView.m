@@ -436,6 +436,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 -(void)setTextColor:(NSColor *)textColor {
     _textColor = textColor;
     _textView.insertionPointColor = _textColor;
+    _textView.textColor = _textColor;
     [self textDidChange:nil];
 }
 

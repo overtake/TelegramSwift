@@ -422,8 +422,9 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         
         switch entry {
         case let .plain(peer, _, presence, drawSeparator):
+            //peer.id == account.peerId ? nil : presence?.status.string
             let color = presence?.status.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
-            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? nil : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
+            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : false, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
         case let .separator(text, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: text)
         case .emptySearch:
@@ -567,8 +568,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         return ChatListIndex(pinningIndex: nil, messageIndex: index)
                     }
                     
-                    entries.append(.plain(user, chatListIndex(), nil, top.isEmpty && recent.isEmpty))
-                    contains[user.id] = user.id
+                    //entries.append(.plain(user, chatListIndex(), nil, top.isEmpty && recent.isEmpty))
+                    //contains[user.id] = user.id
                     
                     if !top.isEmpty {
                         entries.insert(.separator(tr(.searchSeparatorPopular).uppercased(), chatListIndex()), at: 0)

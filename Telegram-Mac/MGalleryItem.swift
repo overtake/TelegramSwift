@@ -93,7 +93,14 @@ class MGalleryItem: NSObject {
     let path:Promise<String> = Promise()
     let entry:GalleryEntry
     let account:Account
-    let pagerSize:NSSize
+    private var _pagerSize: NSSize
+    var pagerSize:NSSize {
+        if let caption = caption {
+            return NSMakeSize(_pagerSize.width, _pagerSize.height - caption.layoutSize.height - 36)
+        } else {
+            return _pagerSize
+        }
+    }
     let caption: TextViewLayout?
     
     private(set) var modifiedSize: NSSize? = nil
@@ -126,8 +133,8 @@ class MGalleryItem: NSObject {
     init(_ account:Account, _ entry:GalleryEntry, _ pagerSize:NSSize) {
         self.entry = entry
         self.account = account
-        self.pagerSize = pagerSize
-        if let caption = entry.message?.text {
+        self._pagerSize = pagerSize
+        if let caption = entry.message?.text, !caption.isEmpty {
             self.caption = TextViewLayout(.initialize(string: caption, color: .white, font: .normal(.text)), alignment: .center)
             self.caption?.measure(width: .greatestFiniteMagnitude)
         } else {
