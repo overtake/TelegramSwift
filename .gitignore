@@ -7,3 +7,5 @@ fastlane/sparkle/dsa_priv.pem
 fastlane/sparkle/dsa_pub.pem
 fastlane/sparkle/sign_update
 Telegram-Mac/Config.swift
+.DS_Store
+xcuserdata/

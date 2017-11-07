@@ -2073,9 +2073,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         globalPeerHandler.set(.single(peerId))
-        chatInteraction.update(animated: false, {$0.withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
         account.context.entertainment.update(with: chatInteraction)
         self.chatInteraction.add(observer: self)
+        chatInteraction.update(animated: false, {$0.withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
     }
     
     private func updateMaxVisibleReadIncomingMessageIndex(_ index: MessageIndex) {
@@ -2211,6 +2211,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                 genericView.updateHeader(value, animated)
             }
             
+            if value.sidebarShown != oldValue.sidebarShown || value.sidebarEnabled != oldValue.sidebarEnabled {
+                updateSidebar()
+                (navigationController as? MajorNavigationController)?.genericView.update()
+            }
 
             self.state = value.selectionState != nil ? .Edit : .Normal
             
