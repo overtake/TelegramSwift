@@ -56,13 +56,52 @@ class ChatInteractiveContentView: ChatMediaContentView {
 
         self.image.setFrameSize(frame.size)
     }
+    
+    private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile) {
+        switch status {
+        case let .Fetching(_, progress):
+            let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
+            let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
+            videoAccessory?.updateText(size, maxWidth: frame.width - 20)
+        case .Remote:
+            videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.elapsedSize))", maxWidth: frame.width - 20)
+        case .Local:
+            videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration), maxWidth: frame.width - 20)
+        }
+    }
 
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {
         
         let mediaUpdated = true//self.media == nil || !self.media!.isEqual(media)
         
-        super.update(with: media, size: size, account: account, parent:parent, table:table, parameters:parameters)
+        super.update(with: media, size: size, account: account, parent:parent, table:table, parameters:parameters, positionFlags: positionFlags)
 
+        
+        var topLeftRadius: CGFloat = 4.0
+        var bottomLeftRadius: CGFloat = 4.0
+        var topRightRadius: CGFloat = 4.0
+        var bottomRightRadius: CGFloat = 4.0
+        
+        if let positionFlags = positionFlags {
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                bottomLeftRadius = topLeftRadius * 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                bottomRightRadius = topRightRadius * 2
+            }
+        }
+        
+//        if (position & TGAttachmentPositionBottom && position & TGAttachmentPositionLeft)
+//        bottomLeftRadius = bigRadius;
+//        if (position & TGAttachmentPositionBottom && position & TGAttachmentPositionRight)
+//        bottomRightRadius = bigRadius;
+        
 
         var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
@@ -130,7 +169,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let arguments = TransformImageArguments(corners: ImageCorners(radius:.cornerRadius), imageSize: dimensions, boundingSize: frame.size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions, boundingSize: frame.size, intrinsicInsets: NSEdgeInsets())
             
              self.image.set(arguments: arguments)
             
@@ -149,15 +188,14 @@ class ChatInteractiveContentView: ChatMediaContentView {
             }
         }
         
-        
-
-        
         if let updateStatusSignal = updatedStatusSignal {
             self.statusDisposable.set(updateStatusSignal.start(next: { [weak self] (status) in
                 
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
-                    
+                    if let file = media as? TelegramMediaFile {
+                        strongSelf.updateVideoAccessory(status, file: file)
+                    }
                     var containsSecretMedia:Bool = false
                     
                     if let message = parent {
@@ -238,6 +276,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
             }
         }
         
+    }
+    
+    override func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+        super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        
+        image._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     }
     
     override func setContent(size: NSSize) {

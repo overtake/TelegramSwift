@@ -133,7 +133,7 @@ class WPContentView: View, MultipleSelectable {
         self.needsLayout = true
     }
     
-    var interactionContentView: NSView {
+    func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self.containerView
     }
     

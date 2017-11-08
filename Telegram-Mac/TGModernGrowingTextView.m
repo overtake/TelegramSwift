@@ -115,7 +115,11 @@ NSString *const TGMentionUidAttributeName = @"TGMentionUidAttributeName";
     
     NSMenuItem *code = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"TextView.Transform.Code", nil) action:@selector(codeWord:) keyEquivalent:@"k"];
     [code setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
-    return @[code, italic, bold];
+    
+    NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"TextView.Transform.URL", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
+    [url setKeyEquivalentModifierMask: NSCommandKeyMask];
+    
+    return @[code, italic, bold, url];
 }
 
 
@@ -124,6 +128,10 @@ NSString *const TGMentionUidAttributeName = @"TGMentionUidAttributeName";
     [self changeFontMarkdown:[NSFont boldSystemFontOfSize:self.font.pointSize]];
    // [self.textStorage addAttribute:NSFontAttributeName value:[NSFont boldSystemFontOfSize:self.font.pointSize] range:self.selectedRange];
    // [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
+}
+
+-(void)makeUrl:(id)sender {
+    [self.weakd makeUrlOfRange:self.selectedRange];
 }
 
 -(void)addLink:(NSString *)link {

@@ -547,6 +547,10 @@ public extension Message {
         }
         return true
     }
+    
+    convenience init(_ media: Media, stableId: UInt32, messageId: MessageId) {
+        self.init(stableId: stableId, stableVersion: 0, id: messageId, globallyUniqueId: nil, timestamp: 0, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: nil, text: "", attributes: [], media: [media], peers: SimpleDictionary(), associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    }
 }
 
 extension SuggestedLocalizationInfo {
@@ -614,6 +618,11 @@ func canForwardMessage(_ message:Message, account:Account) -> Bool {
     if message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     }
+    
+    if message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
+        return false
+    }
+    
     if message.media.first is TelegramMediaAction {
         return false
     }
@@ -796,7 +805,7 @@ extension Peer {
     var isRestrictedChannel: Bool {
         if let peer = self as? TelegramChannel {
             if let restrictionInfo = peer.restrictionInfo {
-                #if APP_STORE || DEBUG
+                #if APP_STORE
                     let reason = restrictionInfo.reason.components(separatedBy: ":")
                     
                     if reason.count == 2 {

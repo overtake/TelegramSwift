@@ -132,6 +132,7 @@ extern NSString *__nonnull const TGMentionUidAttributeName;
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
+- (void)makeUrlOfRange: (NSRange)range;
 @end
 
 

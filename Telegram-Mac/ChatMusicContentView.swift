@@ -14,8 +14,8 @@ import TGUIKit
 
 class ChatMusicContentView: ChatAudioContentView {
 
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool) {
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated)
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {
+        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             textView.update(parameters.nameLayout)

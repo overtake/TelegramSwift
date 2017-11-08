@@ -491,6 +491,9 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     func makeBold() {
         self.textView.boldWord()
     }
+    func makeUrl() {
+        self.makeUrl(of: textView.selectedRange())
+    }
     func makeItalic() {
         self.textView.italicWord()
     }
@@ -527,44 +530,9 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
-        let close:()->Void = { [weak self] in
-            if let strongSelf = self {
-                strongSelf.formatterPopover?.close()
-                strongSelf.textView.setSelectedRange(NSMakeRange(strongSelf.textView.selectedRange().max, 0))
-                strongSelf.formatterPopover = nil
-            }
-        }
-        
-        if formatterPopover == nil {
-            self.formatterPopover = InputFormatterPopover(InputFormatterArguments(bold: { [weak self] in
-                self?.textView.boldWord()
-                close()
-            }, italic: {  [weak self] in
-                self?.textView.italicWord()
-                close()
-            }, code: {  [weak self] in
-                self?.textView.codeWord()
-                close()
-            }, link: { [weak self] url in
-                self?.textView.addLink(url)
-                close()
-            }), window: mainWindow)
-        }
-        
-        if range.max - range.min > 0 {
-            
-            formatterDisposable.set((Signal<Void, Void>.single(Void()) |> delay(0.4, queue: Queue.mainQueue())).start(completed: { [weak self] in
-                if let strongSelf = self {
-                    strongSelf.formatterPopover?.show(relativeTo: strongSelf.textView.inputView.selectedRangeRect, of: strongSelf.textView, preferredEdge: .maxY)
-                }
-            }))
-            
-        } else {
-            formatterPopover?.close()
-            formatterPopover = nil
-        }
-        
-        
+        formatterPopover?.close()
+        formatterPopover = nil
+
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
         
@@ -578,6 +546,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         }
         
     }
+
     
     deinit {
         chatInteraction.remove(observer: self)
@@ -592,6 +561,40 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     func textViewIsTypingEnabled() -> Bool {
         return self.chatState == .normal || self.chatState == .editing
+    }
+    
+    func makeUrl(of range: NSRange) {
+        guard range.min != range.max else {
+            return
+        }
+        
+        let attributed = self.textView.attributedString()
+        
+        let close:()->Void = { [weak self] in
+            if let strongSelf = self {
+                strongSelf.formatterPopover?.close()
+                strongSelf.textView.setSelectedRange(NSMakeRange(strongSelf.textView.selectedRange().max, 0))
+                strongSelf.formatterPopover = nil
+            }
+        }
+        
+        if formatterPopover == nil {
+            self.formatterPopover = InputFormatterPopover(InputFormatterArguments(bold: { [weak self] in
+                self?.textView.boldWord()
+                close()
+                }, italic: {  [weak self] in
+                    self?.textView.italicWord()
+                    close()
+                }, code: {  [weak self] in
+                    self?.textView.codeWord()
+                    close()
+                }, link: { [weak self] url in
+                    self?.textView.addLink(url)
+                    close()
+            }), window: mainWindow)
+        }
+        
+        formatterPopover?.show(relativeTo: textView.inputView.selectedRangeRect, of: textView, preferredEdge: .maxY)
     }
     
     func maxCharactersLimit() -> Int32 {

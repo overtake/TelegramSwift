@@ -435,6 +435,8 @@ struct TelegramIconsTheme {
     let changePhoneNumberIntro: CGImage
     
     let peerSavedMessages: CGImage
+    
+    let previewCollage: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -739,7 +741,8 @@ private func generateIcons(from pallete: ColorPallete) -> TelegramIconsTheme {
                                                inputChannelMute: #imageLiteral(resourceName: "Icon_InputChannelMute").precomposed(pallete.grayIcon),
                                                inputChannelUnmute: #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(pallete.grayIcon),
                                                changePhoneNumberIntro: #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed(),
-                                               peerSavedMessages: #imageLiteral(resourceName: "Icon_SavedMessages").precomposed())
+                                               peerSavedMessages: #imageLiteral(resourceName: "Icon_SavedMessages").precomposed(),
+                                               previewCollage: #imageLiteral(resourceName: "Icon_PreviewCollage").precomposed(pallete.grayIcon))
 }
 
 
@@ -815,7 +818,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
         window.contentView?.subviews.first?.background = theme.colors.background
         window.appearance = theme.appearance
         window.backgroundColor = theme.colors.grayBackground
-        window.titlebarAppearsTransparent = theme.dark
+        window.titlebarAppearsTransparent = true//theme.dark
     }
     _themeSignal.set(theme)
 }

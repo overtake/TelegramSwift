@@ -55,6 +55,7 @@ class TelegramViewController: TelegramGenericViewController<NSView> {
 
 class TableViewController: TelegramGenericViewController<TableView>, TableViewDelegate {
     
+   
     
     override func loadView() {
         super.loadView()
@@ -76,7 +77,9 @@ class TableViewController: TelegramGenericViewController<TableView>, TableViewDe
     func isSelectable(row:Int, item:TableRowItem) -> Bool {
         return false
     }
-    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
     
     override var enableBack: Bool {
         return true

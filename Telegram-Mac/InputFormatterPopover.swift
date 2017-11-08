@@ -23,14 +23,14 @@ private class InputFormatterView : View, NSTextFieldDelegate {
     let linkField: NSTextField = NSTextField()
     let dismissLink:ImageButton = ImageButton()
     
-    fileprivate var state: InputFormatterViewState = .normal
+    fileprivate var state: InputFormatterViewState = .link
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(linkField)
-        addSubview(bold)
-        addSubview(italic)
-        addSubview(monospace)
+//        addSubview(bold)
+//        addSubview(italic)
+//        addSubview(monospace)
         addSubview(link)
         addSubview(dismissLink)
  
@@ -79,14 +79,12 @@ private class InputFormatterView : View, NSTextFieldDelegate {
         linkField.setFrameSize(frame.width - link.frame.width - 10, 18)
         linkField.centerY(x: 10)
         
-        dismissLink.set(handler: { [weak self] _ in
-            self?.linkField.stringValue = ""
-            self?.change(state: .normal, animated: true)
-        }, for: .Click)
+
         
         dismissLink.centerY(x: frame.width - 10 - dismissLink.frame.width)
         dismissLink.isHidden = true
-        change(state: .normal, animated: false)
+        
+        change(state: .link, animated: false)
     }
     
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -184,6 +182,7 @@ class InputFormatterPopover: NSPopover {
         super.init()
         let controller = NSViewController()
         let view = InputFormatterView(frame: NSMakeRect(0, 0, 240, 40))
+        
         controller.view = view
         
         view.bold.set(handler: { _ in
@@ -196,6 +195,10 @@ class InputFormatterPopover: NSPopover {
         
         view.monospace.set(handler: { _ in
             arguments.code()
+        }, for: .Click)
+        
+        view.dismissLink.set(handler: { [weak self] _ in
+            self?.close()
         }, for: .Click)
         
         self.contentViewController = controller
@@ -238,6 +241,11 @@ class InputFormatterPopover: NSPopover {
             return .rejected
         }, with: self, for: .Return, priority: .modal)
         
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.close()
+            return .invoked
+        }, with: self, for: .Escape, priority: .modal)
+        
         window.set(responder: { [weak view] () -> NSResponder? in
             if let view = view {
                 if view.state == .link {
@@ -248,6 +256,7 @@ class InputFormatterPopover: NSPopover {
             
         }, with: self, priority: .modal)
     }
+    
     
     deinit {
         window.removeAllHandlers(for: self)

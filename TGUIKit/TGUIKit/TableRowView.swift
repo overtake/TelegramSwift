@@ -81,7 +81,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    open var interactionContentView:NSView {
+    open func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self
     }
     

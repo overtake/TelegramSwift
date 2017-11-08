@@ -289,6 +289,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
 class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
+    
+    
     private let account:Account
     private let arguments:SearchControllerArguments
     private var open:(PeerId, Message?, Bool) -> Void = {_,_,_  in}

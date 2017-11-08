@@ -106,6 +106,18 @@ open class TableRowItem: NSObject {
         return TableRowView.self;
     }
     
+    open var layoutSize: NSSize {
+        return NSZeroSize
+    }
+    
+    open var view: TableRowView? {
+        assertOnMainThread()
+        if let table = table {
+            return table.viewNecessary(at: index)
+        }
+        return nil
+    }
+    
     open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {
         self.oldWidth = width
         return true;

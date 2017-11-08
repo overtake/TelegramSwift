@@ -221,7 +221,9 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
     return inputAttributes
 }
 
-private let markdownRegexFormat = "(^|\\s)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`)([^\\n]+?)\\7([\\s\\.,:?!;]|$)"
+//x/m
+private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)" //"(^|\\s)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`)([^\\n]+?)\\7([\\s\\.,:?!;]|$)"
+
 private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexFormat, options: [.caseInsensitive, .anchorsMatchLines])
 
 struct ChatTextInputState: PostboxCoding, Equatable {
@@ -308,8 +310,21 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 if pre.location != NSNotFound {
                     let text = raw.nsstring.substring(with: pre)
                     
+                    
+                    let entity = raw.nsstring.substring(with: match.range(at: 7))
+                    
                     newText.append(raw.nsstring.substring(with: match.range(at: 6)) + text + raw.nsstring.substring(with: match.range(at: 9)))
-                    attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+
+                    switch entity {
+                    case "`":
+                        attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
+                    case "**":
+                        attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
+                    case "__":
+                        attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
+                    default:
+                        break
+                    }
                     
                     rawOffset -= match.range(at: 7).length * 2
                 }

@@ -34,7 +34,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) {
+                if !(view is TransformImageView) && !(view is SelectingControl) {
                     view.background = newValue
                 }
             }
@@ -138,7 +138,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         dragDisposable.dispose()
     }
     
-    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false) -> Void  {
+    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) -> Void  {
         self.setContent(size: size)
         self.media = media
         self.parameters = parameters
@@ -161,7 +161,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         return view
     }
     
-    var interactionContentView: NSView {
+    func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self
     }
     
@@ -175,10 +175,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     override func mouseDown(with event: NSEvent) {
         if userInteractionEnabled {
             inDragging = false
-            acceptDragging = false
             dragpath = nil
             mouseDownPoint = convert(event.locationInWindow, from: nil)
-            acceptDragging = draggingAbility(event)
+            acceptDragging = draggingAbility(event) && parent != nil
+            
             if let parent = parent, parent.id.peerId.id == Namespaces.Peer.SecretChat {
                 acceptDragging = false
             }
@@ -253,6 +253,8 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     super.mouseDragged(with: event)
                 }
 
+            } else {
+                super.mouseDragged(with: event)
             }
 
         }

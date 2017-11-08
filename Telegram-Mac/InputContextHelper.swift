@@ -220,6 +220,10 @@ class InputContextView : TableView, AppearanceViewProtocol {
 
 class InputContextViewController : GenericViewController<InputContextView>, TableViewDelegate {
     
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private let account:Account
     private let chatInteraction:ChatInteraction
     override func loadView() {

@@ -232,7 +232,7 @@ class WPArticleContentView: WPContentView {
         
     }
     
-    override var interactionContentView:NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self.imageView ?? self
     }
     

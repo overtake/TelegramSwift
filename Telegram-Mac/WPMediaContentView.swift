@@ -47,8 +47,8 @@ class WPMediaContentView: WPContentView {
         }
     }
     
-    override var interactionContentView: NSView {
-        return contentNode?.interactionContentView ?? self
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+        return contentNode?.interactionContentView(for: innerId) ?? self
     }
     
 }

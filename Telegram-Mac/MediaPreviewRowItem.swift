@@ -65,7 +65,7 @@ class MediaPreviewRowItem: TableRowItem {
         return NSMakeSize(width - 20, overSize ?? contentSize.height)
     }
     
-    var layoutSize: NSSize {
+    override var layoutSize: NSSize {
         return ChatLayoutUtils.contentSize(for: media, with: initialSize.width - 20)
     }
     
@@ -116,8 +116,8 @@ fileprivate class MediaPreviewRowView : TableRowView {
         self.contentNode?.setFrameOrigin(10, 6)
     }
     
-    open override var interactionContentView:NSView {
-        if let content = self.contentNode?.interactionContentView {
+    open override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+        if let content = self.contentNode?.interactionContentView(for: innerId) {
             return content
         }
         return self

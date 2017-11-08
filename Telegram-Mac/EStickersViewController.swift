@@ -281,6 +281,12 @@ class StickersControllerView : View {
 
 class StickersViewController: GenericViewController<StickersControllerView>, TableViewDelegate, Notifable {
     
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
+    
     private var interactions:EntertainmentInteractions?
     private var chatInteraction:ChatInteraction?
     private var account:Account

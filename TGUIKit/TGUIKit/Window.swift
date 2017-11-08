@@ -478,4 +478,6 @@ public class Window: NSWindow {
         
       //  self.contentView?.canDrawSubviewsIntoLayer = true
     }
+    
+    
 }

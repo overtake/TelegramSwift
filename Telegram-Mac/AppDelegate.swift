@@ -16,13 +16,14 @@ import MtProtoKitMac
 
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
    
     #if !APP_STORE
     @IBOutlet weak var updater: SUUpdater!
     #endif
     @IBOutlet weak var window: Window! {
         didSet {
+            window.delegate = self
             window.initSaver()
         }
     }
@@ -225,6 +226,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
     
     
+    func window(_ window: NSWindow, willPositionSheet sheet: NSWindow, using rect: NSRect) -> NSRect {
+        var rect = rect
+        rect.origin.y -= 22
+        return rect;
+    }
+    
     func applicationDidBecomeActive(_ notification: Notification) {
         presentAccountStatus.set(.single(true) |> then(.single(true) |> delay(50, queue: Queue.concurrentBackgroundQueue())) |> restart)
     }
@@ -278,7 +285,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
     
-
+    func applicationWillUnhide(_ notification: Notification) {
+        window.makeKeyAndOrderFront(nil)
+    }
+    
+    func applicationWillBecomeActive(_ notification: Notification) {
+         window.makeKeyAndOrderFront(nil)
+    }
 
     override func awakeFromNib() {
         #if APP_STORE

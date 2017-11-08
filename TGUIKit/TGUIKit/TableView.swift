@@ -68,6 +68,13 @@ public protocol TableViewDelegate : class {
     func selectionWillChange(row:Int, item:TableRowItem) -> Bool;
     func isSelectable(row:Int, item:TableRowItem) -> Bool;
     
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable?
+}
+
+extension TableViewDelegate {
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
 }
 
 public enum TableSavingSide {
@@ -1466,10 +1473,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
 
     public func contentInteractionView(for stableId: AnyHashable) -> NSView? {
-        if let item = self.item(stableId: stableId) {
+        var item = self.item(stableId: stableId)
+        
+        if item == nil {
+            if let groupStableId = delegate?.findGroupStableId(for: stableId) {
+                item = self.item(stableId: groupStableId)
+            }
+        }
+        
+        if let item = item {
             let view = viewNecessary(at:item.index)
             if let view = view, !NSIsEmptyRect(view.visibleRect) {
-                return view.interactionContentView
+                return view.interactionContentView(for: stableId)
             }
            
         }

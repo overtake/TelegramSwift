@@ -116,11 +116,11 @@ private class StickersModalView : View {
                     arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peer: peer))
                 })
             })
-            let layout = TextViewLayout(attr, maximumNumberOfLines: 1)
+            let layout = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
             layout.interactions = globalLinkExecutor
             
             
-            layout.measure(width: frame.width - 140)
+            layout.measure(width: frame.width - 160)
             headerTitle.update(layout)
             
             let items = collectionItems.filter({ item -> Bool in

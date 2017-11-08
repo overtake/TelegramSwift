@@ -53,6 +53,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     let view:GalleryPageView = GalleryPageView()
     private let captionView: TextView = TextView()
     private let window:Window
+    private let autohideCaptionDisposable = MetaDisposable()
+    private let magnifyDisposable = MetaDisposable()
     let selectedIndex:ValuePromise<Int> = ValuePromise(ignoreRepeated: false)
     init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window) {
         self.contentInset = contentInset
@@ -60,7 +62,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         super.init()
         cache.countLimit = 10
-        
+        captionView.isSelectable = false
+        captionView.userInteractionEnabled = false
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
             if let view = self?.controller.selectedViewController?.view as? MagnifyView, let window = view.window {
                 
@@ -95,6 +98,15 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             return .invoked
         }, with: self, for: .scrollWheel)
         
+        window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
+            self?.autohideCaptionDisposable.set(nil)
+            if self?.lockedTransition == false {
+                self?.captionView.change(opacity: 1.0)
+                self?.configureCaptionAutohide()
+            }
+            return .rejected
+        }, with: self, for: .mouseMoved)
+        
         
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
             if let view = self?.controller.selectedViewController?.view as? MagnifyView, let window = view.window {
@@ -118,6 +130,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         controller.view.frame = frame
         controller.delegate = self
         controller.transitionStyle = .horizontalStrip
+    }
+    
+    private func configureCaptionAutohide() {
+        autohideCaptionDisposable.set((Signal<Void, Void>.single(Void()) |> delay(5.0, queue: Queue.mainQueue())).start(next: { [weak self] in
+            self?.captionView.change(opacity: 0)
+        }))
     }
     
     func merge(with transition:UpdateTransition<MGalleryItem>) -> Bool {
@@ -277,9 +295,32 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }
         })
         
+        
+        
+        
+        if startIndex != pageController.selectedIndex {
+            if startIndex > 0 && startIndex < pageController.arrangedObjects.count {
+                self.item(at: startIndex).disappear(for: previousView?.contentView)
+            }
+            startIndex = pageController.selectedIndex
+            
+            
+
+            pageController.completeTransition()
+            if  let controllerView = pageController.selectedViewController?.view as? MagnifyView, previousView != controllerView || force {
+                let item = self.item(at: startIndex)
+                item.appear(for: controllerView.contentView)
+                controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
+                
+                magnifyDisposable.set(controllerView.magnifyUpdater.get().start(next: { [weak self] value in
+                    self?.captionView.isHidden = value > 1.0
+                }))
+                
+            }
+        }
+        
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
-            caption.measure(width: item.sizeValue.width)
             captionView.update(caption)
             captionView.background = .blackTransparent
             captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
@@ -290,22 +331,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             captionView.centerX(y: 90)
         }
         
-        if startIndex != pageController.selectedIndex {
-            if startIndex > 0 && startIndex < pageController.arrangedObjects.count {
-                self.item(at: startIndex).disappear(for: previousView?.contentView)
-            }
-            startIndex = pageController.selectedIndex
-            
-
-            pageController.completeTransition()
-            if  let controllerView = pageController.selectedViewController?.view as? MagnifyView, previousView != controllerView || force {
-                let item = self.item(at: startIndex)
-                item.appear(for: controllerView.contentView)
-                controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
-            }
-            
-            
-        }
+        configureCaptionAutohide()
     }
     
     private var currentController:NSViewController?
@@ -333,15 +359,17 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     
     var contentFrame:NSRect {
-        return NSMakeRect(frame.minX + contentInset.left, frame.minY + contentInset.top, frame.width - contentInset.left - contentInset.right, frame.height - contentInset.top - contentInset.bottom)
+        let rect = NSMakeRect(frame.minX + contentInset.left, frame.minY + contentInset.top, frame.width - contentInset.left - contentInset.right, frame.height - contentInset.top - contentInset.bottom)
+        
+        return rect
     }
     
     func pageController(_ pageController: NSPageController, frameFor object: Any?) -> NSRect {
         if let object = object {
             let item = self.item(for: object)
             let size = item.sizeValue
-
-            return view.focus(size.fitted(contentFrame.size), inset:contentInset)
+            
+            return view.focus(size.fitted(contentFrame.size), inset:self.contentInset)
         }
         return view.bounds
     }
@@ -398,6 +426,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     
     func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil) ->Void {
+        
+        
+        captionView.change(opacity: 0, animated: false)
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
             lockedTransition = true
             if let oldView = from(item.stableId), let oldWindow = oldView.window {
@@ -415,6 +446,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: image, oldView: oldView, completion: { [weak strongSelf] in
                                 selectedView?.isHidden = false
                                 strongSelf?.lockedTransition = false
+                                strongSelf?.captionView.change(opacity: 1.0)
                             })
                         } else {
                             selectedView?.isHidden = false
@@ -521,8 +553,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     
     deinit {
-        window.remove(object: self, for: .leftMouseUp)
+        window.removeAllHandlers(for: self)
         ioDisposabe.dispose()
+        autohideCaptionDisposable.dispose()
+        magnifyDisposable.dispose()
     }
 
 }

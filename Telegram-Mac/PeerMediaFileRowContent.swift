@@ -230,7 +230,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         
     }
     
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return imageView
     }
     
