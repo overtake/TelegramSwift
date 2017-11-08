@@ -129,7 +129,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
     
 
     
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return image
     }
     

@@ -22,6 +22,17 @@ class ChatMediaView: ChatRowView {
             contentNode?.needsDisplay = true
         }
     }
+    override var backgroundColor: NSColor {
+        didSet {
+            contentNode?.backgroundColor = backdorColor
+        }
+    }
+    
+    override func viewWillMove(toSuperview newSuperview: NSView?) {
+        if newSuperview == nil {
+            self.contentNode?.willRemove()
+        }
+    }
     
     override func draw(_ dirtyRect: NSRect) {
         
@@ -41,25 +52,15 @@ class ChatMediaView: ChatRowView {
         super.set(item: item, animated: animated)
     }
     
-    open override var interactionContentView:NSView {
-        if let content = self.contentNode?.interactionContentView {
+    open override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+        if let content = self.contentNode?.interactionContentView(for: innerId) {
             return content
         }
        return self
     }
     
     
-    override var backgroundColor: NSColor {
-        didSet {
-            contentNode?.backgroundColor = backdorColor
-        }
-    }
-    
-    override func viewWillMove(toSuperview newSuperview: NSView?) {
-        if newSuperview == nil {
-            self.contentNode?.willRemove()
-        }
-    }
+  
     
 }
 

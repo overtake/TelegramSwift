@@ -1714,6 +1714,19 @@ func + <K,V>(left: Dictionary<K,V>, right: Dictionary<K,V>)
     return map
 }
 
+extension Array {
+    func subarray(with range: NSRange) -> Array {
+        return Array(self[range.min ..< range.max])
+    }
+}
+extension Array {
+    func chunks(_ chunkSize: Int) -> [[Element]] {
+        return stride(from: 0, to: self.count, by: chunkSize).map {
+            Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
+        }
+    }
+}
+
 func copyToClipboard(_ string:String) {
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)

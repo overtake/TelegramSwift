@@ -27,6 +27,7 @@ public class SelectingControl: Control {
         
     }
     
+    
     public override func layout() {
         super.layout()
         imageView.setFrameSize(unselectedImage.backingSize)
@@ -51,10 +52,8 @@ public class SelectingControl: Control {
         fatalError("init(frame:) has not been implemented")
     }
 
-    override public func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        // Drawing code here.
+    public override func draw(_ layer: CALayer, in ctx: CGContext) {
+        
     }
     
 }

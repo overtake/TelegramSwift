@@ -1237,7 +1237,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfo
             }
         }
         
-        if let cachedGroupData = view.cachedData as? CachedChannelData, let participants = cachedGroupData.topParticipants, let channel = group as? TelegramChannel {
+        if let cachedGroupData = view.cachedData as? CachedChannelData, let participants = cachedGroupData.topParticipants, let channel = group as? TelegramChannel, case let .group(info) = channel.info {
             
             var updatedParticipants = participants.participants
             let existingParticipantIds = Set(updatedParticipants.map { $0.peerId })
@@ -1268,7 +1268,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfo
                 entries.append(GroupInfoEntry.usersHeader(section: sectionId, count: Int(membersCount)))
             }
             
-            if channel.hasAdminRights(.canInviteUsers) {
+            if channel.hasAdminRights(.canInviteUsers) || info.flags.contains(.everyMemberCanInviteMembers) {
                 entries.append(GroupInfoEntry.addMember(section: sectionId))
             }
             

@@ -27,6 +27,7 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
+- (void)makeUrlOfRange: (NSRange)range;
 @end
 
 
@@ -88,7 +89,7 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 -(void)codeWord;
 -(void)italicWord;
 -(void)boldWord;
--(void)addLink:(NSString *)link;
+-(void)addLink:(NSString *_Nonnull)link;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 
 @end

@@ -79,9 +79,9 @@ class ChatMessageView: ChatRowView {
     
     
     
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         if let webpageContent = webpageContent {
-            return webpageContent.interactionContentView
+            return webpageContent.interactionContentView(for: innerId)
         }
         return self
     }

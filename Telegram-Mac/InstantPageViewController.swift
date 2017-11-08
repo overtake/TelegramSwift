@@ -362,8 +362,8 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         for tile in self.currentLayoutTiles {
             tileIndex += 1
             var tileVisibleFrame = tile.frame
-            tileVisibleFrame.origin.y -= 400.0
-            tileVisibleFrame.size.height += 400.0 * 2.0
+            tileVisibleFrame.origin.y -= 800.0
+            tileVisibleFrame.size.height += 800.0 * 2.0
             if tileVisibleFrame.intersects(visibleBounds) {
                 visibleTileIndices.insert(tileIndex)
                 

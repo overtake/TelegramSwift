@@ -31,6 +31,7 @@ class ChatVideoAccessoryView: View {
         let updatedText = TextNode.layoutText(maybeNode: textNode, .initialize(string: text, color: .white, font: .normal(.custom(11))), nil, 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
         self.text = updatedText
         setFrameSize(NSMakeSize(updatedText.0.size.width + 12, updatedText.0.size.height + 4))
+        needsDisplay = true
     }
     
     required init(frame frameRect: NSRect) {

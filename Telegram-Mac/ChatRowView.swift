@@ -37,8 +37,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     private var shareControl:ImageButton?
     private var nameView:TextView?
     private var rightView:ChatRightView = ChatRightView(frame:NSZeroRect)
-    private var selectingView:SelectingControl?
-    
+    private(set) var selectingView:SelectingControl?
+    private var mouseDragged: Bool = false
     private var animatedView:ChatRowAnimateView?
     
     
@@ -68,7 +68,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if (value.selectionState != nil && oldValue.selectionState == nil) || (value.selectionState == nil && oldValue.selectionState != nil) {
+            if (value.selectionState != oldValue.selectionState) {
                 updateSelectingState(!NSIsEmptyRect(visibleRect), selectingMode:value.selectionState != nil, item: self.item as? ChatRowItem)
                 updateColors()
                 self.needsLayout = true
@@ -95,12 +95,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
                 if selectingView == nil {
                     selectingView = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
                     selectingView?.setFrameOrigin(NSMakePoint(frame.width, item.defaultContentTopOffset - 1))
+                    selectingView?.layer?.opacity = 0
                     super.addSubview(selectingView!)
                 }
-                if animated {
-                    selectingView?.layer?.removeAnimation(forKey: "opacity")
-                    selectingView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                }
+                selectingView?.change(opacity: 1.0, animated: animated)
+
                
                 selectingView?.change(pos: NSMakePoint(rightView.frame.maxX + 4,item.defaultContentTopOffset - 1), animated: animated)
             } else {
@@ -119,16 +118,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
                 
                 selectingView?.change(pos: NSMakePoint(frame.width,item.defaultContentTopOffset - 1), animated: animated)
             }
-            if let selectionState = item.chatInteraction.presentation.selectionState, let message = item.message {
-                selectingView?.set(selected: selectionState.selectedIds.contains(message.id), animated: animated)
-                updateColors()
-            }
+            
+            updateSelectionViewAfterUpdateState(animated: animated)
+            updateColors()
             if item.chatInteraction.presentation.state == .selecting {
                 disableHierarchyInteraction()
             } else {
                restoreHierarchyInteraction()
             }
 
+        }
+    }
+    
+    func updateSelectionViewAfterUpdateState(animated: Bool) {
+        guard let item = item as? ChatRowItem else {return}
+        
+        if let selectionState = item.chatInteraction.presentation.selectionState, let message = item.message {
+            selectingView?.set(selected: selectionState.selectedIds.contains(message.id), animated: animated)
         }
     }
     
@@ -145,6 +151,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             return selectionState.selectedIds.contains(message.id)
         }
         return false
+    }
+    
+    func isSelectInGroup(_ location: NSPoint) -> Bool {
+        return isSelect
     }
     
     override var backdorColor: NSColor {
@@ -172,19 +182,29 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     }
     
 
+    override func mouseDragged(with event: NSEvent) {
+        super.mouseDragged(with: event)
+        mouseDragged = true
+    }
+    
     
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
+        mouseDragged = false
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
         
         
-        if let item = item as? ChatRowItem, !item.chatInteraction.isLogInteraction, !item.sending {
+        if let item = item as? ChatRowItem, !item.chatInteraction.isLogInteraction, !item.sending, mouseInside(), !mouseDragged {
             
-            if item.chatInteraction.presentation.state == .selecting, let message = item.message {
-                item.chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
-            } else if let message = item.message {
+            if item.chatInteraction.presentation.state == .selecting {
+                forceSelectItem(item, onRightClick: false)
+            } else  {
                 let location = self.convert(event.locationInWindow, from: nil)
                 if NSPointInRect(location, rightView.frame) {
-                    if message.flags.contains(.Failed) {
+                    if item.isFailed {
                         confirm(for: mainWindow, with: tr(.alertSendErrorHeader), and: tr(.alertSendErrorText), okTitle: tr(.alertSendErrorResend), cancelTitle: tr(.alertSendErrorIgnore), thridTitle: tr(.alertSendErrorDelete), successHandler: { result in
                             
                             switch result {
@@ -197,10 +217,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
                             
                         })
                     } else {
-                        item.chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
+                        forceSelectItem(item, onRightClick: true)
                     }
                 }
             }
+        }
+    }
+    
+    func forceSelectItem(_ item: ChatRowItem, onRightClick: Bool) {
+        if let message = item.message {
+            item.chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
         }
     }
     
@@ -486,6 +512,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
      
         
     }
+    
+    func canDropSelection(in location: NSPoint) -> Bool {
+        return true
+    }
 
     override func rightMouseDown(with event: NSEvent) {
         if let item = self.item as? ChatRowItem {
@@ -498,6 +528,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
+                
         if let item = self.item as? ChatRowItem {
             item.chatInteraction.remove(observer: self)
         }
@@ -525,7 +556,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
         self.needsLayout = true
     }
 
-    open override var interactionContentView:NSView {
+    open override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self.contentView
     }
     
@@ -540,6 +571,19 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
                 item.chatInteraction.setupReplyMessage(item.message?.id)
             }
         }
+    }
+    
+    func toggleSelected(_ select: Bool, in point: NSPoint) {
+        guard let item = item as? ChatRowItem else { return }
+        
+        item.chatInteraction.update({ current in
+            if let message = item.message {
+                if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
+                    return current.withToggledSelectedMessage(message.id)
+                }
+            }
+            return current
+        })
     }
     
     override func forceClick(in location: NSPoint) {

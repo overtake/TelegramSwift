@@ -330,6 +330,26 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    var isFailed: Bool {
+        if let message = message {
+            return message.flags.contains(.Failed)
+        }
+        return false
+    }
+    
+    var isIncoming: Bool {
+        if let message = message {
+            return message.flags.contains(.Incoming)
+        }
+        return false
+    }
+    var isUnsent: Bool {
+        if let message = message {
+            return message.flags.contains(.Unsent)
+        }
+        return false
+    }
+    
     var isEditMarkVisible: Bool {
         var peers:[Peer] = []
         if let peer = peer {
@@ -376,10 +396,24 @@ class ChatRowItem: TableRowItem {
         self.account = account
         self.chatInteraction = chatInteraction
         
-        if case let .MessageEntry(message,isRead,itemType, fwdType, _) = object {
-            
+        var message: Message?
+        var isRead: Bool = true
+        var itemType: ChatItemType = .Full(isAdmin: false)
+        var fwdType: ForwardItemType? = nil
+        
+        if case let .MessageEntry(_message, _isRead, _itemType, _fwdType, _) = object {
+            message = _message
+            isRead = _isRead
+            itemType = _itemType
+            fwdType = _fwdType
+        }  else if case let .groupedPhotos(messages) = object {
+            message = messages[0]
+        }
+        
+        self.message = message
+                
+        if let message = message {
             self.itemType = itemType
-            self.message = message
             self.isRead = isRead
             self.isGame = message.media.first is TelegramMediaGame
             if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
@@ -449,7 +483,7 @@ class ChatRowItem: TableRowItem {
                     
                     forwardNameLayout = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end)
                     forwardNameLayout?.interactions = globalLinkExecutor
-                } 
+                }
             }
             
             if case .Full(let isAdmin) = itemType {
@@ -497,14 +531,14 @@ class ChatRowItem: TableRowItem {
                     authorText = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
                     
                     authorText?.interactions = globalLinkExecutor
-
+                    
                 }
             }
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= account.context.timeDifference
             date = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: NSFont.normal(.short)), nil, 1, .end, NSMakeSize(CGFloat.greatestFiniteMagnitude, 20), nil, false, .left)
-            
-        } 
+
+        }
         
         super.init(initialSize)
         
@@ -728,7 +762,7 @@ class ChatRowItem: TableRowItem {
                     }))
                 }
                 
-                if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.isSupergroup {
+                if let peer = message.peers[message.id.peerId] as? TelegramChannel {
                     if let address = peer.addressName {
                         items.append(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
                             copyToClipboard("t.me/\(address)/\(message.id.id)")

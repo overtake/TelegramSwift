@@ -106,7 +106,9 @@ class ChatFileContentView: ChatMediaContentView {
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                 let _ = attr.append(string: tr(.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             } else {
-                let _ = attr.append(string: tr(.messagesFileStateFetchingIn1(Int(progress * 100.0))), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+                let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
+                let size = ", \(current) / \(String.prettySized(with: file.elapsedSize))"
+                let _ = attr.append(string: tr(.messagesFileStateFetchingIn1(Int(progress * 100.0))) + size, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             }
         case .Local:
 
@@ -126,12 +128,12 @@ class ChatFileContentView: ChatMediaContentView {
         return TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         let mediaUpdated = true//self.media == nil || !self.media!.isEqual(media)
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated)
+        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         let parameters = parameters as? ChatFileLayoutParameters
@@ -263,7 +265,7 @@ class ChatFileContentView: ChatMediaContentView {
         return progressView.copy()
     }
     
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         if let media = media as? TelegramMediaFile, !media.previewRepresentations.isEmpty {
             return thumbView
         }

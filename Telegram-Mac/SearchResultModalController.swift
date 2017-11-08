@@ -89,6 +89,11 @@ fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry]
 }
 
 class SearchResultModalController: ModalViewController, TableViewDelegate {
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private let account:Account
     private let entries:Atomic<[SearchResultEntry]> = Atomic(value:[])
     private let promise:Promise<[Message]> = Promise()

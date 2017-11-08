@@ -75,6 +75,8 @@
 		C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221ED5B1EA69AA300471C65 /* StorageUsageController.swift */; };
 		C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */; };
 		C22338451F823F8C004AD57C /* VideoCameraStructures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22338441F823F8C004AD57C /* VideoCameraStructures.swift */; };
+		C224675B1FA8546200F03E27 /* GroupedLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C224675A1FA8546200F03E27 /* GroupedLayout.swift */; };
+		C224675D1FA884E300F03E27 /* ChatGroupedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C224675C1FA884E300F03E27 /* ChatGroupedItem.swift */; };
 		C224A72D1EB75A3100F43F3F /* ExMajorNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C224A72C1EB75A3100F43F3F /* ExMajorNavigationController.swift */; };
 		C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1D61DC61AFF0063A23B /* TelegramCoreMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2FBC1D81DC61B050063A23B /* SwiftSignalKitMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -207,6 +209,7 @@
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2423A531F2235080041907F /* InstantPageViewController.swift */; };
 		C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */; };
+		C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C246D6271FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift */; };
 		C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */; };
 		C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */; };
 		C248BD241E706104004B9106 /* BlockedPeersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C248BD231E706104004B9106 /* BlockedPeersViewController.swift */; };
@@ -396,6 +399,8 @@
 		C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */; };
 		C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */; };
 		C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */; };
+		C2A759301FB1C476009FCF07 /* AlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A7592F1FB1C476009FCF07 /* AlertController.swift */; };
+		C2A759321FB1C5D0009FCF07 /* AlertControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A759311FB1C5D0009FCF07 /* AlertControllerView.swift */; };
 		C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */; };
 		C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = C2A8E1461F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m */; };
 		C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C030CC1DD5097400617711 /* CoreMedia.framework */; };
@@ -664,6 +669,8 @@
 		C221ED5B1EA69AA300471C65 /* StorageUsageController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StorageUsageController.swift; sourceTree = "<group>"; };
 		C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatStorageManagmentModalController.swift; sourceTree = "<group>"; };
 		C22338441F823F8C004AD57C /* VideoCameraStructures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCameraStructures.swift; sourceTree = "<group>"; };
+		C224675A1FA8546200F03E27 /* GroupedLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupedLayout.swift; sourceTree = "<group>"; };
+		C224675C1FA884E300F03E27 /* ChatGroupedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGroupedItem.swift; sourceTree = "<group>"; };
 		C224A72C1EB75A3100F43F3F /* ExMajorNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExMajorNavigationController.swift; sourceTree = "<group>"; };
 		C225524A1F7BE7000007944D /* VideoRecorderModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderModalController.swift; sourceTree = "<group>"; };
 		C225524C1F7BE8E40007944D /* VideoRecorderModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderModalView.swift; sourceTree = "<group>"; };
@@ -789,6 +796,7 @@
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
 		C2423A531F2235080041907F /* InstantPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageViewController.swift; sourceTree = "<group>"; };
 		C246161A1ED33FFE0026D5BC /* InstantVideoPIP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantVideoPIP.swift; sourceTree = "<group>"; };
+		C246D6271FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGroupPreviewRowItem.swift; sourceTree = "<group>"; };
 		C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatGameContentView.swift; sourceTree = "<group>"; };
 		C248BD231E706104004B9106 /* BlockedPeersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlockedPeersViewController.swift; sourceTree = "<group>"; };
 		C248BD251E706A05004B9106 /* RecentSessionsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentSessionsController.swift; sourceTree = "<group>"; };
@@ -998,6 +1006,8 @@
 		C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationSettingsViewController.swift; sourceTree = "<group>"; };
 		C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHeaderController.swift; sourceTree = "<group>"; };
 		C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginErrorStateView.swift; sourceTree = "<group>"; };
+		C2A7592F1FB1C476009FCF07 /* AlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertController.swift; sourceTree = "<group>"; };
+		C2A759311FB1C5D0009FCF07 /* AlertControllerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertControllerView.swift; sourceTree = "<group>"; };
 		C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewWindow.swift; sourceTree = "<group>"; };
 		C2A8E1461F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGVideoCameraGLRenderer.m; sourceTree = "<group>"; };
 		C2A8E1471F7D2612000FD5E3 /* TGVideoCameraGLRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TGVideoCameraGLRenderer.h; sourceTree = "<group>"; };
@@ -1225,6 +1235,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				C22467591FA8544200F03E27 /* photo-grouping */,
 				C21656E61EE576650041A6BA /* popover */,
 				C24616161ED33F850026D5BC /* instant-pip */,
 				C2379D281DDCCBD00063AD30 /* bot */,
@@ -1352,6 +1363,7 @@
 				C26546CB1EA0AC3C00E3969A /* ChatVideoMessageItem.swift */,
 				C2057FA91EBC6A3C000423DC /* ChatCallRowItem.swift */,
 				C2E0646A1ECF137300387BB8 /* ChatInvoiceItem.swift */,
+				C224675C1FA884E300F03E27 /* ChatGroupedItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -1364,6 +1376,14 @@
 				C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */,
 			);
 			name = "data-and-storage";
+			sourceTree = "<group>";
+		};
+		C22467591FA8544200F03E27 /* photo-grouping */ = {
+			isa = PBXGroup;
+			children = (
+				C224675A1FA8546200F03E27 /* GroupedLayout.swift */,
+			);
+			name = "photo-grouping";
 			sourceTree = "<group>";
 		};
 		C22552491F7BE6BB0007944D /* video-record */ = {
@@ -1552,6 +1572,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				C2A7592E1FB1C19E009FCF07 /* alert */,
 				C22552491F7BE6BB0007944D /* video-record */,
 				C235A47A1EFBDC6400D463FD /* appearance */,
 				C205DB991EE800E9003711DF /* ui-controls */,
@@ -1871,6 +1892,7 @@
 				C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */,
 				C24D9FDB1E267932002CD3F3 /* PreviewSenderItems.swift */,
 				C23044821F98F8B400977C51 /* MediaPreviewRowItem.swift */,
+				C246D6271FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift */,
 			);
 			name = "preview-sender";
 			sourceTree = "<group>";
@@ -2354,6 +2376,15 @@
 				C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */,
 			);
 			name = views;
+			sourceTree = "<group>";
+		};
+		C2A7592E1FB1C19E009FCF07 /* alert */ = {
+			isa = PBXGroup;
+			children = (
+				C2A7592F1FB1C476009FCF07 /* AlertController.swift */,
+				C2A759311FB1C5D0009FCF07 /* AlertControllerView.swift */,
+			);
+			name = alert;
 			sourceTree = "<group>";
 		};
 		C2A8E1451F7D2602000FD5E3 /* opengl */ = {
@@ -3133,6 +3164,7 @@
 				C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */,
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
+				C2A759321FB1C5D0009FCF07 /* AlertControllerView.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatVideoAccessoryView.swift in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
 				C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */,
@@ -3186,6 +3218,7 @@
 				C218FF9A1F42030B00DD7D35 /* InstantPageChannelItem.swift in Sources */,
 				C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */,
 				C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */,
+				C2A759301FB1C476009FCF07 /* AlertController.swift in Sources */,
 				C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
@@ -3382,6 +3415,7 @@
 				C2DF47EE1DE9A1F3003AA6C0 /* LoginViewController.swift in Sources */,
 				C2DE5D301F3CA7C00081EC1E /* InstantPageLinkSelectionView.swift in Sources */,
 				C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */,
+				C224675D1FA884E300F03E27 /* ChatGroupedItem.swift in Sources */,
 				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */,
@@ -3428,6 +3462,7 @@
 				C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
+				C224675B1FA8546200F03E27 /* GroupedLayout.swift in Sources */,
 				C230BEBA1EE9AEB80029586C /* ChannelEventLogItem.swift in Sources */,
 				C26A37EE1E5DE48F006977AC /* ChannelBlacklistViewController.swift in Sources */,
 				C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */,
@@ -3516,6 +3551,7 @@
 				C2167E5F1DC25C6900F98E03 /* InterfaceObserver.swift in Sources */,
 				C29C3E711E43881500193A7E /* StickerPreviewModalController.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
+				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,
 				C24949121E5B704900D7ED5D /* AccountsListViewController.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,

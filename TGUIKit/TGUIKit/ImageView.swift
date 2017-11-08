@@ -26,7 +26,7 @@ public class ImageView: NSView {
             setFrameSize(image.backingSize)
         }
     }
-    
+
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true

@@ -26,6 +26,13 @@ private enum PreviewSenderType {
     case media
 }
 
+fileprivate enum PreviewSendingState : Int32 {
+    case media = 0
+    case file = 1
+    case collage = 2
+}
+
+
 fileprivate class PreviewSenderView : Control {
     fileprivate let tableView:TableView = TableView()
     fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
@@ -39,6 +46,7 @@ fileprivate class PreviewSenderView : Control {
     
     fileprivate let photoButton = ImageButton()
     fileprivate let fileButton = ImageButton()
+    fileprivate let collageButton = ImageButton()
     
     fileprivate let textContainerView: View = View()
     fileprivate let separator: View = View()
@@ -48,7 +56,7 @@ fileprivate class PreviewSenderView : Control {
             textView.setPlaceholderAttributedString(.initialize(string: count > 1 ? tr(.previewSenderCommentPlaceholder) : tr(.previewSenderCaptionPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
         }
     }
-    let sendAsFile: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
+    let sendAsFile: ValuePromise<PreviewSendingState> = ValuePromise(ignoreRepeated: true)
     private let disposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -67,19 +75,24 @@ fileprivate class PreviewSenderView : Control {
         photoButton.sizeToFit()
         
         disposable.set(sendAsFile.get().start(next: { [weak self] value in
-            self?.fileButton.isSelected = value
-            self?.photoButton.isSelected = !value
+            self?.fileButton.isSelected = value == .file
+            self?.photoButton.isSelected = value == .media
+            self?.collageButton.isSelected = value == .collage
         }))
         
         photoButton.isSelected = true
         
         photoButton.set(handler: { [weak self] _ in
-            self?.sendAsFile.set(false)
+            self?.sendAsFile.set(.media)
             
         }, for: .Click)
         
+        collageButton.set(handler: { [weak self] _ in
+            self?.sendAsFile.set(.collage)
+        }, for: .Click)
+        
         fileButton.set(handler: { [weak self] _ in
-            self?.sendAsFile.set(true)
+            self?.sendAsFile.set(.file)
         }, for: .Click)
         
         closeButton.set(handler: { [weak self] _ in
@@ -89,12 +102,16 @@ fileprivate class PreviewSenderView : Control {
         fileButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachFile), for: .Normal)
         fileButton.sizeToFit()
         
+        collageButton.set(image: theme.icons.previewCollage, for: .Normal)
+        collageButton.sizeToFit()
+        
         title.backgroundColor = theme.colors.background
         
         headerView.addSubview(closeButton)
         headerView.addSubview(title)
         headerView.addSubview(fileButton)
         headerView.addSubview(photoButton)
+        headerView.addSubview(collageButton)
         
         title.isSelectable = false
         title.userInteractionEnabled = false
@@ -152,12 +169,12 @@ fileprivate class PreviewSenderView : Control {
         return max(50, textView.frame.height + 16) + headerView.frame.height - 12
     }
     
-    func updateTitle(_ medias: [Media], isFile: Bool) -> Void {
+    func updateTitle(_ medias: [Media], state: PreviewSendingState) -> Void {
         
         
         let count = medias.count
         let type: PreviewSenderType
-        if isFile {
+        if state == .file {
             type = .files
         } else {
                         
@@ -236,10 +253,14 @@ fileprivate class PreviewSenderView : Control {
         title.update(title.layout)
         title.centerX()
         title.centerY()
+        
         closeButton.centerY(x: headerView.frame.width - closeButton.frame.width - 10)
+        collageButton.centerY(x: closeButton.frame.minX - 10 - collageButton.frame.width)
+
         
         photoButton.centerY(x: 10)
         fileButton.centerY(x: photoButton.frame.maxX + 10)
+        
         
         textContainerView.setFrameSize(frame.width, textView.frame.height + 16)
         textContainerView.setFrameOrigin(0, frame.height - textContainerView.frame.height)
@@ -261,10 +282,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
     fileprivate let urls:[URL]
     private let account:Account
     private let chatInteraction:ChatInteraction
-    private var isNeedAsFile:Bool = true
+    private var sendingState:PreviewSendingState = .file
     private let disposable = MetaDisposable()
     private let emoji: EmojiViewController
-    private var cachedMedia:[Bool: (media: [Media], items: [MediaPreviewRowItem])] = [:]
+    private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
     
     private let isFileDisposable = MetaDisposable()
     
@@ -284,22 +305,36 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         let options = takeSenderOptions(for: urls)
         genericView.applyOptions(options)
         
-        let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] isFile -> Signal<([Media], [MediaPreviewRowItem], Bool), Void> in
-            if let cached = self?.cachedMedia[isFile] {
-                return .single((cached.media, cached.items, isFile))
+        let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), Void> in
+            if let cached = self?.cachedMedia[state] {
+                return .single((cached.media, cached.items, state))
+            } else if state == .collage {
+                return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
+                    |> map { $0.map({$0.0})}
+                    |> map { media in
+                        var id:Int32 = 0
+                        let groups = media.map({ media -> Message in
+                            id += 1
+                            return Message(media, stableId: UInt32(id), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: id))
+                        }).chunks(10)
+                        
+                        return (media, groups.map({MediaGroupPreviewRowItem(initialSize.modify{$0}, messages: $0, account: account)}), state)
+                        
+                    }
+            } else {
+                return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
+                    |> map { $0.map({$0.0})}
+                    |> map { ($0, $0.map{MediaPreviewRowItem(initialSize.modify{$0}, media: $0, account: account)}, state) }
             }
-            return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: isFile), account: account)}))
-                |> map { $0.map({$0.0})}
-                |> map { ($0, $0.map{MediaPreviewRowItem(initialSize.modify{$0}, media: $0, account: account)}, isFile) }
         } |> deliverOnMainQueue
         
         let animated: Atomic<Bool> = Atomic(value: false)
         
-        disposable.set(signal.start(next: { [weak self] medias, items, isFile in
+        disposable.set(signal.start(next: { [weak self] medias, items, state in
             if let strongSelf = self {
-                strongSelf.isNeedAsFile = isFile
-                strongSelf.cachedMedia[isFile] = (media: medias, items: items)
-                strongSelf.genericView.updateTitle(medias, isFile: strongSelf.isNeedAsFile)
+                strongSelf.sendingState = state
+                strongSelf.cachedMedia[state] = (media: medias, items: items)
+                strongSelf.genericView.updateTitle(medias, state: state)
                 strongSelf.genericView.tableView.beginTableUpdates()
                 strongSelf.genericView.tableView.removeAll(animation: .effectFade)
                 strongSelf.genericView.tableView.insert(items: items, animation: .effectFade)
@@ -340,7 +375,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         emoji.popover?.hide()
         self.modal?.close(true)
         var caption = genericView.textView.string()
-        if let cached = cachedMedia[isNeedAsFile] {
+        if let cached = cachedMedia[sendingState] {
             if cached.media.count > 1 && !caption.isEmpty {
                 chatInteraction.forceSendMessage(caption)
                 caption = ""
@@ -358,7 +393,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         super.viewDidLoad()
         genericView.controller = self
         genericView.textView.delegate = self
-        genericView.sendAsFile.set(isNeedAsFile)
+        genericView.sendAsFile.set(sendingState)
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
         interactions.sendEmoji = { [weak self] emoji in
@@ -386,7 +421,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         self.urls = urls
         self.account = account
         self.emoji = EmojiViewController(account)
-        self.isNeedAsFile = !asMedia
+        self.sendingState = asMedia ? .media : .file
         self.chatInteraction = chatInteraction
         super.init(frame:NSMakeRect(0,0,300, 300))
         bar = .init(height: 0)

@@ -324,7 +324,7 @@ class ChatMessageItem: ChatRowItem {
                     
                     string.addAttribute(NSAttributedStringKey.link, value: inApp(for: url as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
                 case .Bold:
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(.custom(fontSize)), range: range)
+                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.bold(.custom(fontSize)), range: range)
                 case .Italic:
                     string.addAttribute(NSAttributedStringKey.font, value: NSFontManager.shared.convert(.normal(.custom(fontSize)), toHaveTrait: .italicFontMask), range: range)
                 case .Mention:

@@ -450,6 +450,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 item = ChatUnreadRowItem(initialSize, interaction, account,entry)
             case .MessageEntry:
                 item = ChatRowItem.item(initialSize, from:entry, with:account, interaction: interaction)
+            case .groupedPhotos:
+                item = ChatGroupedItem(initialSize, interaction, account, entry)
             case .DateEntry:
                 item = ChatDateStickItem(initialSize,entry, interaction: interaction)
             case .bottom:
@@ -638,8 +640,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         let item:TableRowItem
                         
                         if firstInsertedRange.indexIn(i) {
-                            item = firstInsertion[i - initialIndex].1
-                            updates.append((i, item))
+                            //item = firstInsertion[i - initialIndex].1
+                            //updates.append((i, item))
                         } else {
                             item = makeItem(entries[i].entry)
                             insertions.append((i, item))
@@ -695,7 +697,7 @@ enum ChatHistoryViewTransitionReason {
 }
 
 
-class ChatController: EditableViewController<ChatControllerView>, Notifable {
+class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate {
     
     private var peerId:PeerId
     private let peerView = Promise<PeerView>()
@@ -814,6 +816,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
         super.viewDidLoad()
         
        
+        genericView.tableView.delegate = self
         updateSidebar()
         
        // navigationController.genericView.setpropo
@@ -898,7 +901,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
                     if let peer = strongSelf.peer, peer.isRestrictedChannel {
                         proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
                     } else {
-                        proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
+                        proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds, groupingPhotos: true).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
                     }
                     
                     return prepareEntries(from: strongSelf.previousView.swap(proccesedView), to: proccesedView, account: strongSelf.account, initialSize: strongSelf.atomicSize.modify({$0}), interaction:strongSelf.chatInteraction, animated: animated, scrollPosition:scrollPosition, reason:updateType, animationInterface:animationInterface) |> map { transition in
@@ -2047,6 +2050,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
             return .invoked
         }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
         
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.inputView.makeUrl()
+            return .invoked
+        }, with: self, for: .U, priority: .medium, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.genericView.inputView.makeItalic()
@@ -2392,6 +2399,39 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable {
         super.updateLocalizationAndTheme()
         self.centerBarView.updateLocalizationAndTheme()
         (centerBarView as? ChatTitleBarView)?.updateStatus()
+    }
+    
+    
+    func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
+        
+    }
+    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+        return false
+    }
+    func isSelectable(row:Int, item:TableRowItem) -> Bool {
+        return false
+    }
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        if let view = previousView.modify({$0}), let stableId = stableId.base as? ChatHistoryEntryId {
+            switch stableId {
+            case let .message(message):
+                for entry in view.filteredEntries {
+                    switch entry.entry {
+                    case let .groupedPhotos(messages):
+                        for groupMessage in messages {
+                            if message.id == groupMessage.id {
+                                return entry.stableId
+                            }
+                        }
+                    default:
+                        break
+                    }
+                }
+            default:
+                break
+            }
+        }
+        return nil
     }
 
     

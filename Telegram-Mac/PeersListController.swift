@@ -75,6 +75,12 @@ class PeerListContainerView : View {
 
 
 class PeersListController: TelegramGenericViewController<PeerListContainerView>, TableViewDelegate {
+    
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private let globalPeerDisposable:MetaDisposable = MetaDisposable()
     private let progressDisposable = MetaDisposable()
     private let createSecretChatDisposable = MetaDisposable()

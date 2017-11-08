@@ -216,6 +216,13 @@ func takeSenderOptions(for urls:[URL]) -> [PreviewOptions] {
     var options:[PreviewOptions] = []
     for url in urls {
         let mime = MIMEType(url.path.nsstring.pathExtension)
+        
+        if mime.hasPrefix("image"), let image = NSImage(contentsOf: url) {
+            if image.size.width / 10 > image.size.height || image.size.height < 40 {
+                continue
+            }
+        }
+        
         let media = mime.hasPrefix("image") || mime.hasSuffix("gif") || mime.hasPrefix("video/mp4")
 
         if media {

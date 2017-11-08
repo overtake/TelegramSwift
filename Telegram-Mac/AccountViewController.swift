@@ -267,6 +267,10 @@ enum AccountInfoEntry : Comparable, Identifiable {
 
 
 class LayoutAccountController : EditableViewController<TableView>, TableViewDelegate {
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     
     func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
         

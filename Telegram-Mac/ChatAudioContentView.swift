@@ -113,12 +113,12 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         }
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated)
+        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         
@@ -184,7 +184,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         return view
     }
     
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self.progressView
     }
     
