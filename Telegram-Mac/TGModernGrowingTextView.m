@@ -33,7 +33,7 @@
 - (void)refreshAttributes;
 @end
 
-NSString *const TGMentionUidAttributeName = @"TGMentionUidAttributeName";
+NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 
 @interface TGGrowingTextView ()
@@ -52,6 +52,22 @@ NSString *const TGMentionUidAttributeName = @"TGMentionUidAttributeName";
     
     return [super textContainerOrigin];
     
+}
+
+-(void)drawRect:(NSRect)dirtyRect {
+    
+    
+    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
+                                          graphicsPort];
+    
+    BOOL isRetina = self.window.backingScaleFactor == 2.0;
+    
+    CGContextSetAllowsAntialiasing(context, true);
+    CGContextSetShouldSmoothFonts(context, !isRetina);
+    CGContextSetAllowsFontSmoothing(context,!isRetina);
+    
+    [super drawRect:dirtyRect];
+
 }
 
 -(void)paste:(id)sender {
@@ -361,6 +377,21 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 @implementation TGTextFieldPlaceholder
 
+-(void)drawRect:(NSRect)dirtyRect {
+    
+    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
+                                          graphicsPort];
+    
+    BOOL isRetina = self.window.backingScaleFactor == 2.0;
+    
+    if (isRetina) {
+        CGContextSetAllowsAntialiasing(context, true);
+        CGContextSetShouldSmoothFonts(context, !isRetina);
+        CGContextSetAllowsFontSmoothing(context,!isRetina);
+    }
+    [super drawRect:dirtyRect];
+    
+}
 
 @end
 
@@ -468,7 +499,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     newSize.height+= 8;
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
-    [self updatePlaceholder:false newSize:newSize];
+    [self updatePlaceholder:true newSize:newSize];
 }
 
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -747,7 +778,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             
             
         } else {
-            [_placeholder setHidden:!self._needShowPlaceholder];
+            if (_placeholder.layer.animationKeys.count == 0) {
+                [_placeholder setHidden:!self._needShowPlaceholder];
+            }
         }
         
         
@@ -770,11 +803,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 -(void)setLinkColor:(NSColor *)linkColor {
     _linkColor = linkColor;
-    
-    NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
-    dict[NSFontAttributeName] = self.textView.font;
-    dict[NSForegroundColorAttributeName] = linkColor;
-    self.textView.linkTextAttributes = dict;
 }
 
 -(void)setFrameSize:(NSSize)newSize {
@@ -845,7 +873,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         
         
         __block NSMutableArray<TGInputTextTagAndRange *> *inputTextTags = [[NSMutableArray alloc] init];
-        [string enumerateAttribute:TGMentionUidAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+        [string enumerateAttribute:TGCustomLinkAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
             if ([value isKindOfClass:[TGInputTextTag class]]) {
                 [inputTextTags addObject:[[TGInputTextTagAndRange alloc] initWithTag:value range:range]];
             }
@@ -863,7 +891,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             TGInputTextTagAndRange *tagAndRange = inputTextTags[i];
             if ([removeTags containsObject:@(tagAndRange.tag.uniqueId)]) {
                 [inputTextTags removeObjectAtIndex:i];
-                [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:tagAndRange.range];
+                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                 
                 i--;
             } else {
@@ -878,9 +906,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                 
                 if (j != (NSInteger)tagAndRange.range.location) {
                     NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
-                    [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:tagAndRange.range];
+                    [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                     
-                    [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tagAndRange.tag range:updatedRange];
+                    [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                     
                     inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                     
@@ -899,9 +927,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                     
                     if (j < ((NSInteger)tagAndRange.range.location)) {
                         NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
-                        [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:tagAndRange.range];
+                        [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                         
-                        [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tagAndRange.tag range:updatedRange];
+                        [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                         
                         inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                         
@@ -929,10 +957,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                                 [removeTags addObject:@(tagAndRange.tag.uniqueId)];
                                 [_textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
                             } else {
-                                [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:tagAndRange.range];
+                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
                                 NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
-                                [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tagAndRange.tag range:updatedRange];
+                                [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                                 inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                                 
                                 i--;
@@ -952,23 +980,23 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                             }
                             
                             if (j == candidateEnd) {
-                                [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:tagAndRange.range];
+                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
-                                [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:nextTagAndRange.range];
+                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:nextTagAndRange.range];
                                 
                                 NSRange updatedRange = NSMakeRange(tagAndRange.range.location, nextTagAndRange.range.location + nextTagAndRange.range.length - tagAndRange.range.location);
                                 
-                                [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tagAndRange.tag range:updatedRange];
+                                [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                                 
                                 inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                                 [inputTextTags removeObjectAtIndex:i + 1];
                                 
                                 i--;
                             } else if (j != candidateStart) {
-                                [_textView.textStorage removeAttribute:TGMentionUidAttributeName range:tagAndRange.range];
+                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
                                 NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
-                                [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tagAndRange.tag range:updatedRange];
+                                [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                                 
                                 inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                                 
@@ -1067,7 +1095,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)addInputTextTag:(TGInputTextTag *)tag range:(NSRange)range {
-    [_textView.textStorage addAttribute:TGMentionUidAttributeName value:tag range:range];
+    [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tag range:range];
 }
 
 static int64_t nextId = 0;
@@ -1121,7 +1149,7 @@ static int64_t nextId = 0;
             [text replaceCharactersInRange:candidateMentionRange withString:replacementText];
             
             nextId++;
-            [text addAttributes:@{TGMentionUidAttributeName: [[TGInputTextTag alloc] initWithUniqueId:nextId attachment:@(userId) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]]} range:NSMakeRange(candidateMentionRange.location, replacementText.length - 1)];
+            [text addAttributes:@{TGCustomLinkAttributeName: [[TGInputTextTag alloc] initWithUniqueId:nextId attachment:@(userId) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]]} range:NSMakeRange(candidateMentionRange.location, replacementText.length - 1)];
         } else {
             [text replaceCharactersInRange:candidateMentionRange withString:replacementText];
         }

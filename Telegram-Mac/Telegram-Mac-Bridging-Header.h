@@ -88,7 +88,7 @@ int colorIndexForUid(int32_t uid, int32_t myUserId);
 
 @end
 
-extern NSString *__nonnull const TGMentionUidAttributeName;
+extern NSString *__nonnull const TGCustomLinkAttributeName;
 
 
 @interface TGInputTextAttribute : NSObject

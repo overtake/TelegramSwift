@@ -115,7 +115,7 @@ enum L10n {
   case adminsWhoCanInviteEveryone
   /// Who can add members
   case adminsWhoCanInviteText
-  /// Cancel
+  /// CANCEL
   case alertCancel
   /// OK
   case alertOK
@@ -1195,6 +1195,8 @@ enum L10n {
   case messagesPlaceholderBroadcast
   /// Write a message...
   case messagesPlaceholderSentMessage
+  /// Silent Broadcast...
+  case messagesPlaceholderSilentBroadcast
   /// Reply
   case messagesReplyLoadingHeader
   /// Loading...
@@ -1975,6 +1977,8 @@ enum L10n {
   case textViewTransformCode
   /// Make Italic
   case textViewTransformItalic
+  /// Make URL
+  case textViewTransformURL
   /// at
   case timeAt
   /// last seen
@@ -3421,6 +3425,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Messages.Placeholder.Broadcast")
       case .messagesPlaceholderSentMessage:
         return L10n.tr(key: "Messages.Placeholder.SentMessage")
+      case .messagesPlaceholderSilentBroadcast:
+        return L10n.tr(key: "Messages.Placeholder.SilentBroadcast")
       case .messagesReplyLoadingHeader:
         return L10n.tr(key: "Messages.ReplyLoading.Header")
       case .messagesReplyLoadingLoading:
@@ -4201,6 +4207,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "TextView.Transform.Code")
       case .textViewTransformItalic:
         return L10n.tr(key: "TextView.Transform.Italic")
+      case .textViewTransformURL:
+        return L10n.tr(key: "TextView.Transform.URL")
       case .timeAt:
         return L10n.tr(key: "Time.at")
       case .timeLastSeen:

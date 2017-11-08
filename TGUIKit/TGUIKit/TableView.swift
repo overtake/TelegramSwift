@@ -679,8 +679,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     if let item = stickItem {
                         (viewNecessary(at: item.index) as? TableStickView)?.updateIsVisible(!firstTime, animated: false)
-                        
-                        
                     }
 
                     stickItem = currentStick ?? item
