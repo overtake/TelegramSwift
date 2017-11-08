@@ -67,6 +67,9 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     private var standart:CGFloat = 50.0
     private var bottomHeight:CGFloat = 0
+
+    static let bottomPadding:CGFloat = 10
+    static let maxBottomHeight = ReplyMarkupNode.rowHeight * 3 + ReplyMarkupNode.buttonHeight / 2
     
     
     private let formatterDisposable = MetaDisposable()
@@ -439,7 +442,10 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         let contentHeight:CGFloat = defaultContentHeight + yInset * 2.0
         var sumHeight:CGFloat = contentHeight + (accessory.isVisibility() ? accessory.size.height + 5 : 0)
         if let markup = replyMarkupModel  {
-            bottomHeight = min(110,markup.size.height) + 10
+            bottomHeight = min(
+              ChatInputView.maxBottomHeight,
+              markup.size.height + ChatInputView.bottomPadding
+            )
         } else {
             bottomHeight = 0
         }

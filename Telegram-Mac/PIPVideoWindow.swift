@@ -60,8 +60,8 @@ fileprivate class PIPVideoWindow: NSPanel {
         openGallery.style = ControlStyle(backgroundColor: .blackTransparent, highlightColor: .grayIcon)
         openGallery.layer?.opacity = 0.8
         
-        
-        
+
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
         
         self.contentView?.wantsLayer = true;
         self.contentView?.layer?.cornerRadius = 4;
