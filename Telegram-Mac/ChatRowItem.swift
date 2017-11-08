@@ -768,11 +768,16 @@ class ChatRowItem: TableRowItem {
                             copyToClipboard("t.me/\(address)/\(message.id.id)")
                         }))
                     }
-                    if peer.hasAdminRights(.canPinMessages) {
+                    if peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
                         items.append(ContextMenuItem(tr(.messageContextPin), handler: {
-                            confirm(for: mainWindow, with: appName, and: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
-                                chatInteraction.updatePinned(message.id, false, result == .thrid)
-                            })
+                            if peer.isSupergroup {
+                                confirm(for: mainWindow, with: appName, and: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
+                                    chatInteraction.updatePinned(message.id, false, result == .thrid)
+                                })
+                            } else {
+                                chatInteraction.updatePinned(message.id, false, true)
+                            }
+                            
                         }))
                     }
                 }

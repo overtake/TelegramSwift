@@ -759,6 +759,7 @@ public class TextView: Control {
         if let layout = layout {
             
 
+            
             ctx.setAllowsAntialiasing(true)
             
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)

@@ -103,10 +103,10 @@ extension ChatTextInputAttribute {
             return (NSAttributedStringKey.font.rawValue, NSFont.code(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .uid(range, uid):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
-            return (TGMentionUidAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .url(range, url):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
-            return (TGMentionUidAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
     
@@ -209,7 +209,7 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
         }
     }
     
-    attributed.enumerateAttribute(NSAttributedStringKey(rawValue: TGMentionUidAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
+    attributed.enumerateAttribute(NSAttributedStringKey(rawValue: TGCustomLinkAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
         if let tag = tag as? TGInputTextTag {
             if let uid = tag.attachment as? NSNumber {
                 inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))

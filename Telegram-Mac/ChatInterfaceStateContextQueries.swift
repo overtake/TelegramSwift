@@ -302,7 +302,7 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
         
         let attr = chatPresentationInterfaceState.effectiveInput.attributedString
         
-        attr.enumerateAttribute(NSAttributedStringKey(rawValue: TGMentionUidAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+        attr.enumerateAttribute(NSAttributedStringKey(rawValue: TGCustomLinkAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
             
             if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
                 detectedUrl = url

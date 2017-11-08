@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "TGInputTextTag.h"
 
-extern NSString * _Nonnull const TGMentionUidAttributeName;
+extern NSString * _Nonnull const TGCustomLinkAttributeName;
 
 @protocol TGModernGrowingDelegate <NSObject>
 

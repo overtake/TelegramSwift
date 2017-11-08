@@ -149,7 +149,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     private var textPlaceholder: String {
         if let peer = chatInteraction.presentation.peer {
             if peer.isChannel {
-                return tr(.messagesPlaceholderBroadcast)
+                return FastSettings.isChannelMessagesMuted(peer.id) ? tr(.messagesPlaceholderSilentBroadcast) : tr(.messagesPlaceholderBroadcast)
             }
         }
         return tr(.messagesPlaceholderSentMessage)
