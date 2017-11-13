@@ -41,13 +41,21 @@ class WPArticleLayout: WPLayout {
     }
     
     private let mediaTypes:[String] = ["photo","video"]
+    private let fullSizeSites:[String] = ["instagram","twitter"]
+    
+    private var isFullImageSize: Bool {
+        if let type = content.type, let website = content.websiteName?.lowercased(), mediaTypes.contains(type) || (fullSizeSites.contains(website) && content.instantPage != nil)  {
+            return true
+        }
+        return false
+    }
     
     override func measure(width: CGFloat) {
         super.measure(width: width)
         
         var contentSize:NSSize = NSMakeSize(width, 0)
         
-        if let imageSize = imageSize, let type = content.type, mediaTypes.contains(type) {
+        if let imageSize = imageSize, isFullImageSize {
             contrainedImageSize = imageSize.aspectFitted(NSMakeSize(min(width - insets.left, 320), 320))
             textLayout?.cutout = nil
             smallThumb = false

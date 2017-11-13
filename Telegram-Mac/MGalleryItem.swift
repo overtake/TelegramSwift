@@ -130,7 +130,7 @@ class MGalleryItem: NSObject {
         self.entry = entry
         self.account = account
         self._pagerSize = pagerSize
-        if let caption = entry.message?.text, !caption.isEmpty {
+        if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
             self.caption = TextViewLayout(.initialize(string: caption, color: .white, font: .normal(.text)), alignment: .center)
             self.caption?.measure(width: pagerSize.width - 200)
         } else {

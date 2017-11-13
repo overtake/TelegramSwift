@@ -914,7 +914,16 @@ public func ==(lhs:AddressNameAvailabilityState, rhs:AddressNameAvailabilityStat
     }
 }
 
-
+extension Signal {
+    
+    public static func next(_ value: T) -> Signal<T, E> {
+        return Signal<T, E> { subscriber in
+            subscriber.putNext(value)
+            
+            return EmptyDisposable
+        }
+    }
+}
 
 public func peerCompactDisplayTitles(_ peerIds: [PeerId], _ dict: SimpleDictionary<PeerId, Peer>) -> String {
     var names:String = ""

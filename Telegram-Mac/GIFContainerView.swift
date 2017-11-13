@@ -161,7 +161,7 @@ class GIFContainerView: View {
         player.center()
         progressView?.center()
         
-        player.setSignal(account: account, signal: iconSignal)
+        player.setSignal( iconSignal)
         let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height - 8))
 
         let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())

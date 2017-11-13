@@ -147,7 +147,7 @@ class ChatSelectText : NSObject {
                 let point = superview.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 let documentPoint = documentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 let row = table.row(at: documentPoint)
-                if !NSPointInRect(point, table.frame) || hasModals() {
+                if !NSPointInRect(point, table.frame) || hasModals() || (table.item(at: row) is ChatVoiceRowItem && chatInteraction.presentation.state != .selecting) {
                     self?.beginInnerLocation = NSZeroPoint
                 } else {
                     self?.beginInnerLocation = documentPoint

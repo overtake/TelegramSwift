@@ -30,6 +30,14 @@ class WPLayout: Equatable {
     
     var insets: NSEdgeInsets = NSEdgeInsets(left:8.0, top:0.0)
     
+    
+    var mediaCount: Int? {
+        if let instantPage = content.instantPage, isGalleryAssemble {
+            return instantPage.media.count + 1
+        }
+        return nil
+    }
+    
     init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat) {
         self.content = content
         self.account = account
@@ -94,6 +102,13 @@ class WPLayout: Equatable {
         
     }
     
+    var isGalleryAssemble: Bool {
+        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter") && content.instantPage != nil) {
+            return true
+        }
+        return false
+    }
+    
     func viewClass() -> AnyClass {
         return WPArticleContentView.self
     }
@@ -114,7 +129,13 @@ class WPLayout: Equatable {
     }
     
     var hasInstantPage: Bool {
-        return content.instantPage != nil
+        if let _ = content.instantPage {
+            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
+                return false
+            }
+            return true
+        }
+        return  false
     }
     
 }

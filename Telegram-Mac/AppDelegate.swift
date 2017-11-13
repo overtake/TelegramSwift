@@ -6,6 +6,7 @@ import TelegramCoreMac
 import TGUIKit
 import Quartz
 import MtProtoKitMac
+import CoreServices
 
 #if !APP_STORE
     import HockeySDK
@@ -128,6 +129,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let logger = Logger(basePath: containerUrl.path + "/logs")
         logger.logToConsole = UserDefaults.standard.bool(forKey: "enablelogs")
         logger.logToFile = UserDefaults.standard.bool(forKey: "enablelogs")
+        #if DEBUG
+            MTLogSetEnabled(true)
+            logger.logToFile = true
+        #endif
         
         #if APP_STORE || STABLE
             logger.logToConsole = false

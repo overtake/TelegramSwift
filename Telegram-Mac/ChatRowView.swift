@@ -443,7 +443,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
                 shareControl?.change(opacity: 0, animated: false)
                 super.addSubview(shareControl!)
             }
-            shareControl?.set(image: theme.icons.chatShare, for: .Normal)
+            shareControl?.set(image: theme.icons.chatForwardMessagesActive, for: .Normal)
             shareControl?.sizeToFit()
             shareControl?.removeAllHandlers()
             shareControl?.set(handler: { [weak self] _ in

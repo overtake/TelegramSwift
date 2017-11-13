@@ -182,7 +182,7 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             }
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-                imageView.setSignal(account: item.account, signal: updateIconImageSignal)
+                imageView.setSignal( updateIconImageSignal)
             }
             
             if item.icon == nil {

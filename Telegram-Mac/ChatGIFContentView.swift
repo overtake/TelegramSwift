@@ -137,7 +137,7 @@ class ChatGIFContentView: ChatMediaContentView {
                 let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
-                player.setSignal(account: account, signal: chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+                player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:.cornerRadius), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 player.set(arguments: arguments)
                 

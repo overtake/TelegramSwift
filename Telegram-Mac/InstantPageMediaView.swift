@@ -99,7 +99,7 @@ final class InstantPageMediaView: View, InstantPageView {
         
         if let image = media.media as? TelegramMediaImage {
             
-            self.imageView.setSignal(account: account, signal: chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+            self.imageView.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
 
            
             self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: image).start())
@@ -111,7 +111,7 @@ final class InstantPageMediaView: View, InstantPageView {
             statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
             self.fetchedDisposable.set(account.postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .video)).start())
             
-            self.imageView.setSignal(account: account, signal: chatMessageVideo(account: account, video: file, scale: backingScaleFactor))
+            self.imageView.setSignal( chatMessageVideo(account: account, video: file, scale: backingScaleFactor))
 
             switch arguments {
             case let .video(_, autoplay):

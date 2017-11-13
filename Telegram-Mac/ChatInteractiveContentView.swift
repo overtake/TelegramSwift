@@ -16,7 +16,7 @@ import TGUIKit
 class ChatInteractiveContentView: ChatMediaContentView {
 
     private let image:TransformImageView = TransformImageView()
-    private var videoAccessory: ChatVideoAccessoryView? = nil
+    private var videoAccessory: ChatMessageAccessoryView? = nil
     private var progressView:RadialProgressView?
     private var timableProgressView: TimableProgressView? = nil
     private let statusDisposable = MetaDisposable()
@@ -138,7 +138,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 
                 if file.isVideo {
                     if videoAccessory == nil {
-                        videoAccessory = ChatVideoAccessoryView(frame: NSZeroRect)
+                        videoAccessory = ChatMessageAccessoryView(frame: NSZeroRect)
                         addSubview(videoAccessory!)
                     }
                     videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.elapsedSize))", maxWidth: size.width - 20)
@@ -178,7 +178,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             }
             
             if let updateImageSignal = updateImageSignal {
-                self.image.setSignal(account: account, signal: updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                self.image.setSignal( updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                     if let strongSelf = self {
                         return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                     } else {

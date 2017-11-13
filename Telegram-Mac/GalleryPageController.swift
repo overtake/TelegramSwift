@@ -56,8 +56,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     private let autohideCaptionDisposable = MetaDisposable()
     private let magnifyDisposable = MetaDisposable()
     let selectedIndex:ValuePromise<Int> = ValuePromise(ignoreRepeated: false)
-    init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window) {
+    private let thumbsControl: GalleryThumbsControl
+    init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window, thumbsControl: GalleryThumbsControl) {
         self.contentInset = contentInset
+        self.thumbsControl = thumbsControl
         self.window = window
         
         super.init()
@@ -227,6 +229,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         if !lockedTransition {
             set(index: max(controller.selectedIndex - 1, 0), animated: false)
         }
+    }
+    
+    var currentIndex: Int {
+        return controller.selectedIndex
     }
     
     func zoomIn() {

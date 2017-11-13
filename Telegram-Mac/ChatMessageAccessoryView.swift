@@ -1,5 +1,5 @@
 //
-//  ChatVideoAccessoryView.swift
+//  ChatMessageAccessoryView.swift
 //  Telegram
 //
 //  Created by keepcoder on 05/10/2017.
@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 
 
-class ChatVideoAccessoryView: View {
+class ChatMessageAccessoryView: View {
 
     private var text:(TextNodeLayout, TextNode)?
     private var textNode:TextNode?

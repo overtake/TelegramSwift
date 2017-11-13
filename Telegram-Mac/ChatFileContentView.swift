@@ -107,8 +107,8 @@ class ChatFileContentView: ChatMediaContentView {
                 let _ = attr.append(string: tr(.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             } else {
                 let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
-                let size = ", \(current) / \(String.prettySized(with: file.elapsedSize))"
-                let _ = attr.append(string: tr(.messagesFileStateFetchingIn1(Int(progress * 100.0))) + size, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+                let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
+                let _ = attr.append(string: size, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
             }
         case .Local:
 
@@ -162,7 +162,7 @@ class ChatFileContentView: ChatMediaContentView {
                 }
                 
                 
-                thumbView.setSignal(account: account, signal: chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
+                thumbView.setSignal( chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
                     if let strongSelf = self {
                         return cacheMedia(signal: image, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                     } else {

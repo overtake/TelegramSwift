@@ -85,7 +85,7 @@ class ChatInvoiceView : ChatRowView {
             textView.update(item.textLayout)
             if let photo = item.media.photo, let arguments = item.arguments {
                 addSubview(imageView)
-                imageView.setSignal(account: item.account, signal: chatMessageWebFilePhoto(account: item.account, photo: photo, scale: backingScaleFactor))
+                imageView.setSignal( chatMessageWebFilePhoto(account: item.account, photo: photo, scale: backingScaleFactor))
                 imageView.set(arguments: arguments)
                 imageView.setFrameSize(arguments.boundingSize)
                 _ = item.account.postbox.mediaBox.fetchedResource(photo.resource, tag: nil).start()

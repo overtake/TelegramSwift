@@ -609,6 +609,8 @@ enum L10n {
   case chatServiceSecretChatSetTimerSelf(String)
   /// Your Cloud storage
   case chatTitleSelf
+  /// %d of %d
+  case chatWebpageMediaCount(Int, Int)
   /// Draft:
   case chatListDraft
   /// Message is not supported
@@ -1305,6 +1307,10 @@ enum L10n {
   case peerActivityUserSendingVideo
   /// typing
   case peerActivityUserTypingText
+  /// Remove photo
+  case peerCreatePeerContextRemovePhoto
+  /// Update photo
+  case peerCreatePeerContextUpdatePhoto
   /// You can send and receive files of any type up to 1.5 GB each and access them anywhere.
   case peerMediaSharedFilesEmptyList
   /// All links shared in this chat will appear here.
@@ -2839,6 +2845,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.Service.SecretChat.SetTimer.Self", p1)
       case .chatTitleSelf:
         return L10n.tr(key: "Chat.Title.self")
+      case .chatWebpageMediaCount(let p1, let p2):
+        return L10n.tr(key: "Chat.Webpage.MediaCount", p1, p2)
       case .chatListDraft:
         return L10n.tr(key: "ChatList.Draft")
       case .chatListUnsupportedMessage:
@@ -3535,6 +3543,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Peer.Activity.User.SendingVideo")
       case .peerActivityUserTypingText:
         return L10n.tr(key: "Peer.Activity.User.TypingText")
+      case .peerCreatePeerContextRemovePhoto:
+        return L10n.tr(key: "Peer.CreatePeer.Context.RemovePhoto")
+      case .peerCreatePeerContextUpdatePhoto:
+        return L10n.tr(key: "Peer.CreatePeer.Context.UpdatePhoto")
       case .peerMediaSharedFilesEmptyList:
         return L10n.tr(key: "Peer.Media.SharedFilesEmptyList")
       case .peerMediaSharedLinksEmptyList:
