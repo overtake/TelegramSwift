@@ -24,22 +24,25 @@ class GalleryControls: Node {
     
     let index:Promise<(Int,Int)> = Promise()
     private let interactions:GalleryInteractions
-    
+    private let thumbsView: GalleryThumbsControlView
     
     override var backgroundColor: NSColor? {
         return .blackTransparent
     }
     
-    init(_ view: View? = nil, interactions:GalleryInteractions) {
+    init(_ view: View? = nil, interactions:GalleryInteractions, thumbsView: GalleryThumbsControlView) {
         self.interactions = interactions
+        self.thumbsView = thumbsView
         super.init(view)
         view?.layer?.opacity = 0.0
     }
     
     func animateIn() -> Void {
         self.setNeedDisplay()
-        
         if let view = view {
+            view.addSubview(thumbsView)
+            thumbsView.center()
+            
             view.centerX(y: 10.0)
             view.layer?.opacity = 1.0
             view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25)
@@ -78,16 +81,17 @@ class GalleryGeneralControls : GalleryControls {
     private let counter:TitleButton = TitleButton()
     
     
+    
     private let disposable:MetaDisposable = MetaDisposable()
     
     override var backgroundColor: NSColor? {
         return .blackTransparent
     }
     
-    override init(_ view: View? = nil, interactions:GalleryInteractions) {
+    override init(_ view: View? = nil, interactions:GalleryInteractions, thumbsView: GalleryThumbsControlView) {
         
         
-        super.init(view, interactions: interactions)
+        super.init(view, interactions: interactions, thumbsView: thumbsView)
         
         counter.style = galleryButtonStyle
         previous.style = galleryButtonStyle
@@ -143,8 +147,8 @@ class GallerySecretControls : GalleryControls {
     private let duration: TitleButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
     private var timer:SwiftSignalKitMac.Timer? = nil
-    override init(_ view: View?, interactions: GalleryInteractions) {
-        super.init(view, interactions: interactions)
+    override init(_ view: View?, interactions: GalleryInteractions, thumbsView: GalleryThumbsControlView) {
+        super.init(view, interactions: interactions, thumbsView: thumbsView)
         if let view = view {
             duration.set(font: .bold(.header), for: .Normal)
             duration.set(color: .white, for: .Normal)

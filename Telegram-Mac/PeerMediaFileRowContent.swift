@@ -258,7 +258,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 updateIconImageSignal = .complete()
             }
             
-            imageView.setSignal(account: item.account, signal: updateIconImageSignal)
+            imageView.setSignal( updateIconImageSignal)
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
             } else {

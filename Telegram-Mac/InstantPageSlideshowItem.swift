@@ -67,7 +67,13 @@ class InstantPageSlideshowView : View, InstantPageView {
         addSubview(slideView)
         
         for media in medias {
-            let view = InstantPageMediaView(account: account, media: media, arguments: .image(interactive: true, roundCorners: false, fit: false))
+            var arguments: InstantPageMediaArguments = .image(interactive: true, roundCorners: false, fit: false)
+            if let media = media.media as? TelegramMediaFile {
+                if media.isVideo {
+                    arguments = .video(interactive: true, autoplay: media.isAnimated)
+                }
+            }
+            let view = InstantPageMediaView(account: account, media: media, arguments: arguments)
             slideView.addSlide(view)
         }
         

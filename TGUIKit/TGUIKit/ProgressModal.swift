@@ -60,7 +60,7 @@ class ProgressModalController: ModalViewController {
     
 }
 
-public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window) -> Signal<T,E> {
+public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, disposeAfterComplete: Bool = true) -> Signal<T,E> {
     return Signal { subscriber in
         
         let signal = signal |> deliverOnMainQueue
@@ -84,7 +84,9 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window) -> Si
             modal.close()
         }, completed: {
             subscriber.putCompletion()
-            beforeDisposable.dispose()
+            if disposeAfterComplete {
+                beforeDisposable.dispose()
+            }
             modal.close()
         }))
         

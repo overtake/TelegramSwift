@@ -56,7 +56,7 @@ open class TransformImageView: NSView {
     }
     
     
-    public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = true, animate:Bool = false, cacheImage:(Signal<CGImage?, Void>) -> Signal<Void, Void> = {_ in return .single(Void())}) {
+    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = true, animate:Bool = false, cacheImage:(Signal<CGImage?, Void>) -> Signal<Void, Void> = {_ in return .single(Void())}) {
         if clearInstantly {
             self.layer?.contents = nil
         }

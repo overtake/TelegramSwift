@@ -93,7 +93,7 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
                     }, for: .LongMouseDown)
                     
                     let view = TransformImageView()
-                    view.setSignal(account: item.account, signal: chatMessageSticker(account: item.account, file: data.file, type: .small, scale: backingScaleFactor))
+                    view.setSignal( chatMessageSticker(account: item.account, file: data.file, type: .small, scale: backingScaleFactor))
                     _ = fileInteractiveFetched(account: item.account, file: data.file).start()
                     
                     let imageSize = data.file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]

@@ -134,7 +134,7 @@ class ReplyModel: ChatAccessoryModel {
                         view.imageView?.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
                         
                         if view.imageView?.layer?.contents == nil {
-                            view.imageView?.setSignal(account: self.account, signal: updateImageSignal, animate: true, cacheImage: { image in
+                            view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
                                 return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
                             })
                             if let media = media as? TelegramMediaImage {

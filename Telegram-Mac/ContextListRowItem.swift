@@ -238,7 +238,7 @@ class ContextListImageView : TableRowView {
             if let capImage = item.capImage {
                 self.image.layer?.contents = capImage
             } else {
-                image.setSignal(account: item.account, signal: item.iconSignal)
+                image.setSignal( item.iconSignal)
             }
         }
     }

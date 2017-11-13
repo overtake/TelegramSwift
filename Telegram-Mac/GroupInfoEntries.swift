@@ -217,21 +217,6 @@ final class GroupInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-        
-        
-//        let updateSignal = filethumb(with: URL(fileURLWithPath: path), account: account, scale: System.backingScale) |> mapToSignal { res -> Signal<String, Void> in
-//            guard let image = NSImage(contentsOf: URL(fileURLWithPath: path)) else {
-//                return .complete()
-//            }
-//            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: image.size, boundingSize: NSMakeSize(640, 640), intrinsicInsets: NSEdgeInsets())
-//            if let image = res(arguments)?.generateImage() {
-//                return putToTemp(image: NSImage(cgImage: image, size: image.backingSize))
-//            }
-//            return .complete()
-//        } |> map { path -> TelegramMediaResource in
-//                return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-//            }
-        
         let updateSignal = Signal<String, Void>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
         } |> beforeNext { resource in

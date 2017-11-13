@@ -56,7 +56,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     
     weak var view:NSView?
     
-    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void, onClose:@escaping()->Void) -> Void {
+    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}) -> Void {
         
         let menu = ContextMenu.init()
         menu.onShow = onShow

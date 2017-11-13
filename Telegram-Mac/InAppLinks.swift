@@ -69,6 +69,28 @@ func execute(inapp:inAppLink) {
         }
         if let url = URL(string: escape(with:url)) {
             let success:()->Void = {
+                
+                var path = url.absoluteString
+                let supportSchemes:[String] = ["itunes.apple.com"]
+                for scheme in supportSchemes {
+                    var url:URL? = nil
+                    if path.contains(scheme) {
+                        switch scheme {
+                        case supportSchemes[0]: // itunes
+                           path = "itms://" + path.nsstring.substring(from: path.nsstring.range(of: scheme).location)
+                           url = URL(string: path)
+                        default:
+                            continue
+                        }
+                    }
+                    if let url = url {
+                        NSWorkspace.shared.open(url)
+                        return
+                    }
+                }
+                
+                
+                
                 NSWorkspace.shared.open(url)
             }
             if needConfirm {

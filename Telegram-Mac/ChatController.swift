@@ -1888,9 +1888,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }, theme.icons.chatActionEdit))
                                 
                                 if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings  {
-                                    items.append(SPopoverItem(notificationSettings.isMuted ? tr(.chatContextEnableNotifications) : tr(.chatContextDisableNotifications), { [weak strongSelf] in
+                                    items.append(SPopoverItem(!notificationSettings.isMuted ? tr(.chatContextEnableNotifications) : tr(.chatContextDisableNotifications), { [weak strongSelf] in
                                         strongSelf?.chatInteraction.toggleNotifications()
-                                    }, notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
+                                    }, !notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
                                 }
                                 
                                 if let peer = peerViewMainPeer(peerView) {

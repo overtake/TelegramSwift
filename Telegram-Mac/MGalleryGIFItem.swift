@@ -28,7 +28,7 @@ class MGalleryGIFItem: MGalleryItem {
         
     }
     
-    private var media:TelegramMediaFile {
+    var media:TelegramMediaFile {
         switch entry {
         case .message(let entry):
             if let media = entry.message!.media[0] as? TelegramMediaFile {

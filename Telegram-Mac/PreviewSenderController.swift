@@ -454,8 +454,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         
     }
     
-    
-    
     func textViewDidReachedLimit(_ textView: Any) {
         genericView.textView.shake()
     }

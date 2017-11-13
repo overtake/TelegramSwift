@@ -120,7 +120,7 @@ class PreviewThumbRowView : TableRowView {
         super.set(item: item,animated:animated)
         
         if let item = item as? PreviewThumbRowItem {
-            imageView.setSignal(account: item.account, signal: filethumb(with: item.url, account:item.account, scale: backingScaleFactor))
+            imageView.setSignal( filethumb(with: item.url, account:item.account, scale: backingScaleFactor))
         }
         
     }
@@ -319,7 +319,7 @@ class ExpandedPreviewRowView : TableRowView {
             if let thumb = item.thumb {
                 thumbView.image = thumb
             } else {
-                imageView.setSignal(account: item.account, signal: filethumb(with: item.url, account:item.account, scale: backingScaleFactor))
+                imageView.setSignal( filethumb(with: item.url, account:item.account, scale: backingScaleFactor))
             }
             thumbView.isHidden = item.thumb == nil
             imageView.isHidden = !thumbView.isHidden

@@ -170,7 +170,7 @@ final class GridMessageItemNode: GridItemNode {
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
 
                 if self.imageView.layer?.contents == nil {
-                    self.imageView.setSignal(account: account, signal: mediaGridMessagePhoto(account: account, photo: media, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                    self.imageView.setSignal( mediaGridMessagePhoto(account: account, photo: media, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                         if let strongSelf = self {
                             return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
                         } else {
@@ -183,7 +183,7 @@ final class GridMessageItemNode: GridItemNode {
                 progressView = nil
             } else if let file = media as? TelegramMediaFile {
                 mediaDimensions = file.previewRepresentations.last?.dimensions
-                self.imageView.setSignal(account: account, signal: mediaGridMessageVideo(account: account, file: file, scale: backingScaleFactor))
+                self.imageView.setSignal( mediaGridMessageVideo(account: account, file: file, scale: backingScaleFactor))
                 
                 
                 statusDisposable.set((chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue).start(next: { [weak self] status in

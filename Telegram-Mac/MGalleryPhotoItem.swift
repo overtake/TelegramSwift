@@ -14,7 +14,7 @@ import TGUIKit
 
 class MGalleryPhotoItem: MGalleryItem {
     
-    private let media:TelegramMediaImage
+    let media:TelegramMediaImage
     private let representation:TelegramMediaImageRepresentation
     override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {

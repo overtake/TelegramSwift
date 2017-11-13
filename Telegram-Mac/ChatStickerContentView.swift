@@ -48,7 +48,7 @@ class ChatStickerContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor))
             
             if self.image.layer?.contents == nil {
-                self.image.setSignal(account: account, signal: chatMessageSticker(account: account, file: file, type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                self.image.setSignal( chatMessageSticker(account: account, file: file, type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
                     if let strongSelf = self {
                         return cacheMedia(signal: signal, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                     } else {

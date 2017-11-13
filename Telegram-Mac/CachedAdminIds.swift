@@ -21,11 +21,7 @@ private func hashForIdsReverse(_ ids: [Int32]) -> Int32 {
     var acc: UInt32 = 0
     
     for id in ids {
-        let low = UInt32(UInt32(bitPattern: id) & (0xffffffff as UInt32))
-        let high = UInt32((UInt32(bitPattern: id) >> 32) & (0xffffffff as UInt32))
-        
-        acc = (acc &* 20261) &+ high
-        acc = (acc &* 20261) &+ low
+        acc = (acc &* 20261) &+ UInt32(bitPattern: id)
     }
     return Int32(bitPattern: acc & UInt32(0x7FFFFFFF))
 }
