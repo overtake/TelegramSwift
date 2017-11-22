@@ -67,7 +67,7 @@ class WPLayout: Equatable {
                 p = [.Links, .Mentions, .Hashtags]
             }
             
-            attributedText.detectLinks(type: p)
+            attributedText.detectLinks(type: p, dotInMention: wname == "instagram")
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil)
             textLayout?.interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
@@ -89,6 +89,7 @@ class WPLayout: Equatable {
                                 link = .external(link: "https://twitter.com/hashtag/\(url.nsstring.substring(from: 1))", false)
                             }
                         default:
+                            link = inApp(for: url.nsstring, account: account, peerId: nil, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                             break
                         }
                     }
@@ -103,7 +104,7 @@ class WPLayout: Equatable {
     }
     
     var isGalleryAssemble: Bool {
-        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter") && content.instantPage != nil) {
+        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter") && content.instantPage != nil) || content.text == nil {
             return true
         }
         return false

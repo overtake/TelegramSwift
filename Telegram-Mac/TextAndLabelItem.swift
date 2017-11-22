@@ -26,7 +26,7 @@ class TextAndLabelItem: GeneralRowItem {
     let isTextSelectable:Bool
     let callback:()->Void
     let account:Account
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, text:String, account:Account, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, text:String, account:Account, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false) {
         self.account = account
         self.callback = callback
         self.isTextSelectable = isTextSelectable
@@ -36,8 +36,19 @@ class TextAndLabelItem: GeneralRowItem {
         if detectLinks {
             attr.detectLinks(type: [.Links, .Hashtags, .Mentions], account: account, openInfo: openInfo, hashtag: hashtag)
         }
+        
+        
+        
         textLayout = TextViewLayout(attr)
         textLayout.interactions = globalLinkExecutor
+        
+        if selectFullWord {
+            textLayout.interactions.copy = {
+                copyToClipboard(text)
+                return true
+            }
+        }
+        
         super.init(initialSize,stableId: stableId, type: .none, action: callback, drawCustomSeparator: true)
     }
     
@@ -73,7 +84,7 @@ class TextAndLabelItem: GeneralRowItem {
         return (height - labelsHeight) / 2.0
     }
     
-//    override func menuItems() -> Signal<[ContextMenuItem], Void> {
+//    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
 //        return .single([ContextMenuItem(tr(.textCopy), handler: { [weak self] in
 //            if let strongSelf = self {
 //            copyToClipboard(strongSelf.textLayout.attributedString.string)

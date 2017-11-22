@@ -13,7 +13,7 @@ import SwiftSignalKitMac
 import TGUIKit
 
 class MGalleryPeerPhotoItem: MGalleryItem {
-    private let media:TelegramMediaImage
+    let media:TelegramMediaImage
     override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         
         self.media = entry.photo!

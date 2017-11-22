@@ -56,7 +56,7 @@ class ChatRightView: View {
                         self.addSubview(stateView!)
                     }
                     
-                    if item.isRead && !item.isFailed {
+                    if item.isRead && !item.isFailed && item.chatInteraction.peerId != item.account.peerId {
                         if readImageView == nil {
                             readImageView = ImageView(frame: NSMakeRect(0, 0, theme.icons.chatReadMark2.backingSize.width, theme.icons.chatReadMark2.backingSize.height))
                             addSubview(readImageView!)

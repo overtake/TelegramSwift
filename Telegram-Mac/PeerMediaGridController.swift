@@ -273,13 +273,13 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                 if top.0 < 5 && historyView.originalView.laterId != nil {
                     //
                     let lastEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - top.0, 0), historyView.filteredEntries.count - 1)]
-                    let location = ChatHistoryLocation.Navigation(index: lastEntry.entry.index, anchorIndex: historyView.originalView.anchorIndex)
+                    let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(lastEntry.entry.index), anchorIndex: historyView.originalView.anchorIndex)
                     
                     strongSelf._chatHistoryLocation.set(location)
                     strongSelf.disableScroll()
                 } else if bottom.0 >= historyView.filteredEntries.count - 5 && historyView.originalView.earlierId != nil {
                     let firstEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - bottom.0, 0), historyView.filteredEntries.count - 1)]
-                    strongSelf._chatHistoryLocation.set(ChatHistoryLocation.Navigation(index: firstEntry.entry.index, anchorIndex: historyView.originalView.anchorIndex))
+                    strongSelf._chatHistoryLocation.set(ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(firstEntry.entry.index), anchorIndex: historyView.originalView.anchorIndex))
                     strongSelf.disableScroll()
                 }
             }

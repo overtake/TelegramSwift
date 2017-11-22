@@ -22,13 +22,38 @@ private class VideoPlayerView : AVPlayerView {
         bp += 1
     }
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        updateLayout()
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateLayout()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateLayout()
+    }
+    
+    private func updateLayout() {
+        let controls = subviews.last?.subviews.last
+        if let controls = controls {
+            if let pip = controls.subviews.last as? ImageButton {
+                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 44)
+            }
+            controls.centerX(y: 60)
+        }
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        updateLayout()
+    }
+    
     override func layout() {
         super.layout()
-        let controls = subviews.last?.subviews.last
-        if let controls = controls, let pip = controls.subviews.last as? ImageButton {
-            pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 34)
-            controls.centerX(y: 50)
-        }
+        updateLayout()
     }
 }
 
@@ -175,7 +200,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     override func request(immediately: Bool) {
 
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
         
         let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: image, scale: System.backingScale)
         

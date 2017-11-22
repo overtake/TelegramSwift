@@ -36,7 +36,7 @@ private enum ChannelMembersEntryStableId: Hashable {
     case inviteLink
     case membersDesc
     case section(Int)
-    
+    case loading
     var hashValue: Int {
         switch self {
         case let .peer(peerId):
@@ -47,6 +47,8 @@ private enum ChannelMembersEntryStableId: Hashable {
             return 1
         case .membersDesc:
             return 2
+        case .loading:
+            return 3
         case let .section(sectionId):
             return -(sectionId)
         }
@@ -78,6 +80,12 @@ private enum ChannelMembersEntryStableId: Hashable {
             } else {
                 return false
             }
+        case .loading:
+            if case .loading = rhs {
+                return true
+            } else {
+                return false
+            }
         case let .section(sectionId):
             if case .section(sectionId) = rhs {
                 return true
@@ -94,6 +102,7 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
     case inviteLink(sectionId:Int)
     case membersDesc(sectionId:Int)
     case section(sectionId:Int)
+    case loading(sectionId: Int)
     
     var stableId: ChannelMembersEntryStableId {
         switch self {
@@ -105,6 +114,8 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return .inviteLink
         case .membersDesc:
             return .membersDesc
+        case .loading:
+            return .loading
         case let .section(sectionId):
             return .section(sectionId)
         }
@@ -121,6 +132,8 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return (sectionId * 1000) + 1
         case let .membersDesc(sectionId):
             return (sectionId * 1000) + 2
+        case let .loading(sectionId):
+            return (sectionId * 1000) + 4
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -148,6 +161,12 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             }
         case .addMembers:
             if case .addMembers = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .loading:
+            if case .loading = rhs {
                 return true
             } else {
                 return false
@@ -207,6 +226,8 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             })
         case .membersDesc:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.channelMembersMembersListDesc))
+        case .loading:
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -255,10 +276,9 @@ private func channelMembersControllerEntries(view: PeerView, account:Account, st
     
     var entries: [ChannelMembersEntry] = []
     
+    var sectionId:Int = 1
+
     if let participants = participants {
-        
-        var sectionId:Int = 1
-        
         
         if !participants.isEmpty {
             entries.append(.section(sectionId: sectionId))
@@ -287,8 +307,6 @@ private func channelMembersControllerEntries(view: PeerView, account:Account, st
             var index: Int32 = 0
             for participant in participants.sorted(by: <) {
                 
-                
-                
                 let editable:Bool
                 switch participant.participant {
                 case let .member(_, _, adminInfo, _):
@@ -313,6 +331,8 @@ private func channelMembersControllerEntries(view: PeerView, account:Account, st
         }
 
         
+    } else {
+        entries.append(.loading(sectionId: sectionId))
     }
     
     return entries

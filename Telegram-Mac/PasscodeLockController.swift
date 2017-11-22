@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
+import LocalAuthentication
 
 enum PasscodeInnterState {
     case old
@@ -68,7 +69,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.textView?.insertionPointColor = theme.colors.text
         input.sizeToFit()
         
-        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLogoutDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents,  {_ in}))
         }))
         
@@ -289,6 +290,23 @@ class PasscodeLockController: ModalViewController {
         }
     }
     
+    func callTouchId() {
+        let myContext = LAContext()
+                
+        if myContext.canUseBiometric {
+            myContext.evaluatePolicy(.applicationPolicy, localizedReason: tr(.passcodeUnlockTouchIdReason)) { (success, evaluateError) in
+                if (success) {
+                    Queue.mainQueue().async {
+                        self._doneValue.set(.single(true))
+                        self.close()
+                    }
+                }
+            }
+        }
+        
+
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -311,8 +329,16 @@ class PasscodeLockController: ModalViewController {
             self?.checkNextValue(value, current)
         }))
         
-        disposable.set((account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
+        disposable.set(combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue, additionalSettings(postbox: account.postbox) |> take(1)).start(next: { [weak self] peer, additional in
             if let strongSelf = self {
+                if additional.useTouchId {
+                    switch strongSelf.state {
+                    case .login:
+                        strongSelf.callTouchId()
+                    default:
+                        break
+                    }
+                }
                 strongSelf.genericView.update(with: strongSelf.state, account: strongSelf.account, peer: peer)
                 strongSelf.readyOnce()
             }

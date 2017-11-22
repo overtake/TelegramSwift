@@ -21,7 +21,7 @@ protocol ChatInputDelegate : class {
 
 let yInset:CGFloat = 8;
 
-class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
+class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private let sendActivityDisposable = MetaDisposable()
     
@@ -482,7 +482,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     public func textViewEnterPressed(_ event: NSEvent) -> Bool {
         
         if FastSettings.checkSendingAbility(for: event) {
-            if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty {
+            if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage()
                 chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
             }
@@ -514,13 +514,21 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     func makeFirstResponder()  {
         self.window?.makeFirstResponder(self.textView.inputView)
     }
-    
+    private var previousString: String = ""
     func textViewTextDidChange(_ string: String) {
         if FastSettings.isPossibleReplaceEmojies {
-            let replacedEmojies = string.stringEmojiReplacements
-            if string != replacedEmojies {
-                self.textView.setString(replacedEmojies)
+            
+            if previousString != string {
+                let difference = string.replacingOccurrences(of: previousString, with: "")
+                if difference.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
+                    let replacedEmojies = string.stringEmojiReplacements
+                    if string != replacedEmojies {
+                        self.textView.setString(replacedEmojies)
+                    }
+                }
             }
+           
+            previousString = string
         }
     }
     

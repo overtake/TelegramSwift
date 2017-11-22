@@ -186,7 +186,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "submodules/TelegramCore/TelegramCore/Account.swift"
-            timestampString = "529352687.463877"
+            timestampString = "532629197.422599"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "154"
@@ -218,7 +218,7 @@
                   moduleName = "Telegram"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/Telegram-Mac/ChannelAdminsViewController.swift"
-                  timestampString = "532253393.750677"
+                  timestampString = "533049599.680577"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "628"
@@ -233,7 +233,7 @@
                   moduleName = "Telegram"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/Telegram-Mac/ChannelAdminsViewController.swift"
-                  timestampString = "532253393.753188"
+                  timestampString = "533049599.687866"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "629"
@@ -250,13 +250,61 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "submodules/TelegramCore/TelegramCore/PeerAccessRestrictionInfo.swift"
-            timestampString = "530714181.562929"
+            timestampString = "532371489.159943"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "16"
             endingLineNumber = "16"
             landmarkName = "init(decoder:)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/SearchMessages.swift"
+            timestampString = "532621019.144863"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "14"
+            endingLineNumber = "14"
+            landmarkName = "searchMessages(account:peerId:query:fromId:tagMask:)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TelegramCoreMac.searchMessages(account: TelegramCoreMac.Account, peerId: Swift.Optional&lt;PostboxMac.PeerId&gt;, query: Swift.String, fromId: Swift.Optional&lt;PostboxMac.PeerId&gt;, tagMask: Swift.Optional&lt;PostboxMac.MessageTags&gt;) -&gt; SwiftSignalKitMac.Signal&lt;Swift.Array&lt;PostboxMac.Message&gt;, ()&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/submodules/TelegramCore/TelegramCore/SearchMessages.swift"
+                  timestampString = "533049599.918795"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "14"
+                  endingLineNumber = "14"
+                  offsetFromSymbolStart = "275">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (PostboxMac.Modifier) -&gt; Swift.Array&lt;PostboxMac.Message&gt; in TelegramCoreMac.searchMessages(account: TelegramCoreMac.Account, peerId: Swift.Optional&lt;PostboxMac.PeerId&gt;, query: Swift.String, fromId: Swift.Optional&lt;PostboxMac.PeerId&gt;, tagMask: Swift.Optional&lt;PostboxMac.MessageTags&gt;) -&gt; SwiftSignalKitMac.Signal&lt;Swift.Array&lt;PostboxMac.Message&gt;, ()&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/TelegramGit/submodules/TelegramCore/TelegramCore/SearchMessages.swift"
+                  timestampString = "533049599.92215"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "15"
+                  endingLineNumber = "15"
+                  offsetFromSymbolStart = "20">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

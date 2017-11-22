@@ -58,44 +58,50 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile) {
-        switch status {
-        case let .Fetching(_, progress):
-            let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
-            let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
-            videoAccessory?.updateText(size, maxWidth: frame.width - 20)
-        case .Remote:
-            videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.elapsedSize))", maxWidth: frame.width - 20)
-        case .Local:
-            videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration), maxWidth: frame.width - 20)
+        let maxWidth = frame.width - 20
+        if maxWidth > 100 {
+            switch status {
+            case let .Fetching(_, progress):
+                let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
+                let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
+                videoAccessory?.updateText(size, maxWidth: maxWidth)
+            case .Remote:
+                videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.elapsedSize))", maxWidth: maxWidth)
+            case .Local:
+                videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration), maxWidth: maxWidth)
+            }
+        } else {
+            videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration), maxWidth: maxWidth)
         }
+        
     }
 
     override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {
         
-        let mediaUpdated = true//self.media == nil || !self.media!.isEqual(media)
+        let mediaUpdated = self.media == nil || !self.media!.isEqual(media) || frame.size != size
         
         super.update(with: media, size: size, account: account, parent:parent, table:table, parameters:parameters, positionFlags: positionFlags)
 
         
-        var topLeftRadius: CGFloat = 4.0
-        var bottomLeftRadius: CGFloat = 4.0
-        var topRightRadius: CGFloat = 4.0
-        var bottomRightRadius: CGFloat = 4.0
+        let topLeftRadius: CGFloat = .cornerRadius
+        let bottomLeftRadius: CGFloat = .cornerRadius
+        let topRightRadius: CGFloat = .cornerRadius
+        let bottomRightRadius: CGFloat = .cornerRadius
         
-        if let positionFlags = positionFlags {
-            if positionFlags.contains(.top) && positionFlags.contains(.left) {
-                topLeftRadius = topLeftRadius * 2
-            }
-            if positionFlags.contains(.top) && positionFlags.contains(.right) {
-                topRightRadius = topRightRadius * 2
-            }
-            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
-                bottomLeftRadius = topLeftRadius * 2
-            }
-            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
-                bottomRightRadius = topRightRadius * 2
-            }
-        }
+//        if let positionFlags = positionFlags {
+//            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+//                topLeftRadius = topLeftRadius * 2
+//            }
+//            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+//                topRightRadius = topRightRadius * 2
+//            }
+//            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+//                bottomLeftRadius = topLeftRadius * 2
+//            }
+//            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+//                bottomRightRadius = topRightRadius * 2
+//            }
+//        }
         
 //        if (position & TGAttachmentPositionBottom && position & TGAttachmentPositionLeft)
 //        bottomLeftRadius = bigRadius;
@@ -136,7 +142,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             
             } else if let file = media as? TelegramMediaFile {
                 
-                if file.isVideo {
+                if file.isVideo, size.height > 80 {
                     if videoAccessory == nil {
                         videoAccessory = ChatMessageAccessoryView(frame: NSZeroRect)
                         addSubview(videoAccessory!)
@@ -169,18 +175,18 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions, boundingSize: frame.size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             
              self.image.set(arguments: arguments)
             
             if !animated {
-                self.image.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: backingScaleFactor))
+                self.image.setSignal(signal: cachedMedia(media: media, size: arguments.boundingSize, scale: backingScaleFactor))
             }
             
             if let updateImageSignal = updateImageSignal {
                 self.image.setSignal( updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                     if let strongSelf = self {
-                        return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                        return cacheMedia(signal: image, media: media, size: arguments.boundingSize, scale: strongSelf.backingScaleFactor)
                     } else {
                         return .complete()
                     }

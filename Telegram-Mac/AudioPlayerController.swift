@@ -784,9 +784,9 @@ class APChatController : APController {
         let apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), Void> in
             switch location {
             case .initial:
-                return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageIndex.upperBound(peerId: peerId), count: 100, anchorIndex: MessageIndex.upperBound(peerId: peerId), fixedCombinedReadState: nil, tagMask: tagMask)
+                return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadState: nil, tagMask: tagMask)
             case let .index(index):
-                return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, count: 100, anchorIndex: index, fixedCombinedReadState: nil, tagMask: tagMask)
+                return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadState: nil, tagMask: tagMask)
             }
             
         } |> map { view -> (APHistory?,APHistory) in

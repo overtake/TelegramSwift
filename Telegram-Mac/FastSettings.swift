@@ -163,6 +163,9 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
         if data.complete {
             var ext:String = ""
             let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
+            if let ext = file.fileName?.nsstring.pathExtension {
+                return .single((data.path, ext))
+            }
             ext = fileName.nsstring.pathExtension
             return resourceType(mimeType: file.mimeType) |> mapToSignal { _type -> Signal<(String, String), Void> in
                 let ext = _type == "*" || _type == nil ? (ext.length == 0 ? "file" : ext) : _type!

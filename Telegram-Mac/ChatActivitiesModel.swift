@@ -153,35 +153,37 @@ class ChatActivitiesModel: Node {
                 }
                 
                 if isFew {
+                    let firstTitle: String = activities.1[0].0.displayTitle
                     if sameActivity {
                         let activity = activities.1[0].1
                         switch activity {
                             case .recordingVoice:
                                 animation = .recording
-                            _ = text.append(string: tr(.peerActivityChatMultiRecordingAudio(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string:
+                                tr(.peerActivityChatMultiRecordingAudio1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         case .uploadingFile:
                              animation = .uploading
-                            _ = text.append(string: tr(.peerActivityChatMultiSendingFile(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(.peerActivityChatMultiSendingFile1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         case .uploadingPhoto:
                             animation = .uploading
-                            _ = text.append(string: tr(.peerActivityChatMultiSendingPhoto(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(.peerActivityChatMultiSendingPhoto1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         case .uploadingVideo:
                             animation = .uploading
-                            _ = text.append(string: tr(.peerActivityChatMultiSendingVideo(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(.peerActivityChatMultiSendingVideo1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         //case .playingGame:
                             
                             //_ = text.append(string: tr(.peerActivityChatMultiPlayingGame(activities.1.count)), color: theme.textColor, font: .normal(.text))
                         case .recordingInstantVideo:
                             animation = .recording
-                            _ = text.append(string: tr(.peerActivityChatMultiRecordingVideo(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(.peerActivityChatMultiRecordingVideo1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         default:
                             animation = .text
-                            break
+                            _ = text.append(string: tr(.peerActivityChatMultiTypingText1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         }
                     } else {
                         animation = .text
                         if activities.1.count > 2 {
-                            _ = text.append(string: tr(.peerActivityChatMultiTypingText(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(.peerActivityChatMultiTypingText1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
                         } else {
                             let names = activities.1.map({$0.0.compactDisplayTitle}).joined(separator: ", ")
                             _ = text.append(string: names, color: theme.textColor, font: .normal(.text))

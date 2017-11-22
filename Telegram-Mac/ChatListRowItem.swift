@@ -83,7 +83,7 @@ class ChatListRowItem: TableRowItem {
     
     var isOutMessage:Bool {
         if let message = message {
-            return !message.flags.contains(.Incoming)
+            return !message.flags.contains(.Incoming) && message.id.peerId != account.peerId
         }
         return false
     }
@@ -153,7 +153,7 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+        let _ = titleText.append(string: peer?.id == account.peerId ? tr(.peerSavedMessages) : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: .white ,range: titleText.range)
 
         self.titleText = titleText
@@ -231,7 +231,7 @@ class ChatListRowItem: TableRowItem {
     
 
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         
         if let peer = peer {
             var items:[ContextMenuItem] = []
@@ -294,7 +294,9 @@ class ChatListRowItem: TableRowItem {
             
             items.append(ContextMenuItem(pinnedType == .none ? tr(.chatListContextPin) : tr(.chatListContextUnpin), handler: togglePin))
             
-            items.append(ContextMenuItem(isMuted ? tr(.chatListContextUnmute) : tr(.chatListContextMute), handler: toggleMute))
+            if account.peerId != peer.id {
+                items.append(ContextMenuItem(isMuted ? tr(.chatListContextUnmute) : tr(.chatListContextMute), handler: toggleMute))
+            }
             
             if peer is TelegramUser {
                 if peer.canCall && peer.id != account.peerId {

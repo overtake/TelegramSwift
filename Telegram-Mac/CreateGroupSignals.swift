@@ -12,17 +12,18 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import MtProtoKitMac
 
-public func removeUserPhoto(account: Account, reference: TelegramMediaRemoteImageReference) -> Signal<Void, Void> {
+public func removeUserPhoto(account: Account, reference: TelegramMediaImageReference?) -> Signal<Void, Void> {
     
-    switch reference {
-    case let .remoteImage(imageId, accesshash):
-        let api = Api.functions.photos.deletePhotos(id: [Api.InputPhoto.inputPhoto(id: imageId, accessHash: accesshash)])
-        return account.network.request(api) |> map {_ in} |> retryRequest
-    case .none:
+    if let reference = reference {
+        switch reference {
+        case let .cloud(imageId, accesshash):
+            let api = Api.functions.photos.deletePhotos(id: [Api.InputPhoto.inputPhoto(id: imageId, accessHash: accesshash)])
+            return account.network.request(api) |> map {_ in} |> retryRequest
+        }
+    } else {
         let api = Api.functions.photos.updateProfilePhoto(id: Api.InputPhoto.inputPhotoEmpty)
         return account.network.request(api) |> map { _ in } |> retryRequest
     }
-    
 }
 
 

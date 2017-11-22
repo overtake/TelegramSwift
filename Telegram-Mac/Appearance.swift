@@ -39,6 +39,17 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
     })!
 }
 
+private func generateChatGroupToggleSelected(foregroundColor: NSColor) -> CGImage {
+    let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
+    return generateImage(NSMakeSize(icon.backingSize.width + 1, icon.backingSize.height + 1), contextGenerator: { size, ctx in
+        ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+        ctx.round(size, size.width/2)
+        ctx.setFillColor(NSColor.white.cgColor)
+        ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+        let imageRect = NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+    })!
+}
 
 
 private func deleteItemIcon(_ color: NSColor) -> CGImage {
@@ -437,6 +448,12 @@ struct TelegramIconsTheme {
     let peerSavedMessages: CGImage
     
     let previewCollage: CGImage
+    let chatGoMessage: CGImage
+    
+    let chatGroupToggleSelected: CGImage
+    let chatGroupToggleUnselected: CGImage
+    
+    let successModalProgress: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -742,7 +759,11 @@ private func generateIcons(from pallete: ColorPallete) -> TelegramIconsTheme {
                                                inputChannelUnmute: #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(pallete.grayIcon),
                                                changePhoneNumberIntro: #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed(),
                                                peerSavedMessages: #imageLiteral(resourceName: "Icon_SavedMessages").precomposed(),
-                                               previewCollage: #imageLiteral(resourceName: "Icon_PreviewCollage").precomposed(pallete.grayIcon))
+                                               previewCollage: #imageLiteral(resourceName: "Icon_PreviewCollage").precomposed(pallete.grayIcon),
+                                               chatGoMessage: #imageLiteral(resourceName: "Icon_ChatGoMessage").precomposed(pallete.blueIcon),
+                                               chatGroupToggleSelected: generateChatGroupToggleSelected(foregroundColor: pallete.blueIcon),
+                                               chatGroupToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
+                                               successModalProgress: #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed())
 }
 
 

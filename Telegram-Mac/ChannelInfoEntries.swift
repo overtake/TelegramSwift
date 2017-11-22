@@ -606,7 +606,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(.peerInfoSharelink), text: link, account: arguments.account, isTextSelectable:false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.account, link: link)), for: mainWindow)
-            })
+            }, selectFullWord: true)
         case .sharedMedia:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoSharedMedia), type: .none, action: { () in
                 arguments.sharedMedia()

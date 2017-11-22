@@ -259,7 +259,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectPreviousSticker()
-                    return .invoked
+                    return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
                 }
             }
             return .invokeNext
@@ -269,7 +269,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectNextSticker()
-                    return .invoked
+                    return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
                 }
             }
             return .invokeNext

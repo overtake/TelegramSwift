@@ -1257,8 +1257,6 @@ enum L10n {
   case passcodeEnterNewPlaceholder
   /// Enter a passcode
   case passcodeEnterPasscodePlaceholder
-  /// If you don't remember your passcode, you can [logout]()
-  case passcodeLogoutDescription
   /// Next
   case passcodeNext
   /// Re-enter a passcode
@@ -1269,10 +1267,16 @@ enum L10n {
   case passcodeTurnOn
   /// When you set up an additional passcode, you can use ⌘ + L for lock.\n\nNote: if you forget the passcode, you'll need to delete and reinstall the app. All secret chats will be lost.
   case passcodeTurnOnDescription
+  /// unlock application.
+  case passcodeUnlockTouchIdReason
+  /// Unlock with Touch ID
+  case passcodeUseTouchId
   /// Disabled
   case passcodeAutoLockDisabled
   /// If away for %@
   case passcodeAutoLockIfAway(String)
+  /// If you don't remember your passcode, you can [logout]()
+  case passcodeLostDescription
   /// Sorry, Telegram Mac doesn't support payments yet. Please use one of our mobile apps to do this.
   case paymentsUnsupported
   /// Deleted User
@@ -1281,20 +1285,20 @@ enum L10n {
   case peerSavedMessages
   /// Service Notifications
   case peerServiceNotifications
-  /// %d are recording voice
-  case peerActivityChatMultiRecordingAudio(Int)
-  /// %d are recording video
-  case peerActivityChatMultiRecordingVideo(Int)
-  /// %d are sending audio
-  case peerActivityChatMultiSendingAudio(Int)
-  /// %d are sending file
-  case peerActivityChatMultiSendingFile(Int)
-  /// %d are sending photo
-  case peerActivityChatMultiSendingPhoto(Int)
-  /// %d are sending video
-  case peerActivityChatMultiSendingVideo(Int)
-  /// %d are typing
-  case peerActivityChatMultiTypingText(Int)
+  /// %@ and %d are recording voice
+  case peerActivityChatMultiRecordingAudio1(String, Int)
+  /// %@ and %d are recording video
+  case peerActivityChatMultiRecordingVideo1(String, Int)
+  /// %@ and %d are sending audio
+  case peerActivityChatMultiSendingAudio1(String, Int)
+  /// %@ and %d are sending file
+  case peerActivityChatMultiSendingFile1(String, Int)
+  /// %@ and %d are sending photo
+  case peerActivityChatMultiSendingPhoto1(String, Int)
+  /// %@ and %d are sending video
+  case peerActivityChatMultiSendingVideo1(String, Int)
+  /// %@ and %d are typing
+  case peerActivityChatMultiTypingText1(String, Int)
   /// recording voice
   case peerActivityUserRecordingAudio
   /// recording video
@@ -1787,6 +1791,10 @@ enum L10n {
   case rgMF4YcnTitle
   /// Select All
   case ruw6mB2mTitle
+  /// %@, %d subscribers
+  case searchGlobalChannel(String, Int)
+  /// %@, %d members
+  case searchGlobalGroup(String, Int)
   /// contacts and chats
   case searchSeparatorChatsAndContacts
   /// global search
@@ -1955,8 +1963,6 @@ enum L10n {
   case telegramPeerInfoController
   /// Change Number
   case telegramPhoneNumberConfirmController
-  /// Change Phone Number
-  case telegramPhoneNumberIntroController
   /// Chat History Settings
   case telegramPreHistorySettingsController
   /// Privacy and Security
@@ -3493,8 +3499,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Passcode.EnterNewPlaceholder")
       case .passcodeEnterPasscodePlaceholder:
         return L10n.tr(key: "Passcode.EnterPasscodePlaceholder")
-      case .passcodeLogoutDescription:
-        return L10n.tr(key: "Passcode.LogoutDescription")
       case .passcodeNext:
         return L10n.tr(key: "Passcode.Next")
       case .passcodeReEnterPlaceholder:
@@ -3505,10 +3509,16 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Passcode.TurnOn")
       case .passcodeTurnOnDescription:
         return L10n.tr(key: "Passcode.TurnOnDescription")
+      case .passcodeUnlockTouchIdReason:
+        return L10n.tr(key: "Passcode.UnlockTouchIdReason")
+      case .passcodeUseTouchId:
+        return L10n.tr(key: "Passcode.UseTouchId")
       case .passcodeAutoLockDisabled:
         return L10n.tr(key: "Passcode.AutoLock.Disabled")
       case .passcodeAutoLockIfAway(let p1):
         return L10n.tr(key: "Passcode.AutoLock.IfAway", p1)
+      case .passcodeLostDescription:
+        return L10n.tr(key: "Passcode.Lost.Description")
       case .paymentsUnsupported:
         return L10n.tr(key: "Payments.Unsupported")
       case .peerDeletedUser:
@@ -3517,20 +3527,20 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Peer.SavedMessages")
       case .peerServiceNotifications:
         return L10n.tr(key: "Peer.ServiceNotifications")
-      case .peerActivityChatMultiRecordingAudio(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingAudio", p1)
-      case .peerActivityChatMultiRecordingVideo(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingVideo", p1)
-      case .peerActivityChatMultiSendingAudio(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingAudio", p1)
-      case .peerActivityChatMultiSendingFile(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingFile", p1)
-      case .peerActivityChatMultiSendingPhoto(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingPhoto", p1)
-      case .peerActivityChatMultiSendingVideo(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingVideo", p1)
-      case .peerActivityChatMultiTypingText(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.TypingText", p1)
+      case .peerActivityChatMultiRecordingAudio1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingAudio1", p1, p2)
+      case .peerActivityChatMultiRecordingVideo1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingVideo1", p1, p2)
+      case .peerActivityChatMultiSendingAudio1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingAudio1", p1, p2)
+      case .peerActivityChatMultiSendingFile1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingFile1", p1, p2)
+      case .peerActivityChatMultiSendingPhoto1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingPhoto1", p1, p2)
+      case .peerActivityChatMultiSendingVideo1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingVideo1", p1, p2)
+      case .peerActivityChatMultiTypingText1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.TypingText1", p1, p2)
       case .peerActivityUserRecordingAudio:
         return L10n.tr(key: "Peer.Activity.User.RecordingAudio")
       case .peerActivityUserRecordingVideo:
@@ -4023,6 +4033,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "rgM-f4-ycn.title")
       case .ruw6mB2mTitle:
         return L10n.tr(key: "Ruw-6m-B2m.title")
+      case .searchGlobalChannel(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel", p1, p2)
+      case .searchGlobalGroup(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group", p1, p2)
       case .searchSeparatorChatsAndContacts:
         return L10n.tr(key: "Search.Separator.ChatsAndContacts")
       case .searchSeparatorGlobalPeers:
@@ -4191,8 +4205,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Telegram.PeerInfoController")
       case .telegramPhoneNumberConfirmController:
         return L10n.tr(key: "Telegram.PhoneNumberConfirmController")
-      case .telegramPhoneNumberIntroController:
-        return L10n.tr(key: "Telegram.PhoneNumberIntroController")
       case .telegramPreHistorySettingsController:
         return L10n.tr(key: "Telegram.PreHistorySettingsController")
       case .telegramPrivacyAndSecurityViewController:

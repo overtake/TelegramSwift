@@ -7,6 +7,7 @@ import TGUIKit
 import Quartz
 import MtProtoKitMac
 import CoreServices
+import LocalAuthentication
 
 #if !APP_STORE
     import HockeySDK

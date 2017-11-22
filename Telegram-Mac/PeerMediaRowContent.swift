@@ -47,7 +47,7 @@ class PeerMediaRowItem: TableRowItem {
         super.init(initialSize)
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         var items:[ContextMenuItem] = []
         if canForwardMessage(message, account: account) {
             items.append(ContextMenuItem(tr(.messageContextForward), handler: { [weak self] in

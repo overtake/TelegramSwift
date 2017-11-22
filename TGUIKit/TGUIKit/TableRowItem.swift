@@ -78,7 +78,7 @@ open class TableRowItem: NSObject {
     }
     
     
-    open func menuItems() -> Signal<[ContextMenuItem], Void> {
+    open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         return .single([])
     }
     
@@ -96,6 +96,13 @@ open class TableRowItem: NSObject {
     
     open var isLast: Bool {
         return table?.lastItem == self
+    }
+    
+    open func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        if let view = view {
+            return view.canMultiselectTextIn(location)
+        }
+        return false
     }
     
     open var identifier:String {

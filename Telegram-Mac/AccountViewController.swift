@@ -443,6 +443,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             self?.navigationWillChangeController()
         }))
         
+        
         peer.set(account.viewTracker.peerView(account.peerId) |> map { peerView -> TelegramUser? in
             return peerView.peers[peerView.peerId] as? TelegramUser
         })

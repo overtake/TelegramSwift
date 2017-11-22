@@ -56,7 +56,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             
             if let iconImageRepresentation = iconImageRepresentation {
                 iconArguments = TransformImageArguments(corners: ImageCorners( radius: iconSize.width / 2), imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
-                icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation])
+                icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil)
             } else {
                 let fileName: String = file.fileName ?? ""
                 
@@ -74,8 +74,8 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         }
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
-        let signal = super.menuItems()
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        let signal = super.menuItems(in: location)
         let account = self.account
         if let file = self.file {
             return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in

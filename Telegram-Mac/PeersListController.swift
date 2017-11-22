@@ -300,9 +300,17 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     func open(with peerId:PeerId, message:Message? = nil, close:Bool = true) ->Void {
-        if let navigationController = navigationController {
-            let chat:ChatController = ChatController(account: self.account, peerId:peerId, messageId:message?.id)
-            navigationController.push(chat)
+        if let navigation = navigationController {
+            
+            if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == account.peerId {
+                _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, account: account, peerId: account.peerId).start()
+                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                modalAction.afterInvoke()
+                navigation.removeModalAction()
+            } else {
+                let chat:ChatController = ChatController(account: self.account, peerId:peerId, messageId:message?.id)
+                navigation.push(chat)
+            }
         }
         if close {
             genericView.searchView.cancel(true)

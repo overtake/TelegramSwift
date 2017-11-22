@@ -130,7 +130,7 @@ class Sender: NSObject {
             }
             
             
-            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, media: nil, replyToMessageId: replyId)
+            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, media: nil, replyToMessageId: replyId, localGroupingKey: nil)
         }
         
         return enqueueMessages(account: account, peerId: peerId, messages: mapped) |> mapToSignal { value in
@@ -211,7 +211,7 @@ class Sender: NSObject {
                                 let scaledSize = size.aspectFilled(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)])
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)], reference: nil)
                             }
                             
                         } else {
@@ -300,7 +300,7 @@ class Sender: NSObject {
         
         
         for msgId in sorted {
-            fwdMessages.append(EnqueueMessage.forward(source: msgId))
+            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: .auto))
         }
         return enqueueMessages(account: account, peerId: peerId, messages: fwdMessages.reversed())
     }
@@ -312,7 +312,7 @@ class Sender: NSObject {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id), replyToMessageId: nil)])
+        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id), replyToMessageId: nil, localGroupingKey: nil)])
     }
     
     public static func enqueue(media:[MediaSenderContainer], account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
@@ -326,7 +326,7 @@ class Sender: NSObject {
         for path in media {
             senders.append(generateMedia(for: path, account: account) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
                 
-                return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, media: media, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)])
+                return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, media: media, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: nil)])
 
             })
         }
@@ -355,7 +355,7 @@ class Sender: NSObject {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)})
+        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: nil)})
         
         return enqueueMessages(account: account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})

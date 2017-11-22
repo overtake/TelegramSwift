@@ -52,8 +52,8 @@ fileprivate class SearchResultModalView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        separator.backgroundColor = .border
-        
+        separator.backgroundColor = theme.colors.border
+        textView.backgroundColor = theme.colors.background
         addSubview(table)
         addSubview(textView)
         addSubview(separator)
