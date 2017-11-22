@@ -404,7 +404,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             case let .index(scrollIndex, position, directionHint, animated):
                 var index = toView.filteredEntries.count - 1
                 for entry in toView.filteredEntries {
-                    if entry.entry.index >= scrollIndex {
+                    if scrollIndex.isLessOrEqual(to: entry.entry.index) {
                         scrollToItem = position.swap(to: entry.entry.stableId)
                         break
                     }
@@ -414,7 +414,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 if scrollToItem == nil {
                     var index = 0
                     for entry in toView.filteredEntries.reversed() {
-                        if entry.entry.index < scrollIndex {
+                        if MessageHistoryAnchorIndex.message(entry.entry.index) < scrollIndex {
                             scrollToItem = position.swap(to: entry.entry.stableId)
                             break
                         }
@@ -783,7 +783,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             historyState = historyState.withRemovingReplies(max: reply)
         } else {
             if previousView.modify({$0})?.originalView.laterId != nil {
-                setLocation(.Scroll(index: MessageIndex.upperBound(peerId: self.peerId), anchorIndex: MessageIndex.upperBound(peerId: self.peerId), sourceIndex: MessageIndex.lowerBound(peerId: self.peerId), scrollPosition: .down(true), animated: true))
+                setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .down(true), animated: true))
             } else {
                 genericView.tableView.scroll(to: .down(true))
             }
@@ -955,6 +955,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let scrollAfterSend:()->Void = { [weak self] in
             self?.chatInteraction.scrollToLatest(true)
+            self?.account.context.entertainment.closePopover()
         }
         
         
@@ -1263,7 +1264,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         strongSelf.messageIndexDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak strongSelf] message in
                             if let strongSelf = strongSelf, let message = message {
                                 let toIndex = MessageIndex(message)
-                                strongSelf.setLocation(.Scroll(index: toIndex, anchorIndex: toIndex, sourceIndex: fromIndex, scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), animated: state.animated))
+                                strongSelf.setLocation(.Scroll(index: MessageHistoryAnchorIndex.message(toIndex), anchorIndex: MessageHistoryAnchorIndex.message(toIndex), sourceIndex: MessageHistoryAnchorIndex.message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), animated: state.animated))
                             }
                         }, completed: {
                                 
@@ -1303,7 +1304,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 strongSelf.shareContactDisposable.set((strongSelf.account.viewTracker.peerView(strongSelf.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
                     if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
                         
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id), replyToMessageId: replyId), account: strongSelf.account, peerId: strongSelf.peerId).start()
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id), replyToMessageId: replyId, localGroupingKey: nil), account: strongSelf.account, peerId: strongSelf.peerId).start()
                     }
                 }))
             }
@@ -1323,7 +1324,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     commandText += "@" + (command.peer.username ?? "")
                 }
                 strongSelf.chatInteraction.updateInput(with: "")
-                let _ = enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: commandText, attributes:[], media: nil, replyToMessageId: nil)]).start()
+                let _ = enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: commandText, attributes:[], media: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
             }
         }
         
@@ -1636,7 +1637,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         break
                     }
                     if let messageIndex = messageIndex {
-                        strongSelf.setLocation(.Navigation(index: messageIndex, anchorIndex: messageIndex))
+                        strongSelf.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex)))
                     }
                 }
             }
@@ -1888,9 +1889,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }, theme.icons.chatActionEdit))
                                 
                                 if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings  {
-                                    items.append(SPopoverItem(!notificationSettings.isMuted ? tr(.chatContextEnableNotifications) : tr(.chatContextDisableNotifications), { [weak strongSelf] in
-                                        strongSelf?.chatInteraction.toggleNotifications()
-                                    }, !notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
+                                    if strongSelf.chatInteraction.peerId != account.peerId {
+                                        items.append(SPopoverItem(!notificationSettings.isMuted ? tr(.chatContextEnableNotifications) : tr(.chatContextDisableNotifications), { [weak strongSelf] in
+                                            strongSelf?.chatInteraction.toggleNotifications()
+                                        }, !notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
+                                    }
                                 }
                                 
                                 if let peer = peerViewMainPeer(peerView) {
@@ -2416,15 +2419,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             switch stableId {
             case let .message(message):
                 for entry in view.filteredEntries {
-                    switch entry.entry {
-                    case let .groupedPhotos(messages):
-                        for groupMessage in messages {
-                            if message.id == groupMessage.id {
+                    s: switch entry.entry {
+                    case let .groupedPhotos(entries, _):
+                        for groupedEntry in entries {
+                            if message.id == groupedEntry.message?.id {
                                 return entry.stableId
                             }
                         }
                     default:
-                        break
+                        break s
                     }
                 }
             default:

@@ -46,6 +46,10 @@ class ChatVoiceRowItem: ChatMediaItem {
         self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction)
     }
     
+    override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        return false
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)

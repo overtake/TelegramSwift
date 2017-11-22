@@ -207,7 +207,7 @@ private enum ProxySettingsEntry : TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case .header(_, _, let text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .share(_, _, let text):
             let attributed = NSMutableAttributedString()
             _ = attributed.append(string: text, color: .link, font: .medium(.text))
@@ -377,14 +377,14 @@ class ProxySettingsViewController: EditableViewController<TableView> {
             })
             
         }, changeServerHandler: { updated in
-            updateState({$0.withUpdatedSettings(ProxySettings(host: updated, port: $0.settings?.port ?? 0, username: $0.settings?.username, password: $0.settings?.password))})
+            updateState({$0.withUpdatedSettings(ProxySettings(host: updated, port: $0.settings?.port ?? 0, username: $0.settings?.username, password: $0.settings?.password, useForCalls: false))})
         }, changePortHandler: { updated in
-            updateState({$0.withUpdatedSettings(ProxySettings(host: $0.settings?.host ?? "", port: Int32(updated) ?? 0, username: $0.settings?.username, password: $0.settings?.password))})
+            updateState({$0.withUpdatedSettings(ProxySettings(host: $0.settings?.host ?? "", port: Int32(updated) ?? 0, username: $0.settings?.username, password: $0.settings?.password, useForCalls: false))})
         }, changeUsernameHandler: { updated in
-            updateState({$0.withUpdatedSettings(ProxySettings(host: $0.settings?.host ?? "", port: $0.settings?.port ?? 0, username: updated, password: $0.settings?.password))})
+            updateState({$0.withUpdatedSettings(ProxySettings(host: $0.settings?.host ?? "", port: $0.settings?.port ?? 0, username: updated, password: $0.settings?.password, useForCalls: false))})
 
         }, changePasswordHandler: { updated in
-            updateState({$0.withUpdatedSettings(ProxySettings(host: $0.settings?.host ?? "", port: $0.settings?.port ?? 0, username: $0.settings?.username, password: updated))})
+            updateState({$0.withUpdatedSettings(ProxySettings(host: $0.settings?.host ?? "", port: $0.settings?.port ?? 0, username: $0.settings?.username, password: updated, useForCalls: false))})
         }, copyShareLink: { [weak self] in
             if let value = stateValue.modify({$0}).settings {
                 var link = "https://t.me/socks?server=\(value.host)&port=\(value.port)"

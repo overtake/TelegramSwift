@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
+import LocalAuthentication
 
 private enum PasscodeEntry : Comparable, Identifiable {
     case turnOn(sectionId:Int)
@@ -19,6 +20,7 @@ private enum PasscodeEntry : Comparable, Identifiable {
     case turnOffDescription(sectionId:Int)
     case change(sectionId:Int)
     case autoLock(sectionId:Int, time:Int32?)
+    case turnTouchId(sectionId:Int, enabled: Bool)
     case section(sectionId:Int)
     
     var stableId:Int {
@@ -35,6 +37,8 @@ private enum PasscodeEntry : Comparable, Identifiable {
             return 4
         case .autoLock:
             return 5
+        case .turnTouchId:
+            return 6
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -53,6 +57,8 @@ private enum PasscodeEntry : Comparable, Identifiable {
         case let .change(sectionId):
             return (sectionId * 1000) + stableId
         case let .autoLock(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .turnTouchId(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -102,6 +108,12 @@ private func ==(lhs:PasscodeEntry, rhs:PasscodeEntry) -> Bool {
         } else {
             return false
         }
+    case let .turnTouchId(lhsSectionId, lhsEnabled):
+        if case let .turnTouchId(rhsSectionId, rhsEnabled) = rhs {
+            return lhsSectionId == rhsSectionId && lhsEnabled == rhsEnabled
+        } else {
+            return false
+        }
     case let .section(sectionId):
         if case .section(sectionId) = rhs {
             return true
@@ -111,7 +123,7 @@ private func ==(lhs:PasscodeEntry, rhs:PasscodeEntry) -> Bool {
     }
 }
 
-private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData) -> [PasscodeEntry] {
+private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, _ additional: AdditionalSettings) -> [PasscodeEntry] {
     var entries:[PasscodeEntry] = []
     
     var sectionId:Int = 1
@@ -131,6 +143,12 @@ private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData) -> [Pa
         sectionId += 1
         
         entries.append(.autoLock(sectionId: sectionId, time: passcode.timeout))
+        
+        let context = LAContext()
+         if context.canUseBiometric {
+            entries.append(.turnTouchId(sectionId: sectionId, enabled: additional.useTouchId))
+        }
+        
     }
     
     
@@ -159,6 +177,12 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
             })
         case .turnOnDescription, .turnOffDescription:
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: tr(.passcodeTurnOnDescription))
+        case .turnTouchId(_, let enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.passcodeUseTouchId), type: .switchable(stateback: {
+                return enabled
+            }), action: {
+                arguments.toggleTouchId(!enabled)
+            })
         case let .autoLock(sectionId: _, time: time):
             
             var text:String
@@ -194,12 +218,14 @@ private final class PasscodeSettingsArguments {
     let turnOff:()->Void
     let change:()->Void
     let ifAway:()->Void
-    init(_ account:Account, turnOn: @escaping()->Void, turnOff: @escaping()->Void, change:@escaping()->Void, ifAway: @escaping()-> Void) {
+    let toggleTouchId:(Bool)->Void
+    init(_ account:Account, turnOn: @escaping()->Void, turnOff: @escaping()->Void, change:@escaping()->Void, ifAway: @escaping()-> Void, toggleTouchId:@escaping(Bool)->Void) {
         self.account = account
         self.turnOn = turnOn
         self.turnOff = turnOff
         self.change = change
         self.ifAway = ifAway
+        self.toggleTouchId = toggleTouchId
     }
 }
 
@@ -276,6 +302,10 @@ class PasscodeSettingsViewController: TableViewController {
             self?.show(with: .change(.old))
         }, ifAway: { [weak self] in
             self?.showIfAwayOptions()
+        }, toggleTouchId: { enabled in
+            _ = updateAdditionalSettingsInteractively(postbox: account.postbox, { current -> AdditionalSettings in
+                return current.withUpdatedTouchId(enabled)
+            }).start()
         })
         
         let initialSize = self.atomicSize.modify({$0})
@@ -287,8 +317,8 @@ class PasscodeSettingsViewController: TableViewController {
             return account.postbox.modify { modifier -> PostboxAccessChallengeData in
                 return modifier.getAccessChallengeData()
             }
-        } |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue)) |> map { passcode, appearance in
-            let entries = passcodeSettinsEntry(passcode).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        } |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue), additionalSettings(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { passcode, appearance, additional in
+            let entries = passcodeSettinsEntry(passcode, additional).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize, arguments: arguments)
         } |> deliverOnMainQueue)
         

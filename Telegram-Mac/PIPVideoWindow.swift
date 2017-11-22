@@ -82,6 +82,9 @@ fileprivate class PIPVideoWindow: NSPanel {
         
         self.level = .screenSaver
         self.isMovableByWindowBackground = true
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: self)
+
     }
     
     
@@ -108,12 +111,9 @@ fileprivate class PIPVideoWindow: NSPanel {
     }
     
     override func setFrame(_ frameRect: NSRect, display displayFlag: Bool, animate animateFlag: Bool) {
-        //let closePoint = NSMakePoint(10, frameRect.height - 50)
-      //  let openPoint = NSMakePoint(closePoint.x + close.frame.width + 10, frameRect.height - 50)
-        
-
         super.setFrame(frameRect, display: displayFlag, animate: animateFlag)
     }
+    
     
 
     override func mouseMoved(with event: NSEvent) {
@@ -130,6 +130,13 @@ fileprivate class PIPVideoWindow: NSPanel {
         super.mouseExited(with: event)
         close.change(opacity: 0, animated: true)
         openGallery.change(opacity: 0, animated: true)
+    }
+    
+    @objc func windowDidResized(_ notification: Notification) {
+        let closePoint = NSMakePoint(10, frame.height - 50)
+        let openPoint = NSMakePoint(closePoint.x + close.frame.width + 10, frame.height - 50)
+        self.close.setFrameOrigin(closePoint)
+        self.openGallery.setFrameOrigin(openPoint)
     }
     
     override func makeKeyAndOrderFront(_ sender: Any?) {

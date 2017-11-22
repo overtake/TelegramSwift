@@ -208,7 +208,7 @@ func legacyAuthData(passcode:Data, textPasscode:String? = nil) -> AuthorizationL
                                                         
                                                         representations.append(TelegramMediaImageRepresentation(dimensions: NSMakeSize(CGFloat(w), CGFloat(h)), resource: resource))
                                                         
-                                                        let image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudSecretImage, id: id), representations: representations)
+                                                        let image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudSecretImage, id: id), representations: representations, reference: nil)
                                                         
                                                         media.append(image)
                                                     default:
@@ -303,7 +303,7 @@ func legacyAuthData(passcode:Data, textPasscode:String? = nil) -> AuthorizationL
                                     flags.insert(.Incoming)
                                 }
                                 let tags = tagsForStoreMessage(incoming: message.fromId == peer.id.id, attributes: [], media: media, textEntities: nil)
-                                messages.append(StoreMessage(id: MessageId(peerId: peer.id, namespace: Namespaces.Message.SecretIncoming, id: message.id), globallyUniqueId: message.random, timestamp: message.date, flags: flags, tags: tags.0, globalTags: tags.1, forwardInfo: nil, authorId: PeerId(namespace: Namespaces.Peer.CloudUser, id: message.fromId), text: text, attributes: attributes, media: media))
+                                messages.append(StoreMessage(id: MessageId(peerId: peer.id, namespace: Namespaces.Message.SecretIncoming, id: message.id), globallyUniqueId: message.random, groupingKey: nil, timestamp: message.date, flags: flags, tags: tags.0, globalTags: tags.1, forwardInfo: nil, authorId: PeerId(namespace: Namespaces.Peer.CloudUser, id: message.fromId), text: text, attributes: attributes, media: media))
                             }
                         }
                         return true

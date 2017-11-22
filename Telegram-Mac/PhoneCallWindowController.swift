@@ -559,7 +559,7 @@ class PhoneCallWindowController {
     
     private func updatePeerUI(_ user:TelegramUser) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations)
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations, reference: nil)
         
 
         

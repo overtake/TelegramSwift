@@ -91,6 +91,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             let defRight = frame.width - item.rightSize.width - item.rightInset
             rightView.change(pos: NSMakePoint(defRight, rightView.frame.minY), animated: animated)
             
+            updateMouse()
+            
             if selectingMode {
                 if selectingView == nil {
                     selectingView = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
@@ -370,7 +372,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             
             selectingView?.setFrameOrigin(rightView.frame.maxX + 4,item.defaultContentTopOffset - 1)
             if let shareControl = shareControl {
-                shareControl.setFrameOrigin(frame.width - 20.0 - shareControl.frame.width, rightView.frame.maxY + 5)
+                shareControl.setFrameOrigin(frame.width - 20.0 - shareControl.frame.width, rightView.frame.maxY )
             }
         }
     }
@@ -436,19 +438,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     }
     
     func fillShareControl(_ item:ChatRowItem) -> Void {
-        if item.isSharable {
+        if item.isSharable || item.isStorage {
             if shareControl == nil {
                 shareControl = ImageButton()
                 shareControl?.disableActions()
                 shareControl?.change(opacity: 0, animated: false)
                 super.addSubview(shareControl!)
             }
-            shareControl?.set(image: theme.icons.chatForwardMessagesActive, for: .Normal)
+            shareControl?.set(image: item.isStorage ? theme.icons.chatGoMessage : theme.icons.chatForwardMessagesActive, for: .Normal)
             shareControl?.sizeToFit()
             shareControl?.removeAllHandlers()
-            shareControl?.set(handler: { [weak self] _ in
-                if let window = self?.contentView.kitWindow, let message = item.message {
-                    showModal(with: ShareModalController(ShareMessageObject(item.account, message)), for: window)
+            shareControl?.set(handler: { [weak self, weak item] _ in
+                if let window = self?.contentView.kitWindow, let item = item, let message = item.message {
+                    if item.isStorage {
+                        item.gotoSourceMessage()
+                    } else {
+                        showModal(with: ShareModalController(ShareMessageObject(item.account, message)), for: window)
+                    }
                 }
             }, for: .Click)
         } else {
@@ -617,6 +623,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             item.chatInteraction.remove(observer: self)
         }
         contentView.removeAllSubviews()
+    }
+    
+    override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        return contentView.convert(point, from: nil)
     }
     
     override func viewDidMoveToWindow() {

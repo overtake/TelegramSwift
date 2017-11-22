@@ -44,7 +44,8 @@ class WPArticleLayout: WPLayout {
     private let fullSizeSites:[String] = ["instagram","twitter"]
     
     private var isFullImageSize: Bool {
-        if let type = content.type, let website = content.websiteName?.lowercased(), mediaTypes.contains(type) || (fullSizeSites.contains(website) && content.instantPage != nil)  {
+        let website = content.websiteName?.lowercased()
+        if let type = content.type, mediaTypes.contains(type) || (fullSizeSites.contains(website ?? "") && content.instantPage != nil) || content.text == nil  {
             return true
         }
         return false
@@ -56,7 +57,7 @@ class WPArticleLayout: WPLayout {
         var contentSize:NSSize = NSMakeSize(width, 0)
         
         if let imageSize = imageSize, isFullImageSize {
-            contrainedImageSize = imageSize.aspectFitted(NSMakeSize(min(width - insets.left, 320), 320))
+            contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, 300), 300))
             textLayout?.cutout = nil
             smallThumb = false
             contentSize.height += contrainedImageSize.height

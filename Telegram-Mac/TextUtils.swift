@@ -112,6 +112,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
 
     if let message = message {
         
+
         if message.text.isEmpty && message.media.isEmpty {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: tr(.chatListUnsupportedMessage), color: theme.chatList.grayTextColor, font: .normal(.text))
@@ -216,7 +217,21 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                 return peer.isChannel ? tr(.chatServiceChannelRemovedPhoto) : tr(.chatServiceGroupRemovedPhoto(authorName))
             }
         case .pinnedMessageUpdated:
-            return tr(.chatServicePinnedMessage)
+            var authorName:String = ""
+            if let displayTitle = message.author?.displayTitle {
+                authorName = displayTitle
+                if account.peerId == message.author?.id {
+                    authorName = tr(.chatServiceYou)
+                }
+            }
+            
+            var replyMessageText = ""
+            for attribute in message.attributes {
+                if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
+                    replyMessageText = pullText(from: message) as String
+                }
+            }
+            return tr(.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefix(30)))
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
                 return tr(.chatServiceGroupRemovedSelf(authorName))

@@ -104,6 +104,7 @@ fileprivate class PreviewSenderView : Control {
         
         collageButton.set(image: theme.icons.previewCollage, for: .Normal)
         collageButton.sizeToFit()
+        collageButton.isHidden = true
         
         title.backgroundColor = theme.colors.background
         
@@ -175,7 +176,11 @@ fileprivate class PreviewSenderView : Control {
         let count = medias.count
         let type: PreviewSenderType
         if state == .file {
-            type = .files
+            if medias.filter({$0 is TelegramMediaFile}).map({$0 as! TelegramMediaFile}).filter({$0.isMusic}).count == medias.count {
+                type = .audio
+            } else {
+                type = .files
+            }
         } else {
                         
             if medias.filter({$0 is TelegramMediaImage}).count == medias.count {
@@ -299,6 +304,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
     
     
     func makeItems(_ urls:[URL])  {
+        
+        if urls.isEmpty {
+            return
+        }
+        
         let initialSize = atomicSize
         let account = self.account
         

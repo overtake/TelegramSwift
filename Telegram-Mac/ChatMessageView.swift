@@ -54,6 +54,14 @@ class ChatMessageView: ChatRowView {
 //        }
         return views
     }
+    
+    override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        let point = self.contentView.convert(location, from: nil)
+        if let webpageContent = webpageContent {
+            return !NSPointInRect(point, webpageContent.frame)
+        }
+        return true
+    }
 
     override func set(item:TableRowItem, animated:Bool = false) {
         

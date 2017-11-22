@@ -18,6 +18,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(RecentUsedEmoji.self, f: { RecentUsedEmoji(decoder: $0) })
     declareEncodable(InstantViewAppearance.self, f: { InstantViewAppearance(decoder: $0) })
     declareEncodable(IVReadState.self, f: { IVReadState(decoder: $0) })
+    declareEncodable(AdditionalSettings.self, f: { AdditionalSettings(decoder: $0) })
     return
 }()
 

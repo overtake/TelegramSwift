@@ -14,6 +14,9 @@ private class EmojiTolerance : View {
     
     init(frame frameRect: NSRect, emoji:String, handle:@escaping(String)->Void) {
         super.init(frame: frameRect)
+        
+        NSLog("\(emoji)")
+        
         let modifiers = emoji.emojiSkinToneModifiers
         var x:CGFloat = 2
         

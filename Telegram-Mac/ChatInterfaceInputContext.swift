@@ -183,6 +183,11 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
 func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, includeContext: Bool) -> ChatPresentationInputQuery {
     let inputState = chatPresentationInterfaceState.effectiveInput
     if let (possibleQueryRange, possibleTypes, additionalStringRange) = textInputStateContextQueryRangeAndType(inputState, includeContext: includeContext) {
+        
+        if chatPresentationInterfaceState.state == .editing {
+            return .none
+        }
+        
         let query = String(inputState.inputText[possibleQueryRange]) //.substring(with: possibleQueryRange)
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
@@ -191,9 +196,9 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         } else if possibleTypes == [.command] {
             return .command(query)
         } else if possibleTypes == [.contextRequest], let additionalStringRange = additionalStringRange {
-            let additionalString = inputState.inputText.substring(with: additionalStringRange)
+            let additionalString = String(inputState.inputText[additionalStringRange])
             return .contextRequest(addressName: query, query: additionalString)
-        } else if possibleTypes == [.stickers], chatPresentationInterfaceState.editState == nil {
+        } else if possibleTypes == [.stickers] {
             return .stickers(query)
         } else if possibleTypes == [.emoji] {
             return .emoji(query)

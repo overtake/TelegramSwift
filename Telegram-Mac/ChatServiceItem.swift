@@ -302,7 +302,7 @@ class ChatServiceItem: ChatRowItem {
         return ChatServiceRowView.self
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         
         var items:[ContextMenuItem] = []
         let chatInteraction = self.chatInteraction

@@ -529,7 +529,13 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.updateEditingNames(firstName: firstName, lastName: lastName)
             })
         case let .about(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(.peerInfoAbout), text:text, account: arguments.account, detectLinks:true)
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(.peerInfoAbout), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, _, _ in
+                if toChat {
+                    arguments.peerChat(peerId)
+                } else {
+                    arguments.peerInfo(peerId)
+                }
+            }, hashtag: arguments.account.context.globalSearch)
         case let .bio(_, text):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(.peerInfoBio), text:text, account: arguments.account, detectLinks:false)
         case let .phoneNumber(_, _, value):
@@ -657,8 +663,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                 
                 entries.append(UserInfoEntry.sharedMedia(sectionId: sectionId))
             }
-            
-            entries.append(UserInfoEntry.notifications(sectionId: sectionId, settings: view.notificationSettings))
+            if arguments.account.peerId != arguments.peerId {
+                entries.append(UserInfoEntry.notifications(sectionId: sectionId, settings: view.notificationSettings))
+            }
             
             if (peer is TelegramSecretChat) {
                 entries.append(UserInfoEntry.encryptionKey(sectionId: sectionId))

@@ -288,7 +288,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         let vars = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                             let server = escape(with: server)
-                            return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass]), applyProxy: applyProxy)
+                            return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), applyProxy: applyProxy)
                         }
                     default:
                         break
@@ -399,7 +399,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                 case known_scheme[5]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)
-                        return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass]), applyProxy: applyProxy)
+                        return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), applyProxy: applyProxy)
                     }
                 default:
                     break
@@ -438,7 +438,7 @@ func proxySettings(from url:String) -> (ProxySettings?, Bool) {
         if action.hasPrefix("socks") {
             if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                 let server = escape(with: server)
-                return (ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass]), true)
+                return (ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), true)
             }
             return (nil , true)
         }

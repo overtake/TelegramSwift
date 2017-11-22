@@ -168,7 +168,7 @@ class ChatMessageItem: ChatRowItem {
                     }
                     
                     
-                    return strongSelf.menuItems() |> map { basic in
+                    return strongSelf.menuItems(in: NSZeroPoint) |> map { basic in
                         var basic = basic
                         basic.remove(at: 1)
                         return items + basic
@@ -211,8 +211,9 @@ class ChatMessageItem: ChatRowItem {
         return contentSize
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
-        var items = super.menuItems()
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        var items = super.menuItems(in: location)
         let text = messageText.string
         
         let account = self.account!

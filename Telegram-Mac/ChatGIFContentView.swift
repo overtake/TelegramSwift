@@ -134,7 +134,7 @@ class ChatGIFContentView: ChatMediaContentView {
                 
                 path = nil
                                 
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
                 player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))

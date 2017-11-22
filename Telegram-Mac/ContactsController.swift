@@ -185,8 +185,8 @@ private func entriesForView(_ view: ContactPeersView) -> [ContactsEntry] {
         }
         
         entries.append(.addContact)
-        entries.append(.separator(tr(.contactsContacsSeparator)))
-        entries.append(.vcard(accountPeer))
+        //entries.append(.separator(tr(.contactsContacsSeparator)))
+        //entries.append(.vcard(accountPeer))
         
         entries.sort()
         

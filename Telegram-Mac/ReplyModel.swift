@@ -164,13 +164,24 @@ class ReplyModel: ChatAccessoryModel {
         updateImageIfNeeded()
 
         if let message = message {
+            
+            var peer = message.author
         
+            for attr in message.attributes {
+                if let _ = attr as? SourceReferenceMessageAttribute {
+                    if let info = message.forwardInfo {
+                        peer = info.author
+                    }
+                    break
+                }
+            }
+            
             
             var text = pullText(from:message, attachEmoji: false) as String
             if text.isEmpty {
                 text = serviceMessageText(message, account: account)
             }
-            self.headerAttr = .initialize(string: !isPinned ? message.author?.displayTitle : tr(.chatHeaderPinnedMessage), color: theme.colors.blueUI, font: .medium(.text))
+            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(.chatHeaderPinnedMessage), color: theme.colors.blueUI, font: .medium(.text))
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
         } else {
             self.headerAttr = nil

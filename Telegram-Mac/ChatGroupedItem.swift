@@ -17,13 +17,68 @@ class ChatGroupedItem: ChatRowItem {
     fileprivate let layout: GroupedLayout
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ entry: ChatHistoryEntry) {
         
-        if case let .groupedPhotos(messages) = entry {
+        var captionLayout: TextViewLayout?
+        
+        if case let .groupedPhotos(messages, _) = entry {
+            
+            let messages = messages.map{$0.message!}
             self.layout = GroupedLayout(messages)
+            
+            var captionMessage: Message? = nil
+            for message in messages {
+                if let _ = captionMessage, !message.text.isEmpty {
+                    captionMessage = nil
+                    break
+                }
+                if !message.text.isEmpty {
+                    captionMessage = message
+                }
+            }
+            
+            if let message = captionMessage {
+                var caption:NSMutableAttributedString = NSMutableAttributedString()
+                NSAttributedString.initialize()
+                _ = caption.append(string: message.text, color: theme.colors.text, font: NSFont.normal(.custom(theme.fontSize)))
+                var types:ParsingType = [.Links, .Mentions, .Hashtags]
+                
+                if let peer = messageMainPeer(message) as? TelegramUser {
+                    if peer.botInfo != nil {
+                        types.insert(.Commands)
+                    }
+                } else if let peer = messageMainPeer(message) as? TelegramChannel {
+                    switch peer.info {
+                    case .group:
+                        types.insert(.Commands)
+                    default:
+                        break
+                    }
+                } else {
+                    types.insert(.Commands)
+                }
+                
+                var hasEntities: Bool = false
+                for attr in message.attributes {
+                    if attr is TextEntitiesMessageAttribute {
+                        hasEntities = true
+                        break
+                    }
+                }
+                if hasEntities {
+                    caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy).mutableCopy() as! NSMutableAttributedString
+                }
+                caption.detectLinks(type: types, account: account, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.modalSearch, command: chatInteraction.forceSendMessage)
+                captionLayout = TextViewLayout(caption, alignment: .left)
+                captionLayout?.interactions = globalLinkExecutor
+                
+            }
+            
         } else {
             fatalError("")
         }
         
         super.init(initialSize, chatInteraction, account, entry)
+        
+        self.captionLayout = captionLayout
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -34,7 +89,54 @@ class ChatGroupedItem: ChatRowItem {
     override var topInset:CGFloat {
         return 4
     }
+    
+    func contentNode(for index: Int) -> ChatMediaContentView.Type {
+        return ChatLayoutUtils.contentNode(for: layout.messages[index].media[0])
+    }
 
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        var message: Message? = nil
+        for i in 0 ..< layout.count {
+            if NSPointInRect(location, layout.frame(at: i)) {
+                message = layout.messages[i]
+                break
+            }
+        }
+        if let message = message, let peer = peer {
+            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
+        }
+        
+        var items: [ContextMenuItem] = []
+        
+        items.append(ContextMenuItem(tr(.messageContextSelect), handler: { [weak self] in
+            guard let `self` = self else {return}
+            let messageIds = self.layout.messages.map{$0.id}
+            self.chatInteraction.update({ current in
+                var current = current
+                for id in messageIds {
+                    current = current.withToggledSelectedMessage(id)
+                }
+                return current
+            })
+        }))
+        
+        var canDelete = true
+        for i in 0 ..< layout.count {
+            if !canDeleteMessage(layout.messages[i], account: account)  {
+                canDelete = false
+                break
+            }
+        }
+        
+        if canDelete {
+            items.append(ContextMenuItem(tr(.messageContextDelete), handler: { [weak self] in
+                guard let `self` = self else {return}
+                self.chatInteraction.deleteMessages(self.layout.messages.map{$0.id})
+            }))
+        }
+        
+        return .single(items)
+    }
     
     override func viewClass() -> AnyClass {
         return ChatGroupedView.self
@@ -45,6 +147,14 @@ class ChatGroupedItem: ChatRowItem {
 private class ChatGroupedView : ChatRowView {
     
     private var contents: [ChatMediaContentView] = []
+    private var selectionBackground: View = View()
+    
+
+    override func updateColors() {
+        super.updateColors()
+        selectionBackground.layer?.cornerRadius = .cornerRadius
+        selectionBackground.background = theme.colors.blackTransparent
+    }
     
     override func notify(with value: Any, oldValue: Any, animated: Bool) {
         super.notify(with: value, oldValue: oldValue, animated: animated)
@@ -65,20 +175,22 @@ private class ChatGroupedView : ChatRowView {
         if let item = item as? ChatGroupedItem {
             
             if selectingMode {
-                for content in contents {
-                    let subviews = content.subviews
-                    var selectingControl: SelectingControl?
-                    for subview in subviews {
-                        if subview is SelectingControl {
-                            selectingControl = subview as? SelectingControl
-                            break
+                if contents.count > 1 {
+                    for content in contents {
+                        let subviews = content.subviews
+                        var selectingControl: SelectingControl?
+                        for subview in subviews {
+                            if subview is SelectingControl {
+                                selectingControl = subview as? SelectingControl
+                                break
+                            }
                         }
+                        if selectingControl == nil {
+                            selectingControl = SelectingControl(unselectedImage: theme.icons.chatGroupToggleUnselected, selectedImage: theme.icons.chatGroupToggleSelected)
+                        }
+                        selectingControl?.setFrameOrigin(5, 5)
+                        content.addSubview(selectingControl!)
                     }
-                    if selectingControl == nil {
-                        selectingControl = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
-                    }
-                    selectingControl?.setFrameOrigin(5, 5)
-                    content.addSubview(selectingControl!)
                 }
             } else {
                 for content in contents {
@@ -109,10 +221,12 @@ private class ChatGroupedView : ChatRowView {
         guard let item = item as? ChatGroupedItem else {return}
         guard let selectingView = selectingView  else {return}
 
-        var selected: Bool = false
+        
+
+        var selected: Bool = true
         for message in item.layout.messages {
-            if item.chatInteraction.presentation.isSelectedMessageId(message.id) {
-                selected = true
+            if !item.chatInteraction.presentation.isSelectedMessageId(message.id) {
+                selected = false
                 break
             }
         }
@@ -123,6 +237,8 @@ private class ChatGroupedView : ChatRowView {
         
         guard let item = item as? ChatGroupedItem else {return}
         
+
+        
         if contents.count > item.layout.count {
             let contentCount = contents.count
             let layoutCount = item.layout.count
@@ -131,10 +247,22 @@ private class ChatGroupedView : ChatRowView {
                 contents[i].removeFromSuperview()
             }
             contents = contents.subarray(with: NSMakeRange(0, layoutCount))
+            
+            for i in 0 ..< contents.count {
+                if !contents[i].isKind(of: item.contentNode(for: i))  {
+                    let node = item.contentNode(for: i)
+                    let view = node.init(frame:NSZeroRect)
+                    replaceSubview(contents[i], with: view)
+                    contents[i] = view
+                }
+            }
         } else if contents.count < item.layout.count {
             let contentCount = contents.count
-            for _ in contentCount ..< item.layout.count {
-                contents.append(ChatInteractiveContentView(frame: NSZeroRect))
+            for i in contentCount ..< item.layout.count {
+                let node = item.contentNode(for: i)
+                let view = node.init(frame:NSZeroRect)
+                //view.progressDimension = NSMakeSize(20, 20)
+                contents.append(view)
             }
         }
         
@@ -145,7 +273,11 @@ private class ChatGroupedView : ChatRowView {
         assert(contents.count == item.layout.count)
         
         for i in 0 ..< item.layout.count {
+            contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
+            
             contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, positionFlags: item.layout.position(at: i))
+            
+            contents[i].change(pos: item.layout.frame(at: i).origin, animated: animated)
         }
         super.set(item: item, animated: animated)
 
@@ -189,8 +321,9 @@ private class ChatGroupedView : ChatRowView {
             }
         }
         
-        
     }
+    
+    
     
     override func forceSelectItem(_ item: ChatRowItem, onRightClick: Bool) {
         
@@ -235,10 +368,6 @@ private class ChatGroupedView : ChatRowView {
             })
         }
         
-        
-//        if let message = .message {
-//            item.chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
-//        }
     }
     
     override func viewWillMove(toSuperview newSuperview: NSView?) {
@@ -311,6 +440,40 @@ private class ChatGroupedView : ChatRowView {
         }
         
         return theme.colors.background
+    }
+    
+    
+    
+    override func onShowContextMenu() {
+        guard let window = window as? Window else {return}
+        guard let item = item as? ChatGroupedItem else {return}
+        
+        let point = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        
+        var selected: Bool = false
+        
+        for i in 0 ..< item.layout.count {
+            if NSPointInRect(point, item.layout.frame(at: i)) {
+                selectionBackground.removeFromSuperview()
+                selectionBackground.setFrameSize(item.layout.frame(at: i).size)
+                contents[i].addSubview(selectionBackground)
+                selected = true
+                break
+            }
+        }
+        
+        if !selected {
+            super.onShowContextMenu()
+        }
+    }
+    
+    override func onCloseContextMenu() {
+        super.onCloseContextMenu()
+        selectionBackground.removeFromSuperview()
+    }
+    
+    override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        return false
     }
     
     

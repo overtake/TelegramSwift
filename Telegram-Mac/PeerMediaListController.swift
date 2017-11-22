@@ -149,15 +149,15 @@ fileprivate func preparedMediaTransition(from fromView:[PeerMediaSharedEntry]?, 
     let (removed,inserted,updated) = proccessEntries(fromView, right: toView, { (entry) -> TableRowItem in
         
         switch entry {
-        case .messageEntry:
-            if tags == .file {
+        case .messageEntry(let message):
+            if tags == .file, message.media.first is TelegramMediaFile {
                 return PeerMediaFileRowItem(initialSize, interaction, account, entry)
-            } else if tags == .webPage {
+            } else if tags == .webPage, message.media.first is TelegramMediaWebpage {
                 return PeerMediaWebpageRowItem(initialSize,interaction,account,entry)
-            } else if tags == .music {
+            } else if tags == .music, message.media.first is TelegramMediaFile {
                 return PeerMediaMusicRowItem(initialSize, interaction, account, entry)
             } else {
-                return GeneralRowItem(initialSize, height: 20, stableId: entry.stableId)
+                return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
             }
         case let .searchEntry(isLoading):
             return SearchRowItem(initialSize, stableId: entry.stableId, searchInteractions: searchInteractions, isLoading: isLoading, inset: NSEdgeInsets(left: 10, right: 10, top: 10, bottom: 10))
@@ -306,7 +306,7 @@ class PeerMediaListController: GenericViewController<TableView> {
         }))
 
         
-        location.set(.Scroll(index: MessageIndex.upperBound(peerId: peerId), anchorIndex: MessageIndex.upperBound(peerId: peerId), sourceIndex: MessageIndex.upperBound(peerId: peerId), scrollPosition: .none(nil), animated: false))
+        location.set(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.upperBound, scrollPosition: .none(nil), animated: false))
      
         genericView.setScrollHandler { [weak self] scroll in
             
@@ -324,7 +324,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                 
                 if let messageIndex = messageIndex {
                     let _ = animated.swap(false)
-                    location.set(.Navigation(index: messageIndex, anchorIndex: messageIndex))
+                    location.set(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex)))
                 }
             }
         }

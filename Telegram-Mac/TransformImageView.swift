@@ -89,6 +89,7 @@ open class TransformImageView: NSView {
     public func set(arguments:TransformImageArguments) ->Void {
         argumentsPromise.set(.single(arguments))
     }
+
     
     override open func copy() -> Any {
         let view = NSView()

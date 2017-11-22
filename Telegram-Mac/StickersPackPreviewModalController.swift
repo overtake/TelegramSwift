@@ -216,7 +216,7 @@ class StickersPackPreviewModalController: ModalViewController {
                 }
                 
                 _ = (strongSelf.account.postbox.loadedPeerWithId(peerId) |> filter {$0.canSendMessage && !$0.stickersRestricted} |> mapToSignal { _ in
-                    return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: media, replyToMessageId: nil)])
+                    return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: media, replyToMessageId: nil, localGroupingKey: nil)])
                 }) .start()
                 
             }

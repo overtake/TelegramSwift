@@ -45,7 +45,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 }
                 
                 if let iconImageRepresentation = iconImageRepresentation {
-                     icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation])
+                     icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil)
                     
                     let imageCorners = ImageCorners(radius: iconSize.width/2)
                     iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
@@ -73,7 +73,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         } else {
             
             var link:String = ""
-            let links = ObjcUtils.textCheckingResults(forText: message.text, highlightMentionsAndTags: false, highlightCommands: false)
+            let links = ObjcUtils.textCheckingResults(forText: message.text, highlightMentionsAndTags: false, highlightCommands: false, dotInMention: false)
             if let links = links, !links.isEmpty {
                 let range = (links[0] as! NSValue).rangeValue
                 link = message.text.nsstring.substring(with: range)

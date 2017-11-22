@@ -142,8 +142,8 @@ class ChatDateStickView : TableStickView {
     }
     
     override func updateIsVisible(_ visible: Bool, animated: Bool) {
-        textView.change(opacity: visible ? 1 : 0, animated: animated)
-        containerView.change(opacity: visible ? 1 : 0, animated: animated)
+        textView.change(opacity: visible ? 1 : 0, animated: false)
+        containerView.change(opacity: visible ? 1 : 0, animated: false)
     }
     
     override var header: Bool {
@@ -183,9 +183,9 @@ class ChatDateStickView : TableStickView {
             containerView.setFrameSize(textView.frame.width + 16, textView.frame.height + 8)
             containerView.layer?.cornerRadius = containerView.frame.height / 2
             borderView.layer?.cornerRadius = containerView.frame.height / 2
-            if animated {
-                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
+//            if animated {
+//                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+//            }
             
             self.needsLayout = true
         }

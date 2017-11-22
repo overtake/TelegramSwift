@@ -126,13 +126,21 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    open func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        return true
+    }
+    
+    open func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        return convert(point, from: nil)
+    }
+    
     open func showContextMenu(_ event:NSEvent) -> Void {
         
         menuDisposable.set(nil)
         contextMenu = nil
         
         if let item = item {
-            menuDisposable.set((item.menuItems() |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
+            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
                 if let strongSelf = self {
                     let menu = ContextMenu()
                     menu.onShow = { [weak strongSelf] menu in

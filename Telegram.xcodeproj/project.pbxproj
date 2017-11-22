@@ -221,7 +221,6 @@
 		C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9F901E1F8F85002CD3F3 /* MajorBackNavigationBar.swift */; };
 		C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC31E24FFF3002CD3F3 /* PasscodeLockController.swift */; };
 		C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FC61E2500AC002CD3F3 /* PasscodeSettingsViewController.swift */; };
-		C24D9FDC1E267932002CD3F3 /* PreviewSenderItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D9FDB1E267932002CD3F3 /* PreviewSenderItems.swift */; };
 		C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */; };
 		C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */; };
 		C24DABA21E083185005EE404 /* YTVimeoExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = C24DAB9A1E083184005EE404 /* YTVimeoExtractor.m */; };
@@ -273,6 +272,8 @@
 		C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E2391DE4D3DB0022A29F /* ChatInterfaceInputContext.swift */; };
 		C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */; };
 		C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */; };
+		C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */; };
+		C256A9161FB9E1490043D497 /* AdditionalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C256A9151FB9E1490043D497 /* AdditionalSettings.swift */; };
 		C258D1B41F8D385700458478 /* PreHistorySettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C258D1B31F8D385700458478 /* PreHistorySettingsController.swift */; };
 		C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C258D1B51F8D3A0D00458478 /* PreHistoryControllerStructures.swift */; };
 		C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */; };
@@ -811,7 +812,6 @@
 		C24D9FC31E24FFF3002CD3F3 /* PasscodeLockController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasscodeLockController.swift; sourceTree = "<group>"; };
 		C24D9FC61E2500AC002CD3F3 /* PasscodeSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasscodeSettingsViewController.swift; sourceTree = "<group>"; };
 		C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivacyAndSecurityViewController.swift; sourceTree = "<group>"; };
-		C24D9FDB1E267932002CD3F3 /* PreviewSenderItems.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderItems.swift; sourceTree = "<group>"; };
 		C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryVideoItem.swift; sourceTree = "<group>"; };
 		C24DAB921E0828B6005EE404 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		C24DAB981E083184005EE404 /* YTVimeoError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YTVimeoError.h; sourceTree = "<group>"; };
@@ -887,6 +887,8 @@
 		C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceStateContextQueries.swift; sourceTree = "<group>"; };
 		C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextListRowItem.swift; sourceTree = "<group>"; };
 		C25692971EDD85FB009EE421 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
+		C256A9151FB9E1490043D497 /* AdditionalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalSettings.swift; sourceTree = "<group>"; };
 		C258D1B31F8D385700458478 /* PreHistorySettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreHistorySettingsController.swift; sourceTree = "<group>"; };
 		C258D1B51F8D3A0D00458478 /* PreHistoryControllerStructures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreHistoryControllerStructures.swift; sourceTree = "<group>"; };
 		C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputRecordingView.swift; sourceTree = "<group>"; };
@@ -1195,6 +1197,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
 				C29FF4A51FA70A8A00BFCA01 /* Sparkle.framework in Frameworks */,
 				C29FF4A61FA70A8A00BFCA01 /* HockeySDK.framework in Frameworks */,
@@ -1897,7 +1900,6 @@
 			isa = PBXGroup;
 			children = (
 				C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */,
-				C24D9FDB1E267932002CD3F3 /* PreviewSenderItems.swift */,
 				C23044821F98F8B400977C51 /* MediaPreviewRowItem.swift */,
 				C246D6271FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift */,
 			);
@@ -2139,6 +2141,7 @@
 				C296707A1F0FBFB500884DA2 /* ThemeSettings.swift */,
 				C24FD40F1F20FBFB00A97196 /* RecentUsedEmoji.swift */,
 				C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */,
+				C256A9151FB9E1490043D497 /* AdditionalSettings.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -2914,6 +2917,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */,
 				C2EBBEA01FB5CA94009AD8ED /* CoreServices.framework */,
 				C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */,
 				C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */,
@@ -3330,6 +3334,7 @@
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				C2DF47BE1DE79574003AA6C0 /* opus_header.c in Sources */,
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
+				C256A9161FB9E1490043D497 /* AdditionalSettings.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,
 				C2DF47D01DE82475003AA6C0 /* OpusAudioPlayer.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
@@ -3342,7 +3347,6 @@
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
-				C24D9FDC1E267932002CD3F3 /* PreviewSenderItems.swift in Sources */,
 				C2271F511D9C392400424F7B /* SPopoverRowView.swift in Sources */,
 				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,

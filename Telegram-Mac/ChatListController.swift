@@ -159,6 +159,16 @@ class ChatListController : PeersListController {
                 return false
             }
             modalAction.afterInvoke()
+            
+            if let modalAction = modalAction as? FWDNavigationAction {
+                if item.peerId == account.peerId {
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, account: account, peerId: account.peerId).start()
+                    _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                    navigationController?.removeModalAction()
+                    return false
+                }
+            }
+            
         }
         return true
     }

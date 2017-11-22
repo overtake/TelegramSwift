@@ -240,9 +240,9 @@ func chatMessagePhoto(account: Account, photo: TelegramMediaImage, toRepresentat
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
             
             let drawingRect = arguments.drawingRect
-            let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
-            
+            let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize)//.fitted(arguments.imageSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
                 if fullSizeComplete {
@@ -287,7 +287,7 @@ func chatMessagePhoto(account: Account, photo: TelegramMediaImage, toRepresentat
             context.withContext { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.fill(arguments.drawingRect)
+                   // c.fill(arguments.drawingRect)
                 }
                 
                 c.setBlendMode(.copy)
@@ -642,8 +642,8 @@ func chatMessageVideo(account: Account, video: TelegramMediaFile, scale:CGFloat)
             }
             
             let drawingRect = arguments.drawingRect
-            let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize)//.fitted(arguments.imageSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeDataAndPath = fullSizeDataAndPath {
@@ -706,7 +706,7 @@ func chatMessageVideo(account: Account, video: TelegramMediaFile, scale:CGFloat)
             context.withContext { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.fill(arguments.drawingRect)
+                    //c.fill(arguments.drawingRect)
                 }
                 
                 c.setBlendMode(.copy)
@@ -766,42 +766,7 @@ func chatSecretMessageVideo(account: Account, video: TelegramMediaFile, scale:CG
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
             let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
-            
-            /*var fullSizeImage: CGImage?
-             if let fullSizeDataAndPath = fullSizeDataAndPath {
-             if fullSizeComplete {
-             if video.mimeType.hasPrefix("video/") {
-             let tempFilePath = NSTemporaryDirectory() + "\(arc4random()).mov"
-             
-             _ = try? FileManager.default.removeItem(atPath: tempFilePath)
-             _ = try? FileManager.default.linkItem(atPath: fullSizeDataAndPath.1, toPath: tempFilePath)
-             
-             let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
-             let imageGenerator = AVAssetImageGenerator(asset: asset)
-             imageGenerator.maximumSize = CGSize(width: 800.0, height: 800.0)
-             imageGenerator.appliesPreferredTrackTransform = true
-             if let image = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil) {
-             fullSizeImage = image
-             }
-             }
-             /*let options: [NSString: NSObject] = [
-             kCGImageSourceThumbnailMaxPixelSize: max(fittedSize.width * context.scale, fittedSize.height * context.scale),
-             kCGImageSourceCreateThumbnailFromImageAlways: true
-             ]
-             if let imageSource = CGImageSourceCreateWithData(fullSizeData, nil), image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
-             fullSizeImage = image
-             }*/
-             } else {
-             /*let imageSource = CGImageSourceCreateIncremental(nil)
-             CGImageSourceUpdateData(imageSource, fullSizeData as CFDataRef, fullSizeData.length >= fullTotalSize)
-             
-             var options: [NSString : NSObject!] = [:]
-             options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-             if let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionaryRef) {
-             fullSizeImage = image
-             }*/
-             }
-             }*/
+    
             var blurredImage: CGImage?
             
             if blurredImage == nil {

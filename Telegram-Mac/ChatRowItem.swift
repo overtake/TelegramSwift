@@ -298,6 +298,27 @@ class ChatRowItem: TableRowItem {
         return entry.stableId
     }
     
+    var isStorage: Bool {
+        if let message = message {
+            for attr in message.attributes {
+                if let attr = attr as? SourceReferenceMessageAttribute {
+                    return chatInteraction.peerId == account.peerId && account.peerId != attr.messageId.peerId
+                }
+            }
+        }
+        return false
+    }
+    
+    func gotoSourceMessage() {
+        if let message = message {
+            for attr in message.attributes {
+                if let attr = attr as? SourceReferenceMessageAttribute {
+                    chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                }
+            }
+        }
+    }
+    
     var isSharable: Bool {
         var peers:[Peer] = []
         if let peer = peer {
@@ -401,13 +422,19 @@ class ChatRowItem: TableRowItem {
         var itemType: ChatItemType = .Full(isAdmin: false)
         var fwdType: ForwardItemType? = nil
         
+        var object = object
+        if case let .groupedPhotos(entries, _) = object {
+            object = entries.last!
+        }
+        
         if case let .MessageEntry(_message, _isRead, _itemType, _fwdType, _) = object {
             message = _message
             isRead = _isRead
             itemType = _itemType
             fwdType = _fwdType
-        }  else if case let .groupedPhotos(messages) = object {
-            message = messages[0]
+        }
+        if message?.id.peerId == account.peerId {
+            itemType = .Full(isAdmin: false)
         }
         
         self.message = message
@@ -416,14 +443,34 @@ class ChatRowItem: TableRowItem {
             self.itemType = itemType
             self.isRead = isRead
             self.isGame = message.media.first is TelegramMediaGame
+            
+            var isHasSource: Bool = false
+            
+            for attr in message.attributes {
+                if let _ = attr as? SourceReferenceMessageAttribute {
+                    isHasSource = true
+                    if let info = message.forwardInfo {
+                        self.peer = info.author
+                    }
+                    break
+                }
+            }
+            
             if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                 self.peer = peer
                 
-                if let author = message.author, author.id != peer.id, !message.flags.contains(.Unsent), !message.flags.contains(.Failed) {
-                    postAuthorAttributed = .initialize(string: author.displayTitle, color: theme.colors.grayText, font: NSFont.normal(.short))
+                for attr in message.attributes {
+                    if let attr = attr as? AuthorSignatureMessageAttribute {
+                        if !message.flags.contains(.Unsent), !message.flags.contains(.Failed) {
+                            postAuthorAttributed = .initialize(string: attr.signature, color: theme.colors.grayText, font: NSFont.normal(.short))
+                        }
+                        break
+                    }
                 }
                 
-            } else if let author = message.author {
+                
+                
+            } else if let author = message.author, peer == nil {
                 if author is TelegramSecretChat {
                     peer = messageMainPeer(message)
                 } else {
@@ -437,7 +484,7 @@ class ChatRowItem: TableRowItem {
             
             if let info = message.forwardInfo {
                 
-                var accept:Bool = true
+                var accept:Bool = !isHasSource
                 
                 if let media = message.media.first as? TelegramMediaFile {
                     for attr in media.attributes {
@@ -451,6 +498,7 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                 }
+                
                 
                 if accept {
                     forwardType = fwdType
@@ -744,99 +792,152 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
-        
-        if self.chatInteraction.isLogInteraction {
-            return .single([])
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        if let message = message, let peer = peer {
+            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
         }
-        
-        var items:[ContextMenuItem] = []
-        let chatInteraction = self.chatInteraction
-        if chatInteraction.presentation.state != .selecting {
-            if let message = message, let peer = peer {
-                let account = self.account!
-                
-                if peer.canSendMessage {
-                    items.append(ContextMenuItem(tr(.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(.messageContextReplyHelp)))" : ""), handler: {
-                        chatInteraction.setupReplyMessage(message.id)
-                    }))
-                }
-                
-                if let peer = message.peers[message.id.peerId] as? TelegramChannel {
-                    if let address = peer.addressName {
-                        items.append(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
-                            copyToClipboard("t.me/\(address)/\(message.id.id)")
-                        }))
-                    }
-                    if peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
-                        items.append(ContextMenuItem(tr(.messageContextPin), handler: {
-                            if peer.isSupergroup {
-                                confirm(for: mainWindow, with: appName, and: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
-                                    chatInteraction.updatePinned(message.id, false, result == .thrid)
-                                })
-                            } else {
-                                chatInteraction.updatePinned(message.id, false, true)
-                            }
-                            
-                        }))
-                    }
-                }
-                
-                items.append(ContextSeparatorItem())
-                
-                if canEditMessage(message, account:account) {
-                    items.append(ContextMenuItem(tr(.messageContextEdit), handler: {
-                        chatInteraction.beginEditingMessage(message)
-                    }))
-                }
-                
-                if canForwardMessage(message, account: account) {
-                    items.append(ContextMenuItem(tr(.messageContextForward), handler: {
-                        chatInteraction.forwardMessages([message.id])
-                    }))
-                }
-               
-                if canDeleteMessage(message, account: account) {
-                    items.append(ContextMenuItem(tr(.messageContextDelete), handler: {
-                        chatInteraction.deleteMessages([message.id])
-                    }))
-                }
-                
-                
-                items.append(ContextMenuItem(tr(.messageContextSelect), handler: {
-                    chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
-                }))
-                
-
-                if canForwardMessage(message, account: account) {
-                    items.append(ContextSeparatorItem())
-                    items.append(ContextMenuItem(tr(.messageContextForwardToCloud), handler: {
-                        _ = Sender.forwardMessages(messageIds: [message.id], account: account, peerId: account.peerId).start()
-                    }))
-                    
-                }
- 
-                
-                for media in message.media {
-                    if let file = media as? TelegramMediaFile {
-                        if file.isVideo && file.isAnimated {
-                            
-                            if !canForwardMessage(message, account: account) {
-                                items.append(ContextSeparatorItem())
-                            }
-                            
-                            items.append(ContextMenuItem(tr(.messageContextSaveGif), handler: {
-                                let _ = addSavedGif(postbox: account.postbox, file: file).start()
-                            }))
-                        }
-                    }
-                }
-                
-            }
-        }
-        
-        return .single(items)
+        return super.menuItems(in: location)
     }
 }
 
-
+func chatMenuItems(for message: Message, account: Account, chatInteraction: ChatInteraction, peer: Peer) -> Signal<[ContextMenuItem], Void> {
+    
+    if chatInteraction.isLogInteraction || chatInteraction.presentation.state == .selecting {
+        return .single([])
+    }
+    
+    var items:[ContextMenuItem] = []
+    
+    if peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
+        items.append(ContextMenuItem(tr(.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(.messageContextReplyHelp)))" : ""), handler: {
+            chatInteraction.setupReplyMessage(message.id)
+        }))
+    }
+    
+    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if let address = peer.addressName {
+            items.append(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                copyToClipboard("t.me/\(address)/\(message.id.id)")
+            }))
+        }
+        if peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
+            items.append(ContextMenuItem(tr(.messageContextPin), handler: {
+                if peer.isSupergroup {
+                    confirm(for: mainWindow, with: appName, and: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
+                        chatInteraction.updatePinned(message.id, false, result == .thrid)
+                    })
+                } else {
+                    chatInteraction.updatePinned(message.id, false, true)
+                }
+                
+            }))
+        }
+    }
+    
+    items.append(ContextSeparatorItem())
+    
+    if canEditMessage(message, account:account) {
+        items.append(ContextMenuItem(tr(.messageContextEdit), handler: {
+            chatInteraction.beginEditingMessage(message)
+        }))
+    }
+    
+    if canForwardMessage(message, account: account) {
+        items.append(ContextMenuItem(tr(.messageContextForward), handler: {
+            chatInteraction.forwardMessages([message.id])
+        }))
+    }
+    
+    if canDeleteMessage(message, account: account) {
+        items.append(ContextMenuItem(tr(.messageContextDelete), handler: {
+            chatInteraction.deleteMessages([message.id])
+        }))
+    }
+    
+    
+    items.append(ContextMenuItem(tr(.messageContextSelect), handler: {
+        chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
+    }))
+    
+    
+    if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId {
+        items.append(ContextSeparatorItem())
+        items.append(ContextMenuItem(tr(.messageContextForwardToCloud), handler: {
+            _ = Sender.forwardMessages(messageIds: [message.id], account: account, peerId: account.peerId).start()
+        }))
+    }
+    
+    
+    for media in message.media {
+        if let file = media as? TelegramMediaFile {
+            if file.isVideo && file.isAnimated {
+                
+                if !canForwardMessage(message, account: account) {
+                    items.append(ContextSeparatorItem())
+                }
+                
+                items.append(ContextMenuItem(tr(.messageContextSaveGif), handler: {
+                    let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                }))
+            }
+        }
+    }
+    
+    let signal:Signal<[ContextMenuItem], Void> = .single(items)
+    
+    if let file = message.media.first as? TelegramMediaFile {
+        return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+            var items = items
+            return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
+                if data.complete {
+                    items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
+                        saveAs(file, account: account)
+                    }))
+                }
+                
+                if file.isSticker, let fileId = file.id {
+                    return account.postbox.modify { modifier -> [ContextMenuItem] in
+                        let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
+                        items.append(ContextMenuItem( !saved ? tr(.chatContextAddFavoriteSticker) : tr(.chatContextRemoveFavoriteSticker), handler: {
+                            
+                            if !saved {
+                                _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
+                            } else {
+                                _ = removeSavedSticker(postbox: account.postbox, mediaId: fileId).start()
+                            }
+                        }))
+                        
+                        return items
+                    }
+                }
+                
+                return .single(items)
+            }
+        }
+    } else if let image = message.media.first as? TelegramMediaImage {
+        return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+            var items = items
+            if let resource = image.representations.last?.resource {
+                return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
+                    if data.complete {
+                        items.append(ContextMenuItem(tr(.galleryContextCopyToClipboard), handler: {
+                            if let path = link(path: data.path, ext: "jpg") {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.writeObjects([NSURL(fileURLWithPath: path)])
+                            }
+                        }))
+                        items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
+                            savePanel(file: data.path, ext: "jpg", for: mainWindow)
+                        }))
+                    }
+                    return items
+                }
+            } else {
+                return .single(items)
+            }
+        }
+    }
+    
+    return signal
+}
