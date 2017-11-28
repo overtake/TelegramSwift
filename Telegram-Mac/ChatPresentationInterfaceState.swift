@@ -554,7 +554,7 @@ struct ChatPresentationInterfaceState: Equatable {
         return false
     }
     
-    let maxInput:Int32 = 10000
+    let maxInput:Int32 = 50000
     let maxShortInput:Int32 = 200
     
     var maxInputCharacters:Int32 {

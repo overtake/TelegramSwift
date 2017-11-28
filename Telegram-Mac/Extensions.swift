@@ -1718,6 +1718,9 @@ extension Array {
     func subarray(with range: NSRange) -> Array {
         return Array(self[range.min ..< range.max])
     }
+    mutating func move(at oldIndex: Int, to newIndex: Int) {
+        self.insert(self.remove(at: oldIndex), at: newIndex)
+    }
 }
 extension Array {
     func chunks(_ chunkSize: Int) -> [[Element]] {

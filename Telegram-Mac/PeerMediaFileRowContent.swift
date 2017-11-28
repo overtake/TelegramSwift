@@ -130,7 +130,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         actionView.isSelectable = false
-        
+        actionView.userInteractionEnabled = false
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(nameView)

@@ -70,6 +70,7 @@ fileprivate class PreviewSenderView : Control {
         
         photoButton.toolTip = tr(.previewSenderMediaTooltip)
         fileButton.toolTip = tr(.previewSenderFileTooltip)
+        collageButton.toolTip = tr(.previewSenderCollageTooltip)
         
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachPhoto), for: .Normal)
         photoButton.sizeToFit()
@@ -84,11 +85,12 @@ fileprivate class PreviewSenderView : Control {
         
         photoButton.set(handler: { [weak self] _ in
             self?.sendAsFile.set(.media)
-            
+            FastSettings.toggleIsNeedCollage(false)
         }, for: .Click)
         
         collageButton.set(handler: { [weak self] _ in
             self?.sendAsFile.set(.collage)
+            FastSettings.toggleIsNeedCollage(true)
         }, for: .Click)
         
         fileButton.set(handler: { [weak self] _ in
@@ -104,7 +106,6 @@ fileprivate class PreviewSenderView : Control {
         
         collageButton.set(image: theme.icons.previewCollage, for: .Normal)
         collageButton.sizeToFit()
-        collageButton.isHidden = true
         
         title.backgroundColor = theme.colors.background
         
@@ -175,33 +176,45 @@ fileprivate class PreviewSenderView : Control {
         
         let count = medias.count
         let type: PreviewSenderType
-        if state == .file {
-            if medias.filter({$0 is TelegramMediaFile}).map({$0 as! TelegramMediaFile}).filter({$0.isMusic}).count == medias.count {
-                type = .audio
+        
+        var isPhotos = false
+        var isMedia = false
+        
+       
+        if medias.filter({$0 is TelegramMediaImage}).count == medias.count {
+            type = .photo
+            isPhotos = true
+        } else {
+            let files = medias.filter({$0 is TelegramMediaFile}).map({$0 as! TelegramMediaFile})
+            
+            let imagesCount = medias.filter({$0 is TelegramMediaImage}).count
+            let count = files.filter({ file in
+                
+                if file.isVideo && !file.isAnimated {
+                    return true
+                }
+                if let ext = file.fileName?.nsstring.pathExtension.lowercased() {
+                    return photoExts.contains(ext) || videoExts.contains(ext)
+                }
+                return false
+            }).count
+            
+            isMedia = count == (files.count + imagesCount) || count == files.count
+            
+            if files.filter({$0.isMusic}).count == files.count {
+                type = imagesCount > 0 ? .media : .audio
+            } else if files.filter({$0.isVideo && !$0.isAnimated}).count == files.count {
+                type = imagesCount > 0 ? .media : .video
+            } else if files.filter({$0.isVideo && $0.isAnimated}).count == files.count {
+                type = imagesCount > 0 ? .media : .gif
+            } else if files.filter({!$0.isVideo || !$0.isAnimated || $0.isMusic}).count != medias.count {
+                type = .media
             } else {
                 type = .files
             }
-        } else {
-                        
-            if medias.filter({$0 is TelegramMediaImage}).count == medias.count {
-                type = .photo
-            } else {
-                let files = medias.filter({$0 is TelegramMediaFile}).map({$0 as! TelegramMediaFile})
-                
-                if files.filter({$0.isMusic}).count == files.count {
-                    type = .audio
-                } else if files.filter({$0.isVideo && !$0.isAnimated}).count == files.count {
-                    type = .video
-                } else if files.filter({$0.isVideo && $0.isAnimated}).count == files.count {
-                    type = .gif
-                } else if files.filter({!$0.isVideo || !$0.isAnimated || $0.isMusic}).count != medias.count {
-                    type = .media
-                } else {
-                    type = .files
-                }
-            }
-            
         }
+        
+        self.collageButton.isHidden = (!isPhotos && !isMedia) || medias.count > 10 || medias.count < 2
         
         let text:String
         switch type {
@@ -315,10 +328,25 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         let options = takeSenderOptions(for: urls)
         genericView.applyOptions(options)
         
+        let reorder: (Int, Int) -> Void = { [weak self] from, to in
+            guard let `self` = self else {return}
+            let medias:[PreviewSendingState] = [.media, .file, .collage]
+            for type in medias {
+                self.cachedMedia[type]?.media.move(at: from, to: to)
+                if type != .collage {
+                    self.cachedMedia[type]?.items.move(at: from, to: to)
+                }
+            }
+            self.updateSize(self.frame.width, animated: true)
+        }
+        
         let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), Void> in
             if let cached = self?.cachedMedia[state] {
                 return .single((cached.media, cached.items, state))
             } else if state == .collage {
+                
+                
+                
                 return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
                     |> map { $0.map({$0.0})}
                     |> map { media in
@@ -328,7 +356,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
                             return Message(media, stableId: UInt32(id), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: id))
                         }).chunks(10)
                         
-                        return (media, groups.map({MediaGroupPreviewRowItem(initialSize.modify{$0}, messages: $0, account: account)}), state)
+                        return (media, groups.map({MediaGroupPreviewRowItem(initialSize.modify{$0}, messages: $0, account: account, reorder: reorder)}), state)
                         
                     }
             } else {
@@ -390,7 +418,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
                 chatInteraction.forceSendMessage(caption)
                 caption = ""
             }
-            chatInteraction.sendMedias(cached.media, caption)
+            chatInteraction.sendMedias(cached.media, caption, sendingState == .collage)
         }
     }
     
@@ -431,7 +459,16 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         self.urls = urls
         self.account = account
         self.emoji = EmojiViewController(account)
-        self.sendingState = asMedia ? .media : .file
+        
+        var canCollage: Bool = urls.count > 1
+        for url in urls {
+            if !photoExts.contains(url.pathExtension.lowercased()) && !videoExts.contains(url.pathExtension.lowercased()) {
+                canCollage = false
+                break
+            }
+        }
+        
+        self.sendingState = asMedia ? FastSettings.isNeedCollage && canCollage ? .collage : .media : .file
         self.chatInteraction = chatInteraction
         super.init(frame:NSMakeRect(0,0,300, 300))
         bar = .init(height: 0)

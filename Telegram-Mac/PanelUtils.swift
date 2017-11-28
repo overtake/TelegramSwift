@@ -96,9 +96,9 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, with header:String, and information:String?, okTitle:String? = nil, cancelTitle:String = tr(.alertCancel), thridTitle:String? = nil, successHandler:@escaping(ConfirmResult)->Void) {
+func confirm(for window:Window, with header:String, and information:String?, okTitle:String? = nil, cancelTitle:String = tr(.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
     
-    let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle)
+    let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
     alert.show(completionHandler: { response in
         switch response {
         case .OK:

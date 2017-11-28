@@ -26,10 +26,12 @@ class AlertController: ViewController {
     private let okTitle:String
     private let cancelTitle:String?
     private let thridTitle:String?
-    init(_ window: NSWindow, header: String, text:String, okTitle: String? = nil, cancelTitle: String? = nil, thridTitle: String? = nil) {
+    private let swapColors: Bool
+    init(_ window: NSWindow, header: String, text:String, okTitle: String? = nil, cancelTitle: String? = nil, thridTitle: String? = nil, swapColors: Bool = false) {
         self._window = window
         self.header = header
         self.text = text
+        self.swapColors = swapColors
         self.okTitle = okTitle ?? tr(.alertOK)
         self.cancelTitle = cancelTitle
         self.thridTitle = thridTitle
@@ -50,7 +52,7 @@ class AlertController: ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.layoutTexts(with: self.header, information: text, maxWidth: 400)
-        genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, okHandler: { [weak self] in
+        genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors, okHandler: { [weak self] in
             self?.close(.OK)
         }, cancelHandler: { [weak self] in
             self?.close(.cancel)

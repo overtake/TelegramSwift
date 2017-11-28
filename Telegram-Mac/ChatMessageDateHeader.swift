@@ -24,14 +24,10 @@ private let granularity: Int32 = 60 * 60 * 24
 
 
 func chatDateId(for timestamp:Int32) -> Int64 {
-    /*    var roundedTimestamp:Int32
-    if timestamp == Int32.max {
-        roundedTimestamp = timestamp / (granularity) * (granularity)
-    } else {
-        roundedTimestamp = ((timestamp + timezoneOffset) / (granularity)) * (granularity)
-    } */
-    
     return Int64(Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
+}
+func mediaDateId(for timestamp:Int32) -> Int64 {
+    return Int64(Calendar.current.component(.month, from: Date(timeIntervalSince1970: TimeInterval(timestamp))))
 }
 
 class ChatDateStickItem : TableStickItem {

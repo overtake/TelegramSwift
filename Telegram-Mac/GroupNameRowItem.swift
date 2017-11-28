@@ -20,7 +20,7 @@ class GroupNameRowItem: GeneralInputRowItem {
         self.photo = photo
         self.account = account
         self.pickPicture = pickPicture
-        super.init(initialSize, stableId: stableId, placeholder: placeholder, text: text, limit: limit, textChangeHandler:textChangeHandler)
+        super.init(initialSize, stableId: stableId, placeholder: placeholder, text: text, limit: limit, textChangeHandler:textChangeHandler, automaticallyBecomeResponder: false)
     }
     
     override func viewClass() -> AnyClass {

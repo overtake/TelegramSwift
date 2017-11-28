@@ -16,8 +16,10 @@ class MediaGroupPreviewRowItem: TableRowItem {
     fileprivate let account: Account
     private let _stableId: UInt32 = arc4random()
     fileprivate let layout: GroupedLayout
-    init(_ initialSize: NSSize, messages: [Message], account: Account) {
+    fileprivate let reorder:(Int, Int)->Void
+    init(_ initialSize: NSSize, messages: [Message], account: Account, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
+        self.reorder = reorder
         self.account = account
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -49,6 +51,18 @@ private class MediaGroupPreviewRowView : TableRowView {
 
     override func draw(_ dirtyRect: NSRect) {
         
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        for content in contents {
+            content.backgroundColor = .clear
+        }
+    }
+    
+    private var offset: NSPoint {
+        guard let item = item as? MediaGroupPreviewRowItem else { return NSZeroPoint }
+        return NSMakePoint((frame.width - item.layout.dimensions.width) / 2, 6)
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -91,7 +105,7 @@ private class MediaGroupPreviewRowView : TableRowView {
         draggingIndex = nil
         previous = point
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(point, item.layout.frame(at: i).offsetBy(dx: 10, dy: 6)) {
+            if NSPointInRect(point, item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)) {
                 self.startPoint = point
                 self.draggingIndex = i
                 //contents[i].removeFromSuperview()
@@ -114,17 +128,20 @@ private class MediaGroupPreviewRowView : TableRowView {
             contents.remove(at: index)
             contents.insert(current, at: newIndex)
             
-            
             _ = item.makeSize(frame.width, oldWidth: 0)
+            item.table?.noteHeightOfRow(item.index, true)
+            
+            item.reorder(index, newIndex)
+            
             set(item: item, animated: true)
             for i in 0 ..< item.layout.count {
-                let rect = item.layout.frame(at: i).offsetBy(dx: 10, dy: 6)
+                let rect = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)
                 contents[i].change(pos: rect.origin, animated: true)
                 contents[i].change(size: rect.size, animated: true)
             }
         } else {
             for i in 0 ..< item.layout.count {
-                let rect = item.layout.frame(at: i).offsetBy(dx: 10, dy: 6)
+                let rect = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)
                 contents[i].change(pos: rect.origin, animated: true)
                 contents[i].change(size: rect.size, animated: true)
             }
@@ -167,98 +184,11 @@ private class MediaGroupPreviewRowView : TableRowView {
             
             if let new = layout.moveItemIfNeeded(at: index, point: point) {
                 
-                let next: Int? = new
-                let indexPoint = item.layout.frame(at: index).offsetBy(dx: 10, dy: 6).origin
-                let selected = item.layout.frame(at: new).offsetBy(dx: 10, dy: 6).origin
-                
-                let selectedFlags = layout.position(at: new)
-                
-
-                
-                
-                /*
-                 if new > index {
-                 if indexPoint.y != selected.y {
-                 if indexPoint.y > selected.y {
-                 current.y += 1
-                 } else {
-                 current.y -= 1
-                 }
-                 } else {
-                 if selected.y == 6 {
-                 current.y -= 1
-                 } else {
-                 current.x -= 1
-                 }
-                 }
-                 
-                 } else {
-                 if indexPoint.y != selected.y {
-                 if indexPoint.y < selected.y {
-                 current.y -= 1
-                 } else {
-                 
-                 if selected.x == 10 {
-                 current.x += 1
-                 } else {
-                 current.y += 1
-                 }
-                 }
-                 } else {
-                 current.x += 1
-                 }
-                 }
- */
-                
                 
                 for i in 0 ..< layout.count {
-                    var current = item.layout.frame(at: i).offsetBy(dx: 10, dy: 6).origin
-                    let currentFlags = item.layout.position(at: i)
+                    let current = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y).origin
 
                     if i != index {
-                        if i == next {
-//                            if selectedFlags.contains(.left) {
-//                                if currentFlags.contains(.left) {
-//                                    NSLog("left->left")
-//                                } else if currentFlags.contains(.right) {
-//                                    NSLog("left->right")
-//                                } else if currentFlags.contains(.bottom) {
-//                                    NSLog("left->bottom")
-//                                } else if currentFlags.contains(.top) {
-//                                    NSLog("left->top")
-//                                }
-//                            } else if selectedFlags.contains(.right) {
-//                                if currentFlags.contains(.left) {
-//                                    NSLog("right->left")
-//                                } else if currentFlags.contains(.right) {
-//                                    NSLog("right->right")
-//                                } else if currentFlags.contains(.bottom) {
-//                                    NSLog("right->bottom")
-//                                } else if currentFlags.contains(.top) {
-//                                    NSLog("right->top")
-//                                }
-//                            } else if selectedFlags.contains(.bottom) {
-//                                if currentFlags.contains(.left) {
-//                                    NSLog("bottom->left")
-//                                } else if currentFlags.contains(.right) {
-//                                    NSLog("bottom->right")
-//                                } else if currentFlags.contains(.bottom) {
-//                                    NSLog("bottom->bottom")
-//                                } else if currentFlags.contains(.top) {
-//                                    NSLog("bottom->top")
-//                                }
-//                            } else if selectedFlags.contains(.top) {
-//                                if currentFlags.contains(.left) {
-//                                    NSLog("top->left")
-//                                } else if currentFlags.contains(.right) {
-//                                    NSLog("top->right")
-//                                } else if currentFlags.contains(.bottom) {
-//                                    NSLog("top->bottom")
-//                                } else if currentFlags.contains(.top) {
-//                                    NSLog("top->top")
-//                                }
-//                            }
-                        }
                         contents[i].setFrameOrigin(current)
                     }
                     
@@ -266,7 +196,7 @@ private class MediaGroupPreviewRowView : TableRowView {
             } else {
                 for i in 0 ..< item.layout.count {
                     if i != index {
-                        contents[i].setFrameOrigin(item.layout.frame(at: i).origin.offsetBy(dx: 10, dy: 6))
+                        contents[i].setFrameOrigin(item.layout.frame(at: i).origin.offsetBy(dx: offset.x, dy: offset.y))
                     }
                 }
             }
@@ -318,7 +248,7 @@ private class MediaGroupPreviewRowView : TableRowView {
         }
         
         for i in 0 ..< item.layout.count {
-            contents[i].setFrameOrigin(item.layout.frame(at: i).origin.offsetBy(dx: 10, dy: 6))
+            contents[i].setFrameOrigin(item.layout.frame(at: i).origin.offsetBy(dx: offset.x, dy: offset.y))
         }
         
     }

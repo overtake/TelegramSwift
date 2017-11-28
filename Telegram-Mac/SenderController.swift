@@ -348,14 +348,16 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: "", account: account, peerId: peerId, chatInteraction: chatInteraction)
     }
     
-    public static func enqueue(media:[Media], caption: String, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: String, account:Account, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false) ->Signal<[MessageId?],NoError> {
         
         var attributes:[MessageAttribute] = []
         if FastSettings.isChannelMessagesMuted(peerId) {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: nil)})
+        let localGroupingKey = isCollage ? arc4random64() : nil
+        
+        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: localGroupingKey)})
         
         return enqueueMessages(account: account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})

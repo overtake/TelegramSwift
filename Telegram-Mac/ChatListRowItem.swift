@@ -268,7 +268,15 @@ class ChatListRowItem: TableRowItem {
             
             let togglePin = {[weak self] in
                 if let strongSelf = self {
-                    _ = togglePeerChatPinned(postbox: strongSelf.account.postbox, peerId: strongSelf.peerId).start()
+                    _ = (togglePeerChatPinned(postbox: strongSelf.account.postbox, peerId: strongSelf.peerId) |> deliverOnMainQueue).start(next: { result in
+                        
+                        switch result {
+                        case .limitExceeded:
+                            alert(for: mainWindow, info: tr(.chatListContextPinError))
+                        default:
+                            break
+                        }
+                    })
                 }
             }
             

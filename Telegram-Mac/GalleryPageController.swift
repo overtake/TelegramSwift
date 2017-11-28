@@ -69,9 +69,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     let selectedIndex:ValuePromise<Int> = ValuePromise(ignoreRepeated: false)
     let thumbsControl: GalleryThumbsControl
     private let indexDisposable = MetaDisposable()
-    init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window) {
+    fileprivate let reversed: Bool
+    init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window, reversed: Bool) {
         self.contentInset = contentInset
         self.window = window
+        self.reversed = reversed
         thumbsControl = GalleryThumbsControl(interactions: interactions)
 
         super.init()
@@ -194,6 +196,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let animated = !self.items.isEmpty
             
             var items:[MGalleryItem] = controller.arrangedObjects as! [MGalleryItem]
+            items = reversed ? items.reversed() : items
             while !queuedTransitions.isEmpty {
                 let transition = queuedTransitions[0]
                 
@@ -224,6 +227,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 queuedTransitions.removeFirst()
             }
+            
+            items = reversed ? items.reversed() : items
             
             if self.items != items {
                 
@@ -509,12 +514,16 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
 
                 }))
             } else {
-                ioDisposabe.set((item.image.get() |> take(1)).start(next: { [weak self] image in
-                    //selectedView?.isHidden = false
-                    self?.lockedTransition = false
-                    if let completion = completion {
-                        completion()
+                ioDisposabe.set((item.image.get() |> take(1)).start(next: { [weak self, weak selectedView] image in
+                    if let selectedView = selectedView {
+                        selectedView.swapView(selectedView.contentView)
+                        self?.lockedTransition = false
+                        if let completion = completion {
+                            completion()
+                            self?.window.applyResponderIfNeeded()
+                        }
                     }
+                    
                 }))
             }
         }

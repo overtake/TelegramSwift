@@ -633,6 +633,8 @@ enum L10n {
   case chatListContextMute
   /// Pin
   case chatListContextPin
+  /// Sorry, you can pin no more than chats to the top.
+  case chatListContextPinError
   /// Return Group
   case chatListContextReturnGroup
   /// Unmute
@@ -1537,6 +1539,8 @@ enum L10n {
   case presenceBot
   /// Add a caption...
   case previewSenderCaptionPlaceholder
+  /// Group media into one message
+  case previewSenderCollageTooltip
   /// Add a comment...
   case previewSenderCommentPlaceholder
   /// Send as compressed
@@ -2875,6 +2879,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "ChatList.Context.Mute")
       case .chatListContextPin:
         return L10n.tr(key: "ChatList.Context.Pin")
+      case .chatListContextPinError:
+        return L10n.tr(key: "ChatList.Context.PinError")
       case .chatListContextReturnGroup:
         return L10n.tr(key: "ChatList.Context.ReturnGroup")
       case .chatListContextUnmute:
@@ -3779,6 +3785,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Presence.bot")
       case .previewSenderCaptionPlaceholder:
         return L10n.tr(key: "PreviewSender.CaptionPlaceholder")
+      case .previewSenderCollageTooltip:
+        return L10n.tr(key: "PreviewSender.CollageTooltip")
       case .previewSenderCommentPlaceholder:
         return L10n.tr(key: "PreviewSender.CommentPlaceholder")
       case .previewSenderCompressFile:

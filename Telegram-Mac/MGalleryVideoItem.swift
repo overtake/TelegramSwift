@@ -22,6 +22,21 @@ private class VideoPlayerView : AVPlayerView {
         bp += 1
     }
     
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateLayout()
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        updateLayout()
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateLayout()
+    }
+    
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         updateLayout()
@@ -40,9 +55,12 @@ private class VideoPlayerView : AVPlayerView {
         let controls = subviews.last?.subviews.last
         if let controls = controls {
             if let pip = controls.subviews.last as? ImageButton {
-                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 44)
+                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 34)
             }
-            controls.centerX(y: 60)
+            controls.centerX(y: 95)
+            
+            controls._change(opacity: _mouseInside() ? 1 : 0, animated: true)
+            
         }
     }
     
@@ -117,7 +135,7 @@ class MGalleryVideoItem: MGalleryItem {
             if let view = view, let strongSelf = self, let viewer = viewer {
                 let frame = view.window!.convertToScreen(view.convert(view.bounds, to: nil))
                 closeGalleryViewer(false)
-                showPipVideo(view, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
+                showPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
             }
         }, for: .Down)
         

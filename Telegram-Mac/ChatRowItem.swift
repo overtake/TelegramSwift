@@ -319,6 +319,12 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    func share() {
+        if let message = message {
+            showModal(with: ShareModalController(ShareMessageObject(account, message)), for: mainWindow)
+        }
+    }
+    
     var isSharable: Bool {
         var peers:[Peer] = []
         if let peer = peer {
@@ -409,7 +415,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        return !chatInteraction.isLogInteraction
+        return !chatInteraction.isLogInteraction && message?.groupingKey == nil
     }
     
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ object: ChatHistoryEntry) {
