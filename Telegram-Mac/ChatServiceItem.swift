@@ -124,7 +124,8 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .titleUpdated(title):
                     let _ =  attributedString.append(string: peer.isChannel ? tr(.chatServiceChannelUpdatedTitle(title)) : tr(.chatServiceGroupUpdatedTitle(authorName, title)), color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)))
-                    
+                case .customText(let text):
+                    let _ = attributedString.append(string: text, color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)))
                 case .pinnedMessageUpdated:
                     var replyMessageText = ""
                     for attribute in message.attributes {

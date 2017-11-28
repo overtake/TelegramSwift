@@ -77,9 +77,33 @@ extension TableViewDelegate {
     }
 }
 
-public enum TableSavingSide {
+public enum TableSavingSide : Equatable {
     case lower
     case upper
+    case aroundIndex(AnyHashable)
+}
+
+public func ==(lhs: TableSavingSide, rhs: TableSavingSide) -> Bool {
+    switch lhs {
+    case .lower:
+        if case .lower = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .upper:
+        if case .upper = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .aroundIndex(id):
+        if case .aroundIndex(id) = rhs {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 public enum TableScrollState :Equatable {
@@ -1336,7 +1360,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         let state: TableScrollState
         
-        if case .none = transition.state {
+        if case .none = transition.state, !transition.deleted.isEmpty || !transition.inserted.isEmpty {
             let isSomeOfItemVisible = !inserted.filter({$0.isVisible}).isEmpty || !removed.filter({$0.isVisible}).isEmpty
             if isSomeOfItemVisible {
                 state = transition.state
@@ -1367,12 +1391,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             let strideTo:StrideTo<Int>
             
+            var aroundIndex: AnyHashable?
+            
             if !tableView.isFlipped {
                 switch side {
                 case .lower:
-                    strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
+                    strideTo = stride(from: 0, to: visibleItems.count, by: 1)
                 case .upper:
-                    strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1) //stride(from: 0, to: visibleItems.count, by: 1)
+                    strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
+                case .aroundIndex(let index):
+                    aroundIndex = index
+                    strideTo = stride(from: 0, to: visibleItems.count, by: 1)
                 }
             } else {
                 switch side {
@@ -1380,12 +1409,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     strideTo = stride(from: visibleItems.count - 1, to: -1, by: -1)
                 case .lower:
                     strideTo = stride(from: 0, to: visibleItems.count, by: 1)
+                case .aroundIndex(let index):
+                    aroundIndex = index
+                    strideTo = stride(from: 0, to: visibleItems.count, by: 1)
                 }
             }
 
             
             for i in strideTo {
                 let visible = visibleItems[i]
+                
+                if let aroundIndex = aroundIndex {
+                    if aroundIndex != visible.0.stableId {
+                        continue
+                    }
+                }
                 if let item = self.item(stableId: visible.0.stableId) {
                     
                     nrect = rectOf(item: item)
@@ -1405,14 +1443,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         } else {
                             y = nrect.minY - visible.1
                         }
-                        break
                     case .upper:
                         if !tableView.isFlipped {
                             y = nrect.minY - (frame.height - visible.1) + nrect.height
                         } else {
                             y = nrect.minY - visible.1
                         }
-                        break
+                    case .aroundIndex:
+                        if !tableView.isFlipped {
+                            y = nrect.minY - (frame.height - visible.1) + nrect.height
+                        } else {
+                            y = nrect.minY - visible.1
+                        }
                     }
                     self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
                     reflectScrolledClipView(clipView)

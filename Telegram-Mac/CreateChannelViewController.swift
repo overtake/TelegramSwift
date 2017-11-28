@@ -42,7 +42,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
                 self?.picture = nil
             }
         })
-        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(.channelDescriptionHolder), limit: 300)
+        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(.channelDescriptionHolder), limit: 300, automaticallyBecomeResponder: false)
        
         _ = genericView.addItem(item: nameItem)
         _ = genericView.addItem(item: GeneralRowItem(atomicSize.modify({$0}), height: 30, stableId: 1))
@@ -82,7 +82,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     }
     
     override func becomeFirstResponder() -> Bool? {
-        return false
+        return true
     }
     
     override func firstResponder() -> NSResponder? {

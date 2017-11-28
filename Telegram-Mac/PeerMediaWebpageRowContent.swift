@@ -24,7 +24,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
         super.init(initialSize,interface,account,object)
         iconSize = NSMakeSize(50, 50)
-        
+        self.contentInset = NSEdgeInsets(left: 70, right: 10, top: 5, bottom: 5)
         
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {

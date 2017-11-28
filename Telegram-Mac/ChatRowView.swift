@@ -234,6 +234,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
     
     override func onShowContextMenu() {
         updateColors()
+        if let item = item as? ChatRowItem {
+            item.chatInteraction.focusInputField()
+        }
         super.onCloseContextMenu()
     }
     
@@ -323,6 +326,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             
             replyView?.removeAllHandlers()
             replyView?.set(handler: { [weak item, weak reply] _ in
+                item?.chatInteraction.focusInputField()
                 if let replyMessage = reply?.replyMessage, let fromMessage = item?.message {
                     item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .center(id: 0, animated: true, focus: true, inset: 0))
                 }
@@ -449,11 +453,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable {
             shareControl?.sizeToFit()
             shareControl?.removeAllHandlers()
             shareControl?.set(handler: { [weak self, weak item] _ in
-                if let window = self?.contentView.kitWindow, let item = item, let message = item.message {
+                if let window = self?.contentView.kitWindow, let item = item {
                     if item.isStorage {
                         item.gotoSourceMessage()
                     } else {
-                        showModal(with: ShareModalController(ShareMessageObject(item.account, message)), for: window)
+                        item.share()
                     }
                 }
             }, for: .Click)

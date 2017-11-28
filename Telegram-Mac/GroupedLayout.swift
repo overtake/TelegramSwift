@@ -144,7 +144,7 @@ class GroupedLayout {
                 }
             }
             
-            let minWidth: CGFloat = 68.0
+            let minWidth: CGFloat = 70
             let maxAspectRatio = maxSize.width / maxSize.height
             if (photos.count > 0) {
                 averageAspectRatio = averageAspectRatio / CGFloat(photos.count)
@@ -220,8 +220,14 @@ class GroupedLayout {
                         
                         var h: CGFloat = round((maxSize.width - 2 * spacing) / (photos[1].aspectRatio + photos[2].aspectRatio + photos[3].aspectRatio))
                         let w0: CGFloat = max((maxSize.width - 2 * spacing) * 0.33, h * photos[1].aspectRatio)
-                        let w2: CGFloat = max((maxSize.width - 2 * spacing) * 0.33, h * photos[3].aspectRatio)
-                        let w1: CGFloat = w - w0 - w2 - 2 * spacing
+                        var w2: CGFloat = max((maxSize.width - 2 * spacing) * 0.33, h * photos[3].aspectRatio)
+                        var w1: CGFloat = w - w0 - w2 - 2 * spacing
+                        
+                        if w1 < minWidth {
+                            w2 -= minWidth - w1
+                            w1 = minWidth
+                        }
+                        
                         h = min(maxSize.height - h0 - spacing, h)
                         photos[1].layoutFrame = NSMakeRect(0.0, h0 + spacing, w0, h)
                         photos[1].positionFlags = [.left, .bottom]
@@ -282,7 +288,6 @@ class GroupedLayout {
                 addAttempt([croppedRatios.count], [multiHeight(croppedRatios)])
                 
                 
-                let firstLine:Int = 0
                 var secondLine:Int = 0
                 var thirdLine:Int = 0
                 var fourthLine:Int = 0
@@ -322,15 +327,14 @@ class GroupedLayout {
                 }
                 
                 
-                let maxHeight: CGFloat = maxSize.width
+                let maxHeight: CGFloat = maxSize.height / 3 * 4
                 var optimal: GroupedLayoutAttempt? = nil
                 var optimalDiff: CGFloat = 0.0
                 for attempt in attempts {
                     var totalHeight: CGFloat = spacing * (CGFloat(attempt.heights.count) - 1);
                     var minLineHeight: CGFloat = .greatestFiniteMagnitude;
                     var maxLineHeight: CGFloat = 0.0
-                    for h in attempt.heights {
-                        let lineHeight: CGFloat = h
+                    for lineHeight in attempt.heights {
                         totalHeight += lineHeight
                         if lineHeight < minLineHeight {
                             minLineHeight = lineHeight
@@ -340,10 +344,12 @@ class GroupedLayout {
                         }
                     }
                     
-                    var diff: CGFloat  = fabs(totalHeight - maxHeight);
+                    var diff: CGFloat = fabs(totalHeight - maxHeight);
                     
                     if (attempt.lineCounts.count > 1) {
-                        if (attempt.lineCounts[0] > attempt.lineCounts[1]) || (attempt.lineCounts.count > 2 && attempt.lineCounts[1] > attempt.lineCounts[2]) || (attempt.lineCounts.count > 3 && attempt.lineCounts[2] > attempt.lineCounts[3]) {
+                        if (attempt.lineCounts[0] > attempt.lineCounts[1])
+                            || (attempt.lineCounts.count > 2 && attempt.lineCounts[1] > attempt.lineCounts[2])
+                            || (attempt.lineCounts.count > 3 && attempt.lineCounts[2] > attempt.lineCounts[3]) {
                             diff *= 1.5
                         }
                     }
@@ -364,7 +370,7 @@ class GroupedLayout {
                 if let optimal = optimal {
                     for i in 0 ..< optimal.lineCounts.count {
                         let count: Int = optimal.lineCounts[i]
-                        let lineHeight: CGFloat  = optimal.heights[i]
+                        let lineHeight: CGFloat = optimal.heights[i]
                         var x: CGFloat = 0.0
                         
                         var positionFlags: GroupLayoutPositionFlags  = [.none]

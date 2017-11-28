@@ -205,6 +205,11 @@
 		C23D0D7A1F1A609300AF5151 /* SFCompactRounded-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Fonts */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C23D0D7D1F1A692100AF5151 /* SFCompactRounded-Semibold.otf in CopyFiles */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
+		C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23EEC881FCC47C1001371CD /* PeerMediaDateItem.swift */; };
+		C23EECA31FCDB894001371CD /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
+		C23EECA41FCDB894001371CD /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		C23EECA51FCDB899001371CD /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C23EECA61FCDB899001371CD /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C240E9521F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C240E9511F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift */; };
 		C2412E071DA795D200588C14 /* GalleryControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2412E061DA795D200588C14 /* GalleryControls.swift */; };
 		C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2423A531F2235080041907F /* InstantPageViewController.swift */; };
@@ -376,10 +381,6 @@
 		C29F4C761F45F58B00DBFC00 /* MIHSliderView.m in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */; };
 		C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */; };
 		C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C7C1F47283600DBFC00 /* InstantPageBrowser.swift */; };
-		C29FF4A31FA70A8700BFCA01 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C29FF4A41FA70A8700BFCA01 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C29FF4A51FA70A8A00BFCA01 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
-		C29FF4A61FA70A8A00BFCA01 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */; };
 		C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A12FE51E0C503900EC2239 /* ChatContactRowItem.swift */; };
 		C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A16E3D1E11674F00585A85 /* CreateGroupSignals.swift */; };
@@ -542,8 +543,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C29FF4A31FA70A8700BFCA01 /* Sparkle.framework in Copy Files */,
-				C29FF4A41FA70A8700BFCA01 /* HockeySDK.framework in Copy Files */,
+				C23EECA51FCDB899001371CD /* Sparkle.framework in Copy Files */,
+				C23EECA61FCDB899001371CD /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -796,6 +797,7 @@
 		C23CF9711E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/ShareViewController.strings; sourceTree = "<group>"; };
 		C23CF9731E70BD0B0009CD06 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SFCompactRounded-Semibold.otf"; sourceTree = "<group>"; };
+		C23EEC881FCC47C1001371CD /* PeerMediaDateItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaDateItem.swift; sourceTree = "<group>"; };
 		C240E9511F96449E00F671FA /* TwoStepVerificationPasswordEntryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationPasswordEntryController.swift; sourceTree = "<group>"; };
 		C2412E061DA795D200588C14 /* GalleryControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryControls.swift; sourceTree = "<group>"; };
 		C2423A531F2235080041907F /* InstantPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageViewController.swift; sourceTree = "<group>"; };
@@ -1197,10 +1199,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C23EECA31FCDB894001371CD /* Sparkle.framework in Frameworks */,
+				C23EECA41FCDB894001371CD /* HockeySDK.framework in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
-				C29FF4A51FA70A8A00BFCA01 /* Sparkle.framework in Frameworks */,
-				C29FF4A61FA70A8A00BFCA01 /* HockeySDK.framework in Frameworks */,
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
@@ -1317,6 +1319,7 @@
 				C2167E521DC220F600F98E03 /* PeerMediaFileRowContent.swift */,
 				C2167E561DC221E600F98E03 /* PeerMediaRowContent.swift */,
 				C2E40A1A1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift */,
+				C23EEC881FCC47C1001371CD /* PeerMediaDateItem.swift */,
 			);
 			name = content;
 			sourceTree = "<group>";
@@ -3216,6 +3219,7 @@
 				C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
+				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,
 				C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */,
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */,

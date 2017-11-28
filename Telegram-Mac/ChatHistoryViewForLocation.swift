@@ -21,15 +21,15 @@ enum ChatHistoryInitialSearchLocation {
 enum ChatHistoryLocation: Equatable {
     case Initial(count: Int)
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)
-    case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex)
+    case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int)
     case Scroll(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, sourceIndex: MessageHistoryAnchorIndex, scrollPosition: TableScrollState, animated: Bool)
 }
 
 func ==(lhs: ChatHistoryLocation, rhs: ChatHistoryLocation) -> Bool {
     switch lhs {
-    case let .Navigation(lhsIndex, lhsAnchorIndex):
+    case let .Navigation(lhsIndex, lhsAnchorIndex, lhsCount):
         switch rhs {
-        case let .Navigation(rhsIndex, rhsAnchorIndex) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex:
+        case let .Navigation(rhsIndex, rhsAnchorIndex, rhsCount) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex && lhsCount == rhsCount:
             return true
         default:
             return false
@@ -231,9 +231,9 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                 return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: .index(index: anchorIndex, position: scroll, directionHint: .Down, animated: false), initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
             }
         }
-    case let .Navigation(index, anchorIndex):
+    case let .Navigation(index, anchorIndex, count):
         var first = true
-        return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, anchorIndex: anchorIndex, count: 140, fixedCombinedReadState: fixedCombinedReadState, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
+        return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadState: fixedCombinedReadState, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
             var cachedData: CachedPeerData?
             var readStateData: ChatHistoryCombinedInitialReadStateData?
             for data in view.additionalData {

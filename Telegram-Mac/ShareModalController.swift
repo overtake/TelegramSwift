@@ -265,8 +265,8 @@ class ShareMessageObject : ShareObject {
     let link:String?
     private let exportLinkDisposable = MetaDisposable()
     
-    init(_ account:Account, _ message:Message) {
-        self.messageIds = [message.id]
+    init(_ account:Account, _ message:Message, _ groupMessages:[Message] = []) {
+        self.messageIds = groupMessages.isEmpty ? [message.id] : groupMessages.map{$0.id}
         self.message = message
         let peer:TelegramChannel?
         if let author = message.forwardInfo?.author as? TelegramChannel {

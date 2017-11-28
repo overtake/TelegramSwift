@@ -118,7 +118,7 @@ final class GridMessageItemNode: GridItemNode {
                     if strongSelf._status == nil || strongSelf._status == .Local {
                         showChatGallery(account: currentState.0, message: message, strongSelf.grid, ChatMediaGalleryParameters(showMedia: {}, showMessage: { [weak interactions] message in
                             interactions?.focusMessageId(nil, message.id, .center(id: 0, animated: false, focus: true, inset: 0))
-                        }, isWebpage: false))
+                            }, isWebpage: false), reversed: true)
                     } else if let file = message.media.first as? TelegramMediaFile {
                         if let status = strongSelf._status {
                             switch status {
@@ -163,8 +163,6 @@ final class GridMessageItemNode: GridItemNode {
             if let media = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(media.representations)?.dimensions {
                 mediaDimensions = largestSize
                 
-                
-                
                 let imageSize = largestSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
                 
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
@@ -178,12 +176,28 @@ final class GridMessageItemNode: GridItemNode {
                         }
                     })
                 }
-                
                 progressView?.removeFromSuperview()
                 progressView = nil
-            } else if let file = media as? TelegramMediaFile {
-                mediaDimensions = file.previewRepresentations.last?.dimensions
-                self.imageView.setSignal( mediaGridMessageVideo(account: account, file: file, scale: backingScaleFactor))
+            } else if let file = media as? TelegramMediaFile, let imgSize = file.previewRepresentations.last?.dimensions {
+                
+                mediaDimensions = imgSize
+                
+                let imageSize = imgSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
+
+                
+                self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
+
+                
+                if self.imageView.layer?.contents == nil {
+                    self.imageView.setSignal( mediaGridMessageVideo(account: account, file: file, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                        if let strongSelf = self {
+                            return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
+                        } else {
+                            return .complete()
+                        }
+                    })
+                }
+                
                 
                 
                 statusDisposable.set((chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue).start(next: { [weak self] status in
@@ -213,6 +227,8 @@ final class GridMessageItemNode: GridItemNode {
             
             
             self.currentState = (account, media, mediaDimensions ?? NSMakeSize(100, 100))
+        } else {
+            needsLayout = true
         }
         
         self.message = message

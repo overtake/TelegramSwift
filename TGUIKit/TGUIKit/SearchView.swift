@@ -90,7 +90,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
+        inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
+        input.backgroundColor = presentation.colors.background
         placeholder.attributedString = NSAttributedString.initialize(string: presentation.search.placeholder, color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
@@ -150,7 +152,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.font = .normal(.text)
         input.textColor = .text
         input.isHidden = true
-        
+        input.drawsBackground = false
         
         animateContainer.backgroundColor = .clear
         
@@ -167,7 +169,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         inputContainer.addSubview(input)
         addSubview(animateContainer)
         addSubview(inputContainer)
-
+        inputContainer.backgroundColor = .clear
         clear.backgroundColor = .clear
         
         
@@ -195,18 +197,21 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-        if let replacementString = replacementString {
-            return !replacementString.contains("\n") && !replacementString.contains("\r")
-        }
-        return false
+        return true
     }
     
     
     
     open func textDidChange(_ notification: Notification) {
         
+        let trimmed = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+        if trimmed != input.string {
+            self.setString(trimmed)
+            return
+        }
+        
         if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(SearchState(state: state, request: input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
+            searchInteractions.textModified(SearchState(state: state, request: trimmed))
         }
         let pHidden = !input.string.isEmpty
         if placeholder.isHidden != pHidden {

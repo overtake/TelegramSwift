@@ -135,6 +135,8 @@ private func chatMessageFileDatas(account: Account, file: TelegramMediaFile, pat
         let maybeFullSize = account.postbox.mediaBox.resourceData(fullSizeResource, pathExtension: pathExtension)
         
         let signal = maybeFullSize |> take(1) |> mapToSignal { maybeData -> Signal<(Data?, String?, Bool), NoError> in
+            
+           
             if maybeData.complete && !justThumbail {
                 return .single((nil, maybeData.path, true))
             } else {
@@ -157,11 +159,21 @@ private func chatMessageFileDatas(account: Account, file: TelegramMediaFile, pat
                     return (next.size == 0 ? nil : next.path, next.complete)
                 }
                 
+                /*
+                 
+ */
+                
                 return thumbnail |> mapToSignal { thumbnailData in
-                    return fullSizeDataAndPath |> map { (dataPath, complete) in
+                    return fullSizeDataAndPath |> take(1) |> map { dataPath, complete in
                         return (thumbnailData, dataPath, complete)
                     }
-                }
+                } |> then(Signal({ subscriber -> Disposable in
+                    if !maybeData.complete, let fullSizeResource = fullSizeResource as? LocalFileReferenceMediaResource {
+                        subscriber.putNext((nil, fullSizeResource.pathValue, true))
+                    }
+                    subscriber.putCompletion()
+                    return EmptyDisposable
+                }))
             }
             } |> filter({ $0.0 != nil || $0.1 != nil })
         

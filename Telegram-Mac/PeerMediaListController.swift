@@ -16,11 +16,13 @@ enum PeerMediaSharedEntryStableId : Hashable {
     case messageId(MessageId)
     case search
     case emptySearch
-    
+    case date(MessageIndex)
     var hashValue: Int {
         switch self {
         case let .messageId(messageId):
             return messageId.hashValue
+        case .date(let index):
+            return index.hashValue
         case .search:
             return 0
         case .emptySearch:
@@ -42,6 +44,12 @@ enum PeerMediaSharedEntryStableId : Hashable {
             } else {
                 return false
             }
+        case .date(let index):
+            if case .date(index) = rhs {
+                return true
+            } else {
+                return false
+            }
         case .emptySearch:
             if case .emptySearch = rhs {
                 return true
@@ -56,15 +64,17 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
     case messageEntry(Message)
     case searchEntry(Bool)
     case emptySearchEntry
-    
-    var stableId: AnyHashable {
+    case date(MessageIndex)
+    var stableId: PeerMediaSharedEntryStableId {
         switch self {
         case let .messageEntry(message):
-            return PeerMediaSharedEntryStableId.messageId(message.id)
+            return .messageId(message.id)
+        case let .date(index):
+            return .date(index)
         case .searchEntry:
-            return PeerMediaSharedEntryStableId.search
+            return .search
         case .emptySearchEntry:
-            return PeerMediaSharedEntryStableId.emptySearch
+            return .emptySearch
         }
     }
 }
@@ -84,11 +94,23 @@ func <(lhs:PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
         default:
             return false
         }
+    case .date(let lhsIndex):
+        switch rhs {
+        case .date(let rhsIndex):
+            return lhsIndex < rhsIndex
+        case let .messageEntry(rhsMessage):
+            return lhsIndex < MessageIndex(rhsMessage)
+        default:
+            return true
+        }
     case let .messageEntry(lhsMessage):
         switch rhs {
         case let .messageEntry(rhsMessage):
-            return lhsMessage.id < rhsMessage.id
+            return MessageIndex(lhsMessage) < MessageIndex(rhsMessage)
         default:
+            if case .date(let rhsIndex) = rhs {
+                return MessageIndex(lhsMessage) < rhsIndex
+            }
             return true
         }
     }
@@ -109,6 +131,12 @@ func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
         } else {
             return false
         }
+    case let .date(index):
+        if case .date(index) = rhs {
+            return true
+        } else {
+            return false
+        }
     case let .searchEntry(lhsProgress):
         if case let .searchEntry(rhsProgress) = rhs {
             return lhsProgress == rhsProgress
@@ -121,10 +149,32 @@ func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
 }
 
 
-func convertEntries(from update: PeerMediaUpdate) -> [PeerMediaSharedEntry] {
+func convertEntries(from update: PeerMediaUpdate, timeDifference: TimeInterval) -> [PeerMediaSharedEntry] {
     var converted:[PeerMediaSharedEntry] = []
    
-    for message in update.messages {
+    for i in 0 ..< update.messages.count {
+        
+        let message = update.messages[i]
+        
+        let prev = i > 0 ? update.messages[i - 1] : nil
+        let next = i < update.messages.count - 1 ? update.messages[i + 1] : nil
+        
+
+        
+        if let nextMessage = next {
+            let dateId = mediaDateId(for: message.timestamp - Int32(timeDifference))
+            let nextDateId = mediaDateId(for: nextMessage.timestamp - Int32(timeDifference))
+            if dateId != nextDateId {
+                let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: INT32_MAX), timestamp: message.timestamp)
+                converted.append(.date(index))
+            }
+        } else {
+            var time = TimeInterval(message.timestamp)
+            time -= timeDifference
+            let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: INT32_MAX), timestamp: message.timestamp)
+            converted.append(.date(index))
+        }
+        
         converted.append(.messageEntry(message))
     }
 
@@ -159,6 +209,8 @@ fileprivate func preparedMediaTransition(from fromView:[PeerMediaSharedEntry]?, 
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
             }
+        case .date(let index):
+            return PeerMediaDateItem(initialSize, index: index, stableId: entry.stableId)
         case let .searchEntry(isLoading):
             return SearchRowItem(initialSize, stableId: entry.stableId, searchInteractions: searchInteractions, isLoading: isLoading, inset: NSEdgeInsets(left: 10, right: 10, top: 10, bottom: 10))
         case .emptySearchEntry:
@@ -292,7 +344,7 @@ class PeerMediaListController: GenericViewController<TableView> {
             let animated = animated.swap(true)
             let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
             
-            let entries = convertEntries(from: update)
+            let entries = convertEntries(from: update, timeDifference: account.context.timeDifference)
             let previous = _entries.swap(entries)
             _ = _updateView.swap(update)
             
@@ -324,7 +376,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                 
                 if let messageIndex = messageIndex {
                     let _ = animated.swap(false)
-                    location.set(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex)))
+                    location.set(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 140))
                 }
             }
         }

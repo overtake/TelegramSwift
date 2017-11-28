@@ -183,11 +183,12 @@ class GalleryViewer: NSResponder {
         fatalError("init(coder:) has not been implemented")
     }
     let type:GalleryAppearType
-    
-    private init(account:Account, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
+    private let reversed: Bool
+    private init(account:Account, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType, reversed:Bool = false) {
         self.account = account
         self.delegate = delegate
         self.type = type
+        self.reversed = reversed
         self.contentInteractions = contentInteractions
         if let screen = NSScreen.main {
             let bounds = NSMakeRect(0, 0, screen.frame.width, screen.frame.height)
@@ -201,7 +202,7 @@ class GalleryViewer: NSResponder {
             backgroundView.backgroundColor = .blackTransparent
             backgroundView.frame = bounds
             
-            self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window)
+            self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window, reversed: reversed)
         } else {
             fatalError("main screen not found for MediaViewer")
         }
@@ -291,8 +292,8 @@ class GalleryViewer: NSResponder {
         return NSMakeSize(pager.frame.size.width - pager.contentInset.right - pager.contentInset.left, pager.frame.size.height - pager.contentInset.bottom - pager.contentInset.top)
     }
     
-    fileprivate convenience init(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil) {
-        self.init(account: account, delegate, contentInteractions, type: .profile(peerId))
+    fileprivate convenience init(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, reversed:Bool = false) {
+        self.init(account: account, delegate, contentInteractions, type: .profile(peerId), reversed: reversed)
 
         let pagerSize = self.pagerSize
         
@@ -348,8 +349,8 @@ class GalleryViewer: NSResponder {
         }))
     }
     
-    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil) {
-        self.init(account: account, delegate, contentInteractions, type: .history)
+    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, reversed:Bool = false) {
+        self.init(account: account, delegate, contentInteractions, type: .history, reversed: reversed)
         
         let pagerSize = self.pagerSize
         
@@ -390,9 +391,9 @@ class GalleryViewer: NSResponder {
     
    
     
-    fileprivate convenience init(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil) {
+    fileprivate convenience init(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil, reversed: Bool = false) {
         
-        self.init(account: account, delegate, contentInteractions, type: type)
+        self.init(account: account, delegate, contentInteractions, type: type, reversed: reversed)
 
        
         let previous:Atomic<[ChatHistoryEntry]> = Atomic(value:[])
@@ -479,6 +480,9 @@ class GalleryViewer: NSResponder {
             }
             |> map { [weak self] transition, previous, new in
                 if let strongSelf = self {
+                    
+                    let new = reversed ? new.reversed() : new
+                    
                     _ = current.swap(new)
                     
                     var id:MessageId = message.id
@@ -530,7 +534,9 @@ class GalleryViewer: NSResponder {
             
             let current = entries[selectedIndex]
             if let location = current.location {
-                self.controls.index.set(.single((location.index + 1, location.count)))
+                let total = location.count
+                let current = reversed ? total - location.index : location.index + 1
+                self.controls.index.set(.single((current, total)))
             } else  {
                 self.controls.index.set(.single((self.pager.currentIndex + 1, self.pager.count)))
             }
@@ -542,10 +548,18 @@ class GalleryViewer: NSResponder {
             let indexes = indexes.modify({$0})
             
             if let pagerIndex = currentIndex.modify({$0}) {
-                if selectedIndex < pagerIndex && pagerIndex < reqlimit, let earlier = indexes.earlierId {
-                    request.set(.single(earlier))
-                } else if selectedIndex > pagerIndex && pagerIndex > entries.count - reqlimit, let later = indexes.laterId {
-                    request.set(.single(later))
+                if selectedIndex < pagerIndex && pagerIndex < reqlimit {
+                    if !reversed, let earlier = indexes.earlierId {
+                        request.set(.single(earlier))
+                    } else if reversed, let later = indexes.laterId {
+                        request.set(.single(later))
+                    }
+                } else if selectedIndex > pagerIndex && pagerIndex > entries.count - reqlimit {
+                    if !reversed, let later = indexes.laterId {
+                        request.set(.single(later))
+                    } else if reversed, let earlier = indexes.earlierId {
+                        request.set(.single(earlier))
+                    }
                 }
             }
             _ = currentIndex.swap(selectedIndex)
@@ -782,16 +796,15 @@ func closeGalleryViewer(_ animated: Bool) {
     viewer?.close(animated)
 }
 
-func showChatGallery(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history) {
+func showChatGallery(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false) {
     if viewer == nil {
-        let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type)
+        let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type, reversed: reversed)
         gallery.show()
     }
 }
 
-func showGalleryFromPip(item: MGalleryItem, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history) {
-    if viewer == nil, let message = item.entry.message {
-        let gallery = GalleryViewer(account: item.account, message: message, delegate, contentInteractions, type: type, item: item)
+func showGalleryFromPip(item: MGalleryItem, gallery: GalleryViewer, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history) {
+    if viewer == nil {
         gallery.show(true, item.stableId)
     }
 }

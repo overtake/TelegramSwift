@@ -23,7 +23,7 @@ open class MagnifyView : NSView {
     private var mov_content_start:NSPoint = NSZeroPoint
     
     
-    public let contentView:NSView
+    public private(set) var contentView:NSView
     let containerView:NSView = NSView()
     public var contentSize:NSSize = NSZeroSize {
         didSet {
@@ -33,6 +33,15 @@ open class MagnifyView : NSView {
     private var magnifiedSize:NSSize {
         return NSMakeSize(floorToScreenPixels(contentSize.width * magnify), floorToScreenPixels(contentSize.height * magnify))
     }
+    
+    public func swapView(_ newView: NSView) {
+        self.contentView.removeFromSuperview()
+        newView.removeFromSuperview()
+        self.contentView = newView
+        containerView.addSubview(newView)
+        resetMagnify()
+    }
+    
     public init(_ contentView:NSView, contentSize:NSSize) {
         self.contentView = contentView
         contentView.setFrameSize(contentSize)

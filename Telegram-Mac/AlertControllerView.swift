@@ -99,9 +99,12 @@ class AlertControllerView: View {
     }
     
 
-    func layoutButtons(okTitle: String, cancelTitle: String?, thridTitle: String?, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void, thridHandler:@escaping()->Void) {
+    func layoutButtons(okTitle: String, cancelTitle: String?, thridTitle: String?, swapColors: Bool, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void, thridHandler:@escaping()->Void) {
         okButton.set(text: okTitle, for: .Normal)
         okButton.sizeToFit(NSMakeSize(40, 0))
+        
+        self.okButton.set(color: swapColors ? theme.colors.redUI : theme.colors.blueUI, for: .Normal)
+        self.cancelButton.set(color: !swapColors ? theme.colors.redUI : theme.colors.blueUI, for: .Normal)
         
         okButton.set(handler: { _ in
             okHandler()

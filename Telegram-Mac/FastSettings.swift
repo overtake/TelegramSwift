@@ -49,7 +49,7 @@ class FastSettings {
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
     private static let kForceTouchAction = "kForceTouchAction"
-    
+    private static let kNeedCollage = "kNeedCollage"
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -103,6 +103,14 @@ class FastSettings {
     
     static var recordingState: RecordingStateSettings {
         return RecordingStateSettings(rawValue: Int32(UserDefaults.standard.integer(forKey: kRecordingStateType))) ?? .voice
+    }
+    
+    static var isNeedCollage: Bool {
+        return UserDefaults.standard.bool(forKey: kNeedCollage)
+    }
+    
+    static func toggleIsNeedCollage(_ enable: Bool) -> Void {
+        UserDefaults.standard.set(enable, forKey: kNeedCollage)
     }
     
     static func toggleRecordingState() {

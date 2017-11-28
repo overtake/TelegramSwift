@@ -81,8 +81,15 @@ class ChatGroupedItem: ChatRowItem {
         self.captionLayout = captionLayout
     }
     
+    override func share() {
+        if let message = message {
+            showModal(with: ShareModalController(ShareMessageObject(account, message, layout.messages)), for: mainWindow)
+        }
+
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        layout.measure(NSMakeSize(min(width, 320), min(width, 320)))
+        layout.measure(NSMakeSize(min(width, 260), min(width, 260)))
         return layout.dimensions
     }
     
@@ -133,6 +140,32 @@ class ChatGroupedItem: ChatRowItem {
                 guard let `self` = self else {return}
                 self.chatInteraction.deleteMessages(self.layout.messages.map{$0.id})
             }))
+        }
+        if let message = layout.messages.last {
+            if let peer = message.peers[message.id.peerId] as? TelegramChannel, let address = peer.addressName {
+                
+                items.append(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                    copyToClipboard("t.me/\(address)/\(message.id.id)")
+                }))
+            }
+        }
+        
+        var editMessage: Message? = nil
+        for message in layout.messages {
+            if let _ = editMessage, !message.text.isEmpty {
+                editMessage = nil
+                break
+            }
+            if !message.text.isEmpty {
+                editMessage = message
+            }
+        }
+        if let editMessage = editMessage {
+            if canEditMessage(editMessage, account:account) {
+                items.append(ContextMenuItem(tr(.messageContextEdit), handler: { [weak self] in
+                    self?.chatInteraction.beginEditingMessage(editMessage)
+                }))
+            }
         }
         
         return .single(items)
@@ -275,7 +308,7 @@ private class ChatGroupedView : ChatRowView {
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
             
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, positionFlags: item.layout.position(at: i))
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, animated: animated)
             
             contents[i].change(pos: item.layout.frame(at: i).origin, animated: animated)
         }

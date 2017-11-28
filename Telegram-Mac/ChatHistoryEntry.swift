@@ -516,6 +516,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     if hasUnread, sorted.count >= 2 {
         if  case .UnreadEntry = sorted[sorted.count - 2] {
             sorted.remove(at: sorted.count - 2)
+        } else if case .UnreadEntry = sorted[0], case .HoleEntry = sorted[1] {
+            sorted.removeFirst()
         }
     }
     

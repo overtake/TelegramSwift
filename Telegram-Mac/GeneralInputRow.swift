@@ -39,6 +39,7 @@ class GeneralInputRowItem: TableRowItem {
     let placeholder:NSAttributedString
     let limit:Int32
     let holdText:Bool
+    let automaticallyBecomeResponder: Bool
     fileprivate let canFastClean: Bool
     let _stableId:AnyHashable
     override var stableId: AnyHashable {
@@ -47,9 +48,10 @@ class GeneralInputRowItem: TableRowItem {
     
     
     
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), placeholder:String, text:String = "", limit:Int32 = 140, insets: NSEdgeInsets = NSEdgeInsets(left:25,right:25,top:2,bottom:3), textChangeHandler:@escaping(String)->Void = {_ in}, textFilter:@escaping(String)->String = {value in return value}, holdText:Bool = false, inputType: GeneralInputRowType = .plain, pasteFilter:((String)->(Bool, String))? = nil, canFastClean: Bool = false) {
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), placeholder:String, text:String = "", limit:Int32 = 140, insets: NSEdgeInsets = NSEdgeInsets(left:25,right:25,top:2,bottom:3), textChangeHandler:@escaping(String)->Void = {_ in}, textFilter:@escaping(String)->String = {value in return value}, holdText:Bool = false, inputType: GeneralInputRowType = .plain, pasteFilter:((String)->(Bool, String))? = nil, canFastClean: Bool = false, automaticallyBecomeResponder: Bool = true) {
         _stableId = stableId
         self.insets = insets
+        self.automaticallyBecomeResponder = automaticallyBecomeResponder
         self.pasteFilter = pasteFilter
         self.holdText = holdText
         self.canFastClean = canFastClean
@@ -319,7 +321,9 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
     }
     
     override func becomeFirstResponder() -> Bool {
-        window?.makeFirstResponder(firstResponder)
+        if let item = item as? GeneralInputRowItem, item.automaticallyBecomeResponder {
+            window?.makeFirstResponder(firstResponder)
+        }
         return true
     }
     

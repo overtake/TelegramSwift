@@ -60,9 +60,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     private var activity:Any?
 
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+       
+    }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
         
         
         let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
@@ -296,7 +298,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
     
     func applicationWillBecomeActive(_ notification: Notification) {
-         window.makeKeyAndOrderFront(nil)
+        if contextValue != nil {
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 
     override func awakeFromNib() {

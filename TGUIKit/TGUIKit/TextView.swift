@@ -553,7 +553,7 @@ public final class TextViewLayout : Equatable {
     
     public func inSelectedRange(_ location:NSPoint) -> Bool {
         let index = findCharacterIndex(at: location)
-        return selectedRange.range.location < index && selectedRange.range.location + selectedRange.range.length > index
+        return selectedRange.range.indexIn(index)
     }
     
     public func isCurrentLine(pos:NSPoint, index:Int) -> Bool {

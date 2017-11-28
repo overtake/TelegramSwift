@@ -150,19 +150,20 @@ class WPArticleContentView: WPContentView {
                         playIcon = nil
                     }
                     
-                    if let imageSize = layout.imageArguments?.imageSize {
-                        imageView?.setSignal(signal: cachedMedia(media: image, size: imageSize, scale: backingScaleFactor))
-                    
-                    if let updateImageSignal = updateImageSignal, imageView?.layer?.contents == nil  {
-                            imageView?.setSignal(updateImageSignal, cacheImage: { [weak self] signal in
-                                if let strongSelf = self {
-                                    return cacheMedia(signal: signal, media: image, size: imageSize, scale: strongSelf.backingScaleFactor)
-                                } else {
-                                    return .complete()
-                                }
-                            })
+                    if let arguments = layout.imageArguments {
+                        imageView?.set(arguments: arguments)
+                        imageView?.setSignal(signal: cachedMedia(media: image, size: arguments.imageSize, scale: backingScaleFactor))
+                        
+                        if let updateImageSignal = updateImageSignal, imageView?.layer?.contents == nil  {
+                                imageView?.setSignal(updateImageSignal, cacheImage: { [weak self] signal in
+                                    if let strongSelf = self {
+                                        return cacheMedia(signal: signal, media: image, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                                    } else {
+                                        return .complete()
+                                    }
+                                })
+                            }
                         }
-                    }
                     
                 } else {
                     imageView?.removeFromSuperview()

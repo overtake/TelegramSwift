@@ -507,6 +507,15 @@ public extension Message {
         return nil
     }
     
+    var replyAttribute: ReplyMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ReplyMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var autoremoveAttribute:AutoremoveTimeoutMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? AutoremoveTimeoutMessageAttribute {

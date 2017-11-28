@@ -15,7 +15,7 @@ import SwiftSignalKitMac
 class PeerMediaRowItem: TableRowItem {
     
     var iconSize:NSSize = NSZeroSize
-    let contentInset:NSEdgeInsets = NSEdgeInsets(left: 70.0, right: 10, top: 5, bottom: 5)
+    var contentInset:NSEdgeInsets = NSEdgeInsets(left: 60.0, right: 10, top: 5, bottom: 5)
     
     var contentSize:NSSize = NSMakeSize(0, 50)
     

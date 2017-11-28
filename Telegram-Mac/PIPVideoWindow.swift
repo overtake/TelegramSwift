@@ -21,8 +21,9 @@ fileprivate class PIPVideoWindow: NSPanel {
     fileprivate weak var _delegate: InteractionContentViewProtocol?
     fileprivate let _contentInteractions:ChatMediaGalleryParameters?
     fileprivate let _type: GalleryAppearType
-    init(_ player:AVPlayerView, item: MGalleryVideoItem, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
-        
+    fileprivate let viewer: GalleryViewer
+    init(_ player:AVPlayerView, item: MGalleryVideoItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
+        self.viewer = viewer
         self._delegate = delegate
         self._contentInteractions = contentInteractions
         self._type = type
@@ -90,7 +91,6 @@ fileprivate class PIPVideoWindow: NSPanel {
     
     func hide() {
         orderOut(nil)
-        playerView.player?.pause()
         window = nil
     }
     
@@ -101,9 +101,16 @@ fileprivate class PIPVideoWindow: NSPanel {
         openGallery.change(opacity: 0, removeOnCompletion: false) { [weak openGallery] completed in
             openGallery?.removeFromSuperview()
         }
+        playerView.controlsStyle = .floating
         setFrame(rect, display: true, animate: true)
         hide()
-        showGalleryFromPip(item: item, delegate: _delegate, contentInteractions: _contentInteractions, type: _type)
+        showGalleryFromPip(item: item, gallery: self.viewer, delegate: _delegate, contentInteractions: _contentInteractions, type: _type)
+    }
+    
+    deinit {
+        if playerView.controlsStyle != .floating {
+            playerView.player?.pause()
+        }
     }
     
     override func animationResizeTime(_ newFrame: NSRect) -> TimeInterval {
@@ -166,8 +173,8 @@ fileprivate class PIPVideoWindow: NSPanel {
 
 private var window: PIPVideoWindow?
 
-func showPipVideo(_ player:AVPlayerView, item: MGalleryVideoItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
-    window = PIPVideoWindow(player, item: item, origin: origin, delegate: delegate, contentInteractions: contentInteractions, type: type)
+func showPipVideo(_ player:AVPlayerView, viewer: GalleryViewer, item: MGalleryVideoItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
+    window = PIPVideoWindow(player, item: item, viewer: viewer, origin: origin, delegate: delegate, contentInteractions: contentInteractions, type: type)
     window?.makeKeyAndOrderFront(nil)
 }
 
