@@ -173,10 +173,10 @@ func cachedMedia(media: Media, size: NSSize, scale: CGFloat) -> Signal<CGImage?,
 }
 
 func cacheMedia(signal:Signal<CGImage?, Void>, media: Media, size: NSSize, scale: CGFloat) -> Signal <Void, Void> {
-    let entry:PhotoCacheKeyEntry = .media(media, size, scale)
     
     return signal |> mapToSignal { image -> Signal<Void, Void> in
         if let image = image {
+            let entry:PhotoCacheKeyEntry = .media(media, size, scale)
             return .single(stickersCache.cacheImage(image, for: entry))
         }
         return .complete()

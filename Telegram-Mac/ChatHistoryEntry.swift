@@ -14,6 +14,7 @@ import TelegramCoreMac
 enum ChatHistoryEntryId : Hashable {
     case hole(MessageHistoryHole)
     case message(Message)
+    case groupedPhotos(groupInfo: MessageGroupInfo)
     case unread
     case date(MessageIndex)
     case undefined
@@ -28,6 +29,8 @@ enum ChatHistoryEntryId : Hashable {
             return 2 << 1
         case .date(let index):
             return index.hashValue
+        case .groupedPhotos(let info):
+            return Int(info.stableId)
         case .undefined:
             return 3 << 1
         case .maybeId(let id):
@@ -46,6 +49,12 @@ enum ChatHistoryEntryId : Hashable {
         case .message(let lhsMessage):
             if case .message(let rhsMessage) = rhs {
                 return lhsMessage.stableId == rhsMessage.stableId
+            } else {
+                return false
+            }
+        case let .groupedPhotos(groupingKey):
+            if case .groupedPhotos(groupingKey) = rhs {
+                return true
             } else {
                 return false
             }
@@ -82,14 +91,16 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(0) << 40
         case .message:
             return UInt64(1) << 40
+        case .groupedPhotos:
+            return UInt64(2) << 40
         case .unread:
-             return UInt64(2) << 40
+             return UInt64(3) << 40
         case .date:
-            return UInt64(3) << 40
-        case .undefined:
             return UInt64(4) << 40
-        case .maybeId:
+        case .undefined:
             return UInt64(5) << 40
+        case .maybeId:
+            return UInt64(6) << 40
         }
     }
 
@@ -98,6 +109,7 @@ enum ChatHistoryEntryId : Hashable {
 enum ChatHistoryEntry: Identifiable, Comparable {
     case HoleEntry(MessageHistoryHole)
     case MessageEntry(Message, Bool, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?)
+    case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
     case UnreadEntry(MessageIndex)
     case DateEntry(MessageIndex)
     case bottom
@@ -125,6 +137,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .hole(hole)
         case let .MessageEntry(message,_,_,_,_):
             return .message(message)
+        case .groupedPhotos(_, let info):
+            return .groupedPhotos(groupInfo: info)
         case let .DateEntry(index):
             return .date(index)
         case .UnreadEntry:
@@ -140,6 +154,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return hole.maxIndex
         case let .MessageEntry(message,_,_, _,_):
             return MessageIndex(message)
+        case let .groupedPhotos(entries, _):
+            return entries.last!.index
         case let .UnreadEntry(index):
             return index
         case let .DateEntry(index):
@@ -149,6 +165,52 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         }
     }
 
+}
+
+private func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
+    
+    if MessageIndex(lhsMessage) != MessageIndex(rhsMessage) || lhsMessage.stableVersion != rhsMessage.stableVersion {
+        return false
+    }
+    
+    if lhsMessage.media.count != rhsMessage.media.count {
+        return false
+    }
+    for i in 0 ..< lhsMessage.media.count {
+        if !lhsMessage.media[i].isEqual(rhsMessage.media[i]) {
+            return false
+        }
+    }
+    
+    if lhsMessage.associatedMessages.count != rhsMessage.associatedMessages.count {
+        return false
+    } else {
+        for (messageId, lhsAssociatedMessage) in lhsMessage.associatedMessages {
+            if let rhsAssociatedMessage = rhsMessage.associatedMessages[messageId] {
+                if lhsAssociatedMessage.stableVersion != rhsAssociatedMessage.stableVersion {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    
+    if lhsMessage.peers.count != rhsMessage.peers.count {
+        return false
+    } else {
+        for (lhsPeerId, lhsPeer) in lhsMessage.peers {
+            if let rhsPeer = rhsMessage.peers[lhsPeerId] {
+                if !lhsPeer.isEqual(rhsPeer) {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    
+    return true
 }
 
 func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
@@ -162,47 +224,24 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         }
     case let .MessageEntry(lhsMessage,lhsRead,lhsType, lhsFwdType, _):
         switch rhs {
-        case let .MessageEntry(rhsMessage,rhsRead,rhsType, rhsFwdType, _) where MessageIndex(lhsMessage) == MessageIndex(rhsMessage) && lhsMessage.stableVersion == rhsMessage.stableVersion && lhsRead == rhsRead && lhsType == rhsType && lhsFwdType == rhsFwdType:
-            if lhsMessage.media.count != rhsMessage.media.count {
-                return false
-            }
-            for i in 0 ..< lhsMessage.media.count {
-                if !lhsMessage.media[i].isEqual(rhsMessage.media[i]) {
-                    return false
-                }
-            }
-            
-            
-            if lhsMessage.associatedMessages.count != rhsMessage.associatedMessages.count {
-                return false
-            } else {
-                for (messageId, lhsAssociatedMessage) in lhsMessage.associatedMessages {
-                    if let rhsAssociatedMessage = rhsMessage.associatedMessages[messageId] {
-                        if lhsAssociatedMessage.stableVersion != rhsAssociatedMessage.stableVersion {
-                            return false
-                        }
-                    } else {
-                        return false
-                    }
-                }
-            }
-            
-            if lhsMessage.peers.count != rhsMessage.peers.count {
-                return false
-            } else {
-                for (lhsPeerId, lhsPeer) in lhsMessage.peers {
-                    if let rhsPeer = rhsMessage.peers[lhsPeerId] {
-                        if !lhsPeer.isEqual(rhsPeer) {
-                            return false
-                        }
-                    } else {
-                        return false
-                    }
-                }
-            }
-            
-            return true
+        case let .MessageEntry(rhsMessage,rhsRead,rhsType, rhsFwdType, _) where lhsRead == rhsRead && lhsType == rhsType && lhsFwdType == rhsFwdType:
+            return isEqualMessages(lhsMessage, rhsMessage)
         default:
+            return false
+        }
+    case let .groupedPhotos(lhsEntries, lhsGroupingKey):
+        if case let .groupedPhotos(rhsEntries, rhsGroupingKey) = rhs {
+            if lhsEntries.count != rhsEntries.count {
+                return false
+            } else {
+                for i in 0 ..< lhsEntries.count {
+                    if lhsEntries[i] != rhsEntries[i] {
+                        return false
+                    }
+                }
+                return lhsGroupingKey == rhsGroupingKey
+            }
+        } else {
             return false
         }
     case let .UnreadEntry(lhsIndex):
@@ -241,9 +280,13 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = []) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = [], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
  
+    
+    var groupedPhotos:[ChatHistoryEntry] = []
+    var groupInfo: MessageGroupInfo?
+    
     
     var i:Int = 0
     for entry in messagesEntries {
@@ -268,14 +311,47 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 break
             }
             
+            
+            
             var prev:MessageHistoryEntry? = nil
             var next:MessageHistoryEntry? = nil
             
             if i > 0 {
-                prev = messagesEntries[i - 1]
+                for k in stride(from: i - 1, to: -1, by: -1) {
+                    let current = messagesEntries[k]
+                    if let groupInfo = message.groupInfo {
+                        if case let .MessageEntry(msg,_, _, _) = current {
+                            if msg.groupInfo == groupInfo {
+                                continue
+                            } else {
+                                prev = current
+                                break
+                            }
+                        }
+                    } else {
+                        prev = current
+                        break
+                    }
+                }
+                
             }
             if i < messagesEntries.count - 1 {
-                next = messagesEntries[i + 1]
+                for k in i + 1 ..< messagesEntries.count {
+                    let current = messagesEntries[k]
+                    if let groupInfo = message.groupInfo {
+                        if case let .MessageEntry(msg,_, _, _) = current {
+                            if msg.groupInfo == groupInfo {
+                                continue
+                            } else {
+                                next = current
+                                break
+                            }
+                        }
+                    } else {
+                        next = current
+                        break
+                    }
+                }
             }
             
             let isAdmin = adminIds.contains(message.author?.id ?? PeerId(0))
@@ -305,7 +381,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     } else {
                         var canShort:Bool = true
                         for attr in message.attributes {
-                            if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) {
+                            if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
                                 canShort = false
                                 break
                             }
@@ -358,6 +434,45 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
             
             
+            
+            
+            let entry: ChatHistoryEntry = .MessageEntry(message,read,itemType,fwdType, location)
+            
+            
+            if let key = message.groupInfo, groupingPhotos {
+                if groupInfo == nil {
+                    groupInfo = key
+                    groupedPhotos.append(entry)
+                } else if groupInfo == key {
+                    groupedPhotos.append(entry)
+                } else {
+                    if groupedPhotos.count > 0 {
+                        if let groupInfo = groupInfo {
+                            entries.append(.groupedPhotos(groupedPhotos, groupInfo: groupInfo))
+                        }
+                        groupedPhotos.removeAll()
+                    }
+                    
+                    groupInfo = key
+                    groupedPhotos.append(entry)
+                }
+            } else {
+                entries.append(entry)
+                
+                
+
+            }
+            
+            prev = nil
+            next = nil
+            
+            if i > 0 {
+                prev = messagesEntries[i - 1]
+            }
+            if i < messagesEntries.count - 1 {
+                next = messagesEntries[i + 1]
+            }
+            
             if prev == nil && dayGrouping {
                 var time = TimeInterval(message.timestamp)
                 time -= timeDifference
@@ -365,8 +480,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
                 entries.append(.DateEntry(index))
             }
-
-            entries.append(.MessageEntry(message,read,itemType,fwdType, location))
 
             if let next = next, case let .MessageEntry(nextMessage,_, _, _) = next, dayGrouping {
                 let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
@@ -394,13 +507,17 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         entries.append(.bottom)
     }
     
-    
-    
+    if !groupedPhotos.isEmpty, let key = groupInfo {
+        entries.append(.groupedPhotos(groupedPhotos, groupInfo: key))
+    }
+//
     var sorted = entries.sorted()
 
     if hasUnread, sorted.count >= 2 {
         if  case .UnreadEntry = sorted[sorted.count - 2] {
             sorted.remove(at: sorted.count - 2)
+        } else if case .UnreadEntry = sorted[0], case .HoleEntry = sorted[1] {
+            sorted.removeFirst()
         }
     }
     

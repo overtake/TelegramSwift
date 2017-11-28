@@ -31,9 +31,36 @@ class ChatInputAttachView: ImageButton {
             
         }, for: .Click)
         
+        let attachFile = { [weak self] in
+            if let strongSelf = self, let window = strongSelf.kitWindow {
+                filePanel(for: window, completion:{ result in
+                    if let result = result {
+                        
+                        let previous = result.count
+                        
+                        let result = result.filter { path -> Bool in
+                            if let size = fileSize(path) {
+                                return size <= 1500000000
+                            }
+                            return false
+                        }
+                        
+                        let afterSizeCheck = result.count
+                        
+                        if afterSizeCheck == 0 && previous != afterSizeCheck {
+                            alert(for: mainWindow, header: appName, info: tr(.appMaxFileSize))
+                        } else {
+                            strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, false)
+                        }
+                        
+                    }
+                })
+            }
+        }
+        
         let attachPhotoOrVideo = { [weak self] in
             if let strongSelf = self, let window = strongSelf.kitWindow {
-                filePanel(with:mediaExts, for:window, completion:{(result) in
+                filePanel(with:mediaExts, for: window, completion:{(result) in
                     if let result = result {
                         let previous = result.count
                         
@@ -76,31 +103,8 @@ class ChatInputAttachView: ImageButton {
                         })
                     }
                     
-                }, theme.icons.chatAttachCamera), SPopoverItem(tr(.inputAttachPopoverFile), { [weak strongSelf] in
-                    if let strongSelf = strongSelf, let window = strongSelf.kitWindow {
-                        filePanel(for:window, completion:{(result) in
-                            if let result = result {
-                                
-                                let previous = result.count
-                                
-                                let result = result.filter { path -> Bool in
-                                    if let size = fileSize(path) {
-                                        return size <= 1500000000
-                                    }
-                                    return false
-                                }
-                                
-                                let afterSizeCheck = result.count
-                                
-                                if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                    alert(for: mainWindow, header: appName, info: tr(.appMaxFileSize))
-                                } else {
-                                    strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, false)
-                                }
-                                
-                            }
-                        })
-                    }
+                }, theme.icons.chatAttachCamera), SPopoverItem(tr(.inputAttachPopoverFile), {
+                    attachFile()
                 }, theme.icons.chatAttachFile)]
                 
                 strongSelf.controller = SPopoverViewController(items: items)
@@ -116,7 +120,7 @@ class ChatInputAttachView: ImageButton {
                 }
                 self?.controller?.popover?.hide()
                 Queue.mainQueue().justDispatch {
-                    attachPhotoOrVideo()
+                    attachFile()
                 }
                 
             }

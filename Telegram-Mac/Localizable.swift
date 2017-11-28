@@ -115,7 +115,7 @@ enum L10n {
   case adminsWhoCanInviteEveryone
   /// Who can add members
   case adminsWhoCanInviteText
-  /// Cancel
+  /// CANCEL
   case alertCancel
   /// OK
   case alertOK
@@ -497,8 +497,10 @@ enum L10n {
   case chatContextCopyBlock
   /// Unmute
   case chatContextDisableNotifications
-  /// Edit (click on date)
-  case chatContextEdit
+  /// Edit
+  case chatContextEdit1
+  /// click on date
+  case chatContextEditHelp
   /// Mute
   case chatContextEnableNotifications
   /// Info
@@ -607,6 +609,8 @@ enum L10n {
   case chatServiceSecretChatSetTimerSelf(String)
   /// Your Cloud storage
   case chatTitleSelf
+  /// %d of %d
+  case chatWebpageMediaCount(Int, Int)
   /// Draft:
   case chatListDraft
   /// Message is not supported
@@ -629,6 +633,8 @@ enum L10n {
   case chatListContextMute
   /// Pin
   case chatListContextPin
+  /// Sorry, you can pin no more than chats to the top.
+  case chatListContextPinError
   /// Return Group
   case chatListContextReturnGroup
   /// Unmute
@@ -1161,8 +1167,10 @@ enum L10n {
   case messageContextGoto
   /// Pin
   case messageContextPin
-  /// Reply (double click)
-  case messageContextReply
+  /// Reply
+  case messageContextReply1
+  /// double click
+  case messageContextReplyHelp
   /// Add GIF
   case messageContextSaveGif
   /// Select
@@ -1191,6 +1199,8 @@ enum L10n {
   case messagesPlaceholderBroadcast
   /// Write a message...
   case messagesPlaceholderSentMessage
+  /// Silent Broadcast...
+  case messagesPlaceholderSilentBroadcast
   /// Reply
   case messagesReplyLoadingHeader
   /// Loading...
@@ -1249,10 +1259,6 @@ enum L10n {
   case passcodeEnterNewPlaceholder
   /// Enter a passcode
   case passcodeEnterPasscodePlaceholder
-  /// If you don't remember your passcode, you can
-  case passcodeLogoutDescription
-  /// logout
-  case passcodeLogoutLinkText
   /// Next
   case passcodeNext
   /// Re-enter a passcode
@@ -1263,30 +1269,38 @@ enum L10n {
   case passcodeTurnOn
   /// When you set up an additional passcode, you can use ⌘ + L for lock.\n\nNote: if you forget the passcode, you'll need to delete and reinstall the app. All secret chats will be lost.
   case passcodeTurnOnDescription
+  /// unlock application.
+  case passcodeUnlockTouchIdReason
+  /// Unlock with Touch ID
+  case passcodeUseTouchId
   /// Disabled
   case passcodeAutoLockDisabled
   /// If away for %@
   case passcodeAutoLockIfAway(String)
+  /// If you don't remember your passcode, you can [logout]()
+  case passcodeLostDescription
   /// Sorry, Telegram Mac doesn't support payments yet. Please use one of our mobile apps to do this.
   case paymentsUnsupported
   /// Deleted User
   case peerDeletedUser
+  /// Saved Messages
+  case peerSavedMessages
   /// Service Notifications
   case peerServiceNotifications
-  /// %d are recording voice
-  case peerActivityChatMultiRecordingAudio(Int)
-  /// %d are recording video
-  case peerActivityChatMultiRecordingVideo(Int)
-  /// %d are sending audio
-  case peerActivityChatMultiSendingAudio(Int)
-  /// %d are sending file
-  case peerActivityChatMultiSendingFile(Int)
-  /// %d are sending photo
-  case peerActivityChatMultiSendingPhoto(Int)
-  /// %d are sending video
-  case peerActivityChatMultiSendingVideo(Int)
-  /// %d are typing
-  case peerActivityChatMultiTypingText(Int)
+  /// %@ and %d are recording voice
+  case peerActivityChatMultiRecordingAudio1(String, Int)
+  /// %@ and %d are recording video
+  case peerActivityChatMultiRecordingVideo1(String, Int)
+  /// %@ and %d are sending audio
+  case peerActivityChatMultiSendingAudio1(String, Int)
+  /// %@ and %d are sending file
+  case peerActivityChatMultiSendingFile1(String, Int)
+  /// %@ and %d are sending photo
+  case peerActivityChatMultiSendingPhoto1(String, Int)
+  /// %@ and %d are sending video
+  case peerActivityChatMultiSendingVideo1(String, Int)
+  /// %@ and %d are typing
+  case peerActivityChatMultiTypingText1(String, Int)
   /// recording voice
   case peerActivityUserRecordingAudio
   /// recording video
@@ -1299,6 +1313,10 @@ enum L10n {
   case peerActivityUserSendingVideo
   /// typing
   case peerActivityUserTypingText
+  /// Remove photo
+  case peerCreatePeerContextRemovePhoto
+  /// Update photo
+  case peerCreatePeerContextUpdatePhoto
   /// You can send and receive files of any type up to 1.5 GB each and access them anywhere.
   case peerMediaSharedFilesEmptyList
   /// All links shared in this chat will appear here.
@@ -1519,18 +1537,126 @@ enum L10n {
   case preHistorySettingsDescriptionVisible
   /// bot
   case presenceBot
-  /// Caption...
-  case previderSenderCaptionPlaceholder
+  /// Add a caption...
+  case previewSenderCaptionPlaceholder
+  /// Group media into one message
+  case previewSenderCollageTooltip
+  /// Add a comment...
+  case previewSenderCommentPlaceholder
   /// Send as compressed
   case previewSenderCompressFile
+  /// Without compression
+  case previewSenderFileTooltip
+  /// Quick way
+  case previewSenderMediaTooltip
+  /// %d
+  case previewSenderSendAudioCountable(Int)
+  /// Send %d Audios
+  case previewSenderSendAudioFew(Int)
+  /// Send %d Audios
+  case previewSenderSendAudioMany(Int)
+  /// Send Audio
+  case previewSenderSendAudioOne
+  /// Send %d Audios
+  case previewSenderSendAudioOther(Int)
+  /// Send %d Audios
+  case previewSenderSendAudioTwo(Int)
+  /// Send Audio
+  case previewSenderSendAudioZero
+  /// %d
+  case previewSenderSendFileCountable(Int)
+  /// Send %d Files
+  case previewSenderSendFileFew(Int)
+  /// Send %d Files
+  case previewSenderSendFileMany(Int)
+  /// Send File
+  case previewSenderSendFileOne
+  /// Send %d Files
+  case previewSenderSendFileOther(Int)
+  /// Send %d Files
+  case previewSenderSendFileTwo(Int)
+  /// Send File
+  case previewSenderSendFileZero
+  /// %d
+  case previewSenderSendGifCountable(Int)
+  /// Send %d GIFs
+  case previewSenderSendGifFew(Int)
+  /// Send %d GIFs
+  case previewSenderSendGifMany(Int)
+  /// Send GIF
+  case previewSenderSendGifOne
+  /// Send %d GIFs
+  case previewSenderSendGifOther(Int)
+  /// Send %d GIFs
+  case previewSenderSendGifTwo(Int)
+  /// Send GIF
+  case previewSenderSendGifZero
+  /// %d
+  case previewSenderSendMediaCountable(Int)
+  /// Send %d Media
+  case previewSenderSendMediaFew(Int)
+  /// Send %d Media
+  case previewSenderSendMediaMany(Int)
+  /// Send Media
+  case previewSenderSendMediaOne
+  /// Send %d Media
+  case previewSenderSendMediaOther(Int)
+  /// Send %d Media
+  case previewSenderSendMediaTwo(Int)
+  /// Send Media
+  case previewSenderSendMediaZero
+  /// %d
+  case previewSenderSendPhotoCountable(Int)
+  /// Send %d Photos
+  case previewSenderSendPhotoFew(Int)
+  /// Send %d Photos
+  case previewSenderSendPhotoMany(Int)
+  /// Send Photo
+  case previewSenderSendPhotoOne
+  /// Send %d Photos
+  case previewSenderSendPhotoOther(Int)
+  /// Send %d Photos
+  case previewSenderSendPhotoTwo(Int)
+  /// Send Photo
+  case previewSenderSendPhotoZero
+  /// %d
+  case previewSenderSendVideoCountable(Int)
+  /// Send %d Videos
+  case previewSenderSendVideoFew(Int)
+  /// Send %d Videos
+  case previewSenderSendVideoMany(Int)
+  /// Send Video
+  case previewSenderSendVideoOne
+  /// Send %d Videos
+  case previewSenderSendVideoOther(Int)
+  /// Send %d Videos
+  case previewSenderSendVideoTwo(Int)
+  /// Send Video
+  case previewSenderSendVideoZero
   /// Active Sessions
   case privacySettingsActiveSessions
   /// Blocked Users
   case privacySettingsBlockedUsers
+  /// If Away For
+  case privacySettingsDeleteAccount
+  /// If you do not log in at least once within this period, your account will be deleted along with all groups, messages and contacts.
+  case privacySettingsDeleteAccountDescription
+  /// DELETE ACCOUNT
+  case privacySettingsDeleteAccountHeader
   /// Groups
   case privacySettingsGroups
   /// Last Seen
   case privacySettingsLastSeen
+  /// My Contacts (-%@)
+  case privacySettingsLastSeenContactsMinus(String)
+  /// My Contacts (-%@, +%@)
+  case privacySettingsLastSeenContactsMinusPlus(String, String)
+  /// My Contacts (+%@)
+  case privacySettingsLastSeenContactsPlus(String)
+  /// Everybody (-%@)
+  case privacySettingsLastSeenEverybodyMinus(String)
+  /// Nobody (+%@)
+  case privacySettingsLastSeenNobodyPlus(String)
   /// Passcode
   case privacySettingsPasscode
   /// PRIVACY
@@ -1669,6 +1795,10 @@ enum L10n {
   case rgMF4YcnTitle
   /// Select All
   case ruw6mB2mTitle
+  /// %@, %d subscribers
+  case searchGlobalChannel(String, Int)
+  /// %@, %d members
+  case searchGlobalGroup(String, Int)
   /// contacts and chats
   case searchSeparatorChatsAndContacts
   /// global search
@@ -1837,8 +1967,6 @@ enum L10n {
   case telegramPeerInfoController
   /// Change Number
   case telegramPhoneNumberConfirmController
-  /// Change Phone Number
-  case telegramPhoneNumberIntroController
   /// Chat History Settings
   case telegramPreHistorySettingsController
   /// Privacy and Security
@@ -1865,6 +1993,8 @@ enum L10n {
   case textViewTransformCode
   /// Make Italic
   case textViewTransformItalic
+  /// Make URL
+  case textViewTransformURL
   /// at
   case timeAt
   /// last seen
@@ -2613,8 +2743,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.Context.CopyBlock")
       case .chatContextDisableNotifications:
         return L10n.tr(key: "Chat.Context.DisableNotifications")
-      case .chatContextEdit:
-        return L10n.tr(key: "Chat.Context.Edit")
+      case .chatContextEdit1:
+        return L10n.tr(key: "Chat.Context.Edit1")
+      case .chatContextEditHelp:
+        return L10n.tr(key: "Chat.Context.EditHelp")
       case .chatContextEnableNotifications:
         return L10n.tr(key: "Chat.Context.EnableNotifications")
       case .chatContextInfo:
@@ -2723,6 +2855,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.Service.SecretChat.SetTimer.Self", p1)
       case .chatTitleSelf:
         return L10n.tr(key: "Chat.Title.self")
+      case .chatWebpageMediaCount(let p1, let p2):
+        return L10n.tr(key: "Chat.Webpage.MediaCount", p1, p2)
       case .chatListDraft:
         return L10n.tr(key: "ChatList.Draft")
       case .chatListUnsupportedMessage:
@@ -2745,6 +2879,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "ChatList.Context.Mute")
       case .chatListContextPin:
         return L10n.tr(key: "ChatList.Context.Pin")
+      case .chatListContextPinError:
+        return L10n.tr(key: "ChatList.Context.PinError")
       case .chatListContextReturnGroup:
         return L10n.tr(key: "ChatList.Context.ReturnGroup")
       case .chatListContextUnmute:
@@ -3277,8 +3413,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Message.Context.Goto")
       case .messageContextPin:
         return L10n.tr(key: "Message.Context.Pin")
-      case .messageContextReply:
-        return L10n.tr(key: "Message.Context.Reply")
+      case .messageContextReply1:
+        return L10n.tr(key: "Message.Context.Reply1")
+      case .messageContextReplyHelp:
+        return L10n.tr(key: "Message.Context.ReplyHelp")
       case .messageContextSaveGif:
         return L10n.tr(key: "Message.Context.SaveGif")
       case .messageContextSelect:
@@ -3307,6 +3445,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Messages.Placeholder.Broadcast")
       case .messagesPlaceholderSentMessage:
         return L10n.tr(key: "Messages.Placeholder.SentMessage")
+      case .messagesPlaceholderSilentBroadcast:
+        return L10n.tr(key: "Messages.Placeholder.SilentBroadcast")
       case .messagesReplyLoadingHeader:
         return L10n.tr(key: "Messages.ReplyLoading.Header")
       case .messagesReplyLoadingLoading:
@@ -3365,10 +3505,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Passcode.EnterNewPlaceholder")
       case .passcodeEnterPasscodePlaceholder:
         return L10n.tr(key: "Passcode.EnterPasscodePlaceholder")
-      case .passcodeLogoutDescription:
-        return L10n.tr(key: "Passcode.LogoutDescription")
-      case .passcodeLogoutLinkText:
-        return L10n.tr(key: "Passcode.LogoutLinkText")
       case .passcodeNext:
         return L10n.tr(key: "Passcode.Next")
       case .passcodeReEnterPlaceholder:
@@ -3379,30 +3515,38 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Passcode.TurnOn")
       case .passcodeTurnOnDescription:
         return L10n.tr(key: "Passcode.TurnOnDescription")
+      case .passcodeUnlockTouchIdReason:
+        return L10n.tr(key: "Passcode.UnlockTouchIdReason")
+      case .passcodeUseTouchId:
+        return L10n.tr(key: "Passcode.UseTouchId")
       case .passcodeAutoLockDisabled:
         return L10n.tr(key: "Passcode.AutoLock.Disabled")
       case .passcodeAutoLockIfAway(let p1):
         return L10n.tr(key: "Passcode.AutoLock.IfAway", p1)
+      case .passcodeLostDescription:
+        return L10n.tr(key: "Passcode.Lost.Description")
       case .paymentsUnsupported:
         return L10n.tr(key: "Payments.Unsupported")
       case .peerDeletedUser:
         return L10n.tr(key: "Peer.DeletedUser")
+      case .peerSavedMessages:
+        return L10n.tr(key: "Peer.SavedMessages")
       case .peerServiceNotifications:
         return L10n.tr(key: "Peer.ServiceNotifications")
-      case .peerActivityChatMultiRecordingAudio(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingAudio", p1)
-      case .peerActivityChatMultiRecordingVideo(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingVideo", p1)
-      case .peerActivityChatMultiSendingAudio(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingAudio", p1)
-      case .peerActivityChatMultiSendingFile(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingFile", p1)
-      case .peerActivityChatMultiSendingPhoto(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingPhoto", p1)
-      case .peerActivityChatMultiSendingVideo(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingVideo", p1)
-      case .peerActivityChatMultiTypingText(let p1):
-        return L10n.tr(key: "Peer.Activity.Chat.Multi.TypingText", p1)
+      case .peerActivityChatMultiRecordingAudio1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingAudio1", p1, p2)
+      case .peerActivityChatMultiRecordingVideo1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.RecordingVideo1", p1, p2)
+      case .peerActivityChatMultiSendingAudio1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingAudio1", p1, p2)
+      case .peerActivityChatMultiSendingFile1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingFile1", p1, p2)
+      case .peerActivityChatMultiSendingPhoto1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingPhoto1", p1, p2)
+      case .peerActivityChatMultiSendingVideo1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.SendingVideo1", p1, p2)
+      case .peerActivityChatMultiTypingText1(let p1, let p2):
+        return L10n.tr(key: "Peer.Activity.Chat.Multi.TypingText1", p1, p2)
       case .peerActivityUserRecordingAudio:
         return L10n.tr(key: "Peer.Activity.User.RecordingAudio")
       case .peerActivityUserRecordingVideo:
@@ -3415,6 +3559,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Peer.Activity.User.SendingVideo")
       case .peerActivityUserTypingText:
         return L10n.tr(key: "Peer.Activity.User.TypingText")
+      case .peerCreatePeerContextRemovePhoto:
+        return L10n.tr(key: "Peer.CreatePeer.Context.RemovePhoto")
+      case .peerCreatePeerContextUpdatePhoto:
+        return L10n.tr(key: "Peer.CreatePeer.Context.UpdatePhoto")
       case .peerMediaSharedFilesEmptyList:
         return L10n.tr(key: "Peer.Media.SharedFilesEmptyList")
       case .peerMediaSharedLinksEmptyList:
@@ -3635,18 +3783,126 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PreHistorySettings.Description.Visible")
       case .presenceBot:
         return L10n.tr(key: "Presence.bot")
-      case .previderSenderCaptionPlaceholder:
-        return L10n.tr(key: "PreviderSender.CaptionPlaceholder")
+      case .previewSenderCaptionPlaceholder:
+        return L10n.tr(key: "PreviewSender.CaptionPlaceholder")
+      case .previewSenderCollageTooltip:
+        return L10n.tr(key: "PreviewSender.CollageTooltip")
+      case .previewSenderCommentPlaceholder:
+        return L10n.tr(key: "PreviewSender.CommentPlaceholder")
       case .previewSenderCompressFile:
         return L10n.tr(key: "PreviewSender.CompressFile")
+      case .previewSenderFileTooltip:
+        return L10n.tr(key: "PreviewSender.FileTooltip")
+      case .previewSenderMediaTooltip:
+        return L10n.tr(key: "PreviewSender.MediaTooltip")
+      case .previewSenderSendAudioCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_countable", p1)
+      case .previewSenderSendAudioFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_few", p1)
+      case .previewSenderSendAudioMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_many", p1)
+      case .previewSenderSendAudioOne:
+        return L10n.tr(key: "PreviewSender.SendAudio_one")
+      case .previewSenderSendAudioOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_other", p1)
+      case .previewSenderSendAudioTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendAudio_two", p1)
+      case .previewSenderSendAudioZero:
+        return L10n.tr(key: "PreviewSender.SendAudio_zero")
+      case .previewSenderSendFileCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_countable", p1)
+      case .previewSenderSendFileFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_few", p1)
+      case .previewSenderSendFileMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_many", p1)
+      case .previewSenderSendFileOne:
+        return L10n.tr(key: "PreviewSender.SendFile_one")
+      case .previewSenderSendFileOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_other", p1)
+      case .previewSenderSendFileTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendFile_two", p1)
+      case .previewSenderSendFileZero:
+        return L10n.tr(key: "PreviewSender.SendFile_zero")
+      case .previewSenderSendGifCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_countable", p1)
+      case .previewSenderSendGifFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_few", p1)
+      case .previewSenderSendGifMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_many", p1)
+      case .previewSenderSendGifOne:
+        return L10n.tr(key: "PreviewSender.SendGif_one")
+      case .previewSenderSendGifOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_other", p1)
+      case .previewSenderSendGifTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendGif_two", p1)
+      case .previewSenderSendGifZero:
+        return L10n.tr(key: "PreviewSender.SendGif_zero")
+      case .previewSenderSendMediaCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_countable", p1)
+      case .previewSenderSendMediaFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_few", p1)
+      case .previewSenderSendMediaMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_many", p1)
+      case .previewSenderSendMediaOne:
+        return L10n.tr(key: "PreviewSender.SendMedia_one")
+      case .previewSenderSendMediaOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_other", p1)
+      case .previewSenderSendMediaTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendMedia_two", p1)
+      case .previewSenderSendMediaZero:
+        return L10n.tr(key: "PreviewSender.SendMedia_zero")
+      case .previewSenderSendPhotoCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_countable", p1)
+      case .previewSenderSendPhotoFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_few", p1)
+      case .previewSenderSendPhotoMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_many", p1)
+      case .previewSenderSendPhotoOne:
+        return L10n.tr(key: "PreviewSender.SendPhoto_one")
+      case .previewSenderSendPhotoOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_other", p1)
+      case .previewSenderSendPhotoTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendPhoto_two", p1)
+      case .previewSenderSendPhotoZero:
+        return L10n.tr(key: "PreviewSender.SendPhoto_zero")
+      case .previewSenderSendVideoCountable(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_countable", p1)
+      case .previewSenderSendVideoFew(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_few", p1)
+      case .previewSenderSendVideoMany(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_many", p1)
+      case .previewSenderSendVideoOne:
+        return L10n.tr(key: "PreviewSender.SendVideo_one")
+      case .previewSenderSendVideoOther(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_other", p1)
+      case .previewSenderSendVideoTwo(let p1):
+        return L10n.tr(key: "PreviewSender.SendVideo_two", p1)
+      case .previewSenderSendVideoZero:
+        return L10n.tr(key: "PreviewSender.SendVideo_zero")
       case .privacySettingsActiveSessions:
         return L10n.tr(key: "PrivacySettings.ActiveSessions")
       case .privacySettingsBlockedUsers:
         return L10n.tr(key: "PrivacySettings.BlockedUsers")
+      case .privacySettingsDeleteAccount:
+        return L10n.tr(key: "PrivacySettings.DeleteAccount")
+      case .privacySettingsDeleteAccountDescription:
+        return L10n.tr(key: "PrivacySettings.DeleteAccountDescription")
+      case .privacySettingsDeleteAccountHeader:
+        return L10n.tr(key: "PrivacySettings.DeleteAccountHeader")
       case .privacySettingsGroups:
         return L10n.tr(key: "PrivacySettings.Groups")
       case .privacySettingsLastSeen:
         return L10n.tr(key: "PrivacySettings.LastSeen")
+      case .privacySettingsLastSeenContactsMinus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenContactsMinus", p1)
+      case .privacySettingsLastSeenContactsMinusPlus(let p1, let p2):
+        return L10n.tr(key: "PrivacySettings.LastSeenContactsMinusPlus", p1, p2)
+      case .privacySettingsLastSeenContactsPlus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenContactsPlus", p1)
+      case .privacySettingsLastSeenEverybodyMinus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenEverybodyMinus", p1)
+      case .privacySettingsLastSeenNobodyPlus(let p1):
+        return L10n.tr(key: "PrivacySettings.LastSeenNobodyPlus", p1)
       case .privacySettingsPasscode:
         return L10n.tr(key: "PrivacySettings.Passcode")
       case .privacySettingsPrivacyHeader:
@@ -3785,6 +4041,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "rgM-f4-ycn.title")
       case .ruw6mB2mTitle:
         return L10n.tr(key: "Ruw-6m-B2m.title")
+      case .searchGlobalChannel(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel", p1, p2)
+      case .searchGlobalGroup(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group", p1, p2)
       case .searchSeparatorChatsAndContacts:
         return L10n.tr(key: "Search.Separator.ChatsAndContacts")
       case .searchSeparatorGlobalPeers:
@@ -3953,8 +4213,6 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Telegram.PeerInfoController")
       case .telegramPhoneNumberConfirmController:
         return L10n.tr(key: "Telegram.PhoneNumberConfirmController")
-      case .telegramPhoneNumberIntroController:
-        return L10n.tr(key: "Telegram.PhoneNumberIntroController")
       case .telegramPreHistorySettingsController:
         return L10n.tr(key: "Telegram.PreHistorySettingsController")
       case .telegramPrivacyAndSecurityViewController:
@@ -3981,6 +4239,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "TextView.Transform.Code")
       case .textViewTransformItalic:
         return L10n.tr(key: "TextView.Transform.Italic")
+      case .textViewTransformURL:
+        return L10n.tr(key: "TextView.Transform.URL")
       case .timeAt:
         return L10n.tr(key: "Time.at")
       case .timeLastSeen:
@@ -4234,9 +4494,9 @@ extension L10n: CustomStringConvertible {
     }
   }
 
-    private static func tr(key: String, _ args: CVarArg...) -> String {
-        return translate(key: key, args)
-    }
+  private static func tr(key: String, _ args: CVarArg...) -> String {
+    return translate(key: key, args)
+  }
 }
 
 func tr(_ key: L10n) -> String {

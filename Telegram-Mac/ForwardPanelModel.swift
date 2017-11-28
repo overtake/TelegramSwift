@@ -48,8 +48,25 @@ class ForwardPanelModel: ChatAccessoryModel {
         
         var used:Set<PeerId> = Set()
         
+        
+        
+        
         for message in forwardMessages {
-            if let peer = messageMainPeer(message), let author = message.author  {
+            
+            var hasSource: Bool = false
+            for attr in message.attributes {
+                if let _ = attr as? SourceReferenceMessageAttribute {
+                    if let info = message.forwardInfo {
+                        if !used.contains(info.author.id) {
+                            used.insert(info.author.id)
+                            names.append(info.author.displayTitle)
+                        }
+                    }
+                    hasSource = true
+                    break
+                }
+            }
+            if let peer = messageMainPeer(message), let author = message.author, !hasSource  {
                 if !used.contains(author.id) {
                     used.insert(author.id)
                     if peer.isChannel {

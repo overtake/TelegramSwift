@@ -82,6 +82,10 @@ class ChatMediaLayoutParameters : Equatable {
         }
     }
     
+    func makeLabelsForWidth(_ width: CGFloat) {
+        
+    }
+    
 }
 
 class ChatMediaGalleryParameters : ChatMediaLayoutParameters {
@@ -202,72 +206,15 @@ class ChatMediaItem: ChatRowItem {
         }
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
-        
-        if self.chatInteraction.isLogInteraction {
-            return .single([])
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        if let message = message, let peer = peer {
+            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
         }
-        
-        let signal = super.menuItems()
-        if let account = account {
-            if let file = self.media as? TelegramMediaFile {
-                return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
-                    var items = items
-                    return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
-                        if data.complete {
-                            items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
-                                saveAs(file, account: account)
-                            }))
-                        }
-                        
-                        if file.isSticker, let fileId = file.id {
-                            return account.postbox.modify { modifier -> [ContextMenuItem] in
-                                let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
-                                items.append(ContextMenuItem( !saved ? tr(.chatContextAddFavoriteSticker) : tr(.chatContextRemoveFavoriteSticker), handler: {
-                                    
-                                    if !saved {
-                                       _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
-                                    } else {
-                                        _ = removeSavedSticker(postbox: account.postbox, mediaId: fileId).start()
-                                    }
-                                }))
-                                
-                                return items
-                            }
-                        }
-                        
-                        return .single(items)
-                    }
-                }
-            } else if let image = self.media as? TelegramMediaImage {
-
-                return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
-                    var items = items
-                    if let resource = image.representations.last?.resource {
-                        return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
-                            if data.complete {
-                                items.append(ContextMenuItem(tr(.galleryContextCopyToClipboard), handler: {
-                                    if let path = link(path: data.path, ext: "jpg") {
-                                        let pb = NSPasteboard.general
-                                        pb.clearContents()
-                                        pb.writeObjects([NSURL(fileURLWithPath: path)])
-                                    }
-                                }))
-                                items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
-                                    savePanel(file: data.path, ext: "jpg", for: mainWindow)
-                                }))
-                            }
-                            return items
-                        }
-                    } else {
-                        return .single(items)
-                    }
-                }
-            }
-            
-        }
-        
-        return signal
+        return super.menuItems(in: location)
+    }
+    
+    override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        return false
     }
     
     override var identifier: String {

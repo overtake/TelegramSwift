@@ -40,6 +40,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
     required init(frame frameRect: NSRect) {
         input = NSSecureTextField(frame: NSZeroRect)
+        input.stringValue = ""
         super.init(frame: frameRect)
         photoView.setFrameSize(NSMakeSize(80, 80))
         self.backgroundColor = theme.colors.background

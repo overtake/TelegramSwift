@@ -20,6 +20,7 @@ class WPArticleContentView: WPContentView {
     private var playIcon:ImageView?
     private let openExternalDisposable:MetaDisposable = MetaDisposable()
     private let loadingStatusDisposable: MetaDisposable = MetaDisposable()
+    private var countAccessoryView: ChatMessageAccessoryView?
     override var backgroundColor: NSColor {
         didSet {
             self.setNeedsDisplay()
@@ -78,8 +79,8 @@ class WPArticleContentView: WPContentView {
             }
             if content.embedType == "iframe" {
                 showModal(with: WebpageModalController(content:content,account:layout.account), for: window)
-            } else if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" {
-                showChatGallery(account: layout.account, message: layout.parent, layout.table)
+            } else if layout.isGalleryAssemble {
+                showChatGallery(account: layout.account, message: layout.parent, layout.table, type: .alone)
             } else {
                 execute(inapp: .external(link: content.url, false))
             }
@@ -149,19 +150,20 @@ class WPArticleContentView: WPContentView {
                         playIcon = nil
                     }
                     
-                    if let imageSize = layout.imageArguments?.imageSize {
-                        imageView?.setSignal(signal: cachedMedia(media: image, size: imageSize, scale: backingScaleFactor))
-                    
-                    if let updateImageSignal = updateImageSignal, imageView?.layer?.contents == nil  {
-                            imageView?.setSignal(account: layout.account, signal: updateImageSignal, cacheImage: { [weak self] signal in
-                                if let strongSelf = self {
-                                    return cacheMedia(signal: signal, media: image, size: imageSize, scale: strongSelf.backingScaleFactor)
-                                } else {
-                                    return .complete()
-                                }
-                            })
+                    if let arguments = layout.imageArguments {
+                        imageView?.set(arguments: arguments)
+                        imageView?.setSignal(signal: cachedMedia(media: image, size: arguments.imageSize, scale: backingScaleFactor))
+                        
+                        if let updateImageSignal = updateImageSignal, imageView?.layer?.contents == nil  {
+                                imageView?.setSignal(updateImageSignal, cacheImage: { [weak self] signal in
+                                    if let strongSelf = self {
+                                        return cacheMedia(signal: signal, media: image, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                                    } else {
+                                        return .complete()
+                                    }
+                                })
+                            }
                         }
-                    }
                     
                 } else {
                     imageView?.removeFromSuperview()
@@ -182,6 +184,17 @@ class WPArticleContentView: WPContentView {
                 durationView?.removeFromSuperview()
                 durationView = nil
             }
+            
+            if let mediaCount = layout.mediaCount {
+                if countAccessoryView == nil {
+                    countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
+                    imageView?.addSubview(countAccessoryView!)
+                }
+                countAccessoryView?.updateText(tr(.chatWebpageMediaCount(1, mediaCount)), maxWidth: 30)
+            } else {
+                countAccessoryView?.removeFromSuperview()
+                countAccessoryView = nil
+            }
            
         }
         
@@ -201,7 +214,6 @@ class WPArticleContentView: WPContentView {
             playIcon?.isHidden = progressIndicator != nil
             
             if let imageView = imageView {
-                
                 
                 progressIndicator?.center()
                 
@@ -224,7 +236,10 @@ class WPArticleContentView: WPContentView {
                 playIcon?.center()
                 
                 if let durationView = durationView {
-                    durationView.setFrameOrigin(imageView.frame.width - durationView.frame.width - 10, 10)
+                    durationView.setFrameOrigin(imageView.frame.width - durationView.frame.width - 10, imageView.frame.height - durationView.frame.height - 10)
+                }
+                if let countAccessoryView = countAccessoryView {
+                    countAccessoryView.setFrameOrigin(imageView.frame.width - countAccessoryView.frame.width - 10, 10)
                 }
             }
         }
@@ -232,7 +247,7 @@ class WPArticleContentView: WPContentView {
         
     }
     
-    override var interactionContentView:NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return self.imageView ?? self
     }
     

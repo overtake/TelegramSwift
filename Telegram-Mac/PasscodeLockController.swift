@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
+import LocalAuthentication
 
 enum PasscodeInnterState {
     case old
@@ -37,6 +38,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     fileprivate var logoutImpl:() -> Void = {}
     required init(frame frameRect: NSRect) {
         input = NSSecureTextField(frame: NSZeroRect)
+        input.stringValue = ""
         super.init(frame: frameRect)
         photoView.setFrameSize(NSMakeSize(80, 80))
         self.backgroundColor = .white
@@ -67,19 +69,17 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.textView?.insertionPointColor = theme.colors.text
         input.sizeToFit()
         
-        let logoutAttr = NSMutableAttributedString()
-        _ = logoutAttr.append(string: tr(.passcodeLogoutDescription), color: theme.colors.grayText, font: .normal(.text))
-        _ = logoutAttr.append(string: " ")
-        let range = logoutAttr.append(string: tr(.passcodeLogoutLinkText), color: theme.colors.link, font: .normal(.text))
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+            return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents,  {_ in}))
+        }))
         
         logoutTextView.isSelectable = false
         
-        logoutAttr.add(link: inAppLink.logout( { [weak self] in
-            self?.logoutImpl()
-        } ), for: range)
-        
         let logoutLayout = TextViewLayout(logoutAttr)
-        logoutLayout.interactions = globalLinkExecutor
+        logoutLayout.interactions = TextViewInteractions(processURL:{ [weak self] _ in
+            self?.logoutImpl()
+        })
+        
         logoutTextView.set(layout: logoutLayout)
         
         
@@ -290,6 +290,23 @@ class PasscodeLockController: ModalViewController {
         }
     }
     
+    func callTouchId() {
+        let myContext = LAContext()
+                
+        if myContext.canUseBiometric {
+            myContext.evaluatePolicy(.applicationPolicy, localizedReason: tr(.passcodeUnlockTouchIdReason)) { (success, evaluateError) in
+                if (success) {
+                    Queue.mainQueue().async {
+                        self._doneValue.set(.single(true))
+                        self.close()
+                    }
+                }
+            }
+        }
+        
+
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -312,8 +329,16 @@ class PasscodeLockController: ModalViewController {
             self?.checkNextValue(value, current)
         }))
         
-        disposable.set((account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
+        disposable.set(combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue, additionalSettings(postbox: account.postbox) |> take(1)).start(next: { [weak self] peer, additional in
             if let strongSelf = self {
+                if additional.useTouchId {
+                    switch strongSelf.state {
+                    case .login:
+                        strongSelf.callTouchId()
+                    default:
+                        break
+                    }
+                }
                 strongSelf.genericView.update(with: strongSelf.state, account: strongSelf.account, peer: peer)
                 strongSelf.readyOnce()
             }

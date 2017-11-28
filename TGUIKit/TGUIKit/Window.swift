@@ -316,7 +316,9 @@ public class Window: NSWindow {
         }
     }
     
-    
+    public override func makeKeyAndOrderFront(_ sender: Any?) {
+        super.makeKeyAndOrderFront(sender)
+    }
     
     public override func close() {
         if let closeInterceptor = closeInterceptor {
@@ -478,4 +480,6 @@ public class Window: NSWindow {
         
       //  self.contentView?.canDrawSubviewsIntoLayer = true
     }
+    
+    
 }

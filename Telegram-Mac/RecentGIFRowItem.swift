@@ -71,7 +71,7 @@ class RecentGIFRowView: TableRowView {
                 view.playerInset = NSEdgeInsets(left: i == 0 ? 2 : 1, right: i == item.row.entries.count - 1 ? 2 : 1, top: i == 0 ? 2 : 1, bottom: i == item.row.entries.count - 1 ? 2 : 1)
                 
                 let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
-                signal = chatWebpageSnippetPhoto(account: item.account, photo: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: item.row.results[i].previewRepresentations), scale: backingScaleFactor, small:true)
+                signal = chatWebpageSnippetPhoto(account: item.account, photo: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: item.row.results[i].previewRepresentations, reference: nil), scale: backingScaleFactor, small:true)
 
                 
                 view.update(with: item.row.results[i].resource, size: NSMakeSize(item.row.sizes[i].width, item.height), viewSize:  item.row.sizes[i] , account: item.account, table: item.table, iconSignal: signal)

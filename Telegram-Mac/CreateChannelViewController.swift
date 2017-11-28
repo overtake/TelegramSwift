@@ -13,19 +13,36 @@ import SwiftSignalKitMac
 import TGUIKit
 
 
-class CreateChannelViewController: ComposeViewController<PeerId?, Void, TableView> {
+class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, TableView> {
 
     private var nameItem:GroupNameRowItem!
     private var descItem:GeneralInputRowItem!
-
+    private var picture: String? {
+        didSet {
+            nameItem.photo = picture
+            genericView.reloadData(row: 0)
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.nextEnabled(false)
-        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, placeholder: tr(.channelChannelNameHolder), limit: 140, textChangeHandler:{ [weak self] text in
+        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, account: account, placeholder: tr(.channelChannelNameHolder), limit: 140, textChangeHandler:{ [weak self] text in
             self?.nextEnabled(!text.isEmpty)
+        }, pickPicture: { [weak self] select in
+            if let strongSelf = self, select {
+                pickImage(for: mainWindow, completion: { image in
+                    if let image = image {
+                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak strongSelf] path in
+                            strongSelf?.picture = path
+                        })
+                    }
+                })
+            } else {
+                self?.picture = nil
+            }
         })
-        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(.channelDescriptionHolder), limit: 300)
+        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(.channelDescriptionHolder), limit: 300, automaticallyBecomeResponder: false)
        
         _ = genericView.addItem(item: nameItem)
         _ = genericView.addItem(item: GeneralRowItem(atomicSize.modify({$0}), height: 30, stableId: 1))
@@ -39,7 +56,25 @@ class CreateChannelViewController: ComposeViewController<PeerId?, Void, TableVie
     }
     
     override func executeNext() {
-        onComplete.set(showModalProgress(signal: createChannel(account: account, title: nameItem.text, description: descItem.text), for: window!))
+        let picture = self.picture
+        let account = self.account
+        
+        onComplete.set(showModalProgress(signal: createChannel(account: account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
+            if let peerId = peerId, let picture = picture {
+                let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
+                let signal:Signal<(PeerId?, Bool), Void> = updatePeerPhoto(account: account, peerId: peerId, resource: resource) |> mapError {_ in} |> map { value in
+                    switch value {
+                    case .complete:
+                        return (Optional(peerId), false)
+                    default:
+                        return (nil, false)
+                    }
+                }
+                
+                return .single((peerId, true)) |> then(signal)
+            }
+            return .single((peerId, true))
+        })
     }
     
     override var canBecomeResponder: Bool {
@@ -47,7 +82,7 @@ class CreateChannelViewController: ComposeViewController<PeerId?, Void, TableVie
     }
     
     override func becomeFirstResponder() -> Bool? {
-        return false
+        return true
     }
     
     override func firstResponder() -> NSResponder? {
@@ -64,5 +99,9 @@ class CreateChannelViewController: ComposeViewController<PeerId?, Void, TableVie
         return nil
     }
 
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
 }

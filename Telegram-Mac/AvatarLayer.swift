@@ -187,10 +187,14 @@ class AvatarControl: NSView {
                     self.needsDisplay = true
                 }
             }
+        } else {
+            self.state = .Empty
         }
     }
     
     public func setSignal(_ signal: Signal<CGImage?, NoError>, animated: Bool) {
+        self.state = .Empty
+        self.peer = nil
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] next in
             if let strongSelf = self {
                 strongSelf.layer?.contents = next

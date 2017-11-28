@@ -33,11 +33,11 @@ class ChatStickerContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false) {
+    override func update(with media: Media, size: NSSize, account: Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
       
         let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
 
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated)
+        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         if let file = media as? TelegramMediaFile, mediaUpdated {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
@@ -48,7 +48,7 @@ class ChatStickerContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor))
             
             if self.image.layer?.contents == nil {
-                self.image.setSignal(account: account, signal: chatMessageSticker(account: account, file: file, type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                self.image.setSignal( chatMessageSticker(account: account, file: file, type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
                     if let strongSelf = self {
                         return cacheMedia(signal: signal, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                     } else {

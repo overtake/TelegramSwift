@@ -412,7 +412,7 @@ class GeneralSettingsViewController: TableViewController {
                     let messages = logs.map { (name, path) -> EnqueueMessage in
                         let id = arc4random64()
                         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
-                        return .message(text: "", attributes: [], media: file, replyToMessageId: nil)
+                        return .message(text: "", attributes: [], media: file, replyToMessageId: nil, localGroupingKey: nil)
                     }
                     return enqueueMessages(account: account, peerId: peerId, messages: messages) |> map {_ in}
                 }

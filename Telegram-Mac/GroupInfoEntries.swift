@@ -217,21 +217,6 @@ final class GroupInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-        
-        
-//        let updateSignal = filethumb(with: URL(fileURLWithPath: path), account: account, scale: System.backingScale) |> mapToSignal { res -> Signal<String, Void> in
-//            guard let image = NSImage(contentsOf: URL(fileURLWithPath: path)) else {
-//                return .complete()
-//            }
-//            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: image.size, boundingSize: NSMakeSize(640, 640), intrinsicInsets: NSEdgeInsets())
-//            if let image = res(arguments)?.generateImage() {
-//                return putToTemp(image: NSImage(cgImage: image, size: image.backingSize))
-//            }
-//            return .complete()
-//        } |> map { path -> TelegramMediaResource in
-//                return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-//            }
-        
         let updateSignal = Signal<String, Void>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
         } |> beforeNext { resource in
@@ -932,7 +917,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(.peerInfoSharelink), text: link, account: arguments.account, isTextSelectable:false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.account, link: link)), for: mainWindow)
-            })
+            }, selectFullWord: true)
         case .setGroupPhoto:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoSetGroupPhoto), nameStyle: blueActionButton, type: .none, action: {
                 
@@ -1237,7 +1222,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfo
             }
         }
         
-        if let cachedGroupData = view.cachedData as? CachedChannelData, let participants = cachedGroupData.topParticipants, let channel = group as? TelegramChannel {
+        if let cachedGroupData = view.cachedData as? CachedChannelData, let participants = cachedGroupData.topParticipants, let channel = group as? TelegramChannel, case let .group(info) = channel.info {
             
             var updatedParticipants = participants.participants
             let existingParticipantIds = Set(updatedParticipants.map { $0.peerId })
@@ -1268,7 +1253,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfo
                 entries.append(GroupInfoEntry.usersHeader(section: sectionId, count: Int(membersCount)))
             }
             
-            if channel.hasAdminRights(.canInviteUsers) {
+            if channel.hasAdminRights(.canInviteUsers) || info.flags.contains(.everyMemberCanInviteMembers) {
                 entries.append(GroupInfoEntry.addMember(section: sectionId))
             }
             

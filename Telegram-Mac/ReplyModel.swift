@@ -117,12 +117,7 @@ class ReplyModel: ChatAccessoryModel {
                     view.imageView?.centerY(x: super.leftInset)
                     
                     
-                    var mediaUpdated = false
-                    if let updatedMedia = updatedMedia, let previousMedia = self.previousMedia {
-                        mediaUpdated = !updatedMedia.isEqual(previousMedia)
-                    } else if (updatedMedia != nil) != (self.previousMedia != nil) {
-                        mediaUpdated = true
-                    }
+                    let mediaUpdated = true
                     
                     
                     var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
@@ -139,7 +134,7 @@ class ReplyModel: ChatAccessoryModel {
                         view.imageView?.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
                         
                         if view.imageView?.layer?.contents == nil {
-                            view.imageView?.setSignal(account: self.account, signal: updateImageSignal, animate: true, cacheImage: { image in
+                            view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
                                 return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
                             })
                             if let media = media as? TelegramMediaImage {
@@ -169,13 +164,24 @@ class ReplyModel: ChatAccessoryModel {
         updateImageIfNeeded()
 
         if let message = message {
+            
+            var peer = message.author
         
+            for attr in message.attributes {
+                if let _ = attr as? SourceReferenceMessageAttribute {
+                    if let info = message.forwardInfo {
+                        peer = info.author
+                    }
+                    break
+                }
+            }
+            
             
             var text = pullText(from:message, attachEmoji: false) as String
             if text.isEmpty {
                 text = serviceMessageText(message, account: account)
             }
-            self.headerAttr = .initialize(string: !isPinned ? message.author?.displayTitle : tr(.chatHeaderPinnedMessage), color: theme.colors.blueUI, font: .medium(.text))
+            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(.chatHeaderPinnedMessage), color: theme.colors.blueUI, font: .medium(.text))
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
         } else {
             self.headerAttr = nil

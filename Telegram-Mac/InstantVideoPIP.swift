@@ -135,7 +135,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         isShown = true
         if let media = currentMessage?.media.first as? TelegramMediaFile {
             let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
-            signal = chatWebpageSnippetPhoto(account: controller.account, photo: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations), scale: view.backingScaleFactor, small:true)
+            signal = chatWebpageSnippetPhoto(account: controller.account, photo: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil), scale: view.backingScaleFactor, small:true)
             genericView.update(with: media.resource, size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), account: controller.account, table: nil, iconSignal: signal)
         }
 

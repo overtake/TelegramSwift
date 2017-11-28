@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKitMac
-public class MagnifyView : NSView {
+open class MagnifyView : NSView {
     
     public private(set) var magnify:CGFloat = 1.0 {
         didSet {
@@ -23,7 +23,7 @@ public class MagnifyView : NSView {
     private var mov_content_start:NSPoint = NSZeroPoint
     
     
-    public let contentView:NSView
+    public private(set) var contentView:NSView
     let containerView:NSView = NSView()
     public var contentSize:NSSize = NSZeroSize {
         didSet {
@@ -33,6 +33,15 @@ public class MagnifyView : NSView {
     private var magnifiedSize:NSSize {
         return NSMakeSize(floorToScreenPixels(contentSize.width * magnify), floorToScreenPixels(contentSize.height * magnify))
     }
+    
+    public func swapView(_ newView: NSView) {
+        self.contentView.removeFromSuperview()
+        newView.removeFromSuperview()
+        self.contentView = newView
+        containerView.addSubview(newView)
+        resetMagnify()
+    }
+    
     public init(_ contentView:NSView, contentSize:NSSize) {
         self.contentView = contentView
         contentView.setFrameSize(contentSize)
@@ -61,7 +70,7 @@ public class MagnifyView : NSView {
         add(magnify: -0.5, for: NSMakePoint(containerView.frame.width/2, containerView.frame.height/2), animated: true)
     }
     
-    public override func layout() {
+    open override func layout() {
         super.layout()
         containerView.setFrameSize(frame.size)
         contentView.center()
@@ -71,7 +80,7 @@ public class MagnifyView : NSView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override public func magnify(with event: NSEvent) {
+    override open func magnify(with event: NSEvent) {
         super.magnify(with: event)
         
         add(magnify: event.magnification, for: containerView.convert(event.locationInWindow, from: nil))
@@ -83,7 +92,7 @@ public class MagnifyView : NSView {
         }
     }
     
-    override public func smartMagnify(with event: NSEvent) {
+    override open func smartMagnify(with event: NSEvent) {
         super.smartMagnify(with: event)
         addSmart(for: containerView.convert(event.locationInWindow, from: nil))
         smartUpdater.set(.single(magnifiedSize) |> delay(0.2, queue: Queue.mainQueue()))
@@ -128,18 +137,18 @@ public class MagnifyView : NSView {
         return point
     }
     
-    override public func mouseDown(with theEvent: NSEvent) {
+    override open func mouseDown(with theEvent: NSEvent) {
         self.mov_start = convert(theEvent.locationInWindow, from: nil)
         self.mov_content_start = contentView.frame.origin
     }
     
-    override public func mouseUp(with theEvent: NSEvent) {
+    override open func mouseUp(with theEvent: NSEvent) {
         self.mov_start = NSZeroPoint
         self.mov_content_start = NSZeroPoint
         super.mouseUp(with: theEvent)
     }
     
-    override public func mouseDragged(with theEvent: NSEvent) {
+    override open func mouseDragged(with theEvent: NSEvent) {
         super.mouseDragged(with: theEvent)
         if (mov_start.x == 0 || mov_start.y == 0) || (frame.width > magnifiedSize.width && frame.height > magnifiedSize.height) {
             return
@@ -169,7 +178,7 @@ public class MagnifyView : NSView {
         return point
     }
     
-    override public func scrollWheel(with event: NSEvent) {
+    override open func scrollWheel(with event: NSEvent) {
         
         if magnify == minMagnify {
             super.scrollWheel(with: event)

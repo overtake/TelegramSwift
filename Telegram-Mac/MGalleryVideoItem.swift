@@ -22,13 +22,56 @@ private class VideoPlayerView : AVPlayerView {
         bp += 1
     }
     
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateLayout()
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        updateLayout()
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateLayout()
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        updateLayout()
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateLayout()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateLayout()
+    }
+    
+    private func updateLayout() {
+        let controls = subviews.last?.subviews.last
+        if let controls = controls {
+            if let pip = controls.subviews.last as? ImageButton {
+                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 34)
+            }
+            controls.centerX(y: 95)
+            
+            controls._change(opacity: _mouseInside() ? 1 : 0, animated: true)
+            
+        }
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        updateLayout()
+    }
+    
     override func layout() {
         super.layout()
-        let controls = subviews.last?.subviews.last
-        if let controls = controls, let pip = controls.subviews.last as? ImageButton {
-            pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 34)
-            controls.centerX(y: 50)
-        }
+        updateLayout()
     }
 }
 
@@ -92,7 +135,7 @@ class MGalleryVideoItem: MGalleryItem {
             if let view = view, let strongSelf = self, let viewer = viewer {
                 let frame = view.window!.convertToScreen(view.convert(view.bounds, to: nil))
                 closeGalleryViewer(false)
-                showPipVideo(view, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
+                showPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
             }
         }, for: .Down)
         
@@ -143,7 +186,7 @@ class MGalleryVideoItem: MGalleryItem {
         playAfter = false
     }
     
-    private var media:TelegramMediaFile {
+    var media:TelegramMediaFile {
         switch entry {
         case .message(let entry):
             if let media = entry.message!.media[0] as? TelegramMediaFile {
@@ -175,7 +218,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     override func request(immediately: Bool) {
 
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
         
         let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: image, scale: System.backingScale)
         

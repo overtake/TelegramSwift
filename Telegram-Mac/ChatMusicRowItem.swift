@@ -31,6 +31,11 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
         self.resource = resource
     }
     
+    override func makeLabelsForWidth(_ width: CGFloat) {
+        nameLayout.measure(width: width - 20)
+        durationLayout.measure(width: width - 20)
+        sizeLayout.measure(width: width - 20)
+    }
 }
 
 class ChatMusicRowItem: ChatMediaItem {
@@ -47,9 +52,7 @@ class ChatMusicRowItem: ChatMediaItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            parameters.nameLayout.measure(width: width - 20)
-            parameters.durationLayout.measure(width: width - 20)
-            parameters.sizeLayout.measure(width: width - 20)
+            parameters.makeLabelsForWidth(width)
             return NSMakeSize(parameters.nameLayout.layoutSize.width + 50, 40)
         }
         return NSZeroSize

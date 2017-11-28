@@ -256,6 +256,7 @@ class StickersControllerView : View {
     override func updateLocalizationAndTheme() {
         self.restrictedView?.updateLocalizationAndTheme()
         self.separator.backgroundColor = theme.colors.border
+        gridView.updateLocalizationAndTheme()
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -279,6 +280,12 @@ class StickersControllerView : View {
 }
 
 class StickersViewController: GenericViewController<StickersControllerView>, TableViewDelegate, Notifable {
+    
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     
     private var interactions:EntertainmentInteractions?
     private var chatInteraction:ChatInteraction?

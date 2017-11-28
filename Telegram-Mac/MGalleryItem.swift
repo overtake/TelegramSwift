@@ -13,9 +13,54 @@ import SwiftSignalKitMac
 import TGUIKit
 
 
-enum GalleryEntry : Identifiable {
+func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
+    switch lhs {
+    case .message(let lhsEntry):
+        if case let .message(rhsEntry) = rhs {
+            return lhsEntry < rhsEntry
+        } else {
+            return false
+        }
+    case let .photo(lhsIndex, _, _, _):
+        if  case let .photo(rhsIndex, _, _, _) = rhs {
+            return lhsIndex < rhsIndex
+        } else {
+            return false
+        }
+    case let  .instantMedia(lhsMedia):
+        if case let .instantMedia(rhsMedia) = rhs {
+            return lhsMedia.index < rhsMedia.index
+        } else {
+            return false
+        }
+    }
+}
+
+func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
+    switch lhs {
+    case .message(let lhsEntry):
+        if case let .message(rhsEntry) = rhs {
+            return lhsEntry.stableId == rhsEntry.stableId
+        } else {
+            return false
+        }
+    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference):
+        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference) = rhs {
+            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(rhsPhoto) && lhsReference == rhsReference
+        } else {
+            return false
+        }
+    case let  .instantMedia(lhsMedia):
+        if case let .instantMedia(rhsMedia) = rhs {
+            return lhsMedia == rhsMedia
+        } else {
+            return false
+        }
+    }
+}
+enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
-    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaRemoteImageReference)
+    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?)
     case instantMedia(InstantPageMedia)
     var stableId: AnyHashable {
         switch self {
@@ -27,6 +72,8 @@ enum GalleryEntry : Identifiable {
             return media.index
         }
     }
+    
+    
     
     var identifier: String {
         switch self {
@@ -67,7 +114,7 @@ enum GalleryEntry : Identifiable {
         }
     }
     
-    var photoReference:TelegramMediaRemoteImageReference? {
+    var photoReference:TelegramMediaImageReference? {
         switch self {
         case .message:
             return nil
@@ -79,8 +126,14 @@ enum GalleryEntry : Identifiable {
     }
 }
 
+func ==(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
+    return lhs.entry == rhs.entry
+}
+func <(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
+    return lhs.entry < rhs.entry
+}
 
-class MGalleryItem: NSObject {
+class MGalleryItem: NSObject, Comparable, Identifiable {
     let image:Promise<CGImage?> = Promise()
     let view:Promise<NSView> = Promise()
     let size:Promise<NSSize> = Promise()
@@ -93,7 +146,10 @@ class MGalleryItem: NSObject {
     let path:Promise<String> = Promise()
     let entry:GalleryEntry
     let account:Account
-    let pagerSize:NSSize
+    private var _pagerSize: NSSize
+    var pagerSize:NSSize {
+        return _pagerSize
+    }
     let caption: TextViewLayout?
     
     private(set) var modifiedSize: NSSize? = nil
@@ -126,10 +182,10 @@ class MGalleryItem: NSObject {
     init(_ account:Account, _ entry:GalleryEntry, _ pagerSize:NSSize) {
         self.entry = entry
         self.account = account
-        self.pagerSize = pagerSize
-        if let caption = entry.message?.text {
+        self._pagerSize = pagerSize
+        if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
             self.caption = TextViewLayout(.initialize(string: caption, color: .white, font: .normal(.text)), alignment: .center)
-            self.caption?.measure(width: .greatestFiniteMagnitude)
+            self.caption?.measure(width: pagerSize.width - 200)
         } else {
             self.caption = nil
         }
@@ -194,7 +250,5 @@ class MGalleryItem: NSObject {
     
 }
 
-func ==(lhs:MGalleryItem, rhs:MGalleryItem) -> Bool {
-    return lhs.stableId == rhs.stableId
-}
+
 

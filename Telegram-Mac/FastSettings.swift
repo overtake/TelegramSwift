@@ -33,6 +33,11 @@ enum ForceTouchAction: Int32 {
     case forward
 }
 
+enum ContextTextTooltip : Int32 {
+    case reply
+    case edit
+}
+
 class FastSettings {
 
     private static let kSendingType = "kSendingType"
@@ -44,7 +49,7 @@ class FastSettings {
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
     private static let kForceTouchAction = "kForceTouchAction"
-    
+    private static let kNeedCollage = "kNeedCollage"
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -100,6 +105,14 @@ class FastSettings {
         return RecordingStateSettings(rawValue: Int32(UserDefaults.standard.integer(forKey: kRecordingStateType))) ?? .voice
     }
     
+    static var isNeedCollage: Bool {
+        return UserDefaults.standard.bool(forKey: kNeedCollage)
+    }
+    
+    static func toggleIsNeedCollage(_ enable: Bool) -> Void {
+        UserDefaults.standard.set(enable, forKey: kNeedCollage)
+    }
+    
     static func toggleRecordingState() {
         UserDefaults.standard.set((recordingState == .voice ? RecordingStateSettings.video : RecordingStateSettings.voice).rawValue, forKey: kRecordingStateType)
     }
@@ -110,6 +123,12 @@ class FastSettings {
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {
         UserDefaults.standard.set(action.rawValue, forKey: kForceTouchAction)
+    }
+    
+    static func tooltipAbility(for tooltip: ContextTextTooltip) -> Bool {
+        let value = UserDefaults.standard.integer(forKey: "tooltip:\(tooltip.rawValue)")
+        UserDefaults.standard.set(value + 1, forKey: "tooltip:\(tooltip.rawValue)")
+        return value < 12
     }
     
     static func toggleSidebarShown(_ enable: Bool) {
@@ -152,6 +171,9 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
         if data.complete {
             var ext:String = ""
             let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
+            if let ext = file.fileName?.nsstring.pathExtension {
+                return .single((data.path, ext))
+            }
             ext = fileName.nsstring.pathExtension
             return resourceType(mimeType: file.mimeType) |> mapToSignal { _type -> Signal<(String, String), Void> in
                 let ext = _type == "*" || _type == nil ? (ext.length == 0 ? "file" : ext) : _type!

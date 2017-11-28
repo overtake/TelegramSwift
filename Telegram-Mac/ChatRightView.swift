@@ -23,68 +23,65 @@ class ChatRightView: View {
     func set(item:ChatRowItem, animated:Bool) {
         self.item = item
         self.toolTip = item.fullDate
-        if let message = item.message {
-            if !message.flags.contains(.Incoming) && !item.chatInteraction.isLogInteraction {
-                
-                if message.flags.contains(.Unsent) {
-                    stateView?.removeFromSuperview()
-                    stateView = nil
-                    readImageView?.removeFromSuperview()
-                    readImageView = nil
-                    sendingView?.removeFromSuperview()
-                    sendingView = nil
-                    
-                    if sendingView == nil {
-                        sendingView = SendingClockProgress()
-                        sendingView?.setFrameOrigin(0,2)
-                        addSubview(sendingView!)
-                    }
-                } else {
-                    
-                    sendingView?.removeFromSuperview()
-                    sendingView = nil
-                    
-                    
-                    if let peer = item.peer as? TelegramChannel, case .broadcast = peer.info {
-                        stateView?.removeFromSuperview()
-                        stateView = nil
-                        readImageView?.removeFromSuperview()
-                        readImageView = nil
-                    } else {
-                        let stateImage = message.flags.contains(.Failed) ? theme.icons.sentFailed : theme.icons.chatReadMark1
-                        
-                        if stateView == nil {
-                            stateView = ImageView()
-                            self.addSubview(stateView!)
-                        }
-                        
-                        if item.isRead && !message.flags.contains(.Failed) {
-                            if readImageView == nil {
-                                readImageView = ImageView(frame: NSMakeRect(0, 0, theme.icons.chatReadMark2.backingSize.width, theme.icons.chatReadMark2.backingSize.height))
-                                addSubview(readImageView!)
-                            }
-                            
-                        } else {
-                            readImageView?.removeFromSuperview()
-                            readImageView = nil
-                        }
-                        
-                        stateView?.image = stateImage
-                        stateView?.setFrameSize(NSMakeSize(stateImage.backingSize.width, stateImage.backingSize.height))
-                    }
-                   
-                }
-           } else {
+        if !item.isIncoming && !item.chatInteraction.isLogInteraction {
+            if item.isUnsent {
                 stateView?.removeFromSuperview()
                 stateView = nil
                 readImageView?.removeFromSuperview()
                 readImageView = nil
                 sendingView?.removeFromSuperview()
                 sendingView = nil
+                
+                if sendingView == nil {
+                    sendingView = SendingClockProgress()
+                    sendingView?.setFrameOrigin(0,2)
+                    addSubview(sendingView!)
+                }
+            } else {
+                
+                sendingView?.removeFromSuperview()
+                sendingView = nil
+                
+                
+                if let peer = item.peer as? TelegramChannel, case .broadcast = peer.info {
+                    stateView?.removeFromSuperview()
+                    stateView = nil
+                    readImageView?.removeFromSuperview()
+                    readImageView = nil
+                } else {
+                    let stateImage = item.isFailed ? theme.icons.sentFailed : theme.icons.chatReadMark1
+                    
+                    if stateView == nil {
+                        stateView = ImageView()
+                        self.addSubview(stateView!)
+                    }
+                    
+                    if item.isRead && !item.isFailed && item.chatInteraction.peerId != item.account.peerId {
+                        if readImageView == nil {
+                            readImageView = ImageView(frame: NSMakeRect(0, 0, theme.icons.chatReadMark2.backingSize.width, theme.icons.chatReadMark2.backingSize.height))
+                            addSubview(readImageView!)
+                        }
+                        
+                    } else {
+                        readImageView?.removeFromSuperview()
+                        readImageView = nil
+                    }
+                    
+                    stateView?.image = stateImage
+                    stateView?.setFrameSize(NSMakeSize(stateImage.backingSize.width, stateImage.backingSize.height))
+                }
+                
             }
-            readImageView?.image = theme.icons.chatReadMark2
-            self.sendingView?.backgroundColor = theme.colors.background
+        } else {
+            stateView?.removeFromSuperview()
+            stateView = nil
+            readImageView?.removeFromSuperview()
+            readImageView = nil
+            sendingView?.removeFromSuperview()
+            sendingView = nil
         }
+        readImageView?.image = theme.icons.chatReadMark2
+        self.sendingView?.backgroundColor = theme.colors.background
         
         self.needsLayout = true
 
@@ -93,14 +90,14 @@ class ChatRightView: View {
 
     override func layout() {
         super.layout()
-        if let item = item, let message = item.message {
+        if let item = item {
             var rightInset:CGFloat = 0
             if let date = item.date {
                 rightInset = date.0.size.width + 20
             }
             
             if let stateView = stateView {
-                stateView.setFrameOrigin(frame.width - rightInset, message.flags.contains(.Failed) ? 0 : 2)
+                stateView.setFrameOrigin(frame.width - rightInset, item.isFailed ? 0 : 2)
             }
             if let readImageView = readImageView {
                 readImageView.setFrameOrigin((frame.width - rightInset) + 4, 2)

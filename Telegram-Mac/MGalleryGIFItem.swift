@@ -28,7 +28,7 @@ class MGalleryGIFItem: MGalleryItem {
         
     }
     
-    private var media:TelegramMediaFile {
+    var media:TelegramMediaFile {
         switch entry {
         case .message(let entry):
             if let media = entry.message!.media[0] as? TelegramMediaFile {
@@ -68,7 +68,7 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override func request(immediately: Bool) {
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
         
         let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: image, scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())

@@ -98,16 +98,10 @@ final class InstantPageMediaView: View, InstantPageView {
         }
         
         if let image = media.media as? TelegramMediaImage {
-            let imageSize = largestImageRepresentation(image.representations)?.dimensions ?? NSZeroSize
-            imageView.setSignal(signal: cachedMedia(media: image, size: imageSize, scale: backingScaleFactor))
             
-            self.imageView.setSignal(account: account, signal: chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor), cacheImage: { [weak self] img in
-                if let strongSelf = self {
-                    return cacheMedia(signal: img, media: image, size: imageSize, scale: strongSelf.backingScaleFactor)
-                } else {
-                    return .complete()
-                }
-            })
+            self.imageView.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+
+           
             self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: image).start())
             if let largest = largestImageRepresentation(image.representations) {
                 statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start())
@@ -117,7 +111,7 @@ final class InstantPageMediaView: View, InstantPageView {
             statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
             self.fetchedDisposable.set(account.postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .video)).start())
             
-            self.imageView.setSignal(account: account, signal: chatMessageVideo(account: account, video: file, scale: backingScaleFactor))
+            self.imageView.setSignal( chatMessageVideo(account: account, video: file, scale: backingScaleFactor))
 
             switch arguments {
             case let .video(_, autoplay):

@@ -147,69 +147,73 @@ class ChatSelectText : NSObject {
                 let point = superview.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 let documentPoint = documentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 let row = table.row(at: documentPoint)
-                if !NSPointInRect(point, table.frame) {
+                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals() || (!table.item(at: row).canMultiselectTextIn(window.mouseLocationOutsideOfEventStream) && chatInteraction.presentation.state != .selecting)) {
                     self?.beginInnerLocation = NSZeroPoint
                 } else {
                     self?.beginInnerLocation = documentPoint
                 }
-                Queue.mainQueue().justDispatch { [weak self] in
-                    if chatInteraction.presentation.state == .selecting {
-                        if let beginInnerLocation = self?.beginInnerLocation, let selectionState = chatInteraction.presentation.selectionState {
-                            let row = table.row(at: beginInnerLocation)
-                            if row != -1, let item = table.item(at: row) as? ChatRowItem, let message = item.message {
-                                if self?.startMessageId == nil {
-                                    self?.startMessageId = message.id
-                                }
-                                self?.deselect = !selectionState.selectedIds.contains(message.id)
-                            }
+                
+                if chatInteraction.presentation.state == .selecting {
+                    if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
+                        if self?.startMessageId == nil {
+                            self?.startMessageId = item.message?.id
                         }
-                    } else {
-                        if let view = table.viewNecessary(at: row) as? ChatRowView, !view.canStartTextSelecting(event) {
-                            self?.beginInnerLocation = NSZeroPoint
-                        }
-                        self?.startMessageId = nil
+                        self?.deselect = !view.isSelectInGroup(window.mouseLocationOutsideOfEventStream)
                     }
-                    self?.started = self?.beginInnerLocation != NSZeroPoint
-                    
                 }
+                
+                self?.started = self?.beginInnerLocation != NSZeroPoint
             }
             
             return .invokeNext
-            }, with: self, for: .leftMouseDown, priority:.medium)
+        }, with: self, for: .leftMouseDown, priority:.medium)
         
-        window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
+        window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            
             self?.beginInnerLocation = NSZeroPoint
             
-            let point = self?.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
-            if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index) as? ChatRowItem {
+            Queue.mainQueue().justDispatch {
+                guard let table = self?.table else {return}
+                guard let documentView = table.documentView else {return}
                 
-                if item.message?.id == self?.startMessageId {
-                    if let result = item.chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
-                        self?.startMessageId = nil
-                        item.chatInteraction.update({$0.withoutSelectionState()})
+                var cleanStartId: Bool = false
+                let documentPoint = documentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                let row = table.row(at: documentPoint)
+                 if chatInteraction.presentation.state != .selecting {
+                    if let view = table.viewNecessary(at: row) as? ChatRowView, !view.canStartTextSelecting(event) {
+                        self?.beginInnerLocation = NSZeroPoint
                     }
+                    cleanStartId = true
                 }
                 
+                let point = self?.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
+                if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index) as? ChatRowItem, let view = item.view as? ChatRowView {
+                    
+                    if item.message?.id == self?.startMessageId, view.canDropSelection(in: window.mouseLocationOutsideOfEventStream) {
+                        if let result = item.chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
+                            self?.startMessageId = nil
+                            item.chatInteraction.update({$0.withoutSelectionState()})
+                        }
+                    }
+                }
+                if cleanStartId {
+                    self?.startMessageId = nil
+                }
             }
-            
-            
             return .invokeNext
-            }, with: self, for: .leftMouseUp, priority:.medium)
+        }, with: self, for: .leftMouseUp, priority:.medium)
         
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             self?.endInnerLocation = self?.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             
-            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {
-                if overView.userInteractionEnabled == false {
-                    self?.started = false
-                }
-            }
+//            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {
+//                 self?.started = overView.userInteractionEnabled == true
+//            }
             if self?.started == true {
                 self?.started = !hasPopover(window)
             }
             
             if self?.started == true {
-                
                 self?.table.clipView.autoscroll(with: event)
                 
                 if chatInteraction.presentation.state != .selecting {
@@ -223,11 +227,11 @@ class ChatSelectText : NSObject {
                     
                 } else if chatInteraction.presentation.state == .selecting {
                     self?.runSelector(false, window: window, chatInteraction:chatInteraction)
-                    return .invoked
+                    return .invokeNext
                 }
             }
             return .invokeNext
-            }, with: self, for: .leftMouseDragged, priority:.medium)
+        }, with: self, for: .leftMouseDragged, priority:.medium)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
             guard let `self` = self else { return .invokeNext }
@@ -319,22 +323,13 @@ class ChatSelectText : NSObject {
                 
             }
         } else {
-            if let selectionState = chatInteraction.presentation.selectionState {
-                
-                var ids:Set<MessageId> = selectionState.selectedIds
+            if chatInteraction.presentation.state == .selecting {
                 for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
-                    if let item = table.item(at: i) as? ChatRowItem, let message = item.message {
-                        
-                        if deselect {
-                            ids.remove(message.id)
-                        } else {
-                            ids.insert(message.id)
-                        }
+                    let item = table.item(at: i) as? ChatRowItem
+                    if let view = item?.view as? ChatRowView {
+                        view.toggleSelected(deselect, in: window.mouseLocationOutsideOfEventStream)
                     }
-                    
-                    
                 }
-                chatInteraction.update({$0.withUpdatedSelectedMessages(ids)})
                 
             }
             

@@ -103,6 +103,32 @@ public class LinearProgressControl: Control {
         progressView = View(frame:NSMakeRect(0, 0, 0, progressHeight))
         progressView.backgroundColor = style.foregroundColor
         addSubview(progressView)
+        
+    }
+    
+    private func updateCursor() {
+        if mouseInside() && onUserChanged != nil {
+            set(background: style.highlightColor.withAlphaComponent(0.2), for: .Hover)
+            NSCursor.pointingHand.set()
+        } else {
+            set(background: style.backgroundColor, for: .Hover)
+            NSCursor.arrow.set()
+        }
+    }
+    
+    public override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateCursor()
+    }
+    
+    public override func mouseExited(with event: NSEvent) {
+         super.mouseExited(with: event)
+        updateCursor()
+    }
+    
+    public override func mouseMoved(with event: NSEvent) {
+         super.mouseMoved(with: event)
+        updateCursor()
     }
     
     required public init(frame frameRect: NSRect) {

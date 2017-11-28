@@ -14,7 +14,7 @@ import TGUIKit
 
 class MGalleryPhotoItem: MGalleryItem {
     
-    private let media:TelegramMediaImage
+    let media:TelegramMediaImage
     private let representation:TelegramMediaImageRepresentation
     override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
@@ -30,7 +30,7 @@ class MGalleryPhotoItem: MGalleryItem {
                     let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
-                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations)
+                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil)
                 } else {
                     self.media = entry.message!.media[0] as! TelegramMediaImage
                 }

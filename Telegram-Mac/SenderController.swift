@@ -115,7 +115,13 @@ class Sender: NSObject {
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length
             
+
+            
+            
+            
             var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities)]
+
+            
             if disablePreview {
                 attributes.append(OutgoingContentInfoMessageAttribute(flags: [.disableLinkPreviews]))
             }
@@ -124,7 +130,7 @@ class Sender: NSObject {
             }
             
             
-            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, media: nil, replyToMessageId: replyId)
+            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, media: nil, replyToMessageId: replyId, localGroupingKey: nil)
         }
         
         return enqueueMessages(account: account, peerId: peerId, messages: mapped) |> mapToSignal { value in
@@ -144,7 +150,7 @@ class Sender: NSObject {
         
     }
     
-    private static func generateMedia(for container:MediaSenderContainer, account: Account) -> Signal<(Media,String),Void> {
+    static func generateMedia(for container:MediaSenderContainer, account: Account) -> Signal<(Media,String),Void> {
         return Signal { (subscriber) in
             
             let path = container.path
@@ -157,7 +163,7 @@ class Sender: NSObject {
                 let mimeType = MIMEType(path.nsstring.pathExtension)
                 let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: isMedia)
                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, size: fileSize(path))
-                media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: [], mimeType: mimeType, size: nil, attributes: attrs)
+                media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
             }
             
             if !container.isFile {
@@ -205,7 +211,7 @@ class Sender: NSObject {
                                 let scaledSize = size.aspectFilled(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)])
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)], reference: nil)
                             }
                             
                         } else {
@@ -294,7 +300,7 @@ class Sender: NSObject {
         
         
         for msgId in sorted {
-            fwdMessages.append(EnqueueMessage.forward(source: msgId))
+            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: .auto))
         }
         return enqueueMessages(account: account, peerId: peerId, messages: fwdMessages.reversed())
     }
@@ -306,7 +312,7 @@ class Sender: NSObject {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id), replyToMessageId: nil)])
+        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id), replyToMessageId: nil, localGroupingKey: nil)])
     }
     
     public static func enqueue(media:[MediaSenderContainer], account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
@@ -320,7 +326,7 @@ class Sender: NSObject {
         for path in media {
             senders.append(generateMedia(for: path, account: account) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
                 
-                return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, media: media, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)])
+                return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, media: media, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: nil)])
 
             })
         }
@@ -338,16 +344,24 @@ class Sender: NSObject {
         }
     }
     
-    public static func enqueue(media:TelegramMediaFile, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:Media, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
+        return enqueue(media: [media], caption: "", account: account, peerId: peerId, chatInteraction: chatInteraction)
+    }
+    
+    public static func enqueue(media:[Media], caption: String, account:Account, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false) ->Signal<[MessageId?],NoError> {
         
         var attributes:[MessageAttribute] = []
         if FastSettings.isChannelMessagesMuted(peerId) {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: media, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)]) |> deliverOnMainQueue |> afterNext({ (value) -> Void in
+        let localGroupingKey = isCollage ? arc4random64() : nil
+        
+        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: localGroupingKey)})
+        
+        return enqueueMessages(account: account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
-        })
+        }
     }
     
     

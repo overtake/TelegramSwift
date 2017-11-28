@@ -76,7 +76,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public var searchInteractions:SearchInteractions?
 
     
-    
+    private let inputContainer = View()
     
     public var isLoading:Bool = false {
         didSet {
@@ -90,7 +90,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
+        inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
+        input.backgroundColor = presentation.colors.background
         placeholder.attributedString = NSAttributedString.initialize(string: presentation.search.placeholder, color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
@@ -102,7 +104,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         clear.set(image: presentation.search.clearImage, for: .Normal)
         clear.sizeToFit()
         
-        placeholder.centerY(x: placeholderTextInset)
+        placeholder.centerY(x: placeholderTextInset + 2)
         search.centerY()
         input.insertionPointColor = presentation.search.textColor
         
@@ -150,7 +152,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.font = .normal(.text)
         input.textColor = .text
         input.isHidden = true
-
+        input.drawsBackground = false
         
         animateContainer.backgroundColor = .clear
         
@@ -164,10 +166,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
         search.centerY()
         
+        inputContainer.addSubview(input)
         addSubview(animateContainer)
-        addSubview(input)
-        
-
+        addSubview(inputContainer)
+        inputContainer.backgroundColor = .clear
         clear.backgroundColor = .clear
         
         
@@ -183,9 +185,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         self.set(handler: {[weak self] (event) in
             if let strongSelf = self {
-                if strongSelf.isEmpty {
-                    strongSelf.change(state:strongSelf.state == .None ? .Focus : .None,true)
-                }
+                strongSelf.change(state: .Focus , true)
             }
         }, for: .Click)
         
@@ -197,18 +197,21 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-        if let replacementString = replacementString {
-            return !replacementString.contains("\n") && !replacementString.contains("\r")
-        }
-        return false
+        return true
     }
     
     
     
     open func textDidChange(_ notification: Notification) {
         
+        let trimmed = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+        if trimmed != input.string {
+            self.setString(trimmed)
+            return
+        }
+        
         if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(SearchState(state: state, request: input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))))
+            searchInteractions.textModified(SearchState(state: state, request: trimmed))
         }
         let pHidden = !input.string.isEmpty
         if placeholder.isHidden != pHidden {
@@ -219,7 +222,30 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
           //  input.isHidden = iHidden
             window?.makeFirstResponder(input)
         }
-        
+    }
+    
+    public func textViewDidChangeSelection(_ notification: Notification) {
+        if let storage = input.textStorage {
+            let size = storage.size()
+            
+            let inputInset = placeholderTextInset + 8
+            
+            let defWidth = frame.width - inputInset - inset - clear.frame.width - 10
+            
+            input.setFrameSize(max(size.width + 10, defWidth), input.frame.height)
+            if let layout = input.layoutManager, !input.string.isEmpty {
+                let index = max(0, input.selectedRange().max - 1)
+                let point = layout.location(forGlyphAt: layout.glyphIndexForCharacter(at: index))
+                
+                if defWidth < size.width && point.x > defWidth {
+                    input.setFrameOrigin(defWidth - point.x, input.frame.minY)
+                } else {
+                    input.setFrameOrigin(0, input.frame.minY)
+                }
+            } else {
+                input.setFrameOrigin(0, input.frame.minY)
+            }
+        }
     }
     
     open func textDidEndEditing(_ notification: Notification) {
@@ -251,7 +277,21 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             }
             return .rejected
             
-            }, with: self, priority: .high)
+        }, with: self, priority: .high)
+        
+        self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if self?.state == .Focus {
+                return .invokeNext
+            }
+            return .rejected
+        }, with: self, for: .RightArrow, priority: .high)
+        
+        self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if self?.state == .Focus {
+                return .invokeNext
+            }
+            return .rejected
+            }, with: self, for: .LeftArrow, priority: .high)
         
         self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
             return self?.input
@@ -281,13 +321,13 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 
                window?.makeFirstResponder(input)
                 
-                let inputInset = placeholderTextInset + 5
+                let inputInset = placeholderTextInset + 8
                 
                 let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
 
-                
-                self.input.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame), NSWidth(self.frame) - inputInset - inset - clear.frame.width, NSHeight(placeholder.frame))
+                inputContainer.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame), NSWidth(self.frame) - inputInset - inset - clear.frame.width - 6, NSHeight(placeholder.frame))
+                input.frame = inputContainer.bounds
                 
                 if  animated {
                     animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
@@ -389,9 +429,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width)
-        
-        self.input.setFrameOrigin(placeholderTextInset + 5, animateContainer.frame.minY)
-        
+        inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
     }
 
     public func changeResponder(_ animated:Bool = true) -> Bool {
@@ -412,7 +450,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         return self.input.string
     }
     
-    public override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion: ((Bool) -> Void)? = nil) {
+    open override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion: ((Bool) -> Void)? = nil) {
         super.change(size: size, animated: animated, save, duration: duration, timingFunction: timingFunction)
         clear.change(pos: NSMakePoint(frame.width - inset - clear.frame.width, clear.frame.minY), animated: animated)
     }

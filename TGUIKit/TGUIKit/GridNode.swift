@@ -250,7 +250,7 @@ private struct WrappedGridItemNode: Hashable {
     }
 }
 
-open class GridNode: ScrollView, InteractionContentViewProtocol {
+open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewProtocol {
     private var gridLayout = GridNodeLayout(size: CGSize(), insets: NSEdgeInsets(), preloadSize: 0.0, type: .fixed(itemSize: CGSize(), lineSpacing: 0.0))
     private var firstIndexInSectionOffset: Int = 0
     private var items: [GridItem] = []
@@ -282,6 +282,15 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func updateLocalizationAndTheme() {
+        guard let documentView = documentView else {return}
+        for view in documentView.subviews {
+            if let view = view as? AppearanceViewProtocol {
+                view.updateLocalizationAndTheme()
+            }
+        }
     }
     
     public func transaction(_ transaction: GridNodeTransaction, completion: (GridNodeDisplayedItemRange) -> Void) {
@@ -384,6 +393,33 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
         self.applyPresentaionLayoutTransition(self.generatePresentationLayoutTransition(stationaryItems: transaction.stationaryItems, layoutTransactionOffset: layoutTransactionOffset, scrollToItem: generatedScrollToItem), removedNodes: removedNodes, updateLayoutTransition: transaction.updateLayout?.transition, itemTransition: transaction.itemTransition, completion: completion)
     }
     
+    var rows: Int {
+        return items.count / inRowCount
+    }
+    
+    var inRowCount: Int {
+        var count: Int = 0
+        if let range = displayedItemRange().visibleRange  {
+            let y: CGFloat? = itemNodes[range.lowerBound]?.frame.minY
+            for item in itemNodes {
+                if item.value.frame.minY == y {
+                    count += 1
+                }
+            }
+        } else {
+            return 1
+        }
+        
+        return count
+    }
+    
+    private var previousScroll:ScrollPosition?
+    public var scrollHandler:(_ scrollPosition:ScrollPosition) ->Void = {_ in} {
+        didSet {
+            previousScroll = nil
+        }
+    }
+
     
     open override func viewDidMoveToSuperview() {
         if superview != nil {
@@ -392,6 +428,40 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
                     if !strongSelf.applyingContentOffset {
                         strongSelf.applyPresentaionLayoutTransition(strongSelf.generatePresentationLayoutTransition(layoutTransactionOffset: 0.0), removedNodes: [], updateLayoutTransition: nil, itemTransition: .immediate, completion: { _ in })
                     }
+                    
+                    let reqCount = 1
+                    
+                    if let range = strongSelf.displayedItemRange().visibleRange {
+                        let range = NSMakeRange(range.lowerBound / strongSelf.inRowCount, range.upperBound / strongSelf.inRowCount - range.lowerBound / strongSelf.inRowCount)
+                        let scroll = strongSelf.scrollPosition()
+                        
+                        if (!strongSelf.clipView.isAnimateScrolling) {
+                            
+                            if(scroll.current.rect != strongSelf.previousScroll?.rect) {
+                                
+                                switch(scroll.current.direction) {
+                                case .top:
+                                    if(range.location <= reqCount) {
+                                        strongSelf.scrollHandler(scroll.current)
+                                        strongSelf.previousScroll = scroll.current
+                                        
+                                    }
+                                case .bottom:
+                                    if(strongSelf.rows - (range.location + range.length) <= reqCount) {
+                                        strongSelf.scrollHandler(scroll.current)
+                                        strongSelf.previousScroll = scroll.current
+                                        
+                                    }
+                                case .none:
+                                    strongSelf.scrollHandler(scroll.current)
+                                    strongSelf.previousScroll = scroll.current
+                                    
+                                }
+                            }
+                            
+                        }
+                    }
+                    
                 }
                 
             })
@@ -399,6 +469,8 @@ open class GridNode: ScrollView, InteractionContentViewProtocol {
             NotificationCenter.default.removeObserver(self)
         }
     }
+    
+    
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)

@@ -80,6 +80,7 @@ public enum RadialProgressState: Equatable {
     case ImpossibleFetching(progress: Float, force: Bool)
     case Play
     case Icon(image:CGImage, mode:CGBlendMode)
+    case Success
 }
 
 public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
@@ -92,6 +93,12 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
         }
     case .Remote:
         if case .Remote = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .Success:
+        if case .Success = rhs {
             return true
         } else {
             return false
@@ -138,7 +145,7 @@ private class RadialProgressOverlayLayer: Layer {
     var state: RadialProgressState = .None {
         didSet {
             switch state {
-            case .None, .Play, .Remote, .Icon:
+            case .None, .Play, .Remote, .Icon, .Success:
                 self.progress = 0
                 self._progress = 0
             case let .Fetching(progress, f), let  .ImpossibleFetching(progress, f):
@@ -300,6 +307,13 @@ public class RadialProgressView: Control {
                 default:
                     self.setNeedsDisplay()
                 }
+            case .Success:
+                switch self.state {
+                case .Success:
+                    break
+                default:
+                    self.setNeedsDisplay()
+                }
             case .Icon:
                 switch self.state {
                 case .Icon:
@@ -360,6 +374,32 @@ public class RadialProgressView: Control {
         switch parameters.state {
         case .None:
             break
+        case .Success:
+            let checkValue: CGFloat = 1.0
+            context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
+            let centerPoint = NSMakePoint(floorToScreenPixels(frame.width / 2.0), floorToScreenPixels(frame.height / 2.0));
+            let lineWidth: CGFloat = 2.0
+            let inset: CGFloat = 12
+            
+            context.setLineWidth(lineWidth)
+            context.setLineCap(.round)
+            context.setLineJoin(.round)
+            context.setMiterLimit(10)
+            let firstSegment: CGFloat = min(1.0, checkValue * 3.0)
+            let s = CGPoint(x: inset, y: centerPoint.y)
+            let p1 = CGPoint(x: 5, y: 5)
+            let p2 = CGPoint(x: 11, y: -11)
+            if firstSegment < 1.0 {
+                context.move(to: CGPoint(x: s.x + p1.x * firstSegment, y: s.y + p1.y * firstSegment))
+                context.addLine(to: CGPoint(x: s.x, y: s.y))
+            }
+            else {
+                let secondSegment: CGFloat = (checkValue - 0.33) * 1.5
+                context.move(to: CGPoint(x: s.x + p1.x + p2.x * secondSegment, y: s.y + p1.y + p2.y * secondSegment))
+                context.addLine(to: CGPoint(x: s.x + p1.x, y: s.y + p1.y))
+                context.addLine(to: CGPoint(x: s.x, y: s.y))
+            }
+            context.strokePath()
         case .Fetching:
             context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
             context.setLineWidth(2.0)

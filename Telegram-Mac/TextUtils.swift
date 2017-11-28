@@ -112,6 +112,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
 
     if let message = message {
         
+
         if message.text.isEmpty && message.media.isEmpty {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: tr(.chatListUnsupportedMessage), color: theme.chatList.grayTextColor, font: .normal(.text))
@@ -216,7 +217,21 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                 return peer.isChannel ? tr(.chatServiceChannelRemovedPhoto) : tr(.chatServiceGroupRemovedPhoto(authorName))
             }
         case .pinnedMessageUpdated:
-            return tr(.chatServicePinnedMessage)
+            var authorName:String = ""
+            if let displayTitle = message.author?.displayTitle {
+                authorName = displayTitle
+                if account.peerId == message.author?.id {
+                    authorName = tr(.chatServiceYou)
+                }
+            }
+            
+            var replyMessageText = ""
+            for attribute in message.attributes {
+                if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
+                    replyMessageText = pullText(from: message) as String
+                }
+            }
+            return tr(.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefix(30)))
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
                 return tr(.chatServiceGroupRemovedSelf(authorName))
@@ -305,6 +320,12 @@ struct PeerStatusStringResult : Equatable {
         self.title = title
         self.status = status
         self.presence = presence
+    }
+    
+    func withUpdatedTitle(_ string: String) -> PeerStatusStringResult {
+        let title = self.title.mutableCopy() as! NSMutableAttributedString
+        title.replaceCharacters(in: title.range, with: string)
+        return PeerStatusStringResult(title, self.status, presence: presence)
     }
 }
 
@@ -472,5 +493,21 @@ func parseTextEntities(_ message:String) -> (String, [MessageTextEntity]) {
     
 }
 
-
+func timeIntervalString( _ value: Int) -> String {
+    if value < 60 {
+        return tr(.timerSecondsCountable(value))
+    } else if value < 60 * 60 {
+        return tr(.timerMinutesCountable(max(1, value / 60)))
+    } else if value < 60 * 60 * 24 {
+        return tr(.timerHoursCountable(max(1, value / (60 * 60))))
+    } else if value < 60 * 60 * 24 * 7 {
+        return tr(.timerDaysCountable(max(1, value / (60 * 60 * 24))))
+    } else if value < 60 * 60 * 24 * 30 {
+        return tr(.timerWeeksCountable(max(1, value / (60 * 60 * 24 * 7))))
+    } else if value < 60 * 60 * 24 * 360 {
+        return tr(.timerMonthsCountable(max(1, value / (60 * 60 * 24 * 30))))
+    } else {
+        return tr(.timerYearsCountable(max(1, value / (60 * 60 * 24 * 365))))
+    }
+}
 

@@ -89,7 +89,7 @@ class ContextListRowItem: TableRowItem {
         
         if let imageResource = imageResource {
             let iconRepresentation = TelegramMediaImageRepresentation(dimensions: CGSize(width: 55.0, height: 55.0), resource: imageResource)
-            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconRepresentation])
+            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconRepresentation], reference: nil)
             iconSignal = chatWebpageSnippetPhoto(account: account, photo: tmpImage, scale: 2.0, small:true)
             
             let iconSize = iconRepresentation.dimensions.aspectFilled(CGSize(width: 50, height: 50))
@@ -173,8 +173,14 @@ class ContextListRowView : TableRowView {
                 let f = focus(layout.0.size)
                 layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
             }
-            needsLayout = true
+            
         }
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        needsDisplay = true
+        needsLayout = true
     }
     
     required init?(coder: NSCoder) {
@@ -232,7 +238,7 @@ class ContextListImageView : TableRowView {
             if let capImage = item.capImage {
                 self.image.layer?.contents = capImage
             } else {
-                image.setSignal(account: item.account, signal: item.iconSignal)
+                image.setSignal( item.iconSignal)
             }
         }
     }
@@ -264,7 +270,7 @@ class ContextListGIFView : ContextListRowView {
     
     override func set(item: TableRowItem, animated: Bool) {
         let updated = self.item != item
-        super.set(item: item)
+        super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
             player.update(with: resource, size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), account: item.account, table: item.table, iconSignal: item.iconSignal)
@@ -353,7 +359,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     
     override func set(item: TableRowItem, animated: Bool) {
         let updated = self.item != item
-        super.set(item: item)
+        super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
             

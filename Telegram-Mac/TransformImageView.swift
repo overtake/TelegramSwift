@@ -11,6 +11,8 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
+private let imagesThreadPool = ThreadPool(threadCount: 10, threadPriority: 0.1)
+
 open class TransformImageView: NSView {
     public var imageUpdated: (() -> Void)?
     public var alphaTransitionOnFirstUpdate = false
@@ -53,11 +55,12 @@ open class TransformImageView: NSView {
         }))
     }
     
-    public func setSignal(account: Account, signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = true, animate:Bool = false, cacheImage:(Signal<CGImage?, Void>) -> Signal<Void, Void> = {_ in return .single(Void())}) {
+    
+    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = true, animate:Bool = false, cacheImage:(Signal<CGImage?, Void>) -> Signal<Void, Void> = {_ in return .single(Void())}) {
         if clearInstantly {
             self.layer?.contents = nil
         }
-        let result = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged) |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
+        let result = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged) |> deliverOn(imagesThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
             return deferred {
                 return Signal<CGImage?, NoError>.single(transform(arguments)?.generateImage())
             }
@@ -86,6 +89,7 @@ open class TransformImageView: NSView {
     public func set(arguments:TransformImageArguments) ->Void {
         argumentsPromise.set(.single(arguments))
     }
+
     
     override open func copy() -> Any {
         let view = NSView()

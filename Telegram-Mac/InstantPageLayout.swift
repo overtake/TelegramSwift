@@ -555,13 +555,21 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         
         for subBlock in blocks {
             switch subBlock {
-            case let .image(id, _):
+            case let .image(id, caption):
                 if let photo = media[id] as? TelegramMediaImage, let imageSize = largestImageRepresentation(photo.representations)?.dimensions {
                     let mediaIndex = mediaIndexCounter
                     mediaIndexCounter += 1
                     let filledSize = imageSize.fit(CGSize(width: boundingWidth, height: 600))
                     contentSize.height = min(max(contentSize.height, filledSize.height), boundingWidth)
                     medias.append(InstantPageMedia(index: mediaIndex, media: photo, caption: richPlainText(caption)))
+                }
+            case let .video(id, caption, _, _):
+                if let file = media[id] as? TelegramMediaFile, file.videoSize != NSZeroSize {
+                    let mediaIndex = mediaIndexCounter
+                    mediaIndexCounter += 1
+                    let filledSize = file.videoSize.fit(CGSize(width: boundingWidth, height: 600))
+                    contentSize.height = min(max(contentSize.height, filledSize.height), boundingWidth)
+                    medias.append(InstantPageMedia(index: mediaIndex, media: file, caption: richPlainText(caption)))
                 }
             default:
                 break
@@ -599,6 +607,15 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
     return InstantPageLayout(origin: CGPoint(), contentSize: CGSize(), items: [])
 }
 
+
+func instantPageMedias(for webpage: TelegramMediaWebpage) -> [InstantPageMedia] {
+    var medias:[InstantPageMedia] = []
+    let layout = instantPageLayoutForWebPage(webpage, boundingWidth: 800, presentation: InstantViewAppearance.defaultSettings, openChannel: {_ in}, joinChannel: {_ in})
+    for item in layout.items {
+        medias.append(contentsOf: item.medias)
+    }
+    return medias
+}
 
 func instantPageLayoutForWebPage(_ webPage: TelegramMediaWebpage, boundingWidth: CGFloat, presentation: InstantViewAppearance, openChannel:@escaping(TelegramChannel)->Void, joinChannel:@escaping(TelegramChannel)->Void) -> InstantPageLayout {
     var maybeLoadedContent: TelegramMediaWebpageLoadedContent?

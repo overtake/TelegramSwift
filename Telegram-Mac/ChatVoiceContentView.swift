@@ -29,6 +29,8 @@ class ChatVoiceContentView: ChatAudioContentView {
     }
     
     let waveformView:AudioWaveformView
+    private var acceptDragging: Bool = false
+    private var playAfterDragging: Bool = false
     required init(frame frameRect: NSRect) {
         waveformView = AudioWaveformView(frame: NSMakeRect(0, 20, 100, 20))
         super.init(frame: frameRect)
@@ -117,8 +119,45 @@ class ChatVoiceContentView: ChatAudioContentView {
         
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false) {
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated)
+    override func mouseDragged(with event: NSEvent) {
+        super.mouseDragged(with: event)
+        
+        if acceptDragging, let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+            if song.entry.isEqual(to: parent) {
+                let point = waveformView.convert(event.locationInWindow, from: nil)
+                let progress = Float(point.x/waveformView.frame.width)
+                switch song.state {
+                case .playing:
+                    _ = controller.pause()
+                    playAfterDragging = true
+                default:
+                    break
+                }
+                controller.set(trackProgress: progress)
+            } else {
+                super.mouseDragged(with: event)
+            }
+        }
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        acceptDragging = waveformView.mouseInside()
+        if !acceptDragging {
+            super.mouseDown(with: event)
+        }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        if acceptDragging && playAfterDragging {
+            _ = globalAudio?.play()
+        }
+        playAfterDragging = false
+        acceptDragging = false
+    }
+    
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
+        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.waveform = parameters.waveform

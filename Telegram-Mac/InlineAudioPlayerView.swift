@@ -223,18 +223,20 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     override func layout() {
         super.layout()
         containerView.frame = NSMakeRect(0, 0, frame.width, frame.height)
+        
         previous.centerY(x: 20)
-        playOrPause.centerY(x: previous.frame.maxX + 20)
-        next.centerY(x: playOrPause.frame.maxX + 20)
+        playOrPause.centerY(x: previous.frame.maxX + 5)
+        next.centerY(x: playOrPause.frame.maxX + 5)
+        
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        repeatControl.centerY(x: frame.width - dismiss.frame.width - 40 - repeatControl.frame.width)
-        progressView.frame = NSMakeRect(0, frame.height - 10, frame.width, 10)
+        repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
+        progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
         textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20))
         textView.update(textView.layout)
         
-        let w = dismiss.frame.minX - next.frame.maxX
+        let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
         
-        textView.centerY(x: next.frame.maxX + floorToScreenPixels((w - textView.frame.width)/2))
+        textView.centerY(x: next.frame.maxX + floorToScreenPixels((w - textView.frame.width)/2), addition: -2)
         separator.setFrameOrigin(0, frame.height - .borderSize)
     }
     

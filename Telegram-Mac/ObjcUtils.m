@@ -12,7 +12,7 @@
 
 
 @implementation ObjcUtils
-+ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands
++ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention
 {
     bool containsSomething = false;
     
@@ -146,7 +146,7 @@
                 {
                     if (mentionStart != -1)
                     {
-                        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
+                        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_' || (dotInMention && c == '.'))))
                         {
                             if (i > mentionStart + 1)
                             {
@@ -947,7 +947,6 @@ NSDictionary<NSString *, NSString *> *audioTags(AVURLAsset *asset) {
         NSArray *metadata = [asset metadataForFormat:obj];
         
         for (AVMutableMetadataItem *metaItem in metadata) {
-            NSLog(@"%@ : %@", metaItem.identifier, (NSString *)metaItem.value);
             if([metaItem.identifier isEqualToString:AVMetadataIdentifierID3MetadataLeadPerformer]) {
                 artistName = (NSString *) metaItem.value;
             } else if([metaItem.identifier isEqualToString:AVMetadataIdentifierID3MetadataTitleDescription]) {

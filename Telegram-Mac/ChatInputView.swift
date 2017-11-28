@@ -21,7 +21,7 @@ protocol ChatInputDelegate : class {
 
 let yInset:CGFloat = 8;
 
-class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
+class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private let sendActivityDisposable = MetaDisposable()
     
@@ -58,6 +58,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     private let emojiReplacementDisposable:MetaDisposable = MetaDisposable()
 
+    private var formatterPopover: InputFormatterPopover?
     
     private var replyMarkupModel:ReplyMarkupNode?
     override var isFlipped: Bool {
@@ -66,6 +67,12 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     private var standart:CGFloat = 50.0
     private var bottomHeight:CGFloat = 0
+
+    static let bottomPadding:CGFloat = 10
+    static let maxBottomHeight = ReplyMarkupNode.rowHeight * 3 + ReplyMarkupNode.buttonHeight / 2
+    
+    
+    private let formatterDisposable = MetaDisposable()
     
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
@@ -145,7 +152,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     private var textPlaceholder: String {
         if let peer = chatInteraction.presentation.peer {
             if peer.isChannel {
-                return tr(.messagesPlaceholderBroadcast)
+                return FastSettings.isChannelMessagesMuted(peer.id) ? tr(.messagesPlaceholderSilentBroadcast) : tr(.messagesPlaceholderBroadcast)
             }
         }
         return tr(.messagesPlaceholderSentMessage)
@@ -435,7 +442,10 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         let contentHeight:CGFloat = defaultContentHeight + yInset * 2.0
         var sumHeight:CGFloat = contentHeight + (accessory.isVisibility() ? accessory.size.height + 5 : 0)
         if let markup = replyMarkupModel  {
-            bottomHeight = min(110,markup.size.height) + 10
+            bottomHeight = min(
+              ChatInputView.maxBottomHeight,
+              markup.size.height + ChatInputView.bottomPadding
+            )
         } else {
             bottomHeight = 0
         }
@@ -472,7 +482,7 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     public func textViewEnterPressed(_ event: NSEvent) -> Bool {
         
         if FastSettings.checkSendingAbility(for: event) {
-            if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty {
+            if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage()
                 chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
             }
@@ -486,6 +496,9 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
 
     func makeBold() {
         self.textView.boldWord()
+    }
+    func makeUrl() {
+        self.makeUrl(of: textView.selectedRange())
     }
     func makeItalic() {
         self.textView.italicWord()
@@ -501,13 +514,21 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     func makeFirstResponder()  {
         self.window?.makeFirstResponder(self.textView.inputView)
     }
-    
+    private var previousString: String = ""
     func textViewTextDidChange(_ string: String) {
         if FastSettings.isPossibleReplaceEmojies {
-            let replacedEmojies = string.stringEmojiReplacements
-            if string != replacedEmojies {
-                self.textView.setString(replacedEmojies)
+            
+            if previousString != string {
+                let difference = string.replacingOccurrences(of: previousString, with: "")
+                if difference.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
+                    let replacedEmojies = string.stringEmojiReplacements
+                    if string != replacedEmojies {
+                        self.textView.setString(replacedEmojies)
+                    }
+                }
             }
+           
+            previousString = string
         }
     }
     
@@ -523,6 +544,9 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
+        formatterPopover?.close()
+        formatterPopover = nil
+
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
         
@@ -536,11 +560,13 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
         }
         
     }
+
     
     deinit {
         chatInteraction.remove(observer: self)
         self.accessoryDispose.dispose()
         emojiReplacementDisposable.dispose()
+        formatterDisposable.dispose()
     }
     
     func textViewSize() -> NSSize {
@@ -549,6 +575,40 @@ class ChatInputView: Control, TGModernGrowingDelegate, Notifable {
     
     func textViewIsTypingEnabled() -> Bool {
         return self.chatState == .normal || self.chatState == .editing
+    }
+    
+    func makeUrl(of range: NSRange) {
+        guard range.min != range.max else {
+            return
+        }
+        
+        let attributed = self.textView.attributedString()
+        
+        let close:()->Void = { [weak self] in
+            if let strongSelf = self {
+                strongSelf.formatterPopover?.close()
+                strongSelf.textView.setSelectedRange(NSMakeRange(strongSelf.textView.selectedRange().max, 0))
+                strongSelf.formatterPopover = nil
+            }
+        }
+        
+        if formatterPopover == nil {
+            self.formatterPopover = InputFormatterPopover(InputFormatterArguments(bold: { [weak self] in
+                self?.textView.boldWord()
+                close()
+                }, italic: {  [weak self] in
+                    self?.textView.italicWord()
+                    close()
+                }, code: {  [weak self] in
+                    self?.textView.codeWord()
+                    close()
+                }, link: { [weak self] url in
+                    self?.textView.addLink(url)
+                    close()
+            }), window: mainWindow)
+        }
+        
+        formatterPopover?.show(relativeTo: textView.inputView.selectedRangeRect, of: textView, preferredEdge: .maxY)
     }
     
     func maxCharactersLimit() -> Int32 {
