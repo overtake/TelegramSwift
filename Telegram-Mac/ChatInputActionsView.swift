@@ -81,7 +81,7 @@ class ChatInputActionsView: View, Notifable {
         muteChannelMessages.set(handler: { [weak self] _ in
             if let chatInteraction = self?.chatInteraction {
                 FastSettings.toggleChannelMessagesMuted(chatInteraction.peerId)
-                self?.updateLocalizationAndTheme()
+                (self?.superview?.superview as? View)?.updateLocalizationAndTheme()
             }
         }, for: .Click)
 

@@ -559,14 +559,14 @@ class PhoneCallWindowController {
     
     private func updatePeerUI(_ user:TelegramUser) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations)
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations, reference: nil)
         
 
         
         if let dimension = user.profileImageRepresentations.last?.dimensions {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: view.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
             view.imageView.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
-            view.imageView.setSignal(account: session.account, signal: chatMessagePhoto(account: session.account, photo: media, scale: view.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+            view.imageView.setSignal(chatMessagePhoto(account: session.account, photo: media, scale: view.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                 if let strongSelf = self {
                     return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.view.backingScaleFactor)
                 } else {

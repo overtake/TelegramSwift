@@ -41,7 +41,7 @@ NSImage * __nonnull TGIdenticonImage(NSData * __nonnull data, NSData * __nonnull
 CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 
 @interface ObjcUtils : NSObject
-+ (NSArray * __nullable)textCheckingResultsForText:(NSString *__nonnull)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands;
++ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
 +(NSString * __nonnull) md5:(NSString *__nonnull)string;
 +(NSArray<NSView *> *__nonnull)findElementsByClass:(NSString *__nonnull)className inView:(NSView *__nonnull)view;
 +(NSString * __nonnull)stringForEmojiHashOfData:(NSData *__nonnull)data count:(NSInteger)count positionExtractor:(int32_t (^__nonnull)(uint8_t *__nonnull, int32_t, int32_t))positionExtractor;
@@ -88,7 +88,7 @@ int colorIndexForUid(int32_t uid, int32_t myUserId);
 
 @end
 
-extern NSString *__nonnull const TGMentionUidAttributeName;
+extern NSString *__nonnull const TGCustomLinkAttributeName;
 
 
 @interface TGInputTextAttribute : NSObject
@@ -131,6 +131,8 @@ extern NSString *__nonnull const TGMentionUidAttributeName;
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
+- (void)textViewDidReachedLimit:(id __nonnull)textView;
+- (void)makeUrlOfRange: (NSRange)range;
 @end
 
 
@@ -189,6 +191,7 @@ extern NSString *__nonnull const TGMentionUidAttributeName;
 -(void)codeWord;
 -(void)italicWord;
 -(void)boldWord;
+-(void)addLink:(NSString *)link;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 @end
 

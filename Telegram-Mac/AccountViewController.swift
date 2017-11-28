@@ -267,6 +267,10 @@ enum AccountInfoEntry : Comparable, Identifiable {
 
 
 class LayoutAccountController : EditableViewController<TableView>, TableViewDelegate {
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     
     func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
         
@@ -438,6 +442,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             self?.genericView.merge(with: transition)
             self?.navigationWillChangeController()
         }))
+        
         
         peer.set(account.viewTracker.peerView(account.peerId) |> map { peerView -> TelegramUser? in
             return peerView.peers[peerView.peerId] as? TelegramUser
@@ -657,17 +662,9 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .faq:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsFAQ), icon: theme.icons.settingsFaq, type: .none, action: {
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsFAQ), icon: theme.icons.settingsFaq, type: .none, action: { [weak self] in
                     
-                    let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
-                    
-                    _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
-                        if let webpage = webpage {
-                            showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
-                        } else {
-                            execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
-                        }
-                    })
+                    self?.openFaq()
                     
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .ask:
@@ -682,7 +679,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                                 }
                             })
                         case .thrid:
-                            execute(inapp: .external(link: "https://telegram.org/faq", false))
+                            self?.openFaq()
                         }
                     })
                     
@@ -705,6 +702,19 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         })
         
         return TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated)
+    }
+    
+    private func openFaq() {
+        let account = self.account
+        let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
+        
+        _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
+            if let webpage = webpage {
+                showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
+            } else {
+                execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
+            }
+        })
     }
     
     override func updateLocalizationAndTheme() {

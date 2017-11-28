@@ -147,11 +147,8 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
        
     }
     func songDidChangedState(song: APSongItem, for controller: APController) {
-        
-
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
             if song.entry.isEqual(to: parent) {
-                
                 switch song.state {
                 case let .playing(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
@@ -266,11 +263,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         player.set(path: nil)
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
         
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated)
+        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         
         updateListeners()
@@ -281,14 +278,17 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
             }
             
             if mediaUpdated {
+                
+                globalAudio?.add(listener: self)
+                
                 player.layer?.cornerRadius = size.height / 2
                 
                 path = nil
                 
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
-                player.setSignal(account: account, signal: chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+                player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 player.set(arguments: arguments)
                 

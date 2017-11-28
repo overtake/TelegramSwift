@@ -78,7 +78,7 @@ open class TableRowItem: NSObject {
     }
     
     
-    open func menuItems() -> Signal<[ContextMenuItem], Void> {
+    open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         return .single([])
     }
     
@@ -94,12 +94,35 @@ open class TableRowItem: NSObject {
         }
     }
     
+    open var isLast: Bool {
+        return table?.lastItem == self
+    }
+    
+    open func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        if let view = view {
+            return view.canMultiselectTextIn(location)
+        }
+        return false
+    }
+    
     open var identifier:String {
         return NSStringFromClass(viewClass())
     }
     
     open func viewClass() ->AnyClass {
         return TableRowView.self;
+    }
+    
+    open var layoutSize: NSSize {
+        return NSZeroSize
+    }
+    
+    open var view: TableRowView? {
+        assertOnMainThread()
+        if let table = table {
+            return table.viewNecessary(at: index)
+        }
+        return nil
     }
     
     open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {

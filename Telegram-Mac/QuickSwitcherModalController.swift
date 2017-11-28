@@ -236,6 +236,10 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<QuickSwitcherEnt
 
 
 class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private let account:Account
     private let search:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     private let disposable = MetaDisposable()

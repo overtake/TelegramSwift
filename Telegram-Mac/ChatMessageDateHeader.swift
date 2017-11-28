@@ -24,14 +24,10 @@ private let granularity: Int32 = 60 * 60 * 24
 
 
 func chatDateId(for timestamp:Int32) -> Int64 {
-    /*    var roundedTimestamp:Int32
-    if timestamp == Int32.max {
-        roundedTimestamp = timestamp / (granularity) * (granularity)
-    } else {
-        roundedTimestamp = ((timestamp + timezoneOffset) / (granularity)) * (granularity)
-    } */
-    
     return Int64(Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
+}
+func mediaDateId(for timestamp:Int32) -> Int64 {
+    return Int64(Calendar.current.component(.month, from: Date(timeIntervalSince1970: TimeInterval(timestamp))))
 }
 
 class ChatDateStickItem : TableStickItem {
@@ -142,8 +138,8 @@ class ChatDateStickView : TableStickView {
     }
     
     override func updateIsVisible(_ visible: Bool, animated: Bool) {
-        textView.change(opacity: visible ? 1 : 0, animated: animated)
-        containerView.change(opacity: visible ? 1 : 0, animated: animated)
+        textView.change(opacity: visible ? 1 : 0, animated: false)
+        containerView.change(opacity: visible ? 1 : 0, animated: false)
     }
     
     override var header: Bool {
@@ -183,9 +179,9 @@ class ChatDateStickView : TableStickView {
             containerView.setFrameSize(textView.frame.width + 16, textView.frame.height + 8)
             containerView.layer?.cornerRadius = containerView.frame.height / 2
             borderView.layer?.cornerRadius = containerView.frame.height / 2
-            if animated {
-                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
+//            if animated {
+//                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+//            }
             
             self.needsLayout = true
         }

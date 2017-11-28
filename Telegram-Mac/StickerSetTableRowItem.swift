@@ -197,7 +197,7 @@ class StickerSetTableRowView : TableRowView {
                 
                 removeControl.set(image: theme.icons.stickerPackDelete, for: .Normal)
                 removeControl.sizeToFit()
-                imageView.setSignal(account: item.account, signal: chatMessageSticker(account: item.account, file: topItem.file, type: .thumb, scale: backingScaleFactor))
+                imageView.setSignal( chatMessageSticker(account: item.account, file: topItem.file, type: .thumb, scale: backingScaleFactor))
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
                 _ = fileInteractiveFetched(account: item.account, file: topItem.file).start()
                 nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))

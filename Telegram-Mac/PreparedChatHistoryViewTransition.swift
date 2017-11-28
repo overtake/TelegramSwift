@@ -97,7 +97,7 @@ func preparedChatHistoryViewTransition(from fromView: ChatHistoryView?, to toVie
                     }
                 case .UpperToLower:
                     break
-                case .AroundIndex:
+                case .AroundId:
                     break
                 }
             }

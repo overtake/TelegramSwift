@@ -24,7 +24,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
         super.init(initialSize,interface,account,object)
         iconSize = NSMakeSize(50, 50)
-        
+        self.contentInset = NSEdgeInsets(left: 70, right: 10, top: 5, bottom: 5)
         
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
@@ -45,7 +45,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 }
                 
                 if let iconImageRepresentation = iconImageRepresentation {
-                     icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation])
+                     icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil)
                     
                     let imageCorners = ImageCorners(radius: iconSize.width/2)
                     iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
@@ -73,7 +73,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         } else {
             
             var link:String = ""
-            let links = ObjcUtils.textCheckingResults(forText: message.text, highlightMentionsAndTags: false, highlightCommands: false)
+            let links = ObjcUtils.textCheckingResults(forText: message.text, highlightMentionsAndTags: false, highlightCommands: false, dotInMention: false)
             if let links = links, !links.isEmpty {
                 let range = (links[0] as! NSValue).rangeValue
                 link = message.text.nsstring.substring(with: range)
@@ -182,7 +182,7 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             }
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-                imageView.setSignal(account: item.account, signal: updateIconImageSignal)
+                imageView.setSignal( updateIconImageSignal)
             }
             
             if item.icon == nil {

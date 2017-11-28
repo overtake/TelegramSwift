@@ -78,7 +78,7 @@ class ContextMediaRowView: TableRowView {
                     container = view
                 case let .sticker(data):
                     let view = TransformImageView()
-                    view.setSignal(account: item.account, signal: chatMessageSticker(account: item.account, file: data.file, type: .small, scale: backingScaleFactor))
+                    view.setSignal(chatMessageSticker(account: item.account, file: data.file, type: .small, scale: backingScaleFactor))
                     _ = fileInteractiveFetched(account: item.account, file: data.file).start()
                     
                     let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
@@ -89,7 +89,7 @@ class ContextMediaRowView: TableRowView {
                 case let .photo(data):
                     let view = View()
                     let imageView = TransformImageView()
-                    imageView.setSignal(account: item.account, signal:  chatWebpageSnippetPhoto(account: item.account, photo: data, scale: backingScaleFactor, small:false))
+                    imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, photo: data, scale: backingScaleFactor, small:false))
                     _ = chatMessagePhotoInteractiveFetched(account: item.account, photo: data).start()
                     
                     let imageSize = item.result.sizes[i]

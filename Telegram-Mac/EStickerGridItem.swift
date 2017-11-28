@@ -226,7 +226,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             set(background: theme.colors.background, for: .Normal)
             set(background: theme.colors.background, for: .Hover)
             
-            imageView.setSignal(account: account, signal: chatMessageSticker(account: account, file: file, type: .small, scale: backingScaleFactor))
+            imageView.setSignal( chatMessageSticker(account: account, file: file, type: .small, scale: backingScaleFactor))
             stickerFetchedDisposable.set(fileInteractiveFetched(account: account, file: file).start())
             
             let imageSize = dimensions.aspectFitted(eStickerSize)

@@ -518,6 +518,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 let controller = PasscodeLockController(account, .login, logoutImpl: { [weak self] in
                     self?.logout()
                 })
+                closeAllModals()
                 showModal(with: controller, for: window)
                 return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
             }
@@ -856,9 +857,15 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                             notification.soundName = nil
                         }
                         
-                        let encoded:WriteBuffer = WriteBuffer()
-                        message.id.encodeToBuffer(encoded)
-                        notification.userInfo = ["encodedMessageId":encoded.makeData(), "peerId.namespace":message.id.peerId.namespace, "peerId.id":message.id.peerId.id]
+                        
+                        var dict: [String : Any] = [:]
+                        
+                        dict["message.id"] =  message.id.id
+                        dict["message.namespace"] =  message.id.namespace
+                        dict["peer.id"] =  message.id.peerId.id
+                        dict["peer.namespace"] =  message.id.peerId.namespace
+                        
+                        notification.userInfo = dict
                         NSUserNotificationCenter.default.deliver(notification)
                     }
                 }
@@ -876,8 +883,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
         
         
-        if let encodedMessageId = notification.userInfo?["encodedMessageId"] as? Data {
-            let messageId = MessageId(ReadBuffer(memoryBufferNoCopy: MemoryBuffer(data: encodedMessageId)))
+        if let msgId = notification.userInfo?["message.id"] as? Int32, let msgNamespace = notification.userInfo?["message.namespace"] as? Int32, let namespace = notification.userInfo?["peer.namespace"] as? Int32, let id = notification.userInfo?["peer.id"] as? Int32 {
+            
+            let messageId = MessageId(peerId: PeerId(namespace: namespace, id: id), namespace: msgNamespace, id: msgId)
+            
             rightController.push(ChatController(account: account, peerId: messageId.peerId), false)
             
             if notification.activationType == .replied, let text = notification.response?.string {
@@ -885,7 +894,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
                     replyToMessageId = messageId
                 }
-                _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], media: nil, replyToMessageId: replyToMessageId)]).start()
+                _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], media: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil)]).start()
             } else {
                 self.window.deminiaturize(self)
                 NSApp.activate(ignoringOtherApps: true)
@@ -957,6 +966,7 @@ class LegacyIntroView : View, NSTextFieldDelegate {
     fileprivate let legacyIntro: LegacyPasscodeHeaderView
     fileprivate var layoutWithPasscode: Bool = false {
         didSet {
+            
             self.input.isHidden = !layoutWithPasscode
             self.logoutTextView.isHidden = !layoutWithPasscode
             self.needsLayout = true
@@ -965,6 +975,7 @@ class LegacyIntroView : View, NSTextFieldDelegate {
     }
     required init(frame frameRect: NSRect) {
         input = NSSecureTextField(frame: NSZeroRect)
+        input.stringValue = ""
         legacyIntro = LegacyPasscodeHeaderView(frame: NSMakeRect(0,0, frameRect.width, 300))
         super.init(frame: frameRect)
         
@@ -994,13 +1005,13 @@ class LegacyIntroView : View, NSTextFieldDelegate {
         input.textColor = .text
         input.sizeToFit()
         
-        let logoutAttr = NSMutableAttributedString()
-        _ = logoutAttr.append(string: tr(.passcodeLogoutDescription), color: .grayText, font: .normal(.text))
-        _ = logoutAttr.append(string: " ")
-        let range = logoutAttr.append(string: tr(.passcodeLogoutLinkText), color: .link, font: .normal(.text))
-        logoutAttr.add(link: inAppLink.logout({}), for: range)
-        logoutTextView.set(layout: TextViewLayout(logoutAttr))
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+            return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, {_ in}))
+        }))
         
+        logoutTextView.isSelectable = false
+        
+        logoutTextView.set(layout: TextViewLayout(logoutAttr))
         
         addSubview(legacyIntro)
     }

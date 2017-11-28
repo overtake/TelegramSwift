@@ -18,9 +18,11 @@ func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
         let deliveredNotifications = NSUserNotificationCenter.default.deliveredNotifications
         
         for notification in deliveredNotifications {
-            if let encodedMessageId = notification.userInfo?["encodedMessageId"] as? Data, let namespace = notification.userInfo?["peerId.namespace"] as? Int32, let id = notification.userInfo?["peerId.id"] as? Int32 {
-                let notificationMessageId = MessageId(ReadBuffer(memoryBufferNoCopy: MemoryBuffer(data: encodedMessageId)))
+            if let msgId = notification.userInfo?["message.id"] as? Int32, let msgNamespace = notification.userInfo?["message.namespace"] as? Int32, let namespace = notification.userInfo?["peer.namespace"] as? Int32, let id = notification.userInfo?["peer.id"] as? Int32 {
+                
                 let notificationPeerId = PeerId(namespace: namespace, id: id)
+
+                let notificationMessageId = MessageId(peerId: notificationPeerId, namespace: msgNamespace, id: msgId)
                 
                 if notificationPeerId == peerId, notificationMessageId <= maxId {
                     NSUserNotificationCenter.default.removeDeliveredNotification(notification)

@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "TGInputTextTag.h"
 
-extern NSString * _Nonnull const TGMentionUidAttributeName;
+extern NSString * _Nonnull const TGCustomLinkAttributeName;
 
 @protocol TGModernGrowingDelegate <NSObject>
 
@@ -26,6 +26,8 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
+- (void)textViewDidReachedLimit:(id __nonnull)textView;
+- (void)makeUrlOfRange: (NSRange)range;
 @end
 
 
@@ -87,7 +89,7 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 -(void)codeWord;
 -(void)italicWord;
 -(void)boldWord;
-
+-(void)addLink:(NSString *_Nonnull)link;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 
 @end

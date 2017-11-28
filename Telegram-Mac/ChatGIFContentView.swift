@@ -105,6 +105,12 @@ class ChatGIFContentView: ChatMediaContentView {
         }
     }
     
+    override func willRemove() {
+        super.willRemove()
+        updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
     override func viewDidMoveToWindow() {
         updateListeners()
         updatePlayerIfNeeded()
@@ -114,11 +120,11 @@ class ChatGIFContentView: ChatMediaContentView {
         player.set(path: nil)
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
         
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated)
+        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         updateListeners()
         
@@ -128,10 +134,10 @@ class ChatGIFContentView: ChatMediaContentView {
                 
                 path = nil
                                 
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
-                player.setSignal(account: account, signal: chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+                player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:.cornerRadius), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 player.set(arguments: arguments)
                 
@@ -163,7 +169,7 @@ class ChatGIFContentView: ChatMediaContentView {
                                 strongSelf.path = resource.path
                                 
                             } else {
-                                if strongSelf.progressView == nil {
+                                if strongSelf.progressView == nil, parent != nil {
                                     let progressView = RadialProgressView()
                                     progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: 40.0, height: 40.0))
                                     strongSelf.progressView = progressView

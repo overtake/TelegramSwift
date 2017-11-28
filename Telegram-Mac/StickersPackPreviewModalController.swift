@@ -116,11 +116,11 @@ private class StickersModalView : View {
                     arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peer: peer))
                 })
             })
-            let layout = TextViewLayout(attr, maximumNumberOfLines: 1)
+            let layout = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
             layout.interactions = globalLinkExecutor
             
             
-            layout.measure(width: frame.width - 140)
+            layout.measure(width: frame.width - 160)
             headerTitle.update(layout)
             
             let items = collectionItems.filter({ item -> Bool in
@@ -216,7 +216,7 @@ class StickersPackPreviewModalController: ModalViewController {
                 }
                 
                 _ = (strongSelf.account.postbox.loadedPeerWithId(peerId) |> filter {$0.canSendMessage && !$0.stickersRestricted} |> mapToSignal { _ in
-                    return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: media, replyToMessageId: nil)])
+                    return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: media, replyToMessageId: nil, localGroupingKey: nil)])
                 }) .start()
                 
             }

@@ -330,7 +330,7 @@ public extension NSView {
         }
     }
     
-    public func centerX(_ superView:NSView? = nil, y:CGFloat? = nil) -> Void {
+    public func centerX(_ superView:NSView? = nil, y:CGFloat? = nil, addition: CGFloat = 0) -> Void {
         
         var x:CGFloat = 0
         
@@ -340,7 +340,7 @@ public extension NSView {
             x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
         }
         
-        self.setFrameOrigin(NSMakePoint(x, y == nil ? NSMinY(self.frame) : y!))
+        self.setFrameOrigin(NSMakePoint(x + addition, y == nil ? NSMinY(self.frame) : y!))
     }
     
     public func focus(_ size:NSSize) -> NSRect {
@@ -360,7 +360,7 @@ public extension NSView {
         return NSMakeRect(x, y, size.width, size.height)
     }
     
-    public func centerY(_ superView:NSView? = nil, x:CGFloat? = nil) -> Void {
+    public func centerY(_ superView:NSView? = nil, x:CGFloat? = nil, addition: CGFloat = 0) -> Void {
         
         var y:CGFloat = 0
         
@@ -370,7 +370,7 @@ public extension NSView {
             y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
         }
         
-        self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y))
+        self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y + addition))
     }
 
     
@@ -486,7 +486,7 @@ public extension NSView {
     
     public func disableHierarchyInteraction() -> Void {
         for sub in self.subviews {
-            if let sub = sub as? Control {
+            if let sub = sub as? Control, sub.interactionStateForRestore == nil {
                 sub.interactionStateForRestore = sub.userInteractionEnabled
                 sub.userInteractionEnabled = false
             }
@@ -920,15 +920,14 @@ public extension String {
     }
     
     public var emojiUnmodified: String {
-        if self.characters.isEmpty {
+        if self.isEmpty {
             return ""
         }
-        
         return nsstring.substring(to: min(nsstring.length, 2))
     }
     
     public var emojiSkin: String {
-        if self.characters.count < 2 {
+        if self.length < 2 {
             return ""
         }
         
@@ -938,7 +937,7 @@ public extension String {
     }
     
     public var canHaveSkinToneModifier: Bool {
-        if self.characters.isEmpty {
+        if self.isEmpty {
             return false
         }
         

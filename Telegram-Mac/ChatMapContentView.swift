@@ -45,15 +45,15 @@ class ChatMapContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
         iconView.image = theme.icons.chatMapPin
         iconView.sizeToFit()
 
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated)
+        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         if mediaUpdated, let parameters = parameters as? ChatMediaMapLayoutParameters {
-            imageView.setSignal(account: account, signal: chatWebpageSnippetPhoto(account: account, photo: parameters.image, scale: backingScaleFactor, small: parameters.isVenue))
+            imageView.setSignal( chatWebpageSnippetPhoto(account: account, photo: parameters.image, scale: backingScaleFactor, small: parameters.isVenue))
             
             if parameters.isVenue {
                 if textView == nil {

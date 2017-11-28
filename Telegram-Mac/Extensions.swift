@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
-
+import LocalAuthentication
 extension Message {
     
     var chatStableId:ChatHistoryEntryId {
@@ -28,8 +28,8 @@ extension MessageHistoryHole {
 
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = .link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil) -> Void {
-        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands))
+    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = .link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
         
@@ -1714,11 +1714,59 @@ func + <K,V>(left: Dictionary<K,V>, right: Dictionary<K,V>)
     return map
 }
 
+extension Array {
+    func subarray(with range: NSRange) -> Array {
+        return Array(self[range.min ..< range.max])
+    }
+    mutating func move(at oldIndex: Int, to newIndex: Int) {
+        self.insert(self.remove(at: oldIndex), at: newIndex)
+    }
+}
+extension Array {
+    func chunks(_ chunkSize: Int) -> [[Element]] {
+        return stride(from: 0, to: self.count, by: chunkSize).map {
+            Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
+        }
+    }
+}
+
 func copyToClipboard(_ string:String) {
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)
 }
 
+extension LAPolicy {
+    static var applicationPolicy: LAPolicy {
+        if #available(OSX 10.12.2, *) {
+            #if DEBUG
+                return .deviceOwnerAuthentication
+            #endif
+            return .deviceOwnerAuthenticationWithBiometrics
+        } else {
+            return .deviceOwnerAuthentication
+        }
+    }
+}
+
+extension LAContext {
+    var canUseBiometric: Bool {
+        if #available(OSX 10.12.2, *) {
+            #if DEBUG
+                return true
+            #endif
+            if canEvaluatePolicy( .deviceOwnerAuthenticationWithBiometrics, error: nil) {
+                return true
+            } else {
+                return false
+            }
+        } else {
+            #if DEBUG
+                return true
+            #endif
+            return false
+        }
+    }
+}
 
 
 extension CVImageBuffer {
@@ -1807,4 +1855,33 @@ func synced(_ lock: Any, closure: ()->Void) {
     objc_sync_enter(lock)
     closure()
     objc_sync_exit(lock)
+}
+
+
+extension NSTextView {
+    
+    var selectedRangeRect: NSRect {
+
+        var rect: NSRect = firstRect(forCharacterRange: selectedRange(), actualRange: nil)
+        
+        
+
+        
+        if let window = window {
+            //rect = window.convertFromScreen(rect)
+            
+            var textViewBounds: NSRect = convert(bounds, to: nil)
+            textViewBounds = window.convertToScreen(textViewBounds)
+            
+            rect.origin.x -= textViewBounds.origin.x;
+            rect.origin.y -= (textViewBounds.origin.y );
+        }
+        
+//        if let superview = superview {
+//            rect = superview.convert(rect, from: nil)
+//        }
+      //  rect.origin.y += 10
+        return rect
+    }
+    
 }

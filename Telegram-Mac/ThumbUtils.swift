@@ -196,53 +196,42 @@ public struct PreviewOptions: OptionSet {
     public init(_ flags: PreviewOptions) {
         var rawValue: UInt32 = 0
         
-        if flags.contains(PreviewOptions.image) {
-            rawValue |= PreviewOptions.image.rawValue
-        }
-        
-        if flags.contains(PreviewOptions.video) {
-            rawValue |= PreviewOptions.video.rawValue
-        }
         
         if flags.contains(PreviewOptions.file) {
             rawValue |= PreviewOptions.file.rawValue
         }
         
-        if flags.contains(PreviewOptions.mixed) {
-            rawValue |= PreviewOptions.mixed.rawValue
+        if flags.contains(PreviewOptions.media) {
+            rawValue |= PreviewOptions.media.rawValue
         }
         
         self.rawValue = rawValue
     }
     
-    public static let image = PreviewOptions(rawValue: 1)
-    public static let video = PreviewOptions(rawValue: 2)
-    public static let file = PreviewOptions(rawValue: 4)
-    public static let mixed = PreviewOptions(rawValue: 8)
+    public static let media = PreviewOptions(rawValue: 1)
+    public static let file = PreviewOptions(rawValue: 8)
 }
 
 func takeSenderOptions(for urls:[URL]) -> [PreviewOptions] {
     var options:[PreviewOptions] = []
     for url in urls {
         let mime = MIMEType(url.path.nsstring.pathExtension)
-        let isImage = mime.hasPrefix("image") && !mime.hasSuffix("gif")
-        let isVideo = mime.hasPrefix("video/mp4")
-        if isImage && !options.contains(.image) {
-            options.append(.image)
-        }
-        if isVideo && !options.contains(.video) {
-            options.append(.video)
-        }
         
-        if !isImage && !isVideo {
-            if !options.contains(.file) {
-                options.append(.file)
+        if mime.hasPrefix("image"), let image = NSImage(contentsOf: url) {
+            if image.size.width / 10 > image.size.height || image.size.height < 40 {
+                continue
             }
         }
         
-        if options.count > 1 && (options.contains(.video) || options.contains(.image)) {
-            if !options.contains(.mixed) {
-                options.append(.mixed)
+        let media = mime.hasPrefix("image") || mime.hasSuffix("gif") || mime.hasPrefix("video/mp4")
+
+        if media {
+            if !options.contains(.media) {
+                options.append(.media)
+            }
+        } else {
+            if !options.contains(.file) {
+                options.append(.file)
             }
         }
     }

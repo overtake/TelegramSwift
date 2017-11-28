@@ -77,13 +77,14 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String = appName, info:String?) {
-    let alert:NSAlert = NSAlert()
-    alert.window.appearance = theme.appearance
-    alert.alertStyle = .informational
-    alert.messageText = header
-    alert.informativeText = info ?? ""
-    alert.beginSheetModal(for: window, completionHandler: { (_) in})
+func alert(for window:Window, header:String = appName, info:String?, completion: (()->Void)? = nil) {
+    
+    
+    let alert = AlertController(window, header: header, text: info ?? "")
+    alert.show(completionHandler: { response in
+        completion?()
+    })
+    
 }
 
 func notSupported() {
@@ -95,47 +96,29 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, with header:String, and information:String?, okTitle:String? = nil, cancelTitle:String? = nil, thridTitle:String? = nil, successHandler:@escaping(ConfirmResult)->Void) {
-    let alert:NSAlert = NSAlert()
-    alert.window.appearance = theme.appearance
-    alert.alertStyle = .informational
-    alert.messageText = header
-    alert.informativeText = information ?? ""
-        alert.addButton(withTitle: okTitle ?? tr(.alertOK))
-    alert.addButton(withTitle: cancelTitle ?? tr(.alertCancel))
+func confirm(for window:Window, with header:String, and information:String?, okTitle:String? = nil, cancelTitle:String = tr(.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
     
-    if let thridTitle = thridTitle {
-        alert.addButton(withTitle: thridTitle)
-    }
-    
-    alert.beginSheetModal(for: window, completionHandler: { (response) in
-        
-        if response.rawValue == 1000 {
+    let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
+    alert.show(completionHandler: { response in
+        switch response {
+        case .OK:
             successHandler(.basic)
-        } else if response.rawValue == 1002 {
+        case .alertThirdButtonReturn:
             successHandler(.thrid)
+        default:
+            break
         }
-        
     })
-
 }
 
 func confirmSignal(for window:Window, header:String, information:String?, okTitle:String? = nil, cancelTitle:String? = nil) -> Signal<Bool, Void> {
     let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
-        let alert:NSAlert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = header
-        alert.window.appearance = theme.appearance
-        alert.informativeText = information ?? ""
-        alert.addButton(withTitle: okTitle ?? tr(.alertOK))
-        alert.addButton(withTitle: cancelTitle ?? tr(.alertCancel))
-        
-        alert.beginSheetModal(for: window, completionHandler: { response in
-            value.set(response.rawValue == 1000)
+        let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(.alertCancel))
+        alert.show(completionHandler: { response in
+            value.set(response == .OK)
         })
-        
     }
     return value.get() |> take(1)
 }

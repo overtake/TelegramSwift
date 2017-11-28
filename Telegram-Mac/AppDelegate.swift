@@ -6,6 +6,8 @@ import TelegramCoreMac
 import TGUIKit
 import Quartz
 import MtProtoKitMac
+import CoreServices
+import LocalAuthentication
 
 #if !APP_STORE
     import HockeySDK
@@ -16,13 +18,14 @@ import MtProtoKitMac
 
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
    
     #if !APP_STORE
     @IBOutlet weak var updater: SUUpdater!
     #endif
     @IBOutlet weak var window: Window! {
         didSet {
+            window.delegate = self
             window.initSaver()
         }
     }
@@ -57,9 +60,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     private var activity:Any?
 
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+       
+    }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
         
         
         let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
@@ -127,6 +132,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let logger = Logger(basePath: containerUrl.path + "/logs")
         logger.logToConsole = UserDefaults.standard.bool(forKey: "enablelogs")
         logger.logToFile = UserDefaults.standard.bool(forKey: "enablelogs")
+        #if DEBUG
+            MTLogSetEnabled(true)
+            logger.logToFile = true
+        #endif
         
         #if APP_STORE || STABLE
             logger.logToConsole = false
@@ -225,6 +234,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
     
     
+    func window(_ window: NSWindow, willPositionSheet sheet: NSWindow, using rect: NSRect) -> NSRect {
+        var rect = rect
+        rect.origin.y -= 22
+        return rect;
+    }
+    
     func applicationDidBecomeActive(_ notification: Notification) {
         presentAccountStatus.set(.single(true) |> then(.single(true) |> delay(50, queue: Queue.concurrentBackgroundQueue())) |> restart)
     }
@@ -278,7 +293,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
     
-
+    func applicationWillUnhide(_ notification: Notification) {
+        window.makeKeyAndOrderFront(nil)
+    }
+    
+    func applicationWillBecomeActive(_ notification: Notification) {
+        if contextValue != nil {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
 
     override func awakeFromNib() {
         #if APP_STORE

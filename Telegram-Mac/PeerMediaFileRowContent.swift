@@ -56,7 +56,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             
             if let iconImageRepresentation = iconImageRepresentation {
                 iconArguments = TransformImageArguments(corners: ImageCorners( radius: iconSize.width / 2), imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
-                icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation])
+                icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil)
             } else {
                 let fileName: String = file.fileName ?? ""
                 
@@ -74,8 +74,8 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         }
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
-        let signal = super.menuItems()
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        let signal = super.menuItems(in: location)
         let account = self.account
         if let file = self.file {
             return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
@@ -130,7 +130,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         actionView.isSelectable = false
-        
+        actionView.userInteractionEnabled = false
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(nameView)
@@ -230,7 +230,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         
     }
     
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         return imageView
     }
     
@@ -258,7 +258,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 updateIconImageSignal = .complete()
             }
             
-            imageView.setSignal(account: item.account, signal: updateIconImageSignal)
+            imageView.setSignal( updateIconImageSignal)
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
             } else {

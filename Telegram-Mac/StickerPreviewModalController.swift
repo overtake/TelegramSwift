@@ -30,7 +30,7 @@ fileprivate class StickerPreviewModalView : View {
     }
     
     func update(with file:TelegramMediaFile, account:Account) -> Void {
-        imageView.setSignal(account: account, signal: chatMessageSticker(account: account, file: file, type: .full, scale: backingScaleFactor), clearInstantly: true, animate:true)
+        imageView.setSignal( chatMessageSticker(account: account, file: file, type: .full, scale: backingScaleFactor), clearInstantly: true, animate:true)
         let size = file.dimensions?.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 100)) ?? frame.size
         imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
         imageView.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)

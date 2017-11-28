@@ -554,7 +554,7 @@ struct ChatPresentationInterfaceState: Equatable {
         return false
     }
     
-    let maxInput:Int32 = 10000
+    let maxInput:Int32 = 50000
     let maxShortInput:Int32 = 200
     
     var maxInputCharacters:Int32 {
@@ -642,9 +642,7 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        if lhs.inputContext != rhs.inputContext {
-            return false
-        }
+        
         
         if lhs.state != rhs.state {
             return false
@@ -721,6 +719,10 @@ struct ChatPresentationInterfaceState: Equatable {
                 return false
             }
         } else if (lhs.keyboardButtonsMessage == nil) != (rhs.keyboardButtonsMessage == nil) {
+            return false
+        }
+        
+        if lhs.inputContext != rhs.inputContext {
             return false
         }
         

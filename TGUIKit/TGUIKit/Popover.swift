@@ -86,11 +86,11 @@ open class Popover: NSObject {
                     }, with: strongSelf, for: .All)
                     
                     strongSelf.window?.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-                        if let strongSelf = self, !strongSelf.inside() {
+                        if let strongSelf = self, !strongSelf.inside() && !control.mouseInside() {
                             strongSelf.hide()
                         }
                         return .invokeNext
-                        },  with: strongSelf, for: .leftMouseUp, priority: .high)
+                    },  with: strongSelf, for: .leftMouseUp, priority: .high)
                     
                     
                     strongSelf.window?.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in

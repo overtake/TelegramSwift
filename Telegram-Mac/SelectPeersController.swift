@@ -382,7 +382,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
             
             let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
             
-            let foundRemotePeers:Signal<([Peer], Bool), Void> = .single(([], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0, false)} )
+            let foundRemotePeers:Signal<([Peer], Bool), Void> = .single(([], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, false)} )
             
             
             let contactsSearch: Signal<([TemporaryPeer], [TemporaryPeer], Bool), Void>
@@ -575,7 +575,7 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                 
                 let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
                 
-                let foundRemotePeers:Signal<([Peer], Bool), Void> = settings.contains(.remote) ? .single(([], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0, false)} ) : .single(([], false))
+                let foundRemotePeers:Signal<([Peer], Bool), Void> = settings.contains(.remote) ? .single(([], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, false)} ) : .single(([], false))
                 
                 return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
                     return (uniquePeers(from: (values.0 + values.1.0)), values.1.1 && search.request.length >= 5)

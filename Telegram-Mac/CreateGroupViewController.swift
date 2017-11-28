@@ -12,8 +12,20 @@ import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
 
+
+fileprivate final class CreateGroupArguments {
+    let account: Account
+    let choicePicture:(Bool)->Void
+    let updatedText:(String)->Void
+    init(account: Account, choicePicture:@escaping(Bool)->Void, updatedText:@escaping(String)->Void) {
+        self.account = account
+        self.updatedText = updatedText
+        self.choicePicture = choicePicture
+    }
+}
+
 fileprivate enum CreateGroupEntry : Comparable, Identifiable {
-    case info
+    case info(String?, String)
     case peer(Peer, Int, PeerPresence?)
     
     fileprivate var stableId:AnyHashable {
@@ -37,9 +49,9 @@ fileprivate enum CreateGroupEntry : Comparable, Identifiable {
 
 fileprivate func ==(lhs:CreateGroupEntry, rhs:CreateGroupEntry) -> Bool {
     switch lhs {
-    case .info:
-        if case .info = rhs {
-            return true
+    case let .info(lhsPhoto, lhsText):
+        if case let .info(rhsPhoto, rhsText) = rhs {
+            return lhsPhoto == rhsPhoto && lhsText == rhsText
         } else {
             return false
         }
@@ -65,17 +77,18 @@ fileprivate func <(lhs:CreateGroupEntry, rhs:CreateGroupEntry) -> Bool {
 
 struct CreateGroupResult {
     let title:String
+    let picture: String?
     let peerIds:[PeerId]
 }
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>], to:[AppearanceWrapperEntry<CreateGroupEntry>], account:Account, initialSize:NSSize, animated:Bool) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>], to:[AppearanceWrapperEntry<CreateGroupEntry>], arguments: CreateGroupArguments, initialSize:NSSize, animated:Bool) -> Signal<TableUpdateTransition,Void> {
     
     return Signal { subscriber in
         let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
             
             switch entry.entry {
-            case .info:
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, placeholder:tr(.createGroupNameHolder), limit:140)
+            case let .info(photo, currentText):
+                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.account, placeholder:tr(.createGroupNameHolder), photo: photo, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
             case let .peer(peer, _, presence):
                 
                 var color:NSColor = theme.colors.grayText
@@ -84,7 +97,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
                 }
-                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30))
+                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30))
             }
         })
         
@@ -98,9 +111,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
     
 }
 
-private func createGroupEntries(_ view: MultiplePeersView, appearance: Appearance) -> [AppearanceWrapperEntry<CreateGroupEntry>] {
+private func createGroupEntries(_ view: MultiplePeersView, picture: String?, text: String, appearance: Appearance) -> [AppearanceWrapperEntry<CreateGroupEntry>] {
     
-    var entries:[CreateGroupEntry] = [.info]
+    var entries:[CreateGroupEntry] = [.info(picture, text)]
     var index:Int = 0
     for peer in view.peers.map({$1}) {
         entries.append(.peer(peer, index, view.presences[peer.id]))
@@ -113,21 +126,40 @@ private func createGroupEntries(_ view: MultiplePeersView, appearance: Appearanc
 class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerId], TableView> { // Title, photo path
     private let entries:Atomic<[AppearanceWrapperEntry<CreateGroupEntry>]> = Atomic(value:[])
     private let disposable:MetaDisposable = MetaDisposable()
-    
+    private let pictureValue = Promise<String?>(nil)
+    private let textValue = ValuePromise<String>("", ignoreRepeated: true)
+
     
     override func restart(with result: ComposeState<[PeerId]>) {
         super.restart(with: result)
         assert(isLoaded())
         let initialSize = self.atomicSize
         let table = self.genericView
-        
-        let account: Account = self.account
+        let pictureValue = self.pictureValue
+        let textValue = self.textValue
+
         let entries = self.entries
+        let arguments = CreateGroupArguments(account: account, choicePicture: { select in
+            if select {
+                pickImage(for: mainWindow, completion: { image in
+                    if let image = image {
+                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { path in
+                            pictureValue.set(.single(path))
+                        })
+                    }
+                })
+            } else {
+                pictureValue.set(.single(nil))
+            }
+            
+        }, updatedText: { text in
+            textValue.set(text)
+        })
         
-        let signal:Signal<TableUpdateTransition, Void> = combineLatest(account.postbox.multiplePeersView(result.result) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> mapToSignal { view, appearance in
-            let list = createGroupEntries(view, appearance: appearance)
+        let signal:Signal<TableUpdateTransition, Void> = combineLatest(account.postbox.multiplePeersView(result.result) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, pictureValue.get() |> deliverOnPrepareQueue, textValue.get() |> deliverOnPrepareQueue) |> mapToSignal { view, appearance, picture, text in
+            let list = createGroupEntries(view, picture: picture, text: text, appearance: appearance)
            
-            return prepareEntries(from: entries.swap(list), to: list, account: account, initialSize: initialSize.modify({$0}), animated: true)
+            return prepareEntries(from: entries.swap(list), to: list, arguments: arguments, initialSize: initialSize.modify({$0}), animated: true)
             
         } |> deliverOnMainQueue
         
@@ -168,8 +200,11 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
     }
     
     override func executeNext() -> Void {
-        if let previousResult = previousResult, let item = self.genericView.item(at: 0) as? GroupNameRowItem {
-            onComplete.set(.single(CreateGroupResult(title: item.text, peerIds: previousResult.result)))
+        if let previousResult = previousResult {
+            let result = combineLatest(pictureValue.get() |> take(1), textValue.get() |> take(1)) |> map { value, text in
+                return CreateGroupResult(title: text, picture: value, peerIds: previousResult.result)
+            }
+            onComplete.set(result)
         }
     }
     

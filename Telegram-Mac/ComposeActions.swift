@@ -18,11 +18,29 @@ func createGroup(with account:Account, for navigation:NavigationViewController) 
     
     let select = SelectPeersController(titles: ComposeTitles(tr(.composeSelectUsers), tr(.composeNext)), account: account, settings: [.contacts, .remote])
     let chooseName =  CreateGroupViewController(titles: ComposeTitles(tr(.groupNewGroup), tr(.composeCreate)), account: account)
-    let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<PeerId?, Void> in
-        return showModalProgress(signal: createGroup(account: account, title: result.title, peerIds: result.peerIds), for: mainWindow)
-    }
-    _ = signal.start(next: { [weak navigation] (peerId) in
-        if let peerId = peerId {
+    let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), Void> in
+        let signal = showModalProgress(signal: createGroup(account: account, title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
+        return signal
+    } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), Void> in
+            if let peerId = peerId, let picture = picture {
+                let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
+                let signal:Signal<(PeerId?, Bool), Void> = updatePeerPhoto(account: account, peerId: peerId, resource: resource) |> mapError {_ in} |> map { value in
+                    switch value {
+                    case .complete:
+                        return (Optional(peerId), false)
+                    default:
+                        return (nil, false)
+                    }
+                }
+                
+                return .single((peerId, true)) |> then(signal)
+            }
+            return .single((peerId, true))
+        } |> deliverOnMainQueue |> filter {$0.1}
+    
+    
+    _ = signal.start(next: { [weak navigation] peerId, complete in
+        if let peerId = peerId, complete {
             navigation?.push(ChatController(account: account, peerId: peerId))
         }
     })
@@ -35,7 +53,7 @@ func createChannel(with account:Account, for navigation:NavigationViewController
     let create = intro.onComplete.get() |> mapToSignal{ () -> Signal<PeerId?, Void> in
         let create = CreateChannelViewController(titles: ComposeTitles(tr(.channelNewChannel), tr(.composeNext)), account: account)
         navigation.push(create)
-        return create.onComplete.get() |> deliverOnMainQueue |> mapToSignal { peerId -> Signal<PeerId?, Void> in
+        return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, Void> in
             if let peerId = peerId {
                 navigation.push(ChatController(account: account, peerId: peerId), style: .none)
                 let visibility = ChannelVisibilityController(account: account, peerId: peerId)

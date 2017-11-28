@@ -263,31 +263,57 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     
     
     private var requestCount:Int {
-        return Int((frame.width / 100) * (frame.height / 100)) * 4
+        let screenCount = (frame.width / 100) * (frame.height / 100)
+        return Int(screenCount * 4)
     }
     
     func enableScroll() -> Void {
-        genericView.grid.visibleItemsUpdated = { [weak self] visibleItems in
-            
-            if let strongSelf = self, let historyView = strongSelf.historyView, let top = visibleItems.top, let bottom = visibleItems.bottom {
-                if top.0 < 5 && historyView.originalView.laterId != nil {
-                    //
-                    let lastEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - top.0, 0), historyView.filteredEntries.count - 1)]
-                    let location = ChatHistoryLocation.Navigation(index: lastEntry.entry.index, anchorIndex: historyView.originalView.anchorIndex)
-                    
-                    strongSelf._chatHistoryLocation.set(location)
-                    strongSelf.disableScroll()
-                } else if bottom.0 >= historyView.filteredEntries.count - 5 && historyView.originalView.earlierId != nil {
-                    let firstEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - bottom.0, 0), historyView.filteredEntries.count - 1)]
-                    strongSelf._chatHistoryLocation.set(ChatHistoryLocation.Navigation(index: firstEntry.entry.index, anchorIndex: historyView.originalView.anchorIndex))
-                    strongSelf.disableScroll()
-                }
+        
+        genericView.grid.scrollHandler = { [weak self] scroll in
+            guard let historyView = self?.historyView else {return}
+            guard let `self` = self else {return}
+
+            var index:MessageIndex?
+            switch scroll.direction {
+            case .bottom:
+                index = historyView.originalView.earlierId
+            case .top:
+                index = historyView.originalView.laterId
+            default:
+                break
             }
+            if let index = index {
+                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: historyView.originalView.anchorIndex, count: self.requestCount)
+                
+                self.disableScroll()
+                
+                self._chatHistoryLocation.set(location)
+            }
+            
         }
+        
+//        genericView.grid.visibleItemsUpdated = { [weak self] visibleItems in
+//
+//            if let strongSelf = self, let historyView = strongSelf.historyView, let top = visibleItems.top, let bottom = visibleItems.bottom {
+//                if top.0 < 5 && historyView.originalView.laterId != nil {
+//                    //
+//                    let lastEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - top.0, 0), historyView.filteredEntries.count - 1)]
+//                    let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(lastEntry.entry.index), anchorIndex: historyView.originalView.anchorIndex, count: strongSelf.requestCount)
+//
+//                    strongSelf._chatHistoryLocation.set(location)
+//                    strongSelf.disableScroll()
+//                } else if bottom.0 >= historyView.filteredEntries.count - 5 && historyView.originalView.earlierId != nil {
+//                    let firstEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - bottom.0, 0), historyView.filteredEntries.count - 1)]
+//                    strongSelf._chatHistoryLocation.set(ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(firstEntry.entry.index), anchorIndex: historyView.originalView.anchorIndex, count: strongSelf.requestCount))
+//                    strongSelf.disableScroll()
+//                }
+//            }
+//        }
     }
     
     func disableScroll() -> Void {
         genericView.grid.visibleItemsUpdated = nil
+        genericView.grid.scrollHandler = {_ in}
     }
     
     override func viewDidLoad() {

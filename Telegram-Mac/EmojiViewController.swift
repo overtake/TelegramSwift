@@ -164,13 +164,18 @@ class EmojiControllerView : View {
 }
 
 class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, TableViewDelegate {
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private var disposable:MetaDisposable = MetaDisposable()
  
-    
     private var interactions:EntertainmentInteractions?
     
     override init(_ account: Account) {
         super.init(account)
+        _frameRect = NSMakeRect(0, 0, 350, 300)
         self.bar = .init(height: 0)
     }
     

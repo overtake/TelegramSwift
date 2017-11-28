@@ -309,7 +309,7 @@ class PCallSession {
             case .error:
                 playTone(.callToneFailed)
             default:
-                stopAudio()
+                playTone(.callToneEnded)
             }
 //            if let report = report {
 //                let account = self.account

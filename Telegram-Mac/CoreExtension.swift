@@ -358,6 +358,9 @@ extension TelegramMediaFile {
         if let size = size {
             return size
         }
+        if let resource = resource as? LocalFileReferenceMediaResource {
+            return Int(resource.sizeValue ?? 0)
+        }
         return 0
     }
 }
@@ -504,6 +507,15 @@ public extension Message {
         return nil
     }
     
+    var replyAttribute: ReplyMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ReplyMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var autoremoveAttribute:AutoremoveTimeoutMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? AutoremoveTimeoutMessageAttribute {
@@ -523,7 +535,7 @@ public extension Message {
     }
     
     func withUpdatedStableId(_ stableId:UInt32) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
     }
     
     func possibilityForwardTo(_ peer:Peer) -> Bool {
@@ -543,6 +555,10 @@ public extension Message {
             }
         }
         return true
+    }
+    
+    convenience init(_ media: Media, stableId: UInt32, messageId: MessageId) {
+        self.init(stableId: stableId, stableVersion: 0, id: messageId, globallyUniqueId: nil, groupingKey: nil, groupInfo: nil, timestamp: 0, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: nil, text: "", attributes: [], media: [media], peers: SimpleDictionary(), associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     }
 }
 
@@ -611,6 +627,11 @@ func canForwardMessage(_ message:Message, account:Account) -> Bool {
     if message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     }
+    
+    if message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
+        return false
+    }
+    
     if message.media.first is TelegramMediaAction {
         return false
     }
@@ -790,6 +811,37 @@ extension Peer {
         return self is TelegramGroup
     }
     
+    var isRestrictedChannel: Bool {
+        if let peer = self as? TelegramChannel {
+            if let restrictionInfo = peer.restrictionInfo {
+                #if APP_STORE
+                    let reason = restrictionInfo.reason.components(separatedBy: ":")
+                    
+                    if reason.count == 2 {
+                        let platform = reason[0]
+                        if platform.hasSuffix("ios") || platform.hasSuffix("macos") || platform.hasSuffix("all") {
+                            return true
+                        }
+                    }
+                #endif
+            }
+        }
+        return false
+    }
+    
+    var restrictionText:String? {
+        if let peer = self as? TelegramChannel {
+            if let restrictionInfo = peer.restrictionInfo {
+                let reason = restrictionInfo.reason.components(separatedBy: ":")
+                
+                if reason.count == 2 {
+                    return reason[1]
+                }
+            }
+        }
+        return nil
+    }
+    
     var isSupergroup:Bool {
         if let peer = self as? TelegramChannel {
             switch peer.info {
@@ -871,7 +923,16 @@ public func ==(lhs:AddressNameAvailabilityState, rhs:AddressNameAvailabilityStat
     }
 }
 
-
+extension Signal {
+    
+    public static func next(_ value: T) -> Signal<T, E> {
+        return Signal<T, E> { subscriber in
+            subscriber.putNext(value)
+            
+            return EmptyDisposable
+        }
+    }
+}
 
 public func peerCompactDisplayTitles(_ peerIds: [PeerId], _ dict: SimpleDictionary<PeerId, Peer>) -> String {
     var names:String = ""

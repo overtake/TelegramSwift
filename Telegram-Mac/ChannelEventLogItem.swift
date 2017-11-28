@@ -446,7 +446,7 @@ class ServiceEventLogItem: TableRowItem {
                     
                     let size = NSMakeSize(70, 70)
                     imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
-                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: new)
+                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: new, reference: nil)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case .participantLeave:
@@ -573,7 +573,7 @@ private class ServiceEventLogRowView : TableRowView {
                     imageView?.setFrameSize(NSMakeSize(70, 70))
                     self.addSubview(imageView!)
                 }
-                imageView?.setSignal(account: item.chatInteraction.account, signal: chatMessagePhoto(account: item.chatInteraction.account, photo: image, toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
+                imageView?.setSignal(chatMessagePhoto(account: item.chatInteraction.account, photo: image, toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
             } else {
                 imageView?.removeFromSuperview()
                 imageView = nil

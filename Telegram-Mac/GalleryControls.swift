@@ -24,8 +24,8 @@ class GalleryControls: Node {
     
     let index:Promise<(Int,Int)> = Promise()
     private let interactions:GalleryInteractions
-    
-    
+    private var thumbsView: GalleryThumbsControlView?
+    fileprivate let counter:TitleButton = TitleButton()
     override var backgroundColor: NSColor? {
         return .blackTransparent
     }
@@ -34,12 +34,28 @@ class GalleryControls: Node {
         self.interactions = interactions
         super.init(view)
         view?.layer?.opacity = 0.0
+        
+        interactions.showThumbsControl = { [weak self] view, animated in
+            view.change(opacity: 1.0, animated: animated)
+            self?.view?.addSubview(view)
+            view.center()
+            self?.counter.change(opacity: 0.0)
+            
+        }
+        interactions.hideThumbsControl = { [weak self] view, animated in
+            view.change(opacity: 0, animated: animated, completion: { [weak view] completed in
+                if completed {
+                    view?.removeFromSuperview()
+                }
+            })
+            self?.counter.change(opacity: 1.0)
+        }
     }
     
     func animateIn() -> Void {
         self.setNeedDisplay()
-        
         if let view = view {
+            
             view.centerX(y: 10.0)
             view.layer?.opacity = 1.0
             view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25)
@@ -75,13 +91,13 @@ class GalleryGeneralControls : GalleryControls {
     private let next:ImageButton = ImageButton()
     private let more:ImageButton = ImageButton()
     private let dismiss:ImageButton = ImageButton()
-    private let counter:TitleButton = TitleButton()
+    
     
     
     private let disposable:MetaDisposable = MetaDisposable()
     
     override var backgroundColor: NSColor? {
-        return .blackTransparent
+        return NSColor(0x000000, 0.95)
     }
     
     override init(_ view: View? = nil, interactions:GalleryInteractions) {
@@ -107,7 +123,7 @@ class GalleryGeneralControls : GalleryControls {
         
         if let view = view {
             
-            counter.sizeToFit(NSZeroSize, NSMakeSize(150, view.frame.height))
+            counter.sizeToFit(NSZeroSize, NSMakeSize(190, view.frame.height))
             counter.center(view)
             
             let bwidth = (view.frame.width - counter.frame.width) / 4.0

@@ -64,10 +64,17 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     let tableView:TableView = TableView()
     fileprivate let share:ImageButton = ImageButton()
     fileprivate let dismiss:ImageButton = ImageButton()
-    private let separator = View()
-    fileprivate let invokeButton = ShareButton(frame: NSZeroRect)
-    private let shadowView: View = ShadowView()
     
+    
+    
+    fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
+    fileprivate let sendButton = ImageButton()
+    fileprivate let emojiButton = ImageButton()
+    fileprivate let actionsContainerView: View = View()
+    fileprivate let textContainerView: View = View()
+    fileprivate let bottomSeparator: View = View()
+
+    private let topSeparator = View()
     fileprivate var hasShareMenu: Bool = true {
         didSet {
             share.isHidden = !hasShareMenu
@@ -82,9 +89,11 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         super.init(frame: frameRect)
         addSubview(searchView)
         addSubview(tableView)
-        addSubview(separator)
+        addSubview(topSeparator)
         searchView.delegate = self
-        separator.backgroundColor = theme.colors.border
+        bottomSeparator.backgroundColor = theme.colors.border
+        topSeparator.backgroundColor = theme.colors.border
+        
         self.backgroundColor = theme.colors.background
         share.set(image: theme.icons.modalShare, for: .Normal)
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
@@ -95,32 +104,66 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         addSubview(share)
         addSubview(dismiss)
         
-        shadowView.backgroundColor = theme.colors.background.withAlphaComponent(1.0)
-        shadowView.setFrameSize(frame.width, 70)
+  
         
-        addSubview(shadowView)
-        addSubview(invokeButton)
+        sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
+        sendButton.sizeToFit()
+        
+        emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
+        emojiButton.sizeToFit()
+        
+        actionsContainerView.addSubview(sendButton)
+        actionsContainerView.addSubview(emojiButton)
+        
+        
+        actionsContainerView.setFrameSize(sendButton.frame.width + emojiButton.frame.width + 40, 50)
+        
+        emojiButton.centerY(x: 0)
+        sendButton.centerY(x: emojiButton.frame.maxX + 20)
+        
+        backgroundColor = theme.colors.background
+        textView.background = theme.colors.background
+        textView.textFont = .normal(.text)
+        textView.textColor = theme.colors.text
+        textView.linkColor = theme.colors.link
+        textView.max_height = 120
+        
+        textView.setFrameSize(NSMakeSize(0, 34))
+        textView.setPlaceholderAttributedString(.initialize(string:  tr(.previewSenderCommentPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
 
-    }
-    private var count:Int = 0
-    
-    func updateCount(_ count:Int, animated: Bool) -> Void {
-        self.count = count
-        invokeButton.updateCount(count)
-        if count == 0 {
-            invokeButton.change(pos: NSMakePoint(invokeButton.frame.minX, frame.height), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
-            shadowView.change(pos: NSMakePoint(shadowView.frame.minX, frame.height), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
-        } else {
-            invokeButton.change(pos: NSMakePoint(invokeButton.frame.minX, frame.height - invokeButton.frame.height - 16), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
-            shadowView.change(pos: NSMakePoint(shadowView.frame.minX, frame.height - shadowView.frame.height), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
-        }
+        
+        textContainerView.addSubview(textView)
+
+        addSubview(textContainerView)
+        addSubview(actionsContainerView)
+        addSubview(bottomSeparator)
+
     }
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {
         searchView._change(pos: NSMakePoint(50, 10), animated: animated)
-        tableView.change(size: NSMakeSize(frame.width, frame.height - height - 20), animated: animated)
+        tableView.change(size: NSMakeSize(frame.width, frame.height - height - 20 - textView.frame.height - 16), animated: animated)
         tableView.change(pos: NSMakePoint(0, height + 20), animated: animated)
-        separator.change(pos: NSMakePoint(0, searchView.frame.maxY + 10), animated: animated)
+        topSeparator.change(pos: NSMakePoint(0, searchView.frame.maxY + 10), animated: animated)
+    }
+    
+    func textViewUpdateHeight(_ height: CGFloat, _ animated: Bool) {
+        CATransaction.begin()
+        textContainerView.change(size: NSMakeSize(frame.width, height + 16), animated: animated)
+        textContainerView.change(pos: NSMakePoint(0, frame.height - textContainerView.frame.height), animated: animated)
+        textView._change(pos: NSMakePoint(10, height == 34 ? 8 : 11), animated: animated)
+        tableView.change(size: NSMakeSize(frame.width, frame.height - searchView.frame.height - 20 - 50), animated: animated)
+
+        actionsContainerView.change(pos: NSMakePoint(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height), animated: animated)
+        
+        bottomSeparator.change(pos: NSMakePoint(0, textContainerView.frame.minY), animated: animated)
+        CATransaction.commit()
+        
+        needsLayout = true
+    }
+    
+    var additionHeight: CGFloat {
+        return textView.frame.height + 16 + searchView.frame.height + 20
     }
     
     
@@ -130,10 +173,18 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         share.setFrameOrigin(frame.width - share.frame.width - 10, 10)
         dismiss.setFrameOrigin(10, 10)
         searchView.setFrameOrigin(50, 10)
-        tableView.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, frame.height - searchView.frame.height - 20)
-        separator.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, .borderSize)
-        invokeButton.centerX(y: count == 0 ? frame.height : frame.height - invokeButton.frame.height - 16)
-        shadowView.setFrameOrigin(0, count == 0 ? frame.height : frame.height - shadowView.frame.height)
+        tableView.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, frame.height - searchView.frame.height - 20 - 50)
+        topSeparator.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, .borderSize)
+        actionsContainerView.setFrameOrigin(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height)
+        
+        textContainerView.setFrameSize(frame.width, textView.frame.height + 16)
+        textContainerView.setFrameOrigin(0, frame.height - textContainerView.frame.height)
+
+        
+        textView.setFrameSize(NSMakeSize(textContainerView.frame.width - 10 - actionsContainerView.frame.width, textView.frame.height))
+        textView.setFrameOrigin(10, textView.frame.height == 34 ? 8 : 11)
+        bottomSeparator.frame = NSMakeRect(0, textContainerView.frame.minY, frame.width, .borderSize)
+
     }
     
     
@@ -150,7 +201,7 @@ class ShareObject {
         self.account = account
     }
     
-    func perform(to entries:[PeerId]) {
+    func perform(to entries:[PeerId], comment: String? = nil) {
         
     }
     
@@ -182,13 +233,13 @@ class ShareLinkObject : ShareObject {
         copyToClipboard(link)
     }
     
-    override func perform(to peerIds:[PeerId]) {
+    override func perform(to peerIds:[PeerId], comment: String? = nil) {
         for peerId in peerIds {
             var attributes:[MessageAttribute] = []
             if FastSettings.isChannelMessagesMuted(peerId) {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, media: nil, replyToMessageId: nil)]).start()
+            _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, media: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
         }
     }
 }
@@ -200,7 +251,7 @@ class ShareContactObject : ShareObject {
         super.init(account)
     }
     
-    override func perform(to peerIds:[PeerId]) {
+    override func perform(to peerIds:[PeerId], comment: String? = nil) {
         for peerId in peerIds {
             _ = Sender.shareContact(account: account, peerId: peerId, contact: user).start()
         }
@@ -214,8 +265,8 @@ class ShareMessageObject : ShareObject {
     let link:String?
     private let exportLinkDisposable = MetaDisposable()
     
-    init(_ account:Account, _ message:Message) {
-        self.messageIds = [message.id]
+    init(_ account:Account, _ message:Message, _ groupMessages:[Message] = []) {
+        self.messageIds = groupMessages.isEmpty ? [message.id] : groupMessages.map{$0.id}
         self.message = message
         let peer:TelegramChannel?
         if let author = message.forwardInfo?.author as? TelegramChannel {
@@ -256,8 +307,11 @@ class ShareMessageObject : ShareObject {
         exportLinkDisposable.dispose()
     }
 
-    override func perform(to peerIds:[PeerId]) {
+    override func perform(to peerIds:[PeerId], comment: String? = nil) {
         for peerId in peerIds {
+            if let comment = comment?.trimmed, !comment.isEmpty {
+                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], media: nil, replyToMessageId: nil, localGroupingKey: nil), account: account, peerId: peerId).start()
+            }
             _ = Sender.forwardMessages(messageIds: messageIds, account: account, peerId: peerId).start()
         }
     }
@@ -368,8 +422,9 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         
         switch entry {
         case let .plain(peer, _, presence, drawSeparator):
+            //
             let color = presence?.status.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
-            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: presence?.status.string, drawCustomSeparator: drawSeparator, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
+            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? nil : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
         case let .separator(text, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: text)
         case .emptySearch:
@@ -386,7 +441,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
 
 
 
-class ShareModalController: ModalViewController, Notifable {
+class ShareModalController: ModalViewController, Notifable, TGModernGrowingDelegate {
     private let share:ShareObject
     private let selectInteractions:SelectPeerInteraction = SelectPeerInteraction()
     private let search:Promise<String> = Promise()
@@ -402,13 +457,13 @@ class ShareModalController: ModalViewController, Notifable {
             let removed = oldValue.selected.subtracting(value.selected)
 
             for item in added {
-                genericView.searchView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
+                let title = item == share.account.peerId ? tr(.peerSavedMessages) : value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser)
+                genericView.searchView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
             }
             
             for item in removed {
                 genericView.searchView.removeToken(uniqueId: item.toInt64(), animated: animated)
             }
-            genericView.updateCount(value.selected.count, animated: animated)
             
         }
     }
@@ -436,6 +491,20 @@ class ShareModalController: ModalViewController, Notifable {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let interactions = EntertainmentInteractions(.emoji, peerId: PeerId(0))
+        interactions.sendEmoji = { [weak self] emoji in
+            self?.genericView.textView.appendText(emoji)
+            self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
+        }
+        emoji.update(with: interactions)
+        
+        genericView.emojiButton.set(handler: { [weak self] control in
+            self?.showEmoji(for: control)
+        }, for: .Hover)
+
+        
+        genericView.textView.delegate = self
         genericView.hasShareMenu = self.share.hasLink
         search.set(genericView.searchView.textUpdater)
         
@@ -463,10 +532,14 @@ class ShareModalController: ModalViewController, Notifable {
             })]), edge: .maxY, inset: NSMakePoint(-100,  -40))
         }, for: .Click)
         
-        genericView.invokeButton.set(handler: { [weak self] _ in
-            share.perform(to: selectInteraction.presentation.selected.map{$0})
-            self?.close()
-        }, for: .Click)
+        
+        genericView.sendButton.set(handler: { [weak self] _ in
+            if let strongSelf = self, !selectInteraction.presentation.selected.isEmpty {
+                _ = strongSelf.returnKeyAction()
+            }
+        }, for: .SingleClick)
+        
+
         
         tokenDisposable.set(genericView.searchView.tokensUpdater.start(next: { tokens in
             let ids = Set(tokens.map({PeerId($0.uniqueId)}))
@@ -481,7 +554,7 @@ class ShareModalController: ModalViewController, Notifable {
         let list:Signal<TableUpdateTransition, Void> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue, genericView.searchView.stateValue.get() |> deliverOnPrepareQueue) |> mapToSignal { location, search, state -> Signal<TableUpdateTransition, Void> in
             
             if state == .None {
-                return combineLatest(recentPeers(account: account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { top, recent -> TableUpdateTransition in
+                return combineLatest(account.postbox.loadedPeerWithId(account.peerId), recentPeers(account: account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { user, top, recent -> TableUpdateTransition in
                     
                     var entries:[SelectablePeersEntry] = []
                     
@@ -494,6 +567,9 @@ class ShareModalController: ModalViewController, Notifable {
                         indexId -= 1
                         return ChatListIndex(pinningIndex: nil, messageIndex: index)
                     }
+                    
+                    entries.append(.plain(user, chatListIndex(), nil, top.isEmpty && recent.isEmpty))
+                    contains[user.id] = user.id
                     
                     if !top.isEmpty {
                         entries.insert(.separator(tr(.searchSeparatorPopular).uppercased(), chatListIndex()), at: 0)
@@ -573,7 +649,7 @@ class ShareModalController: ModalViewController, Notifable {
                     var entries:[SelectablePeersEntry] = []
                     
                     var contains:[PeerId:PeerId] = [:]
-                    
+                    contains[account.peerId] = account.peerId
                     for entry in value.0.entries {
                         switch entry {
                         case let .MessageEntry(id, _, _, _, _, renderedPeer, _):
@@ -655,12 +731,16 @@ class ShareModalController: ModalViewController, Notifable {
     
     
     override func firstResponder() -> NSResponder? {
+        if window?.firstResponder == genericView.textView.inputView {
+            return genericView.textView.inputView
+        }
        return genericView.searchView.responder
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
         if !selectInteractions.presentation.peers.isEmpty {
-            share.perform(to: selectInteractions.presentation.peers.map {$0.key})
+            share.perform(to: selectInteractions.presentation.peers.map {$0.key}, comment: genericView.textView.string())
+            emoji.popover?.hide()
             modal?.close(true)
             return .invoked
         }
@@ -677,64 +757,76 @@ class ShareModalController: ModalViewController, Notifable {
         return .rejected
     }
 
+    private let emoji: EmojiViewController
     
     init(_ share:ShareObject) {
         self.share = share
+        emoji = EmojiViewController(share.account)
         super.init(frame: NSMakeRect(0, 0, 360, 400))
         bar = .init(height: 0)
     }
-//    override var modalInteractions: ModalInteractions? {
-//        if let share = share as? ShareMessageObject {
-//            if let link = share.link {
-//                return ModalInteractions(acceptTitle:tr(.modalShare), accept:{ [weak self] in
-//                    if let interactions = self?.selectInteractions, let share = self?.share {
-//                        share.perform(to: interactions.presentation.selected.map({$0}))
-//                    }
-//                    self?.modal?.close()
-//                }, cancelTitle:tr(.modalCopyLink), cancel: { [weak self] in
-//                    if let strongSelf = self, let share = strongSelf.share as? ShareMessageObject {
-//                        
-//                        self?.exportLinkDisposable.set(exportMessageLink(account: strongSelf.share.account, peerId: share.messageIds[0].peerId, messageId: share.messageIds[0]).start(next: { valueLink in
-//                            if let valueLink = valueLink {
-//                                copyToClipboard(valueLink)
-//                            } else {
-//                                copyToClipboard(link)
-//                            }
-//                        }))
-//                    }
-//                    
-//                        self?.show(toaster: ControllerToaster(text: tr(.shareLinkCopied), height:50), for: 2.0, animated: true)
-//                }, drawBorder:true, height:40)
-//            } else {
-//                return ModalInteractions(acceptTitle:tr(.modalShare), accept:{ [weak self] in
-//                    if let interactions = self?.selectInteractions, let share = self?.share {
-//                        share.perform(to: interactions.presentation.selected.map({$0}))
-//                    }
-//                    self?.modal?.close()
-//                }, cancelTitle: tr(.modalCancel), drawBorder:true, height:40)
-//            }
-//            
-//        } else if let share = share as? ShareLinkObject {
-//            return ModalInteractions(acceptTitle: tr(.modalShare), accept:{ [weak self] in
-//                if let interactions = self?.selectInteractions, let share = self?.share {
-//                    share.perform(to: interactions.presentation.selected.map({$0}))
-//                }
-//                self?.modal?.close()
-//            }, cancelTitle: tr(.modalCopyLink), cancel: { [weak self] in
-//                copyToClipboard(share.link)
-//                self?.show(toaster: ControllerToaster(text: tr(.shareLinkCopied), height:50), for: 2.0, animated: true)
-//            }, drawBorder:true, height:40)
-//
-//        } else if let _ = share as? ShareContactObject {
-//            return ModalInteractions(acceptTitle: tr(.modalShare), accept:{ [weak self] in
-//                if let interactions = self?.selectInteractions, let share = self?.share {
-//                    share.perform(to: interactions.presentation.selected.map({$0}))
-//                }
-//                self?.modal?.close()
-//            }, drawBorder:true, height:40)
-//        }
-//        return nil
-//    }
+
+    func showEmoji(for control: Control) {
+        showPopover(for: control, with: emoji)
+    }
+    
+    func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
+        
+        updateSize(frame.width, animated: animated)
+        
+        genericView.textViewUpdateHeight(height, animated)
+        
+    }
+    
+    func textViewEnterPressed(_ event: NSEvent) -> Bool {
+        if FastSettings.checkSendingAbility(for: event) {
+            _ = returnKeyAction()
+            return true
+        }
+        return false
+    }
+    
+    func textViewTextDidChange(_ string: String) {
+        
+    }
+    
+    func textViewTextDidChangeSelectedRange(_ range: NSRange) {
+        
+    }
+    
+    func textViewDidReachedLimit(_ textView: Any) {
+        genericView.textView.shake()
+    }
+    
+    func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
+        return false
+    }
+    
+    func textViewSize() -> NSSize {
+        return NSMakeSize(frame.width - 40, genericView.textView.frame.height)
+    }
+    
+    func textViewIsTypingEnabled() -> Bool {
+        return true
+    }
+    
+    func maxCharactersLimit() -> Int32 {
+        return 200
+    }
+    
+    private func updateSize(_ width: CGFloat, animated: Bool) {
+        if let contentSize = self.window?.contentView?.frame.size {
+            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 70, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: animated)
+        }
+    }
+    
+    override func measure(size: NSSize) {
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: false)
+    }
+    
+    override var dynamicSize: Bool {
+        return true
+    }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)

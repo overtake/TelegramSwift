@@ -19,6 +19,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case themeSettings
     case recentEmoji = 14
     case instantViewAppearance = 11
+    case additionalSettings = 15
 }
 
 struct ApplicationSpecificPreferencesKeys {
@@ -30,4 +31,5 @@ struct ApplicationSpecificPreferencesKeys {
     static let themeSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.themeSettings.rawValue)
     static let recentEmoji = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.recentEmoji.rawValue)
     static let instantViewAppearance = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.instantViewAppearance.rawValue)
+    static let additionalSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.additionalSettings.rawValue)  
 }

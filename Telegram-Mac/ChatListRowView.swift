@@ -272,7 +272,12 @@ class ChatListRowView: TableRowView {
          if let item = self.item as? ChatListRowItem {
             
             if let peer = item.peer {
-                photo.setPeer(account: item.account, peer: peer)
+                if item.account.peerId == peer.id {
+                    let icon = theme.icons.peerSavedMessages
+                    photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: (NSColor(0x2a9ef1), NSColor(0x72d5fd)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 25, photo.frame.size.height - 25)))), animated: animated)
+                } else {
+                    photo.setPeer(account: item.account, peer: peer)
+                }
             }
             
             if let badgeNode = item.ctxBadgeNode {
@@ -323,8 +328,10 @@ class ChatListRowView: TableRowView {
                             }
                         }
                     }
-                    |> deliverOnMainQueue).start(next: { [weak self] activities in
-                        self?.inputActivities = (peerId, activities)
+                    |> deliverOnMainQueue).start(next: { [weak self, weak item] activities in
+                        if item?.account.peerId != item?.peerId {
+                            self?.inputActivities = (peerId, activities)
+                        }
                     }))
                 
                 let inputActivities = self.inputActivities

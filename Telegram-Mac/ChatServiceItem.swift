@@ -124,7 +124,8 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .titleUpdated(title):
                     let _ =  attributedString.append(string: peer.isChannel ? tr(.chatServiceChannelUpdatedTitle(title)) : tr(.chatServiceGroupUpdatedTitle(authorName, title)), color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)))
-                    
+                case .customText(let text):
+                    let _ = attributedString.append(string: text, color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)))
                 case .pinnedMessageUpdated:
                     var replyMessageText = ""
                     for attribute in message.attributes {
@@ -302,7 +303,7 @@ class ChatServiceItem: ChatRowItem {
         return ChatServiceRowView.self
     }
     
-    override func menuItems() -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         
         var items:[ContextMenuItem] = []
         let chatInteraction = self.chatInteraction
@@ -310,7 +311,7 @@ class ChatServiceItem: ChatRowItem {
             
             if let message = message, let peer = messageMainPeer(message) {
                 if peer.canSendMessage, !message.containsSecretMedia {
-                    items.append(ContextMenuItem(tr(.messageContextReply), handler: {
+                    items.append(ContextMenuItem(tr(.messageContextReply1), handler: {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }

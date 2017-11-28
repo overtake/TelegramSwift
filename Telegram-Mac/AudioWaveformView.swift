@@ -137,8 +137,10 @@ class AudioWaveformView: View {
         //foregroundClipingView.clipsToBounds = true;
         foregroundClipingView.addSubview(foregroundView)
         addSubview(foregroundClipingView)
-
-        
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        super.mouseDragged(with: event)
     }
     
     override func setFrameSize(_ newSize: NSSize) {

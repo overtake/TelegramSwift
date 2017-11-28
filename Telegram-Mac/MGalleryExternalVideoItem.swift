@@ -19,12 +19,12 @@ import AVKit
 
 class MGalleryExternalVideoItem: MGalleryVideoItem {
     let content:TelegramMediaWebpageLoadedContent
-    private let media:TelegramMediaImage
+    private let _media:TelegramMediaImage
     override init(_ account: Account, _ entry:GalleryEntry, _ pagerSize: NSSize) {
         let webpage = entry.message!.media[0] as! TelegramMediaWebpage
         if case let .Loaded(content) = webpage.content {
             self.content = content
-            self.media = content.image!
+            self._media = content.image!
         } else {
             fatalError("content for external video not found")
         }
@@ -38,7 +38,7 @@ class MGalleryExternalVideoItem: MGalleryVideoItem {
     
     override func request(immediately: Bool) {
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: media, scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: _media, scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
         let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())

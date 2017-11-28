@@ -23,12 +23,13 @@ enum InputContextEntry : Comparable, Identifiable {
     case command(PeerCommand, Int64, Int64)
     case sticker(InputMediaStickersRow, Int64)
     case emoji(EmojiClue, Int32)
+    case hashtag(String, Int64)
     case inlineRestricted(String?)
     var stableId: Int64 {
         switch self {
         case .switchPeer:
             return -1
-        case let .peer(peer,_, stableId):
+        case let .peer(_,_, stableId):
             return stableId
         case let .contextResult(_,_,index):
             return index
@@ -38,6 +39,8 @@ enum InputContextEntry : Comparable, Identifiable {
             return stableId
         case let .sticker( _, stableId):
             return stableId
+        case let .hashtag(hashtag, _):
+            return Int64(hashtag.hashValue)
         case let .emoji(clue, _):
             return clue.hashValue
         case .inlineRestricted:
@@ -59,6 +62,8 @@ enum InputContextEntry : Comparable, Identifiable {
             return index //result.maybeId | ((Int64(index) << 40))
         case let .sticker(_, index):
             return index //result.maybeId | ((Int64(index) << 40))
+        case let .hashtag(_, index):
+            return index
         case let .emoji(_, index):
             return Int64(index) //result.maybeId | ((Int64(index) << 40))
         case .inlineRestricted:
@@ -104,6 +109,11 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
             return  lhsSticker == rhsSticker && lhsIndex == rhsIndex
         }
         return false
+    case let .hashtag(lhsHashtag, lhsIndex):
+        if case let .hashtag(rhsHashtag, rhsIndex) = rhs {
+            return  lhsHashtag == rhsHashtag && lhsIndex == rhsIndex
+        }
+        return false
     case let .emoji(lhsClue, lhsIndex):
         if case let .emoji(rhsClue, rhsIndex) = rhs {
             return  lhsClue == rhsClue && lhsIndex == rhsIndex
@@ -145,6 +155,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ContextCommandRowItem(initialSize, account, command, stableId)
         case let .emoji(clue, _):
             return ContextClueRowItem(initialSize, stableId: entry.stableId, clue: clue)
+        case let .hashtag(hashtag, _):
+            return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)")
         case let .sticker(result, stableId):
             return ContextStickerRowItem(initialSize, account, result, stableId, chatInteraction)
         case .inlineRestricted(let until):
@@ -208,6 +220,10 @@ class InputContextView : TableView, AppearanceViewProtocol {
 
 class InputContextViewController : GenericViewController<InputContextView>, TableViewDelegate {
     
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private let account:Account
     private let chatInteraction:ChatInteraction
     override func loadView() {
@@ -243,7 +259,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectPreviousSticker()
-                    return .invoked
+                    return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
                 }
             }
             return .invokeNext
@@ -253,7 +269,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectNextSticker()
-                    return .invoked
+                    return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
                 }
             }
             return .invokeNext
@@ -305,6 +321,17 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     let atLength = 1
                     _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                 }
+            } else if let selectedItem = selectedItem as? ContextHashtagRowItem {
+                let textInputState = chatInteraction.presentation.effectiveInput
+                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                    let inputText = textInputState.inputText
+                    
+                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                    let replacementText = selectedItem.hashtag + " "
+                    
+                    let atLength = 1
+                    _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                }
             } else if let selectedItem = selectedItem as? ContextStickerRowItem, let index = selectedItem.selectedIndex {
                 chatInteraction.sendAppFile(selectedItem.result.results[index].file)
                 chatInteraction.clearInput()
@@ -322,6 +349,17 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 let commandText = "/" + selectedItem.command.command.text + " "
                 chatInteraction.updateInput(with: commandText)
 
+            } else if let selectedItem = selectedItem as? ContextHashtagRowItem {
+                let textInputState = chatInteraction.presentation.effectiveInput
+                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                    let inputText = textInputState.inputText
+                    
+                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                    let replacementText = selectedItem.hashtag + " "
+                    
+                    let atLength = 1
+                    _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                }
             }
             return .invoked
         }
@@ -529,7 +567,7 @@ class InputContextHelper: NSObject {
                 
             } else if let controller = self?.controller {
                 controller.viewWillDisappear(animated)
-                
+                controller.genericView.cancelSelection()
                 if animated {
                     controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak controller] completed in
                         
@@ -595,6 +633,12 @@ class InputContextHelper: NSObject {
                     var index:Int64 = 1000
                     for i in 0 ..< commands.count {
                         entries.append(.command(commands[i], index, Int64(arc4random()) | ((Int64(commands.count) << 40))))
+                        index += 1
+                    }
+                case .hashtags(let hashtags):
+                    var index:Int64 = 2000
+                    for i in 0 ..< hashtags.count {
+                        entries.append(.hashtag(hashtags[i], index))
                         index += 1
                     }
                 case let .stickers(stickers):

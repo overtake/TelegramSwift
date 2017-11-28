@@ -15,10 +15,11 @@ func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaR
     return Signal { subscriber in
         subscriber.putNext(.reset)
         
+        let queue: Queue = Queue()
         var cancelled: Bool = false
         let exportPath = NSTemporaryDirectory() + "\(resource.randomId).mp4"
         if let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
-            resourcesQueue.async {
+            queue.async {
                 TGGifConverter.convertGif(toMp4: data, exportPath: exportPath, completionHandler: { path in
                     subscriber.putNext(.moveLocalFile(path: path))
                     subscriber.putCompletion()

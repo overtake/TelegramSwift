@@ -59,7 +59,7 @@ class ChatServiceRowView: TableRowView {
                     self.imageView = TransformImageView()
                     self.addSubview(imageView!)
                 }
-                imageView?.setSignal(account: item.account, signal: chatMessagePhoto(account: item.account, photo: image, toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
+                imageView?.setSignal( chatMessagePhoto(account: item.account, photo: image, toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
             } else {
                 imageView?.removeFromSuperview()
                 imageView = nil

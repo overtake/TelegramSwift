@@ -52,15 +52,15 @@ fileprivate class SearchResultModalView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        separator.backgroundColor = .border
-        
+        separator.backgroundColor = theme.colors.border
+        textView.backgroundColor = theme.colors.background
         addSubview(table)
         addSubview(textView)
         addSubview(separator)
     }
     
     func updateTitle(_ string:String) {
-        textView.set(layout: TextViewLayout(.initialize(string: string, color: .text, font: .medium(.title)), maximumNumberOfLines: 1, truncationType:.middle))
+        textView.set(layout: TextViewLayout(.initialize(string: string, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1, truncationType:.middle))
         self.needsLayout = true
     }
     
@@ -89,6 +89,11 @@ fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry]
 }
 
 class SearchResultModalController: ModalViewController, TableViewDelegate {
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
     private let account:Account
     private let entries:Atomic<[SearchResultEntry]> = Atomic(value:[])
     private let promise:Promise<[Message]> = Promise()
