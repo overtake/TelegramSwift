@@ -103,7 +103,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.generalSettingsDarkMode), description: tr(.generalSettingsDarkModeDescription), type: .switchable(stateback: { () -> Bool in
                 return enabled
             }), action: {
-                _ = updateThemeSettings(postbox: arguments.account.postbox, pallete: !enabled ? darkPallete : whitePallete, dark: !enabled).start()
+                _ = updateThemeSettings(postbox: arguments.account.postbox, palette: !enabled ? darkPalette : whitePalette).start()
 
             })
         case let .handleInAppKeys(sectionId: _, enabled: enabled):
@@ -285,15 +285,15 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     var headerUnique:Int = -1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: tr(.generalSettingsAppearanceSettings)))
-    headerUnique -= 1
+    //entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: tr(.generalSettingsAppearanceSettings)))
+   // headerUnique -= 1
     
-    entries.append(.darkMode(sectionId: sectionId, enabled: appearance.presentation.dark))
-    entries.append(.fontSize(sectionId: sectionId, enabled: appearance.presentation.fontSize > 13.0))
+    //entries.append(.darkMode(sectionId: sectionId, enabled: appearance.presentation.dark))
+    //entries.append(.fontSize(sectionId: sectionId, enabled: appearance.presentation.fontSize > 13.0))
 
     
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
+   // entries.append(.section(sectionId: sectionId))
+   // sectionId += 1
     
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: tr(.generalSettingsInputSettings)))
     headerUnique -= 1

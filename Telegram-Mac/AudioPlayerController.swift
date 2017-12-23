@@ -15,11 +15,13 @@ import TGUIKit
 class APSingleWrapper {
     let resource:TelegramMediaResource
     let name:String?
+    let mimeType: String
     let performer:String?
     let id:AnyHashable
-    init(resource:TelegramMediaResource, name:String?, performer:String?, id: AnyHashable) {
+    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, id: AnyHashable) {
         self.resource = resource
         self.name = name
+        self.mimeType = mimeType
         self.performer = performer
         self.id = id
     }
@@ -190,7 +192,13 @@ class APSongItem : APItem {
             } else {
                 performerName = ""
             }
-            self.ext = "m4a"
+            if let _ = wrapper.mimeType.range(of: "m4a") {
+                self.ext = "m4a"
+            } else if let _ = wrapper.mimeType.range(of: "mp4") {
+                self.ext = "mp4"
+            } else {
+                self.ext = "mp3"
+            }
         } else {
             fatalError("🤔")
         }

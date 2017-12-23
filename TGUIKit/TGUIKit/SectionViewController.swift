@@ -56,7 +56,7 @@ public class SectionControllerView : View {
             let title: TextView = TextView()
             title.isSelectable = false
             title.userInteractionEnabled = false
-            title.update(TextViewLayout(.initialize(string: section.title, color: i == selected ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
+            title.update(TextViewLayout(.initialize(string: section.title(), color: i == selected ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
             headerContainer.addSubview(title)
             header.addSubview(headerContainer)
             headerContainer.border = [.Bottom]
@@ -161,9 +161,9 @@ public class SectionControllerView : View {
 }
 
 public class SectionControllerItem {
-    let title: String
+    let title: ()->String
     let controller: ViewController
-    public init(title: String, controller: ViewController) {
+    public init(title: @escaping()->String, controller: ViewController) {
         self.title = title
         self.controller = controller
     }
@@ -181,6 +181,14 @@ public class SectionViewController: GenericViewController<SectionControllerView>
     
     public func addSection(_ section: SectionControllerItem) {
         sections.append(section)
+    }
+    
+    public override func updateLocalizationAndTheme() {
+        let arguments = SectionControllerArguments { [weak self] index in
+            self?.select(index, true)
+        }
+        genericView.layout(sections: sections, selected: selectedIndex, arguments: arguments)
+        genericView.updateLocalizationAndTheme()
     }
     
     deinit {

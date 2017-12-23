@@ -14,6 +14,18 @@ class ChatAccessoryView : Control {
     var imageView: TransformImageView?
 }
 
+struct ChatAccessoryPresentation {
+    let background: NSColor
+    let title: NSColor
+    let enabledText: NSColor
+    let disabledText: NSColor
+    let border: NSColor
+    
+    func withUpdatedBackground(_ backgroundColor: NSColor) -> ChatAccessoryPresentation {
+        return ChatAccessoryPresentation(background: backgroundColor, title: title, enabledText: enabledText, disabledText: disabledText, border: border)
+    }
+}
+
 class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     
     
@@ -21,7 +33,22 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     
     
     open var backgroundColor:NSColor {
-        return view?.backgroundColor ?? theme.colors.background
+        didSet {
+            self.presentation = presentation.withUpdatedBackground(backgroundColor)
+        }
+    }
+    
+    var isSideAccessory: Bool = false
+    
+    private var _presentation: ChatAccessoryPresentation? = nil
+    var presentation: ChatAccessoryPresentation {
+        set {
+            _presentation = newValue
+            view?.needsDisplay = true
+        }
+        get {
+            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.blueUI, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.blueFill)
+        }
     }
     
     private let _strongView:ChatAccessoryView?
@@ -34,13 +61,15 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     }
     
     open var size:NSSize = NSZeroSize
-    
+    var width: CGFloat = 0
+    var sizeToFit: Bool = false
     open var frame:NSRect {
         get {
             return self.view?.frame ?? NSZeroRect
         }
         set {
             self.view?.frame = newValue
+            self.view?.needsDisplay = true
         }
     }
     
@@ -50,11 +79,13 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
         }
     }
     
-    public init(_ view:ChatAccessoryView? = nil) {
+    public init(_ view:ChatAccessoryView? = nil, presentation: ChatAccessoryPresentation? = nil) {
         _strongView = view
+        _presentation = presentation
         if view != nil {
             assertOnMainThread()
         }
+        backgroundColor = theme.colors.background
         super.init()
         self.view = view
         
@@ -95,11 +126,14 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     var header:(TextNodeLayout,  TextNode)?
     var message:(TextNodeLayout, TextNode)?
     
-    func measureSize(_ width:CGFloat = 0) -> Void {
+    func measureSize(_ width:CGFloat = 0, sizeToFit: Bool = false) -> Void {
+        self.sizeToFit = sizeToFit
         header = TextNode.layoutText(maybeNode: headerNode, headerAttr, nil, 1, .end, NSMakeSize(width - leftInset, 20), nil,false, .left)
         message = TextNode.layoutText(maybeNode: messageNode, messageAttr, nil, 1, .end, NSMakeSize(width - leftInset, 20), nil,false, .left)
         //max(header!.0.size.width,message!.0.size.width) + leftInset
-        size = NSMakeSize(width, max(34, header!.0.size.height + message!.0.size.height + yInset))
+        self.width = width
+        size = NSMakeSize(sizeToFit ? max(header!.0.size.width,message!.0.size.width) + leftInset + (isSideAccessory ? 20 : 0) : width, max(34, header!.0.size.height + message!.0.size.height + yInset + (isSideAccessory ? 10 : 0)))
+        
       //  super.measureSize(width)
     }
     
@@ -108,22 +142,22 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     
     func draw(_ layer: CALayer, in ctx: CGContext) {
         if let view = view {
-            ctx.setFillColor(backgroundColor.cgColor)
+            ctx.setFillColor(presentation.background.cgColor)
             ctx.fill(layer.bounds)
             
-            ctx.setFillColor(theme.colors.blueFill.cgColor)
+            ctx.setFillColor(presentation.border.cgColor)
             
             let radius:CGFloat = 1.0
-            ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
-            ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
-            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
+            ctx.fill(NSMakeRect((isSideAccessory ? 10 : 0), radius + (isSideAccessory ? 5 : 0), 2, layer.bounds.height - radius * 2 - (isSideAccessory ? 10 : 0)))
+            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
+            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : (isSideAccessory ? 5 : 0)), y: layer.bounds.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
             
             if  let header = header, let message = message {
-                header.1.draw(NSMakeRect(leftInset, 0, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
+                header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0), header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
                 if headerAttr == nil {
-                    message.1.draw(NSMakeRect(leftInset, floorToScreenPixels((size.height - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels((size.height - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
                 } else {
-                    message.1.draw(NSMakeRect(leftInset, header.0.size.height + yInset, message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
                 }
             }
         }

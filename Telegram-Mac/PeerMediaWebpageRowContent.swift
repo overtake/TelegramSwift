@@ -110,14 +110,35 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         textLayout?.interactions = globalLinkExecutor
-        linkLayout?.interactions = globalLinkExecutor
+        linkLayout?.interactions = TextViewInteractions.init(processURL: { [weak self] url in
+            if let webpage = self?.message.media.first as? TelegramMediaWebpage {
+                if case let .Loaded(content) = webpage.content {
+                    if let _ = content.instantPage {
+                        showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
+                        return
+                    }
+                }
+            }
+            globalLinkExecutor.processURL(url)
+        })
         
+    }
+    
+    var hasInstantPage: Bool {
+        if let webpage = message.media.first as? TelegramMediaWebpage {
+            if case let .Loaded(content) = webpage.content {
+                if let _ = content.instantPage {
+                    return true
+                }
+            }
+        }
+        return false
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
         textLayout?.measure(width: width - contentInset.left - contentInset.right)
-        linkLayout?.measure(width: width - contentInset.left - contentInset.right)
+        linkLayout?.measure(width: width - contentInset.left - contentInset.right - (hasInstantPage ? 10 : 0))
         
         var textSizes:CGFloat = 0
         if let tLayout = textLayout {
@@ -142,7 +163,7 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     private var imageView:TransformImageView
     private var textView:TextView
     private var linkView:TextView
-    
+    private var ivImage: ImageView? = nil
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame:NSMakeRect(10, 5, 50.0, 50.0))
         textView = TextView()
@@ -162,7 +183,8 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
         if let item = item as? PeerMediaWebpageRowItem {
             textView.update(item.textLayout, origin: NSMakePoint(item.contentInset.left,item.contentInset.top))
             linkView.isHidden = item.linkLayout == nil
-            linkView.update(item.linkLayout, origin: NSMakePoint(item.contentInset.left,textView.frame.maxY + 2.0))
+            linkView.update(item.linkLayout, origin: NSMakePoint(item.contentInset.left + (item.hasInstantPage ? 10 : 0),textView.frame.maxY + 2.0))
+            ivImage?.setFrameOrigin(item.contentInset.left, textView.frame.maxY + 6.0)
         }
     }
     
@@ -173,6 +195,17 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
         linkView.backgroundColor = backdorColor
         if let item = item as? PeerMediaWebpageRowItem {
             
+            if item.hasInstantPage {
+                if ivImage == nil {
+                    ivImage = ImageView()
+                }
+                ivImage!.image = theme.icons.chatInstantView
+                ivImage!.sizeToFit()
+                addSubview(ivImage!)
+            } else {
+                ivImage?.removeFromSuperview()
+                ivImage = nil
+            }
             
             let updateIconImageSignal:Signal<(TransformImageArguments) -> DrawingContext?,NoError>
             if let icon = item.icon {

@@ -85,7 +85,7 @@ class AccountInfoView : TableRowView, TGModernGrowingDelegate {
     private let editButton: ImageButton = ImageButton()
     private let updoadPhotoCap:ImageButton = ImageButton()
     required init(frame frameRect: NSRect) {
-        avatarView = AvatarControl(font: .avatar(.custom(22)))
+        avatarView = AvatarControl(font: .avatar(22.0))
         avatarView.setFrameSize(NSMakeSize(60, 60))
         super.init(frame: frameRect)
 

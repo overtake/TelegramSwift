@@ -307,6 +307,8 @@ double mappingRange(double x, double in_min, double in_max, double out_min, doub
 + (void)setDateLocalizationFunc:(NSString*  __nonnull (^__nonnull)(NSString * __nonnull key))localizationF;
 @end
 
+NSString * NSLocalized(NSString * key, NSString *comment);
+
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -705,5 +707,88 @@ typedef enum
 + (NSDictionary *)audioSettingsForPreset:(TGMediaVideoConversionPreset)preset;
 
 @end
+
+
+@class RHResizableImage;
+
+
+typedef NSEdgeInsets RHEdgeInsets;
+
+
+extern RHEdgeInsets RHEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right);
+extern CGRect RHEdgeInsetsInsetRect(CGRect rect, RHEdgeInsets insets, BOOL flipped); // If flipped origin is top-left otherwise origin is bottom-left (OSX Default is NO)
+extern BOOL RHEdgeInsetsEqualToEdgeInsets(RHEdgeInsets insets1, RHEdgeInsets insets2);
+extern const RHEdgeInsets RHEdgeInsetsZero;
+
+extern NSString *NSStringFromRHEdgeInsets(RHEdgeInsets insets);
+extern RHEdgeInsets RHEdgeInsetsFromString(NSString* string);
+
+
+typedef NSImageResizingMode RHResizableImageResizingMode;
+enum {
+    RHResizableImageResizingModeTile = NSImageResizingModeTile,
+    RHResizableImageResizingModeStretch = NSImageResizingModeStretch,
+};
+
+
+
+@interface NSImage (RHResizableImageAdditions)
+
+-(RHResizableImage *)resizableImageWithCapInsets:(RHEdgeInsets)capInsets; // Create a resizable version of this image. the interior is tiled when drawn.
+-(RHResizableImage *)resizableImageWithCapInsets:(RHEdgeInsets)capInsets resizingMode:(RHResizableImageResizingMode)resizingMode; // The interior is resized according to the resizingMode
+
+-(RHResizableImage *)stretchableImageWithLeftCapWidth:(CGFloat)leftCapWidth topCapHeight:(CGFloat)topCapHeight; // Right cap is calculated as width - leftCapWidth - 1; bottom cap is calculated as height - topCapWidth - 1;
+
+
+-(void)drawTiledInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)delta;
+-(void)drawStretchedInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)delta;
+
+@end
+
+
+
+@interface RHResizableImage : NSImage <NSCopying> {
+    // ivars are private
+    RHEdgeInsets _capInsets;
+    RHResizableImageResizingMode _resizingMode;
+    
+    NSArray *_imagePieces;
+    
+    NSBitmapImageRep *_cachedImageRep;
+    NSSize _cachedImageSize;
+    CGFloat _cachedImageDeviceScale;
+}
+
+-(id)initWithImage:(NSImage *)image leftCapWidth:(CGFloat)leftCapWidth topCapHeight:(CGFloat)topCapHeight; // right cap is calculated as width - leftCapWidth - 1; bottom cap is calculated as height - topCapWidth - 1;
+
+-(id)initWithImage:(NSImage *)image capInsets:(RHEdgeInsets)capInsets;
+-(id)initWithImage:(NSImage *)image capInsets:(RHEdgeInsets)capInsets resizingMode:(RHResizableImageResizingMode)resizingMode; // designated initializer
+
+@property RHEdgeInsets capInsets; // Default is RHEdgeInsetsZero
+@property RHResizableImageResizingMode resizingMode; // Default is UIImageResizingModeTile
+
+-(void)drawInRect:(NSRect)rect;
+-(void)drawInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha;
+-(void)drawInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha respectFlipped:(BOOL)respectContextIsFlipped hints:(NSDictionary *)hints;
+-(void)drawInRect:(NSRect)rect fromRect:(NSRect)fromRect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha respectFlipped:(BOOL)respectContextIsFlipped hints:(NSDictionary *)hints;
+
+-(void)originalDrawInRect:(NSRect)rect fromRect:(NSRect)fromRect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha respectFlipped:(BOOL)respectContextIsFlipped hints:(NSDictionary *)hints; //super passthrough
+
+
+@end
+
+// utilities
+extern NSImage* RHImageByReferencingRectOfExistingImage(NSImage *image, NSRect rect);
+extern NSArray* RHNinePartPiecesFromImageWithInsets(NSImage *image, RHEdgeInsets capInsets);
+extern CGFloat RHContextGetDeviceScale(CGContextRef context);
+
+// nine part
+extern void RHDrawNinePartImage(NSRect frame, NSImage *topLeftCorner, NSImage *topEdgeFill, NSImage *topRightCorner, NSImage *leftEdgeFill, NSImage *centerFill, NSImage *rightEdgeFill, NSImage *bottomLeftCorner, NSImage *bottomEdgeFill, NSImage *bottomRightCorner, NSCompositingOperation op, CGFloat alphaFraction, BOOL shouldTile);
+
+extern void RHDrawImageInRect(NSImage* image, NSRect rect, NSCompositingOperation op, CGFloat fraction, BOOL tile);
+extern void RHDrawTiledImageInRect(NSImage* image, NSRect rect, NSCompositingOperation op, CGFloat fraction);
+extern void RHDrawStretchedImageInRect(NSImage* image, NSRect rect, NSCompositingOperation op, CGFloat fraction);
+
+
 
 #endif /* Telegram_Mac_Bridging_Header_h */

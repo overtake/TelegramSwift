@@ -23,12 +23,22 @@ class ChatInteractiveContentView: ChatMediaContentView {
     private let fetchDisposable = MetaDisposable()
     
     
+    override var backgroundColor: NSColor {
+        get {
+            return super.backgroundColor
+        }
+        set {
+            super.backgroundColor = .clear
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+        //background = .random
         self.addSubview(image)
     }
     
@@ -83,30 +93,27 @@ class ChatInteractiveContentView: ChatMediaContentView {
         super.update(with: media, size: size, account: account, parent:parent, table:table, parameters:parameters, positionFlags: positionFlags)
 
         
-        let topLeftRadius: CGFloat = .cornerRadius
-        let bottomLeftRadius: CGFloat = .cornerRadius
-        let topRightRadius: CGFloat = .cornerRadius
-        let bottomRightRadius: CGFloat = .cornerRadius
+        var topLeftRadius: CGFloat = .cornerRadius
+        var bottomLeftRadius: CGFloat = .cornerRadius
+        var topRightRadius: CGFloat = .cornerRadius
+        var bottomRightRadius: CGFloat = .cornerRadius
         
-//        if let positionFlags = positionFlags {
-//            if positionFlags.contains(.top) && positionFlags.contains(.left) {
-//                topLeftRadius = topLeftRadius * 2
-//            }
-//            if positionFlags.contains(.top) && positionFlags.contains(.right) {
-//                topRightRadius = topRightRadius * 2
-//            }
-//            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
-//                bottomLeftRadius = topLeftRadius * 2
-//            }
-//            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
-//                bottomRightRadius = topRightRadius * 2
-//            }
-//        }
         
-//        if (position & TGAttachmentPositionBottom && position & TGAttachmentPositionLeft)
-//        bottomLeftRadius = bigRadius;
-//        if (position & TGAttachmentPositionBottom && position & TGAttachmentPositionRight)
-//        bottomRightRadius = bigRadius;
+        if let positionFlags = positionFlags {
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                bottomLeftRadius = bottomLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                bottomRightRadius = bottomRightRadius * 3 + 2
+            }
+        }
+
         
 
         var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?

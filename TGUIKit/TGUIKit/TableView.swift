@@ -766,6 +766,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updateScroll()
     }
     
+    public func scrollUp() {
+        self.clipView.scroll(to: NSMakePoint(0, min(clipView.bounds.minY + 30, clipView.bounds.maxY)), animated: true)
+        self.reflectScrolledClipView(clipView)
+    }
+    public func scrollDown() {
+        self.clipView.scroll(to: NSMakePoint(0, max(clipView.bounds.minY - 30, 0)), animated: true)
+        self.reflectScrolledClipView(clipView)
+    }
+    
     public func notifyScrollHandlers() -> Void {
         let scroll = scrollPosition(visibleRows()).current
         for listener in scrollListeners {
@@ -1630,7 +1639,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         if let item = item {
             rowRect = self.rectOf(item: item)
-            
+            var state = state
+            if case let .center(id, animated, focus, inset) = state, rowRect.height > frame.height {
+                state = .top(id: id, animated: animated, focus: focus, inset: inset)
+            }
             switch state {
             case .bottom:
                 if tableView.isFlipped {

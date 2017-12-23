@@ -62,9 +62,15 @@ class ChatVoiceContentView: ChatAudioContentView {
     }
     
     var wBackgroundColor:NSColor {
+        if let parameters = parameters {
+            return parameters.presentation.waveformBackground
+        }
         return theme.colors.grayIcon.withAlphaComponent(0.7)
     } 
     var wForegroundColor:NSColor {
+        if let parameters = parameters {
+            return parameters.presentation.waveformForeground
+        }
         return theme.colors.blueFill
     }
     
@@ -180,7 +186,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                 if let attr = attr as? ConsumableContentMessageAttribute {
                     if !attr.consumed {
                         let center = floorToScreenPixels(frame.height / 2.0)
-                        ctx.setFillColor(theme.colors.blueUI.cgColor)
+                        ctx.setFillColor(parameters.presentation.activityBackground.cgColor)
                         ctx.fillEllipse(in: NSMakeRect(leftInset + parameters.durationLayout.layoutSize.width + 3, center + 8, 5, 5))
                     }
                     break

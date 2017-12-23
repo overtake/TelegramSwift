@@ -98,30 +98,30 @@ class ChatFileContentView: ChatMediaContentView {
         return NSPointInRect(convert(event.locationInWindow, from: nil), progressView.frame)
     }
     
-    func actionLayout(status:MediaResourceStatus, file:TelegramMediaFile) -> TextViewLayout {
+    func actionLayout(status:MediaResourceStatus, file:TelegramMediaFile, presentation: ChatMediaPresentation) -> TextViewLayout {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         
         switch status {
         case let .Fetching(_, progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                let _ = attr.append(string: tr(.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+                let _ = attr.append(string: tr(.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: presentation.grayText, font: .normal(.text))
             } else {
                 let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
-                let _ = attr.append(string: size, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+                let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
             }
         case .Local:
 
-            let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: theme.colors.grayText, font: .normal(.text))
+            let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
             
             if !(file.resource is LocalFileReferenceMediaResource) {
-                let _ = attr.append(string: " - ", color: theme.colors.grayText, font: .normal(.text))
-                let range = attr.append(string: tr(.messagesFileStateLocal), color: theme.colors.link, font: NSFont.normal(FontSize.text))
+                let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
+                let range = attr.append(string: tr(.messagesFileStateLocal), color: presentation.link, font: NSFont.normal(FontSize.text))
                 attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
             }
         case .Remote:
-            let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
-            let range = attr.append(string: tr(.messagesFileStateRemote), color: theme.colors.link, font: NSFont.normal(FontSize.text))
+            let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: presentation.grayText, font: .normal(.text))
+            let range = attr.append(string: tr(.messagesFileStateRemote), color: presentation.link, font: .normal(.text))
             attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
         }
 
@@ -132,6 +132,8 @@ class ChatFileContentView: ChatMediaContentView {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         let mediaUpdated = true//self.media == nil || !self.media!.isEqual(media)
+        
+        let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
@@ -182,7 +184,7 @@ class ChatFileContentView: ChatMediaContentView {
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
                     
-                    let layout = strongSelf.actionLayout(status: status, file: file)
+                    let layout = strongSelf.actionLayout(status: status, file: file, presentation: presentation)
                     if !strongSelf.actionText.isEqual(to :layout) {
                         layout.interactions = strongSelf.actionInteractions
                         layout.measure()
@@ -193,15 +195,17 @@ class ChatFileContentView: ChatMediaContentView {
                             width = max(width, strongSelf.leftInset + name.0.size.width)
                         }
                     }
+                    strongSelf.progressView.isHidden = false
                     switch status {
                     case let .Fetching(_, progress):
-                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? theme.colors.blueFill : theme.colors.blackTransparent, foregroundColor: .white, icon: nil)
+                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
                         strongSelf.progressView.state = .Fetching(progress: progress, force: false)
                     case .Local:
-                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? theme.colors.blueFill : .clear, foregroundColor: .white, icon: file.previewRepresentations.isEmpty ? theme.icons.chatFileThumb : nil)
+                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: file.previewRepresentations.isEmpty ? presentation.fileThumb : nil)
                         strongSelf.progressView.state = .Play
+                        strongSelf.progressView.isHidden = !file.previewRepresentations.isEmpty
                    case .Remote:
-                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? theme.colors.blueFill : theme.colors.blackTransparent, foregroundColor: .white, icon: nil)
+                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
                         strongSelf.progressView.state = .Remote
                     }
                     

@@ -358,10 +358,21 @@ extension TelegramMediaFile {
         if let size = size {
             return size
         }
-        if let resource = resource as? LocalFileReferenceMediaResource {
-            return Int(resource.sizeValue ?? 0)
+        if let resource = resource as? LocalFileReferenceMediaResource, let size = resource.size {
+            return Int(size)
         }
         return 0
+    }
+}
+
+extension Media {
+    var isInteractiveMedia: Bool {
+        if self is TelegramMediaImage {
+            return true
+        } else if let file = self as? TelegramMediaFile {
+            return file.isVideo || file.isAnimated
+        }
+        return false
     }
 }
 
@@ -505,6 +516,43 @@ public extension Message {
             }
         }
         return nil
+    }
+    
+    func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
+        if isBubbled, let peer = chatPeer, peer.isChannel {
+            return true
+        }
+        
+        if id.peerId == account.peerId {
+            if let forward = forwardInfo {
+                return true
+            }
+            return false
+        }
+        return flags.contains(.Incoming)
+    }
+    
+    var chatPeer: Peer? {
+        var _peer: Peer?
+        for attr in attributes {
+            if let _ = attr as? SourceReferenceMessageAttribute {
+                if let info = forwardInfo {
+                    _peer = info.author
+                }
+                break
+            }
+        }
+        
+        if let peer = messageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
+            _peer = peer
+        } else if let author = author, _peer == nil {
+            if author is TelegramSecretChat {
+                return messageMainPeer(self)
+            } else {
+                _peer = author
+            }
+        }
+        return _peer
     }
     
     var replyAttribute: ReplyMessageAttribute? {
@@ -999,7 +1047,7 @@ func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Voi
             text = tr(.confirmDeleteChatUser)
         }
         
-        return confirmSignal(for: mainWindow, header: appName, information: text) |> mapToSignal { result -> Signal<Bool, Void> in
+        return confirmSignal(for: mainWindow, header: appName, information: text, swapColors: true) |> mapToSignal { result -> Signal<Bool, Void> in
             if result {
                 return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
             }
@@ -1034,4 +1082,32 @@ extension PostboxAccessChallengeData {
             return timeout
         }
     }
+}
+
+func clearCache(_ path: String) -> Signal<Void, Void> {
+    return Signal { subscriber -> Disposable in
+        
+        let fileManager = FileManager.default
+        var enumerator = fileManager.enumerator(atPath: path + "/")
+        
+        while let file = enumerator?.nextObject() as? String {
+            if file != "cache" {
+                unlink(path + "/" + file)
+            }
+        }
+        
+        var p = path.nsstring.substring(to: path.nsstring.range(of: path.nsstring.lastPathComponent).location)
+        p = p.nsstring.substring(to: p.nsstring.range(of: p.nsstring.lastPathComponent).location) + "cached/"
+        
+        enumerator = fileManager.enumerator(atPath: p)
+        
+        while let file = enumerator?.nextObject() as? String {
+            unlink(p + file)
+            //try? fileManager.removeItem(atPath: p + file)
+        }
+        
+        subscriber.putNext(Void())
+        subscriber.putCompletion()
+        return EmptyDisposable
+    } |> runOn(resourcesQueue)
 }

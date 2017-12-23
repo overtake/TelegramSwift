@@ -333,7 +333,7 @@ class ChatTitleBarView: TitledBarView {
             if let peer = peerViewMainPeer(peerView) {
                 if peer.id == chatInteraction.account.peerId {
                     let icon = theme.icons.peerSavedMessages
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: (NSColor(0x2a9ef1), NSColor(0x72d5fd)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 20, avatarControl.frame.size.height - 20)))), animated: false)
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: peerAvatarColors[5], icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 20, avatarControl.frame.size.height - 20)))) |> map {($0, false)})
 
                 } else {
                     avatarControl.setPeer(account: chatInteraction.account, peer: peer)

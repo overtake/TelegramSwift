@@ -21,20 +21,19 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     let resource: TelegramMediaResource
     fileprivate(set) var waveformWidth:CGFloat = 120
     let duration:Int
-    init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource) {
+    init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media) {
         self.showPlayer = showPlayer
         self.waveform = waveform
         self.duration = duration
         self.isMarked = isMarked
         self.isWebpage = isWebpage
         self.resource = resource
-        durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
-        
-        
+        durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: presentation.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
+        super.init(presentation: presentation, media: media)
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {
-        return TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: Int(duration)), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
+        return TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: Int(duration)), color: presentation.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
     }
 }
 
@@ -43,11 +42,21 @@ class ChatVoiceRowItem: ChatMediaItem {
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
         super.init(initialSize, chatInteraction, account, object)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction)
+        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
         return false
+    }
+    
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        if let parameters = parameters as? ChatMediaMusicLayoutParameters {
+            if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
+                return rightSize.height
+            }
+        }
+        
+        return super.additionalLineForDateInBubbleState
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -65,8 +74,12 @@ class ChatVoiceRowItem: ChatMediaItem {
             
             parameters.waveformWidth = floor(min(w, 200))
             
-            return NSMakeSize(parameters.waveformWidth + 60, 40)
+            return NSMakeSize(parameters.waveformWidth + 50, 40)
         }
         return NSZeroSize
+    }
+    
+    override var instantlyResize: Bool {
+        return true
     }
 }

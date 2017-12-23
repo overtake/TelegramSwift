@@ -156,7 +156,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                                     return confirmSignal(for: mainWindow, header: appName, information: tr(.composeConfirmStartSecretChat(peer.displayTitle)))
                                 }
                             }
-                            return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMembers(peerIds.count)))
+                            return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
                         }
                         let select = selectModalPeers(account: account, title: tr(.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
                         
@@ -299,8 +299,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return .rejected
     }
     
-    func open(with peerId:PeerId, message:Message? = nil, close:Bool = true) ->Void {
+    func open(with peerId:PeerId, peer: Peer? = nil, message:Message? = nil, close:Bool = true) ->Void {
         if let navigation = navigationController {
+            
+            if peer?.canSendMessage == false {
+                
+            }
             
             if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == account.peerId {
                 _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, account: account, peerId: account.peerId).start()
@@ -313,7 +317,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
         if close {
-            genericView.searchView.cancel(true)
+            self.genericView.searchView.cancel(true)
         }
     }
     
@@ -366,10 +370,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return .invoked
         }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
         
-//        self.window?.set(handler: { () -> KeyHandlerResult in
-//            _ = showModalProgress(signal: Signal<Void, Void>({_ in return EmptyDisposable}), for: mainWindow).start()
-//            return .invoked
-//        }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
+        //#if DEBUG
+        self.window?.set(handler: { () -> KeyHandlerResult in
+                _ = updateBubbledSettings(postbox: self.account.postbox, bubbled: !theme.bubbled).start()
+            return .invoked
+        }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
+        //#endif
         
     }
     

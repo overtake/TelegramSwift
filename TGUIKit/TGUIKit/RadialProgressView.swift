@@ -9,16 +9,16 @@
 import Cocoa
 import SwiftSignalKitMac
 
-private let progressInteractiveThumb:CGImage = {
+private func progressInteractiveThumb(backgroundColor: NSColor, foregroundColor: NSColor) -> CGImage {
     
     let context = DrawingContext(size: NSMakeSize(40, 40), scale: 1.0, clear: true)
     
     context.withContext { (ctx) in
         
         ctx.round(context.size, context.size.height/2.0)
-        ctx.setFillColor(NSColor.blueFill.cgColor)
+        ctx.setFillColor(backgroundColor.cgColor)
         
-        let image = #imageLiteral(resourceName: "Icon_MessageFile").precomposed()
+        let image = #imageLiteral(resourceName: "Icon_MessageFile").precomposed(foregroundColor)
         
         ctx.fill(NSMakeRect(0, 0, context.size.width, context.size.height))
         ctx.draw(image, in: NSMakeRect(floorToScreenPixels((context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels((context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
@@ -27,7 +27,7 @@ private let progressInteractiveThumb:CGImage = {
     
     return context.generateImage()!
     
-}()
+}
 
 public struct FetchControls {
     public let fetch: () -> Void
@@ -132,7 +132,7 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
 
 
 private class RadialProgressOverlayLayer: Layer {
-    let theme: RadialProgressTheme
+    var theme: RadialProgressTheme
     let twist: Bool
     private var timer: SwiftSignalKitMac.Timer?
     private var _progress: Float = 0
@@ -192,7 +192,7 @@ private class RadialProgressOverlayLayer: Layer {
     }
     
     fileprivate override func draw(in ctx: CGContext) {
-        ctx.setStrokeColor(parameters.theme.foregroundColor.cgColor)
+        ctx.setStrokeColor(theme.foregroundColor.cgColor)
         
         let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2
         let endAngle = -(CGFloat.pi / 2)
@@ -244,6 +244,7 @@ public class RadialProgressView: Control {
     
     public var theme:RadialProgressTheme {
         didSet {
+            overlay.theme = theme
             self.setNeedsDisplay()
         }
     }
@@ -456,7 +457,7 @@ public class RadialProgressView: Control {
     public override func copy() -> Any {
         let view = View()
         view.frame = self.frame
-        view.layer?.contents = progressInteractiveThumb
+        view.layer?.contents = progressInteractiveThumb(backgroundColor: parameters.theme.backgroundColor, foregroundColor: parameters.theme.foregroundColor)
         return view
 
     }

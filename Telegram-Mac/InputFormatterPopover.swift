@@ -60,10 +60,10 @@ private class InputFormatterView : View, NSTextFieldDelegate {
         link.set(color: theme.colors.text, for: .Normal)
 
         
-        bold.set(font: .bold(.custom(16)), for: .Normal)
-        italic.set(font: .italic(.custom(16)), for: .Normal)
-        monospace.set(font: .code(.custom(16)), for: .Normal)
-        link.set(font: .normal(.custom(16)), for: .Normal)
+        bold.set(font: .bold(16.0), for: .Normal)
+        italic.set(font: .italic(16.0), for: .Normal)
+        monospace.set(font: .code(16.0), for: .Normal)
+        link.set(font: .normal(16.0), for: .Normal)
         
         bold.set(text: "Bold", for: .Normal)
         italic.set(text: "Italic", for: .Normal)

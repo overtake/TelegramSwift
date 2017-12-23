@@ -118,7 +118,7 @@ final class GridMessageItemNode: GridItemNode {
                     if strongSelf._status == nil || strongSelf._status == .Local {
                         showChatGallery(account: currentState.0, message: message, strongSelf.grid, ChatMediaGalleryParameters(showMedia: {}, showMessage: { [weak interactions] message in
                             interactions?.focusMessageId(nil, message.id, .center(id: 0, animated: false, focus: true, inset: 0))
-                            }, isWebpage: false), reversed: true)
+                            }, isWebpage: false, media: message.media.first!), reversed: true)
                     } else if let file = message.media.first as? TelegramMediaFile {
                         if let status = strongSelf._status {
                             switch status {

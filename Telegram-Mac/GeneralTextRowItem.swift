@@ -20,8 +20,10 @@ class GeneralTextRowItem: GeneralRowItem {
     private let text:NSAttributedString
     private let alignment:NSTextAlignment
     fileprivate let centerViewAlignment: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false) {
+    fileprivate let additionLoading: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false) {
         self.text = text
+        self.additionLoading = additionLoading
         self.alignment = alignment
         self.centerViewAlignment = centerViewAlignment
         layout = TextViewLayout(text, truncationType: .end, alignment: alignment)
@@ -29,31 +31,33 @@ class GeneralTextRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, type: .none, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false) {
        
         let attributedText: NSAttributedString
         
         switch text {
         case let .plain(text):
-            attributedText = .initialize(string: text, color: theme.colors.grayText, font: .normal(.custom(11.5)))
+            attributedText = .initialize(string: text, color: theme.colors.grayText, font: .normal(11.5))
         case let .markdown(text, handler):
-            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.custom(11.5)), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.custom(11.5)), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.custom(11.5)), textColor: theme.colors.link), linkAttribute: { contents in
+            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(11.5), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.link), linkAttribute: { contents in
                 return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, handler))
             }))
         }
         self.text = attributedText
         self.alignment = alignment
+        self.additionLoading = additionLoading
         self.centerViewAlignment = centerViewAlignment
         layout = TextViewLayout(attributedText, truncationType: .end, alignment: alignment)
         layout.interactions = globalLinkExecutor
         super.init(initialSize, height: height, stableId: stableId, type: .none, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false) {
-        let attr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.custom(11.5))).mutableCopy() as! NSMutableAttributedString
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false) {
+        let attr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(11.5)).mutableCopy() as! NSMutableAttributedString
         attr.detectBoldColorInString(with: .medium(.text))
         self.text = attr
         self.alignment = alignment
+        self.additionLoading = additionLoading
         self.centerViewAlignment = centerViewAlignment
         layout = TextViewLayout(self.text, truncationType: .end, alignment: alignment)
         layout.interactions = globalLinkExecutor
@@ -69,7 +73,7 @@ class GeneralTextRowItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
-        layout.measure(width: width - inset.left - inset.right)
+        layout.measure(width: width - inset.left - inset.right - (additionLoading ? 30 : 0))
 
         return super.makeSize(width, oldWidth: oldWidth)
     }
@@ -83,7 +87,7 @@ class GeneralTextRowItem: GeneralRowItem {
 
 class GeneralTextRowView : GeneralRowView {
     private let textView:TextView = TextView()
-
+    private var progressView: ProgressIndicator?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
@@ -106,6 +110,20 @@ class GeneralTextRowView : GeneralRowView {
         super.set(item: item, animated: animated)
         textView.backgroundColor = theme.colors.background
         
+        guard let item = item as? GeneralTextRowItem else {return}
+        
+        if item.additionLoading && item.layout.lines.count == 1 {
+            if progressView == nil {
+                progressView = ProgressIndicator()
+            }
+            addSubview(progressView!)
+        } else {
+            progressView?.removeFromSuperview()
+            progressView = nil
+        }
+        
+        
+        
         needsLayout = true
     }
     
@@ -121,6 +139,9 @@ class GeneralTextRowView : GeneralRowView {
         super.layout()
         if let item = item as? GeneralTextRowItem {
             textView.update(item.layout, origin:NSMakePoint(item.inset.left, item.inset.top))
+            
+            progressView?.centerY(x: textView.frame.maxX + 10)
+            
             if item.centerViewAlignment {
                 textView.center()
             }

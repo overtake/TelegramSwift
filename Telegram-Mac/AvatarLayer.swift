@@ -166,8 +166,14 @@ class AvatarControl: NSView {
         
         layer?.contentsScale = backingScaleFactor
         
+        let updatedState:AvatarNodeState
+        if let peer = peer {
+            updatedState = AvatarNodeState.PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, backingScaleFactor)
+        } else {
+            updatedState = .Empty
+        }
+        
         if let account = account, let peer = peer {
-            let updatedState = AvatarNodeState.PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, backingScaleFactor)
             if updatedState != self.state {
                 self.state = updatedState
                 
@@ -177,7 +183,7 @@ class AvatarControl: NSView {
                 self.layer?.contents = nil
                 
                 if let signal = peerAvatarImage(account: account, peer: peer, displayDimensions:frame.size, scale:backingScaleFactor, font: self.font) {
-                    setSignal(signal, animated: animated)
+                    setSignal(signal)
                     
                 } else {
                     self.displaySuspended = false
@@ -192,12 +198,10 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setSignal(_ signal: Signal<CGImage?, NoError>, animated: Bool) {
-        self.state = .Empty
-        self.peer = nil
-        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] next in
+    public func setSignal(_ signal: Signal<(CGImage?, Bool), NoError>) {
+        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, animated in
             if let strongSelf = self {
-                strongSelf.layer?.contents = next
+                strongSelf.layer?.contents = image
                 if animated {
                     strongSelf.layer?.animateContents()
                 }

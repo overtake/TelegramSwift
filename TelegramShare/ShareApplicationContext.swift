@@ -18,6 +18,8 @@ private let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeer
     return nil
 }, fetchResource: { account, resource, range, _ in
     return nil
+}, fetchResourceMediaReferenceHash: { resource in
+    return .single(nil)
 })
 
 func applicationContext(accountManager: AccountManager, appGroupPath: String, extensionContext: NSExtensionContext) -> Signal<ShareApplicationContext?, NoError> {
@@ -27,7 +29,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
             switch result {
             case .unauthorized(let account):
                 return account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings]) |> take(1) |> deliverOnMainQueue |> map { value in
-                    return .unauthorized(UnauthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePalleteSettings))
+                    return .unauthorized(UnauthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                 }
             case let .authorized(account):
                 let paslock:Signal<PostboxAccessChallengeData, Void> = account.postbox.modify { modifier -> PostboxAccessChallengeData in
@@ -37,7 +39,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                 return paslock |> mapToSignal { access -> Signal<ShareApplicationContext?, Void> in
                     let promise:Promise<Void> = Promise()
                     let auth: Signal<ShareApplicationContext?, Void> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, value in
-                        return .authorized(AuthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePalleteSettings))
+                        return .authorized(AuthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                     }
                     switch access {
                     case .none:
@@ -45,7 +47,7 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                         return auth
                     default:
                         return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings, PreferencesKeys.localizationSettings]) |> take(1) |> deliverOnMainQueue |> map { value in
-                            return .postboxAccess(PasscodeAccessContext(promise: promise, account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePalleteSettings))
+                            return .postboxAccess(PasscodeAccessContext(promise: promise, account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                         } |> then(auth)
                         
                     }
@@ -68,7 +70,7 @@ final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     
     let rootController: SEUnauthorizedViewController
-    init( account: UnauthorizedAccount, context: NSExtensionContext, localization:LocalizationSettings?, theme:ThemePalleteSettings?) {
+    init( account: UnauthorizedAccount, context: NSExtensionContext, localization:LocalizationSettings?, theme:ThemePaletteSettings?) {
         self.account = account
         if let localization = localization {
             applyShareUILocalization(localization)
@@ -90,7 +92,7 @@ final class UnauthorizedApplicationContext {
 class AuthorizedApplicationContext {
     let account: Account
     let rootController: SESelectController
-    init(account: Account, context: NSExtensionContext, localization:LocalizationSettings?, theme:ThemePalleteSettings?) {
+    init(account: Account, context: NSExtensionContext, localization:LocalizationSettings?, theme:ThemePaletteSettings?) {
         self.account = account
         
         if let localization = localization {
@@ -112,7 +114,7 @@ class PasscodeAccessContext {
     let account: Account
     let promise:Promise<Void>
     let rootController: SEPasslockController
-    init(promise:Promise<Void>, account: Account, context:NSExtensionContext, localization:LocalizationSettings?, theme:ThemePalleteSettings?) {
+    init(promise:Promise<Void>, account: Account, context:NSExtensionContext, localization:LocalizationSettings?, theme:ThemePaletteSettings?) {
         self.account = account
         self.promise = promise
         if let localization = localization {

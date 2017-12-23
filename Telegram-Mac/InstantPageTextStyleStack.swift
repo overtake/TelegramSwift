@@ -134,7 +134,7 @@ final class InstantPageTextStyleStack {
             } else if fontFixed != nil && fontFixed! {
                 attributes[NSAttributedStringKey.font] = NSFont(name: "Menlo-BoldItalic", size: parsedFontSize)
             } else {
-                attributes[NSAttributedStringKey.font] = NSFont.bold(.custom(parsedFontSize))
+                attributes[NSAttributedStringKey.font] = NSFont.bold(parsedFontSize)
             }
         } else if bold != nil && bold! {
             if fontSerif != nil && fontSerif! {
@@ -142,7 +142,7 @@ final class InstantPageTextStyleStack {
             } else if fontFixed != nil && fontFixed! {
                 attributes[NSAttributedStringKey.font] = NSFont(name: "Menlo-Bold", size: parsedFontSize)
             } else {
-                attributes[NSAttributedStringKey.font] = NSFont.bold(.custom(parsedFontSize))
+                attributes[NSAttributedStringKey.font] = NSFont.bold(parsedFontSize)
             }
         } else if italic != nil && italic! {
             if fontSerif != nil && fontSerif! {
@@ -150,7 +150,7 @@ final class InstantPageTextStyleStack {
             } else if fontFixed != nil && fontFixed! {
                 attributes[NSAttributedStringKey.font] = NSFont(name: "Menlo-Italic", size: parsedFontSize)
             } else {
-                attributes[NSAttributedStringKey.font] = NSFont.italic(.custom(parsedFontSize))
+                attributes[NSAttributedStringKey.font] = NSFont.italic(parsedFontSize)
             }
         } else {
             if fontSerif != nil && fontSerif! {
@@ -158,7 +158,7 @@ final class InstantPageTextStyleStack {
             } else if fontFixed != nil && fontFixed! {
                 attributes[NSAttributedStringKey.font] = NSFont(name: "Menlo", size: parsedFontSize)
             } else {
-                attributes[NSAttributedStringKey.font] = NSFont.normal(.custom(parsedFontSize))
+                attributes[NSAttributedStringKey.font] = NSFont.normal(parsedFontSize)
             }
         }
         

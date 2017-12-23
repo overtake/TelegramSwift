@@ -65,7 +65,7 @@ class ContextListRowItem: TableRowItem {
             }
             if let selectedUrl = selectedUrl, let parsedUrl = URL(string: selectedUrl) {
                 if let host = parsedUrl.host, !host.isEmpty {
-                    iconText = NSAttributedString.initialize(string: host.substring(to: host.index(after: host.startIndex)).uppercased(), color: .white, font: .medium(.custom(25)))
+                    iconText = NSAttributedString.initialize(string: host.substring(to: host.index(after: host.startIndex)).uppercased(), color: .white, font: .medium(25.0))
                 }
             }
         case let .internalReference(_, _, title, description, image, file, _):
@@ -104,7 +104,7 @@ class ContextListRowItem: TableRowItem {
             if iconText == nil {
                 if let title = result.title, !title.isEmpty {
                     let titleText = title.substring(to: title.index(after: title.startIndex)).uppercased()
-                    iconText = NSAttributedString.initialize(string: titleText, color: .white, font: .medium(.custom(25)))
+                    iconText = NSAttributedString.initialize(string: titleText, color: .white, font: .medium(25.0))
                 }
             }
         }

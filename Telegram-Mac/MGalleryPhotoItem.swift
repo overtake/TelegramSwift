@@ -22,6 +22,12 @@ class MGalleryPhotoItem: MGalleryItem {
             if let webpage =  entry.message!.media[0] as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
+                } else if case let .Loaded(content) = webpage.content, let media = content.file  {
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
+                    var representations = media.previewRepresentations
+                    representations.append(represenatation)
+                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil)
+                    
                 } else {
                     fatalError("image for webpage not found")
                 }

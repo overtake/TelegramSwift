@@ -26,7 +26,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     private(set) var fetchControls:FetchControls!
     var fetchStatus: MediaResourceStatus?
     var dragDisposable:MetaDisposable = MetaDisposable()
-
+    var positionFlags: GroupLayoutPositionFlags?
     override var backgroundColor: NSColor {
         get {
             return super.backgroundColor
@@ -34,7 +34,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) {
                     view.background = newValue
                 }
             }
@@ -142,6 +142,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.setContent(size: size)
         self.media = media
         self.parameters = parameters
+        self.positionFlags = positionFlags
         self.account = account
         self.parent = parent
         self.table = table

@@ -26,6 +26,15 @@ class ChatGIFContentView: ChatMediaContentView {
         }
     }
     
+    override var backgroundColor: NSColor {
+        set {
+            super.backgroundColor = .clear
+        }
+        get {
+            return super.backgroundColor
+        }
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(player)
@@ -70,6 +79,7 @@ class ChatGIFContentView: ChatMediaContentView {
     override func layout() {
         super.layout()
         player.frame = bounds
+        self.player.positionFlags = positionFlags
         progressView?.center()
     }
 
@@ -125,6 +135,8 @@ class ChatGIFContentView: ChatMediaContentView {
         
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
+        
+
         
         updateListeners()
         
@@ -196,6 +208,11 @@ class ChatGIFContentView: ChatMediaContentView {
             }
 
         }
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        var bp:Int = 0
+        bp += 1
     }
     
     override func copy() -> Any {

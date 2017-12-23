@@ -20,7 +20,7 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
     let showPlayer:(APController) -> Void
     let durationLayout:TextViewLayout
     let sizeLayout:TextViewLayout
-    init(nameLayout:TextViewLayout, durationLayout:TextViewLayout, sizeLayout:TextViewLayout, resource:TelegramMediaResource, isWebpage: Bool, title:String?, performer:String?, showPlayer:@escaping(APController) -> Void) {
+    init(nameLayout:TextViewLayout, durationLayout:TextViewLayout, sizeLayout:TextViewLayout, resource:TelegramMediaResource, isWebpage: Bool, title:String?, performer:String?, showPlayer:@escaping(APController) -> Void, presentation: ChatMediaPresentation, media: Media) {
         self.nameLayout = nameLayout
         self.sizeLayout = sizeLayout
         self.durationLayout = durationLayout
@@ -29,12 +29,17 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
         self.title = title
         self.performer = performer
         self.resource = resource
+        super.init(presentation: presentation, media: media)
+    }
+    
+    var file: TelegramMediaFile {
+        return media as! TelegramMediaFile
     }
     
     override func makeLabelsForWidth(_ width: CGFloat) {
-        nameLayout.measure(width: width - 20)
-        durationLayout.measure(width: width - 20)
-        sizeLayout.measure(width: width - 20)
+        nameLayout.measure(width: width - 40)
+        durationLayout.measure(width: width - 40)
+        sizeLayout.measure(width: width - 40)
     }
 }
 
@@ -43,7 +48,19 @@ class ChatMusicRowItem: ChatMediaItem {
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
         super.init(initialSize, chatInteraction, account, object)
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction)
+        
+
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+    }
+    
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        if let parameters = parameters as? ChatMediaMusicLayoutParameters {
+            if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
+                return rightSize.height
+            }
+        }
+        
+        return super.additionalLineForDateInBubbleState
     }
     
     override var instantlyResize: Bool {
@@ -53,7 +70,7 @@ class ChatMusicRowItem: ChatMediaItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             parameters.makeLabelsForWidth(width)
-            return NSMakeSize(parameters.nameLayout.layoutSize.width + 50, 40)
+            return NSMakeSize(max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width) + 50, 40)
         }
         return NSZeroSize
     }

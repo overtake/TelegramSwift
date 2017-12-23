@@ -24,6 +24,7 @@
 + (void)setDateLocalizationFunc:(NSString* (^)(NSString *key))localizationF;
 @end
 
+NSString * NSLocalized(NSString * key, NSString *comment);
 
 
 #ifdef __cplusplus

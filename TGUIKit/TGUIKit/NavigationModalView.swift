@@ -22,7 +22,7 @@ class NavigationModalView: Control {
         self.action = action
         
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(.custom(20)))
+        _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(20.0))
         _ = attr.append(string: "\n")
         _ = attr.append(string: action.desc, color: presentation.colors.grayText, font: .normal(.text))
         
@@ -47,7 +47,8 @@ class NavigationModalView: Control {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(.custom(20)))
+        
+        _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(20.0))
         _ = attr.append(string: "\n")
         _ = attr.append(string: action.desc, color: presentation.colors.grayText, font: .normal(.text))
         

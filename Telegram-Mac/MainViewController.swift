@@ -66,6 +66,8 @@ class MainViewController: TelegramViewController {
         }
     }
     
+
+    
     private let settingsDisposable = MetaDisposable()
     
     private func showFastSettings(_ control:Control) {
@@ -103,11 +105,11 @@ class MainViewController: TelegramViewController {
             }, theme.icons.fastSettingsLock))
         }
         
-        items.append(SPopoverItem(theme.dark ? tr(.fastSettingsDisableDarkMode) : tr(.fastSettingsEnableDarkMode), { [weak self] in
+        items.append(SPopoverItem(theme.colors.isDark ? tr(.fastSettingsDisableDarkMode) : tr(.fastSettingsEnableDarkMode), { [weak self] in
             if let strongSelf = self {
-                _ = updateThemeSettings(postbox: strongSelf.account.postbox, pallete: !theme.dark ? darkPallete : whitePallete, dark: !theme.dark).start()
+                _ = updateThemeSettings(postbox: strongSelf.account.postbox, palette: !theme.colors.isDark ? darkPalette : whitePalette).start()
             }
-        }, theme.dark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
+        }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
         
         let time = Int32(Date().timeIntervalSince1970)
         let unmuted = notifications.muteUntil < time

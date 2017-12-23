@@ -206,6 +206,8 @@ fileprivate func preparedMediaTransition(from fromView:[PeerMediaSharedEntry]?, 
                 return PeerMediaWebpageRowItem(initialSize,interaction,account,entry)
             } else if tags == .music, message.media.first is TelegramMediaFile {
                 return PeerMediaMusicRowItem(initialSize, interaction, account, entry)
+            } else if !message.text.isEmpty {
+                return PeerMediaWebpageRowItem(initialSize,interaction,account,entry)
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
             }

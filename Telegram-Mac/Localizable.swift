@@ -135,6 +135,28 @@ enum L10n {
   case alertSendErrorText
   /// Maximum file size is 1.5 GB
   case appMaxFileSize
+  /// Ahh you kids today with techno music! Enjoy the classics, like Hasselhoff!
+  case appearanceSettingsChatPreviewFirstText
+  /// CHAT PREVIEW
+  case appearanceSettingsChatPreviewHeader
+  /// I can't take you seriously right now. Sorry..
+  case appearanceSettingsChatPreviewSecondText
+  /// Bubbles
+  case appearanceSettingsChatViewBubbles
+  /// Classic
+  case appearanceSettingsChatViewClassic
+  /// CHAT VIEW
+  case appearanceSettingsChatViewHeader
+  /// Dark
+  case appearanceSettingsColorThemeDark
+  /// Classic
+  case appearanceSettingsColorThemeDefault
+  /// COLOR THEME
+  case appearanceSettingsColorThemeHeader
+  /// Night Blue
+  case appearanceSettingsColorThemeNightBlue
+  /// TEXT SIZE
+  case appearanceSettingsTextSizeHeader
   /// You can have up to 200 sticker sets installed. Unused stickers are archived when you add more.
   case archivedStickersDescription
   /// Unknown Artist
@@ -469,6 +491,8 @@ enum L10n {
   case chatSearchFrom
   /// Share
   case chatShareInlineResultActionHeader
+  /// Forwarded from: [%@]()
+  case chatBubblesForwardedFrom(String)
   /// Incoming Call
   case chatCallIncoming
   /// Outgoing Call
@@ -507,6 +531,8 @@ enum L10n {
   case chatContextInfo
   /// Remove from Favorites
   case chatContextRemoveFavoriteSticker
+  /// Link Preview
+  case chatEmptyLinkPreview
   /// Pinned message
   case chatHeaderPinnedMessage
   /// Report Spam
@@ -569,6 +595,10 @@ enum L10n {
   case chatServicePinnedMessage
   /// You
   case chatServiceYou
+  /// Cancelled
+  case chatServiceCallCancelled
+  /// Missed
+  case chatServiceCallMissed
   /// channel photo removed
   case chatServiceChannelRemovedPhoto
   /// channel photo updated
@@ -633,7 +663,7 @@ enum L10n {
   case chatListContextMute
   /// Pin
   case chatListContextPin
-  /// Sorry, you can pin no more than chats to the top.
+  /// Sorry, you can pin no more than 5 chats to the top.
   case chatListContextPinError
   /// Return Group
   case chatListContextReturnGroup
@@ -653,12 +683,22 @@ enum L10n {
   case chatListServiceDestructingPhoto
   /// self-destructing video
   case chatListServiceDestructingVideo
+  /// %d %@
+  case chatListServiceGameScored1Countable(Int, String)
   /// scored %d in %@
-  case chatListServiceGameScored(Int, String)
+  case chatListServiceGameScored1Few(Int, String)
+  /// scored %d in %@
+  case chatListServiceGameScored1Many(Int, String)
+  /// scored %d in %@
+  case chatListServiceGameScored1One(Int, String)
+  /// scored %d in %@
+  case chatListServiceGameScored1Other(Int, String)
+  /// scored %d in %@
+  case chatListServiceGameScored1Two(Int, String)
+  /// scored %d in %@
+  case chatListServiceGameScored1Zero(Int, String)
   /// Cancelled Call
   case chatListServiceCallCancelled
-  /// Disconnected
-  case chatListServiceCallDisconnected
   /// Incoming Call (%@)
   case chatListServiceCallIncoming(String)
   /// Missed Call
@@ -1489,8 +1529,20 @@ enum L10n {
   case peerInfoChannelNamePlaceholder
   /// Add "%@" to group?
   case peerInfoConfirmAddMember(String)
+  /// %d
+  case peerInfoConfirmAddMembers1Countable(Int)
   /// Add %d users to group?
-  case peerInfoConfirmAddMembers(Int)
+  case peerInfoConfirmAddMembers1Few(Int)
+  /// Add %d users to group?
+  case peerInfoConfirmAddMembers1Many(Int)
+  /// Add %d user to group?
+  case peerInfoConfirmAddMembers1One(Int)
+  /// Add %d users to group?
+  case peerInfoConfirmAddMembers1Other(Int)
+  /// Add %d users to group?
+  case peerInfoConfirmAddMembers1Two(Int)
+  /// Add %d users to group?
+  case peerInfoConfirmAddMembers1Zero(Int)
   /// Are you sure you want to delete all message history and leave "%@"?\n\nThis action cannot be undone.
   case peerInfoConfirmDeleteChat(String)
   /// Delete Contact?
@@ -1795,10 +1847,34 @@ enum L10n {
   case rgMF4YcnTitle
   /// Select All
   case ruw6mB2mTitle
+  /// %@ %d
+  case searchGlobalChannel1Countable(String, Int)
   /// %@, %d subscribers
-  case searchGlobalChannel(String, Int)
+  case searchGlobalChannel1Few(String, Int)
+  /// %@, %d subscribers
+  case searchGlobalChannel1Many(String, Int)
+  /// %@, %d subscriber
+  case searchGlobalChannel1One(String, Int)
+  /// %@, %d subscribers
+  case searchGlobalChannel1Other(String, Int)
+  /// %@, %d subscribers
+  case searchGlobalChannel1Two(String, Int)
+  /// %@, %d subscribers
+  case searchGlobalChannel1Zero(String, Int)
+  /// %@ %d
+  case searchGlobalGroup1Countable(String, Int)
   /// %@, %d members
-  case searchGlobalGroup(String, Int)
+  case searchGlobalGroup1Few(String, Int)
+  /// %@, %d members
+  case searchGlobalGroup1Many(String, Int)
+  /// %@, %d member
+  case searchGlobalGroup1One(String, Int)
+  /// %@, %d members
+  case searchGlobalGroup1Other(String, Int)
+  /// %@, %d members
+  case searchGlobalGroup1Two(String, Int)
+  /// %@, %d members
+  case searchGlobalGroup1Zero(String, Int)
   /// contacts and chats
   case searchSeparatorChatsAndContacts
   /// global search
@@ -1861,20 +1937,44 @@ enum L10n {
   case shareModalSearchPlaceholder
   /// Sidebar available in chat
   case sidebarAvalability
+  /// %d
+  case stickerPackAdd1Countable(Int)
   /// Add %d Stickers
-  case stickerPackAdd(Int)
-  /// Remove %d stickers
-  case stickerPackRemove(Int)
+  case stickerPackAdd1Few(Int)
+  /// Add %d Stickers
+  case stickerPackAdd1Many(Int)
+  /// Add %d Sticker
+  case stickerPackAdd1One(Int)
+  /// Add %d Stickers
+  case stickerPackAdd1Other(Int)
+  /// Add %d Stickers
+  case stickerPackAdd1Two(Int)
+  /// Add %d Stickers
+  case stickerPackAdd1Zero(Int)
   /// GROUP STICKERS
   case stickersGroupStickers
   /// Recent
   case stickersRecent
+  /// %d
+  case stickersSetCount1Countable(Int)
   /// %d stickers
-  case stickersSetCount(Int)
+  case stickersSetCount1Few(Int)
+  /// %d stickers
+  case stickersSetCount1Many(Int)
+  /// %d sticker
+  case stickersSetCount1One(Int)
+  /// %d stickers
+  case stickersSetCount1Other(Int)
+  /// %d stickers
+  case stickersSetCount1Two(Int)
+  /// %d stickers
+  case stickersSetCount1Zero(Int)
   /// Remove
   case stickerSetRemove
   /// Clear %@
   case storageClear(String)
+  /// Clear All
+  case storageClearAll
   /// Audio
   case storageClearAudio
   /// Documents
@@ -1883,6 +1983,8 @@ enum L10n {
   case storageClearPhotos
   /// Videos
   case storageClearVideos
+  /// Are you sure you want to clear all cached data?
+  case storageClearAllConfirmDescription
   /// Calculating current cache size...
   case storageUsageCalculating
   /// CHATS
@@ -2381,6 +2483,28 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Alert.SendError.Text")
       case .appMaxFileSize:
         return L10n.tr(key: "App.MaxFileSize")
+      case .appearanceSettingsChatPreviewFirstText:
+        return L10n.tr(key: "AppearanceSettings.ChatPreview.FirstText")
+      case .appearanceSettingsChatPreviewHeader:
+        return L10n.tr(key: "AppearanceSettings.ChatPreview.Header")
+      case .appearanceSettingsChatPreviewSecondText:
+        return L10n.tr(key: "AppearanceSettings.ChatPreview.SecondText")
+      case .appearanceSettingsChatViewBubbles:
+        return L10n.tr(key: "AppearanceSettings.ChatView.Bubbles")
+      case .appearanceSettingsChatViewClassic:
+        return L10n.tr(key: "AppearanceSettings.ChatView.Classic")
+      case .appearanceSettingsChatViewHeader:
+        return L10n.tr(key: "AppearanceSettings.ChatView.Header")
+      case .appearanceSettingsColorThemeDark:
+        return L10n.tr(key: "AppearanceSettings.ColorTheme.dark")
+      case .appearanceSettingsColorThemeDefault:
+        return L10n.tr(key: "AppearanceSettings.ColorTheme.default")
+      case .appearanceSettingsColorThemeHeader:
+        return L10n.tr(key: "AppearanceSettings.ColorTheme.Header")
+      case .appearanceSettingsColorThemeNightBlue:
+        return L10n.tr(key: "AppearanceSettings.ColorTheme.night_blue")
+      case .appearanceSettingsTextSizeHeader:
+        return L10n.tr(key: "AppearanceSettings.TextSize.Header")
       case .archivedStickersDescription:
         return L10n.tr(key: "ArchivedStickers.Description")
       case .audioUnknownArtist:
@@ -2715,6 +2839,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.SearchFrom")
       case .chatShareInlineResultActionHeader:
         return L10n.tr(key: "Chat.ShareInlineResultActionHeader")
+      case .chatBubblesForwardedFrom(let p1):
+        return L10n.tr(key: "Chat.Bubbles.ForwardedFrom", p1)
       case .chatCallIncoming:
         return L10n.tr(key: "Chat.Call.Incoming")
       case .chatCallOutgoing:
@@ -2753,6 +2879,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.Context.Info")
       case .chatContextRemoveFavoriteSticker:
         return L10n.tr(key: "Chat.Context.RemoveFavoriteSticker")
+      case .chatEmptyLinkPreview:
+        return L10n.tr(key: "Chat.Empty.LinkPreview")
       case .chatHeaderPinnedMessage:
         return L10n.tr(key: "Chat.Header.PinnedMessage")
       case .chatHeaderReportSpam:
@@ -2815,6 +2943,10 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.Service.PinnedMessage")
       case .chatServiceYou:
         return L10n.tr(key: "Chat.Service.You")
+      case .chatServiceCallCancelled:
+        return L10n.tr(key: "Chat.Service.Call.Cancelled")
+      case .chatServiceCallMissed:
+        return L10n.tr(key: "Chat.Service.Call.Missed")
       case .chatServiceChannelRemovedPhoto:
         return L10n.tr(key: "Chat.Service.Channel.RemovedPhoto")
       case .chatServiceChannelUpdatedPhoto:
@@ -2899,12 +3031,22 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "ChatList.Service.DestructingPhoto")
       case .chatListServiceDestructingVideo:
         return L10n.tr(key: "ChatList.Service.DestructingVideo")
-      case .chatListServiceGameScored(let p1, let p2):
-        return L10n.tr(key: "ChatList.Service.GameScored", p1, p2)
+      case .chatListServiceGameScored1Countable(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_countable", p1, p2)
+      case .chatListServiceGameScored1Few(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_few", p1, p2)
+      case .chatListServiceGameScored1Many(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_many", p1, p2)
+      case .chatListServiceGameScored1One(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_one", p1, p2)
+      case .chatListServiceGameScored1Other(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_other", p1, p2)
+      case .chatListServiceGameScored1Two(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_two", p1, p2)
+      case .chatListServiceGameScored1Zero(let p1, let p2):
+        return L10n.tr(key: "ChatList.Service.GameScored1_zero", p1, p2)
       case .chatListServiceCallCancelled:
         return L10n.tr(key: "ChatList.Service.Call.Cancelled")
-      case .chatListServiceCallDisconnected:
-        return L10n.tr(key: "ChatList.Service.Call.Disconnected")
       case .chatListServiceCallIncoming(let p1):
         return L10n.tr(key: "ChatList.Service.Call.incoming", p1)
       case .chatListServiceCallMissed:
@@ -3735,8 +3877,20 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "PeerInfo.ChannelName.Placeholder")
       case .peerInfoConfirmAddMember(let p1):
         return L10n.tr(key: "PeerInfo.Confirm.AddMember", p1)
-      case .peerInfoConfirmAddMembers(let p1):
-        return L10n.tr(key: "PeerInfo.Confirm.AddMembers", p1)
+      case .peerInfoConfirmAddMembers1Countable(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_countable", p1)
+      case .peerInfoConfirmAddMembers1Few(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_few", p1)
+      case .peerInfoConfirmAddMembers1Many(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_many", p1)
+      case .peerInfoConfirmAddMembers1One(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_one", p1)
+      case .peerInfoConfirmAddMembers1Other(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_other", p1)
+      case .peerInfoConfirmAddMembers1Two(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_two", p1)
+      case .peerInfoConfirmAddMembers1Zero(let p1):
+        return L10n.tr(key: "PeerInfo.Confirm.AddMembers1_zero", p1)
       case .peerInfoConfirmDeleteChat(let p1):
         return L10n.tr(key: "PeerInfo.Confirm.DeleteChat", p1)
       case .peerInfoConfirmDeleteContact:
@@ -4041,10 +4195,34 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "rgM-f4-ycn.title")
       case .ruw6mB2mTitle:
         return L10n.tr(key: "Ruw-6m-B2m.title")
-      case .searchGlobalChannel(let p1, let p2):
-        return L10n.tr(key: "Search.Global.Channel", p1, p2)
-      case .searchGlobalGroup(let p1, let p2):
-        return L10n.tr(key: "Search.Global.Group", p1, p2)
+      case .searchGlobalChannel1Countable(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_countable", p1, p2)
+      case .searchGlobalChannel1Few(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_few", p1, p2)
+      case .searchGlobalChannel1Many(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_many", p1, p2)
+      case .searchGlobalChannel1One(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_one", p1, p2)
+      case .searchGlobalChannel1Other(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_other", p1, p2)
+      case .searchGlobalChannel1Two(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_two", p1, p2)
+      case .searchGlobalChannel1Zero(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Channel1_zero", p1, p2)
+      case .searchGlobalGroup1Countable(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_countable", p1, p2)
+      case .searchGlobalGroup1Few(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_few", p1, p2)
+      case .searchGlobalGroup1Many(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_many", p1, p2)
+      case .searchGlobalGroup1One(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_one", p1, p2)
+      case .searchGlobalGroup1Other(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_other", p1, p2)
+      case .searchGlobalGroup1Two(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_two", p1, p2)
+      case .searchGlobalGroup1Zero(let p1, let p2):
+        return L10n.tr(key: "Search.Global.Group1_zero", p1, p2)
       case .searchSeparatorChatsAndContacts:
         return L10n.tr(key: "Search.Separator.ChatsAndContacts")
       case .searchSeparatorGlobalPeers:
@@ -4107,20 +4285,44 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "ShareModal.Search.Placeholder")
       case .sidebarAvalability:
         return L10n.tr(key: "Sidebar.Avalability")
-      case .stickerPackAdd(let p1):
-        return L10n.tr(key: "StickerPack.Add", p1)
-      case .stickerPackRemove(let p1):
-        return L10n.tr(key: "StickerPack.Remove", p1)
+      case .stickerPackAdd1Countable(let p1):
+        return L10n.tr(key: "StickerPack.Add1_countable", p1)
+      case .stickerPackAdd1Few(let p1):
+        return L10n.tr(key: "StickerPack.Add1_few", p1)
+      case .stickerPackAdd1Many(let p1):
+        return L10n.tr(key: "StickerPack.Add1_many", p1)
+      case .stickerPackAdd1One(let p1):
+        return L10n.tr(key: "StickerPack.Add1_one", p1)
+      case .stickerPackAdd1Other(let p1):
+        return L10n.tr(key: "StickerPack.Add1_other", p1)
+      case .stickerPackAdd1Two(let p1):
+        return L10n.tr(key: "StickerPack.Add1_two", p1)
+      case .stickerPackAdd1Zero(let p1):
+        return L10n.tr(key: "StickerPack.Add1_zero", p1)
       case .stickersGroupStickers:
         return L10n.tr(key: "Stickers.GroupStickers")
       case .stickersRecent:
         return L10n.tr(key: "Stickers.Recent")
-      case .stickersSetCount(let p1):
-        return L10n.tr(key: "Stickers.Set.Count", p1)
+      case .stickersSetCount1Countable(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_countable", p1)
+      case .stickersSetCount1Few(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_few", p1)
+      case .stickersSetCount1Many(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_many", p1)
+      case .stickersSetCount1One(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_one", p1)
+      case .stickersSetCount1Other(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_other", p1)
+      case .stickersSetCount1Two(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_two", p1)
+      case .stickersSetCount1Zero(let p1):
+        return L10n.tr(key: "Stickers.Set.Count1_zero", p1)
       case .stickerSetRemove:
         return L10n.tr(key: "StickerSet.Remove")
       case .storageClear(let p1):
         return L10n.tr(key: "Storage.Clear", p1)
+      case .storageClearAll:
+        return L10n.tr(key: "Storage.ClearAll")
       case .storageClearAudio:
         return L10n.tr(key: "Storage.Clear.Audio")
       case .storageClearDocuments:
@@ -4129,6 +4331,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Storage.Clear.Photos")
       case .storageClearVideos:
         return L10n.tr(key: "Storage.Clear.Videos")
+      case .storageClearAllConfirmDescription:
+        return L10n.tr(key: "Storage.ClearAll.Confirm.Description")
       case .storageUsageCalculating:
         return L10n.tr(key: "StorageUsage.Calculating")
       case .storageUsageChatsHeader:

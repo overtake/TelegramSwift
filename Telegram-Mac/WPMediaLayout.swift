@@ -19,11 +19,11 @@ class WPMediaLayout: WPLayout {
     var mediaSize:NSSize = NSZeroSize
     private(set) var media:TelegramMediaFile
     var parameters:ChatMediaLayoutParameters?
-    override init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat) {
+    override init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
         self.media = content.file! 
-        super.init(with: content, account: account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize)
+        super.init(with: content, account: account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: self.media, isWebpage: true, chatInteraction: chatInteraction)
+        self.parameters = ChatMediaLayoutParameters.layout(for: self.media, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: account, renderType: presentation.renderType))
     }
     
     override func measure(width: CGFloat) {
@@ -42,10 +42,10 @@ class WPMediaLayout: WPLayout {
             parameters.name = TextNode.layoutText(maybeNode: parameters.nameNode, NSAttributedString.initialize(string: parameters.fileName , color: theme.colors.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (parameters.hasThumb ? 80 : 50), 20), nil,false, .left)
         }
         
+        parameters?.makeLabelsForWidth(contentSize.width - 50)
+        
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            parameters.nameLayout.measure(width: contentSize.width - 50)
-            parameters.durationLayout.measure(width: contentSize.width - 50)
-            parameters.sizeLayout.measure(width: contentSize.width - 50)
+            contentSize.width = 50 + max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width)
         }
         
         layout(with: contentSize)

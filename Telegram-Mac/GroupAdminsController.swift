@@ -196,7 +196,7 @@ private enum GroupAdminsEntry: Comparable, Identifiable {
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.custom(12.5))), statusStyle: ControlStyle(font: NSFont.normal(.custom(12.5)), foregroundColor:color), status: string, drawLastSeparator: true, inset:NSEdgeInsets(left:30.0,right:30.0), generalType: .switchable(stateback: { () -> Bool in
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5)), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, drawLastSeparator: true, inset:NSEdgeInsets(left:30.0,right:30.0), generalType: .switchable(stateback: { () -> Bool in
                 return toggled
             }), action: { 
                 arguments.updatePeerIsAdmin(peer.id, !toggled)

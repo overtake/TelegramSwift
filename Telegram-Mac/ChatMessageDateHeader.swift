@@ -35,11 +35,13 @@ class ChatDateStickItem : TableStickItem {
     private let entry:ChatHistoryEntry
     fileprivate let timestamp:Int32
     fileprivate let chatInteraction:ChatInteraction?
+    let isBubbled: Bool
     let layout:TextViewLayout
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction) {
         self.entry = entry
+        self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
-        if case let .DateEntry(index) = entry {
+        if case let .DateEntry(index, _) = entry {
             self.timestamp = index.timestamp
         } else {
             fatalError()
@@ -74,8 +76,9 @@ class ChatDateStickItem : TableStickItem {
     }
     
     required init(_ initialSize: NSSize) {
-        entry = .DateEntry(MessageIndex.absoluteLowerBound())
+        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list)
         timestamp = 0
+        self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
         self.chatInteraction = nil
         super.init(initialSize)
@@ -142,6 +145,7 @@ class ChatDateStickView : TableStickView {
         containerView.change(opacity: visible ? 1 : 0, animated: false)
     }
     
+    
     override var header: Bool {
         didSet {
             updateColors()
@@ -150,6 +154,8 @@ class ChatDateStickView : TableStickView {
     
     override func updateColors() {
         super.updateColors()
+        
+
         textView.backgroundColor = theme.colors.background
         
         containerView.backgroundColor = .clear

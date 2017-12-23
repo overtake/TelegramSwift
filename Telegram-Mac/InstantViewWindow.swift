@@ -366,7 +366,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        _window.appearance = theme.dark ? NSAppearance(named:NSAppearance.Name.vibrantDark) : NSAppearance(named:NSAppearance.Name.vibrantLight)
+        _window.appearance = theme.appearance
         _window.backgroundColor = theme.colors.grayBackground
     }
     

@@ -20,13 +20,13 @@ class WPArticleLayout: WPLayout {
     
     private(set) var duration:(TextNodeLayout, TextNode)?
     private let durationAttributed:NSAttributedString?
-    override init(with content: TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat) {
+    override init(with content: TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
         if let duration = content.duration {
             self.durationAttributed = .initialize(string: String.durationTransformed(elapsed: duration), color: .white, font: .normal(.text))
         } else {
             durationAttributed = nil
         }
-        super.init(with: content, account:account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize)
+        super.init(with: content, account:account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation)
         
         
         
@@ -43,9 +43,14 @@ class WPArticleLayout: WPLayout {
     private let mediaTypes:[String] = ["photo","video"]
     private let fullSizeSites:[String] = ["instagram","twitter"]
     
-    private var isFullImageSize: Bool {
+    var isFullImageSize: Bool {
         let website = content.websiteName?.lowercased()
-        if let type = content.type, mediaTypes.contains(type) || (fullSizeSites.contains(website ?? "") && content.instantPage != nil) || content.text == nil  {
+        if let type = content.type, mediaTypes.contains(type) || (fullSizeSites.contains(website ?? "") || content.instantPage != nil) || content.text == nil  {
+            if let imageSize = imageSize {
+                if imageSize.width < 100 {
+                    return false
+                }
+            }
             return true
         }
         return false
@@ -54,28 +59,29 @@ class WPArticleLayout: WPLayout {
     override func measure(width: CGFloat) {
         super.measure(width: width)
         
-        var contentSize:NSSize = NSMakeSize(width, 0)
+        var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
         
         if let imageSize = imageSize, isFullImageSize {
-            contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, 300), 300))
+            contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, 320), 300))
             textLayout?.cutout = nil
             smallThumb = false
             contentSize.height += contrainedImageSize.height
+            contentSize.width = contrainedImageSize.width
             if textLayout != nil {
                 contentSize.height += 6
             }
         } else {
-            if imageSize != nil {
+            if let _ = imageSize {
                 contrainedImageSize = NSMakeSize(54, 54)
                 textLayout?.cutout = TextViewCutout(position: .TopRight, size: NSMakeSize(contrainedImageSize.width + 16, contrainedImageSize.height + 10))
             }
         }
         
         if let durationAttributed = durationAttributed {
-            duration = TextNode.layoutText(durationAttributed, nil, 1, .end, NSMakeSize(width, .greatestFiniteMagnitude), nil, false, .center)
+            duration = TextNode.layoutText(durationAttributed, nil, 1, .end, NSMakeSize(contentSize.width, .greatestFiniteMagnitude), nil, false, .center)
         }
 
-        textLayout?.measure(width: width - insets.left)
+        textLayout?.measure(width: contentSize.width)
         
         if let textLayout = textLayout {
             
@@ -90,8 +96,8 @@ class WPArticleLayout: WPLayout {
             }
         }
         
-        if imageSize != nil {
-            let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: contrainedImageSize, boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets())
+        if let imageSize = imageSize {
+            let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imageSize, boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets())
             
             if imageArguments != self.imageArguments {
                 self.imageArguments = imageArguments

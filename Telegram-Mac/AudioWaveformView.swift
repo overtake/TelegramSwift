@@ -31,7 +31,7 @@ fileprivate class AudioWaveformContainerView : View {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
+        //super.draw(layer, in: ctx)
         
         let sampleWidth:CGFloat = 2
         let halfSampleWidth:CGFloat = 1

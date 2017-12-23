@@ -348,6 +348,9 @@ NumberPluralizationForm numberPluralizationForm(unsigned int lc, int n) {
 
 unsigned int languageCodehash(NSString *code) {
     NSString *rawCode = code;
+    if ([rawCode hasSuffix:@"-raw"]) {
+        rawCode = [rawCode substringToIndex:[rawCode rangeOfString:@"-"].location];
+    }
     NSRange range = [code rangeOfString:@"_"];
     if (range.location != NSNotFound) {
         rawCode = [code substringToIndex:range.location];

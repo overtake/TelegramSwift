@@ -235,6 +235,11 @@ class ShareLinkObject : ShareObject {
     
     override func perform(to peerIds:[PeerId], comment: String? = nil) {
         for peerId in peerIds {
+            
+            if let comment = comment?.trimmed, !comment.isEmpty {
+                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], media: nil, replyToMessageId: nil, localGroupingKey: nil), account: account, peerId: peerId).start()
+            }
+            
             var attributes:[MessageAttribute] = []
             if FastSettings.isChannelMessagesMuted(peerId) {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))

@@ -696,7 +696,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
 private func maxIncomingMessageIndexForEntries(_ entries: [ChatHistoryEntry], indexRange: (Int, Int)) -> MessageIndex? {
     if !entries.isEmpty {
         for i in (indexRange.0 ... indexRange.1).reversed() {
-            if case let .MessageEntry(message, _, _, _, _) = entries[i], message.flags.contains(.Incoming) {
+            if case let .MessageEntry(message, _, _, _, _, _) = entries[i], message.flags.contains(.Incoming) {
                 return MessageIndex(message)
             }
         }
@@ -740,6 +740,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let navigationActionDisposable:MetaDisposable = MetaDisposable()
     private let messageIndexDisposable: MetaDisposable = MetaDisposable()
     private let dateDisposable:MetaDisposable = MetaDisposable()
+    private let interactiveReadingDisposable: MetaDisposable = MetaDisposable()
 
     var chatInteraction:ChatInteraction
     
@@ -893,7 +894,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                 case let .HistoryView(view, updateType, scrollPosition, initialData):
                     
-                    var prepareOnMainQueue = previousAppearance.swap(appearance).presentation.dark != appearance.presentation.dark
+                    var prepareOnMainQueue = previousAppearance.swap(appearance).presentation.dark != appearance.presentation.dark || previousAppearance.swap(appearance).presentation.bubbled != appearance.presentation.bubbled
                     switch updateType {
                     case .Initial:
                         prepareOnMainQueue = firstInitialUpdate.swap(false) || prepareOnMainQueue
@@ -917,7 +918,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let peer = strongSelf.peer, peer.isRestrictedChannel {
                         proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
                     } else {
-                        proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds, groupingPhotos: true).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
+                        proccesedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries, maxReadIndex: autoremoving == nil ? view.maxReadIndex : nil, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: strongSelf.account.context.timeDifference, adminIds: adminIds, groupingPhotos: true).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
                     }
                     
                     return prepareEntries(from: strongSelf.previousView.swap(proccesedView), to: proccesedView, account: strongSelf.account, initialSize: strongSelf.atomicSize.modify({$0}), interaction:strongSelf.chatInteraction, animated: animated, scrollPosition:scrollPosition, reason:updateType, animationInterface:animationInterface) |> map { transition in
@@ -1034,7 +1035,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                         })
                         strongSelf.chatInteraction.beginEditingMessage(nil)
-                    } else  if !presentation.effectiveInput.inputText.isEmpty {
+                    } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                         setNextToTransaction = true
                         let _ = (Sender.enqueue(input: presentation.effectiveInput, account: strongSelf.account, peerId: strongSelf.peerId, replyId: presentation.interfaceState.replyMessageId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     }
@@ -1693,12 +1694,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         })
         
+        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            guard let `self` = self else {return}
+            self.updateInteractiveReading()
+        }))
+        
         genericView.tableView.addScroll(listener: TableScrollListener { [weak self] position in
             let tableView = self?.genericView.tableView
             
-            /*
-             
- */
             if let strongSelf = self, let tableView = tableView {
             
                 if let row = tableView.topVisibleRow, let item = tableView.item(at: row) as? ChatRowItem, let id = item.message?.id {
@@ -1768,10 +1771,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func windowDidBecomeKey() {
         super.windowDidBecomeKey()
+        updateInteractiveReading()
         chatInteraction.saveState(scrollState: immediateScrollState())
     }
     override func windowDidResignKey() {
         super.windowDidResignKey()
+        updateInteractiveReading()
         chatInteraction.saveState(scrollState:immediateScrollState())
     }
     
@@ -1781,7 +1786,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             var index = 0
             for entry in historyView.filteredEntries.reversed() {
                 if index >= visibleRange.min && index <= visibleRange.max {
-                    if case let .MessageEntry(message, _, _, _, _) = entry.entry {
+                    if case let .MessageEntry(message, _, _, _, _, _) = entry.entry {
                         return message
                     }
                 }
@@ -1796,6 +1801,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         return nil
     }
+    
+    private func updateInteractiveReading() {
+        let scroll = genericView.tableView.scrollPosition().current
+        
+        if let window = window, window.isKeyWindow, self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height {
+            self.interactiveReadingDisposable.set(installInteractiveReadMessagesAction(postbox: self.account.postbox, peerId: self.peerId))
+        } else {
+            self.interactiveReadingDisposable.set(nil)
+        }
+    }
+    
+    
     
     private func messageInCurrentHistoryView(_ id: MessageId) -> Message? {
         if let historyView = self.previousView.modify({$0}) {
@@ -1881,6 +1898,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             didSetHistoryReady = true
             _historyReady.set(.single(true))
         }
+        
+        updateInteractiveReading()
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
@@ -2021,10 +2040,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     override func backKeyAction() -> KeyHandlerResult {
+        
+        if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
+            if !selectManager.isEmpty {
+                _ = selectManager.selectPrevChar()
+                return .invoked
+            }
+        }
+        
         return !self.chatInteraction.presentation.isSearchMode && self.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .rejected : .invokeNext
     }
     
     override func nextKeyAction() -> KeyHandlerResult {
+        
+        if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
+            if !selectManager.isEmpty {
+                _ = selectManager.selectNextChar()
+                return .invoked
+            }
+        }
+        
         if !self.chatInteraction.presentation.isSearchMode && chatInteraction.presentation.effectiveInput.inputText.isEmpty {
             chatInteraction.openInfo(peerId, false, nil, nil)
             return .invoked
@@ -2062,6 +2097,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         messageIndexDisposable.dispose()
         dateDisposable.dispose()
         account.context.cachedAdminIds.remove(for: peerId)
+        interactiveReadingDisposable.dispose()
     }
     
     
@@ -2097,13 +2133,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
                 
                 if result == .invoked {
-                    strongSelf.findAndSetEditableMessage()
+                    let setup = strongSelf.findAndSetEditableMessage()
+                    if !setup {
+                        strongSelf.genericView.tableView.scrollUp()
+                    }
+                } else {
+                    if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
+                        strongSelf.genericView.tableView.scrollUp()
+                    }
                 }
                 
                 return result
             }
             return .rejected
         }, with: self, for: .UpArrow, priority: .low)
+        
+        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+            if let strongSelf = self, !hasModals() {
+                let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .invoked : .invokeNext
+                
+                if result == .invoked {
+                    strongSelf.genericView.tableView.scrollDown()
+                }
+                
+                return result
+            }
+            return .rejected
+        }, with: self, for: .DownArrow, priority: .low)
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
@@ -2144,18 +2200,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     }
     
-    func findAndSetEditableMessage() -> Void {
+    func findAndSetEditableMessage() -> Bool {
         let view = self.previousView.modify({$0})
         if let view = view?.originalView, view.laterId == nil {
             for entry in view.entries.reversed() {
                 if case let .MessageEntry(message,_,_,_) = entry {
                     if canEditMessage(message, account:account) {
                         chatInteraction.beginEditingMessage(message)
-                        return
+                        return true
                     }
                 }
             }
         }
+        return false
     }
     
     override func firstResponder() -> NSResponder? {

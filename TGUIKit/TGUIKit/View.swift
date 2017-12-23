@@ -89,6 +89,8 @@ public class CustomViewHandlers {
 
 open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
+    public var userInteractionEnabled:Bool = true
+    
     public var animates:Bool = false
     
     public var isEventLess: Bool = false

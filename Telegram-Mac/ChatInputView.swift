@@ -135,10 +135,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         textView.textColor = theme.colors.text
         textView.linkColor = theme.colors.link
-        textView.textFont = .normal(.custom(theme.fontSize))
+        textView.textFont = .normal(CGFloat(theme.fontSize))
         
         updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(),false)
-        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)), coreText: false), update: false)
+        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         
         textView.delegate = self
      
@@ -160,7 +160,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.custom(theme.fontSize)), coreText: false), update: false)
+        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         _ts.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
         contentView.backgroundColor = theme.colors.background
@@ -168,7 +168,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.textColor = theme.colors.text
         actionsView.backgroundColor = theme.colors.background
         blockedActionView?.disableActions()
-        textView.textFont = .normal(.custom(theme.fontSize))
+        textView.textFont = .normal(theme.fontSize)
 
         blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
@@ -482,6 +482,13 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewEnterPressed(_ event: NSEvent) -> Bool {
         
         if FastSettings.checkSendingAbility(for: event) {
+            if FastSettings.isPossibleReplaceEmojies {
+                let text = textView.string().stringEmojiReplacements
+                if textView.string() != text {
+                    self.textView.setString(text)
+                }
+            }
+            
             if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage()
                 chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)

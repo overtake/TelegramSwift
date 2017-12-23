@@ -35,9 +35,13 @@ class WPContentView: View, MultipleSelectable {
             for subview in containerView.subviews {
                 subview.background = backgroundColor
             }
-            instantPageButton?.set(image: theme.icons.chatInstantView, for: .Normal)
-            instantPageButton?.layer?.borderColor = theme.colors.blueIcon.cgColor
-            instantPageButton?.set(color: theme.colors.blueIcon, for: .Normal)
+            if let content = content {
+                instantPageButton?.set(image: content.presentation.ivIcon, for: .Normal)
+                instantPageButton?.set(image: content.presentation.ivIcon, for: .Highlight)
+                instantPageButton?.layer?.borderColor = content.presentation.activity.cgColor
+                instantPageButton?.set(color: content.presentation.activity, for: .Normal)
+            }
+            
             setNeedsDisplay()
         }
     }
@@ -49,16 +53,16 @@ class WPContentView: View, MultipleSelectable {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        ctx.setFillColor(theme.colors.blueFill.cgColor)
+        guard let content = content else {return}
+        
+        ctx.setFillColor(content.presentation.activity.cgColor)
         let radius:CGFloat = 1.0
         ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
         ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
         ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
         
-        if let content = content {
-            if let siteName = content.siteName {
-                siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
-            }
+        if let siteName = content.siteName {
+            siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
         }
     }
     

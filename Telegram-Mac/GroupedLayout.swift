@@ -112,8 +112,7 @@ class GroupedLayout {
         return messages.count
     }
     
-    func measure(_ maxSize: NSSize) {
-        let spacing: CGFloat = 4.0
+    func measure(_ maxSize: NSSize, spacing: CGFloat = 4.0) {
         
         var photos: [MessagePhotoInfo] = []
         

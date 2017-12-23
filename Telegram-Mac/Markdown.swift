@@ -21,7 +21,7 @@ final class MarkdownAttributes {
     let link: MarkdownAttributeSet
     let linkAttribute: (String) -> (String, Any)?
     
-    init(body: MarkdownAttributeSet, bold: MarkdownAttributeSet, link: MarkdownAttributeSet, linkAttribute: @escaping (String) -> (String, Any)?) {
+    init(body: MarkdownAttributeSet, bold: MarkdownAttributeSet = MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet, linkAttribute: @escaping (String) -> (String, Any)?) {
         self.body = body
         self.link = link
         self.bold = bold

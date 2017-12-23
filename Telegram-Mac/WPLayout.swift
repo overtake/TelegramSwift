@@ -11,6 +11,16 @@ import TGUIKit
 import PostboxMac
 import TelegramCoreMac
 
+
+struct WPLayoutPresentation {
+    let text: NSColor
+    let activity: NSColor
+    let link: NSColor
+    let selectText: NSColor
+    let ivIcon: CGImage
+    let renderType: ChatItemRenderType
+}
+
 class WPLayout: Equatable {
     let content:TelegramMediaWebpageLoadedContent
     let parent:Message
@@ -33,18 +43,26 @@ class WPLayout: Equatable {
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble {
-            return instantPage.media.count + 1
+            if let block = instantPage.blocks.last, case let .slideshow(items) = block {
+                if items.items.count == 1 {
+                    return nil
+                }
+                return items.items.count
+            }
         }
         return nil
     }
     
-    init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat) {
+    let presentation: WPLayoutPresentation
+    
+    init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
         self.content = content
         self.account = account
+        self.presentation = presentation
         self.parent = parent
         self.fontSize = fontSize
         if let websiteName = content.websiteName {
-            _siteNameAttr = .initialize(string: websiteName, color: theme.colors.link, font: .medium(.text))
+            _siteNameAttr = .initialize(string: websiteName, color: presentation.activity, font: .medium(.text))
             _nameNode = TextNode()
         }
         
@@ -52,13 +70,13 @@ class WPLayout: Equatable {
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
         
         if let title = content.title ?? content.author {
-            _ = attributedText.append(string: title, color: theme.colors.text, font: NSFont.medium(.custom(fontSize)))
+            _ = attributedText.append(string: title, color: presentation.text, font: .medium(fontSize))
             if content.text != nil {
                 _ = attributedText.append(string: "\n")
             }
         }
         if let text = content.text {
-            _ = attributedText.append(string: text, color: theme.colors.text, font: NSFont.normal(.custom(fontSize)))
+            _ = attributedText.append(string: text, color: presentation.text, font: .normal(fontSize))
         }
         if attributedText.length > 0 {
             var p: ParsingType = [.Links]
@@ -67,8 +85,8 @@ class WPLayout: Equatable {
                 p = [.Links, .Mentions, .Hashtags]
             }
             
-            attributedText.detectLinks(type: p, dotInMention: wname == "instagram")
-            textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil)
+            attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
+            textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true)
             textLayout?.interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
                     var link = link
@@ -96,6 +114,11 @@ class WPLayout: Equatable {
                     
                     execute(inapp: link)
                 }
+            }, isDomainLink: { value in
+                if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") {
+                    return true
+                }
+                return false
             })
             
         }
@@ -104,8 +127,8 @@ class WPLayout: Equatable {
     }
     
     var isGalleryAssemble: Bool {
-        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter") && content.instantPage != nil) || content.text == nil {
-            return true
+        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram") && content.instantPage != nil) || content.text == nil {
+            return !content.url.isEmpty
         }
         return false
     }
@@ -131,7 +154,7 @@ class WPLayout: Equatable {
     
     var hasInstantPage: Bool {
         if let _ = content.instantPage {
-            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
+            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram" {
                 return false
             }
             return true
