@@ -14,29 +14,37 @@ import SwiftSignalKitMac
 
 private final class AppearanceViewArguments {
     let account:Account
-    let toggleDarkMode:(Bool)->Void
+    let togglePalette:(ColorPalette)->Void
+    let toggleBubbles:(Bool)->Void
     let toggleFontSize:(Int32)->Void
-    init(account:Account, toggleDarkMode: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void) {
+    init(account:Account, togglePalette: @escaping(ColorPalette)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void) {
         self.account = account
-        self.toggleDarkMode = toggleDarkMode
+        self.togglePalette = togglePalette
+        self.toggleBubbles = toggleBubbles
         self.toggleFontSize = toggleFontSize
     }
 }
 
 private enum AppearanceViewEntry : TableItemListNodeEntry {
-    case darkMode(Int32, Bool)
+    case colorPalette(Int32, Int32, Bool, ColorPalette)
+    case chatView(Int32, Int32, Bool, Bool)
     case section(Int32)
-    case font(Int32, Int32)
+    case preview(Int32, Int32, ChatHistoryEntry)
+    case font(Int32, Int32, Int32, [Int32])
     case description(Int32, Int32, String)
     
     var stableId: Int32 {
         switch self {
-        case .darkMode:
-            return 0
+        case .colorPalette(_, let index, _, _):
+            return index
+        case .chatView(_, let index, _, _):
+            return index
         case .section(let section):
             return section + 1000
-        case .font:
-            return 1
+        case .font(_, let index, _, _):
+            return index
+        case let .preview(_, index, _):
+            return index
         case let .description(section, index, _):
             return (section * 1000) + (index + 1) * 1000
         }
@@ -44,12 +52,16 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case .darkMode(let section, _):
-            return (section * 1000) + 0
+        case let .colorPalette(section, index, _, _):
+            return (section * 1000) + index
+        case let .chatView(section, index, _, _):
+            return (section * 1000) + index
         case .section(let section):
             return (section + 1) * 1000 - section
-        case .font(let section, _):
-            return (section * 1000) + 1
+        case let .font(section, index, _, _):
+            return (section * 1000) + index
+        case let .preview(section, id, _):
+            return (section * 1000) + id
         case let .description(section, index, _):
             return (section * 1000) + index + 2
         }
@@ -57,29 +69,47 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     
     func item(_ arguments: AppearanceViewArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .darkMode(_, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.generalSettingsDarkMode), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: { 
-                arguments.toggleDarkMode(!enabled)
+        case let .colorPalette(_, _, selected, palette):
+            let localizationKey = "AppearanceSettings.ColorTheme." + palette.name.lowercased().replacingOccurrences(of: " ", with: "_")
+            let localized = _NSLocalizedString(localizationKey)
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: localized != localizationKey ? localized : palette.name, type: .selectable(stateback: { () -> Bool in
+                return selected
+            }), action: {
+                arguments.togglePalette(palette)
+            })
+        case let .chatView(_, _, selected, value):
+            //, description: tr(.generalSettingsDarkModeDescription)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: !value ? tr(.appearanceSettingsChatViewClassic) : tr(.appearanceSettingsChatViewBubbles), type: .selectable(stateback: { () -> Bool in
+                return selected
+            }), action: {
+                arguments.toggleBubbles(value)
             })
         case .description(_, _, let text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case .font(_, let size):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.generalSettingsLargeFonts), type: .switchable(stateback: { () -> Bool in
-                return size == 15
-            }), action: {
-                arguments.toggleFontSize(size == 13 ? 15 : 13)
+        case let .font(_, _, current, sizes):
+            return TextSizeSettingsRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, selectAction: { index in
+                arguments.toggleFontSize(sizes[index])
             })
+        case let .preview(_, _, entry):
+            let item = ChatRowItem.item(initialSize, from: entry, with: arguments.account, interaction: ChatInteraction(peerId: PeerId(0), account: arguments.account, disableSelectAbility: true))
+            _ = item.makeSize(initialSize.width, oldWidth: 0)
+            return item
         }
     }
 }
 private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
     switch lhs {
-    case let .darkMode(section, enabled):
-        if case .darkMode(section, enabled) = rhs {
+    case let .colorPalette(lhsSection, lhsIndex, lhsSelected, lhsPalette):
+        if case let .colorPalette(rhsSection, rhsIndex, rhsSelected, rhsPalette) = rhs {
+            return lhsSection == rhsSection && lhsIndex == rhsIndex && lhsSelected == rhsSelected && lhsPalette == rhsPalette
+        } else {
+            return false
+        }
+    case let .chatView(section, index, selected, value):
+        if case .chatView(section, index, selected, value) = rhs {
             return true
         } else {
             return false
@@ -90,8 +120,14 @@ private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
         } else {
             return false
         }
-    case let .font(section, size):
-        if case .font(section, size) = rhs {
+    case let .preview(section, index, entry):
+        if case .preview(section, index, entry) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .font(section, index, current, _):
+        if case .font(section, index, current, _) = rhs {
             return true
         } else {
             return false
@@ -108,7 +144,7 @@ private func <(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
     return lhs.index < rhs.index
 }
 
-private func AppearanceViewEntries(dark:Bool, settings: BaseApplicationSettings?) -> [AppearanceViewEntry] {
+private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer: Peer) -> [AppearanceViewEntry] {
     var entries:[AppearanceViewEntry] = []
     
     var sectionId:Int32 = 1
@@ -116,21 +152,110 @@ private func AppearanceViewEntries(dark:Bool, settings: BaseApplicationSettings?
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.darkMode(sectionId, dark))
+    var index: Int32 = 0
+    
+    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsTextSizeHeader)))
+    descIndex += 1
+    
+    let sizes:[Int32] = [11, 12, 13, 14, 15]
+    
+    let current = sizes.index(of: Int32(settings.fontSize)) ?? 2
+        
+    entries.append(.font(sectionId, index, Int32(current), sizes))
+    index += 1
+    
+    
+    entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, descIndex, tr(.generalSettingsDarkModeDescription)))
+    
+    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsChatPreviewHeader)))
     descIndex += 1
+    
+    let fromUser = TelegramUser(id: PeerId(1), accessHash: nil, firstName: "Mike", lastName: "Renoir", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
+    
+    
+    
+   
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
+    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], forwardInfo: nil, author: fromUser, text: tr(.appearanceSettingsChatPreviewFirstText), attributes: [], media: [], peers:SimpleDictionary([fromUser.id : fromUser]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
+    
+    entries.append(.preview(sectionId, index, firstEntry))
+    index += 1
+    
+    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: selfPeer, text: tr(.appearanceSettingsChatPreviewSecondText), attributes: [ReplyMessageAttribute(messageId: firstMessage.id)], media: [], peers:SimpleDictionary([selfPeer.id : selfPeer, fromUser.id : fromUser]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [firstMessage.id])
+    
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
+    
+    entries.append(.preview(sectionId, index, secondEntry))
+    index += 1
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
+    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsColorThemeHeader)))
+    descIndex += 1
+    
+    
+    var installed:[String: ColorPalette] = [:]
+
+    installed[whitePalette.name] = whitePalette
+    installed[darkPalette.name] = darkPalette
+    
+    entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette))
+    index += 1
+    
+    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette))
+    index += 1
+    
+    if installed[settings.colors.name] == nil {
+        installed[settings.colors.name] = settings.colors
+        entries.append(.colorPalette(sectionId, index, true, settings.colors))
+        index += 1
+    }
+    
+    
+    var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")
+    let globalPalettes = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Palettes/".nsstring.expandingTildeInPath + "/"
+    paths += ((try? FileManager.default.contentsOfDirectory(atPath: globalPalettes)) ?? []).map({globalPalettes + $0})
+    
+    let palettes = paths.map{importPalette($0)}.filter{$0 != nil}.map{$0!}
+    
+    for palette in palettes {
+        if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
+            installed[palette.name] = palette
+            entries.append(.colorPalette(sectionId, index, false, palette))
+            index += 1
+        }
+    }
+    
+    var bp:Int = 0
+    bp += 1
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
+    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsChatViewHeader)))
+    descIndex += 1
+    
+    entries.append(.chatView(sectionId, index, !settings.bubbled, false))
+    index += 1
+    entries.append(.chatView(sectionId, index, settings.bubbled, true))
+    index += 1
+    
 
     entries.append(.section(sectionId))
     sectionId += 1
 
     
-    entries.append(.font(sectionId, settings?.fontSize ?? 13))
-    sectionId += 1
     
-    entries.append(.description(sectionId, descIndex, tr(.generalSettingsFontDescription)))
-    descIndex += 1
+    
+  
 //
     return entries
 }
@@ -149,24 +274,28 @@ class AppearanceViewController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let account = self.account
-        let arguments = AppearanceViewArguments(account: account, toggleDarkMode: { enable in
-            _ = updateThemeSettings(postbox: account.postbox, pallete: enable ? darkPallete : whitePallete, dark: enable).start()
+        let arguments = AppearanceViewArguments(account: account, togglePalette: { palette in
+            _ = updateThemeSettings(postbox: account.postbox, palette: palette).start()
+        }, toggleBubbles: { enabled in
+            _ = updateBubbledSettings(postbox: account.postbox, bubbled: enabled).start()
         }, toggleFontSize: { size in
-            _ = updateBaseAppSettingsInteractively(postbox: account.postbox, { settings -> BaseApplicationSettings in
-                return settings.withUpdatedFontSize(size)
-            }).start()
+            _ = updateApplicationFontSize(postbox: account.postbox, fontSize: CGFloat(size)).start()
         })
         
         let initialSize = self.atomicSize
 
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
-        genericView.merge(with:  combineLatest(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue) |> map { pref, appearance in
-            let entries = AppearanceViewEntries(dark: appearance.presentation.dark, settings: pref.values[ApplicationSpecificPreferencesKeys.baseAppSettings] as? BaseApplicationSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        genericView.merge(with: combineLatest(appearanceSignal |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, selfPeer in
+            let entries = AppearanceViewEntries(settings: appearance.presentation, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> deliverOnMainQueue)
         readyOnce()
         
+    }
+    
+    override func firstResponder() -> NSResponder? {
+       return genericView.item(stableId: Int32(1))?.view?.firstResponder
     }
     
 }

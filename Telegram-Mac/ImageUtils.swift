@@ -21,33 +21,44 @@ import TGUIKit
  @[TGColorWithHex(0xd669ed), TGColorWithHex(0xe0a2f3)],
  */
 
-private let colors: [(top: NSColor, bottom: NSColor)] = [
-    (NSColor(0xff516a), NSColor(0xff885e)),
-    (NSColor(0xffa85c), NSColor(0xffcd6a)),
-    (NSColor(0x54cb68), NSColor(0xa0de7e)),
-    (NSColor(0x2a9ef1), NSColor(0x72d5fd)),
-    (NSColor(0x665fff), NSColor(0x82b1ff)),
-    (NSColor(0xd669ed), NSColor(0xe0a2f3))
+/*
+ { .bottom = 0xff516a, .top = 0xff885e }, //red
+ { .bottom = 0xffa85c, .top = 0xffcd6a }, //orange
+ { .bottom = 0x54cb68, .top = 0xa0de7e }, //violet
+ { .bottom = 0x665fff, .top = 0x82b1ff }, //green
+ { .bottom = 0x4acccd, .top = 0x00fcfd }, //cyan
+ { .bottom = 0x2a9ef1, .top = 0x72d5fd }, //blue
+ { .bottom = 0xd669ed, .top = 0xe0a2f3 }, //pink
+ */
+//bottom = 0x54cb68, .top = 0xa0de7e
+let peerAvatarColors: [(top: NSColor, bottom: NSColor)] = [
+    (NSColor(0xff885e), NSColor(0xff516a)),
+    (NSColor(0xffcd6a), NSColor(0xffa85c)),
+    (NSColor(0x82b1ff), NSColor(0x665fff)),
+    (NSColor(0xa0de7e), NSColor(0x54cb68)),
+    (NSColor(0x53edd6), NSColor(0x28c9b7)),
+    (NSColor(0x72d5fd), NSColor(0x2a9ef1)),
+    (NSColor(0xe0a2f3), NSColor(0xd669ed))
 ]
 
-public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title)) -> Signal<CGImage?, NoError>? {
+public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true) -> Signal<(CGImage?, Bool), NoError>? {
     if let smallProfileImage = peer.smallProfileImage {
         
-        return cachedPeerPhoto(peer.id, representation: smallProfileImage, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<CGImage?, Void> in
+        return cachedPeerPhoto(peer.id, representation: smallProfileImage, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
             if let cached = cached {
-                return .single(cached)
+                return .single((cached, false))
             } else {
                 let resourceData = account.postbox.mediaBox.resourceData(smallProfileImage.resource)
                 let imageData = resourceData
                     |> take(1)
-                    |> mapToSignal { maybeData -> Signal<Data?, NoError> in
+                    |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
                         if maybeData.complete {
-                            return .single(try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)))
+                            return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
                         } else {
                             return Signal { subscriber in
                                 let resourceDataDisposable = resourceData.start(next: { data in
                                     if data.complete {
-                                        subscriber.putNext(try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)))
+                                        subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), true))
                                         subscriber.putCompletion()
                                     }
                                 }, error: { error in
@@ -63,9 +74,15 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
                             }
                         }
                 }
-                return imageData
+                
+                let def = deferred({ () -> Signal<(CGImage?, Bool), Void> in
+                    return .single((generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: displayDimensions), false))
+                }) |> deliverOn(account.graphicsThreadPool)
+                
+                
+                let img = imageData
                     |> deliverOn(account.graphicsThreadPool)
-                    |> mapToSignal { data -> Signal<CGImage?, Void> in
+                    |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), Void> in
                         
                         let image:CGImage?
                         if let data = data {
@@ -75,12 +92,17 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
                         }
                         if let image = image {
                             return cachePeerPhoto(image: image, peerId: peer.id, representation: smallProfileImage, size: displayDimensions, scale: scale) |> map {
-                                return image
+                                return (image, animated)
                             }
                         } else {
-                            return .single(image)
+                            return .single((image, animated))
                         }
                         
+                    }
+                if genCap {
+                    return def |> then(img)
+                } else {
+                    return img
                 }
             }
         }
@@ -94,32 +116,24 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             }
         }
         
-        let colorIndex: Int32
-        if peer.id.namespace == Namespaces.Peer.CloudUser {
-            colorIndex = colorIndexForUid(peer.id.id, account.peerId.id)
-        } else if peer.id.namespace == Namespaces.Peer.CloudChannel {
-            colorIndex = colorIndexForGroupId(TGPeerIdFromChannelId(peer.id.id))
-        } else {
-            colorIndex = colorIndexForGroupId(-Int64(peer.id.id))
-        }
-        let color = colors[abs(Int(colorIndex % 6))]
+        let color = peerAvatarColors[Int(abs(peer.id.id % 7))]
         
         
         let symbol = letters.reduce("", { (current, letter) -> String in
             return current + letter
         })
         
-        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<CGImage?, Void> in
+        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
             if let cached = cached {
-                return .single(cached)
+                return .single((cached, false))
             } else {
-                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<CGImage?, Void> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), Void> in
                     if let image = image {
                         return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
-                            return image
+                            return (image, false)
                         }
                     } else {
-                        return .single(image)
+                        return .single((image, false))
                     }
                 }
             }
@@ -167,7 +181,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
             
             var locations: [CGFloat] = [1.0, 0.2];
             let colorSpace = CGColorSpaceCreateDeviceRGB()
-            let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.bottom.cgColor, color.top.cgColor]), locations: &locations)!
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.top.cgColor, color.bottom.cgColor]), locations: &locations)!
             
             ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
             
@@ -207,22 +221,14 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let colorIndex: Int32
-        if peer.id.namespace == Namespaces.Peer.CloudUser {
-            colorIndex = colorIndexForUid(peer.id.id, account.peerId.id)
-        } else if peer.id.namespace == Namespaces.Peer.CloudChannel {
-            colorIndex = colorIndexForGroupId(TGPeerIdFromChannelId(peer.id.id))
-        } else {
-            colorIndex = colorIndexForGroupId(-Int64(peer.id.id))
-        }
-        let color = colors[abs(Int(colorIndex % 6))]
+        let color = peerAvatarColors[abs(Int(peer.id.id % 7))]
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))
             
             var locations: [CGFloat] = [1.0, 0.2];
             let colorSpace = CGColorSpaceCreateDeviceRGB()
-            let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.bottom.cgColor, color.top.cgColor]), locations: &locations)!
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.top.cgColor, color.bottom.cgColor]), locations: &locations)!
             
             ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
             

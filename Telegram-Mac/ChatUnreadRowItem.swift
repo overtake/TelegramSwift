@@ -13,7 +13,7 @@ import PostboxMac
 class ChatUnreadRowItem: ChatRowItem {
 
     override var height: CGFloat {
-        return 20
+        return 26
     }
     
     
@@ -31,7 +31,7 @@ class ChatUnreadRowItem: ChatRowItem {
     
     override var messageIndex:MessageIndex? {
         switch entry {
-        case .UnreadEntry(let index):
+        case .UnreadEntry(let index, _):
             return index
         default:
             break
@@ -41,6 +41,37 @@ class ChatUnreadRowItem: ChatRowItem {
     
     override func viewClass() -> AnyClass {
         return ChatUnreadRowView.self
+    }
+    
+}
+
+private class ChatUnreadRowView: TableRowView {
+    
+    private var text:TextNode = TextNode()
+    
+    override func draw(_ dirtyRect: NSRect) {
+        
+        // Drawing code here.
+    }
+    
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(theme.colors.background.cgColor)
+        ctx.fill(bounds)
+        
+        ctx.setFillColor(theme.colors.grayBackground.cgColor)
+        ctx.fill(NSMakeRect(0, 3, frame.width, frame.height - 6))
+        
+        if let item = self.item as? ChatUnreadRowItem {
+            let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(NSWidth(self.frame), NSHeight(self.frame)), nil,false, .left)
+            apply.draw(NSMakeRect(round((NSWidth(layer.bounds) - layout.size.width)/2.0), round((NSHeight(layer.bounds) - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+        }
+        
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
 }

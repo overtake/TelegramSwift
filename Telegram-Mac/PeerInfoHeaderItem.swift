@@ -27,7 +27,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
         return self.inset.left + photoDimension + textMargin
     }
     
-    var photo:Signal<CGImage?, NoError>?
+    var photo:Signal<(CGImage?, Bool), NoError>?
     var status:(TextNodeLayout, TextNode)?
     var name:(TextNodeLayout, TextNode)?
     

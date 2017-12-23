@@ -24,7 +24,7 @@ class MediaPreviewRowItem: TableRowItem {
         self.account = account
         self.chatInteraction = ChatInteraction(peerId: PeerId(0), account: account)
         if let media = media as? TelegramMediaFile {
-            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction)
+            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty)
         } else {
             parameters = nil
         }

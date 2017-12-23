@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 class ChatMessageView: ChatRowView {
-    private var text:TextView = TextView()
+    private let text:TextView = TextView()
 
     private var webpageContent:WPContentView?
     
@@ -31,7 +31,7 @@ class ChatMessageView: ChatRowView {
             self.text.update(item.textLayout)
             
             if let webpageLayout = item.webpageLayout {
-                webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentTopOffset, webpageLayout.size.width, webpageLayout.size.height)
+                webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentInnerInset, webpageLayout.size.width, webpageLayout.size.height)
             }
         }
     }

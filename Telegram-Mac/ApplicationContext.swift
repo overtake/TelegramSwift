@@ -27,7 +27,7 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool,Void>, ac
                         return paslock |> mapToSignal { access -> Signal<ApplicationContext?, Void> in
                             let promise:Promise<Void> = Promise()
                             let auth: Signal<ApplicationContext?, Void> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, preferences in
-                                return .authorized(AuthorizedApplicationContext(window: window, shouldOnlineKeeper: shouldOnlineKeeper, account: account, accountManager: accountManager, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: preferences.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePalleteSettings))
+                                return .authorized(AuthorizedApplicationContext(window: window, shouldOnlineKeeper: shouldOnlineKeeper, account: account, accountManager: accountManager, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: preferences.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                             }
                             switch access {
                             case .none:
@@ -35,7 +35,7 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool,Void>, ac
                                 return auth
                             default:
                                 return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings, PreferencesKeys.localizationSettings]) |> take(1) |> deliverOnMainQueue |> map { value in
-                                    return ApplicationContext.postboxAccess(PasscodeAccessContext(window, promise: promise, account: account, accountManager: accountManager, localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePalleteSettings))
+                                    return ApplicationContext.postboxAccess(PasscodeAccessContext(window, promise: promise, account: account, accountManager: accountManager, localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                                 } |> then(auth)
                             }
                         }
@@ -216,7 +216,7 @@ enum ApplicationContext {
 final class PasscodeAccessContext {
     let rootController:PasscodeLockController
     private let logoutDisposable = MetaDisposable()
-    init(_ window:Window, promise:Promise<Void>, account:Account, accountManager:AccountManager, localization: LocalizationSettings?, themeSettings: ThemePalleteSettings?) {
+    init(_ window:Window, promise:Promise<Void>, account:Account, accountManager:AccountManager, localization: LocalizationSettings?, themeSettings: ThemePaletteSettings?) {
         
         dropLocalization()
         if let localization = localization {
@@ -374,9 +374,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         lockedScreenPromise.set(.single(_lockedValue))
     }
     
-    private let query:NSMetadataQuery
-    
-    init(window: Window, shouldOnlineKeeper:Signal<Bool, Void>, account: Account, accountManager: AccountManager, localization:LocalizationSettings?, themeSettings: ThemePalleteSettings?) {
+    init(window: Window, shouldOnlineKeeper:Signal<Bool, Void>, account: Account, accountManager: AccountManager, localization:LocalizationSettings?, themeSettings: ThemePaletteSettings?) {
         emptyController = EmptyChatViewController(account)
         
         self.account = account
@@ -391,6 +389,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             setDefaultTheme(for: window)
         }
 
+        if let localization = localization {
+            applyUILocalization(localization)
+        }
+        
+        
         if !window.initFromSaver {
             window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
             window.center()
@@ -432,8 +435,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         leftController = MainViewController(account, accountManager: accountManager);
         
         leftController.navigationController = rightController
-        
-        query = NSMetadataQuery()
         
         
        
@@ -556,15 +557,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsUnlocked), name: NSNotification.Name(rawValue: "com.apple.screenIsUnlocked"), object: nil)
         
-//
-//        NotificationCenter.default.addObserver(self, selector: #selector(queryUpdated(_:)), name: NSNotification.Name.NSMetadataQueryDidStartGathering, object: query)
-//        
-//        NotificationCenter.default.addObserver(self, selector: #selector(queryUpdated(_:)), name: NSNotification.Name.NSMetadataQueryDidUpdate, object: query)
-//        
-//        NotificationCenter.default.addObserver(self, selector: #selector(queryUpdated(_:)), name: NSNotification.Name.NSMetadataQueryDidFinishGathering, object: query)
-//        
-//        query.predicate = NSPredicate(format: "kMDItemIsScreenCapture = 1")
-//        _ = query.start()
+
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             
@@ -592,10 +585,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }, with: self, for: .Zero, priority: .low, modifierFlags: [.command])
         
         
-        if let localization = localization {
-            applyUILocalization(localization)
-        }
-        
+
         
         
         suggestedLocalizationDisposable.set(( account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, Void> in
@@ -619,10 +609,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         rightController.backgroundColor = theme.colors.background
         splitView.backgroundColor = theme.colors.background
-        let basic = Atomic<ThemePalleteSettings?>(value: themeSettings)
+        let basic = Atomic<ThemePaletteSettings?>(value: themeSettings)
         appearanceDisposable.set((account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings]) |> deliverOnMainQueue).start(next: { [weak self] view in
-            if let settings = view.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePalleteSettings {
-                if basic.swap(nil)?.dark != settings.dark {
+            if let settings = view.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings {
+                if basic.swap(settings) != settings {
                     updateTheme(with: settings, for: window, animated: true)
                     self?.rightController.backgroundColor = theme.colors.background
                     self?.splitView.backgroundColor = theme.colors.background
@@ -636,13 +626,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         return _lockedValue.isLocked
     }
     
-    @objc private func queryUpdated(_ notification: NSNotification) {
-        if query.resultCount != 0 {
-            var bp:Int = 0
-            bp += 1
-        }
-    }
-   
     
     func logout() {
         self.logoutDisposable.set((confirmSignal(for: window, header: appName, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
@@ -795,8 +778,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         }
                     }
                     if let peer = peer {
-                        if let image = peerAvatarImage(account: account, peer: peer) {
-                            photos.append(image |> map { image in return (message.id,image)})
+                        if let image = peerAvatarImage(account: account, peer: peer, genCap: false) {
+                            photos.append(image |> map { data in return (message.id, data.0)})
                         }
                     }
                 }
@@ -927,12 +910,12 @@ private class LegacyPasscodeHeaderView : View {
         let logoImage = #imageLiteral(resourceName: "Icon_LegacyIntro").precomposed()
         self.logo.image = logoImage
         self.logo.sizeToFit()
-        let headerLayout = TextViewLayout(NSAttributedString.initialize(string: appName, color: NSColor.text, font: NSFont.normal(.custom(28))), maximumNumberOfLines: 1)
+        let headerLayout = TextViewLayout(NSAttributedString.initialize(string: appName, color: NSColor.text, font: .normal(28.0)), maximumNumberOfLines: 1)
         headerLayout.measure(width: CGFloat.greatestFiniteMagnitude)
         header.update(headerLayout)
         
         
-        let descLayout1 = TextViewLayout(NSAttributedString.initialize(string: tr(.legacyIntroDescription1), color: .grayText, font: NSFont.normal(FontSize.text)), alignment: .center)
+        let descLayout1 = TextViewLayout(NSAttributedString.initialize(string: tr(.legacyIntroDescription1), color: .grayText, font: .normal(FontSize.text)), alignment: .center)
         descLayout1.measure(width: frameRect.width - 200)
         desc1.update(descLayout1)
         

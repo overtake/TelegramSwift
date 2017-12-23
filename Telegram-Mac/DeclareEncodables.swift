@@ -13,7 +13,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(ChatInterfaceState.self, f: { ChatInterfaceState(decoder: $0) })
     declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
     declareEncodable(BaseApplicationSettings.self, f: { BaseApplicationSettings(decoder: $0) })
-    declareEncodable(ThemePalleteSettings.self, f: { ThemePalleteSettings(decoder: $0) })
+    declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
     declareEncodable(LocalFileGifMediaResource.self, f: { LocalFileGifMediaResource(decoder: $0) })
     declareEncodable(RecentUsedEmoji.self, f: { RecentUsedEmoji(decoder: $0) })
     declareEncodable(InstantViewAppearance.self, f: { InstantViewAppearance(decoder: $0) })

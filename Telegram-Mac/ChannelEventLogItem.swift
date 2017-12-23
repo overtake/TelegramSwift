@@ -240,8 +240,8 @@ class ServiceEventLogItem: TableRowItem {
             if chatInteraction.account.peerId == peer.id {
                 nameColor = theme.colors.link
             } else {
-                let value = ObjcUtils.colorMask(peer.id.id, mainId: chatInteraction.account.peerId.id)
-                nameColor = userChatColors[Int(value) % userChatColors.count] ?? .blueText
+                let value = abs(Int(peer.id.id) % 7)
+                nameColor = theme.chat.peerName(value)
             }
             
             let range = contentName.append(string: peer.displayTitle, color: nameColor, font: .medium(.text))
@@ -481,7 +481,7 @@ class ServiceEventLogItem: TableRowItem {
                 newContentAttributed.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                 
                 let prevContentAttributed = NSMutableAttributedString()
-                _ = prevContentAttributed.append(string: changedInfo.prev, color: theme.colors.text, font: .normal(.custom(12.5)))
+                _ = prevContentAttributed.append(string: changedInfo.prev, color: theme.colors.text, font: .normal(12.5))
                 prevContentAttributed.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                 
                 let panel:ServiceEventLogMessagePanel?
@@ -617,8 +617,8 @@ class ChannelEventLogEditedPanelItem : TableRowItem {
         _ = associatedItem?.makeSize(width, oldWidth: oldWidth)
         if let item = associatedItem {
             
-            panel.content.measure(width: item.blockSize.width - 8)
-            panel.header.measure(width: item.blockSize.width - 8)
+            panel.content.measure(width: item.blockWidth - 8)
+            panel.header.measure(width: item.blockWidth - 8)
         }
        
         return super.makeSize(width, oldWidth: oldWidth)
@@ -650,7 +650,7 @@ class ChannelEventLogEditedPanelView : TableRowView {
         super.set(item: item)
         if let item = item as? ChannelEventLogEditedPanelItem, let associatedItem = item.associatedItem {
             panel.update(with: item.panel)
-            panel.setFrameSize(associatedItem.blockSize.width, item.panel.height)
+            panel.setFrameSize(associatedItem.blockWidth, item.panel.height)
             panel.setFrameOrigin(associatedItem.contentOffset.x, 0)
         }
     }

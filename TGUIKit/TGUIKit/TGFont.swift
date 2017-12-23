@@ -41,9 +41,9 @@ public extension NSFont {
     public static func normal(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.regular)
+            return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.regular)
         } else {
-            return NSFont(name: "HelveticaNeue", size: convert(from:size))!
+            return NSFont(name: "HelveticaNeue", size: size)!
         }
     }
     
@@ -53,7 +53,7 @@ public extension NSFont {
     
     public static func avatar(_ size: FontSize) -> NSFont {
         
-        if let font = NSFont(name: ".SFCompactRounded-Semibold", size: convert(from:size)) {
+        if let font = NSFont(name: ".SFCompactRounded-Semibold", size: size) {
             return font
         } else {
             return .medium(size)
@@ -63,9 +63,9 @@ public extension NSFont {
     public static func medium(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.medium)
+            return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.medium)
         } else {
-            return NSFont(name: "HelveticaNeue-Medium", size: convert(from:size))!
+            return NSFont(name: "HelveticaNeue-Medium", size: size)!
         }
         
     }
@@ -73,45 +73,28 @@ public extension NSFont {
     public static func bold(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
-            return NSFont.systemFont(ofSize: convert(from:size), weight: NSFont.Weight.bold)
+            return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.bold)
         } else {
-            return NSFont(name: "HelveticaNeue-Bold", size: convert(from:size))!
+            return NSFont(name: "HelveticaNeue-Bold", size: size)!
         }
     }
     
     public static func code(_ size:FontSize) ->NSFont {
-        return NSFont(name: "Menlo-Regular", size: convert(from:size)) ?? NSFont.systemFont(ofSize: 17.0)
+        return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: 17.0)
     }
 }
 
-public enum FontSize {
-    case small
-    case short
-    case text
-    case title
-    case header
-    case huge
-    case custom(CGFloat)
+public typealias FontSize = CGFloat
+
+public extension FontSize {
+    public static let small: CGFloat = 11.0
+    public static let short: CGFloat = 12.0
+    public static let text: CGFloat = 13.0
+    public static let title: CGFloat = 14.0
+    public static let header: CGFloat = 15.0
+    public static let huge: CGFloat = 18.0
 }
 
-fileprivate func convert(from s:FontSize) -> CGFloat {
-    switch s {
-    case .small:
-        return 11.0
-    case .short:
-        return 12.0
-    case .text:
-        return 13.0
-    case .title:
-        return 14.0
-    case .header:
-        return 15.0
-    case .huge:
-        return 18.0
-    case let .custom(size):
-        return size
-    }
-}
 
 
 

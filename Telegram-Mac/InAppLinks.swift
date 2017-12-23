@@ -49,11 +49,20 @@ func ==(lhs:ChatInitialAction, rhs:ChatInitialAction) -> Bool {
     }
 }
 
-let globalLinkExecutor:TextViewInteractions = TextViewInteractions(processURL:{(link) in
-    if let link = link as? inAppLink {
-        execute(inapp:link)
+var globalLinkExecutor:TextViewInteractions {
+    get {
+        return TextViewInteractions(processURL:{(link) in
+            if let link = link as? inAppLink {
+                execute(inapp:link)
+            }
+        }, isDomainLink: { value in
+            if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") {
+                return true
+            }
+            return false
+        })
     }
-})
+}
 
 func execute(inapp:inAppLink) {
     
@@ -184,27 +193,28 @@ func execute(inapp:inAppLink) {
 }
 
 private func escape(with link:String) -> String {
-    var escaped = link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-    escaped = escaped?.replacingOccurrences(of: "%24", with: "$")
-    escaped = escaped?.replacingOccurrences(of: "%26", with: "&")
-    escaped = escaped?.replacingOccurrences(of: "%2B", with: "+")
-    escaped = escaped?.replacingOccurrences(of: "%2C", with: ",")
-    escaped = escaped?.replacingOccurrences(of: "%2F", with: "/")
-    escaped = escaped?.replacingOccurrences(of: "%3A", with: ":")
-    escaped = escaped?.replacingOccurrences(of: "%3B", with: ";")
-    escaped = escaped?.replacingOccurrences(of: "%3D", with: "=")
-    escaped = escaped?.replacingOccurrences(of: "%3F", with: "?")
-    escaped = escaped?.replacingOccurrences(of: "%40", with: "@")
-    escaped = escaped?.replacingOccurrences(of: "%20", with: " ")
-    escaped = escaped?.replacingOccurrences(of: "%09", with: "\t")
-    escaped = escaped?.replacingOccurrences(of: "%23", with: "#")
-    escaped = escaped?.replacingOccurrences(of: "%3C", with: "<")
-    escaped = escaped?.replacingOccurrences(of: "%3E", with: ">")
-    escaped = escaped?.replacingOccurrences(of: "%22", with: "\"")
-    escaped = escaped?.replacingOccurrences(of: "%0A", with: "\n")
-    escaped = escaped?.replacingOccurrences(of: "%25", with: "%")
-    escaped = escaped?.replacingOccurrences(of: "%2E", with: ".")
-    return escaped ?? link
+    var escaped = link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link
+    escaped = escaped.replacingOccurrences(of: "%21", with: "!")
+    escaped = escaped.replacingOccurrences(of: "%24", with: "$")
+    escaped = escaped.replacingOccurrences(of: "%26", with: "&")
+    escaped = escaped.replacingOccurrences(of: "%2B", with: "+")
+    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
+    escaped = escaped.replacingOccurrences(of: "%2F", with: "/")
+    escaped = escaped.replacingOccurrences(of: "%3A", with: ":")
+    escaped = escaped.replacingOccurrences(of: "%3B", with: ";")
+    escaped = escaped.replacingOccurrences(of: "%3D", with: "=")
+    escaped = escaped.replacingOccurrences(of: "%3F", with: "?")
+    escaped = escaped.replacingOccurrences(of: "%40", with: "@")
+    escaped = escaped.replacingOccurrences(of: "%20", with: " ")
+    escaped = escaped.replacingOccurrences(of: "%09", with: "\t")
+    escaped = escaped.replacingOccurrences(of: "%23", with: "#")
+    escaped = escaped.replacingOccurrences(of: "%3C", with: "<")
+    escaped = escaped.replacingOccurrences(of: "%3E", with: ">")
+    escaped = escaped.replacingOccurrences(of: "%22", with: "\"")
+    escaped = escaped.replacingOccurrences(of: "%0A", with: "\n")
+    escaped = escaped.replacingOccurrences(of: "%25", with: "%")
+    escaped = escaped.replacingOccurrences(of: "%2E", with: ".")
+    return escaped
 }
 
 private func urlVars(with url:String) -> [String:String] {
@@ -288,7 +298,9 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         let vars = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                             let server = escape(with: server)
-                            return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), applyProxy: applyProxy)
+                            let username = vars[keyURLUser] != nil ? escape(with: vars[keyURLUser]!) : nil
+                            let pass = vars[keyURLPass] != nil ? escape(with: vars[keyURLPass]!) : nil
+                            return .socks(ProxySettings(host: server, port: port, username: username, password: pass, useForCalls: false), applyProxy: applyProxy)
                         }
                     default:
                         break

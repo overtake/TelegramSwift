@@ -252,19 +252,17 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             }
             
             if let reason = reason {
+                let outgoing = !message.flags.contains(.Incoming)
+
                 switch reason {
                 case .busy:
-                    return tr(.chatListServiceCallCancelled)
+                    return outgoing ? tr(.chatListServiceCallCancelled) : tr(.chatListServiceCallMissed)
                 case .disconnect:
-                    return tr(.chatListServiceCallDisconnected)
-                case .hangup:
-                    if message.author?.id == account.peerId {
-                        return tr(.chatListServiceCallCancelled)
-                    } else {
-                        return tr(.chatListServiceCallMissed)
-                    }
-                case .missed:
                     return tr(.chatListServiceCallMissed)
+                case .hangup:
+                    return outgoing ? tr(.chatListServiceCallCancelled) : tr(.chatListServiceCallMissed)
+                case .missed:
+                    return outgoing ? tr(.chatListServiceCallCancelled) : tr(.chatListServiceCallMissed)
                 }
             }
         case let .gameScore(gameId: _, score: score):
@@ -276,7 +274,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                     }
                 }
             }
-            var text = tr(.chatListServiceGameScored(Int(score), gameName))
+            var text = tr(.chatListServiceGameScored1Countable(Int(score), gameName))
             if let peer = messageMainPeer(message) {
                 if peer.isGroup || peer.isSupergroup {
                     text = (message.author?.compactDisplayTitle ?? "") + " " + text

@@ -29,7 +29,7 @@ enum PasscodeViewState {
 }
 
 private class PasscodeLockView : Control, NSTextFieldDelegate {
-    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(.custom(23)))
+    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(23.0))
     fileprivate let nameView:TextView = TextView()
     fileprivate let input:NSSecureTextField
     private let nextButton:TitleButton = TitleButton()

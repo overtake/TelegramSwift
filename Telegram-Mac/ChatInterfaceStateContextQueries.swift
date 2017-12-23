@@ -84,7 +84,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 inlineSignal = recentlyUsedInlineBots(postbox: account.postbox)
             }
             
-            let participants = combineLatest(inlineSignal, peerParticipants(account: account, id: peer.id))
+            let participants = combineLatest(inlineSignal, peerParticipants(postbox: account.postbox, id: peer.id))
                 |> map { recent, participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     
                     let filteredRecent = recent.filter ({ recent in
@@ -218,7 +218,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         let normalizedQuery = query.lowercased()
                         
                         if let peer = chatPresentationInterfaceState.peer {
-                            return peerParticipants(account: account, id: peer.id)
+                            return peerParticipants(postbox: account.postbox, id: peer.id)
                                 |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                                     let filteredParticipants = participants.filter ({ peer in
                                         if peer.indexName.matchesByTokens(normalizedQuery) {
@@ -264,7 +264,7 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
             }
         }
         
-        let participants = peerParticipants(account: account, id: peer.id)
+        let participants = peerParticipants(postbox: account.postbox, id: peer.id)
             |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                 let filteredParticipants = participants.filter ({ peer in
                     if peer.indexName.matchesByTokens(normalizedQuery) {

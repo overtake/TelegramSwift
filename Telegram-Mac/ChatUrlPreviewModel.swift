@@ -30,6 +30,7 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
     private func updateWebpage() {
         var authorName = ""
         var text = ""
+        var isEmptyText: Bool = false
         switch self.webpage.content {
         case .Pending:
             authorName = "Loading..."
@@ -42,11 +43,14 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
             } else {
                 authorName = content.displayUrl
             }
-            text = content.text ?? content.title ?? ""
+            if content.text == nil && content.title == nil {
+                isEmptyText = true
+            }
+            text = content.text ?? content.title ?? tr(.chatEmptyLinkPreview)
         }
         
         self.headerAttr = .initialize(string: authorName, color: theme.colors.link, font: .medium(.text))
-        self.messageAttr = .initialize(string: text, color: theme.colors.text, font: .normal(.text))
+        self.messageAttr = .initialize(string: text, color: isEmptyText ? theme.colors.grayText : theme.colors.text, font: .normal(.text))
         
         nodeReady.set(.single(true))
         self.setNeedDisplay()

@@ -24,7 +24,7 @@ public class DragItem {
         _ = attr.append(string: title, color: presentation.colors.grayText, font: .normal(.huge))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: desc, color: presentation.colors.text, font: .medium(.custom(16)))
+        _ = attr.append(string: desc, color: presentation.colors.text, font: .medium(16.0))
         
         self.attr = attr.copy() as! NSAttributedString
     }

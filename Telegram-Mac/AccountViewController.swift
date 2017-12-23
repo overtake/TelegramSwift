@@ -26,6 +26,10 @@ class AccountViewController: NavigationViewController {
         layoutController.viewWillAppear(animated)
     }
     
+    override func scrollup() {
+        layoutController.scrollup()
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         layoutController.viewDidAppear(animated)
@@ -361,7 +365,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             }
            
 
-        }, for: .Hover)
+        }, for: .Click)
         
         doneButton.set(handler: { [weak self] _ in
             self?.changeState()
@@ -376,6 +380,10 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         if let navigation = navigation as? ExMajorNavigationController {
             if navigation.controller is StorageUsageController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.dataAndStorage(index: 0).stableId)) {
+                    _ = genericView.select(item: item)
+                }
+            } else if navigation.controller is AppearanceViewController {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.appearance(index: 0).stableId)) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is NotificationSettingsViewController {
@@ -521,6 +529,10 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         
         entries.append(.general(index: index))
         index += 1
+        
+        entries.append(.appearance(index: index))
+        index += 1
+        
         entries.append(.notifications(index: index))
         index += 1
         entries.append(.dataAndStorage(index: index))
@@ -634,7 +646,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .appearance:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAppearance), type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAppearance), icon: theme.icons.settingsAppearance, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is AppearanceViewController) {
                         self?.navigation?.push(AppearanceViewController(account))
                     }
@@ -728,6 +740,13 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             return updatePeerPhoto(account: account, peerId: account.peerId, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64()))
                 |> mapError {_ in} |> map {_ in}
         }).start())
+    }
+    
+    override func scrollup() {
+        if let currentEvent = NSApp.currentEvent, currentEvent.clickCount == 5 {
+            account.context.mainNavigation?.push(DeveloperViewController(account))
+        }
+        genericView.scroll(to: .up(true))
     }
     
     deinit {

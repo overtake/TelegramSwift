@@ -250,9 +250,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             }
             if let subscribers = foundPeer.subscribers, let username = status {
                 if foundPeer.peer.isChannel {
-                    status = tr(.searchGlobalChannel(username, Int(subscribers)))
+                    status = tr(.searchGlobalChannel1Countable(username, Int(subscribers)))
                 } else if foundPeer.peer.isSupergroup || foundPeer.peer.isGroup {
-                    status = tr(.searchGlobalGroup(username, Int(subscribers)))
+                    status = tr(.searchGlobalGroup1Countable(username, Int(subscribers)))
                 }
             }
             return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right])
@@ -537,14 +537,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.startMerge()
         request(with: nil)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        self.genericView.removeAll()
-        genericView.stopMerge()
     }
     
    private let globalDisposable = MetaDisposable()
@@ -552,6 +549,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     deinit {
         openPeerDisposable.dispose()
         globalDisposable.dispose()
+        disposable.dispose()
     }
     
     init(account: Account, open:@escaping(PeerId,Message?, Bool) ->Void , frame:NSRect = NSZeroRect) {
@@ -588,9 +586,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         var peer:Peer!
         var peerId:PeerId!
         var message:Message?
-        if let _ = item as? SavedMessagesRowItem {
-            peerId = account.peerId
-        } else if let item = item as? ChatListMessageRowItem {
+        if let item = item as? ChatListMessageRowItem {
             peer = item.peer
             message = item.message
             peerId = item.message!.id.peerId
@@ -651,6 +647,31 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
+        
+        var peer: Peer? = nil
+        if let item = item as? ChatListMessageRowItem {
+            peer = item.peer
+        } else if let item = item as? ShortPeerRowItem {
+            peer = item.peer
+        }
+        
+        if let peer = peer, let modalAction = navigationController?.modalAction {
+            if !modalAction.isInvokable(for: peer) {
+                modalAction.alertError(for: peer, with:window!)
+                return false
+            }
+            modalAction.afterInvoke()
+            
+            if let modalAction = modalAction as? FWDNavigationAction {
+                if peer.id == account.peerId {
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, account: account, peerId: account.peerId).start()
+                    _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                    navigationController?.removeModalAction()
+                    return false
+                }
+            }
+            
+        }
         
         return !(item is SearchEmptyRowItem)
     }

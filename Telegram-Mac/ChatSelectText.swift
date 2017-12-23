@@ -75,6 +75,70 @@ class SelectManager : NSResponder {
         
     }
     
+    func selectNextChar() -> Bool {
+        if let last = ranges.last, let textView = last.1.value {
+            if last.2.range.max < last.2.text.length, let layout = textView.layout {
+                
+                var range = last.2.range
+                
+                switch layout.selectedRange.cursorAlignment {
+                case let .min(cursorAlignment), let .max(cursorAlignment):
+                    if range.min >= cursorAlignment {
+                        range.length += 1
+                    } else {
+                        range.location += 1
+                        if range.length > 1 {
+                            range.length -= 1
+                        }
+                    }
+                }
+                let location = min(max(0, range.location), last.2.text.length)
+                let length = max(min(range.length, last.2.text.length - location), 0)
+                range = NSMakeRange(location, length)
+                
+                layout.selectedRange.range = range
+                ranges[ranges.count - 1] = (last.0, last.1, SelectContainer(text: last.2.text, range: range, header: last.2.header))
+                textView.needsDisplay = true
+                return true
+            }
+        }
+        return false
+    }
+    
+    func selectPrevChar() -> Bool {
+        if let first = ranges.first, let textView = first.1.value {
+            if let layout = textView.layout {
+                
+                var range = first.2.range
+                
+                switch layout.selectedRange.cursorAlignment {
+                case let .min(cursorAlignment), let .max(cursorAlignment):
+                    if range.location >= cursorAlignment {
+                        if range.length > 1 {
+                            range.length -= 1
+                        } else {
+                            range.location -= 1
+                        }
+                    } else {
+                        if range.location > 0 {
+                            range.location -= 1
+                            range.length += 1
+                        }
+                    }
+                }
+    
+                let location = min(max(0, range.location), first.2.text.length)
+                let length = max(min(range.length, first.2.text.length - location), 0)
+                range = NSMakeRange(location, length)
+                layout.selectedRange.range = range
+                ranges[0] = (first.0, first.1, SelectContainer(text: first.2.text, range: range, header: first.2.header))
+                textView.needsDisplay = true
+                return true
+            }
+        }
+        return false
+    }
+    
     func find(_ stableId:AnyHashable) -> NSRange? {
         for range in ranges {
             if range.0 == stableId {
@@ -241,6 +305,11 @@ class ChatSelectText : NSObject {
             self.lastPressureEventStage = event.stage
             return .invokeNext
         }, with: self, for: .pressure, priority: .medium)
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            
+            return .rejected
+        }, with: self, for: .A, priority: .medium, modifierFlags: [.command])
     }
     
     private func runSelector(_ selectingText:Bool = true, window: Window, chatInteraction:ChatInteraction) {
@@ -313,6 +382,7 @@ class ChatSelectText : NSObject {
                             
                             selectableView.canBeResponder = false
                             layout.selectedRange.range = layout.selectedRange(startPoint:startPoint, currentPoint:endPoint)
+                            layout.selectedRange.cursorAlignment = startPoint.x > endPoint.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
                             selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString.string, header: view?.header, stableId: table.item(at: i).stableId)
                             selectableView.setNeedsDisplay()
                             

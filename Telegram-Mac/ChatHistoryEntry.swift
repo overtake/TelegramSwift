@@ -108,22 +108,40 @@ enum ChatHistoryEntryId : Hashable {
 
 enum ChatHistoryEntry: Identifiable, Comparable {
     case HoleEntry(MessageHistoryHole)
-    case MessageEntry(Message, Bool, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?)
+    case MessageEntry(Message, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?)
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
-    case UnreadEntry(MessageIndex)
-    case DateEntry(MessageIndex)
+    case UnreadEntry(MessageIndex, ChatItemRenderType)
+    case DateEntry(MessageIndex, ChatItemRenderType)
     case bottom
     var message:Message? {
         switch self {
-        case let .MessageEntry(message,_,_,_,_):
+        case let .MessageEntry(message,_,_,_,_,_):
             return message
         default:
           return nil
         }
     }
+    
+    var renderType: ChatItemRenderType {
+        switch self {
+        case .HoleEntry:
+            return .list
+        case let .MessageEntry(_,_, renderType,_,_,_):
+            return renderType
+        case .groupedPhotos(let entries, _):
+            return entries.first!.renderType
+        case let .DateEntry(_, renderType):
+            return renderType
+        case .UnreadEntry(_, let renderType):
+            return renderType
+        case .bottom:
+            return .list
+        }
+    }
+    
     var location:MessageHistoryEntryLocation? {
         switch self {
-        case let .MessageEntry(_,_,_,_,location):
+        case let .MessageEntry(_,_,_,_,_,location):
             return location
         default:
             return nil
@@ -135,11 +153,11 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .HoleEntry(hole):
             return .hole(hole)
-        case let .MessageEntry(message,_,_,_,_):
+        case let .MessageEntry(message,_,_,_,_,_):
             return .message(message)
         case .groupedPhotos(_, let info):
             return .groupedPhotos(groupInfo: info)
-        case let .DateEntry(index):
+        case let .DateEntry(index, _):
             return .date(index)
         case .UnreadEntry:
             return .unread
@@ -152,13 +170,13 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .HoleEntry(hole):
             return hole.maxIndex
-        case let .MessageEntry(message,_,_, _,_):
+        case let .MessageEntry(message,_,_,_, _,_):
             return MessageIndex(message)
         case let .groupedPhotos(entries, _):
             return entries.last!.index
-        case let .UnreadEntry(index):
+        case let .UnreadEntry(index, _):
             return index
-        case let .DateEntry(index):
+        case let .DateEntry(index, _):
             return index
         case .bottom:
             return MessageIndex.absoluteUpperBound()
@@ -222,9 +240,9 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
-    case let .MessageEntry(lhsMessage,lhsRead,lhsType, lhsFwdType, _):
+    case let .MessageEntry(lhsMessage, lhsRenderType, lhsRead, lhsType, lhsFwdType, _):
         switch rhs {
-        case let .MessageEntry(rhsMessage,rhsRead,rhsType, rhsFwdType, _) where lhsRead == rhsRead && lhsType == rhsType && lhsFwdType == rhsFwdType:
+        case let .MessageEntry(rhsMessage, rhsRenderType, rhsRead, rhsType, rhsFwdType, _) where lhsRead == rhsRead && lhsType == rhsType && lhsFwdType == rhsFwdType && lhsRenderType == rhsRenderType:
             return isEqualMessages(lhsMessage, rhsMessage)
         default:
             return false
@@ -280,7 +298,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = [], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = [], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
  
     
@@ -360,41 +378,55 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             var fwdType:ForwardItemType? = nil
             
             
-            
-            
-            if let prev = prev, case let .MessageEntry(prevMessage,_, _, _) = prev {
-                
-                
-                var actionShortAccess: Bool = true
-                if let action = prevMessage.media.first as? TelegramMediaAction {
-                    switch action.action {
-                    case .phoneCall:
-                        actionShortAccess = true
-                    default:
-                        actionShortAccess = false
-                    }
-                }
-                
-                if message.author?.id == prevMessage.author?.id, (message.timestamp - prevMessage.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
-                    if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
-                        itemType = .Full(isAdmin: isAdmin)
-                    } else {
-                        var canShort:Bool = true
-                        for attr in message.attributes {
-                            if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
-                                canShort = false
-                                break
-                            }
+            if renderType == .list {
+                if let prev = prev, case let .MessageEntry(prevMessage,_, _, _) = prev {
+                    var actionShortAccess: Bool = true
+                    if let action = prevMessage.media.first as? TelegramMediaAction {
+                        switch action.action {
+                        case .phoneCall:
+                            actionShortAccess = true
+                        default:
+                            actionShortAccess = false
                         }
-                        itemType = !canShort ? .Full(isAdmin: isAdmin) : .Short
-                        
+                    }
+                    
+                    if message.author?.id == prevMessage.author?.id, (message.timestamp - prevMessage.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
+                        if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
+                            itemType = .Full(isAdmin: isAdmin)
+                        } else {
+                            var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
+                            for attr in message.attributes {
+                                if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
+                                    canShort = false
+                                    break
+                                }
+                            }
+                            itemType = !canShort ? .Full(isAdmin: isAdmin) : .Short
+                            
+                        }
+                    } else {
+                        itemType = .Full(isAdmin: isAdmin)
                     }
                 } else {
                     itemType = .Full(isAdmin: isAdmin)
                 }
             } else {
-                itemType = .Full(isAdmin: isAdmin)
+                if let next = next, case let .MessageEntry(nextMessage,_, _, _) = next {
+                    if message.author?.id == nextMessage.author?.id, let peer = message.peers[message.id.peerId] {
+                        if peer.isChannel || ((peer.isGroup || peer.isSupergroup) && message.flags.contains(.Incoming)) {
+                            itemType = .Full(isAdmin: isAdmin)
+                        } else {                            
+                            itemType = .Short
+                        }
+                    } else {
+                        itemType = .Full(isAdmin: isAdmin)
+                    }
+                } else {
+                    itemType = .Full(isAdmin: isAdmin)
+                }
             }
+            
+            
             
             
             if message.forwardInfo != nil {
@@ -436,7 +468,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             
             
             
-            let entry: ChatHistoryEntry = .MessageEntry(message,read,itemType,fwdType, location)
+            let entry: ChatHistoryEntry = .MessageEntry(message,read, renderType,itemType,fwdType, location)
             
             
             if let key = message.groupInfo, groupingPhotos {
@@ -478,7 +510,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 time -= timeDifference
                 let dateId = chatDateId(for: Int32(time))
                 let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
-                entries.append(.DateEntry(index))
+                entries.append(.DateEntry(index, renderType))
             }
 
             if let next = next, case let .MessageEntry(nextMessage,_, _, _) = next, dayGrouping {
@@ -486,7 +518,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 let nextDateId = chatDateId(for: nextMessage.timestamp - Int32(timeDifference))
                 if dateId != nextDateId {
                     let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: INT_MAX), timestamp: Int32(nextDateId))
-                    entries.append(.DateEntry(index))
+                    entries.append(.DateEntry(index, renderType))
                 }
             }
       
@@ -498,7 +530,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     
     var hasUnread = false
     if let maxReadIndex = maxReadIndex {
-        entries.append(.UnreadEntry(maxReadIndex))
+        entries.append(.UnreadEntry(maxReadIndex, renderType))
         hasUnread = true
     }
     

@@ -558,7 +558,7 @@ class InputContextHelper: NSObject {
                         controller.view.setFrameOrigin(0, relativeView.frame.minY)
                     }
                     controller.viewDidAppear(animated)
-
+                    controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)
                     let y = position == .above ? relativeView.frame.minY - controller.frame.height : relativeView.frame.maxY
                     controller.genericView.change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring)
@@ -575,6 +575,8 @@ class InputContextHelper: NSObject {
                             controller?.removeFromSuperview()
                             controller?.genericView.removeAll()
                             controller?.viewDidDisappear(animated)
+                        } else {
+                            controller?.genericView.isHidden = true
                         }
                         
                     })

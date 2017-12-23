@@ -79,7 +79,6 @@ func savePanel(file:String, named:String, for window:Window) {
 
 func alert(for window:Window, header:String = appName, info:String?, completion: (()->Void)? = nil) {
     
-    
     let alert = AlertController(window, header: header, text: info ?? "")
     alert.show(completionHandler: { response in
         completion?()
@@ -111,11 +110,11 @@ func confirm(for window:Window, with header:String, and information:String?, okT
     })
 }
 
-func confirmSignal(for window:Window, header:String, information:String?, okTitle:String? = nil, cancelTitle:String? = nil) -> Signal<Bool, Void> {
+func confirmSignal(for window:Window, header:String, information:String?, okTitle:String? = nil, cancelTitle:String? = nil, swapColors: Bool = false) -> Signal<Bool, Void> {
     let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
-        let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(.alertCancel))
+        let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(.alertCancel), swapColors: swapColors)
         alert.show(completionHandler: { response in
             value.set(response == .OK)
         })

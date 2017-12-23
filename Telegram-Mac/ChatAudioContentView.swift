@@ -51,7 +51,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
             } else {
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, name: parameters.title, performer: parameters.performer, id: parent.chatStableId))
+                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId))
                 } else {
                     controller = APChatMusicController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
@@ -102,21 +102,24 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     
     func checkState() {
+        
+        let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
+        
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: parent), case .playing = song.state {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:1))
             } else {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
             }
         } else {
-            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+            progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
         }
     }
     
     override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
+        let mediaUpdated = self.media == nil || !self.media!.isEqual(media) || parameters?.presentation != parameters?.presentation
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         

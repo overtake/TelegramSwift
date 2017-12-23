@@ -14,166 +14,175 @@ public enum PresentationThemeParsingError: Error {
     case generic
 }
 
-private func parseColor(_ decoder: PostboxDecoder, _ key: String) -> NSColor {
+private func parseColor(_ decoder: PostboxDecoder, _ key: String) -> NSColor? {
     if let value = decoder.decodeOptionalInt32ForKey(key) {
         return NSColor(argb: UInt32(bitPattern: value))
-    } else {
-        return NSColor(0x000000)
     }
+    return nil
 }
 
-struct ThemePalleteSettings: PreferencesEntry, Equatable {
-    let background: NSColor
-    let text: NSColor
-    let grayText:NSColor
-    let link:NSColor
-    let blueUI:NSColor
-    let redUI:NSColor
-    let greenUI:NSColor
-    let blackTransparent:NSColor
-    let grayTransparent:NSColor
-    let grayUI:NSColor
-    let darkGrayText:NSColor
-    let blueText:NSColor
-    let blueSelect:NSColor
-    let selectText:NSColor
-    let blueFill:NSColor
-    let border:NSColor
-    let grayBackground:NSColor
-    let grayForeground:NSColor
-    let grayIcon:NSColor
-    let blueIcon:NSColor
-    let badgeMuted:NSColor
-    let badge:NSColor
-    let indicatorColor: NSColor
-    let selectMessage: NSColor
-    let dark: Bool
+struct ThemePaletteSettings: PreferencesEntry, Equatable {
+    let palette: ColorPalette
     
+    let bubbled: Bool
     let fontSize: CGFloat
     
-    init(background:NSColor, text: NSColor, grayText: NSColor, link: NSColor, blueUI:NSColor, redUI:NSColor, greenUI:NSColor, blackTransparent:NSColor, grayTransparent:NSColor, grayUI:NSColor, darkGrayText:NSColor, blueText:NSColor, blueSelect:NSColor, selectText:NSColor, blueFill:NSColor, border:NSColor, grayBackground:NSColor, grayForeground:NSColor, grayIcon:NSColor, blueIcon:NSColor, badgeMuted:NSColor, badge:NSColor, indicatorColor: NSColor, selectMessage: NSColor, dark:Bool, fontSize: CGFloat) {
-        self.background = background
-        self.text = text
-        self.grayText = grayText
-        self.link = link
-        self.blueUI = blueUI
-        self.redUI = redUI
-        self.greenUI = greenUI
-        self.blackTransparent = blackTransparent
-        self.grayTransparent = grayTransparent
-        self.grayUI = grayUI
-        self.darkGrayText = darkGrayText
-        self.blueText = blueText
-        self.blueSelect = blueSelect
-        self.selectText = selectText
-        self.blueFill = blueFill
-        self.border = border
-        self.grayBackground = grayBackground
-        self.grayForeground = grayForeground
-        self.grayIcon = grayIcon
-        self.blueIcon = blueIcon
-        self.badgeMuted = badgeMuted
-        self.badge = badge
-        self.indicatorColor = indicatorColor
-        self.selectMessage = selectMessage
-        self.dark = dark
+    init(palette: ColorPalette,
+         bubbled: Bool,
+         fontSize: CGFloat) {
+        
+        self.palette = palette
+        self.bubbled = bubbled
         self.fontSize = fontSize
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? ThemePalleteSettings {
+        if let to = to as? ThemePaletteSettings {
             return self == to
         } else {
             return false
         }
     }
     init(decoder: PostboxDecoder) {
-        self.background = parseColor(decoder, "background")
-        self.text = parseColor(decoder, "text")
-        self.grayText = parseColor(decoder, "grayText")
-        self.link = parseColor(decoder, "link")
-        self.blueUI = parseColor(decoder, "blueUI")
-        self.redUI = parseColor(decoder, "redUI")
-        self.greenUI = parseColor(decoder, "greenUI")
-        self.blackTransparent = parseColor(decoder, "blackTransparent")
-        self.grayTransparent = parseColor(decoder, "grayTransparent")
-        self.grayUI = parseColor(decoder, "grayUI")
-        self.darkGrayText = parseColor(decoder, "darkGrayText")
-        self.blueText = parseColor(decoder, "blueText")
-        self.blueSelect = parseColor(decoder, "blueSelect")
-        self.selectText = parseColor(decoder, "selectText")
-        self.blueFill = parseColor(decoder, "blueFill")
-        self.border = parseColor(decoder, "border")
-        self.grayBackground = parseColor(decoder, "grayBackground")
-        self.grayForeground = parseColor(decoder, "grayForeground")
-        self.grayIcon = parseColor(decoder, "grayIcon")
-        self.blueIcon = parseColor(decoder, "blueIcon")
-        self.badgeMuted = parseColor(decoder, "badgeMuted")
-        self.badge = parseColor(decoder, "badge")
-        self.indicatorColor = parseColor(decoder, "indicatorColor")
-        self.selectMessage = parseColor(decoder, "selectMessage")
-        self.dark = decoder.decodeBoolForKey("dark", orElse: false)
+        
+        let dark = decoder.decodeBoolForKey("dark", orElse: false)
+        let name = decoder.decodeStringForKey("name", orElse: "Default")
+
+        let palette: ColorPalette = dark ? darkPalette : whitePalette
+        
+        self.palette = ColorPalette(isDark: dark,
+            name: name,
+            background: parseColor(decoder, "background") ?? palette.background,
+            text: parseColor(decoder, "text") ?? palette.text,
+            grayText: parseColor(decoder, "grayText") ?? palette.grayText,
+            link: parseColor(decoder, "link") ?? palette.link,
+            blueUI: parseColor(decoder, "blueUI") ?? palette.blueUI,
+            redUI: parseColor(decoder, "redUI") ?? palette.redUI,
+            greenUI: parseColor(decoder, "greenUI") ?? palette.greenUI,
+            blackTransparent: parseColor(decoder, "blackTransparent") ?? palette.blackTransparent,
+            grayTransparent: parseColor(decoder, "grayTransparent") ?? palette.grayTransparent,
+            grayUI: parseColor(decoder, "grayUI") ?? palette.grayUI,
+            darkGrayText: parseColor(decoder, "darkGrayText") ?? palette.darkGrayText,
+            blueText: parseColor(decoder, "blueText") ?? palette.blueText,
+            blueSelect: parseColor(decoder, "blueSelect") ?? palette.blueSelect,
+            selectText: parseColor(decoder, "selectText") ?? palette.selectText,
+            blueFill: parseColor(decoder, "blueFill") ?? palette.blueFill,
+            border: parseColor(decoder, "border") ?? palette.border,
+            grayBackground: parseColor(decoder, "grayBackground") ?? palette.grayBackground,
+            grayForeground: parseColor(decoder, "grayForeground") ?? palette.grayForeground,
+            grayIcon: parseColor(decoder, "grayIcon") ?? palette.grayIcon,
+            blueIcon: parseColor(decoder, "blueIcon") ?? palette.blueIcon,
+            badgeMuted: parseColor(decoder, "badgeMuted") ?? palette.badgeMuted,
+            badge: parseColor(decoder, "badge") ?? palette.badge,
+            indicatorColor: parseColor(decoder, "indicatorColor") ?? palette.indicatorColor,
+            selectMessage: parseColor(decoder, "selectMessage") ?? palette.selectMessage,
+            monospacedPre: parseColor(decoder, "monospacedPre") ?? palette.monospacedPre,
+            monospacedCode: parseColor(decoder, "monospacedCode") ?? palette.monospacedCode,
+            monospacedPreBubble_incoming: parseColor(decoder, "monospacedPreBubble_incoming") ?? palette.monospacedPreBubble_incoming,
+            monospacedPreBubble_outgoing: parseColor(decoder, "monospacedPreBubble_outgoing") ?? palette.monospacedPreBubble_outgoing,
+            monospacedCodeBubble_incoming: parseColor(decoder, "monospacedCodeBubble_incoming") ?? palette.monospacedCodeBubble_incoming,
+            monospacedCodeBubble_outgoing: parseColor(decoder, "monospacedCodeBubble_outgoing") ?? palette.monospacedCodeBubble_outgoing,
+            selectTextBubble_incoming: parseColor(decoder, "selectTextBubble_incoming") ?? palette.selectTextBubble_incoming,
+            selectTextBubble_outgoing: parseColor(decoder, "selectTextBubble_outgoing") ?? palette.selectTextBubble_outgoing,
+            bubbleBackground_incoming: parseColor(decoder, "bubbleBackground_incoming") ?? palette.bubbleBackground_incoming,
+            bubbleBackground_outgoing: parseColor(decoder, "bubbleBackground_outgoing") ?? palette.bubbleBackground_outgoing,
+            bubbleBorder_incoming: parseColor(decoder, "bubbleBorder_incoming") ?? palette.bubbleBorder_incoming,
+            bubbleBorder_outgoing: parseColor(decoder, "bubbleBorder_outgoing") ?? palette.bubbleBorder_outgoing,
+            grayTextBubble_incoming: parseColor(decoder, "grayTextBubble_incoming") ?? palette.grayTextBubble_incoming,
+            grayTextBubble_outgoing: parseColor(decoder, "grayTextBubble_outgoing") ?? palette.grayTextBubble_outgoing,
+            grayIconBubble_incoming: parseColor(decoder, "grayIconBubble_incoming") ?? palette.grayIconBubble_incoming,
+            grayIconBubble_outgoing: parseColor(decoder, "grayIconBubble_outgoing") ?? palette.grayIconBubble_outgoing,
+            blueIconBubble_incoming: parseColor(decoder, "blueIconBubble_incoming") ?? palette.blueIconBubble_incoming,
+            blueIconBubble_outgoing: parseColor(decoder, "blueIconBubble_outgoing") ?? palette.blueIconBubble_outgoing,
+            linkBubble_incoming: parseColor(decoder, "linkBubble_incoming") ?? palette.linkBubble_incoming,
+            linkBubble_outgoing: parseColor(decoder, "linkBubble_outgoing") ?? palette.linkBubble_outgoing,
+            textBubble_incoming: parseColor(decoder, "textBubble_incoming") ?? palette.textBubble_incoming,
+            textBubble_outgoing: parseColor(decoder, "textBubble_outgoing") ?? palette.textBubble_outgoing,
+            selectMessageBubble: parseColor(decoder, "selectMessageBubble") ?? palette.selectMessageBubble,
+            fileActivityBackground: parseColor(decoder, "fileActivityBackground") ?? palette.fileActivityBackground,
+            fileActivityForeground: parseColor(decoder, "fileActivityForeground") ?? palette.fileActivityForeground,
+            fileActivityBackgroundBubble_incoming: parseColor(decoder, "fileActivityBackgroundBubble_incoming") ?? palette.fileActivityBackgroundBubble_incoming,
+            fileActivityBackgroundBubble_outgoing: parseColor(decoder, "fileActivityBackgroundBubble_outgoing") ?? palette.fileActivityBackgroundBubble_outgoing,
+            fileActivityForegroundBubble_incoming: parseColor(decoder, "fileActivityForegroundBubble_incoming") ?? palette.fileActivityForegroundBubble_incoming,
+            fileActivityForegroundBubble_outgoing: parseColor(decoder, "fileActivityForegroundBubble_outgoing") ?? palette.fileActivityForegroundBubble_outgoing,
+            waveformBackground: parseColor(decoder, "waveformBackground") ?? palette.waveformBackground,
+            waveformForeground: parseColor(decoder, "waveformForeground") ?? palette.waveformForeground,
+            waveformBackgroundBubble_incoming: parseColor(decoder, "waveformBackgroundBubble_incoming") ?? palette.waveformBackgroundBubble_incoming,
+            waveformBackgroundBubble_outgoing: parseColor(decoder, "waveformBackgroundBubble_outgoing") ?? palette.waveformBackgroundBubble_outgoing,
+            waveformForegroundBubble_incoming: parseColor(decoder, "waveformForegroundBubble_incoming") ?? palette.waveformForegroundBubble_incoming,
+            waveformForegroundBubble_outgoing: parseColor(decoder, "waveformForegroundBubble_outgoing") ?? palette.waveformForegroundBubble_outgoing,
+            webPreviewActivity: parseColor(decoder, "webPreviewActivity") ?? palette.webPreviewActivity,
+            webPreviewActivityBubble_incoming: parseColor(decoder, "webPreviewActivityBubble_incoming") ?? palette.webPreviewActivityBubble_incoming,
+            webPreviewActivityBubble_outgoing: parseColor(decoder, "webPreviewActivityBubble_outgoing") ?? palette.webPreviewActivityBubble_outgoing,
+            redBubble_incoming: parseColor(decoder, "redBubble_incoming") ?? palette.redBubble_incoming,
+            redBubble_outgoing: parseColor(decoder, "redBubble_outgoing") ?? palette.redBubble_outgoing,
+            greenBubble_incoming: parseColor(decoder, "greenBubble_incoming") ?? palette.greenBubble_incoming,
+            greenBubble_outgoing: parseColor(decoder, "greenBubble_outgoing") ?? palette.greenBubble_outgoing,
+            chatReplyTitle: parseColor(decoder, "chatReplyTitle") ?? palette.chatReplyTitle,
+            chatReplyTextEnabled: parseColor(decoder, "chatReplyTextEnabled") ?? palette.chatReplyTextEnabled,
+            chatReplyTextDisabled: parseColor(decoder, "chatReplyTextDisabled") ?? palette.chatReplyTextDisabled,
+            chatReplyTitleBubble_incoming: parseColor(decoder, "chatReplyTitleBubble_incoming") ?? palette.chatReplyTitleBubble_incoming,
+            chatReplyTitleBubble_outgoing: parseColor(decoder, "chatReplyTitleBubble_outgoing") ?? palette.chatReplyTitleBubble_outgoing,
+            chatReplyTextEnabledBubble_incoming: parseColor(decoder, "chatReplyTextEnabledBubble_incoming") ?? palette.chatReplyTextEnabledBubble_incoming,
+            chatReplyTextEnabledBubble_outgoing: parseColor(decoder, "chatReplyTextEnabledBubble_outgoing") ?? palette.chatReplyTextEnabledBubble_outgoing,
+            chatReplyTextDisabledBubble_incoming: parseColor(decoder, "chatReplyTextDisabledBubble_incoming") ?? palette.chatReplyTextDisabledBubble_incoming,
+            chatReplyTextDisabledBubble_outgoing: parseColor(decoder, "chatReplyTextDisabledBubble_outgoing") ?? palette.chatReplyTextDisabledBubble_outgoing,
+            groupPeerNameRed: parseColor(decoder, "groupPeerNameRed") ?? palette.groupPeerNameRed,
+            groupPeerNameOrange: parseColor(decoder, "groupPeerNameOrange") ?? palette.groupPeerNameOrange,
+            groupPeerNameViolet:parseColor(decoder, "groupPeerNameViolet") ?? palette.groupPeerNameViolet,
+            groupPeerNameGreen:parseColor(decoder, "groupPeerNameGreen") ?? palette.groupPeerNameGreen,
+            groupPeerNameCyan: parseColor(decoder, "groupPeerNameCyan") ?? palette.groupPeerNameCyan,
+            groupPeerNameLightBlue: parseColor(decoder, "groupPeerNameLightBlue") ?? palette.groupPeerNameLightBlue,
+            groupPeerNameBlue: parseColor(decoder, "groupPeerNameBlue") ?? palette.groupPeerNameBlue)
+        
+        
+        
+        
+        self.bubbled = decoder.decodeBoolForKey("bubbled", orElse: false)
         self.fontSize = CGFloat(decoder.decodeDoubleForKey("fontSize", orElse: 13.0))
     }
     
     public func encode(_ encoder: PostboxEncoder) {
-        for child in Mirror(reflecting: self).children {
+        for child in Mirror(reflecting: palette).children {
             if let label = child.label {
                 if let value = child.value as? NSColor {
                     encoder.encodeInt32(Int32(bitPattern: value.argb), forKey: label)
                 }
             }
         }
-        encoder.encodeBool(dark, forKey: "dark")
+        encoder.encodeString(palette.name, forKey: "name")
+        encoder.encodeBool(palette.isDark, forKey: "dark")
+        encoder.encodeBool(bubbled, forKey: "bubbled")
         encoder.encodeDouble(Double(fontSize), forKey: "fontSize")
     }
     
     
-    static var defaultTheme: ThemePalleteSettings {
-        return ThemePalleteSettings(whitePallete, dark: false, fontSize: 13.0)
+    static var defaultTheme: ThemePaletteSettings {
+        return ThemePaletteSettings(palette: whitePalette, bubbled: false, fontSize: 13.0)
     }
 }
 
-func ==(lhs: ThemePalleteSettings, rhs: ThemePalleteSettings) -> Bool {
-    return lhs.background == rhs.background &&
-    lhs.text == rhs.text &&
-    lhs.grayText == rhs.grayText &&
-    lhs.link == rhs.link &&
-    lhs.blueUI == rhs.blueUI &&
-    lhs.redUI == rhs.redUI &&
-    lhs.greenUI == rhs.greenUI &&
-    lhs.blackTransparent == rhs.blackTransparent &&
-    lhs.grayTransparent == rhs.grayTransparent &&
-    lhs.grayUI == rhs.grayUI &&
-    lhs.darkGrayText == rhs.darkGrayText &&
-    lhs.blueText == rhs.blueText &&
-    lhs.blueSelect == rhs.blueSelect &&
-    lhs.selectText == rhs.selectText &&
-    lhs.blueFill == rhs.blueFill &&
-    lhs.border == rhs.border &&
-    lhs.grayBackground == rhs.grayBackground &&
-    lhs.grayForeground == rhs.grayForeground &&
-    lhs.grayIcon == rhs.grayIcon &&
-    lhs.blueIcon == rhs.blueIcon &&
-    lhs.badgeMuted == rhs.badgeMuted &&
-    lhs.badge == rhs.badge &&
-    lhs.indicatorColor == rhs.indicatorColor &&
-    lhs.selectMessage == rhs.selectMessage &&
-    lhs.dark == rhs.dark &&
-    lhs.fontSize == rhs.fontSize
+func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
+    return lhs.palette === rhs.palette &&
+    lhs.fontSize == rhs.fontSize &&
+    lhs.bubbled == rhs.bubbled
 }
 
-extension ThemePalleteSettings {
-    init(_ pallete: ColorPallete, dark: Bool, fontSize: CGFloat) {
-        self.init(background: pallete.background, text: pallete.text, grayText: pallete.grayText, link: pallete.link, blueUI: pallete.blueUI, redUI: pallete.redUI, greenUI: pallete.greenUI, blackTransparent: pallete.blackTransparent, grayTransparent: pallete.grayTransparent, grayUI: pallete.grayUI, darkGrayText: pallete.darkGrayText, blueText: pallete.blueText, blueSelect: pallete.blueSelect, selectText: pallete.selectText, blueFill: pallete.blueFill, border: pallete.border, grayBackground: pallete.grayBackground, grayForeground: pallete.grayForeground, grayIcon: pallete.grayIcon, blueIcon: pallete.blueIcon, badgeMuted: pallete.badgeMuted, badge: pallete.badge, indicatorColor: pallete.indicatorColor, selectMessage: pallete.selectMessage, dark: dark, fontSize: fontSize)
-    }
-}
 
-func updateThemeSettings(postbox: Postbox, pallete: ColorPallete, dark: Bool) -> Signal<Void, Void> {
+func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void, Void> {
     return postbox.modify { modifier -> Void in
         modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
-            let current = entry as? ThemePalleteSettings
-            return ThemePalleteSettings(pallete, dark: dark, fontSize: current?.fontSize ?? 13.0)
+            let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
+            return ThemePaletteSettings(palette: palette, bubbled: current.bubbled, fontSize: current.fontSize)
+        })
+    }
+}
+
+func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void> {
+    return postbox.modify { modifier -> Void in
+        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+            let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
+            return ThemePaletteSettings(palette: current.palette, bubbled: bubbled, fontSize: current.fontSize)
         })
     }
 }
@@ -181,8 +190,8 @@ func updateThemeSettings(postbox: Postbox, pallete: ColorPallete, dark: Bool) ->
 func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Void, Void> {
     return postbox.modify { modifier -> Void in
         modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
-            let current = entry as? ThemePalleteSettings ?? ThemePalleteSettings.defaultTheme
-            return ThemePalleteSettings(ColorPallete(current), dark: current.dark, fontSize: fontSize)
+            let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
+            return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: fontSize)
         })
     }
 }

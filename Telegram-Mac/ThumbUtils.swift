@@ -102,7 +102,7 @@ func generateMediaEmptyLinkThumb(color: NSColor, host:String) -> CGImage? {
         context.setFillColor(color.cgColor)
         context.fill(CGRect(origin: CGPoint(), size: size))
         if !host.isEmpty {
-            let layout = TextViewLayout(.initialize(string: host, color: .white, font: .normal(.custom(16))), maximumNumberOfLines: 1, truncationType: .middle)
+            let layout = TextViewLayout(.initialize(string: host, color: .white, font: .normal(16.0)), maximumNumberOfLines: 1, truncationType: .middle)
             layout.measure(width: size.width - 4)
             let line = layout.lines[0]
             

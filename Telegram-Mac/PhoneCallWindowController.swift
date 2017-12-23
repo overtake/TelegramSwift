@@ -32,7 +32,7 @@ private class PhoneCallWindowView : View {
     //private var avatar:AvatarControl = AvatarControl
     fileprivate let imageView:TransformImageView = TransformImageView()
     fileprivate let controls:NSVisualEffectView = NSVisualEffectView()
-    private let backgroundView:View = View()
+    fileprivate let backgroundView:View = View()
     let acceptControl:ImageButton = ImageButton()
     let declineControl:ImageButton = ImageButton()
     let muteControl:ImageButton = ImageButton()
@@ -98,10 +98,10 @@ private class PhoneCallWindowView : View {
         controls.addSubview(statusTextView)
         controls.addSubview(closeMissedControl)
         
-        textNameView.font = .medium(.custom(18))
+        textNameView.font = .medium(18.0)
         textNameView.drawsBackground = false
         textNameView.backgroundColor = .clear
-        textNameView.textColor = darkPallete.text
+        textNameView.textColor = darkPalette.text
         textNameView.isSelectable = false
         textNameView.isEditable = false
         textNameView.isBordered = false
@@ -110,10 +110,10 @@ private class PhoneCallWindowView : View {
         textNameView.alignment = .center
         textNameView.cell?.truncatesLastVisibleLine = true
         textNameView.lineBreakMode = .byTruncatingTail
-        statusTextView.font = .normal(.custom(15))
+        statusTextView.font = .normal(.header)
         statusTextView.drawsBackground = false
         statusTextView.backgroundColor = .clear
-        statusTextView.textColor = darkPallete.text
+        statusTextView.textColor = darkPalette.text
         statusTextView.isSelectable = false
         statusTextView.isEditable = false
         statusTextView.isBordered = false
@@ -174,7 +174,7 @@ private class PhoneCallWindowView : View {
         case .accepting:
             statusTextView.stringValue = tr(.callStatusConnecting)
         case .active(_, let visual, _):
-            let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(.custom(16))), alignment: .center)
+            let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
             secureTextView.update(layout)
             secureContainerView.isHidden = false
@@ -335,8 +335,9 @@ class PhoneCallWindowController {
         
         let size = NSMakeSize(300, 460)
         if let screen = NSScreen.main {
-            self.window = NSWindow(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.titled, .fullSizeContentView], backing: .buffered, defer: false, screen: screen)
+            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
             self.window.level = .screenSaver
+            self.window.backgroundColor = .clear
         } else {
             fatalError("screen not found")
         }
@@ -441,7 +442,6 @@ class PhoneCallWindowController {
         self.window.backgroundColor = .clear
         self.window.contentView?.layer?.cornerRadius = 4
         self.window.titlebarAppearsTransparent = true
-        
         self.window.isMovableByWindowBackground = true
  
         sessionDidUpdated()
@@ -576,7 +576,7 @@ class PhoneCallWindowController {
             view.imageView.set(arguments: arguments)
 
         } else {
-            view.imageView.setSignal(signal: generateEmptyRoundAvatar(view.imageView.frame.size, font: .avatar(.custom(90)), account: session.account, peer: user))
+            view.imageView.setSignal(signal: generateEmptyRoundAvatar(view.imageView.frame.size, font: .avatar(90.0), account: session.account, peer: user))
         }
         
         
@@ -614,12 +614,10 @@ func closeCall(_ timeout:TimeInterval? = nil) {
         signal = signal |> delay(timeout, queue: Queue.mainQueue())
     }
     closeDisposable.set(signal.start(completed: {
-        controller?.window.styleMask = [.borderless]
+        //controller?.window.styleMask = [.borderless]
         controller?.view.controls.removeFromSuperview()
-        controller?.window.contentView?._change(opacity: 0.0, removeOnCompletion: false, completion: { completed in
-            controller?.window.orderOut(nil)
-            controller = nil
-        })
+        controller?.window.orderOut(nil)
+        controller = nil
     }))
 }
 

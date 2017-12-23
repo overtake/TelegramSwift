@@ -252,7 +252,7 @@ class ChatListRowItem: TableRowItem {
             
             let clearHistory = { [weak self] in
                 if let strongSelf = self {
-                   confirm(for: mainWindow, with: appName, and: tr(.confirmDeleteChatUser), successHandler: { _ in
+                    confirm(for: mainWindow, with: appName, and: tr(.confirmDeleteChatUser), swapColors: true, successHandler: { _ in
                         strongSelf.clearHistoryDisposable.set(clearHistoryInteractively(postbox: strongSelf.account.postbox, peerId: strongSelf.peerId).start())
                    })
                 }
@@ -288,7 +288,7 @@ class ChatListRowItem: TableRowItem {
             
             let leaveGroup = { [weak self] in
                 if let strongSelf = self {
-                    confirm(for: mainWindow, with: appName, and: tr(.confirmLeaveGroup), successHandler: { _ in
+                    confirm(for: mainWindow, with: appName, and: tr(.confirmLeaveGroup), swapColors: true, successHandler: { _ in
                         strongSelf.deleteChatDisposable.set(leftGroup(account: strongSelf.account, peerId: strongSelf.peerId).start())
                     })
                 }

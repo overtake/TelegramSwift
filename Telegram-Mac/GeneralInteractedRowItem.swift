@@ -69,7 +69,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
-        nameLayout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: nameStyle.foregroundColor, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, self.size.height), nil, isSelected, .left)
+        nameLayout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, self.size.height), nil, isSelected, .left)
         nameLayoutSelected = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: .white, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, self.size.height), nil, isSelected, .left)
         descLayout?.measure(width: nameWidth)
         

@@ -8,6 +8,21 @@
 
 #import "TGModernGrowingTextView.h"
 #import <QuartzCore/QuartzCore.h>
+#import "DateUtils.h"
+
+static NSString* (^localizationFunc)(NSString *key);
+
+void setDateLocalizationFunc(NSString* (^localizationF)(NSString *key)) {
+    localizationFunc = localizationF;
+}
+
+NSString * NSLocalized(NSString * key, NSString *comment) {
+    if (localizationFunc != nil) {
+        return localizationFunc(key);
+    } else {
+        return NSLocalizedString(key, comment);
+    }
+}
 
 @interface GrowingScrollView : NSScrollView
 
@@ -122,17 +137,17 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 -(NSArray *)transformItems {
     
-    NSMenuItem *bold = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"TextView.Transform.Bold", nil) action:@selector(boldWord:) keyEquivalent:@"b"];
+    NSMenuItem *bold = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Bold", nil) action:@selector(boldWord:) keyEquivalent:@"b"];
     [bold setKeyEquivalentModifierMask: NSCommandKeyMask];
     
-    NSMenuItem *italic = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"TextView.Transform.Italic", nil) action:@selector(italicWord:) keyEquivalent:@"i"];
+    NSMenuItem *italic = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Italic", nil) action:@selector(italicWord:) keyEquivalent:@"i"];
     [italic setKeyEquivalentModifierMask: NSCommandKeyMask];
     
     
-    NSMenuItem *code = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"TextView.Transform.Code", nil) action:@selector(codeWord:) keyEquivalent:@"k"];
+    NSMenuItem *code = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Code", nil) action:@selector(codeWord:) keyEquivalent:@"k"];
     [code setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
     
-    NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"TextView.Transform.URL", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
+    NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.URL", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
     [url setKeyEquivalentModifierMask: NSCommandKeyMask];
     
     return @[code, italic, bold, url];

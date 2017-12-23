@@ -69,7 +69,7 @@ private class StickersModalView : View {
         add.set(background: theme.colors.blueFill, for: .Normal)
         add.set(background: theme.colors.blueFill, for: .Hover)
         add.set(background: theme.colors.blueFill, for: .Highlight)
-        add.set(text: tr(.stickerPackAdd(0)), for: .Normal)
+        add.set(text: tr(.stickerPackAdd1Countable(0)), for: .Normal)
 
         addSubview(add)
         headerTitle.backgroundColor = theme.colors.background
@@ -104,12 +104,12 @@ private class StickersModalView : View {
             indicatorView.removeFromSuperview()
             dismiss.isHidden = !installed
             shareView.isHidden = false
-            add.set(text: tr(.stickerPackAdd(collectionItems .count)).uppercased(), for: .Normal)
+            add.set(text: tr(.stickerPackAdd1Countable(collectionItems .count)).uppercased(), for: .Normal)
             add.isHidden = installed
             shadowView.isHidden = installed
             let attr = NSMutableAttributedString()
             
-            _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(.custom(16)))
+            _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(16.0))
             attr.detectLinks(type: [.Mentions], account: arguments.account, color: .blueUI, openInfo: { (peerId, _, _, _) in
                 _ = (arguments.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()

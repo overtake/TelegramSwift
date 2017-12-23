@@ -54,9 +54,9 @@ private class AddContactControllerView : View, NSTextFieldDelegate {
         phoneNumber.focusRingType = .none
         
         
-        firstName.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.custom(13.5)))
-        lastName.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.custom(13.5)))
-        phoneNumber.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsPhoneNumberPlaceholder), color: theme.colors.grayText, font: .normal(.custom(13.5)))
+        firstName.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
+        lastName.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsLastNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
+        phoneNumber.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsPhoneNumberPlaceholder), color: theme.colors.grayText, font: .normal(13.5))
         
         firstName.setFrameSize(NSMakeSize(frameRect.width - 40, 20))
         lastName.setFrameSize(NSMakeSize(frameRect.width - 40, 20))

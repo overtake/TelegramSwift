@@ -20,7 +20,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let defaultImageSize:NSSize
     let url:String
     fileprivate(set) var arguments:TransformImageArguments
-    init(map:TelegramMediaMap, resource:HttpReferenceMediaResource) {
+    init(map:TelegramMediaMap, resource:HttpReferenceMediaResource, presentation: ChatMediaPresentation) {
         self.map = map
         self.isVenue = map.venue != nil
         self.resource = resource
@@ -32,13 +32,14 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         self.arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: defaultImageSize, boundingSize: defaultImageSize, intrinsicInsets: NSEdgeInsets())
         if let venue = map.venue {
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: venue.title, color: theme.colors.text, font: .normal(.text))
+            _ = attr.append(string: venue.title, color: presentation.text, font: .normal(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: venue.address, color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: venue.address, color: presentation.grayText, font: .normal(.text))
             venueText = TextViewLayout(attr, maximumNumberOfLines: 4, truncationType: .middle, alignment: .left)
         } else {
             venueText = nil
         }
+        super.init(presentation: presentation, media: map)
     }
 }
 
@@ -53,7 +54,7 @@ class ChatMapRowItem: ChatMediaItem {
         let map = media as! TelegramMediaMap
         let isVenue = map.venue != nil
         let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
-        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource)
+        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
     }
     
     override var instantlyResize:Bool {
@@ -61,6 +62,17 @@ class ChatMapRowItem: ChatMediaItem {
             return parameters.isVenue
         }
         return false
+    }
+    
+    override var isBubbleFullFilled: Bool {
+        if let media = media as? TelegramMediaMap {
+            return media.venue == nil && isBubbled
+        }
+        return false
+    }
+    
+    override var isStateOverlayLayout: Bool {
+        return hasBubble && isBubbleFullFilled
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -71,7 +83,11 @@ class ChatMapRowItem: ChatMediaItem {
                 size = parameters.defaultImageSize.aspectFitted(NSMakeSize(min(width,parameters.defaultImageSize.width), parameters.defaultImageSize.height))
                 parameters.arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             }
-            return NSMakeSize(width, size.height)
+            var venueSize: CGFloat = 0
+            if let venueText = parameters.venueText {
+                venueSize = venueText.layoutSize.width + 10
+            }
+            return NSMakeSize(venueSize + size.width, size.height)
         }
         return super.makeContentSize(width)
     }

@@ -50,7 +50,7 @@ class AuthHeaderView : View {
         textHeaderView.userInteractionEnabled = false
         textHeaderView.isSelected = false
         
-        nextButton.style = ControlStyle(font: NSFont.medium(.custom(16)), foregroundColor: .white, backgroundColor: NSColor(0x32A3E2), highlightColor: .white)
+        nextButton.style = ControlStyle(font: NSFont.medium(16.0), foregroundColor: .white, backgroundColor: NSColor(0x32A3E2), highlightColor: .white)
         nextButton.set(background: .blueUI, for: .Highlight)
         nextButton.set(text: tr(.loginNext), for: .Normal)
         nextButton.sizeToFit()
@@ -127,12 +127,12 @@ class AuthHeaderView : View {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        let headerLayout = TextViewLayout(NSAttributedString.initialize(string: appName, color: NSColor.text, font: NSFont.normal(.custom(30))), maximumNumberOfLines: 1)
+        let headerLayout = TextViewLayout(NSAttributedString.initialize(string: appName, color: NSColor.text, font: NSFont.normal(30.0)), maximumNumberOfLines: 1)
         headerLayout.measure(width: CGFloat.greatestFiniteMagnitude)
         header.update(headerLayout)
         
         
-        let descLayout = TextViewLayout(NSAttributedString.initialize(string: tr(.loginWelcomeDescription), color: .grayText, font: NSFont.normal(.custom(16))), maximumNumberOfLines: 1)
+        let descLayout = TextViewLayout(NSAttributedString.initialize(string: tr(.loginWelcomeDescription), color: .grayText, font: .normal(16.0)), maximumNumberOfLines: 1)
         descLayout.measure(width: CGFloat.greatestFiniteMagnitude)
         desc.update(descLayout)
         
@@ -159,7 +159,7 @@ class AuthHeaderView : View {
             switchLanguage.isHidden = !needShowSuggestedButton
         case .confirmationCodeEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: tr(.loginHeaderCode), color: .text, font: .normal(.custom(30))))
+            let headerLayout = TextViewLayout(.initialize(string: tr(.loginHeaderCode), color: .text, font: .normal(30.0)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
@@ -172,7 +172,7 @@ class AuthHeaderView : View {
             break
         case .passwordEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: tr(.loginHeaderPassword), color: .text, font: .normal(.custom(30))))
+            let headerLayout = TextViewLayout(.initialize(string: tr(.loginHeaderPassword), color: .text, font: .normal(30.0)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX(y: 90)
@@ -184,7 +184,7 @@ class AuthHeaderView : View {
             break
         case .signUp:
             nextButton.change(opacity: 0, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: tr(.loginHeaderSignUp), color: .text, font: .normal(.custom(30))))
+            let headerLayout = TextViewLayout(.initialize(string: tr(.loginHeaderSignUp), color: .text, font: .normal(30.0)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()

@@ -36,9 +36,12 @@ class ChatGroupedItem: ChatRowItem {
             }
             
             if let message = captionMessage {
+                
+                let isIncoming: Bool = message.isIncoming(account, entry.renderType == .bubble)
+
                 var caption:NSMutableAttributedString = NSMutableAttributedString()
                 NSAttributedString.initialize()
-                _ = caption.append(string: message.text, color: theme.colors.text, font: NSFont.normal(.custom(theme.fontSize)))
+                _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming), font: NSFont.normal(theme.fontSize))
                 var types:ParsingType = [.Links, .Mentions, .Hashtags]
                 
                 if let peer = messageMainPeer(message) as? TelegramUser {
@@ -66,8 +69,10 @@ class ChatGroupedItem: ChatRowItem {
                 if hasEntities {
                     caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy).mutableCopy() as! NSMutableAttributedString
                 }
-                caption.detectLinks(type: types, account: account, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.modalSearch, command: chatInteraction.forceSendMessage)
-                captionLayout = TextViewLayout(caption, alignment: .left)
+                
+                
+                caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.modalSearch, command: chatInteraction.forceSendMessage)
+                captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
                 captionLayout?.interactions = globalLinkExecutor
                 
             }
@@ -88,8 +93,94 @@ class ChatGroupedItem: ChatRowItem {
 
     }
     
+    override var hasBubble: Bool {
+        return isBubbled && (captionLayout != nil || replyModel != nil)
+    }
+    
+    override var isBubbleFullFilled: Bool {
+        return isBubbled
+    }
+    
+    var mediaBubbleCornerInset: CGFloat {
+        return 1
+    }
+    
+    override var bubbleFrame: NSRect {
+        var frame = super.bubbleFrame
+        
+        if isBubbleFullFilled {
+            frame.size.width = contentSize.width + additionBubbleInset
+            if hasBubble {
+                frame.size.width += self.mediaBubbleCornerInset * 2
+            }
+        }
+        
+        return frame
+    }
+    
+    override var defaultContentTopOffset: CGFloat {
+        if isBubbled && !hasBubble {
+            return defaultContentInnerInset
+        }
+        return super.defaultContentTopOffset
+    }
+    
+    override var contentOffset: NSPoint {
+        var offset = super.contentOffset
+        //
+        if hasBubble {
+            if  (forwardNameLayout != nil) {
+                offset.y += defaultContentInnerInset
+            } else if authorText == nil, !isBubbleFullFilled  {
+                offset.y += (defaultContentInnerInset + 2)
+            }
+        }
+        
+        if hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil {
+            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2)
+        }
+        return offset
+    }
+    
+    override var elementsContentInset: CGFloat {
+        if hasBubble && isBubbleFullFilled {
+            return bubbleContentInset
+        }
+        return super.elementsContentInset
+    }
+    
+    override var _defaultHeight: CGFloat {
+        if hasBubble && isBubbleFullFilled && captionLayout == nil {
+            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2
+        }
+        
+        return super._defaultHeight
+    }
+    
+    override var realContentSize: NSSize {
+        var size = super.realContentSize
+        
+        if isBubbleFullFilled {
+            size.width -= bubbleContentInset * 2
+        }
+        return size
+    }
+    
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        if let caption = captionLayout {
+            if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+                return rightSize.height
+            }
+        }
+        return super.additionalLineForDateInBubbleState
+    }
+    
+    override var isFixedRightPosition: Bool {
+        return true
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        layout.measure(NSMakeSize(min(width, 260), min(width, 260)))
+        layout.measure(NSMakeSize(min(width, 260), min(width, 260)), spacing: hasBubble ? 2 : 4)
         return layout.dimensions
     }
     
@@ -168,7 +259,42 @@ class ChatGroupedItem: ChatRowItem {
             }
         }
         
-        return .single(items)
+        return .single(items) |> map { [weak self] items in
+            var items = items
+            if let captionLayout = self?.captionLayout {
+                let text = captionLayout.attributedString.string
+                items.insert(ContextMenuItem(tr(.textCopy), handler: {
+                    copyToClipboard(text)
+                }), at: 1)
+                
+                if let view = self?.view as? ChatRowView, let textView = view.captionView, let window = textView.window {
+                    let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                    if let layout = textView.layout {
+                        if let (link, range, _) = layout.link(at: point) {
+                            var text:String = layout.attributedString.string.nsstring.substring(with: range)
+                            if let link = link as? inAppLink {
+                                if case let .external(link, _) = link {
+                                    text = link
+                                }
+                            }
+                            
+                            for i in 0 ..< items.count {
+                                if items[i].title == tr(.messageContextCopyMessageLink) {
+                                    items.remove(at: i)
+                                    break
+                                }
+                            }
+                            
+                            items.insert(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                                copyToClipboard(text)
+                            }), at: 1)
+                        }
+                    }
+                }
+            }
+            
+            return items
+        }
     }
     
     override func viewClass() -> AnyClass {
@@ -202,7 +328,7 @@ private class ChatGroupedView : ChatRowView {
         
     }
     
-    override func updateSelectingState(_ animated: Bool, selectingMode: Bool, item: ChatRowItem?) {
+    override func updateSelectingState(_ animated: Bool, selectingMode: Bool, item: ChatRowItem?, needUpdateColors: Bool) {
         
         
         if let item = item as? ChatGroupedItem {
@@ -247,7 +373,7 @@ private class ChatGroupedView : ChatRowView {
                 }
             }
         }
-        super.updateSelectingState(animated, selectingMode: selectingMode, item: item)
+        super.updateSelectingState(animated, selectingMode: selectingMode, item: item, needUpdateColors: needUpdateColors)
     }
     
     override func updateSelectionViewAfterUpdateState(animated: Bool) {
@@ -307,8 +433,19 @@ private class ChatGroupedView : ChatRowView {
         
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
+            var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.layout.position(at: i) : []
+
+            if item.hasBubble  {
+                if item.captionLayout != nil {
+                    positionFlags.remove(.bottom)
+                }
+                if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                    positionFlags.remove(.top)
+                }
+            }
+
             
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, animated: animated)
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, animated: animated, positionFlags: positionFlags)
             
             contents[i].change(pos: item.layout.frame(at: i).origin, animated: animated)
         }
@@ -509,6 +646,20 @@ private class ChatGroupedView : ChatRowView {
         return false
     }
     
+    override var contentFrame: NSRect {
+        var rect = super.contentFrame
+        
+        guard let item = item as? ChatGroupedItem else { return rect }
+        
+        if item.isBubbled, item.isBubbleFullFilled {
+            rect.origin.x -= item.bubbleContentInset
+            if item.hasBubble {
+                rect.origin.x += item.mediaBubbleCornerInset
+            }
+        }
+        
+        return rect
+    }
     
     override func layout() {
         super.layout()

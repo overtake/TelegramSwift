@@ -257,7 +257,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             self.border = item.border
             image.setFrameSize(item.photoSize)
             if let photo = item.photo {
-                image.setSignal(photo, animated: animated)
+                image.setSignal(photo)
             } else {
                 image.setPeer(account: item.account, peer: item.peer)
             }

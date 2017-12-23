@@ -358,7 +358,7 @@ public class Window: NSWindow {
             if event.type == .keyDown {
                 
                 
-                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape {
+                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.LeftArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.RightArrow {
                     applyResponderIfNeeded()
                 }
                 

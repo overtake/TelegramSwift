@@ -108,7 +108,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [String
                 }
             }
             
-            line.append(.initialize(string: e, font: NSFont.normal(.custom(26))))
+            line.append(.initialize(string: e, font: NSFont.normal(26.0)))
             
             i += 1
             if i == 8 {

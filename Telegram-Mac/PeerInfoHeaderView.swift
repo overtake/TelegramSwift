@@ -15,7 +15,7 @@ import SwiftSignalKitMac
 
 class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
 
-    private let image:AvatarControl = AvatarControl(font: .avatar(.custom(26)))
+    private let image:AvatarControl = AvatarControl(font: .avatar(26.0))
     
     private let firstNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     private let lastNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)

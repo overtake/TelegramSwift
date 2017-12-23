@@ -81,7 +81,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 if let attr = attr as? ConsumableContentMessageAttribute {
                     if !attr.consumed {
                         ctx.setFillColor(theme.colors.blueUI.cgColor)
-                        ctx.fillEllipse(in: NSMakeRect(parameters.durationLayout.layoutSize.width + 3, frame.height - floorToScreenPixels((durationView.frame.height - 5)/2) - 5, 5, 5))
+                        ctx.fillEllipse(in: NSMakeRect(parameters.durationLayout.layoutSize.width + 3, frame.height - floorToScreenPixels((durationView.frame.height - 5)/2) - 4, 5, 5))
                     }
                     break
                 }
@@ -282,7 +282,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 globalAudio?.add(listener: self)
                 
                 player.layer?.cornerRadius = size.height / 2
-                
                 path = nil
                 
                 let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)

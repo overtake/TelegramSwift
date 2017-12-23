@@ -10,10 +10,11 @@ private final class BlockedPeerControllerArguments {
     let account: Account
     
     let removePeer: (PeerId) -> Void
-    
-    init(account: Account, removePeer: @escaping (PeerId) -> Void) {
+    let openPeer:(PeerId) -> Void
+    init(account: Account, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping(PeerId)->Void) {
         self.account = account
         self.removePeer = removePeer
+        self.openPeer = openPeer
     }
 }
 
@@ -146,7 +147,18 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {})
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+                arguments.openPeer(peer.id)
+            }, contextMenuItems: {
+                if case .plain = interactionType {
+                    return [ContextMenuItem(tr(.chatInputUnblock), handler: {
+                        arguments.removePeer(peer.id)
+                    })]
+                } else {
+                    return []
+                }
+                
+            })
         case let .empty(progress):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: tr(.blockedPeersEmptyDescrpition))
         case let .whiteSpace(height):
@@ -240,7 +252,8 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     private let removePeerDisposable:MetaDisposable = MetaDisposable()
     
     private let disposable:MetaDisposable = MetaDisposable()
-    
+    private let openPeerDisposable = MetaDisposable()
+
 
     
     override func viewDidLoad() {
@@ -290,6 +303,13 @@ class BlockedPeersViewController: EditableViewController<TableView> {
                 }
                 
             }))
+        }, openPeer: { [weak self] peerId in
+            guard let `self` = self else {return}
+            self.openPeerDisposable.set((self.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
+                if let strongSelf = self {
+                    strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peer: peer))
+                }
+            }))
         })
         
         
@@ -320,6 +340,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     deinit {
         disposable.dispose()
         removePeerDisposable.dispose()
+        openPeerDisposable.dispose()
     }
     
     override func update(with state: ViewControllerState) {

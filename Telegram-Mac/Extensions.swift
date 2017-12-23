@@ -28,7 +28,7 @@ extension MessageHistoryHole {
 
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = .link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
         let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
@@ -45,7 +45,7 @@ extension NSMutableAttributedString {
                     } else {
                         self.addAttribute(NSAttributedStringKey.link, value: inAppLink.external(link: sublink, false), range: range)
                     }
-                    self.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    self.addAttribute(NSAttributedStringKey.foregroundColor, value: color, range: range)
                     self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
                 }
                 
@@ -1885,3 +1885,135 @@ extension NSTextView {
     }
     
 }
+
+extension CGContext {
+    func round(_ size:NSSize,_ cornerRadius:CGFloat = .cornerRadius, positionFlags: GroupLayoutPositionFlags? = nil) {
+        let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
+        let miny:CGFloat = 0, midy = size.height/2.0, maxy = size.height
+        
+        self.move(to: NSMakePoint(minx, midy))
+        
+        var topLeftRadius: CGFloat = cornerRadius
+        var bottomLeftRadius: CGFloat = cornerRadius
+        var topRightRadius: CGFloat = cornerRadius
+        var bottomRightRadius: CGFloat = cornerRadius
+        
+        
+        if let positionFlags = positionFlags {
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                bottomLeftRadius = bottomLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                bottomRightRadius = bottomRightRadius * 3 + 2
+            }
+        }
+        
+        self.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: topLeftRadius)
+        self.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: topRightRadius)
+        self.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: bottomLeftRadius)
+        self.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: bottomRightRadius)
+        
+        self.closePath()
+        self.clip()
+        
+    }
+}
+
+
+func ninePartPiecesFromImageWithInsets(_ image: CGImage, capInsets: RHEdgeInsets) -> [CGImage] {
+    
+    let imageWidth: CGFloat  = image.backingSize.width
+    let imageHeight: CGFloat = image.backingSize.height
+    
+    let leftCapWidth: CGFloat = capInsets.left
+    let topCapHeight: CGFloat = capInsets.top
+    let rightCapWidth: CGFloat = capInsets.right
+    let bottomCapHeight: CGFloat = capInsets.bottom
+    
+    let centerSize: NSSize  = NSMakeSize(imageWidth - leftCapWidth - rightCapWidth, imageHeight - topCapHeight - bottomCapHeight);
+    
+    let topLeftCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(0.0, imageHeight - topCapHeight, leftCapWidth, topCapHeight))
+    let topEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(leftCapWidth, imageHeight - topCapHeight, centerSize.width, topCapHeight))
+    let topRightCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(imageWidth - rightCapWidth, imageHeight - topCapHeight, rightCapWidth, topCapHeight))
+    
+    let leftEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(0.0, bottomCapHeight, leftCapWidth, centerSize.height))
+    let centerFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(leftCapWidth, bottomCapHeight, centerSize.width, centerSize.height))
+    let rightEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(imageWidth - rightCapWidth, bottomCapHeight, rightCapWidth, centerSize.height))
+    
+    let bottomLeftCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(0.0, 0.0, leftCapWidth, bottomCapHeight))
+    let bottomEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(leftCapWidth, 0.0, centerSize.width, bottomCapHeight))
+    let bottomRightCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(imageWidth - rightCapWidth, 0.0, rightCapWidth, bottomCapHeight))
+    
+    return [topLeftCorner, topEdgeFill, topRightCorner, leftEdgeFill, centerFill, rightEdgeFill, bottomLeftCorner, bottomEdgeFill, bottomRightCorner]
+}
+
+func drawNinePartImage(_ context: CGContext, frame: NSRect, topLeftCorner: CGImage, topEdgeFill: CGImage, topRightCorner: CGImage, leftEdgeFill: CGImage, centerFill: CGImage, rightEdgeFill: CGImage, bottomLeftCorner: CGImage, bottomEdgeFill: CGImage, bottomRightCorner: CGImage){
+    
+    let imageWidth: CGFloat = frame.size.width;
+    let imageHeight: CGFloat = frame.size.height;
+    
+    let leftCapWidth: CGFloat = topLeftCorner.backingSize.width;
+    let topCapHeight: CGFloat = topLeftCorner.backingSize.height;
+    let rightCapWidth: CGFloat = bottomRightCorner.backingSize.width;
+    let bottomCapHeight: CGFloat = bottomRightCorner.backingSize.height;
+    
+    let centerSize = NSMakeSize(imageWidth - leftCapWidth - rightCapWidth, imageHeight - topCapHeight - bottomCapHeight);
+    
+    let topLeftCornerRect: NSRect = NSMakeRect(0.0, imageHeight - topCapHeight, leftCapWidth, topCapHeight);
+    let topEdgeFillRect: NSRect = NSMakeRect(leftCapWidth, imageHeight - topCapHeight, centerSize.width, topCapHeight);
+    let topRightCornerRect: NSRect = NSMakeRect(imageWidth - rightCapWidth, imageHeight - topCapHeight, rightCapWidth, topCapHeight);
+    
+    let leftEdgeFillRect: NSRect = NSMakeRect(0.0, bottomCapHeight, leftCapWidth, centerSize.height);
+    let centerFillRect: NSRect = NSMakeRect(leftCapWidth, bottomCapHeight, centerSize.width, centerSize.height);
+    let rightEdgeFillRect: NSRect = NSMakeRect(imageWidth - rightCapWidth, bottomCapHeight, rightCapWidth, centerSize.height);
+    
+    let bottomLeftCornerRect: NSRect = NSMakeRect(0.0, 0.0, leftCapWidth, bottomCapHeight);
+    let bottomEdgeFillRect: NSRect = NSMakeRect(leftCapWidth, 0.0, centerSize.width, bottomCapHeight);
+    let bottomRightCornerRect: NSRect = NSMakeRect(imageWidth - rightCapWidth, 0.0, rightCapWidth, bottomCapHeight);
+    
+    
+    drawStretchedImageInRect(topLeftCorner, context: context, rect: topLeftCornerRect);
+    drawStretchedImageInRect(topEdgeFill, context: context, rect: topEdgeFillRect);
+    drawStretchedImageInRect(topRightCorner, context: context, rect: topRightCornerRect);
+    
+    drawStretchedImageInRect(leftEdgeFill, context: context, rect: leftEdgeFillRect);
+    drawStretchedImageInRect(centerFill, context: context, rect: centerFillRect);
+    drawStretchedImageInRect(rightEdgeFill, context: context, rect: rightEdgeFillRect);
+    
+    drawStretchedImageInRect(bottomLeftCorner, context: context, rect: bottomLeftCornerRect);
+    drawStretchedImageInRect(bottomEdgeFill, context: context, rect: bottomEdgeFillRect);
+    drawStretchedImageInRect(bottomRightCorner, context: context, rect: bottomRightCornerRect);
+    
+}
+
+
+func imageByReferencingRectOfExistingImage(_ image: CGImage, _ rect: NSRect) -> CGImage {
+    if (!NSIsEmptyRect(rect)){
+        
+        let pixelsHigh = CGFloat(image.height) 
+        
+        let scaleFactor:CGFloat = pixelsHigh / image.backingSize.height
+        var captureRect = NSMakeRect(scaleFactor * rect.origin.x, scaleFactor * rect.origin.y, scaleFactor * rect.size.width, scaleFactor * rect.size.height)
+        
+        captureRect.origin.y = pixelsHigh - captureRect.origin.y - captureRect.size.height;
+        
+        return image.cropping(to: captureRect)!
+    }
+    return image.cropping(to: NSMakeRect(0, 0, image.size.width, image.size.height))!
+}
+
+func drawStretchedImageInRect(_ image: CGImage, context: CGContext, rect: NSRect) -> Void {
+    context.saveGState()
+    context.setBlendMode(.normal) //NSCompositeSourceOver
+    context.clip(to: rect)
+    
+    context.draw(image, in: rect)
+    context.restoreGState()
+}
+

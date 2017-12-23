@@ -16,7 +16,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case automaticMediaDownloadSettings
     case generatedMediaStoreSettings
     case voiceCallSettings
-    case themeSettings
+    case themeSettings = 22
     case recentEmoji = 14
     case instantViewAppearance = 11
     case additionalSettings = 15

@@ -17,7 +17,6 @@ private let veryLongTimeInterval = CFTimeInterval(256.0 * 365.0 * 24.0 * 60.0 * 
 
 
 
-
 class GIFPlayerView: TransformImageView {
     
     private var sampleLayer:AVSampleBufferDisplayLayer = AVSampleBufferDisplayLayer()
@@ -46,18 +45,66 @@ class GIFPlayerView: TransformImageView {
     private let _swapNext:Atomic<Bool> = Atomic(value:true)
     private let _path:Atomic<String?> = Atomic(value:nil)
     
-    public var followWindow:Bool = true
+    private let maskLayer = CAShapeLayer()
     
+    var followWindow:Bool = true
+    var positionFlags: GroupLayoutPositionFlags? {
+        didSet {
+            if let positionFlags = positionFlags {
+                let path = CGMutablePath()
+                
+                let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+                let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+                
+                path.move(to: NSMakePoint(minx, midy))
+                
+                var topLeftRadius: CGFloat = .cornerRadius
+                var bottomLeftRadius: CGFloat = .cornerRadius
+                var topRightRadius: CGFloat = .cornerRadius
+                var bottomRightRadius: CGFloat = .cornerRadius
+                
+                
+                if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                    topLeftRadius = topLeftRadius * 3 + 2
+                }
+                if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                    topRightRadius = topRightRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                    bottomLeftRadius = bottomLeftRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                    bottomRightRadius = bottomRightRadius * 3 + 2
+                }
+                
+                path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topLeftRadius)
+                path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topRightRadius)
+                
+                maskLayer.path = path
+                layer?.mask = maskLayer
+            } else {
+                layer?.mask = nil
+            }
+        }
+    }
     override init() {
         super.init()
         sampleLayer.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"opacity":NSNull(), "transform": NSNull()
         ]
         sampleLayer.videoGravity = .resizeAspectFill
         sampleLayer.backgroundColor = NSColor.clear.cgColor
+        
+
         layer?.addSublayer(sampleLayer)
+       // sampleLayer.mask = maskLayer
+       // maskLayer.delegate = self
+
     }
+
     
-    
+
     var isHasPath: Bool {
         return _path.modify({$0}) != nil
     }

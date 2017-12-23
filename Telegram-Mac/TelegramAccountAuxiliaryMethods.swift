@@ -30,4 +30,6 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
 //        return fetchLocalFileVideoMediaResource(resource: resource)
 //    }
     return nil
+}, fetchResourceMediaReferenceHash: { resource in
+    return .single(nil)
 })

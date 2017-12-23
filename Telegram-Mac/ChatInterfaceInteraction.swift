@@ -29,6 +29,7 @@ final class ChatInteraction : InterfaceObserver  {
     let peerId:PeerId
     let account:Account
     let isLogInteraction:Bool
+    let disableSelectAbility: Bool
     private let modifyDisposable:MetaDisposable = MetaDisposable()
     private let mediaDisposable:MetaDisposable = MetaDisposable()
     private let startBotDisposable:MetaDisposable = MetaDisposable()
@@ -36,9 +37,10 @@ final class ChatInteraction : InterfaceObserver  {
     private let requestSessionId:MetaDisposable = MetaDisposable()
     private let disableProxyDisposable = MetaDisposable()
     private let enableProxyDisposable = MetaDisposable()
-    init(peerId:PeerId, account:Account, isLogInteraction: Bool = false) {
+    init(peerId:PeerId, account:Account, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
         self.peerId = peerId
         self.account = account
+        self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
         self.presentation = ChatPresentationInterfaceState()
         super.init()

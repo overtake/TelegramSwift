@@ -130,17 +130,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
 
         let logger = Logger(basePath: containerUrl.path + "/logs")
-        logger.logToConsole = UserDefaults.standard.bool(forKey: "enablelogs")
+        logger.logToConsole = false
         logger.logToFile = UserDefaults.standard.bool(forKey: "enablelogs")
+        
         #if DEBUG
             MTLogSetEnabled(true)
             logger.logToFile = true
         #endif
         
-        #if APP_STORE || STABLE
-            logger.logToConsole = false
-            MTLogSetEnabled(false)
-        #endif
+//        #if APP_STORE || STABLE
+//            logger.logToConsole = false
+//            MTLogSetEnabled(false)
+//        #endif
         
         Logger.setSharedLogger(logger)
         

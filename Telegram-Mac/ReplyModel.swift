@@ -20,11 +20,11 @@ class ReplyModel: ChatAccessoryModel {
     private var previousMedia: Media?
     private var isLoading: Bool = false
     private let fetchDisposable = MetaDisposable()
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false) {
+    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, presentation: ChatAccessoryPresentation? = nil) {
         self.isPinned = isPinned
         self.account = account
         self.replyMessage = replyMessage
-        super.init()
+        super.init(presentation: presentation)
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
             nodeReady.set(.single(true))
@@ -114,7 +114,7 @@ class ReplyModel: ChatAccessoryModel {
                     }
                     view.imageView?.setFrameSize(boundingSize)
                     view.addSubview(view.imageView!)
-                    view.imageView?.centerY(x: super.leftInset)
+                    view.imageView?.centerY(x: super.leftInset + (self.isSideAccessory ? 10 : 0))
                     
                     
                     let mediaUpdated = true
@@ -161,6 +161,7 @@ class ReplyModel: ChatAccessoryModel {
         self.replyMessage = message
         self.isLoading = isLoading
         
+        var display: Bool = display
         updateImageIfNeeded()
 
         if let message = message {
@@ -181,18 +182,21 @@ class ReplyModel: ChatAccessoryModel {
             if text.isEmpty {
                 text = serviceMessageText(message, account: account)
             }
-            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(.chatHeaderPinnedMessage), color: theme.colors.blueUI, font: .medium(.text))
-            self.messageAttr = .initialize(string: text, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
+            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(.chatHeaderPinnedMessage), color: presentation.title, font: .medium(.text))
+            self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
         } else {
             self.headerAttr = nil
-            self.messageAttr = .initialize(string: isLoading ? tr(.messagesReplyLoadingLoading) : tr(.messagesDeletedMessage), color: theme.colors.grayText, font: .normal(.text))
+            self.messageAttr = .initialize(string: isLoading ? tr(.messagesReplyLoadingLoading) : tr(.messagesDeletedMessage), color: presentation.disabledText, font: .normal(.text))
+            display = true
         }
         
         if !isLoading {
-            measureSize(size.width)
+            measureSize(width, sizeToFit: sizeToFit)
+            display = true
         }
         if display {
             Queue.mainQueue().async {
+                self.view?.setFrameSize(self.size)
                 self.setNeedDisplay()
             }
         }

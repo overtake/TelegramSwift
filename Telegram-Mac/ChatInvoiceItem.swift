@@ -18,10 +18,13 @@ class ChatInvoiceItem: ChatRowItem {
     fileprivate var arguments:TransformImageArguments?
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
         let message = object.message!
+        
+        let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
+
         self.media = message.media[0] as! TelegramMediaInvoice
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: media.description, color: theme.colors.text, font: .normal(.text))
-        attr.detectLinks(type: [.Links])
+        _ = attr.append(string: media.description, color: theme.chat.textColor(isIncoming), font: .normal(.text))
+        attr.detectLinks(type: [.Links], color: theme.chat.linkColor(isIncoming))
         
         textLayout = TextViewLayout(attr)
         

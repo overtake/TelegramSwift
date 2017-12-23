@@ -16,11 +16,12 @@ private final class StorageUsageControllerArguments {
     let account: Account
     let updateKeepMedia: () -> Void
     let openPeerMedia: (PeerId) -> Void
-    
-    init(account: Account, updateKeepMedia: @escaping () -> Void, openPeerMedia: @escaping (PeerId) -> Void) {
+    let clearAll:()->Void
+    init(account: Account, updateKeepMedia: @escaping () -> Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void) {
         self.account = account
         self.updateKeepMedia = updateKeepMedia
         self.openPeerMedia = openPeerMedia
+        self.clearAll = clearAll
     }
 }
 
@@ -32,7 +33,7 @@ private enum StorageUsageSection: Int32 {
 private enum StorageUsageEntry: TableItemListNodeEntry {
     case keepMedia(Int32, String, String)
     case keepMediaInfo(Int32, String)
-    
+    case clearAll(Int32, Bool)
     case collecting(Int32, String)
     case peersHeader(Int32, String)
     case peer(Int32, Int32, Peer, String)
@@ -44,10 +45,12 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 0
         case .keepMediaInfo:
             return 1
-        case .collecting:
+        case .clearAll:
             return 2
-        case .peersHeader:
+        case .collecting:
             return 3
+        case .peersHeader:
+            return 4
         case let .peer(_, _, peer, _):
             return Int32(peer.id.hashValue)
         case .section(let sectionId):
@@ -61,12 +64,14 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 0
         case .keepMediaInfo:
             return 1
-        case .collecting:
+        case .clearAll:
             return 2
-        case .peersHeader:
+        case .collecting:
             return 3
+        case .peersHeader:
+            return 4
         case let .peer(_, index, _, _):
-            return 4 + index
+            return 5 + index
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -77,6 +82,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case .keepMedia(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case .keepMediaInfo(let sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case .clearAll(let sectionId, _):
             return (sectionId * 1000) + stableIndex
         case .collecting(let sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -99,6 +106,12 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             }
         case let .keepMediaInfo(sectionId, text):
             if case .keepMediaInfo(sectionId, text) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .clearAll(sectionId, enabled):
+            if case .clearAll(sectionId, enabled) = rhs {
                 return true
             } else {
                 return false
@@ -159,7 +172,13 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .keepMediaInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .collecting(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, additionLoading: true)
+        case .clearAll(_, let enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.storageClearAll), type: .next, action: {
+                confirm(for: mainWindow, with: appName, and: tr(.storageClearAllConfirmDescription), successHandler: { _ in
+                    arguments.clearAll()
+                })
+            }, enabled: enabled)
         case let .peersHeader(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .peer(_, _, peer, value):
@@ -202,6 +221,12 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     
     var exists:[PeerId:PeerId] = [:]
     if let cacheStats = cacheStats, case let .result(stats) = cacheStats {
+        
+        entries.append(.clearAll(sectionId, !stats.peers.isEmpty))
+
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
         var statsByPeerId: [(PeerId, Int64)] = []
         for (peerId, categories) in stats.media {
             if exists[peerId] == nil {
@@ -339,6 +364,11 @@ class StorageUsageController: TableViewController {
                     }
                 }
             })
+        }, clearAll: {
+            let path = account.postbox.mediaBox.basePath
+            
+            _ = showModalProgress(signal: clearCache(path), for: mainWindow).start()
+            statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:]))))
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<StorageUsageEntry>]> = Atomic(value: [])

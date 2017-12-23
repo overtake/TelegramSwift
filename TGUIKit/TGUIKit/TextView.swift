@@ -166,21 +166,24 @@ private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat,
 public final class TextViewInteractions {
     public var processURL:(Any!)->Void // link, isPresent
     public var copy:(()->Bool)?
-    public var menuItems:(()->Signal<[ContextMenuItem], Void>)?
-    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:(()->Signal<[ContextMenuItem], Void>)? = nil) {
+    public var menuItems:((Bool)->Signal<[ContextMenuItem], Void>)?
+    public var isDomainLink:(String)->Bool
+    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((Bool)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
+        self.isDomainLink = isDomainLink
     }
 }
 
 public final class TextViewLine {
     public let line: CTLine
     public let frame: NSRect
-    
-    init(line: CTLine, frame: CGRect) {
+    public let range: NSRange
+    init(line: CTLine, frame: CGRect, range: NSRange) {
         self.line = line
         self.frame = frame
+        self.range = range
     }
     
 }
@@ -212,7 +215,7 @@ public final class TextViewLayout : Equatable {
     public fileprivate(set) var attributedString:NSAttributedString
     public fileprivate(set) var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
-    public var selectedRange:TextSelectedRange = TextSelectedRange()
+    public var selectedRange:TextSelectedRange
     public var penFlush:CGFloat
     public var insets:NSSize = NSZeroSize
     public fileprivate(set) var lines:[TextViewLine] = []
@@ -220,20 +223,27 @@ public final class TextViewLayout : Equatable {
     public let maximumNumberOfLines:Int32
     public let truncationType:CTLineTruncationType
     public var cutout:TextViewCutout?
-    
-    fileprivate var monospacedImage:(CGPoint, CGImage?) = (CGPoint(), nil)
+    public var mayBlocked: Bool = true
+    fileprivate var blockImage:(CGPoint, CGImage?) = (CGPoint(), nil)
 
     public fileprivate(set) var lineSpacing:CGFloat?
     
     public private(set) var layoutSize:NSSize = NSZeroSize
     public private(set) var perfectSize:NSSize = NSZeroSize
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil) {
+    public var alwaysStaticItems: Bool
+    fileprivate var selectText: NSColor
+    public var strokeLinks: Bool
+    fileprivate var strokeRects: [(NSRect, NSColor)] = []
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
         self.attributedString = attributedString
         self.constrainedWidth = constrainedWidth
-        
+        self.selectText = selectText
+        self.alwaysStaticItems = alwaysStaticItems
+        self.selectedRange = TextSelectedRange(color: selectText)
+        self.strokeLinks = strokeLinks
         switch alignment {
         case .center:
             penFlush = 0.5
@@ -295,6 +305,7 @@ public final class TextViewLayout : Equatable {
             cutoutEnabled = true
         }
         
+        let stringLength = attributedString.length
         var first = true
         var breakInset: CGFloat = 0
         var isWasPreformatted: Bool = false
@@ -311,7 +322,14 @@ public final class TextViewLayout : Equatable {
             
             
             
-            if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber) {
+
+            
+            
+            if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber), mayBlocked {
+                
+                
+                
+                
                 breakInset = CGFloat(space.floatValue * 2)
                 lineCutoutOffset += CGFloat(space.floatValue)
                 lineAdditionalWidth += breakInset
@@ -356,7 +374,8 @@ public final class TextViewLayout : Equatable {
             
             
             let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, lastLineCharacterIndex, Double(lineConstrainedWidth - breakInset))
-            
+            let lineRange = CFRange(location: lastLineCharacterIndex, length: lineCharacterCount)
+
             
             var lineHeight = fontLineHeight
             
@@ -399,7 +418,7 @@ public final class TextViewLayout : Equatable {
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length)))
                 
                 break
             } else {
@@ -420,7 +439,7 @@ public final class TextViewLayout : Equatable {
                     layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
-                    if let space = lineString.attribute(.preformattedPre, at: 0, effectiveRange: nil) as? NSNumber {
+                    if let space = lineString.attribute(.preformattedPre, at: 0, effectiveRange: nil) as? NSNumber, mayBlocked {
                         
                         layoutSize.width = self.constrainedWidth
                         let preformattedSpace = CGFloat(space.floatValue) * 2
@@ -428,7 +447,7 @@ public final class TextViewLayout : Equatable {
                         monospacedRects.append(NSMakeRect(0, lineFrame.minY - lineFrame.height, layoutSize.width, lineFrame.height + preformattedSpace))
                     }
 
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame))
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length)))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -438,35 +457,115 @@ public final class TextViewLayout : Equatable {
                 }
             }
             
-
-            if let isPreformattedLine = isPreformattedLine {
-                layoutSize.height += isPreformattedLine * 2
-                if lastLineCharacterIndex == attributedString.length {
-                    layoutSize.height += isPreformattedLine/2
+            if mayBlocked {
+                if let isPreformattedLine = isPreformattedLine {
+                    layoutSize.height += isPreformattedLine * 2
+                    if lastLineCharacterIndex == attributedString.length {
+                        layoutSize.height += isPreformattedLine/2
+                    }
+                    // fontLineSpacing = isPreformattedLine
                 }
-               // fontLineSpacing = isPreformattedLine
             }
             
         }
         
-        let sortedIndices = (0 ..< monospacedRects.count).sorted(by: { monospacedRects[$0].width > monospacedRects[$1].width })
-        for i in 0 ..< sortedIndices.count {
-            let index = sortedIndices[i]
-            for j in -1 ... 1 {
-                if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
-                    if abs(monospacedRects[index + j].width - monospacedRects[index].width) < 40.0 {
-                        monospacedRects[index + j].size.width = max(monospacedRects[index + j].width, monospacedRects[index].width)
+        if mayBlocked {
+            let sortedIndices = (0 ..< monospacedRects.count).sorted(by: { monospacedRects[$0].width > monospacedRects[$1].width })
+            for i in 0 ..< sortedIndices.count {
+                let index = sortedIndices[i]
+                for j in -1 ... 1 {
+                    if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
+                        if abs(monospacedRects[index + j].width - monospacedRects[index].width) < 40.0 {
+                            monospacedRects[index + j].size.width = max(monospacedRects[index + j].width, monospacedRects[index].width)
+                        }
                     }
                 }
             }
+            
+            self.blockImage = generateRectsImage(color: presentation.colors.grayBackground, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
         }
         
-        self.monospacedImage = generateRectsImage(color: presentation.colors.grayBackground, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
+        
         
         //self.monospacedStrokeImage = generateRectsImage(color: presentation.colors.border, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
 
         
         self.layoutSize = layoutSize
+    }
+    
+    public func generateAutoBlock(backgroundColor: NSColor) {
+        
+        var rects = self.lines.map({$0.frame})
+        
+        if !rects.isEmpty {
+            let sortedIndices = (0 ..< rects.count).sorted(by: { rects[$0].width > rects[$1].width })
+            for i in 0 ..< sortedIndices.count {
+                let index = sortedIndices[i]
+                for j in -1 ... 1 {
+                    if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
+                        if abs(rects[index + j].width - rects[index].width) < 40.0 {
+                            rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
+                        }
+                    }
+                }
+            }
+            
+            for i in 0 ..< rects.count {
+                rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - 20.0) / 2.0))
+                rects[i].size.height = 18
+                rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
+                rects[i].size.width += 12
+            }
+            
+            self.blockImage = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: rects[0].height / 2, innerRadius: .cornerRadius)
+            self.blockImage.0 = NSMakePoint(0, 0)
+            
+            layoutSize.width += 12
+            layoutSize.height = rects.last!.maxY
+        }
+        
+    }
+    
+    public func selectNextChar() {
+        var range = selectedRange.range
+        
+        switch selectedRange.cursorAlignment {
+        case let .min(cursorAlignment), let .max(cursorAlignment):
+            if range.min >= cursorAlignment {
+                range.length += 1
+            } else {
+                range.location += 1
+                if range.length > 1 {
+                    range.length -= 1
+                }
+            }
+        }
+        let location = min(max(0, range.location), attributedString.length)
+        let length = max(min(range.length, attributedString.length - location), 0)
+        selectedRange.range = NSMakeRange(location, length)
+    }
+    
+    public func selectPrevChar() {
+        var range = selectedRange.range
+        
+        switch selectedRange.cursorAlignment {
+            case let .min(cursorAlignment), let .max(cursorAlignment):
+            if range.location >= cursorAlignment {
+                if range.length > 1 {
+                    range.length -= 1
+                } else {
+                    range.location -= 1
+                }
+            } else {
+                if range.location > 0 {
+                    range.location -= 1
+                    range.length += 1
+                }
+            }
+        }
+        let location = min(max(0, range.location), attributedString.length)
+        let length = max(min(range.length, attributedString.length - location), 0)
+        selectedRange.range = NSMakeRange(location, length)
     }
     
     public func measure(width: CGFloat = 0) -> Void {
@@ -476,6 +575,34 @@ public final class TextViewLayout : Equatable {
         }
         calculateLayout()
 
+        strokeRects.removeAll()
+        if strokeLinks {
+            attributedString.enumerateAttribute(NSAttributedStringKey.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
+                if let _ = value, self.interactions.isDomainLink(attributedString.string.nsstring.substring(with: range)) {
+                    
+                    for line in self.lines {
+                        let lineRange = NSIntersectionRange(range, line.range)
+                        if lineRange.length != 0 {
+                            var leftOffset: CGFloat = 0.0
+                            if lineRange.location != line.range.location {
+                                leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                            }
+                            let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
+                            
+                            
+                            let color: NSColor = self.attributedString.attribute(NSAttributedStringKey.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
+                            let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
+                            
+                            self.strokeRects.append((rect, color))
+                        }
+                    }
+                }
+    
+            })
+        }
+        
+        
+        
     }
     
     public func clearSelect() {
@@ -574,7 +701,7 @@ public final class TextViewLayout : Equatable {
         
     }
 
-    public func link(at point:NSPoint) -> (Any, NSRect)? {
+    public func link(at point:NSPoint) -> (Any, NSRange, NSRect)? {
         
         let index = findIndex(location: point)
         
@@ -600,7 +727,7 @@ public final class TextViewLayout : Equatable {
             if let link = link {
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
-                return (link, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
+                return (link, range, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
             }
         }
         return nil
@@ -631,9 +758,9 @@ public final class TextViewLayout : Equatable {
         
         var blockRange: NSRange = NSMakeRange(NSNotFound, 0)
         if let _ = attributedString.attribute(.preformattedPre, at: startIndex, effectiveRange: &blockRange) {
-            self.selectedRange = TextSelectedRange(range: blockRange, color: .selectText, def: true)
+            self.selectedRange = TextSelectedRange(range: blockRange, color: selectText, def: true)
         } else {
-            self.selectedRange = TextSelectedRange(range: NSMakeRange(0,attributedString.length), color: .selectText, def: true)
+            self.selectedRange = TextSelectedRange(range: NSMakeRange(0,attributedString.length), color: selectText, def: true)
         }
         
     }
@@ -650,11 +777,11 @@ public final class TextViewLayout : Equatable {
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
         let check = attributedString.attribute(NSAttributedStringKey.link, at: range.location, effectiveRange: &effectiveRange)
         if check != nil && effectiveRange.location != NSNotFound {
-            self.selectedRange = TextSelectedRange(range: effectiveRange, color: presentation.colors.selectText, def: true)
+            self.selectedRange = TextSelectedRange(range: effectiveRange, color: selectText, def: true)
             return
         }
         if char == "" {
-            self.selectedRange = TextSelectedRange()
+            self.selectedRange = TextSelectedRange(color: selectText)
             return
         }
         let valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || char == "_"
@@ -687,7 +814,7 @@ public final class TextViewLayout : Equatable {
             }
         }
         
-        self.selectedRange = TextSelectedRange(range: range, color: presentation.colors.selectText, def: true)
+        self.selectedRange = TextSelectedRange(range: range, color: selectText, def: true)
     }
     
 
@@ -697,10 +824,26 @@ public func ==(lhs:TextViewLayout, rhs:TextViewLayout) -> Bool {
     return lhs.constrainedWidth == rhs.constrainedWidth && lhs.attributedString.isEqual(to: rhs.attributedString) && lhs.selectedRange == rhs.selectedRange && lhs.maximumNumberOfLines == rhs.maximumNumberOfLines && lhs.cutout == rhs.cutout && lhs.truncationType == rhs.truncationType && lhs.constrainedWidth == rhs.constrainedWidth
 }
 
+public enum CursorSelectAlignment {
+    case min(Int)
+    case max(Int)
+}
+
 public struct TextSelectedRange: Equatable {
+    
+    
     public var range:NSRange = NSMakeRange(NSNotFound, 0)
     public var color:NSColor = presentation.colors.selectText
     public var def:Bool = true
+    
+    init(range: NSRange = NSMakeRange(NSNotFound, 0), color: NSColor = presentation.colors.selectText, def: Bool = true, cursorAlignment: CursorSelectAlignment = .min(0)) {
+        self.range = range
+        self.color = color
+        self.def = def
+        self.cursorAlignment = cursorAlignment
+    }
+    
+    public var cursorAlignment: CursorSelectAlignment = .min(0)
     
     public var hasSelectText:Bool {
         return range.location != NSNotFound
@@ -766,8 +909,8 @@ public class TextView: Control {
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
             
             
-            if let image = layout.monospacedImage.1 {
-                ctx.draw(image, in: NSMakeRect(layout.monospacedImage.0.x, layout.monospacedImage.0.y, image.backingSize.width, image.backingSize.height))
+            if let image = layout.blockImage.1 {
+                ctx.draw(image, in: NSMakeRect(layout.blockImage.0.x, layout.blockImage.0.y, image.backingSize.width, image.backingSize.height))
             }
             
             
@@ -819,7 +962,7 @@ public class TextView: Control {
                         
                         width = endOffset - startOffset;
                         
-                        let blockValue:CGFloat = CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0)
+                        let blockValue:CGFloat = layout.mayBlocked ? CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0) : 0
                         
                         
 
@@ -828,7 +971,7 @@ public class TextView: Control {
                         rect.origin.x = startOffset + blockValue
                         rect.origin.y = rect.minY - rect.height + blockValue / 2
                         rect.size.height += ceil(descent - leading)
-                        let color:NSColor = presentation.colors.selectText
+                        let color:NSColor = layout.selectText
                         
                         ctx.setFillColor(color.cgColor)
                         ctx.fill(rect)
@@ -861,6 +1004,11 @@ public class TextView: Control {
             ctx.textMatrix = textMatrix
             ctx.textPosition = CGPoint(x: textPosition.x, y: textPosition.y)
             
+            for stroke in layout.strokeRects {
+                ctx.setFillColor(stroke.1.cgColor)
+                ctx.fill(stroke.0)
+            }
+            
         }
         
     }
@@ -868,12 +1016,13 @@ public class TextView: Control {
     
     public override func rightMouseDown(with event: NSEvent) {
         if let layout = layout, userInteractionEnabled {
-            if !layout.selectedRange.hasSelectText || !layout.inSelectedRange(convert(event.locationInWindow, from: nil)) {
-                layout.selectWord(at : self.convert(event.locationInWindow, from: nil))
+            let location = convert(event.locationInWindow, from: nil)
+            if (!layout.selectedRange.hasSelectText || !layout.inSelectedRange(location)) && (!layout.alwaysStaticItems || layout.link(at: location) != nil) {
+                layout.selectWord(at : location)
             }
             self.setNeedsDisplayLayer()
-            if layout.selectedRange.hasSelectText {
-                if let menuItems = layout.interactions.menuItems?() {
+            if layout.selectedRange.hasSelectText || !layout.alwaysStaticItems {
+                if let menuItems = layout.interactions.menuItems?(layout.link(at: convert(event.locationInWindow, from: nil)) != nil) {
                     menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
                         if let strongSelf = self {
                             let menu = NSMenu()
@@ -890,6 +1039,8 @@ public class TextView: Control {
                     NSMenu.popUpContextMenu(menu, with: event, for: self)
                 }
             } else {
+                layout.selectedRange.range = NSMakeRange(NSNotFound, 0)
+                needsDisplay = true
                 super.rightMouseDown(with: event)
             }
         } else {
@@ -945,8 +1096,9 @@ public class TextView: Control {
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
         
-        
-        layout?.selectedRange = TextSelectedRange(range:range, color:.selectText, def:true)
+        if let layout = layout {
+            layout.selectedRange = TextSelectedRange(range:range, color: layout.selectText, def:true)
+        }
         
         beginSelect = NSMakePoint(-1, -1)
         endSelect = NSMakePoint(-1, -1)
@@ -995,6 +1147,7 @@ public class TextView: Control {
         endSelect = self.convert(event.locationInWindow, from: nil)
         if let layout = layout {
             layout.selectedRange.range = layout.selectedRange(startPoint: beginSelect, currentPoint: endSelect)
+            layout.selectedRange.cursorAlignment = beginSelect.x > endSelect.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
         }
         self.setNeedsDisplayLayer()
     }
@@ -1024,10 +1177,12 @@ public class TextView: Control {
             let point = self.convert(event.locationInWindow, from: nil)
             if event.clickCount == 3 {
                 layout.selectAll(at: point)
+                layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
             } else if event.clickCount == 2 || (event.type == .rightMouseUp  && !layout.selectedRange.hasSelectText) {
                 layout.selectWord(at : point)
+                layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
             } else if !layout.selectedRange.hasSelectText || !isSelectable && event.clickCount == 1 {
-                if let (link,_) = layout.link(at: point) {
+                if let (link, _, _) = layout.link(at: point) {
                     layout.interactions.processURL(link)
                 }
             }
@@ -1042,7 +1197,7 @@ public class TextView: Control {
         
         if self.mouse(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
             
-            if let layout = layout, let (_, _) = layout.link(at: location) {
+            if let layout = layout, let (_, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand.set()
             } else if isSelectable {
                 NSCursor.iBeam.set()

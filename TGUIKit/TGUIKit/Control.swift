@@ -55,7 +55,6 @@ open class Control: View {
     
     public var interactionStateForRestore:Bool? = nil
     
-    public var userInteractionEnabled:Bool = true
     
     private var handlers:[(ControlEvent,(Control) -> Void)] = []
     private var stateHandlers:[(ControlState,(Control) -> Void)] = []

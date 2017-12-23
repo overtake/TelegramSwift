@@ -18,7 +18,7 @@ class SidebarCapView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        text.font = .normal(.custom(15))
+        text.font = .normal(.header)
         text.drawsBackground = false
        // text.backgroundColor = .clear
         text.isSelectable = false

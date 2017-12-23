@@ -208,7 +208,7 @@ class Sender: NSObject {
                                 try? imageRep.representation(using: NSBitmapImageRep.FileType.jpeg, properties: options)?.write(to: URL(fileURLWithPath: path))
                                 
                                 
-                                let scaledSize = size.aspectFilled(CGSize(width: 1280.0, height: 1280.0))
+                                let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
                                 media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)], reference: nil)

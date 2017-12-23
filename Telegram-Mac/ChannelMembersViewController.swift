@@ -414,7 +414,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         }, addMembers: {
             peersPromise.set(selectModalPeers(account: account, title: tr(.channelMembersSelectTitle), settings: [.contacts, .remote]) |> mapToSignal { peers -> Signal<[RenderedChannelParticipant]?, Void> in
                 return showModalProgress(signal: addChannelMembers(account: account, peerId: peerId, memberIds: peers) |> mapToSignal {
-                    return channelMembers(account: account, peerId: peerId) |> map { Optional($0) }
+                    return channelMembers(postbox: account.postbox, network: account.network, peerId: peerId) |> map { Optional($0) }
                     }, for: mainWindow)
             })
         }, inviteLink: { [weak self] in
@@ -427,7 +427,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         
         let peerView = account.viewTracker.peerView(peerId)
         
-        let peersSignal: Signal<[RenderedChannelParticipant]?, NoError> = .single(nil) |> then(channelMembers(account: account, peerId: peerId) |> map { Optional($0) })
+        let peersSignal: Signal<[RenderedChannelParticipant]?, NoError> = .single(nil) |> then(channelMembers(postbox: account.postbox, network: account.network, peerId: peerId) |> map { Optional($0) })
         
         peersPromise.set(peersSignal)
         

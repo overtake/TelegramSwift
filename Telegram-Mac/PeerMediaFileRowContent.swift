@@ -130,7 +130,6 @@ class PeerMediaFileRowView : PeerMediaRowView {
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         actionView.isSelectable = false
-        actionView.userInteractionEnabled = false
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(nameView)
@@ -283,7 +282,11 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
                     if let strongSelf = self {
                         strongSelf.fetchStatus = status
-                        
+                        if case .Local = status {
+                            strongSelf.actionView.userInteractionEnabled = true
+                        } else {
+                            strongSelf.actionView.userInteractionEnabled = false
+                        }
                         let initDownloadControlIfNeeded = { [weak strongSelf] in
                             if let strongSelf = strongSelf, strongSelf.downloadStatusControl == nil {
                                 strongSelf.downloadStatusControl = ImageView(frame:NSMakeRect(item.contentInset.left, strongSelf.frame.height - theme.icons.peerMediaDownloadFileStart.backingSize.height - item.contentInset.bottom - 4.0, theme.icons.peerMediaDownloadFileStart.backingSize.width, theme.icons.peerMediaDownloadFileStart.backingSize.height))

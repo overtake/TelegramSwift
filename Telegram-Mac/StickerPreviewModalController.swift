@@ -36,7 +36,7 @@ fileprivate class StickerPreviewModalView : View {
         imageView.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
         imageView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
         
-        let layout = TextViewLayout(.initialize(string: file.stickerText?.fixed, color: nil, font: .normal(.custom(30))))
+        let layout = TextViewLayout(.initialize(string: file.stickerText?.fixed, color: nil, font: .normal(30.0)))
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
         textView.centerX()

@@ -19,13 +19,14 @@ class ChatMediaVideoMessageLayoutParameters : ChatMediaLayoutParameters {
     let isMarked:Bool
     let duration:Int
     let durationLayout:TextViewLayout
-    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource) {
+    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media) {
         self.showPlayer = showPlayer
         self.duration = duration
         self.isMarked = isMarked
         self.isWebpage = isWebpage
         self.resource = resource
         self.durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
+        super.init(presentation: presentation, media: media)
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {
@@ -39,7 +40,11 @@ class ChatVideoMessageItem: ChatMediaItem {
         super.init(initialSize, chatInteraction, account, object)
 
 
-        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction)
+        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+    }
+    
+    override var instantlyResize: Bool {
+        return true
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

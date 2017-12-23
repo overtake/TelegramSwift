@@ -27,7 +27,7 @@ enum PasscodeViewState {
 }
 
 private class PasscodeLockView : Control, NSTextFieldDelegate {
-    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(.custom(23)))
+    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(23.0))
     fileprivate let nameView:TextView = TextView()
     fileprivate let input:NSSecureTextField
     private let nextButton:TitleButton = TitleButton()
@@ -329,7 +329,7 @@ class PasscodeLockController: ModalViewController {
             self?.checkNextValue(value, current)
         }))
         
-        disposable.set(combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue, additionalSettings(postbox: account.postbox) |> take(1)).start(next: { [weak self] peer, additional in
+        disposable.set(combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue, additionalSettings(postbox: account.postbox) |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peer, additional in
             if let strongSelf = self {
                 if additional.useTouchId {
                     switch strongSelf.state {

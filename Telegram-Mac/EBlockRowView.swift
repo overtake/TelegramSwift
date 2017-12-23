@@ -226,7 +226,6 @@ class EBlockRowView: TableRowView {
         
         self.button.isSelected = self.update(with: segmentView.convert(event.locationInWindow, from: nil))
         let emoji = selectedEmoji
-        NSLog("\(emoji)")
         let lhs = emoji.emojiUnmodified.glyphCount
         let rhs = ( emoji.emojiUnmodified + "🏻").glyphCount
         longHandle.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in

@@ -268,7 +268,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                     return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMember(peer.displayTitle)))
                 }
             }
-            return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMembers(peerIds.count)))
+            return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
         }
         
         let addMember = account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<Void, Void> in
@@ -1030,7 +1030,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.account, stableId: stableId.hashValue, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.custom(12.5)), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(.custom(12.5)), foregroundColor:color), status: string, inset:NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType:.context( stateback: {
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.account, stableId: stableId.hashValue, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset:NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType:.context( stateback: {
                 return label
             }), action:{
                 arguments.peerInfo(peer!.id)

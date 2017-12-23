@@ -20,17 +20,19 @@ class ChatContactRowItem: ChatRowItem {
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
 
+            let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
+
             if let peerId = contact.peerId {
                 self.contactPeer = message.peers[peerId]
-                let range = attr.append(string: contact.firstName + " " + contact.lastName, color: theme.colors.link, font: .medium(.text))
-                attr.add(link: inAppLink.peerInfo(peerId:peerId,action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range)
+                let range = attr.append(string: contact.firstName + " " + contact.lastName, font: .medium(.text))
+                attr.add(link: inAppLink.peerInfo(peerId:peerId,action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: theme.chat.linkColor(isIncoming))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.colors.text, font: .normal(.text))
+                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming), font: .normal(.text))
             } else {
                 self.contactPeer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: 0), accessHash: nil, firstName: contact.firstName, lastName: contact.lastName, username: nil, phone: contact.phoneNumber, photo: [], botInfo: nil, flags: [])
-                _ = attr.append(string: contact.firstName + " " + contact.lastName, color: theme.colors.text, font: .medium(.text))
+                _ = attr.append(string: contact.firstName + " " + contact.lastName, color: theme.chat.textColor(isIncoming), font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.colors.text, font: .normal(.text))
+                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming), font: .normal(.text))
             }
             text = TextViewLayout(attr, maximumNumberOfLines: 3, truncationType: .end, alignment: .left)
             text.interactions = globalLinkExecutor
@@ -42,9 +44,13 @@ class ChatContactRowItem: ChatRowItem {
         super.init(initialSize, chatInteraction, account, object)
     }
     
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        return rightSize.height
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        text.measure(width: width - 60)
-        return NSMakeSize(text.layoutSize.width + 60, 50)
+        text.measure(width: width - 50)
+        return NSMakeSize(text.layoutSize.width + 50, 40)
     }
     
     override func viewClass() -> AnyClass {
@@ -61,14 +67,14 @@ class ChatContactRowView : ChatRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(photoView)
-        photoView.setFrameSize(50,50)
+        photoView.setFrameSize(40,40)
         textView.isSelectable = false
         addSubview(textView)
     }
     
     override func updateColors() {
         super.updateColors()
-        textView.backgroundColor = backdorColor
+        textView.backgroundColor = contentColor
     }
     
     required init?(coder: NSCoder) {
@@ -79,7 +85,7 @@ class ChatContactRowView : ChatRowView {
         super.layout()
         if let item = self.item as? ChatContactRowItem {
             textView.update(item.text)
-            textView.centerY(x:60)
+            textView.centerY(x:50)
         }
 
     }

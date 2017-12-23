@@ -20,7 +20,10 @@ class WPArticleContentView: WPContentView {
     private var playIcon:ImageView?
     private let openExternalDisposable:MetaDisposable = MetaDisposable()
     private let loadingStatusDisposable: MetaDisposable = MetaDisposable()
+    private let fetchDisposable = MetaDisposable()
+    private let statusDisposable = MetaDisposable()
     private var countAccessoryView: ChatMessageAccessoryView?
+    private var downloadIndicator: RadialProgressView?
     override var backgroundColor: NSColor {
         didSet {
             self.setNeedsDisplay()
@@ -36,6 +39,8 @@ class WPArticleContentView: WPContentView {
     deinit {
         openExternalDisposable.dispose()
         loadingStatusDisposable.dispose()
+        statusDisposable.dispose()
+        fetchDisposable.dispose()
     }
     
     override func viewDidMoveToSuperview() {
@@ -81,7 +86,7 @@ class WPArticleContentView: WPContentView {
                 showModal(with: WebpageModalController(content:content,account:layout.account), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(account: layout.account, message: layout.parent, layout.table, type: .alone)
-            } else {
+            } else if !content.url.isEmpty {
                 execute(inapp: .external(link: content.url, false))
             }
 
@@ -111,6 +116,7 @@ class WPArticleContentView: WPContentView {
                                // self?.progressIndicator?.set(color: .white)
                                 strongSelf.imageView?.addSubview((strongSelf.progressIndicator)!)
                             }
+                            strongSelf.progressIndicator?.center()
                             strongSelf.progressIndicator?.animates = true
                         default:
                             strongSelf.progressIndicator?.animates = false
@@ -130,7 +136,47 @@ class WPArticleContentView: WPContentView {
             var updateImageSignal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
             if self.content?.content.image != layout.content.image {
                 if let image = layout.content.image {
-                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, photo: image, scale: backingScaleFactor, small:layout.smallThumb)
+                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, photo: image, scale: backingScaleFactor, small: layout.smallThumb)
+                    
+                    fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.account, photo: image).start())
+                    
+                    let closestRepresentation = (layout.smallThumb ? image.representationForDisplayAtSize(NSMakeSize(120.0, 120.0)) : largestImageRepresentation(image.representations))
+                    
+                    if let closestRepresentation = closestRepresentation {
+                        statusDisposable.set((layout.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource) |> deliverOnMainQueue).start(next: { [weak self] status in
+                            
+                            guard let `self` = self else {return}
+                            
+                            var initProgress: Bool = false
+                            var state: RadialProgressState = .None
+                            switch status {
+                            case .Fetching:
+                                state = .ImpossibleFetching(progress: 0.8, force: false)
+                                initProgress = true
+                            case .Local:
+                                break
+                            case .Remote:
+                                state = .ImpossibleFetching(progress: 0.3, force: true)
+                            }
+                            if initProgress {
+                                if self.downloadIndicator == nil {
+                                    self.downloadIndicator = RadialProgressView()
+                                }
+                                self.imageView?.addSubview(self.downloadIndicator!)
+                                self.downloadIndicator!.center()
+                            } else {
+                                self.downloadIndicator?.removeFromSuperview()
+                                self.downloadIndicator = nil
+                            }
+                            self.downloadIndicator?.state = state
+                            
+                        }))
+                    } else {
+                        statusDisposable.set(nil)
+                        downloadIndicator?.removeFromSuperview()
+                        downloadIndicator = nil
+                        
+                    }
                     
                     if imageView == nil {
                         imageView = TransformImageView()
@@ -154,8 +200,8 @@ class WPArticleContentView: WPContentView {
                         imageView?.set(arguments: arguments)
                         imageView?.setSignal(signal: cachedMedia(media: image, size: arguments.imageSize, scale: backingScaleFactor))
                         
-                        if let updateImageSignal = updateImageSignal, imageView?.layer?.contents == nil  {
-                                imageView?.setSignal(updateImageSignal, cacheImage: { [weak self] signal in
+                        if let updateImageSignal = updateImageSignal {
+                                imageView?.setSignal(updateImageSignal, clearInstantly: true, animate: true, cacheImage: { [weak self] signal in
                                     if let strongSelf = self {
                                         return cacheMedia(signal: signal, media: image, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                                     } else {
@@ -190,7 +236,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(tr(.chatWebpageMediaCount(1, mediaCount)), maxWidth: 30)
+                countAccessoryView?.updateText(tr(.chatWebpageMediaCount(1, mediaCount)), maxWidth: 40)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil
@@ -216,6 +262,7 @@ class WPArticleContentView: WPContentView {
             if let imageView = imageView {
                 
                 progressIndicator?.center()
+                downloadIndicator?.center()
                 
                 if let arguments = layout.imageArguments {
                     imageView.set(arguments: arguments)

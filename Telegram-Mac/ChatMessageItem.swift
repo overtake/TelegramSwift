@@ -27,24 +27,23 @@ class ChatMessageItem: ChatRowItem {
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ account:Account, _ entry: ChatHistoryEntry) {
         
-        if let message = entry.message {
+         if let message = entry.message {
+            
+            let isIncoming: Bool = message.isIncoming(account, entry.renderType == .bubble)
+
            
             let messageAttr:NSMutableAttributedString
             if message.text.isEmpty && message.media.isEmpty {
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: tr(.chatMessageUnsupported), color: theme.colors.text, font: .code(.custom(theme.fontSize)))
+                _ = attr.append(string: tr(.chatMessageUnsupported), color: theme.chat.textColor(isIncoming), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy).mutableCopy() as! NSMutableAttributedString
-//
-                if message.flags.contains(.Sending) {
-                    messageAttr.detectLinks(type: [.Links, .Mentions, .Hashtags], account: account, openInfo:chatInteraction.openInfo, applyProxy: chatInteraction.applyProxy)
-                }
-                
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming), linkColor: theme.chat.linkColor(isIncoming), monospacedPre: theme.chat.monospacedPreColor(isIncoming), monospacedCode: theme.chat.monospacedCodeColor(isIncoming)).mutableCopy() as! NSMutableAttributedString
+
                 messageAttr.fixUndefinedEmojies()
                 
                 
-                var formatting: Bool = true
+                var formatting: Bool = messageAttr.length > 0 
                 var index:Int = 0
                 while formatting {
                     var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
@@ -85,9 +84,6 @@ class ChatMessageItem: ChatRowItem {
                     
                     formatting = index < messageAttr.length
                 }
-                
-        
-                
             }
             
             
@@ -95,28 +91,34 @@ class ChatMessageItem: ChatRowItem {
             
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
-                    copy.detectLinks(type: .Links, account: account)
+                    copy.detectLinks(type: .Links, account: account, color: theme.chat.linkColor(isIncoming))
                 }
             }
             
+           
             self.messageText = copy
            
             
-            textLayout = TextViewLayout(self.messageText)
-
+            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
+            textLayout.mayBlocked = entry.renderType != .bubble
             if let range = selectManager.find(entry.stableId) {
                 textLayout.selectedRange.range = range
             }
             
             
+            var media = message.media.first
+            if let game = media as? TelegramMediaGame {
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, instantPage: nil)))
+            }
             
-            if let webpage = message.media.first as? TelegramMediaWebpage {
+            if let webpage = media as? TelegramMediaWebpage {
+                let presentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming), activity: theme.chat.webPreviewActivity(isIncoming), link: theme.chat.linkColor(isIncoming), selectText: theme.chat.selectText(isIncoming), ivIcon: theme.chat.instantPageIcon(isIncoming), renderType: entry.renderType)
                 switch webpage.content {
                 case let .Loaded(content):
                     if content.file == nil {
-                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize)
+                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation)
                     } else {
-                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize)
+                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation)
                     }
                 default:
                     break
@@ -124,7 +126,7 @@ class ChatMessageItem: ChatRowItem {
             }
             
             super.init(initialSize,chatInteraction,account,entry)
-            
+
             textLayout.interactions = TextViewInteractions(processURL:{ link in
                 if let link = link as? inAppLink {
                     execute(inapp:link)
@@ -132,10 +134,10 @@ class ChatMessageItem: ChatRowItem {
             }, copy: {
                 selectManager.copy(selectManager)
                 return !selectManager.isEmpty
-            }, menuItems: { [weak self] in
+            }, menuItems: { [weak self] onLink in
                 var items:[ContextMenuItem] = []
                 if let strongSelf = self {
-                    items.append(ContextMenuItem(tr(.textCopy), handler: { [weak strongSelf] in
+                    items.append(ContextMenuItem(onLink ? tr(.messageContextCopyMessageLink) : tr(.textCopy), handler: { [weak strongSelf] in
                         let result = strongSelf?.textLayout.interactions.copy?()
                         if let result = result, let strongSelf = strongSelf, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
@@ -171,11 +173,17 @@ class ChatMessageItem: ChatRowItem {
                     return strongSelf.menuItems(in: NSZeroPoint) |> map { basic in
                         var basic = basic
                         basic.remove(at: 1)
-                        return items + basic
+                        basic.insert(contentsOf: items, at: 1)
+                        return basic
                     }
                 }
                 return .complete()
                 
+            }, isDomainLink: { value in
+                if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") {
+                    return true
+                }
+                return false
             })
             
             return
@@ -192,18 +200,69 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
+    
+    override var isFixedRightPosition: Bool {
+        
+        if let webpageLayout = webpageLayout {
+            if let webpageLayout = webpageLayout as? WPArticleLayout, let textLayout = webpageLayout.textLayout {
+                if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+                    return true
+                }
+            }
+            return super.isFixedRightPosition
+        }
+        
+        if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+            return true
+        }
+        return super.isFixedRightPosition
+    }
+    
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        
+        if let webpageLayout = webpageLayout {
+            if let webpageLayout = webpageLayout as? WPArticleLayout {
+                if let textLayout = webpageLayout.textLayout {
+                    if webpageLayout.hasInstantPage {
+                        return rightSize.height
+                    }
+                    if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+                        return rightSize.height
+                    }
+                    if let _ = webpageLayout.imageSize, webpageLayout.isFullImageSize || textLayout.layoutSize.height - 10 <= webpageLayout.contrainedImageSize.height {
+                        return rightSize.height
+                    }
+                } else {
+                    return rightSize.height
+                }
+                
+                
+            } else if webpageLayout is WPMediaLayout {
+                return rightSize.height
+            }
+            return nil
+        }
+        
+        if textLayout.lines.count == 1 {
+            if contentOffset.x + textLayout.layoutSize.width - (rightSize.width + insetBetweenContentAndDate) > width {
+                return rightSize.height
+            }
+        } else if let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+            return rightSize.height
+        }
+        return nil
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         let size:NSSize = super.makeContentSize(width)
         textLayout.measure(width: width)
      
-        webpageLayout?.measure(width: min(width, 400))
-        
-        
+        webpageLayout?.measure(width: min(width, 380))
         
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         
         if let webpageLayout = webpageLayout {
-            contentSize.height += webpageLayout.size.height + defaultContentTopOffset
+            contentSize.height += webpageLayout.size.height + defaultContentInnerInset
             contentSize.width = max(webpageLayout.size.width, contentSize.width)
         }
         
@@ -273,11 +332,48 @@ class ChatMessageItem: ChatRowItem {
         }
 
         
-        return items |> map { items in
+        return items |> map { [weak self] items in
             var items = items
-            items.insert(ContextMenuItem(tr(.textCopy), handler: {
-                copyToClipboard(text)
-            }), at: 1)
+            
+            var needCopy: Bool = true
+            for i in 0 ..< items.count {
+                if items[i].title == tr(.messageContextCopyMessageLink) || items[i].title == tr(.textCopy) {
+                    needCopy = false
+                }
+            }
+            if needCopy {
+
+            }
+            
+            
+            if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, needCopy {
+                let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                if let layout = textView.layout {
+                    if let (link, range, _) = layout.link(at: point) {
+                        var text:String = layout.attributedString.string.nsstring.substring(with: range)
+                        if let link = link as? inAppLink {
+                            if case let .external(link, _) = link {
+                                text = link
+                            }
+                        }
+                        
+                        for i in 0 ..< items.count {
+                            if items[i].title == tr(.messageContextCopyMessageLink) {
+                                items.remove(at: i)
+                                break
+                            }
+                        }
+                        
+                        items.insert(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                            copyToClipboard(text)
+                        }), at: 1)
+                    } else {
+                        items.insert(ContextMenuItem(tr(.textCopy), handler: {
+                            copyToClipboard(text)
+                        }), at: 1)
+                    }
+                }
+            }
             
             return items
         }
@@ -287,7 +383,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, account:Account, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxySettings)->Void) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, account:Account, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxySettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode ) -> NSAttributedString {
         var entities: TextEntitiesMessageAttribute?
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -297,7 +393,7 @@ class ChatMessageItem: ChatRowItem {
         }
         
         
-        let string = NSMutableAttributedString(string: text, attributes: [NSAttributedStringKey.font: NSFont.normal(.custom(fontSize)), NSAttributedStringKey.foregroundColor: theme.colors.text])
+        let string = NSMutableAttributedString(string: text, attributes: [NSAttributedStringKey.font: NSFont.normal(fontSize), NSAttributedStringKey.foregroundColor: textColor])
         if let entities = entities {
             var nsString: NSString?
             for entity in entities.entities {
@@ -305,54 +401,54 @@ class ChatMessageItem: ChatRowItem {
 
                 switch entity.type {
                 case .Url:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     let link = inApp(for:nsString!.substring(with: range) as NSString, account:account, openInfo:openInfo, applyProxy: applyProxy)
                     string.addAttribute(NSAttributedStringKey.link, value: link, range: range)
                 case .Email:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     string.addAttribute(NSAttributedStringKey.link, value: inAppLink.external(link: "mailto:\(nsString!.substring(with: range))", false), range: range)
                 case let .TextUrl(url):
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     
                     string.addAttribute(NSAttributedStringKey.link, value: inApp(for: url as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
                 case .Bold:
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.bold(.custom(fontSize)), range: range)
+                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.bold(fontSize), range: range)
                 case .Italic:
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFontManager.shared.convert(.normal(.custom(fontSize)), toHaveTrait: .italicFontMask), range: range)
+                    string.addAttribute(NSAttributedStringKey.font, value: NSFontManager.shared.convert(.normal(fontSize), toHaveTrait: .italicFontMask), range: range)
                 case .Mention:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     string.addAttribute(NSAttributedStringKey.link, value: inAppLink.followResolvedName(username:nsString!.substring(with: range), postId:nil, account:account, action:nil, callback: openInfo), range: range)
                 case let .TextMention(peerId):
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     string.addAttribute(NSAttributedStringKey.link, value: inAppLink.peerInfo(peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
                 case .BotCommand:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     string.addAttribute(NSAttributedStringKey.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
                 case .Code:
                     string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.code(.custom(fontSize)), range: range)
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.redUI, range: range)
+                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.code(fontSize), range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: monospacedCode, range: range)
                 case  .Pre:
                     string.addAttribute(.preformattedPre, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.code(.custom(fontSize)), range: range)
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.text, range: range)
+                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.code(fontSize), range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: monospacedPre, range: range)
                 case .Hashtag:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }

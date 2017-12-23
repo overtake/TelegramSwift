@@ -91,7 +91,7 @@ private func mediaForMessage(message: Message) -> Media? {
 
 fileprivate func itemFor(entry: ChatHistoryEntry, account: Account, pagerSize: NSSize) -> MGalleryItem {
     switch entry {
-    case let .MessageEntry(message, _, _, _, _):
+    case let .MessageEntry(message, _, _, _, _, _):
         if let media = mediaForMessage(message: message) {
             if let _ = media as? TelegramMediaImage {
                 return MGalleryPhotoItem(account, .message(entry), pagerSize)
@@ -425,7 +425,7 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, false, .Full(isAdmin: false), nil, nil)]
+                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, false, .list, .Full(isAdmin: false), nil, nil)]
                     let previous = previous.swap(entries)
                     
                     var inserted: [(Int, MGalleryItem)] = []
@@ -466,7 +466,7 @@ class GalleryViewer: NSResponder {
                     return account.postbox.messageView(index.id) |> mapToQueue { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), Void> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
-                            entries.append(.MessageEntry(message, false, .Full(isAdmin: false), nil, nil))
+                            entries.append(.MessageEntry(message, false, .list, .Full(isAdmin: false), nil, nil))
                         }
                         let previous = previous.swap(entries)
                         return prepareEntries(from: previous, to: entries, account: account, pagerSize: pagerSize) |> map { transition in
