@@ -37,9 +37,9 @@ class PeerListContainerView : View {
     
     override func updateLocalizationAndTheme() {
         self.backgroundColor = theme.colors.background
-        compose.disableActions()
-        compose.set(background: theme.colors.background, for: .Normal)
-        compose.set(background: theme.colors.background, for: .Hover)
+        compose.background = .clear
+        compose.set(background: .clear, for: .Normal)
+        compose.set(background: .clear, for: .Hover)
         compose.set(background: theme.colors.blueFill, for: .Highlight)
         compose.set(image: theme.icons.composeNewChat, for: .Normal)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
@@ -153,10 +153,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         let confirmationImpl:([PeerId])->Signal<Bool,Void> = { peerIds in
                             if let first = peerIds.first, peerIds.count == 1 {
                                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                                    return confirmSignal(for: mainWindow, header: appName, information: tr(.composeConfirmStartSecretChat(peer.displayTitle)))
+                                    return confirmSignal(for: mainWindow, information: tr(.composeConfirmStartSecretChat(peer.displayTitle)))
                                 }
                             }
-                            return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
+                            return confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
                         }
                         let select = selectModalPeers(account: account, title: tr(.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
                         

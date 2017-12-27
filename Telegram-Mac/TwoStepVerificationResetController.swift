@@ -105,7 +105,7 @@ class TwoStepVerificationResetController : TableViewController {
                     case .limitExceeded:
                         alertText = tr(.twoStepAuthFloodError)
                     }
-                    alert(for: mainWindow, header: appName, info: alertText)
+                    alert(for: mainWindow, info: alertText)
 
                 }, completed: {
                     updateState {

@@ -192,13 +192,16 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
+        if isForceRightLine {
+            return rightSize.height
+        }
         if let caption = captionLayout {
             if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
                 return rightSize.height
             }
         }
         if postAuthor != nil {
-            return isStateOverlayLayout ? nil : rightSize.height
+           // return isStateOverlayLayout ? nil : rightSize.height
         }
         return super.additionalLineForDateInBubbleState
     }

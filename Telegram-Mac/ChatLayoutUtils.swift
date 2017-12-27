@@ -33,6 +33,9 @@ class ChatLayoutUtils: NSObject {
                     contentSize = size
                 } else if case let .Video(_,video, _) = attr {
                     contentSize = video
+                    if contentSize.width < 50 && contentSize.height < 50 {
+                        contentSize = maxSize
+                    }
                 }
             }
             

@@ -36,6 +36,7 @@ public class SelectingControl: Control {
     
     public func set(selected:Bool, animated:Bool = false) {
         if selected != isSelected {
+
             self.isSelected = selected
             imageView.image = selected ? selectedImage : unselectedImage
             if animated {

@@ -78,7 +78,7 @@ class RecentSessionRowView : TableRowView {
         
         reset.set(handler: { [weak self] _ in
             if let item = self?.item as? RecentSessionRowItem {
-                confirm(for: mainWindow, with: appName, and: tr(.recentSessionsConfirmRevoke), successHandler: { _ in
+                confirm(for: mainWindow, information: tr(.recentSessionsConfirmRevoke), successHandler: { _ in
                     item.revoke()
                 })
             }

@@ -257,7 +257,7 @@ class LinkInvationController: TableViewController {
         }, revoke: { [weak self] in
             if let peer = peer.modify({$0}), let account = self?.account {
                 let info = peer.isChannel ? tr(.linkInvationChannelConfirmRevoke) : tr(.linkInvationGroupConfirmRevoke)
-                let signal = confirmSignal(for: mainWindow, header: appName, information: info, okTitle: tr(.linkInvationConfirmOk))
+                let signal = confirmSignal(for: mainWindow, information: info, okTitle: tr(.linkInvationConfirmOk))
                     |> filter {$0}
                     |> mapToSignal { _ -> Signal<Void, Void> in
                         return ensuredExistingPeerExportedInvitation(account: account, peerId: peer.id, revokeExisted: true)

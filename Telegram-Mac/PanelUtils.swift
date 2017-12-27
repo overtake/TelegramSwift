@@ -10,6 +10,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 import Foundation
+import PostboxMac
+
 let mediaExts:[String] = ["png","jpg","jpeg","tiff","mp4","mov","avi", "gif"]
 let photoExts:[String] = ["png","jpg","jpeg","tiff"]
 let videoExts:[String] = ["mp4","mov","avi"]
@@ -19,10 +21,7 @@ func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, for window:
     var result:[String] = []
     let panel:NSOpenPanel = NSOpenPanel()
     panel.canChooseFiles = true
-    
-    if let window = NSApp.window(withWindowNumber: panel.windowNumber) {
-        //window.appearance = theme.appearance
-    }
+
     
     panel.canCreateDirectories = true
     panel.allowedFileTypes = exts
@@ -95,9 +94,9 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, with header:String, and information:String?, okTitle:String? = nil, cancelTitle:String = tr(.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = tr(.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
     
-    let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
+    let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
     alert.show(completionHandler: { response in
         switch response {
         case .OK:
@@ -110,11 +109,11 @@ func confirm(for window:Window, with header:String, and information:String?, okT
     })
 }
 
-func confirmSignal(for window:Window, header:String, information:String?, okTitle:String? = nil, cancelTitle:String? = nil, swapColors: Bool = false) -> Signal<Bool, Void> {
+func confirmSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil, swapColors: Bool = false) -> Signal<Bool, Void> {
     let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
-        let alert = AlertController(window, header: header, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(.alertCancel), swapColors: swapColors)
+        let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(.alertCancel), swapColors: swapColors)
         alert.show(completionHandler: { response in
             value.set(response == .OK)
         })

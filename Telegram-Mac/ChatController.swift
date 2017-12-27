@@ -651,7 +651,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     }
                     
                     var insertions:[(Int, TableRowItem)] = []
-                    var updates:[(Int, TableRowItem)] = []
+                    let updates:[(Int, TableRowItem)] = []
                     for i in 0 ..< entries.count {
                         let item:TableRowItem
                         
@@ -1122,10 +1122,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
                                 }), for: mainWindow)
                             } else {
-                                let thrid:String? = canDeleteForEveryone ? tr(.chatConfirmDeleteMessagesForEveryone) : nil
-                                
+                                let thrid:String? = canDeleteForEveryone ? peer.isUser ? tr(.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle)) : tr(.chatConfirmDeleteMessagesForEveryone) : nil
+                                var okTitle: String? = tr(.confirmDelete)
+                                if peer.isUser || peer.isGroup {
+                                    okTitle = tr(.chatMessageDeleteForMe)
+                                } else {
+                                    okTitle = tr(.chatMessageDeleteForEveryone)
+                                }
                                 if let window = self?.window {
-                                    confirm(for: window, with: tr(.chatConfirmActionUndonable), and: tr(.chatConfirmDeleteMessages), thridTitle:thrid, swapColors: true, successHandler: { result in
+                                    confirm(for: window, header: tr(.chatConfirmActionUndonable), information: tr(.chatConfirmDeleteMessages), okTitle: okTitle, thridTitle:thrid, swapColors: true, successHandler: { result in
                                         let type:InteractiveMessagesDeletionType
                                         switch result {
                                         case .basic:
@@ -1443,7 +1448,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     let pinnedUpdate: PinnedMessageUpdate = dismiss ? .clear : .pin(id: pinnedId, silent: silent)
                     
-                    strongSelf.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: mainWindow, header: appName, information: tr(.chatConfirmUnpin)) : Signal<Bool,Void>.single(true)) |> filter {$0} |> mapToSignal { _ in return  showModalProgress(signal: requestUpdatePinnedMessage(account: strongSelf.account, peerId: strongSelf.peerId, update: pinnedUpdate) |> mapError {_ in}, for: mainWindow)}).start())
+                    strongSelf.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: mainWindow, information: tr(.chatConfirmUnpin)) : Signal<Bool,Void>.single(true)) |> filter {$0} |> mapToSignal { _ in return  showModalProgress(signal: requestUpdatePinnedMessage(account: strongSelf.account, peerId: strongSelf.peerId, update: pinnedUpdate) |> mapError {_ in}, for: mainWindow)}).start())
                 } else {
                     strongSelf.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedDismissedPinnedId(pinnedId)})})
                 }
@@ -1982,7 +1987,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 if let peer = peerViewMainPeer(peerView) {
                                     if peer.isGroup || peer.isUser || (peer.isSupergroup && peer.addressName == nil) {
                                         items.append(SPopoverItem(tr(.chatContextClearHistory), {
-                                            confirm(for: mainWindow, with: appName, and: tr(.confirmDeleteChatUser), successHandler: { _ in
+                                            confirm(for: mainWindow, information: tr(.confirmDeleteChatUser), successHandler: { _ in
                                                 _ = clearHistoryInteractively(postbox: account.postbox, peerId: peerId).start()
                                             })
                                         }, theme.icons.chatActionClearHistory))

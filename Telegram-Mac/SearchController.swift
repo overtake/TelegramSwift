@@ -431,7 +431,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     var recent = recent.filter({topIds[$0.peerId] == nil})
 
                     if top.count > 0 {
-                        entries.append(.separator(text: tr(.searchSeparatorPopular), index: i, state: state.0))
+                        entries.append(.separator(text: tr(.searchSeparatorPopular), index: i, state: recent.isEmpty ? .none : state.0))
                     }
                     
                     for peer in top {

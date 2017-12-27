@@ -161,7 +161,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         animateContainer.addSubview(search)
         
-        self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + NSWidth(search.frame) + inset, max(NSHeight(placeholder.frame), NSHeight(search.frame))))
+        self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset, max(placeholder.frame.height, search.frame.height)))
         
         placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
         search.centerY()
@@ -190,6 +190,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }, for: .Click)
         
         updateLocalizationAndTheme()
+       
     }
     
     open func cancelSearch() {
@@ -326,7 +327,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
 
-                inputContainer.frame = NSMakeRect(inputInset, NSMinY(self.animateContainer.frame), NSWidth(self.frame) - inputInset - inset - clear.frame.width - 6, NSHeight(placeholder.frame))
+                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY, frame.width - inputInset - inset - clear.frame.width - 6, placeholder.frame.height)
                 input.frame = inputContainer.bounds
                 
                 if  animated {
@@ -427,9 +428,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         case .Focus:
             animateContainer.centerY(x: leftInset)
         }
+        placeholder.centerY()
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width)
         inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
+        search.centerY()
     }
 
     public func changeResponder(_ animated:Bool = true) -> Bool {

@@ -36,7 +36,7 @@ class FWDNavigationAction: NavigationModalAction {
     
     override func alertError(for value:Any, with window:Window) -> Void {
         if let _ = value as? Peer {
-            alert(for: window, header: appName, info: tr(.alertForwardError))
+            alert(for: window, info: tr(.alertForwardError))
         }
     }
     

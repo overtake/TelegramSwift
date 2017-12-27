@@ -191,7 +191,7 @@ class TwoStepVerificationUnlockController: TableViewController {
             }))
         }, openDisablePassword: {
             
-            confirm(for: mainWindow, with: appName, and: tr(.twoStepAuthConfirmDisablePassword), successHandler: { _ in
+            confirm(for: mainWindow, information: tr(.twoStepAuthConfirmDisablePassword), successHandler: { _ in
                 var disablePassword = false
                 updateState { state in
                     if state.checking {

@@ -85,7 +85,15 @@ class ChatMessageView: ChatRowView {
 
     }
     
-    
+    override func clickInContent(point: NSPoint) -> Bool {
+        guard let item = item as? ChatMessageItem else {return true}
+        
+        let point = text.convert(point, from: self)
+        let layout = item.textLayout
+        
+        let index = layout.findIndex(location: point)
+        return point.x < layout.lines[index].frame.maxX
+    }
     
     override func interactionContentView(for innerId: AnyHashable ) -> NSView {
         if let webpageContent = webpageContent {

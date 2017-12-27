@@ -1047,7 +1047,7 @@ func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Voi
             text = tr(.confirmDeleteChatUser)
         }
         
-        return confirmSignal(for: mainWindow, header: appName, information: text, swapColors: true) |> mapToSignal { result -> Signal<Bool, Void> in
+        return confirmSignal(for: mainWindow, information: text, swapColors: true) |> mapToSignal { result -> Signal<Bool, Void> in
             if result {
                 return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
             }

@@ -28,6 +28,7 @@ class RestrictionWrappedView : View {
         self.backgroundColor = theme.colors.background
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2, alignment: .center)
         textView.update(layout)
+        textView.backgroundColor = theme.colors.background
     }
     
     required init?(coder: NSCoder) {

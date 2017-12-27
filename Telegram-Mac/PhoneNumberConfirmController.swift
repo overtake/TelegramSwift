@@ -348,7 +348,7 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
                     text = tr(.changeNumberSendDataErrorGeneric)
                 }
 
-                alert(for: mainWindow, header: appName, info: text)
+                alert(for: mainWindow, info: text)
 
             }))
         })

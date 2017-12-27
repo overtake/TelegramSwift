@@ -573,6 +573,12 @@ enum L10n {
   case chatListVoice
   /// Payment: %@
   case chatListServicePaymentSent(String)
+  /// Delete for everyone
+  case chatMessageDeleteForEveryone
+  /// Delete for me
+  case chatMessageDeleteForMe
+  /// Delete for me and %@
+  case chatMessageDeleteForMeAndPerson(String)
   /// edited
   case chatMessageEdited
   /// This message is not supported by your version of Telegram. Please update to the latest version from the AppStore or install it from https://macos.telegram.org
@@ -729,6 +735,8 @@ enum L10n {
   case composeSelectGroupUsersPlaceholder
   /// Add the bot to "%@"?
   case confirmAddBotToGroup(String)
+  /// Delete
+  case confirmDelete
   /// Wait! Deleting this channel will remove all members and all messages will be lost. Delete the channel anyway?
   case confirmDeleteAdminedChannel
   /// Are you sure you want to delete all message history?\n\nThis action cannot be undone.
@@ -1985,7 +1993,7 @@ enum L10n {
   case storageClearVideos
   /// Are you sure you want to clear all cached data?
   case storageClearAllConfirmDescription
-  /// Calculating current cache size...
+  /// Telegram is calculating current cache size.\nThis can take a few minutes.
   case storageUsageCalculating
   /// CHATS
   case storageUsageChatsHeader
@@ -2921,6 +2929,12 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.List.Voice")
       case .chatListServicePaymentSent(let p1):
         return L10n.tr(key: "Chat.List.Service.PaymentSent", p1)
+      case .chatMessageDeleteForEveryone:
+        return L10n.tr(key: "Chat.Message.DeleteForEveryone")
+      case .chatMessageDeleteForMe:
+        return L10n.tr(key: "Chat.Message.DeleteForMe")
+      case .chatMessageDeleteForMeAndPerson(let p1):
+        return L10n.tr(key: "Chat.Message.DeleteForMeAndPerson", p1)
       case .chatMessageEdited:
         return L10n.tr(key: "Chat.Message.edited")
       case .chatMessageUnsupported:
@@ -3077,6 +3091,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Compose.SelectGroupUsers.Placeholder")
       case .confirmAddBotToGroup(let p1):
         return L10n.tr(key: "Confirm.AddBotToGroup", p1)
+      case .confirmDelete:
+        return L10n.tr(key: "Confirm.Delete")
       case .confirmDeleteAdminedChannel:
         return L10n.tr(key: "Confirm.DeleteAdminedChannel")
       case .confirmDeleteChatUser:

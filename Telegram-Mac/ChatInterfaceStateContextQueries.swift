@@ -101,6 +101,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     }).map {$0.0}
                     
                     let filteredParticipants = participants.filter ({ peer in
+                        if peer.id == account.peerId {
+                            return false
+                        }
                         if peer.indexName.matchesByTokens(normalizedQuery) {
                             return true
                         }

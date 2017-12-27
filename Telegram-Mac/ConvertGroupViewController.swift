@@ -46,7 +46,7 @@ class ConvertGroupViewController: TableViewController {
     func convert() {
         
         
-        confirm(for: mainWindow, with: appName, and:  tr(.convertToSuperGroupConfirm)) { [weak self] result in
+        confirm(for: mainWindow, information:  tr(.convertToSuperGroupConfirm)) { [weak self] result in
             
             if let strongSelf = self {
                 let signal = convertGroupToSupergroup(account: strongSelf.account, peerId: strongSelf.peerId)

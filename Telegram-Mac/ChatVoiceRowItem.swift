@@ -50,6 +50,9 @@ class ChatVoiceRowItem: ChatMediaItem {
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
+        if isForceRightLine {
+            return rightSize.height
+        }
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
                 return rightSize.height

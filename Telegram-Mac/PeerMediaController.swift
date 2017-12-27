@@ -259,7 +259,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                         let thrid:String? = canDeleteForEveryone ? tr(.chatConfirmDeleteMessagesForEveryone) : nil
                         
                         if let window = self?.window {
-                            confirm(for: window, with: tr(.chatConfirmActionUndonable), and: tr(.chatConfirmDeleteMessages), thridTitle:thrid, successHandler: { [weak self] result in
+                            confirm(for: window, header: tr(.chatConfirmActionUndonable), information: tr(.chatConfirmDeleteMessages), thridTitle:thrid, successHandler: { [weak self] result in
                                 let type:InteractiveMessagesDeletionType
                                 switch result {
                                 case .basic:

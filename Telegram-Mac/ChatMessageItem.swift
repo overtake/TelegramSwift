@@ -219,7 +219,9 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
-        
+        if isForceRightLine {
+            return rightSize.height
+        }
         if let webpageLayout = webpageLayout {
             if let webpageLayout = webpageLayout as? WPArticleLayout {
                 if let textLayout = webpageLayout.textLayout {
@@ -270,6 +272,8 @@ class ChatMessageItem: ChatRowItem {
         return contentSize
     }
     
+    
+   
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         var items = super.menuItems(in: location)
