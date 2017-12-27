@@ -51,14 +51,17 @@ class AlertController: ViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.layoutTexts(with: self.header, information: text, maxWidth: 400)
-        genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors, okHandler: { [weak self] in
+        let maxWidth = genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors, okHandler: { [weak self] in
             self?.close(.OK)
-        }, cancelHandler: { [weak self] in
-            self?.close(.cancel)
-        }, thridHandler: { [weak self] in
-            self?.close(.alertThirdButtonReturn)
+            }, cancelHandler: { [weak self] in
+                self?.close(.cancel)
+            }, thridHandler: { [weak self] in
+                self?.close(.alertThirdButtonReturn)
         })
+        genericView.layoutTexts(with: self.header, information: text, maxWidth: maxWidth)
+        alert.setFrame(NSMakeRect(0, 0, maxWidth, 130), display: true)
+        view.frame = NSMakeRect(0, 0, maxWidth, 130)
+        view.needsLayout = true
     }
     
     func show(completionHandler: @escaping(NSApplication.ModalResponse)->Void) {

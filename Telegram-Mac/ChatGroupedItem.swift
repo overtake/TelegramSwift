@@ -94,7 +94,7 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override var hasBubble: Bool {
-        return isBubbled && (captionLayout != nil || replyModel != nil)
+        return isBubbled && (captionLayout != nil || replyModel != nil || forwardNameLayout != nil)
     }
     
     override var isBubbleFullFilled: Bool {
@@ -376,7 +376,7 @@ private class ChatGroupedView : ChatRowView {
         super.updateSelectingState(animated, selectingMode: selectingMode, item: item, needUpdateColors: needUpdateColors)
     }
     
-    override func updateSelectionViewAfterUpdateState(animated: Bool) {
+    override func updateSelectionViewAfterUpdateState(item: ChatRowItem, animated: Bool) {
         guard let item = item as? ChatGroupedItem else {return}
         guard let selectingView = selectingView  else {return}
 

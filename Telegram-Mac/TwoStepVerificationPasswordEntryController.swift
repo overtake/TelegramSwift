@@ -127,7 +127,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                         case .invalidEmail:
                             alertText = tr(.twoStepAuthErrorInvalidEmail)
                         }
-                        alert(for: mainWindow, header: appName, info: alertText)
+                        alert(for: mainWindow, info: alertText)
                     }))
                 case let .setupEmail(password):
                     updatePasswordDisposable.set((updateTwoStepVerificationEmail(account: account, currentPassword: password, updatedEmail: email) |> deliverOnMainQueue).start(next: { update in
@@ -151,11 +151,11 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                         case .invalidEmail:
                             alertText = tr(.twoStepAuthErrorInvalidEmail)
                         }
-                        alert(for: mainWindow, header: appName, info: alertText)
+                        alert(for: mainWindow, info: alertText)
                     }))
                 }
             } else if invalidReentry {
-                alert(for: mainWindow, header: appName, info: tr(.twoStepAuthErrorPasswordsDontMatch))
+                alert(for: mainWindow, info: tr(.twoStepAuthErrorPasswordsDontMatch))
             }
         }
         
@@ -183,7 +183,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                         break
                     }
                     if text.isEmpty {
-                        confirm(for: mainWindow, with: appName, and: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
+                        confirm(for: mainWindow, information: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
                             checkPassword()
                         })
                     } else {
@@ -197,7 +197,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
             
             checkPassword()
         }, skipEmail: {
-            confirm(for: mainWindow, with: appName, and: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
+            confirm(for: mainWindow, information: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
                 checkPassword(true)
             })
         })

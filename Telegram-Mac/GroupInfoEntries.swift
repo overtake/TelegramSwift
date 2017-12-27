@@ -265,10 +265,10 @@ final class GroupInfoArguments : PeerInfoArguments {
         let confirmationImpl:([PeerId])->Signal<Bool,Void> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMember(peer.displayTitle)))
+                    return confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmAddMember(peer.displayTitle)))
                 }
             }
-            return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
+            return confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
         }
         
         let addMember = account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<Void, Void> in
@@ -362,7 +362,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let signal = account.postbox.loadedPeerWithId(memberId)
             |> deliverOnMainQueue
             |> mapToSignal { peer -> Signal<Bool, NoError> in
-                return confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmRemovePeer(peer.displayTitle)))
+                return confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmRemovePeer(peer.displayTitle)))
             }
             |> mapToSignal { value -> Signal<Void, NoError> in
                 if value {

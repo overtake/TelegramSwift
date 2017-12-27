@@ -261,13 +261,15 @@ class WPArticleContentView: WPContentView {
             
             if let imageView = imageView {
                 
-                progressIndicator?.center()
-                downloadIndicator?.center()
+              
                 
                 if let arguments = layout.imageArguments {
                     imageView.set(arguments: arguments)
                     imageView.setFrameSize(arguments.boundingSize)
                 }
+                
+                progressIndicator?.center()
+                downloadIndicator?.center()
                 
                 var origin:NSPoint = NSMakePoint(layout.contentRect.width - imageView.frame.width - 10, 0)
                 

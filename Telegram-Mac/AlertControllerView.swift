@@ -99,9 +99,11 @@ class AlertControllerView: View {
     }
     
 
-    func layoutButtons(okTitle: String, cancelTitle: String?, thridTitle: String?, swapColors: Bool, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void, thridHandler:@escaping()->Void) {
+    func layoutButtons(okTitle: String, cancelTitle: String?, thridTitle: String?, swapColors: Bool, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void, thridHandler:@escaping()->Void) -> CGFloat {
         okButton.set(text: okTitle, for: .Normal)
         okButton.sizeToFit(NSMakeSize(40, 0))
+        
+        var width: CGFloat = okButton.frame.width + 40
         
         self.okButton.set(color: swapColors ? theme.colors.redUI : theme.colors.blueUI, for: .Normal)
         self.cancelButton.set(color: !swapColors ? theme.colors.redUI : theme.colors.blueUI, for: .Normal)
@@ -117,6 +119,7 @@ class AlertControllerView: View {
             cancelButton.set(handler: { _ in
                 cancelHandler()
             }, for: .Click)
+            width += cancelButton.frame.width + 40
         }
         
         if let thridTitle = thridTitle  {
@@ -126,9 +129,12 @@ class AlertControllerView: View {
             thridButton.set(handler: { _ in
                 thridHandler()
             }, for: .Click)
+            width += thridButton.frame.width + 40
         }
         
         needsLayout = true
+        
+        return max(400, width)
     }
     
     override func layout() {

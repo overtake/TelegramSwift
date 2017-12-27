@@ -89,7 +89,7 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     }
     
     func executeNext() {
-        confirm(for: mainWindow, with: appName, and: tr(.changePhoneNumberIntroAlert), successHandler: { [weak self] _ in
+        confirm(for: mainWindow, information: tr(.changePhoneNumberIntroAlert), successHandler: { [weak self] _ in
             if let account = self?.account {
                 self?.navigationController?.push(PhoneNumberConfirmController(account))
             }

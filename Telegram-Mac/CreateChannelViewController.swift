@@ -51,6 +51,10 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         readyOnce()
     }
     
+    override func backKeyAction() -> KeyHandlerResult {
+        return .invokeNext
+    }
+    
     override var removeAfterDisapper: Bool {
         return true
     }

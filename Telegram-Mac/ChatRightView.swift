@@ -29,7 +29,8 @@ class ChatRightView: View {
     func set(item:ChatRowItem, animated:Bool) {
         self.item = item
         self.toolTip = item.fullDate
-        if let message = item.message, !item.isIncoming && !item.chatInteraction.isLogInteraction {
+        if !item.isIncoming
+            && !item.chatInteraction.isLogInteraction {
             if item.isUnsent {
                 stateView?.removeFromSuperview()
                 stateView = nil
@@ -106,6 +107,9 @@ class ChatRightView: View {
                 if isReversed {
                     rightInset += 3
                 }
+                if item.isFailed {
+                    rightInset -= 2
+                }
                 stateView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, item.isFailed ? 0 : 2)
             }
             
@@ -134,9 +138,10 @@ class ChatRightView: View {
             
             super.draw(layer, in: ctx)
 
+            let additional: CGFloat = item.isBubbled && item.isFailed ? 2 : 0
             
             if let date = item.date {
-                date.1.draw(NSMakeRect(frame.width - date.0.size.width - (isReversed ? 16 : 0) - item.stateOverlayAdditionCorner, item.isBubbled ? 1 : 0, date.0.size.width, date.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                date.1.draw(NSMakeRect(frame.width - date.0.size.width - (isReversed ? 16 : 0) - item.stateOverlayAdditionCorner - additional, item.isBubbled ? 1 : 0, date.0.size.width, date.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
             }
             if let channelViews = item.channelViews {
                 let icon = theme.chat.channelViewsIcon(item)

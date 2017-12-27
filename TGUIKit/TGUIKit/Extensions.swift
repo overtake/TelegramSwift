@@ -590,8 +590,8 @@ public extension NSImage {
         
         let make:(CGContext) -> Void = { ctx in
             let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
-            //ctx.interpolationQuality = .high
-            
+            ctx.interpolationQuality = .high
+            ctx.clear(rect)
             
             var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
 

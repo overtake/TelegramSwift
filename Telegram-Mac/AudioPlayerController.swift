@@ -393,6 +393,8 @@ class APController : NSObject, AudioPlayerDelegate {
     
     fileprivate var timer:SwiftSignalKitMac.Timer?
     
+    fileprivate var prevNextDisposable = DisposableSet()
+    
     private var _song:APSongItem?
     fileprivate var song:APSongItem? {
         set {
@@ -624,6 +626,19 @@ class APController : NSObject, AudioPlayerDelegate {
     }
     
     fileprivate func play(with item:APSongItem) {
+        
+        let items = self.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+        if let index = items.index(of: item) {
+            let previous = index - 1
+            let next = index + 1
+            if previous >= 0 {
+                prevNextDisposable.add(account.postbox.mediaBox.fetchedResource(items[previous].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+            }
+            if next < items.count {
+                prevNextDisposable.add(account.postbox.mediaBox.fetchedResource(items[next].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+            }
+        }
+        
         itemDisposable.set(item.pullResource().start(next: { [weak self] resource in
             if let strongSelf = self {
                 if resource.complete {
@@ -749,6 +764,7 @@ class APController : NSObject, AudioPlayerDelegate {
         disposable.dispose()
         itemDisposable.dispose()
         songStateDisposable.dispose()
+        prevNextDisposable.dispose()
         cleanup()
     }
     

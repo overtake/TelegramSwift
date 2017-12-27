@@ -155,7 +155,7 @@ class NotificationSettingsViewController: TableViewController {
         
         let interactions = NotificationSettingsInteractions(resetAllNotifications: { [weak self] in
             if let window = self?.window , let account = self?.account {
-                confirm(for: window, with: tr(.notificationSettingsConfirmReset), and: tr(.chatConfirmActionUndonable), successHandler: { _ in
+                confirm(for: window, header: tr(.notificationSettingsConfirmReset), information: tr(.chatConfirmActionUndonable), successHandler: { _ in
                     _ = resetPeerNotificationSettings(network: account.network).start()
                 })
             }

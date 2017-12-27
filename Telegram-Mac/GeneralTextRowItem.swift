@@ -68,12 +68,12 @@ class GeneralTextRowItem: GeneralRowItem {
         if _height > 0 {
             return _height
         }
-        return layout.layoutSize.height + inset.top + inset.bottom
+        return layout.layoutSize.height + inset.top + inset.bottom + (additionLoading ? 30 : 0)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
-        layout.measure(width: width - inset.left - inset.right - (additionLoading ? 30 : 0))
+        layout.measure(width: width - inset.left - inset.right)
 
         return super.makeSize(width, oldWidth: oldWidth)
     }
@@ -112,11 +112,13 @@ class GeneralTextRowView : GeneralRowView {
         
         guard let item = item as? GeneralTextRowItem else {return}
         
-        if item.additionLoading && item.layout.lines.count == 1 {
+        if item.additionLoading {
             if progressView == nil {
                 progressView = ProgressIndicator()
             }
-            addSubview(progressView!)
+            if progressView!.superview == nil {
+                addSubview(progressView!)
+            }
         } else {
             progressView?.removeFromSuperview()
             progressView = nil
@@ -138,9 +140,14 @@ class GeneralTextRowView : GeneralRowView {
     override func layout() {
         super.layout()
         if let item = item as? GeneralTextRowItem {
-            textView.update(item.layout, origin:NSMakePoint(item.inset.left, item.inset.top))
+            if item.additionLoading, let progressView = progressView {
+                progressView.centerX(y: 0)
+                textView.update(item.layout)
+                textView.centerX(y: progressView.frame.maxY + 10)
+            } else {
+                textView.update(item.layout, origin:NSMakePoint(item.inset.left, item.inset.top))
+            }
             
-            progressView?.centerY(x: textView.frame.maxX + 10)
             
             if item.centerViewAlignment {
                 textView.center()

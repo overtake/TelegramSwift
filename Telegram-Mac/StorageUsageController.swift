@@ -172,10 +172,10 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .keepMediaInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .collecting(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, additionLoading: true)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, alignment: .center, additionLoading: true)
         case .clearAll(_, let enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.storageClearAll), type: .next, action: {
-                confirm(for: mainWindow, with: appName, and: tr(.storageClearAllConfirmDescription), successHandler: { _ in
+                confirm(for: mainWindow, information: tr(.storageClearAllConfirmDescription), successHandler: { _ in
                     arguments.clearAll()
                 })
             }, enabled: enabled)

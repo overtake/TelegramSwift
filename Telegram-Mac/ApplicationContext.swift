@@ -230,7 +230,7 @@ final class PasscodeAccessContext {
         }
         
         rootController = PasscodeLockController(account, .login, logoutImpl: {
-            _ = (confirmSignal(for: window, header: appName, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
+            _ = (confirmSignal(for: window, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
         })
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
         
@@ -628,7 +628,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     
     
     func logout() {
-        self.logoutDisposable.set((confirmSignal(for: window, header: appName, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
+        self.logoutDisposable.set((confirmSignal(for: window, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
             if let strongSelf = self {
                 return logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager)
             }

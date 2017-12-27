@@ -195,7 +195,7 @@ class ChatRowItem: TableRowItem {
         var size:NSSize = NSZeroSize
         
         if let date = date {
-            size = NSMakeSize(date.0.size.width, isBubbled ? 15 : 16)
+            size = NSMakeSize(date.0.size.width, isBubbled && !isFailed ? 15 : 16)
         }
         
         if let peer = peer as? TelegramChannel, case .broadcast = peer.info, !isUnsent {
@@ -204,6 +204,9 @@ class ChatRowItem: TableRowItem {
             if !isIncoming {
                 if isBubbled {
                     size.width += 16
+                    if isFailed {
+                        size.width += 4
+                    }
                 } else {
                     size.width += 20
                 }
@@ -305,6 +308,8 @@ class ChatRowItem: TableRowItem {
         }
         return false
     }
+    
+    private(set) var isForceRightLine: Bool = false
     
     var forwardHeaderInset:NSPoint {
         
@@ -455,6 +460,8 @@ class ChatRowItem: TableRowItem {
         }
         return false
     }
+    
+   
     
     func gotoSourceMessage() {
         if let message = message {
@@ -988,7 +995,7 @@ class ChatRowItem: TableRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
 
-        
+        isForceRightLine = false
         
         if let channelViewsAttributed = channelViewsAttributed {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
@@ -1007,7 +1014,8 @@ class ChatRowItem: TableRowItem {
                 if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
                     if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent {
                         widthForContent = _contentSize.width - 5
-                        _contentSize = self.makeContentSize(widthForContent)
+                        self.isForceRightLine = true
+                        //_contentSize = self.makeContentSize(widthForContent)
                         return true
                     }
                 }
@@ -1170,7 +1178,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var additionalLineForDateInBubbleState: CGFloat? {
-        return nil
+        return isForceRightLine ? rightSize.height : nil
     }
     
     func deleteMessage() {
@@ -1262,7 +1270,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
         items.append(ContextMenuItem(tr(.messageContextPin), handler: {
             if peer.isSupergroup {
-                confirm(for: mainWindow, with: appName, and: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
+                confirm(for: mainWindow, information: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
                     chatInteraction.updatePinned(message.id, false, result == .thrid)
                 })
             } else {

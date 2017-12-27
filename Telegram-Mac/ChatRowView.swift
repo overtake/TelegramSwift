@@ -72,6 +72,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return []
     }
     
+    func clickInContent(point: NSPoint) -> Bool {
+        guard let item = item as? ChatRowItem, let layout = item.captionLayout, let captionView = captionView else {return true}
+        let point = captionView.convert(point, from: self)
+        let index = layout.findIndex(location: point)
+        return point.x < layout.lines[index].frame.maxX
+    }
+    
     func isEqual(to other: Notifable) -> Bool {
         if let other = other as? ChatRowView {
             return self == other
@@ -109,6 +116,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rowView.change(pos: rowPoint, animated: animated)
             }
             
+            
             updateMouse()
             
             if selectingMode {
@@ -119,28 +127,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     super.addSubview(selectingView!)
                 }
                 selectingView?.change(opacity: 1.0, animated: animated)
-
                
                 selectingView?.change(pos: selectingPoint, animated: animated)
             } else {
-                
                 if animated {
                     selectingView?.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
-                        if completed {
+                        //if completed {
                             self?.selectingView?.removeFromSuperview()
                             self?.selectingView = nil
-                        }
+                        //}
                     })
                 } else {
                     self.selectingView?.removeFromSuperview()
                     self.selectingView = nil
                 }
-                
                 selectingView?.change(pos: NSMakePoint(frame.width, selectingPoint.y), animated: animated)
             }
             
-            updateSelectionViewAfterUpdateState(animated: animated)
-            updateColors()
+            updateSelectionViewAfterUpdateState(item: item, animated: animated)
+            if needUpdateColors {
+                updateColors()
+            }
             if item.chatInteraction.presentation.state == .selecting {
                 disableHierarchyInteraction()
             } else {
@@ -150,8 +157,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    func updateSelectionViewAfterUpdateState(animated: Bool) {
-        guard let item = item as? ChatRowItem else {return}
+    func updateSelectionViewAfterUpdateState(item: ChatRowItem, animated: Bool) {
         
         if let selectionState = item.chatInteraction.presentation.selectionState, let message = item.message {
             selectingView?.set(selected: selectionState.selectedIds.contains(message.id), animated: animated)
@@ -234,7 +240,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let location = self.convert(event.locationInWindow, from: nil)
                 if NSPointInRect(location, rightView.frame) {
                     if item.isFailed {
-                        confirm(for: mainWindow, with: tr(.alertSendErrorHeader), and: tr(.alertSendErrorText), okTitle: tr(.alertSendErrorResend), cancelTitle: tr(.alertSendErrorIgnore), thridTitle: tr(.alertSendErrorDelete), successHandler: { result in
+                        confirm(for: mainWindow, header: tr(.alertSendErrorHeader), information: tr(.alertSendErrorText), okTitle: tr(.alertSendErrorResend), cancelTitle: tr(.alertSendErrorIgnore), thridTitle: tr(.alertSendErrorDelete), successHandler: { result in
                             
                             switch result {
                             case .thrid:
@@ -770,7 +776,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func doubleClick(in location: NSPoint) {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
-            if self.hitTest(location) == nil || self.hitTest(location) == self || self.hitTest(location) == rowView || self.hitTest(location) == replyView {
+            if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == replyView {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {
                         return

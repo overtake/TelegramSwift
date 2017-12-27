@@ -193,11 +193,11 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
             case .limitExceeded:
                 alertText = tr(.changeNumberConfirmCodeErrorLimitExceeded)
             }
-            alert(for: mainWindow, header: appName, info: alertText)
+            alert(for: mainWindow, info: alertText)
         }, completed: { [weak self] in
             if let strongSelf = self {
                 strongSelf.navigationController?.close(animated: true)
-                alert(for: mainWindow, header: appName, info: tr(.changeNumberConfirmCodeSuccess(strongSelf.formattedNumber)))
+                alert(for: mainWindow, info: tr(.changeNumberConfirmCodeSuccess(strongSelf.formattedNumber)))
             }
         }))
     }

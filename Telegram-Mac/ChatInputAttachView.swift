@@ -48,7 +48,7 @@ class ChatInputAttachView: ImageButton {
                         let afterSizeCheck = result.count
                         
                         if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, header: appName, info: tr(.appMaxFileSize))
+                            alert(for: mainWindow, info: tr(.appMaxFileSize))
                         } else {
                             strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, false)
                         }
@@ -74,7 +74,7 @@ class ChatInputAttachView: ImageButton {
                         let afterSizeCheck = result.count
                         
                         if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, header: appName, info: tr(.appMaxFileSize))
+                            alert(for: mainWindow, info: tr(.appMaxFileSize))
                         } else {
                             strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true)
                         }

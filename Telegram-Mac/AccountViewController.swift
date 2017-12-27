@@ -354,7 +354,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     showModal(with: AboutModalController(), for: mainWindow)
                 }, theme.icons.settingsAbout))
                 items.append(SPopoverItem(tr(.accountSettingsLogout), { [weak strongSelf] in
-                    confirm(for: mainWindow, with: tr(.accountConfirmLogout), and: tr(.accountConfirmLogoutText), successHandler: {_ in 
+                    confirm(for: mainWindow, header: tr(.accountConfirmLogout), information: tr(.accountConfirmLogoutText), successHandler: {_ in
                         if let strongSelf = strongSelf {
                             let _ = logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager).start()
                         }
@@ -682,7 +682,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             case .ask:
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAskQuestion), icon: theme.icons.settingsAskQuestion, type: .none, action: { [weak self] in
                     
-                    confirm(for: mainWindow, with: appName, and: tr(.accountConfirmAskQuestion), thridTitle: tr(.accountConfirmGoToFaq), successHandler: { [weak self] result in
+                    confirm(for: mainWindow, information: tr(.accountConfirmAskQuestion), thridTitle: tr(.accountConfirmGoToFaq), successHandler: { [weak self] result in
                         switch result {
                         case .basic:
                             _ = showModalProgress(signal: supportPeerId(account: account), for: mainWindow).start(next: { [weak self] peerId in
@@ -699,7 +699,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             case .logout:
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsLogout), nameStyle: redActionButton, type: .none, action: { [weak self] in
                     
-                    confirm(for: mainWindow, with: tr(.accountConfirmLogout), and: tr(.accountConfirmLogoutText), successHandler: { [weak self] _ in
+                    confirm(for: mainWindow, header: tr(.accountConfirmLogout), information: tr(.accountConfirmLogoutText), successHandler: { [weak self] _ in
                         if let strongSelf = self {
                             let _ = logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager).start()
                         }

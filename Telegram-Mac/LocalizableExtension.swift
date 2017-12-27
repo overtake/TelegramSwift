@@ -129,44 +129,50 @@ func ==(lhs:Language, rhs:Language) -> Bool {
 }
 
 func translate(key: String, _ args: [CVarArg]) -> String {
-    let format:String
+    var format:String?
     var args = args
     if key.hasSuffix("_countable") {
-        if let count = args.first as? Int {
-            
-            let code = languageCodehash(appCurrentLanguage.languageCode)
-            
-            if let index = key.range(of: "_")?.lowerBound {
-                var string = String(key[..<index])
-                string += "_\(presentationStringsPluralizationForm(code, Int32(count)).name)"
-                format = _NSLocalizedString(string)
-                if args.count > 1 {
-                    args.removeFirst()
-                }
+        
+        for i in 0 ..< args.count {
+            if let count = args[i] as? Int {
+                let code = languageCodehash(appCurrentLanguage.languageCode)
                 
-            } else {
-                format = _NSLocalizedString(key)
+                if let index = key.range(of: "_")?.lowerBound {
+                    var string = String(key[..<index])
+                    string += "_\(presentationStringsPluralizationForm(code, Int32(count)).name)"
+                    format = _NSLocalizedString(string)
+                    //if args.count > 1 {
+                        //args.remove(at: i)
+                    //}
+                } else {
+                    format = _NSLocalizedString(key)
+                }
+                break
             }
-        } else {
+        }
+        if format == nil {
             format = _NSLocalizedString(key)
         }
+
         
     } else {
         format = _NSLocalizedString(key)
     }
     
-    let ranges = extractArgumentRanges(format)
-    var formatted = format
-    for range in ranges.reversed() {
-        if range.0 < args.count {
-            let value = "\(args[range.0])"
-            formatted = formatted.nsstring.replacingCharacters(in: range.1, with: value)
-        } else {
-            formatted = formatted.nsstring.replacingCharacters(in: range.1, with: "")
+    if let format = format {
+        let ranges = extractArgumentRanges(format)
+        var formatted = format
+        for range in ranges.reversed() {
+            if range.0 < args.count {
+                let value = "\(args[range.0])"
+                formatted = formatted.nsstring.replacingCharacters(in: range.1, with: value)
+            } else {
+                formatted = formatted.nsstring.replacingCharacters(in: range.1, with: "")
+            }
         }
-        
+        return formatted
     }
-    return formatted
+    return "UndefinedKey"
 }
 
 private let argumentRegex = try! NSRegularExpression(pattern: "%(((\\\\d+)\\\\$)?)([@df])", options: [])

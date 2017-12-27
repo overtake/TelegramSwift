@@ -169,7 +169,7 @@ class UserInfoArguments : PeerInfoArguments {
             
             } |> deliverOnMainQueue  |> mapToSignal { peer, account -> Signal<PeerId, Void> in
                 if let peer = peer, let account = account {
-                    let confirm = confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmStartSecretChat(peer.displayTitle)))
+                    let confirm = confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmStartSecretChat(peer.displayTitle)))
                     return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, Void> in
                         return showModalProgress(signal: createSecretChat(account: account, peerId: peer.id), for: mainWindow) |> mapError {_ in}
                     }
@@ -210,7 +210,7 @@ class UserInfoArguments : PeerInfoArguments {
     func deleteContact() {
         let account = self.account
         let peerId = self.peerId
-        deletePeerContactDisposable.set((confirmSignal(for: mainWindow, header: appName, information: tr(.peerInfoConfirmDeleteContact))
+        deletePeerContactDisposable.set((confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmDeleteContact))
             |> filter {$0}
             |> mapToSignal { _ in
                 showModalProgress(signal: deleteContactPeerInteractively(account: account, peerId: peerId) |> deliverOnMainQueue, for: mainWindow)

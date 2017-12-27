@@ -340,7 +340,7 @@ class InstalledStickerPacksController: TableViewController {
             showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { id in
             
-            confirm(for: mainWindow, with: appName, and: tr(.installedStickersRemoveDescription), okTitle: tr(.installedStickersRemoveDelete), successHandler: { result in
+            confirm(for: mainWindow, information: tr(.installedStickersRemoveDescription), okTitle: tr(.installedStickersRemoveDelete), successHandler: { result in
                 switch result {
                 case .basic:
                     _ = removeStickerPackInteractively(postbox: account.postbox, id: id).start()
