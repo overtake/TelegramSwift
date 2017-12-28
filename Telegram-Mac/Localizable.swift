@@ -965,6 +965,8 @@ enum L10n {
   case generalSettingsEnableSidebar
   /// FORCE TOUCH ACTION
   case generalSettingsForceTouchHeader
+  /// INSTANT VIEW ACTION
+  case generalSettingsInstantViewHeader
   /// GENERAL SETTINGS
   case generalSettingsGeneralSettings
   /// In-App Sounds
@@ -989,6 +991,8 @@ enum L10n {
   case generalSettingsForceTouchForward
   /// Reply to Message
   case generalSettingsForceTouchReply
+  /// Forward Message
+  case generalSettingsInstantViewScrollBySpace
   /// New Group
   case groupCreateGroup
   /// New Group
@@ -3313,6 +3317,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "GeneralSettings.EnableSidebar")
       case .generalSettingsForceTouchHeader:
         return L10n.tr(key: "GeneralSettings.ForceTouchHeader")
+	  case .generalSettingsInstantViewHeader:
+		return L10n.tr(key: "GeneralSettings.InstantViewHeader")
       case .generalSettingsGeneralSettings:
         return L10n.tr(key: "GeneralSettings.GeneralSettings")
       case .generalSettingsInAppSounds:
@@ -3337,6 +3343,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "GeneralSettings.ForceTouch.Forward")
       case .generalSettingsForceTouchReply:
         return L10n.tr(key: "GeneralSettings.ForceTouch.Reply")
+      case .generalSettingsInstantViewScrollBySpace:
+		return L10n.tr(key: "GeneralSettings.InstantView.ScrollBySpace")
       case .groupCreateGroup:
         return L10n.tr(key: "Group.CreateGroup")
       case .groupNewGroup:
