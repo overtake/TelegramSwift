@@ -50,6 +50,8 @@ class FastSettings {
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
+	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
+	
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -142,6 +144,10 @@ class FastSettings {
     static func toggleInAppSouds(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kInAppSoundsType)
     }
+	
+	static func toggleInstantViewScrollBySpace(_ enable: Bool) {
+		UserDefaults.standard.set(enable, forKey: kInstantViewScrollBySpace)
+	}
     
     static var inAppSounds: Bool {
         return !UserDefaults.standard.bool(forKey: kInAppSoundsType)
@@ -154,6 +160,10 @@ class FastSettings {
     static var isPossibleReplaceEmojies: Bool {
         return !UserDefaults.standard.bool(forKey: kAutomaticConvertEmojiesType)
     }
+	
+	static var instantViewScrollBySpace: Bool {
+		return UserDefaults.standard.bool(forKey: kInstantViewScrollBySpace)
+	}
     
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)

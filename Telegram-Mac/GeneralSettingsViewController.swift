@@ -27,6 +27,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case forceTouchReply(sectionId:Int, enabled: Bool)
     case forceTouchEdit(sectionId:Int, enabled: Bool)
     case forceTouchForward(sectionId:Int, enabled: Bool)
+	case instantViewScrollBySpace(sectionId:Int, enabled: Bool)
     var stableId: Int {
         switch self {
         case let .header(_, uniqueId, _):
@@ -53,6 +54,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 9
         case .forceTouchForward:
             return 10
+		case .instantViewScrollBySpace:
+			return 11
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -84,6 +87,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return (sectionId * 1000) + stableId
         case let .forceTouchForward(sectionId, _):
             return (sectionId * 1000) + stableId
+		case let .instantViewScrollBySpace(sectionId, _):
+			return (sectionId * 1000) + stableId
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -162,6 +167,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             }), action: {
                 arguments.toggleForceTouchAction(.forward)
             })
+		case let .instantViewScrollBySpace(sectionId: _, enabled: enabled):
+			return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.generalSettingsInstantViewScrollBySpace), type: .switchable(stateback: { () -> Bool in
+				return enabled
+			}), action: {
+				arguments.toggleInstantViewScrollBySpace(!enabled)
+			})
         }
     }
     
@@ -241,6 +252,12 @@ private func ==(lhs: GeneralSettingsEntry, rhs: GeneralSettingsEntry) -> Bool {
         } else {
             return false
         }
+	case let .instantViewScrollBySpace(sectionId, enabled):
+		if case .instantViewScrollBySpace(sectionId, enabled) = rhs {
+			return true
+		} else {
+			return false
+		}
     case let .section(sectionId):
         if case .section(sectionId) = rhs {
             return true
@@ -263,7 +280,8 @@ private final class GeneralSettingsArguments {
     let toggleInAppSounds:(Bool) -> Void
     let toggleEmojiReplacements:(Bool) -> Void
     let toggleForceTouchAction:(ForceTouchAction) -> Void
-    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void) {
+	let toggleInstantViewScrollBySpace:(Bool) -> Void
+    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void) {
         self.account = account
         self.toggleFonts = toggleFonts
         self.toggleInAppKeys = toggleInAppKeys
@@ -272,6 +290,7 @@ private final class GeneralSettingsArguments {
         self.toggleInAppSounds = toggleInAppSounds
         self.toggleEmojiReplacements = toggleEmojiReplacements
         self.toggleForceTouchAction = toggleForceTouchAction
+		self.toggleInstantViewScrollBySpace = toggleInstantViewScrollBySpace
     }
    
 }
@@ -331,6 +350,12 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
+	
+	
+	entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: tr(.generalSettingsInstantViewHeader)))
+	entries.append(.instantViewScrollBySpace(sectionId: sectionId, enabled: FastSettings.instantViewScrollBySpace))
+	entries.append(.section(sectionId: sectionId))
+	sectionId += 1
     
     return entries
 }
@@ -377,7 +402,9 @@ class GeneralSettingsViewController: TableViewController {
         }, toggleForceTouchAction: { action in
             FastSettings.toggleForceTouchAction(action)
             forceTouchPromise.set(action)
-        })
+		}, toggleInstantViewScrollBySpace: { enable in
+			FastSettings.toggleInstantViewScrollBySpace(enable)
+		})
         
         let initialSize = atomicSize
         
