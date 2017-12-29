@@ -371,6 +371,8 @@ extension Media {
             return true
         } else if let file = self as? TelegramMediaFile {
             return file.isVideo || file.isAnimated
+        } else if let map = self as? TelegramMediaMap {
+            return map.venue == nil
         }
         return false
     }
@@ -1030,11 +1032,13 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Void> {
     return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
         let text:String
+        var okTitle: String? = nil
         if let peer = peer as? TelegramChannel {
             switch peer.info {
             case .broadcast:
                 if peer.flags.contains(.isCreator) {
                     text = tr(.confirmDeleteAdminedChannel)
+                    okTitle = tr(.confirmDelete)
                 } else {
                     text = tr(.peerInfoConfirmLeaveChannel)
                 }
@@ -1043,11 +1047,13 @@ func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Voi
             }
         } else if let peer = peer as? TelegramGroup {
             text = tr(.peerInfoConfirmDeleteChat(peer.title))
+            okTitle = tr(.confirmDelete)
         } else {
             text = tr(.confirmDeleteChatUser)
+            okTitle = tr(.confirmDelete)
         }
         
-        return confirmSignal(for: mainWindow, information: text, swapColors: true) |> mapToSignal { result -> Signal<Bool, Void> in
+        return confirmSignal(for: mainWindow, information: text, okTitle: okTitle , swapColors: true) |> mapToSignal { result -> Signal<Bool, Void> in
             if result {
                 return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
             }

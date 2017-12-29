@@ -83,7 +83,9 @@ open class TableRowItem: NSObject {
     }
     
     public func redraw()->Void {
-        table?.reloadData(row: index)
+        if index != -1 {
+            table?.reloadData(row: index)
+        }
     }
     
     public var isSelected:Bool {

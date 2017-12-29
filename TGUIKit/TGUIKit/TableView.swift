@@ -1205,11 +1205,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
             
-            view = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), item.height))
+            view = vz.init(frame:NSMakeRect(0, 0, frame.width, item.height))
             
             view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
             
-        } 
+        }
+        if view!.frame.height != item.height {
+            view?.setFrameSize(NSMakeSize(frame.width, item.height))
+        }
         return view as! TableRowView;
     }
     

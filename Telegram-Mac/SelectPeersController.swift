@@ -382,14 +382,14 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
             
             let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
             
-            let foundRemotePeers:Signal<([Peer], Bool), Void> = .single(([], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, false)} )
+            let foundRemotePeers:Signal<([Peer], [Peer], Bool), Void> = .single(([], [], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} )
             
             
             let contactsSearch: Signal<([TemporaryPeer], [TemporaryPeer], Bool), Void>
             
             if settings.contains(.remote) {
                 contactsSearch = combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
-                    return (values.0, values.1.0, values.1.1 && search.request.length >= 5)
+                    return (values.0 + values.1.0, values.1.1, values.1.2 && search.request.length >= 5)
                     }
                     |> mapToSignal { values -> Signal<([Peer], [Peer], MultiplePeersView, Bool), Void> in
                         return account.postbox.multiplePeersView(values.0.map {$0.id}) |> take(1) |> map { views in
@@ -575,10 +575,10 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                 
                 let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
                 
-                let foundRemotePeers:Signal<([Peer], Bool), Void> = settings.contains(.remote) ? .single(([], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, false)} ) : .single(([], false))
+                let foundRemotePeers:Signal<([Peer], [Peer], Bool), Void> = settings.contains(.remote) ? .single(([], [], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
                 
                 return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
-                    return (uniquePeers(from: (values.0 + values.1.0)), values.1.1 && search.request.length >= 5)
+                    return (uniquePeers(from: (values.0 + values.1.0 + values.1.1)), values.1.2 && search.request.length >= 5)
                     }
                     |> runOn(prepareQueue)
                     |> mapToSignal { values -> Signal<[SelectPeerEntry], Void> in

@@ -423,10 +423,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -584,6 +584,9 @@
       <ContextState
          contextName = "WPArticleLayout.isFullImageSize.getter:WPArticleLayout.swift">
          <PersistentStrings>
+            <PersistentString
+               value = "content">
+            </PersistentString>
             <PersistentString
                value = "content.type">
             </PersistentString>
@@ -884,7 +887,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -896,7 +899,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1140,13 +1143,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
+         contextName = "_NSLocalizedString(_:):LocalizableExtension.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.messageSize">
-            </PersistentString>
-            <PersistentString
-               value = "_contentSize">
+               value = "language.strings">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1154,10 +1154,13 @@
          contextName = "ChatRowItem.(init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem).(closure #1):ChatRowItem.swift">
       </ContextState>
       <ContextState
-         contextName = "_NSLocalizedString(_:):LocalizableExtension.swift">
+         contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
-               value = "language.strings">
+               value = "self.messageSize">
+            </PersistentString>
+            <PersistentString
+               value = "_contentSize">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

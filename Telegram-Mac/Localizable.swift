@@ -473,6 +473,8 @@ enum L10n {
   case chatAdminBadge
   /// Cancel
   case chatCancel
+  /// Copy Selected Text
+  case chatCopySelectedText
   /// without compression
   case chatDropAsFilesDesc
   /// in a quick way
@@ -2829,6 +2831,8 @@ extension L10n: CustomStringConvertible {
         return L10n.tr(key: "Chat.AdminBadge")
       case .chatCancel:
         return L10n.tr(key: "Chat.Cancel")
+      case .chatCopySelectedText:
+        return L10n.tr(key: "Chat.CopySelectedText")
       case .chatDropAsFilesDesc:
         return L10n.tr(key: "Chat.DropAsFilesDesc")
       case .chatDropQuickDesc:

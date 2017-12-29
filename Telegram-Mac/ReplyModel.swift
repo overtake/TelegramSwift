@@ -20,9 +20,11 @@ class ReplyModel: ChatAccessoryModel {
     private var previousMedia: Media?
     private var isLoading: Bool = false
     private let fetchDisposable = MetaDisposable()
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, presentation: ChatAccessoryPresentation? = nil) {
+    private let makesizeCallback:(()->Void)?
+    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, presentation: ChatAccessoryPresentation? = nil, makesizeCallback: (()->Void)? = nil) {
         self.isPinned = isPinned
         self.account = account
+        self.makesizeCallback = makesizeCallback
         self.replyMessage = replyMessage
         super.init(presentation: presentation)
         if let replyMessage = replyMessage {
@@ -36,7 +38,7 @@ class ReplyModel: ChatAccessoryModel {
                     return .single(message)
                 }
                 return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network) |> map {$0.first}
-            } |> deliverOn(Queue.mainQueue().isCurrent() ? Queue.mainQueue() : prepareQueue) |> map { [weak self] message -> Bool in
+            } |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
                  self?.make(with: message, isLoading: false, display: true)
                  return message != nil
              })
@@ -191,8 +193,13 @@ class ReplyModel: ChatAccessoryModel {
         }
         
         if !isLoading {
-            measureSize(width, sizeToFit: sizeToFit)
-            display = true
+            if let makesizeCallback = makesizeCallback {
+                makesizeCallback()
+                return
+            } else {
+                measureSize(width, sizeToFit: sizeToFit)
+                display = true
+            }
         }
         if display {
             Queue.mainQueue().async {

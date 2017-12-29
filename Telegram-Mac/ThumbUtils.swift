@@ -150,8 +150,8 @@ func capIcon(for text:NSAttributedString, size:NSSize = NSMakeSize(50, 50), corn
         let rect = CTLineGetBoundsWithOptions(line, [.excludeTypographicLeading])
         
 
-        ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-        ctx.textPosition = NSMakePoint(floorToScreenPixels((size.width - rect.width)/2.0), size.height - floorToScreenPixels((size.height - rect.height)/2.0) - 6 )
+        ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: 1.0)
+        ctx.textPosition = NSMakePoint(floorToScreenPixels((size.width - rect.width)/2.0), floorToScreenPixels((size.height - rect.height)/2.0) + 6 )
         
         CTLineDraw(line, ctx)
         

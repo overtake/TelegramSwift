@@ -239,6 +239,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    
     open override var needsLayout: Bool {
         set {
             super.needsLayout = newValue

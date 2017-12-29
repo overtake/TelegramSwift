@@ -57,6 +57,10 @@ class ChatMapRowItem: ChatMediaItem {
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
     }
     
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        return nil
+    }
+    
     override var instantlyResize:Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {
             return parameters.isVenue

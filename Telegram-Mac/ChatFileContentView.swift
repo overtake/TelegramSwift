@@ -179,6 +179,8 @@ class ChatFileContentView: ChatMediaContentView {
             self.setNeedsDisplay()
         }
         
+        progressView.isHidden = true
+        
         if let updatedStatusSignal = updatedStatusSignal {
             self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
                 if let strongSelf = self {

@@ -136,8 +136,8 @@ class ChatMessageItem: ChatRowItem {
                 return !selectManager.isEmpty
             }, menuItems: { [weak self] onLink in
                 var items:[ContextMenuItem] = []
-                if let strongSelf = self {
-                    items.append(ContextMenuItem(onLink ? tr(.messageContextCopyMessageLink) : tr(.textCopy), handler: { [weak strongSelf] in
+                if let strongSelf = self, let layout = self?.textLayout {
+                    items.append(ContextMenuItem(onLink ? tr(.messageContextCopyMessageLink) : layout.selectedRange.hasSelectText ? tr(.chatCopySelectedText) : tr(.textCopy), handler: { [weak strongSelf] in
                         let result = strongSelf?.textLayout.interactions.copy?()
                         if let result = result, let strongSelf = strongSelf, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
@@ -372,7 +372,7 @@ class ChatMessageItem: ChatRowItem {
                             copyToClipboard(text)
                         }), at: 1)
                     } else {
-                        items.insert(ContextMenuItem(tr(.textCopy), handler: {
+                        items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(.chatCopySelectedText) : tr(.textCopy), handler: {
                             copyToClipboard(text)
                         }), at: 1)
                     }

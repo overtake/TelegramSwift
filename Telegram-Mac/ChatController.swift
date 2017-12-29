@@ -118,7 +118,7 @@ class ChatControllerView : View, ChatInputDelegate {
         }, cancel: {
             chatInteraction.update({$0.updatedSearchMode(false)})
         }, searchRequest: { query, fromId -> Signal<[Message],Void> in
-            return searchMessages(account: account, peerId: chatInteraction.peerId, query: query, fromId: fromId)
+            return searchMessages(account: account, location: .peer(peerId: chatInteraction.peerId, fromId: fromId, tags: nil), query: query)
         })
         
         
@@ -1364,7 +1364,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.modalSearch = { [weak self] query in
             if let strongSelf = self {
-                let apply = showModalProgress(signal: searchMessages(account: strongSelf.account, peerId: strongSelf.peerId, query: query), for: mainWindow)
+                let apply = showModalProgress(signal: searchMessages(account: strongSelf.account, location: .peer(peerId: strongSelf.peerId, fromId: nil, tags: nil), query: query), for: mainWindow)
                 showModal(with: SearchResultModalController(strongSelf.account, request: apply, query: query, chatInteraction:strongSelf.chatInteraction), for: mainWindow)
             }
         }

@@ -172,7 +172,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsChatPreviewHeader)))
     descIndex += 1
     
-    let fromUser = TelegramUser(id: PeerId(1), accessHash: nil, firstName: "Mike", lastName: "Renoir", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
+    let fromUser = TelegramUser(id: PeerId(1), accessHash: nil, firstName: "Reinhart", lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
     
     
     

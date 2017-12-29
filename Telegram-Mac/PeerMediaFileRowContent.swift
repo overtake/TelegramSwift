@@ -127,8 +127,8 @@ class PeerMediaFileRowView : PeerMediaRowView {
     private let fetchDisposable = MetaDisposable()
     
     required init(frame frameRect: NSRect) {
-        nameView.userInteractionEnabled = false
         nameView.isSelectable = false
+        nameView.userInteractionEnabled = false
         actionView.isSelectable = false
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -209,6 +209,15 @@ class PeerMediaFileRowView : PeerMediaRowView {
             if imageView._mouseInside() {
                 executeInteraction(true)
                 return
+            } else if let status = self.fetchStatus {
+                switch status {
+                case .Remote:
+                    executeInteraction(true)
+                case .Fetching:
+                    executeInteraction(true)
+                default:
+                    break
+                }
             }
         }
         super.mouseUp(with: event)

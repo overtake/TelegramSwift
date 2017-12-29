@@ -59,8 +59,8 @@ class AlertController: ViewController {
                 self?.close(.alertThirdButtonReturn)
         })
         genericView.layoutTexts(with: self.header, information: text, maxWidth: maxWidth)
-        alert.setFrame(NSMakeRect(0, 0, maxWidth, 130), display: true)
-        view.frame = NSMakeRect(0, 0, maxWidth, 130)
+        alert.setFrame(NSMakeRect(0, 0, maxWidth, view.frame.height), display: true)
+        view.frame = NSMakeRect(0, 0, maxWidth, view.frame.height)
         view.needsLayout = true
     }
     
