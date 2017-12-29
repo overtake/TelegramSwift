@@ -42,10 +42,18 @@ class ChatFileMediaItem: ChatMediaItem {
         let file = media as! TelegramMediaFile
         parameters.makeLabelsForWidth( width - (file.previewRepresentations.isEmpty ? 50 : 80))
         
-        return NSMakeSize(max((parameters.name?.0.size.width ?? 0) + (file.previewRepresentations.isEmpty ? 50 : 80), 240), parameters.hasThumb ? 70 : 40)
+        return NSMakeSize(min(max((parameters.name?.0.size.width ?? 0) + (file.previewRepresentations.isEmpty ? 50 : 80), 250), width), parameters.hasThumb ? 70 : 40)
     }
     
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        let file = media as! TelegramMediaFile
+        return file.previewRepresentations.isEmpty || captionLayout != nil ? super.additionalLineForDateInBubbleState : nil
+    }
     
+    override var isFixedRightPosition: Bool {
+        let file = media as! TelegramMediaFile
+        return file.previewRepresentations.isEmpty || captionLayout != nil ? super.isFixedRightPosition : true
+    }
     
     override func contentNode() -> ChatMediaContentView.Type {
         return ChatFileContentView.self

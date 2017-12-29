@@ -134,7 +134,7 @@ private func chatMessageFileDatas(account: Account, file: TelegramMediaFile, pat
         
         let maybeFullSize = account.postbox.mediaBox.resourceData(fullSizeResource, pathExtension: pathExtension)
         
-        let signal = maybeFullSize |> take(1) |> mapToSignal { maybeData -> Signal<(Data?, String?, Bool), NoError> in
+        let signal = maybeFullSize |> mapToSignal { maybeData -> Signal<(Data?, String?, Bool), NoError> in
             
            
             if maybeData.complete && !justThumbail {
@@ -167,13 +167,13 @@ private func chatMessageFileDatas(account: Account, file: TelegramMediaFile, pat
                     return fullSizeDataAndPath |> take(1) |> map { dataPath, complete in
                         return (thumbnailData, dataPath, complete)
                     }
-                } |> then(Signal({ subscriber -> Disposable in
+                }/* |> then(Signal({ subscriber -> Disposable in
                     if !maybeData.complete, let fullSizeResource = fullSizeResource as? LocalFileReferenceMediaResource {
-                        subscriber.putNext((justThumbail ? try?Data(contentsOf: URL(fileURLWithPath: fullSizeResource.localFilePath)) : nil, fullSizeResource.localFilePath, true))
+                      //  subscriber.putNext((justThumbail ? try?Data(contentsOf: URL(fileURLWithPath: fullSizeResource.localFilePath)) : nil, fullSizeResource.localFilePath, true))
                     }
                     subscriber.putCompletion()
                     return EmptyDisposable
-                }))
+                })) */
             }
             } |> filter({ $0.0 != nil || $0.1 != nil })
         
@@ -574,6 +574,7 @@ func chatWebpageSnippetPhoto(account: Account, photo: TelegramMediaImage, scale:
                 context.withContext { c in
                     c.setBlendMode(.copy)
                     if arguments.boundingSize != arguments.imageSize {
+                        c.setFillColor(.clear)
                         c.fill(arguments.drawingRect)
                     }
                     
@@ -1535,11 +1536,14 @@ func chatMessageImageFile(account: Account, file: TelegramMediaFile, progressive
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            let options = NSMutableDictionary()
+            options.setValue(90 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
                 thumbnailImage = image
             }
             
@@ -1552,12 +1556,12 @@ func chatMessageImageFile(account: Account, file: TelegramMediaFile, progressive
                     c.interpolationQuality = .none
                     c.draw(thumbnailImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
                 }
-                
+
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             
             context.withContext { c in
-                c.setBlendMode(.copy)
+                //c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
                     c.fill(arguments.drawingRect)
                 }
@@ -1567,6 +1571,7 @@ func chatMessageImageFile(account: Account, file: TelegramMediaFile, progressive
                     c.interpolationQuality = .low
                     c.draw(blurredThumbnailImage, in: fittedRect)
                 }
+               
                 
             }
             

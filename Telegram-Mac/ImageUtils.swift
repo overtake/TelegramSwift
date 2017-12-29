@@ -12,34 +12,7 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import TGUIKit
 
-/*
- @[TGColorWithHex(0xff516a), TGColorWithHex(0xff885e)],
- @[TGColorWithHex(0xffa85c), TGColorWithHex(0xffcd6a)],
- @[TGColorWithHex(0x54cb68), TGColorWithHex(0xa0de7e)],
- @[TGColorWithHex(0x2a9ef1), TGColorWithHex(0x72d5fd)],
- @[TGColorWithHex(0x665fff), TGColorWithHex(0x82b1ff)],
- @[TGColorWithHex(0xd669ed), TGColorWithHex(0xe0a2f3)],
- */
 
-/*
- { .bottom = 0xff516a, .top = 0xff885e }, //red
- { .bottom = 0xffa85c, .top = 0xffcd6a }, //orange
- { .bottom = 0x54cb68, .top = 0xa0de7e }, //violet
- { .bottom = 0x665fff, .top = 0x82b1ff }, //green
- { .bottom = 0x4acccd, .top = 0x00fcfd }, //cyan
- { .bottom = 0x2a9ef1, .top = 0x72d5fd }, //blue
- { .bottom = 0xd669ed, .top = 0xe0a2f3 }, //pink
- */
-//bottom = 0x54cb68, .top = 0xa0de7e
-let peerAvatarColors: [(top: NSColor, bottom: NSColor)] = [
-    (NSColor(0xff885e), NSColor(0xff516a)),
-    (NSColor(0xffcd6a), NSColor(0xffa85c)),
-    (NSColor(0x82b1ff), NSColor(0x665fff)),
-    (NSColor(0xa0de7e), NSColor(0x54cb68)),
-    (NSColor(0x53edd6), NSColor(0x28c9b7)),
-    (NSColor(0x72d5fd), NSColor(0x2a9ef1)),
-    (NSColor(0xe0a2f3), NSColor(0xd669ed))
-]
 
 public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true) -> Signal<(CGImage?, Bool), NoError>? {
     if let smallProfileImage = peer.smallProfileImage {
@@ -116,7 +89,8 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             }
         }
         
-        let color = peerAvatarColors[Int(abs(peer.id.id % 7))]
+        
+        let color = theme.colors.peerColors(Int(abs(peer.id.id % 7)))
         
         
         let symbol = letters.reduce("", { (current, letter) -> String in
@@ -221,7 +195,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let color = peerAvatarColors[abs(Int(peer.id.id % 7))]
+        let color = theme.colors.peerColors(Int(abs(peer.id.id % 7)))
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))

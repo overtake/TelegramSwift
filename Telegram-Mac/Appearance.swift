@@ -134,6 +134,10 @@ private func generateChatScrolldownImage(backgroundColor: NSColor, borderColor: 
     })!
 }
 
+/*
+
+ */
+
 private func generateRecentActionsTriangle(_ color: NSColor) -> CGImage {
     return generateImage(NSMakeSize(10, 8), contextGenerator: { (size, ctx) in
         let bounds = NSMakeRect(0, 0, size.width, size.height)
@@ -544,6 +548,9 @@ final class TelegramChatListTheme {
 
     init(selectedBackgroundColor: NSColor, singleLayoutSelectedBackgroundColor: NSColor, activeDraggingBackgroundColor: NSColor, pinnedBackgroundColor: NSColor, contextMenuBackgroundColor: NSColor, textColor: NSColor, grayTextColor: NSColor, secretChatTextColor: NSColor, peerTextColor: NSColor, activityColor: NSColor, activitySelectedColor: NSColor, activityContextMenuColor: NSColor, activityPinnedColor: NSColor, badgeTextColor: NSColor, badgeBackgroundColor: NSColor, badgeSelectedTextColor: NSColor, badgeSelectedBackgroundColor: NSColor,  badgeMutedTextColor: NSColor, badgeMutedBackgroundColor: NSColor) {
         
+        
+        
+    
         
         self.selectedBackgroundColor = selectedBackgroundColor
         self.singleLayoutSelectedBackgroundColor = singleLayoutSelectedBackgroundColor

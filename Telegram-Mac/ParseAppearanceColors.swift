@@ -138,7 +138,21 @@ func importPalette(_ path: String) -> ColorPalette? {
                                      groupPeerNameGreen: colors["groupPeerNameGreen"]!,
                                      groupPeerNameCyan: colors["groupPeerNameCyan"]!,
                                      groupPeerNameLightBlue: colors["groupPeerNameLightBlue"]!,
-                                     groupPeerNameBlue: colors["groupPeerNameBlue"]!)
+                                     groupPeerNameBlue: colors["groupPeerNameBlue"]!,
+                                     peerAvatarRedTop: colors["peerAvatarRedTop"]!,
+                                     peerAvatarRedBottom: colors["peerAvatarRedBottom"]!,
+                                     peerAvatarOrangeTop: colors["peerAvatarOrangeTop"]!,
+                                     peerAvatarOrangeBottom: colors["peerAvatarOrangeBottom"]!,
+                                     peerAvatarVioletTop: colors["peerAvatarVioletTop"]!,
+                                     peerAvatarVioletBottom: colors["peerAvatarVioletBottom"]!,
+                                     peerAvatarGreenTop: colors["peerAvatarGreenTop"]!,
+                                     peerAvatarGreenBottom: colors["peerAvatarGreenBottom"]!,
+                                     peerAvatarCyanTop: colors["peerAvatarCyanTop"]!,
+                                     peerAvatarCyanBottom: colors["peerAvatarCyanBottom"]!,
+                                     peerAvatarBlueTop: colors["peerAvatarBlueTop"]!,
+                                     peerAvatarBlueBottom: colors["peerAvatarBlueBottom"]!,
+                                     peerAvatarPinkTop: colors["peerAvatarPinkTop"]!,
+                                     peerAvatarPinkBottom: colors["peerAvatarPinkBottom"]!)
             }
         }
         

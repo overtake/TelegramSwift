@@ -47,13 +47,13 @@ class WPArticleLayout: WPLayout {
         let website = content.websiteName?.lowercased()
         if let type = content.type, mediaTypes.contains(type) || (fullSizeSites.contains(website ?? "") || content.instantPage != nil) || content.text == nil  {
             if let imageSize = imageSize {
-                if imageSize.width < 100 {
+                if imageSize.width < 200 {
                     return false
                 }
             }
             return true
         }
-        return false
+        return content.text == nil || content.text!.trimmed.isEmpty
     }
     
     override func measure(width: CGFloat) {

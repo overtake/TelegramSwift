@@ -1111,7 +1111,7 @@ public class TextView: Control {
     }
     
     public override func mouseDown(with event: NSEvent) {
-        if isSelectable {
+        if isSelectable && !event.modifierFlags.contains(.shift)  {
             self.window?.makeFirstResponder(nil)
         }
         if !userInteractionEnabled {
@@ -1128,7 +1128,7 @@ public class TextView: Control {
     
     func _mouseDown(with event: NSEvent) -> Void {
         
-        if !isSelectable || !userInteractionEnabled {
+        if !isSelectable || !userInteractionEnabled || event.modifierFlags.contains(.shift) {
             return
         }
         
@@ -1193,6 +1193,16 @@ public class TextView: Control {
                 if let (link, _, _) = layout.link(at: point) {
                     layout.interactions.processURL(link)
                 }
+            } else if layout.selectedRange.hasSelectText && event.clickCount == 1 && event.modifierFlags.contains(.shift) {
+                var range = layout.selectedRange.range
+                let index = layout.findCharacterIndex(at: point)
+                if index < range.min {
+                    range.length += (range.location - index)
+                    range.location = index
+                } else if index > range.max {
+                    range.length = (index - range.location)
+                }
+                layout.selectedRange.range = range
             }
             setNeedsDisplay()
         }

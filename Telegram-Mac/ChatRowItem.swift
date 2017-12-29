@@ -899,7 +899,11 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? theme.chat.backgroundColor(isIncoming) : isBubbled ?   theme.colors.grayForeground : theme.colors.background, title: theme.chat.replyTitle(self), enabledText: theme.chat.replyText(self), disabledText: theme.chat.replyDisabledText(self), border: theme.chat.replyTitle(self))
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account:account, replyMessage:message.associatedMessages[attribute.messageId], presentation: replyPresentation)
+                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account:account, replyMessage:message.associatedMessages[attribute.messageId], presentation: replyPresentation, makesizeCallback: { [weak self] in
+                        guard let strongSelf = self else {return}
+                        _ = strongSelf.makeSize(strongSelf.width, oldWidth: 0)
+                         strongSelf.redraw()
+                    })
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
@@ -1064,7 +1068,7 @@ class ChatRowItem: TableRowItem {
                 replyModel?.measureSize(widthForContent, sizeToFit: true)
             } else {
                 if !hasBubble {
-                    replyModel?.measureSize(min(width - _contentSize.width - contentOffset.x - 70, 300), sizeToFit: true)
+                    replyModel?.measureSize(min(width - _contentSize.width - contentOffset.x - 100, 300), sizeToFit: true)
                 } else {
                     replyModel?.measureSize(widthForContent, sizeToFit: true)
                 }

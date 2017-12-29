@@ -306,7 +306,7 @@ class ChatGroupedItem: ChatRowItem {
 private class ChatGroupedView : ChatRowView {
     
     private var contents: [ChatMediaContentView] = []
-    private var selectionBackground: View = View()
+    private var selectionBackground: CornerView = CornerView()
     
 
     override func updateColors() {
@@ -626,6 +626,7 @@ private class ChatGroupedView : ChatRowView {
             if NSPointInRect(point, item.layout.frame(at: i)) {
                 selectionBackground.removeFromSuperview()
                 selectionBackground.setFrameSize(item.layout.frame(at: i).size)
+                selectionBackground.positionFlags = item.isBubbled ? item.layout.position(at: i) : nil
                 contents[i].addSubview(selectionBackground)
                 selected = true
                 break

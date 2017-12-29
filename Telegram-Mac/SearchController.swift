@@ -358,26 +358,39 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return entries
                 }
                 
-                let foundRemotePeers: Signal<([ChatListSearchEntry], Bool), NoError> = .single(([], true)) |> then(searchPeers(account: account, query: query)
+                let foundRemotePeers: Signal<([ChatListSearchEntry], [ChatListSearchEntry], Bool), NoError> = .single(([], [], true)) |> then(searchPeers(account: account, query: query)
                     |> delay(0.2, queue: prepareQueue)
-                    |> map { founds -> [FoundPeer] in
-                        return founds.filter { found -> Bool in
+                    |> map { founds -> ([FoundPeer], [FoundPeer]) in
+                        
+                        return (founds.0.filter { found -> Bool in
                             let first = ids[found.peer.id] == nil
                             ids[found.peer.id] = found.peer.id
                             return first
-                        }
+                        }, founds.1.filter { found -> Bool in
+                                let first = ids[found.peer.id] == nil
+                                ids[found.peer.id] = found.peer.id
+                                return first
+                        })
+                        
                     }
-                    |> map { peers -> ([ChatListSearchEntry], Bool) in
-                        var entries: [ChatListSearchEntry] = []
-                        var index = 10001
-                        for peer in peers {
-                            entries.append(.globalPeer(peer, index))
+                    |> map { _local, _remote -> ([ChatListSearchEntry], [ChatListSearchEntry], Bool) in
+                        var local: [ChatListSearchEntry] = []
+                        var index = 1000
+                        for peer in _local {
+                            local.append(.localPeer(peer.peer, index, nil, true))
                             index += 1
                         }
-                        return (entries, false)
+                        
+                        var remote: [ChatListSearchEntry] = []
+                        index = 10001
+                        for peer in _remote {
+                            remote.append(.globalPeer(peer, index))
+                            index += 1
+                        }
+                        return (local, remote, false)
                     })
                 
-                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool), NoError> = .single(([], true)) |> then(searchMessages(account: account, peerId:nil , query: query)
+                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool), NoError> = .single(([], true)) |> then(searchMessages(account: account, location: .general , query: query)
                     |> delay(0.2, queue: prepareQueue)
                     |> map { messages -> ([ChatListSearchEntry], Bool) in
                         
@@ -398,21 +411,21 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty {
                             entries.append(.separator(text: tr(.searchSeparatorChatsAndContacts), index: 0, state: .none))
-                            
                             entries += localPeers
-                        }
-                        if !remotePeers.0.isEmpty {
-                            entries.append(.separator(text: tr(.searchSeparatorGlobalPeers), index: 10000, state: .none))
                             entries += remotePeers.0
+                        }
+                        if !remotePeers.1.isEmpty {
+                            entries.append(.separator(text: tr(.searchSeparatorGlobalPeers), index: 10000, state: .none))
+                            entries += remotePeers.1
                         }
                         if !remoteMessages.0.isEmpty {
                             entries.append(.separator(text: tr(.searchSeparatorMessages), index: 20000, state: .none))
                             entries += remoteMessages.0
                         }
-                        if entries.isEmpty && !remotePeers.1 && !remoteMessages.1 {
+                        if entries.isEmpty && !remotePeers.2 && !remoteMessages.1 {
                             entries.append(.emptySearch)
                         }
-                        return (entries, remotePeers.1 || remoteMessages.1)
+                        return (entries, remotePeers.2 || remoteMessages.1)
                 }
                 
             } else {
@@ -474,7 +487,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         entries.append(.emptySearch)
                     }
                     
-                    return (entries, false)
+                    return (entries.sorted(by: <), false)
                 }
             }
         }
@@ -510,6 +523,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         isLoading.set(.single(false))
         self.window?.remove(object: self, for: .UpArrow)
         self.window?.remove(object: self, for: .DownArrow)
+        openPeerDisposable.set(nil)
+        globalDisposable.set(nil)
+        disposable.set(nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {

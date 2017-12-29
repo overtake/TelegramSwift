@@ -69,13 +69,14 @@ class WPLayout: Equatable {
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
         
+        let text = content.text?.trimmed
         if let title = content.title ?? content.author {
             _ = attributedText.append(string: title, color: presentation.text, font: .medium(fontSize))
-            if content.text != nil {
+            if text != nil {
                 _ = attributedText.append(string: "\n")
             }
         }
-        if let text = content.text {
+        if let text = text {
             _ = attributedText.append(string: text, color: presentation.text, font: .normal(fontSize))
         }
         if attributedText.length > 0 {

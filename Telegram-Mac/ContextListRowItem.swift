@@ -104,7 +104,7 @@ class ContextListRowItem: TableRowItem {
             if iconText == nil {
                 if let title = result.title, !title.isEmpty {
                     let titleText = title.substring(to: title.index(after: title.startIndex)).uppercased()
-                    iconText = NSAttributedString.initialize(string: titleText, color: .white, font: .medium(25.0))
+                    iconText = .initialize(string: titleText, color: .white, font: .medium(25.0))
                 }
             }
         }

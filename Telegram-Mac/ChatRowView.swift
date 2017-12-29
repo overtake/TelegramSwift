@@ -361,7 +361,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }, for: .Click)
             
             reply.view = replyView
-            reply.view?.needsDisplay = true
+            //reply.view?.needsDisplay = true
         } else {
             replyView?.removeFromSuperview()
             replyView = nil
@@ -729,7 +729,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
-            bubbleView.frame = bubbleFrame
             bubbleView.data = item.modernBubbleImage
             
         } else {
@@ -767,7 +766,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         rowView.needsDisplay = true
         super.set(item: item, animated: animated)
-        self.needsLayout = true
+        layout()
     }
 
     open override func interactionContentView(for innerId: AnyHashable ) -> NSView {

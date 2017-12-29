@@ -162,6 +162,9 @@ func translate(key: String, _ args: [CVarArg]) -> String {
     if let format = format {
         let ranges = extractArgumentRanges(format)
         var formatted = format
+        while ranges.count != args.count {
+            args.removeFirst()
+        }
         for range in ranges.reversed() {
             if range.0 < args.count {
                 let value = "\(args[range.0])"

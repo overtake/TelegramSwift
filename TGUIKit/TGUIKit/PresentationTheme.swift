@@ -126,6 +126,36 @@ public final class ColorPalette : Equatable {
     public let groupPeerNameLightBlue:NSColor
     public let groupPeerNameBlue:NSColor
     
+    public let peerAvatarRedTop: NSColor
+    public let peerAvatarRedBottom: NSColor
+    public let peerAvatarOrangeTop: NSColor
+    public let peerAvatarOrangeBottom: NSColor
+    public let peerAvatarVioletTop: NSColor
+    public let peerAvatarVioletBottom: NSColor
+    public let peerAvatarGreenTop: NSColor
+    public let peerAvatarGreenBottom: NSColor
+    public let peerAvatarCyanTop: NSColor
+    public let peerAvatarCyanBottom: NSColor
+    public let peerAvatarBlueTop: NSColor
+    public let peerAvatarBlueBottom: NSColor
+    public let peerAvatarPinkTop: NSColor
+    public let peerAvatarPinkBottom: NSColor
+  
+    
+    public func peerColors(_ index: Int) -> (top: NSColor, bottom: NSColor) {
+        let colors: [(top: NSColor, bottom: NSColor)] = [
+            (peerAvatarRedTop, peerAvatarRedBottom),
+            (peerAvatarOrangeTop, peerAvatarOrangeBottom),
+            (peerAvatarVioletTop, peerAvatarVioletBottom),
+            (peerAvatarGreenTop, peerAvatarGreenBottom),
+            (peerAvatarCyanTop, peerAvatarCyanBottom),
+            (peerAvatarBlueTop, peerAvatarBlueBottom),
+            (peerAvatarPinkTop, peerAvatarPinkBottom)
+        ]
+        
+        return colors[index]
+    }
+    
     public init(isDark: Bool,
                 name: String,
                 background:NSColor,
@@ -209,7 +239,21 @@ public final class ColorPalette : Equatable {
                 groupPeerNameGreen:NSColor,
                 groupPeerNameCyan:NSColor,
                 groupPeerNameLightBlue:NSColor,
-                groupPeerNameBlue:NSColor) {
+                groupPeerNameBlue:NSColor,
+                peerAvatarRedTop: NSColor,
+                peerAvatarRedBottom: NSColor,
+                peerAvatarOrangeTop: NSColor,
+                peerAvatarOrangeBottom: NSColor,
+                peerAvatarVioletTop: NSColor,
+                peerAvatarVioletBottom: NSColor,
+                peerAvatarGreenTop: NSColor,
+                peerAvatarGreenBottom: NSColor,
+                peerAvatarCyanTop: NSColor,
+                peerAvatarCyanBottom: NSColor,
+                peerAvatarBlueTop: NSColor,
+                peerAvatarBlueBottom: NSColor,
+                peerAvatarPinkTop: NSColor,
+                peerAvatarPinkBottom: NSColor) {
         self.isDark = isDark
         self.name = name
         self.background = background
@@ -295,6 +339,21 @@ public final class ColorPalette : Equatable {
         self.groupPeerNameCyan = groupPeerNameCyan
         self.groupPeerNameLightBlue = groupPeerNameLightBlue
         self.groupPeerNameBlue = groupPeerNameBlue
+        
+        self.peerAvatarRedTop =  peerAvatarRedTop
+        self.peerAvatarRedBottom = peerAvatarRedBottom
+        self.peerAvatarOrangeTop = peerAvatarOrangeTop
+        self.peerAvatarOrangeBottom = peerAvatarOrangeBottom
+        self.peerAvatarVioletTop = peerAvatarVioletTop
+        self.peerAvatarVioletBottom = peerAvatarVioletBottom
+        self.peerAvatarGreenTop = peerAvatarGreenTop
+        self.peerAvatarGreenBottom = peerAvatarGreenBottom
+        self.peerAvatarCyanTop = peerAvatarCyanTop
+        self.peerAvatarCyanBottom = peerAvatarCyanBottom
+        self.peerAvatarBlueTop = peerAvatarBlueTop
+        self.peerAvatarBlueBottom = peerAvatarBlueBottom
+        self.peerAvatarPinkTop = peerAvatarPinkTop
+        self.peerAvatarPinkBottom = peerAvatarPinkBottom
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -440,7 +499,21 @@ public let whitePalette = ColorPalette(isDark: false,
                                        groupPeerNameGreen:NSColor(0x0fb297),
                                        groupPeerNameCyan:NSColor(0x00c1a6),
                                        groupPeerNameLightBlue:NSColor(0x3ca5ec),
-                                       groupPeerNameBlue:NSColor(0x3d72ed))
+                                       groupPeerNameBlue:NSColor(0x3d72ed),
+                                       peerAvatarRedTop: NSColor(0xff885e),
+                                       peerAvatarRedBottom: NSColor(0xff516a),
+                                       peerAvatarOrangeTop: NSColor(0xffcd6a),
+                                       peerAvatarOrangeBottom: NSColor(0xffa85c),
+                                       peerAvatarVioletTop: NSColor(0x82b1ff),
+                                       peerAvatarVioletBottom: NSColor(0x665fff),
+                                       peerAvatarGreenTop: NSColor(0xa0de7e),
+                                       peerAvatarGreenBottom: NSColor(0x54cb68),
+                                       peerAvatarCyanTop: NSColor(0x53edd6),
+                                       peerAvatarCyanBottom: NSColor(0x28c9b7),
+                                       peerAvatarBlueTop: NSColor(0x72d5fd),
+                                       peerAvatarBlueBottom: NSColor(0x2a9ef1),
+                                       peerAvatarPinkTop: NSColor(0xe0a2f3),
+                                       peerAvatarPinkBottom: NSColor(0xd669ed))
 
 /*
  colors[0] = NSColor(0xfc5c51); // red
@@ -536,7 +609,21 @@ public let darkPalette = ColorPalette(isDark: true,
                                       groupPeerNameGreen:NSColor(0x0fb297),
                                       groupPeerNameCyan:NSColor(0x00c1a6),
                                       groupPeerNameLightBlue:NSColor(0x3ca5ec),
-                                      groupPeerNameBlue:NSColor(0x3d72ed))
+                                      groupPeerNameBlue:NSColor(0x3d72ed),
+                                      peerAvatarRedTop: NSColor(0xff885e),
+                                      peerAvatarRedBottom: NSColor(0xff516a),
+                                      peerAvatarOrangeTop: NSColor(0xffcd6a),
+                                      peerAvatarOrangeBottom: NSColor(0xffa85c),
+                                      peerAvatarVioletTop: NSColor(0x82b1ff),
+                                      peerAvatarVioletBottom: NSColor(0x665fff),
+                                      peerAvatarGreenTop: NSColor(0xa0de7e),
+                                      peerAvatarGreenBottom: NSColor(0x54cb68),
+                                      peerAvatarCyanTop: NSColor(0x53edd6),
+                                      peerAvatarCyanBottom: NSColor(0x28c9b7),
+                                      peerAvatarBlueTop: NSColor(0x72d5fd),
+                                      peerAvatarBlueBottom: NSColor(0x2a9ef1),
+                                      peerAvatarPinkTop: NSColor(0xe0a2f3),
+                                      peerAvatarPinkBottom: NSColor(0xd669ed))
 
 
 /*

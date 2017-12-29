@@ -84,3 +84,57 @@ class VideoDurationView : View {
         fatalError("init(frame:) has not been implemented")
     }
 }
+
+class CornerView : View {
+
+    var positionFlags: GroupLayoutPositionFlags? {
+        didSet {
+            needsLayout = true
+        }
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        
+        ctx.round(frame.size, .cornerRadius, positionFlags: positionFlags)
+        super.draw(layer, in: ctx)
+//        if let positionFlags = positionFlags {
+//
+//            let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+//            let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+//
+//            ctx.move(to: NSMakePoint(minx, midy))
+//
+//            var topLeftRadius: CGFloat = .cornerRadius
+//            var bottomLeftRadius: CGFloat = .cornerRadius
+//            var topRightRadius: CGFloat = .cornerRadius
+//            var bottomRightRadius: CGFloat = .cornerRadius
+//
+//
+//            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+//                topLeftRadius = topLeftRadius * 3 + 2
+//            }
+//            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+//                topRightRadius = topRightRadius * 3 + 2
+//            }
+//            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+//                bottomLeftRadius = bottomLeftRadius * 3 + 2
+//            }
+//            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+//                bottomRightRadius = bottomRightRadius * 3 + 2
+//            }
+//
+//            ctx.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+//            ctx.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+//            ctx.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topLeftRadius)
+//            ctx.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topRightRadius)
+//
+//            ctx.closePath()
+//            ctx.clip()
+//        }
+//
+//        ctx.setFillColor(backgroundColor.cgColor)
+//        ctx.fill(bounds)
+//
+    }
+    
+}

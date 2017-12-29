@@ -115,7 +115,7 @@ struct TelegramChatColors {
     }
     
     func bubbleBorderColor(_ incoming: Bool) -> NSColor {
-        return incoming ? palette.bubbleBorder_incoming : palette.bubbleBorder_outgoing
+        return incoming ? palette.bubbleBorder_incoming : palette.bubbleBackground_outgoing//.clear//palette.bubbleBorder_outgoing
     }
     
     func textColor(_ incoming: Bool) -> NSColor {

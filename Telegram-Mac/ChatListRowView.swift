@@ -275,7 +275,7 @@ class ChatListRowView: TableRowView {
                 if item.account.peerId == peer.id {
                     let icon = theme.icons.peerSavedMessages
                     photo.setPeer(account: item.account, peer: nil)
-                    photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: peerAvatarColors[5], icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 25, photo.frame.size.height - 25)))) |> map {($0, false)})
+                    photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 25, photo.frame.size.height - 25)))) |> map {($0, false)})
                 } else {
                     photo.setPeer(account: item.account, peer: peer)
                 }

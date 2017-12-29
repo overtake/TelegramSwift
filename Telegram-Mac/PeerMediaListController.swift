@@ -316,7 +316,8 @@ class PeerMediaListController: GenericViewController<TableView> {
                         }
                     }
                 } else {
-                    return .single(PeerMediaUpdate()) |> then(searchMessages(account: strongSelf.account, peerId: strongSelf.peerId, query: searchState.request, tagMask: tagMask) |> deliverOnMainQueue |> map { messages -> PeerMediaUpdate in
+                    
+                    return .single(PeerMediaUpdate()) |> then(searchMessages(account: strongSelf.account, location: .peer(peerId: strongSelf.peerId, fromId: nil, tags: tagMask), query: searchState.request) |> deliverOnMainQueue |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
                     })
                 }
