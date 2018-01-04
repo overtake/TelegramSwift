@@ -206,7 +206,7 @@ private func archivedStickerPacksControllerEntries(state: ArchivedStickerPacksCo
     sectionId += 1
     
     if let packs = packs {
-        entries.append(.info(sectionId: sectionId, tr(.archivedStickersDescription)))
+        entries.append(.info(sectionId: sectionId, tr(L10n.archivedStickersDescription)))
         
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
@@ -266,7 +266,7 @@ class ArchivedStickerPacksController: TableViewController {
         let arguments = ArchivedStickerPacksControllerArguments(account: account, openStickerPack: { info in
           showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { info in
-            confirm(for: mainWindow, information: tr(.chatConfirmActionUndonable), successHandler: { _ in
+            confirm(for: mainWindow, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
                 var remove = false
                 updateState { state in
                     var removingPackIds = state.removingPackIds

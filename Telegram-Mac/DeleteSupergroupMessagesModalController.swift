@@ -85,7 +85,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
             if let strongSelf = self, let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                 _ = strongSelf.genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: 0))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(.supergroupDeleteRestrictionDeleteMessage), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(L10n.supergroupDeleteRestrictionDeleteMessage), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
                     if let strongSelf = strongSelf {
                         return strongSelf.options.contains(.deleteMessages)
                     }
@@ -95,7 +95,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                 }))
                 
                 if peer.hasAdminRights(.canBanUsers) {
-                    _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: tr(.supergroupDeleteRestrictionBanUser), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
+                    _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: tr(L10n.supergroupDeleteRestrictionBanUser), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
                         if let strongSelf = strongSelf {
                             return strongSelf.options.contains(.banUser)
                         }
@@ -112,7 +112,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     }))
                 }
                
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 3, name: tr(.supergroupDeleteRestrictionReportSpam), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 3, name: tr(L10n.supergroupDeleteRestrictionReportSpam), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
                     if let strongSelf = strongSelf {
                         return strongSelf.options.contains(.reportSpam)
                     }
@@ -128,7 +128,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     }
                 }))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 4, name: tr(.supergroupDeleteRestrictionDeleteAllMessages), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 4, name: tr(L10n.supergroupDeleteRestrictionDeleteAllMessages), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
                     if let strongSelf = strongSelf {
                         return strongSelf.options.contains(.deleteAllMessages)
                     }
@@ -168,9 +168,9 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             self?.perform()
-        }, cancelTitle: tr(.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
     }
     
     

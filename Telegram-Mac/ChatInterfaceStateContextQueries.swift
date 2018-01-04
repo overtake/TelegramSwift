@@ -224,6 +224,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                             return peerParticipants(postbox: account.postbox, id: peer.id)
                                 |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                                     let filteredParticipants = participants.filter ({ peer in
+                                        if peer.id == account.peerId {
+                                            return false
+                                        }
                                         if peer.indexName.matchesByTokens(normalizedQuery) {
                                             return true
                                         }

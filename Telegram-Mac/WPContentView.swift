@@ -119,7 +119,7 @@ class WPContentView: View, MultipleSelectable {
             instantPageButton?.set(image: theme.icons.chatInstantView, for: .Normal)
             instantPageButton?.set(font: .medium(.title), for: .Normal)
             instantPageButton?.set(background: theme.colors.background, for: .Normal)
-            instantPageButton?.set(text: tr(.chatInstantView), for: .Normal)
+            instantPageButton?.set(text: tr(L10n.chatInstantView), for: .Normal)
             instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
             
             instantPageButton?.removeAllHandlers()

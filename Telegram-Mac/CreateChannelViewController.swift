@@ -27,7 +27,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.nextEnabled(false)
-        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, account: account, placeholder: tr(.channelChannelNameHolder), limit: 140, textChangeHandler:{ [weak self] text in
+        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, account: account, placeholder: tr(L10n.channelChannelNameHolder), limit: 140, textChangeHandler:{ [weak self] text in
             self?.nextEnabled(!text.isEmpty)
         }, pickPicture: { [weak self] select in
             if let strongSelf = self, select {
@@ -42,12 +42,12 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
                 self?.picture = nil
             }
         })
-        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(.channelDescriptionHolder), limit: 300, automaticallyBecomeResponder: false)
+        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(L10n.channelDescriptionHolder), limit: 300, automaticallyBecomeResponder: false)
        
         _ = genericView.addItem(item: nameItem)
         _ = genericView.addItem(item: GeneralRowItem(atomicSize.modify({$0}), height: 30, stableId: 1))
         _ = genericView.addItem(item: descItem)
-        _ = genericView.addItem(item: GeneralTextRowItem(atomicSize.modify({$0}), stableId: 3, text: tr(.channelDescriptionHolderDescrpiton)))
+        _ = genericView.addItem(item: GeneralTextRowItem(atomicSize.modify({$0}), stableId: 3, text: tr(L10n.channelDescriptionHolderDescrpiton)))
         readyOnce()
     }
     

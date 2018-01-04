@@ -81,11 +81,11 @@ extension ChatMediaGridPackHeaderInfo {
                 return ""
             }
         case .recent:
-            return tr(.stickersRecent)
+            return tr(L10n.stickersRecent)
         case .saved:
-            return "tr(.stickersFavorite)"
+            return "tr(L10n.stickersFavorite)"
         case .speficicPack:
-            return tr(.stickersGroupStickers)
+            return tr(L10n.stickersGroupStickers)
         }
     }
 }

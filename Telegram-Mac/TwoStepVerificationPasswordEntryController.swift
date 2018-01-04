@@ -123,9 +123,9 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                         let alertText: String
                         switch error {
                         case .generic:
-                            alertText = tr(.twoStepAuthErrorGeneric)
+                            alertText = tr(L10n.twoStepAuthErrorGeneric)
                         case .invalidEmail:
-                            alertText = tr(.twoStepAuthErrorInvalidEmail)
+                            alertText = tr(L10n.twoStepAuthErrorInvalidEmail)
                         }
                         alert(for: mainWindow, info: alertText)
                     }))
@@ -147,15 +147,15 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                         let alertText: String
                         switch error {
                         case .generic:
-                            alertText = tr(.twoStepAuthErrorGeneric)
+                            alertText = tr(L10n.twoStepAuthErrorGeneric)
                         case .invalidEmail:
-                            alertText = tr(.twoStepAuthErrorInvalidEmail)
+                            alertText = tr(L10n.twoStepAuthErrorInvalidEmail)
                         }
                         alert(for: mainWindow, info: alertText)
                     }))
                 }
             } else if invalidReentry {
-                alert(for: mainWindow, info: tr(.twoStepAuthErrorPasswordsDontMatch))
+                alert(for: mainWindow, info: tr(L10n.twoStepAuthErrorPasswordsDontMatch))
             }
         }
         
@@ -183,7 +183,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                         break
                     }
                     if text.isEmpty {
-                        confirm(for: mainWindow, information: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
+                        confirm(for: mainWindow, information: tr(L10n.twoStepAuthEmailSkipAlert), successHandler: { _ in
                             checkPassword()
                         })
                     } else {
@@ -197,7 +197,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
             
             checkPassword()
         }, skipEmail: {
-            confirm(for: mainWindow, information: tr(.twoStepAuthEmailSkipAlert), successHandler: { _ in
+            confirm(for: mainWindow, information: tr(L10n.twoStepAuthEmailSkipAlert), successHandler: { _ in
                 checkPassword(true)
             })
         })
@@ -213,13 +213,13 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                 
                 switch state.stage {
                 case .entry:
-                    title = tr(.twoStepAuthSetupPasswordTitle)
+                    title = tr(L10n.twoStepAuthSetupPasswordTitle)
                 case .reentry:
-                     title = tr(.twoStepAuthSetupPasswordTitle)
+                     title = tr(L10n.twoStepAuthSetupPasswordTitle)
                 case .hint:
-                     title = tr(.twoStepAuthSetupHintTitle)
+                     title = tr(L10n.twoStepAuthSetupHintTitle)
                 case .email:
-                     title = tr(.twoStepAuthSetupEmailTitle)
+                     title = tr(L10n.twoStepAuthSetupEmailTitle)
                 }
                 
                 if state.updating {
@@ -269,7 +269,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.composeNext))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.composeNext))
         
         button.button.set(handler: { [weak self] _ in
             self?.nextAction?()

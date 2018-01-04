@@ -204,7 +204,7 @@ class PeerInfoController: EditableViewController<TableView> {
     private let peerViewDisposable:MetaDisposable = MetaDisposable()
     private let peerAtomic:Atomic<Peer>
     private let peerView:Atomic<PeerView?> = Atomic(value: nil)
-    
+    private let peerInputActivitiesDisposable = MetaDisposable()
     private var _groupArguments:GroupInfoArguments!
     private var _userArguments:UserInfoArguments!
     private var _channelArguments:ChannelInfoArguments!
@@ -214,6 +214,8 @@ class PeerInfoController: EditableViewController<TableView> {
         peerAtomic = Atomic(value: peer)
         self.peerId = peer.id
         super.init(account)
+        
+        
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
             self?.navigationController?.push(controller)
@@ -251,6 +253,7 @@ class PeerInfoController: EditableViewController<TableView> {
     deinit {
         disposable.dispose()
         updatedChannelParticipants.dispose()
+        peerInputActivitiesDisposable.dispose()
         window?.removeAllHandlers(for: self)
     }
     
@@ -312,12 +315,28 @@ class PeerInfoController: EditableViewController<TableView> {
         let peerId = self.peerId
         let initialSize = atomicSize
         let arguments = self.arguments
+        let peer = peerAtomic.modify({$0})
+        
+        let inputActivity = self.account.peerInputActivities(peerId: peerId)
+            |> map { activities -> [PeerId : PeerInputActivity] in
+                return activities.reduce([:], { (current, activity) -> [PeerId : PeerInputActivity] in
+                    var current = current
+                    current[activity.0] = activity.1
+                    return current
+                })
+        }
+        
+        let inputActivityState: Promise<[PeerId : PeerInputActivity]> = Promise([:])
+        
+        if peer.isGroup || peer.isSupergroup {
+            inputActivityState.set(inputActivity)
+        }
         
         
-        let transition = combineLatest(account.viewTracker.peerView(peerId), arguments.statePromise |> distinctUntilChanged, appearanceSignal) |> deliverOn(prepareQueue)
-            |> map { [weak peerAtomic] view, state, appearance -> (PeerView, TableUpdateTransition) in
+        let transition = combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> distinctUntilChanged |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
+            |> map { [weak peerAtomic] view, state, appearance, inputActivities -> (PeerView, TableUpdateTransition) in
                 
-                let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                 
                 let previous = previousEntries.swap(entries)
                 

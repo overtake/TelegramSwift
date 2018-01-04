@@ -35,7 +35,7 @@ class ChatMessageItem: ChatRowItem {
             let messageAttr:NSMutableAttributedString
             if message.text.isEmpty && message.media.isEmpty {
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: tr(.chatMessageUnsupported), color: theme.chat.textColor(isIncoming), font: .code(theme.fontSize))
+                _ = attr.append(string: tr(L10n.chatMessageUnsupported), color: theme.chat.textColor(isIncoming), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
                 messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming), linkColor: theme.chat.linkColor(isIncoming), monospacedPre: theme.chat.monospacedPreColor(isIncoming), monospacedCode: theme.chat.monospacedCodeColor(isIncoming)).mutableCopy() as! NSMutableAttributedString
@@ -137,7 +137,7 @@ class ChatMessageItem: ChatRowItem {
             }, menuItems: { [weak self] onLink in
                 var items:[ContextMenuItem] = []
                 if let strongSelf = self, let layout = self?.textLayout {
-                    items.append(ContextMenuItem(onLink ? tr(.messageContextCopyMessageLink) : layout.selectedRange.hasSelectText ? tr(.chatCopySelectedText) : tr(.textCopy), handler: { [weak strongSelf] in
+                    items.append(ContextMenuItem(onLink ? tr(L10n.messageContextCopyMessageLink) : layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: { [weak strongSelf] in
                         let result = strongSelf?.textLayout.interactions.copy?()
                         if let result = result, let strongSelf = strongSelf, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
@@ -163,7 +163,7 @@ class ChatMessageItem: ChatRowItem {
                         var effectiveRange: NSRange = NSMakeRange(NSNotFound, 0)
                         if let _ = strongSelf.textLayout.attributedString.attribute(.preformattedPre, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange) {
                             let blockText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange).string
-                            items.append(ContextMenuItem(tr(.chatContextCopyBlock), handler: {
+                            items.append(ContextMenuItem(tr(L10n.chatContextCopyBlock), handler: {
                                 copyToClipboard(blockText)
                             }))
                         }
@@ -286,7 +286,7 @@ class ChatMessageItem: ChatRowItem {
                 var items = items
                 return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
                     if data.complete {
-                        items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
+                        items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                             saveAs(file, account: account)
                         }))
                     }
@@ -294,7 +294,7 @@ class ChatMessageItem: ChatRowItem {
                     if file.isSticker, let fileId = file.id {
                         return account.postbox.modify { modifier -> [ContextMenuItem] in
                             let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
-                            items.append(ContextMenuItem( !saved ? tr(.chatContextAddFavoriteSticker) : tr(.chatContextRemoveFavoriteSticker), handler: {
+                            items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
                                 
                                 if !saved {
                                     _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
@@ -316,14 +316,14 @@ class ChatMessageItem: ChatRowItem {
                 if let resource = image.representations.last?.resource {
                     return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
                         if data.complete {
-                            items.append(ContextMenuItem(tr(.galleryContextCopyToClipboard), handler: {
+                            items.append(ContextMenuItem(tr(L10n.galleryContextCopyToClipboard), handler: {
                                 if let path = link(path: data.path, ext: "jpg") {
                                     let pb = NSPasteboard.general
                                     pb.clearContents()
                                     pb.writeObjects([NSURL(fileURLWithPath: path)])
                                 }
                             }))
-                            items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
+                            items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                                 savePanel(file: data.path, ext: "jpg", for: mainWindow)
                             }))
                         }
@@ -341,7 +341,7 @@ class ChatMessageItem: ChatRowItem {
             
             var needCopy: Bool = true
             for i in 0 ..< items.count {
-                if items[i].title == tr(.messageContextCopyMessageLink) || items[i].title == tr(.textCopy) {
+                if items[i].title == tr(L10n.messageContextCopyMessageLink) || items[i].title == tr(L10n.textCopy) {
                     needCopy = false
                 }
             }
@@ -362,17 +362,17 @@ class ChatMessageItem: ChatRowItem {
                         }
                         
                         for i in 0 ..< items.count {
-                            if items[i].title == tr(.messageContextCopyMessageLink) {
+                            if items[i].title == tr(L10n.messageContextCopyMessageLink) {
                                 items.remove(at: i)
                                 break
                             }
                         }
                         
-                        items.insert(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                        items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
                             copyToClipboard(text)
                         }), at: 1)
                     } else {
-                        items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(.chatCopySelectedText) : tr(.textCopy), handler: {
+                        items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: {
                             copyToClipboard(text)
                         }), at: 1)
                     }

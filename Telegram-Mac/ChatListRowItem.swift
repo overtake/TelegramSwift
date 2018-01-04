@@ -153,7 +153,7 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: peer?.id == account.peerId ? tr(.peerSavedMessages) : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+        let _ = titleText.append(string: peer?.id == account.peerId ? tr(L10n.peerSavedMessages) : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: .white ,range: titleText.range)
 
         self.titleText = titleText
@@ -252,7 +252,7 @@ class ChatListRowItem: TableRowItem {
             
             let clearHistory = { [weak self] in
                 if let strongSelf = self {
-                    confirm(for: mainWindow, information: tr(.confirmDeleteChatUser), swapColors: true, successHandler: { _ in
+                    confirm(for: mainWindow, information: tr(L10n.confirmDeleteChatUser), swapColors: true, successHandler: { _ in
                         strongSelf.clearHistoryDisposable.set(clearHistoryInteractively(postbox: strongSelf.account.postbox, peerId: strongSelf.peerId).start())
                    })
                 }
@@ -272,7 +272,7 @@ class ChatListRowItem: TableRowItem {
                         
                         switch result {
                         case .limitExceeded:
-                            alert(for: mainWindow, info: tr(.chatListContextPinError))
+                            alert(for: mainWindow, info: tr(L10n.chatListContextPinError))
                         default:
                             break
                         }
@@ -288,7 +288,7 @@ class ChatListRowItem: TableRowItem {
             
             let leaveGroup = { [weak self] in
                 if let strongSelf = self {
-                    confirm(for: mainWindow, information: tr(.confirmLeaveGroup), swapColors: true, successHandler: { _ in
+                    confirm(for: mainWindow, information: tr(L10n.confirmLeaveGroup), swapColors: true, successHandler: { _ in
                         strongSelf.deleteChatDisposable.set(leftGroup(account: strongSelf.account, peerId: strongSelf.peerId).start())
                     })
                 }
@@ -300,40 +300,40 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            items.append(ContextMenuItem(pinnedType == .none ? tr(.chatListContextPin) : tr(.chatListContextUnpin), handler: togglePin))
+            items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             
             if account.peerId != peer.id {
-                items.append(ContextMenuItem(isMuted ? tr(.chatListContextUnmute) : tr(.chatListContextMute), handler: toggleMute))
+                items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
             }
             
             if peer is TelegramUser {
                 if peer.canCall && peer.id != account.peerId {
-                    items.append(ContextMenuItem(tr(.chatListContextCall), handler: call))
+                    items.append(ContextMenuItem(tr(L10n.chatListContextCall), handler: call))
                 }
-                items.append(ContextMenuItem(tr(.chatListContextClearHistory), handler: clearHistory))
-                items.append(ContextMenuItem(tr(.chatListContextDeleteChat), handler: deleteChat))
+                items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
+                items.append(ContextMenuItem(tr(L10n.chatListContextDeleteChat), handler: deleteChat))
             }
 
             if let peer = peer as? TelegramGroup {
-                items.append(ContextMenuItem(tr(.chatListContextClearHistory), handler: clearHistory))
+                items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                 switch peer.membership {
                 case .Member:
-                    items.append(ContextMenuItem(tr(.chatListContextLeaveGroup), handler: leaveGroup))
+                    items.append(ContextMenuItem(tr(L10n.chatListContextLeaveGroup), handler: leaveGroup))
                 case .Left:
-                    items.append(ContextMenuItem(tr(.chatListContextReturnGroup), handler: rGroup))
+                    items.append(ContextMenuItem(tr(L10n.chatListContextReturnGroup), handler: rGroup))
                 default:
                     break
                 }
-                items.append(ContextMenuItem(tr(.chatListContextDeleteAndExit), handler: deleteChat))
+                items.append(ContextMenuItem(tr(L10n.chatListContextDeleteAndExit), handler: deleteChat))
             } else if let peer = peer as? TelegramChannel {
                 
                 if case .broadcast = peer.info {
-                    items.append(ContextMenuItem(tr(.chatListContextLeaveChannel), handler: deleteChat))
+                    items.append(ContextMenuItem(tr(L10n.chatListContextLeaveChannel), handler: deleteChat))
                 } else {
                     if peer.addressName == nil {
-                        items.append(ContextMenuItem(tr(.chatListContextClearHistory), handler: clearHistory))
+                        items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                     }
-                    items.append(ContextMenuItem(tr(.chatListContextLeaveGroup), handler: deleteChat))
+                    items.append(ContextMenuItem(tr(L10n.chatListContextLeaveGroup), handler: deleteChat))
                 }
             }
             

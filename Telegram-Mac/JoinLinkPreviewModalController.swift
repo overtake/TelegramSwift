@@ -33,7 +33,7 @@ private class JoinLinkPreviewView : View {
         _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .normal(.title))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: tr(.peerStatusMemberCountable(peer.participantCount)), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: tr(L10n.peerStatusMemberCountable(peer.participantCount)), color: theme.colors.grayText, font: .normal(.text))
         let titleLayout = TextViewLayout(attr, alignment: .center)
         titleLayout.measure(width: frame.width - 40)
         titleView.update(titleLayout)
@@ -91,14 +91,14 @@ class JoinLinkPreviewModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.joinLinkJoin), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.joinLinkJoin), accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
                 _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.account), for: window).start(next: { [weak strongSelf] (peerId) in
                     strongSelf?.interaction(peerId)
                     self?.close()
                 })
             }
-        }, cancelTitle: tr(.modalCancel))
+        }, cancelTitle: tr(L10n.modalCancel))
         
     }
     

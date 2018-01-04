@@ -22,7 +22,7 @@ fileprivate class ShareButton : Control {
         super.init(frame: frameRect)
         addSubview(badgeView)
         addSubview(shareText)
-        let layout = TextViewLayout(.initialize(string: tr(.modalShare).uppercased(), color: .white, font: .normal(.header)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: tr(L10n.modalShare).uppercased(), color: .white, font: .normal(.header)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         shareText.update(layout)
         setFrameSize(NSMakeSize(22 + shareText.frame.width + 47, 41))
@@ -129,7 +129,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         textView.max_height = 120
         
         textView.setFrameSize(NSMakeSize(0, 34))
-        textView.setPlaceholderAttributedString(.initialize(string:  tr(.previewSenderCommentPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
+        textView.setPlaceholderAttributedString(.initialize(string:  tr(L10n.previewSenderCommentPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
 
         
         textContainerView.addSubview(textView)
@@ -462,7 +462,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             let removed = oldValue.selected.subtracting(value.selected)
 
             for item in added {
-                let title = item == share.account.peerId ? tr(.peerSavedMessages) : value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser)
+                let title = item == share.account.peerId ? tr(L10n.peerSavedMessages) : value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser)
                 genericView.searchView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
             }
             
@@ -529,10 +529,10 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         
         genericView.share.set(handler: { [weak self] control in
-            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(tr(.modalCopyLink), {
+            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(tr(L10n.modalCopyLink), {
                 if share.hasLink {
                     share.shareLink()
-                    self?.show(toaster: ControllerToaster(text: tr(.shareLinkCopied), height:50), for: 2.0, animated: true)
+                    self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied), height:50), for: 2.0, animated: true)
                 }
             })]), edge: .maxY, inset: NSMakePoint(-100,  -40))
         }, for: .Click)
@@ -577,7 +577,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     contains[user.id] = user.id
                     
                     if !top.isEmpty {
-                        entries.insert(.separator(tr(.searchSeparatorPopular).uppercased(), chatListIndex()), at: 0)
+                        entries.insert(.separator(tr(L10n.searchSeparatorPopular).uppercased(), chatListIndex()), at: 0)
                         
                         var count: Int32 = 0
                         for peer in top {
@@ -596,7 +596,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     
                     if !recent.isEmpty {
                         
-                        entries.insert(.separator(tr(.searchSeparatorRecent).uppercased(), chatListIndex()), at: 0)
+                        entries.insert(.separator(tr(L10n.searchSeparatorRecent).uppercased(), chatListIndex()), at: 0)
 
                         for rendered in recent {
                             if let peer = rendered.chatMainPeer {

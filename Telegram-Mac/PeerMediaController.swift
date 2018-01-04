@@ -256,10 +256,10 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                     }
                     
                     if canDelete {
-                        let thrid:String? = canDeleteForEveryone ? tr(.chatConfirmDeleteMessagesForEveryone) : nil
+                        let thrid:String? = canDeleteForEveryone ? tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
                         
                         if let window = self?.window {
-                            confirm(for: window, header: tr(.chatConfirmActionUndonable), information: tr(.chatConfirmDeleteMessages), thridTitle:thrid, successHandler: { [weak self] result in
+                            confirm(for: window, header: tr(L10n.chatConfirmActionUndonable), information: tr(L10n.chatConfirmDeleteMessages), thridTitle:thrid, successHandler: { [weak self] result in
                                 let type:InteractiveMessagesDeletionType
                                 switch result {
                                 case .basic:

@@ -208,14 +208,14 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     func item(_ arguments: InstalledStickerPacksControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case let .trending(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.installedStickersTranding), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersTranding), type: .context(stateback: { () -> String in
                 return count > 0 ? "\(count)" : ""
             }), action: {
                 arguments.openFeatured()
             })
            
         case .archived:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.installedStickersArchived), type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersArchived), type: .next, action: {
                 arguments.openArchived()
             })
         case let .packsTitle(_, text):
@@ -289,7 +289,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.packsTitle(sectionId: sectionId, tr(.installedStickersPacksTitle)))
+    entries.append(.packsTitle(sectionId: sectionId, tr(L10n.installedStickersPacksTitle)))
     
     if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
         if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
@@ -304,7 +304,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
     }
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
-    entries.append(.packsInfo(sectionId: sectionId, tr(.installedStickersDescrpiption)))
+    entries.append(.packsInfo(sectionId: sectionId, tr(L10n.installedStickersDescrpiption)))
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     return entries
@@ -340,7 +340,7 @@ class InstalledStickerPacksController: TableViewController {
             showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { id in
             
-            confirm(for: mainWindow, information: tr(.installedStickersRemoveDescription), okTitle: tr(.installedStickersRemoveDelete), successHandler: { result in
+            confirm(for: mainWindow, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
                 switch result {
                 case .basic:
                     _ = removeStickerPackInteractively(postbox: account.postbox, id: id).start()

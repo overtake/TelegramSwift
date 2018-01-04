@@ -48,8 +48,8 @@ private class EmptyGroupstickerSearchRowView : TableRowView {
         super.layout()
         
         if let item = item as? EmptyGroupstickerSearchRowItem {
-            let headerLayout = TextViewLayout(.initialize(string: tr(.groupStickersEmptyHeader), color: theme.colors.redUI, font: .medium(.text)), maximumNumberOfLines: 1)
-            let descLayout = TextViewLayout(.initialize(string: tr(.groupStickersEmptyDesc), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+            let headerLayout = TextViewLayout(.initialize(string: tr(L10n.groupStickersEmptyHeader), color: theme.colors.redUI, font: .medium(.text)), maximumNumberOfLines: 1)
+            let descLayout = TextViewLayout(.initialize(string: tr(L10n.groupStickersEmptyDesc), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
             headerLayout.measure(width: frame.width - item.inset.left - item.inset.right - 40)
             descLayout.measure(width: frame.width - item.inset.left - item.inset.right - 40)
             descView.update(descLayout)

@@ -26,7 +26,7 @@ class ChatSwitchInlineController: ChatController {
     }
     
     override open func backSettings() -> (String,CGImage?) {
-        return (tr(.navigationCancel),nil)
+        return (tr(L10n.navigationCancel),nil)
     }
     
     override func applyTransition(_ transition: TableUpdateTransition, initialData: ChatHistoryCombinedInitialData) {

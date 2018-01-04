@@ -31,6 +31,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         self.layer?.delegate = self
         self.layer?.drawsAsynchronously = System.drawAsync
+        canDrawSubviewsIntoLayer = true
         autoresizesSubviews = false
         pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
     }

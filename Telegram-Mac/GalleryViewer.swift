@@ -575,22 +575,22 @@ class GalleryViewer: NSResponder {
     
     func showControlsPopover(_ control:Control) {
         var items:[SPopoverItem] = []
-        items.append(SPopoverItem(tr(.galleryContextSaveAs), {[weak self] in
+        items.append(SPopoverItem(tr(L10n.galleryContextSaveAs), {[weak self] in
             self?.saveAs()
         }))
         if let _ = self.contentInteractions, case .history = type {
-            items.append(SPopoverItem(tr(.galleryContextShowMessage), {[weak self] in
+            items.append(SPopoverItem(tr(L10n.galleryContextShowMessage), {[weak self] in
                 self?.showMessage()
             }))
         }
-        items.append(SPopoverItem(tr(.galleryContextCopyToClipboard), {[weak self] in
+        items.append(SPopoverItem(tr(L10n.galleryContextCopyToClipboard), {[weak self] in
             self?.copy(nil)
         }))
         
         switch type {
         case .profile(let peerId):
             if peerId == account.peerId {
-                items.append(SPopoverItem(tr(.galleryContextDeletePhoto), {[weak self] in
+                items.append(SPopoverItem(tr(L10n.galleryContextDeletePhoto), {[weak self] in
                     self?.deletePhoto()
                 }))
             }
@@ -626,17 +626,17 @@ class GalleryViewer: NSResponder {
         
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {
-                menu.addItem(ContextMenuItem(tr(.galleryContextSaveAs), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(tr(L10n.galleryContextSaveAs), handler: { [weak self] in
                     self?.saveAs()
                 }))
             }
             
             if let _ = self.contentInteractions {
-                menu.addItem(ContextMenuItem(tr(.galleryContextShowMessage), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(tr(L10n.galleryContextShowMessage), handler: { [weak self] in
                     self?.showMessage()
                 }))
             }
-            menu.addItem(ContextMenuItem(tr(.galleryContextCopyToClipboard), handler: { [weak self] in
+            menu.addItem(ContextMenuItem(tr(L10n.galleryContextCopyToClipboard), handler: { [weak self] in
                 self?.copy(nil)
             }))
         }

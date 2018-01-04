@@ -256,7 +256,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
         case let .peer(peer, _, presence, enabled):
             
             var color:NSColor = theme.colors.grayText
-            var string:String = tr(.peerStatusRecently)
+            var string:String = tr(L10n.peerStatusRecently)
             if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
@@ -454,7 +454,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     
     var index:Int32 = 0
     if !participants.isEmpty {
-        //entries.append(.separator(index, tr(.channelSelectPeersMembers)))
+        //entries.append(.separator(index, tr(L10n.channelSelectPeersMembers)))
         index += 1
         for participant in participants {
             if account.peerId != participant.peer.id {
@@ -464,7 +464,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
         }
     }
     if let users = users, !users.isEmpty {
-        entries.append(.separator(index, tr(.channelSelectPeersContacts)))
+        entries.append(.separator(index, tr(L10n.channelSelectPeersContacts)))
         index += 1
         for peer in users {
             if account.peerId != peer.peer.id {
@@ -475,7 +475,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     }
     
     if !remote.isEmpty {
-        entries.append(.separator(index, tr(.channelSelectPeersGlobal)))
+        entries.append(.separator(index, tr(L10n.channelSelectPeersGlobal)))
         index += 1
         for peer in remote {
             if account.peerId != peer.peer.id {
@@ -653,7 +653,7 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
             let removed = oldValue.selected.subtracting(value.selected)
             
             for item in added {
-                genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
+                genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
             }
             
             for item in removed {
@@ -800,7 +800,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 let removed = oldValue.selected.subtracting(value.selected)
                 
                 for item in added {
-                    genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
+                    genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
                 }
                 
                 for item in removed {
@@ -928,13 +928,13 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     override var modalInteractions: ModalInteractions? {
         if behavior.limit == 1 {
-            return ModalInteractions(acceptTitle: tr(.modalCancel), drawBorder: true, height: 40)
+            return ModalInteractions(acceptTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
         } else {
-            return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+            return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
-            }, cancelTitle: tr(.modalCancel), drawBorder: true, height: 40)
+            }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
         }
     }
     

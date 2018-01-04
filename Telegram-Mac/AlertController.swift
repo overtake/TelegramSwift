@@ -32,7 +32,7 @@ class AlertController: ViewController {
         self.header = header
         self.text = text
         self.swapColors = swapColors
-        self.okTitle = okTitle ?? tr(.alertOK)
+        self.okTitle = okTitle ?? tr(L10n.alertOK)
         self.cancelTitle = cancelTitle
         self.thridTitle = thridTitle
         alert = Window(contentRect: NSMakeRect(0, 0, 380, 130), styleMask: [], backing: .buffered, defer: true)

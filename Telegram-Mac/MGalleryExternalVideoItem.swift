@@ -22,13 +22,20 @@ class MGalleryExternalVideoItem: MGalleryVideoItem {
     private let _media:TelegramMediaImage
     override init(_ account: Account, _ entry:GalleryEntry, _ pagerSize: NSSize) {
         let webpage = entry.message!.media[0] as! TelegramMediaWebpage
+        
+        var startTime:TimeInterval = 0
         if case let .Loaded(content) = webpage.content {
             self.content = content
+            
+            
+            _ = ObjcUtils._youtubeVideoId(fromText: content.embedUrl, originalUrl: content.url, startTime: &startTime)
+            
             self._media = content.image!
         } else {
             fatalError("content for external video not found")
         }
         super.init(account, entry, pagerSize)
+        self.startTime = startTime
     
     }
  

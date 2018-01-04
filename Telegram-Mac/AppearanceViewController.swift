@@ -17,17 +17,20 @@ private final class AppearanceViewArguments {
     let togglePalette:(ColorPalette)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(Int32)->Void
-    init(account:Account, togglePalette: @escaping(ColorPalette)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void) {
+    let selectAccentColor:()->Void
+    init(account:Account, togglePalette: @escaping(ColorPalette)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void) {
         self.account = account
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
         self.toggleFontSize = toggleFontSize
+        self.selectAccentColor = selectAccentColor
     }
 }
 
 private enum AppearanceViewEntry : TableItemListNodeEntry {
     case colorPalette(Int32, Int32, Bool, ColorPalette)
     case chatView(Int32, Int32, Bool, Bool)
+    case accentColor(Int32, Int32, NSColor)
     case section(Int32)
     case preview(Int32, Int32, ChatHistoryEntry)
     case font(Int32, Int32, Int32, [Int32])
@@ -38,6 +41,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case .colorPalette(_, let index, _, _):
             return index
         case .chatView(_, let index, _, _):
+            return index
+        case .accentColor(_, let index, _):
             return index
         case .section(let section):
             return section + 1000
@@ -55,6 +60,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case let .colorPalette(section, index, _, _):
             return (section * 1000) + index
         case let .chatView(section, index, _, _):
+            return (section * 1000) + index
+        case let .accentColor(section, index, _):
             return (section * 1000) + index
         case .section(let section):
             return (section + 1) * 1000 - section
@@ -79,11 +86,17 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
                 arguments.togglePalette(palette)
             })
         case let .chatView(_, _, selected, value):
-            //, description: tr(.generalSettingsDarkModeDescription)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: !value ? tr(.appearanceSettingsChatViewClassic) : tr(.appearanceSettingsChatViewBubbles), type: .selectable(stateback: { () -> Bool in
+            //, description: tr(L10n.generalSettingsDarkModeDescription)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: !value ? tr(L10n.appearanceSettingsChatViewClassic) : tr(L10n.appearanceSettingsChatViewBubbles), type: .selectable(stateback: { () -> Bool in
                 return selected
             }), action: {
                 arguments.toggleBubbles(value)
+            })
+        case let .accentColor(_, _, color):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(stateback: { () -> NSColor in
+                return color
+            }), action: {
+                arguments.selectAccentColor()
             })
         case .description(_, _, let text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
@@ -110,6 +123,12 @@ private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
         }
     case let .chatView(section, index, selected, value):
         if case .chatView(section, index, selected, value) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .accentColor(section, index, color):
+        if case .accentColor(section, index, color) = rhs {
             return true
         } else {
             return false
@@ -154,7 +173,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     
     var index: Int32 = 0
     
-    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsTextSizeHeader)))
+    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsTextSizeHeader)))
     descIndex += 1
     
     let sizes:[Int32] = [11, 12, 13, 14, 15]
@@ -169,36 +188,50 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     sectionId += 1
     
     
-    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsChatPreviewHeader)))
+    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsChatPreviewHeader)))
     descIndex += 1
     
-    let fromUser = TelegramUser(id: PeerId(1), accessHash: nil, firstName: "Reinhart", lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
+    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName1), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
     
-    
-    
-   
+    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName2), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
+
     
     entries.append(.section(sectionId))
     sectionId += 1
     
-    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], forwardInfo: nil, author: fromUser, text: tr(.appearanceSettingsChatPreviewFirstText), attributes: [], media: [], peers:SimpleDictionary([fromUser.id : fromUser]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewZeroText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+
+    
+    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
     
     let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
     
     entries.append(.preview(sectionId, index, firstEntry))
     index += 1
     
-    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: selfPeer, text: tr(.appearanceSettingsChatPreviewSecondText), attributes: [ReplyMessageAttribute(messageId: firstMessage.id)], media: [], peers:SimpleDictionary([selfPeer.id : selfPeer, fromUser.id : fromUser]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [firstMessage.id])
+    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewSecondText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     
     let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
     
     entries.append(.preview(sectionId, index, secondEntry))
     index += 1
     
+    #if BETA || DEBUG
+        if settings.colors == whitePalette {
+            
+            entries.append(.section(sectionId))
+            sectionId += 1
+            
+            entries.append(.accentColor(sectionId, index, theme.colors.blueUI))
+            index += 1
+        }
+    #endif
+    
+    
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsColorThemeHeader)))
+    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsColorThemeHeader)))
     descIndex += 1
     
     
@@ -240,7 +273,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, descIndex, tr(.appearanceSettingsChatViewHeader)))
+    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsChatViewHeader)))
     descIndex += 1
     
     entries.append(.chatView(sectionId, index, !settings.bubbled, false))
@@ -280,6 +313,8 @@ class AppearanceViewController: TableViewController {
             _ = updateBubbledSettings(postbox: account.postbox, bubbled: enabled).start()
         }, toggleFontSize: { size in
             _ = updateApplicationFontSize(postbox: account.postbox, fontSize: CGFloat(size)).start()
+        }, selectAccentColor: {
+            showModal(with: AccentColorModalController(account, current: theme.colors.blueUI), for: mainWindow)
         })
         
         let initialSize = self.atomicSize

@@ -1111,6 +1111,12 @@ public class TextView: Control {
     }
     
     public override func mouseDown(with event: NSEvent) {
+        
+        if event.modifierFlags.contains(.control) {
+            rightMouseDown(with: event)
+            return
+        }
+        
         if isSelectable && !event.modifierFlags.contains(.shift)  {
             self.window?.makeFirstResponder(nil)
         }
@@ -1123,7 +1129,9 @@ public class TextView: Control {
                 superview?.mouseDown(with: event)
             }
         }
+        
         _mouseDown(with: event)
+        
     }
     
     func _mouseDown(with event: NSEvent) -> Void {

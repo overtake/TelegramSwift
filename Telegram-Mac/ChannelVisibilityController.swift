@@ -250,20 +250,20 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
         case let .typeHeader(_, title):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: title)
         case let .typePublic(_, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.channelPublic), type: .selectable(stateback: { return selected}), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPublic), type: .selectable(stateback: { return selected}), action: {
                 arguments.updateCurrentType(.publicChannel)
             })
         case let .typePrivate(_, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.channelPrivate), type: .selectable(stateback: { return selected}), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPrivate), type: .selectable(stateback: { return selected}), action: {
                 arguments.updateCurrentType(.privateChannel)
             })
         case let .typeInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .publicLinkAvailability(_, value):
             if value {
-                return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: tr(.channelVisibilityChecking), color: theme.colors.redUI, font:.normal(.text)))
+                return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: tr(L10n.channelVisibilityChecking), color: theme.colors.redUI, font:.normal(.text)))
             } else {
-                return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: tr(.channelPublicNamesLimitError), color: theme.colors.redUI, font:.normal(.text)))
+                return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: tr(L10n.channelPublicNamesLimitError), color: theme.colors.redUI, font:.normal(.text)))
             }
         case let .privateLink(_, link):
             let color:NSColor
@@ -272,7 +272,7 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
             } else {
                 color = theme.colors.grayText
             }
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string:link ?? tr(.channelVisibilityLoading), color: color, font:.normal(.text)), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:5, bottom:8), action: {
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string:link ?? tr(L10n.channelVisibilityLoading), color: color, font:.normal(.text)), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:5, bottom:8), action: {
                 if let link = link {
                     arguments.displayPrivateLinkMenu(link)
                 }
@@ -424,22 +424,22 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             }
         }
         
-        entries.append(.typeHeader(sectionId: sectionId, isGroup ? tr(.channelTypeHeaderGroup) : tr(.channelTypeHeaderChannel)))
+        entries.append(.typeHeader(sectionId: sectionId, isGroup ? tr(L10n.channelTypeHeaderGroup) : tr(L10n.channelTypeHeaderChannel)))
         entries.append(.typePublic(sectionId: sectionId, selectedType == .publicChannel))
         entries.append(.typePrivate(sectionId: sectionId, selectedType == .privateChannel))
         
         switch selectedType {
         case .publicChannel:
             if isGroup {
-                entries.append(.typeInfo(sectionId: sectionId, tr(.channelPublicAboutGroup)))
+                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPublicAboutGroup)))
             } else {
-                entries.append(.typeInfo(sectionId: sectionId, tr(.channelPublicAboutChannel)))
+                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPublicAboutChannel)))
             }
         case .privateChannel:
             if isGroup {
-                entries.append(.typeInfo(sectionId: sectionId, tr(.channelPrivateAboutGroup)))
+                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPrivateAboutGroup)))
             } else {
-                entries.append(.typeInfo(sectionId: sectionId, tr(.channelPrivateAboutChannel)))
+                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPrivateAboutChannel)))
             }
         }
         
@@ -486,11 +486,11 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                         break
                     }
                 }
-                entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? tr(.channelUsernameAboutGroup) : tr(.channelUsernameAboutChannel)))
+                entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? tr(L10n.channelUsernameAboutGroup) : tr(L10n.channelUsernameAboutChannel)))
             }
         case .privateChannel:
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation?.link))
-            entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? tr(.channelExportLinkAboutGroup) : tr(.channelExportLinkAboutChannel)))
+            entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? tr(L10n.channelExportLinkAboutGroup) : tr(L10n.channelExportLinkAboutChannel)))
         }
     }
     
@@ -637,7 +637,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
                 }))
             }
         }, displayPrivateLinkMenu: { [weak self] text in
-            self?.show(toaster: ControllerToaster(text: tr(.shareLinkCopied)))
+            self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied)))
             copyToClipboard(text)
         }, revokePeerId: { [weak self] peerId in
             updateState { state in
@@ -752,7 +752,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.navigationDone))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.navigationDone))
         
         return button
     }

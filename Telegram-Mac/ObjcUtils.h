@@ -24,6 +24,7 @@
 +(int)colorMask:(int)idValue mainId:(int)mainId;
 +(NSArray<NSString *> *)notificationTones:(NSString *)def;
 +(NSString *)youtubeIdentifier:(NSString *)url;
++ (NSString *)_youtubeVideoIdFromText:(NSString *)text originalUrl:(NSString *)originalUrl startTime:(NSTimeInterval *)startTime;
 @end
 
 @interface NSFileManager (Extension)

@@ -52,11 +52,11 @@ class ShareModalView : View {
         borderView.backgroundColor = theme.colors.border
         
         acceptView.style = ControlStyle(font: .medium(.text),foregroundColor: theme.colors.blueUI)
-        acceptView.set(text: tr(.shareExtensionShare), for: .Normal)
+        acceptView.set(text: tr(L10n.shareExtensionShare), for: .Normal)
         acceptView.sizeToFit()
         
         cancelView.style = ControlStyle(font:.medium(.text),foregroundColor: theme.colors.blueUI)
-        cancelView.set(text: tr(.shareExtensionCancel), for: .Normal)
+        cancelView.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
         cancelView.sizeToFit()
         
         addSubview(acceptView)

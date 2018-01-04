@@ -55,24 +55,24 @@ class NativeCallSettingsViewController: NSViewController {
 //        for device in inputDevices {
 //            let index = inputDeviceButton.itemArray.count
 //            
-//            inputDeviceButton.addItem(withTitle: device.deviceId == "default" ? tr(.callDeviceSettingsDefault) : device.deviceName)
+//            inputDeviceButton.addItem(withTitle: device.deviceId == "default" ? tr(L10n.callDeviceSettingsDefault) : device.deviceName)
 //            if inputDevices[index].deviceId == currentInputDeviceId {
 //                inputDeviceButton.select(inputDeviceButton.lastItem)
 //            }
 //        }
 //        for device in outputDevices {
 //            let index = outputDeviceButton.itemArray.count
-//            outputDeviceButton.addItem(withTitle:  device.deviceId == "default" ? tr(.callDeviceSettingsDefault) : device.deviceName)
+//            outputDeviceButton.addItem(withTitle:  device.deviceId == "default" ? tr(L10n.callDeviceSettingsDefault) : device.deviceName)
 //            if outputDevices[index].deviceId == currentOutputDeviceId {
 //                outputDeviceButton.select(outputDeviceButton.lastItem)
 //            }
 //        }
 //        
-//        inputDeviceTitle.stringValue = tr(.callDeviceSettingsInputLabel)
-//        outputDeviceTitle.stringValue = tr(.callDeviceSettingsOutputLabel)
+//        inputDeviceTitle.stringValue = tr(L10n.callDeviceSettingsInputLabel)
+//        outputDeviceTitle.stringValue = tr(L10n.callDeviceSettingsOutputLabel)
         
-        okButton.title = tr(.modalOK)
-        cancelButton.title = tr(.modalCancel)
+        okButton.title = tr(L10n.modalOK)
+        cancelButton.title = tr(L10n.modalCancel)
     }
     
 }

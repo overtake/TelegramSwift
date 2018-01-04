@@ -48,13 +48,18 @@ func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> B
 }
 
 class ChatMapRowItem: ChatMediaItem {
-
+    fileprivate var liveText: TextViewLayout?
+    fileprivate var updatedText: TextViewLayout?
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
         super.init(initialSize, chatInteraction, account, object)
         let map = media as! TelegramMediaMap
         let isVenue = map.venue != nil
         let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+        
+        if isLiveLocationView {
+            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
+        }
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
@@ -75,9 +80,25 @@ class ChatMapRowItem: ChatMediaItem {
         return false
     }
     
-    override var isStateOverlayLayout: Bool {
-        return hasBubble && isBubbleFullFilled
+    var isLiveLocationView: Bool {
+        if let media = media as? TelegramMediaMap, let message = message {
+            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                if message.timestamp < message.timestamp + liveBroadcastingTimeout {
+                    return true
+                }
+            }
+        }
+        return false
     }
+    
+    override func viewClass() -> AnyClass {
+        return isLiveLocationView ? LiveLocationRowView.self : super.viewClass()
+    }
+    
+    override var isStateOverlayLayout: Bool {
+        return !isLiveLocationView && hasBubble && isBubbleFullFilled
+    }
+    
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {
@@ -91,9 +112,50 @@ class ChatMapRowItem: ChatMediaItem {
             if let venueText = parameters.venueText {
                 venueSize = venueText.layoutSize.width + 10
             }
+        
             return NSMakeSize(venueSize + size.width, size.height)
         }
         return super.makeContentSize(width)
     }
     
+    override var height: CGFloat {
+        if isLiveLocationView {
+            liveText?.measure(width: _contentSize.width - elementsContentInset * 2)
+            updatedText?.measure(width: _contentSize.width - elementsContentInset * 2)
+            return super.height + 40
+        }
+        return super.height
+    }
+    
+}
+
+private class LiveLocationRowView : ChatMediaView {
+    private let liveText: TextView = TextView()
+    private let updatedText: TextView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(liveText)
+        //addSubview(updatedText)
+    }
+    
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        
+        guard let item = item as? ChatMapRowItem else {return}
+        
+        liveText.update(item.liveText)
+        super.set(item: item, animated: animated)
+
+    }
+    
+    override func layout() {
+        super.layout()
+        guard let item = item as? ChatMapRowItem else {return}
+
+        liveText.setFrameOrigin(contentFrame.minX + item.elementsContentInset, item.contentSize.height + item.defaultContentTopOffset)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }

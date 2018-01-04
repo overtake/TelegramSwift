@@ -176,7 +176,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
         
         dropCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         dropCall.sizeToFit()
-        endCall.set(text: tr(.callHeaderEndCall), for: .Normal)
+        endCall.set(text: tr(L10n.callHeaderEndCall), for: .Normal)
         endCall.sizeToFit(NSZeroSize, NSMakeSize(80, 20), thatFit: true)
         durationView.textColor = .white
         callInfo.set(color: .white, for: .Normal)

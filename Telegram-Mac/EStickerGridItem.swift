@@ -158,12 +158,12 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             let file = currentState.1
             if state == .recent {
                 if let reference = file.stickerReference, case let .id(id, _) = reference {
-                    menu.addItem(ContextMenuItem(tr(.contextViewStickerSet), handler: { [weak self] in
+                    menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
                         self?.inputNodeInteraction?.navigateToCollectionId(.pack(ItemCollectionId.init(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
                     }))
                 }
             } else if state == .saved, let mediaId = file.id {
-                menu.addItem(ContextMenuItem(tr(.contextRemoveFaveSticker), handler: {
+                menu.addItem(ContextMenuItem(tr(L10n.contextRemoveFaveSticker), handler: {
                     _ = removeSavedSticker(postbox: currentState.0.postbox, mediaId: mediaId).start()
                 }))
             }

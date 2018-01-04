@@ -35,18 +35,18 @@ class ChatEmptyPeerItem: TableRowItem {
         
         let attr = NSMutableAttributedString()
         if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
-            _ = attr.append(string: tr(.chatSecretChatEmptyHeader), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatSecretChatEmptyHeader), color: theme.colors.grayText, font: .normal(.text))
             _ = attr.append(string: "\n\n")
-            _ = attr.append(string: tr(.chatSecretChat1Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatSecretChat1Feature), color: theme.colors.grayText, font: .normal(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: tr(.chatSecretChat2Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatSecretChat2Feature), color: theme.colors.grayText, font: .normal(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: tr(.chatSecretChat3Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatSecretChat3Feature), color: theme.colors.grayText, font: .normal(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: tr(.chatSecretChat4Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatSecretChat4Feature), color: theme.colors.grayText, font: .normal(.text))
 
         } else {
-            _ = attr.append(string: tr(.chatEmptyChat), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatEmptyChat), color: theme.colors.grayText, font: .normal(.text))
         }
         textViewLayout = TextViewLayout(attr, alignment: .center)
         super.init(initialSize)

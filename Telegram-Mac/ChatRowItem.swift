@@ -430,6 +430,10 @@ class ChatRowItem: TableRowItem {
             }
         }
         
+        if isBubbled, self is ChatMessageItem {
+            top -= 1
+        }
+        
         
         if forwardNameLayout != nil {
             left += leftContentInset
@@ -801,7 +805,7 @@ class ChatRowItem: TableRowItem {
                         }
                         
                         
-                        let newAttr = parseMarkdownIntoAttributedString(tr(.chatBubblesForwardedFrom(attr.string)), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming || isInstantVideo)), link: MarkdownAttributeSet(font: .normal(.short), textColor: theme.chat.linkColor(isIncoming || isInstantVideo)), linkAttribute: { contents in
+                        let newAttr = parseMarkdownIntoAttributedString(tr(L10n.chatBubblesForwardedFrom(attr.string)), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming || isInstantVideo)), link: MarkdownAttributeSet(font: .normal(.short), textColor: theme.chat.linkColor(isIncoming || isInstantVideo)), linkAttribute: { contents in
                             if let link = attr.attribute(NSAttributedStringKey.link, at: 0, effectiveRange: nil) {
                                 return (NSAttributedStringKey.link.rawValue, link)
                             }
@@ -861,7 +865,7 @@ class ChatRowItem: TableRowItem {
                             if attr.length > 0 {
                                 _ = attr.append(string: " ")
                             }
-                            _ = attr.append(string: "\(tr(.chatMessageVia)) ", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font:.medium(.text))
+                            _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font:.medium(.text))
                             let range = attr.append(string: "@" + address, color: theme.chat.linkColor(isIncoming), font:.medium(.text))
                             attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.callback("@" + address, { (parameter) in
                                 chatInteraction.updateInput(with: parameter + " ")
@@ -870,7 +874,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     if isAdmin, canFillAuthorName {
-                        _ = attr.append(string: " \(tr(.chatAdminBadge))", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.short))
+                        _ = attr.append(string: " \(tr(L10n.chatAdminBadge))", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.short))
                     }
                     if attr.length > 0 {
                         authorText = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
@@ -910,12 +914,12 @@ class ChatRowItem: TableRowItem {
                     channelViewsAttributed = .initialize(string: attribute.count.prettyNumber, color: isStateOverlayLayout ? .white : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
                     if attribute.count >= 1000 {
-                        fullDate = "\(attribute.count.separatedNumber) \(tr(.chatMessageTooltipViews)), \(fullDate)"
+                        fullDate = "\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
                     }
                 }
                 if let attribute = attribute as? EditedMessageAttribute {
                     if isEditMarkVisible {
-                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(.chatMessageEdited), color: isStateOverlayLayout ? .white : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? .white : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                     }
                     
                     let formatterEdited = DateFormatter()
@@ -1056,7 +1060,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if forwardType == .FullHeader || forwardType == .ShortHeader {
-            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: tr(.messagesForwardHeader), color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
+            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: tr(L10n.messagesForwardHeader), color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
         } else {
             forwardHeader = nil
         }
@@ -1153,6 +1157,7 @@ class ChatRowItem: TableRowItem {
 
         var rect = NSMakeRect(defLeftInset, 3, contentSize.width, height - 6)
         
+       
         if isBubbled, let replyMarkup = replyMarkupModel {
             rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
         }
@@ -1255,14 +1260,14 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     var items:[ContextMenuItem] = []
     
     if peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
-        items.append(ContextMenuItem(tr(.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(.messageContextReplyHelp)))" : ""), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
         }))
     }
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if let address = peer.addressName {
-            items.append(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+            items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
                 copyToClipboard("t.me/\(address)/\(message.id.id)")
             }))
         }
@@ -1272,9 +1277,9 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     items.append(ContextSeparatorItem())
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
-        items.append(ContextMenuItem(tr(.messageContextPin), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
             if peer.isSupergroup {
-                confirm(for: mainWindow, information: tr(.messageContextConfirmPin), thridTitle: tr(.messageContextConfirmOnlyPin), successHandler: { result in
+                confirm(for: mainWindow, information: tr(L10n.messageContextConfirmPin), thridTitle: tr(L10n.messageContextConfirmOnlyPin), successHandler: { result in
                     chatInteraction.updatePinned(message.id, false, result == .thrid)
                 })
             } else {
@@ -1284,32 +1289,32 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     }
     
     if canEditMessage(message, account:account) {
-        items.append(ContextMenuItem(tr(.messageContextEdit), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: {
             chatInteraction.beginEditingMessage(message)
         }))
     }
     
     if canForwardMessage(message, account: account) {
-        items.append(ContextMenuItem(tr(.messageContextForward), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: {
             chatInteraction.forwardMessages([message.id])
         }))
     }
     
     if canDeleteMessage(message, account: account) {
-        items.append(ContextMenuItem(tr(.messageContextDelete), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: {
             chatInteraction.deleteMessages([message.id])
         }))
     }
     
     
-    items.append(ContextMenuItem(tr(.messageContextSelect), handler: {
+    items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: {
         chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
     }))
     
     
     if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId {
         items.append(ContextSeparatorItem())
-        items.append(ContextMenuItem(tr(.messageContextForwardToCloud), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: {
             _ = Sender.forwardMessages(messageIds: [message.id], account: account, peerId: account.peerId).start()
         }))
     }
@@ -1323,7 +1328,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                     items.append(ContextSeparatorItem())
                 }
                 
-                items.append(ContextMenuItem(tr(.messageContextSaveGif), handler: {
+                items.append(ContextMenuItem(tr(L10n.messageContextSaveGif), handler: {
                     let _ = addSavedGif(postbox: account.postbox, file: file).start()
                 }))
             }
@@ -1337,7 +1342,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
             var items = items
             return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
                 if data.complete {
-                    items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
+                    items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                         saveAs(file, account: account)
                     }))
                 }
@@ -1345,7 +1350,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                 if file.isSticker, let fileId = file.id {
                     return account.postbox.modify { modifier -> [ContextMenuItem] in
                         let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
-                        items.append(ContextMenuItem( !saved ? tr(.chatContextAddFavoriteSticker) : tr(.chatContextRemoveFavoriteSticker), handler: {
+                        items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
                             
                             if !saved {
                                 _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
@@ -1367,14 +1372,14 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
             if let resource = image.representations.last?.resource {
                 return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
                     if data.complete {
-                        items.append(ContextMenuItem(tr(.galleryContextCopyToClipboard), handler: {
+                        items.append(ContextMenuItem(tr(L10n.galleryContextCopyToClipboard), handler: {
                             if let path = link(path: data.path, ext: "jpg") {
                                 let pb = NSPasteboard.general
                                 pb.clearContents()
                                 pb.writeObjects([NSURL(fileURLWithPath: path)])
                             }
                         }))
-                        items.append(ContextMenuItem(tr(.contextCopyMedia), handler: {
+                        items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                             savePanel(file: data.path, ext: "jpg", for: mainWindow)
                         }))
                     }

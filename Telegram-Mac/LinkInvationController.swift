@@ -178,21 +178,21 @@ private func groupInvationEntries(view:PeerView, arguments:GroupLinkInvationArgu
         
         entries.append(.link(sectionId: sectionId, uniqueIdx: uniqueId, text: link))
         uniqueId += 1
-        entries.append(.text(sectionId: sectionId, uniqueIdx: uniqueId, text: isGroup ? tr(.groupInvationGroupDescription) : tr(.groupInvationChannelDescription)))
+        entries.append(.text(sectionId: sectionId, uniqueIdx: uniqueId, text: isGroup ? tr(L10n.groupInvationGroupDescription) : tr(L10n.groupInvationChannelDescription)))
         uniqueId += 1
         
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
         
-        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(.groupInvationCopyLink), callback: {
+        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(L10n.groupInvationCopyLink), callback: {
             arguments.copy()
         }))
         uniqueId += 1
-        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(.groupInvationRevoke), callback: {
+        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(L10n.groupInvationRevoke), callback: {
             arguments.revoke()
         }))
         uniqueId += 1
-        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(.groupInvationShare), callback: {
+        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(L10n.groupInvationShare), callback: {
             arguments.share()
         }))
         uniqueId += 1
@@ -248,7 +248,7 @@ class LinkInvationController: TableViewController {
         let arguments = GroupLinkInvationArguments(account: account, copy: { [weak self] in
             if let link = link.modify({$0}) {
                 copyToClipboard(link)
-                self?.show(toaster: ControllerToaster(text: tr(.shareLinkCopied)))
+                self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied)))
             }
         }, share: {
             if let link = link.modify({$0}) {
@@ -256,8 +256,8 @@ class LinkInvationController: TableViewController {
             }
         }, revoke: { [weak self] in
             if let peer = peer.modify({$0}), let account = self?.account {
-                let info = peer.isChannel ? tr(.linkInvationChannelConfirmRevoke) : tr(.linkInvationGroupConfirmRevoke)
-                let signal = confirmSignal(for: mainWindow, information: info, okTitle: tr(.linkInvationConfirmOk))
+                let info = peer.isChannel ? tr(L10n.linkInvationChannelConfirmRevoke) : tr(L10n.linkInvationGroupConfirmRevoke)
+                let signal = confirmSignal(for: mainWindow, information: info, okTitle: tr(L10n.linkInvationConfirmOk))
                     |> filter {$0}
                     |> mapToSignal { _ -> Signal<Void, Void> in
                         return ensuredExistingPeerExportedInvitation(account: account, peerId: peer.id, revokeExisted: true)

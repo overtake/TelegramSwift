@@ -91,21 +91,21 @@ class MainViewController: TelegramViewController {
        
         switch passcodeData {
         case .none:
-            items.append(SPopoverItem(tr(.fastSettingsSetPasscode), { [weak self] in
+            items.append(SPopoverItem(tr(L10n.fastSettingsSetPasscode), { [weak self] in
                 if let account = self?.account {
                     self?.tabController.select(index: 3)
                     account.context.mainNavigation?.push(PasscodeSettingsViewController(account))
                 }
             }, theme.icons.fastSettingsLock))
         default:
-            items.append(SPopoverItem(tr(.fastSettingsLockTelegram), {
+            items.append(SPopoverItem(tr(L10n.fastSettingsLockTelegram), {
                 if let event = NSEvent.keyEvent(with: .keyDown, location: NSZeroPoint, modifierFlags: [.command], timestamp: Date().timeIntervalSince1970, windowNumber: mainWindow.windowNumber, context: nil, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: KeyboardKey.L.rawValue) {
                     mainWindow.sendEvent(event)
                 }
             }, theme.icons.fastSettingsLock))
         }
         
-        items.append(SPopoverItem(theme.colors.isDark ? tr(.fastSettingsDisableDarkMode) : tr(.fastSettingsEnableDarkMode), { [weak self] in
+        items.append(SPopoverItem(theme.colors.isDark ? tr(L10n.fastSettingsDisableDarkMode) : tr(L10n.fastSettingsEnableDarkMode), { [weak self] in
             if let strongSelf = self {
                 _ = updateThemeSettings(postbox: strongSelf.account.postbox, palette: !theme.colors.isDark ? darkPalette : whitePalette).start()
             }
@@ -113,7 +113,7 @@ class MainViewController: TelegramViewController {
         
         let time = Int32(Date().timeIntervalSince1970)
         let unmuted = notifications.muteUntil < time
-        items.append(SPopoverItem(unmuted ? tr(.fastSettingsMute2Hours) : tr(.fastSettingsUnmute), { [weak self] in
+        items.append(SPopoverItem(unmuted ? tr(L10n.fastSettingsMute2Hours) : tr(L10n.fastSettingsUnmute), { [weak self] in
             if let account = self?.account {
                 let time = Int32(Date().timeIntervalSince1970 + 2 * 60 * 60)
                 _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {$0.withUpdatedMuteUntil(unmuted ? time : 0)}).start()

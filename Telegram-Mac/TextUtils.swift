@@ -18,9 +18,9 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
         case _ as TelegramMediaImage:
             
             if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                messageText = tr(.chatListServiceDestructingPhoto).nsstring
+                messageText = tr(L10n.chatListServiceDestructingPhoto).nsstring
             } else {
-                messageText = tr(.chatListPhoto).nsstring
+                messageText = tr(L10n.chatListPhoto).nsstring
                 if !message.text.isEmpty {
                     messageText = ((attachEmoji ? "🖼 " : "") + message.text.fixed).nsstring
                 }
@@ -28,22 +28,22 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             
         case let fileMedia as TelegramMediaFile:
             if fileMedia.isSticker {
-                messageText = tr(.chatListSticker(fileMedia.stickerText?.fixed ?? "")).nsstring
+                messageText = tr(L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "")).nsstring
             } else if fileMedia.isVoice {
-                messageText = tr(.chatListVoice).nsstring
+                messageText = tr(L10n.chatListVoice).nsstring
             } else if fileMedia.isMusic  {
                 messageText = (fileMedia.musicText.0 + " - " + fileMedia.musicText.1).nsstring
             } else if fileMedia.isInstantVideo {
-                messageText = tr(.chatListInstantVideo).nsstring
+                messageText = tr(L10n.chatListInstantVideo).nsstring
             } else if fileMedia.isVideo {
                 
                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                    messageText = tr(.chatListServiceDestructingVideo).nsstring
+                    messageText = tr(L10n.chatListServiceDestructingVideo).nsstring
                 } else {
                     if fileMedia.isAnimated {
-                        messageText = tr(.chatListGIF).nsstring
+                        messageText = tr(L10n.chatListGIF).nsstring
                     } else {
-                        messageText = tr(.chatListVideo).nsstring
+                        messageText = tr(L10n.chatListVideo).nsstring
                         if !message.text.isEmpty {
                             messageText = ("📹 " + message.text.fixed).nsstring
                         }
@@ -58,9 +58,9 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
                 }
             }
         case _ as TelegramMediaMap:
-            messageText = tr(.chatListMap).nsstring
+            messageText = tr(L10n.chatListMap).nsstring
         case _ as TelegramMediaContact:
-            messageText = tr(.chatListContact).nsstring
+            messageText = tr(L10n.chatListContact).nsstring
         case let game as TelegramMediaGame:
             messageText = "🎮 \(game.title)".nsstring
         case let invoice as TelegramMediaInvoice:
@@ -77,7 +77,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
     
     if let embeddedState = embeddedState as? ChatEmbeddedInterfaceState {
         let mutableAttributedText = NSMutableAttributedString()
-        _ = mutableAttributedText.append(string: tr(.chatListDraft), color: theme.colors.redUI, font: .normal(FontSize.text))
+        _ = mutableAttributedText.append(string: tr(L10n.chatListDraft), color: theme.colors.redUI, font: .normal(FontSize.text))
         _ = mutableAttributedText.append(string: " \(embeddedState.text)", color: theme.chatList.grayTextColor, font: .normal(FontSize.text))
         mutableAttributedText.setSelected(color: .white, range: mutableAttributedText.range)
         return mutableAttributedText
@@ -88,17 +88,17 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             let subAttr = NSMutableAttributedString()
             switch peer.embeddedState {
             case .terminated:
-                _ = subAttr.append(string: tr(.chatListSecretChatTerminated), color: theme.chatList.grayTextColor, font: .normal(.text))
+                _ = subAttr.append(string: tr(L10n.chatListSecretChatTerminated), color: theme.chatList.grayTextColor, font: .normal(.text))
             case .handshake:
-            _ = subAttr.append(string: tr(.chatListSecretChatExKeys), color: theme.chatList.grayTextColor, font: .normal(.text))
+            _ = subAttr.append(string: tr(L10n.chatListSecretChatExKeys), color: theme.chatList.grayTextColor, font: .normal(.text))
             case .active:
                 if message == nil {
-                    let title:String = renderedPeer.chatMainPeer?.compactDisplayTitle ?? tr(.peerDeletedUser)
+                    let title:String = renderedPeer.chatMainPeer?.compactDisplayTitle ?? tr(L10n.peerDeletedUser)
                     switch peer.role {
                     case .creator:
-                        _ = subAttr.append(string: tr(.chatListSecretChatJoined(title)), color: theme.chatList.grayTextColor, font: .normal(.text))
+                        _ = subAttr.append(string: tr(L10n.chatListSecretChatJoined(title)), color: theme.chatList.grayTextColor, font: .normal(.text))
                     case .participant:
-                        _ = subAttr.append(string: tr(.chatListSecretChatCreated(title)), color: theme.chatList.grayTextColor, font: .normal(.text))
+                        _ = subAttr.append(string: tr(L10n.chatListSecretChatCreated(title)), color: theme.chatList.grayTextColor, font: .normal(.text))
                     }
                     
                 }
@@ -115,7 +115,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
 
         if message.text.isEmpty && message.media.isEmpty {
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: tr(.chatListUnsupportedMessage), color: theme.chatList.grayTextColor, font: .normal(.text))
+            _ = attr.append(string: tr(L10n.chatListUnsupportedMessage), color: theme.chatList.grayTextColor, font: .normal(.text))
             attr.setSelected(color: .white, range: attr.range)
             return attr
         }
@@ -127,7 +127,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
         if messageText.length > 0 {
             var attributedText: NSMutableAttributedString
             if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
-                let peerText: NSString = (author.id == account.peerId ? "\(tr(.chatListYou))\n" : author.compactDisplayTitle + "\n") as NSString
+                let peerText: NSString = (author.id == account.peerId ? "\(tr(L10n.chatListYou))\n" : author.compactDisplayTitle + "\n") as NSString
                 let mutableAttributedText = NSMutableAttributedString()
                 
                 _ = mutableAttributedText.append(string: peerText as String, color: theme.chatList.peerTextColor, font: .normal(.text))
@@ -148,9 +148,9 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             let text:String
             switch media.data {
             case .image:
-                text = tr(.serviceMessageExpiredPhoto)
+                text = tr(L10n.serviceMessageExpiredPhoto)
             case .file:
-                text = tr(.serviceMessageExpiredFile)
+                text = tr(L10n.serviceMessageExpiredFile)
             }
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: .white,range: attributedText.range)
@@ -166,7 +166,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
     var authorName:String = ""
     if let displayTitle = message.author?.compactDisplayTitle {
         if message.author?.id == account.peerId {
-            authorName = tr(.chatServiceYou)
+            authorName = tr(L10n.chatServiceYou)
         } else {
             authorName = displayTitle
         }
@@ -180,48 +180,48 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
         switch action.action {
         case let .addedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
-                return tr(.chatServiceGroupAddedSelf(authorName))
+                return tr(L10n.chatServiceGroupAddedSelf(authorName))
             } else {
-                return tr(.chatServiceGroupAddedMembers(authorName, peerDisplayTitles(peerIds, message.peers)))
+                return tr(L10n.chatServiceGroupAddedMembers(authorName, peerDisplayTitles(peerIds, message.peers)))
             }
         case .channelMigratedFromGroup:
-            return tr(.chatServiceGroupMigratedToSupergroup)
+            return tr(L10n.chatServiceGroupMigratedToSupergroup)
         case let .groupCreated(title: title):
             if peer.isChannel {
-                return tr(.chatServiceChannelCreated)
+                return tr(L10n.chatServiceChannelCreated)
             } else {
-                return tr(.chatServiceGroupCreated(authorName, title))
+                return tr(L10n.chatServiceGroupCreated(authorName, title))
             }
         case .groupMigratedToChannel:
-            return tr(.chatServiceGroupMigratedToSupergroup)
+            return tr(L10n.chatServiceGroupMigratedToSupergroup)
         case .historyCleared:
             return ""
         case .historyScreenshot:
-            return tr(.chatServiceGroupTookScreenshot(authorName))
+            return tr(L10n.chatServiceGroupTookScreenshot(authorName))
         case let .joinedByLink(inviter: peerId):
             if peerId == authorId {
-                return tr(.chatServiceGroupJoinedByLink(tr(.chatServiceYou)))
+                return tr(L10n.chatServiceGroupJoinedByLink(tr(L10n.chatServiceYou)))
             } else {
-                return tr(.chatServiceGroupJoinedByLink(authorName))
+                return tr(L10n.chatServiceGroupJoinedByLink(authorName))
             }
         case let .messageAutoremoveTimeoutUpdated(seconds):
             if seconds > 0 {
-                return tr(.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds))))
+                return tr(L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds))))
             } else {
-                return tr(.chatServiceSecretChatDisabledTimer(authorName))
+                return tr(L10n.chatServiceSecretChatDisabledTimer(authorName))
             }
         case let .photoUpdated(image: image):
             if let _ = image {
-                return peer.isChannel ? tr(.chatServiceChannelUpdatedPhoto) : tr(.chatServiceGroupUpdatedPhoto(authorName))
+                return peer.isChannel ? tr(L10n.chatServiceChannelUpdatedPhoto) : tr(L10n.chatServiceGroupUpdatedPhoto(authorName))
             } else {
-                return peer.isChannel ? tr(.chatServiceChannelRemovedPhoto) : tr(.chatServiceGroupRemovedPhoto(authorName))
+                return peer.isChannel ? tr(L10n.chatServiceChannelRemovedPhoto) : tr(L10n.chatServiceGroupRemovedPhoto(authorName))
             }
         case .pinnedMessageUpdated:
             var authorName:String = ""
             if let displayTitle = message.author?.displayTitle {
                 authorName = displayTitle
                 if account.peerId == message.author?.id {
-                    authorName = tr(.chatServiceYou)
+                    authorName = tr(L10n.chatServiceYou)
                 }
             }
             
@@ -231,23 +231,23 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                     replyMessageText = pullText(from: message) as String
                 }
             }
-            return tr(.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefix(30)))
+            return tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefix(30)))
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
-                return tr(.chatServiceGroupRemovedSelf(authorName))
+                return tr(L10n.chatServiceGroupRemovedSelf(authorName))
             } else {
-                return tr(.chatServiceGroupRemovedMembers(authorName, peerCompactDisplayTitles(peerIds, message.peers)))
+                return tr(L10n.chatServiceGroupRemovedMembers(authorName, peerCompactDisplayTitles(peerIds, message.peers)))
             }
 
         case let .titleUpdated(title: title):
-            return peer.isChannel ? tr(.chatServiceChannelUpdatedTitle(title)) : tr(.chatServiceGroupUpdatedTitle(authorName, title))
+            return peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle(authorName, title))
         case let .phoneCall(callId: _, discardReason: reason, duration: duration):
             
             if let duration = duration, duration > 0 {
                 if message.author?.id == account.peerId {
-                    return tr(.chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration)))
+                    return tr(L10n.chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration)))
                 } else {
-                    return tr(.chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration)))
+                    return tr(L10n.chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration)))
                 }
             }
             
@@ -256,13 +256,13 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
 
                 switch reason {
                 case .busy:
-                    return outgoing ? tr(.chatListServiceCallCancelled) : tr(.chatListServiceCallMissed)
+                    return outgoing ? tr(L10n.chatListServiceCallCancelled) : tr(L10n.chatListServiceCallMissed)
                 case .disconnect:
-                    return tr(.chatListServiceCallMissed)
+                    return tr(L10n.chatListServiceCallMissed)
                 case .hangup:
-                    return outgoing ? tr(.chatListServiceCallCancelled) : tr(.chatListServiceCallMissed)
+                    return outgoing ? tr(L10n.chatListServiceCallCancelled) : tr(L10n.chatListServiceCallMissed)
                 case .missed:
-                    return outgoing ? tr(.chatListServiceCallCancelled) : tr(.chatListServiceCallMissed)
+                    return outgoing ? tr(L10n.chatListServiceCallCancelled) : tr(L10n.chatListServiceCallMissed)
                 }
             }
         case let .gameScore(gameId: _, score: score):
@@ -274,7 +274,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                     }
                 }
             }
-            var text = tr(.chatListServiceGameScored1Countable(Int(score), gameName))
+            var text = tr(L10n.chatListServiceGameScored1Countable(Int(score), gameName))
             if let peer = messageMainPeer(message) {
                 if peer.isGroup || peer.isSupergroup {
                     text = (message.author?.compactDisplayTitle ?? "") + " " + text
@@ -282,7 +282,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             }
             return text
         case let .paymentSent(currency, totalAmount):
-            return tr(.chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency)))
+            return tr(L10n.chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency)))
         case .unknown:
             break
         case .customText(let text):
@@ -290,7 +290,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
         }
     }
     
-    return tr(.chatMessageUnsupported)
+    return tr(L10n.chatMessageUnsupported)
 }
 
 struct PeerStatusStringTheme {
@@ -348,10 +348,10 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {
-                return PeerStatusStringResult(title, .initialize(string: tr(.peerServiceNotifications),  color: theme.statusColor, font: theme.statusFont))
+                return PeerStatusStringResult(title, .initialize(string: tr(L10n.peerServiceNotifications),  color: theme.statusColor, font: theme.statusFont))
             }
             if let _ = user.botInfo {
-                return PeerStatusStringResult(title, .initialize(string: tr(.presenceBot),  color: theme.statusColor, font: theme.statusFont))
+                return PeerStatusStringResult(title, .initialize(string: tr(L10n.presenceBot),  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 let (string, activity, _) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
@@ -359,7 +359,7 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
                 return PeerStatusStringResult(title, .initialize(string: string, color: activity && theme.highlightIfActivity ? theme.highlightColor : theme.statusColor, font: theme.statusFont), presence: presence)
 
             } else {
-                return PeerStatusStringResult(title, .initialize(string: tr(.peerStatusRecently), color: theme.statusColor, font: theme.statusFont))
+                return PeerStatusStringResult(title, .initialize(string: tr(L10n.peerStatusRecently), color: theme.statusColor, font: theme.statusFont))
             }
         } else if let group = peer as? TelegramGroup {
             var onlineCount = 0
@@ -380,11 +380,11 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
             if onlineCount > 1 {
                 let string = NSMutableAttributedString()
                 
-                let _ = string.append(string: "\(tr(.peerStatusMemberCountable(group.participantCount))), ", color: theme.statusColor, font: theme.statusFont)
-                let _ = string.append(string: tr(.peerStatusMemberOnlineCountable(onlineCount)), color: theme.statusColor, font: theme.statusFont)
+                let _ = string.append(string: "\(tr(L10n.peerStatusMemberCountable(group.participantCount))), ", color: theme.statusColor, font: theme.statusFont)
+                let _ = string.append(string: tr(L10n.peerStatusMemberOnlineCountable(onlineCount)), color: theme.statusColor, font: theme.statusFont)
                 return PeerStatusStringResult(title, string)
             } else {
-                let string = NSAttributedString.initialize(string: tr(.peerStatusMemberCountable(group.participantCount)), color: theme.statusColor, font: theme.statusFont)
+                let string = NSAttributedString.initialize(string: tr(L10n.peerStatusMemberCountable(group.participantCount)), color: theme.statusColor, font: theme.statusFont)
                 return PeerStatusStringResult(title, string)
             }
         } else if let channel = peer as? TelegramChannel {
@@ -408,22 +408,22 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
                 }
                 if onlineCount > 1, memberCount <= 200, case .group = channel.info {
                     let string = NSMutableAttributedString()
-                    let _ = string.append(string: "\(tr(.peerStatusMemberCountable(Int(memberCount)))), ", color: theme.statusColor, font: theme.statusFont)
-                    let _ = string.append(string: tr(.peerStatusMemberOnlineCountable(onlineCount)), color: theme.statusColor, font: theme.statusFont)
+                    let _ = string.append(string: "\(tr(L10n.peerStatusMemberCountable(Int(memberCount)))), ", color: theme.statusColor, font: theme.statusFont)
+                    let _ = string.append(string: tr(L10n.peerStatusMemberOnlineCountable(onlineCount)), color: theme.statusColor, font: theme.statusFont)
                     return PeerStatusStringResult(title, string)
                 } else {
-                    let string = NSAttributedString.initialize(string: tr(.peerStatusMemberCountable(Int(memberCount))), color: theme.statusColor, font: theme.statusFont)
+                    let string = NSAttributedString.initialize(string: tr(L10n.peerStatusMemberCountable(Int(memberCount))), color: theme.statusColor, font: theme.statusFont)
                     return PeerStatusStringResult(title, string)
                 }
                 
             } else {
                 switch channel.info {
                 case .group:
-                    let string = NSAttributedString.initialize(string: tr(.peerStatusGroup), color: theme.statusColor, font: theme.statusFont)
+                    let string = NSAttributedString.initialize(string: tr(L10n.peerStatusGroup), color: theme.statusColor, font: theme.statusFont)
                     return PeerStatusStringResult(title, string)
 
                 case .broadcast:
-                    let string = NSAttributedString.initialize(string: tr(.peerStatusChannel), color: theme.statusColor, font: theme.statusFont)
+                    let string = NSAttributedString.initialize(string: tr(L10n.peerStatusChannel), color: theme.statusColor, font: theme.statusFont)
                     return PeerStatusStringResult(title, string)
                 }
             }
@@ -436,15 +436,15 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
  func autoremoveLocalized(_ ttl: Int) -> String {
     var localized: String = ""
      if ttl <= 59 {
-        localized = tr(.timerSecondsCountable(ttl))
+        localized = tr(L10n.timerSecondsCountable(ttl))
     } else if ttl <= 3599 {
-        localized = tr(.timerMinutesCountable(ttl / 60))
+        localized = tr(L10n.timerMinutesCountable(ttl / 60))
     } else if ttl <= 86399 {
-        localized = tr(.timerHoursCountable(ttl / 60 / 60))
+        localized = tr(L10n.timerHoursCountable(ttl / 60 / 60))
     } else if ttl <= 604799 {
-        localized = tr(.timerDaysCountable(ttl / 60 / 60 / 24))
+        localized = tr(L10n.timerDaysCountable(ttl / 60 / 60 / 24))
     } else {
-        localized = tr(.timerWeeksCountable(ttl / 60 / 60 / 24 / 7))
+        localized = tr(L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7))
     }
     return localized
 }
@@ -493,19 +493,19 @@ func parseTextEntities(_ message:String) -> (String, [MessageTextEntity]) {
 
 func timeIntervalString( _ value: Int) -> String {
     if value < 60 {
-        return tr(.timerSecondsCountable(value))
+        return tr(L10n.timerSecondsCountable(value))
     } else if value < 60 * 60 {
-        return tr(.timerMinutesCountable(max(1, value / 60)))
+        return tr(L10n.timerMinutesCountable(max(1, value / 60)))
     } else if value < 60 * 60 * 24 {
-        return tr(.timerHoursCountable(max(1, value / (60 * 60))))
+        return tr(L10n.timerHoursCountable(max(1, value / (60 * 60))))
     } else if value < 60 * 60 * 24 * 7 {
-        return tr(.timerDaysCountable(max(1, value / (60 * 60 * 24))))
+        return tr(L10n.timerDaysCountable(max(1, value / (60 * 60 * 24))))
     } else if value < 60 * 60 * 24 * 30 {
-        return tr(.timerWeeksCountable(max(1, value / (60 * 60 * 24 * 7))))
+        return tr(L10n.timerWeeksCountable(max(1, value / (60 * 60 * 24 * 7))))
     } else if value < 60 * 60 * 24 * 360 {
-        return tr(.timerMonthsCountable(max(1, value / (60 * 60 * 24 * 30))))
+        return tr(L10n.timerMonthsCountable(max(1, value / (60 * 60 * 24 * 30))))
     } else {
-        return tr(.timerYearsCountable(max(1, value / (60 * 60 * 24 * 365))))
+        return tr(L10n.timerYearsCountable(max(1, value / (60 * 60 * 24 * 365))))
     }
 }
 

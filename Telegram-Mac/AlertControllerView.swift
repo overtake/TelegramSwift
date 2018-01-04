@@ -124,7 +124,7 @@ class AlertControllerView: View {
         
         if let thridTitle = thridTitle  {
             thridButton.set(text: thridTitle, for: .Normal)
-            thridButton.sizeToFit()
+            thridButton.sizeToFit(NSZeroSize, NSMakeSize(200, 20))
             containerView.addSubview(thridButton)
             thridButton.set(handler: { _ in
                 thridHandler()

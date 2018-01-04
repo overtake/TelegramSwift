@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-
+import TelegramCoreMac
+import PostboxMac
 
 
 //FB2126
@@ -22,7 +23,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var switchView:SwitchView?
     private var contextLabel:TextViewLabel?
     private var choiceControl:ImageView?
+    private var activities: ChatActivitiesModel?
     private let rightSeparatorView:View = View()
+    private var hiddenStatus: Bool = true
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         container.frame = bounds
@@ -77,7 +80,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         tY = (NSHeight(self.frame) - t) / 2.0
                         
                         let sY = tY + title.0.size.height + 1.0
-                        status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                        if hiddenStatus {
+                            status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                        }
                     }
                     
                     title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
@@ -134,6 +139,10 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             
             if let choiceControl = choiceControl {
                 choiceControl.centerY(x: frame.width - choiceControl.frame.width - item.inset.right)
+            }
+            
+            if let view = activities?.view {
+                view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(frame.height / 2 + 1))
             }
             
         }
@@ -226,11 +235,10 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
-        var previousType:ShortPeerItemInteractionType = .plain
+        let previousType:ShortPeerItemInteractionType = self.item == nil ? .plain : (self.item as? ShortPeerRowItem)!.interactionType
+
         
-        if let item = self.item as? ShortPeerRowItem {
-            previousType = item.interactionType
-        }
+        guard let item = item as? ShortPeerRowItem else {return}
         
         switch previousType {
         case let .selectable(interaction):
@@ -244,6 +252,27 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         super.set(item: item, animated: animated)
         
         
+        if let activity = item.inputActivity {
+            if activities == nil {
+                activities = ChatActivitiesModel()
+            }
+            guard let activities = activities else {return}
+            
+            let inputActivites: (PeerId, [(Peer, PeerInputActivity)]) = (item.peer.id, [(item.peer, activity)])
+            
+            activities.update(with: inputActivites, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background), layout: { [weak self] show in
+                self?.needsLayout = true
+                self?.hiddenStatus = !show
+                self?.needsDisplay = true
+                self?.activities?.view?.isHidden = !show
+            })
+            addSubview(activities.view!)
+            
+        } else {
+            hiddenStatus = true
+            activities?.view?.removeFromSuperview()
+        }
+        
         switch previousType {
         case let .selectable(interaction):
             interaction.add(observer: self)
@@ -253,63 +282,59 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             break
         }
         
-        if let item = item as? ShortPeerRowItem {
-            self.border = item.border
-            image.setFrameSize(item.photoSize)
-            if let photo = item.photo {
-                image.setSignal(photo)
-            } else {
-                image.setPeer(account: item.account, peer: item.peer)
+        self.border = item.border
+        image.setFrameSize(item.photoSize)
+        if let photo = item.photo {
+            image.setSignal(photo)
+        } else {
+            image.setPeer(account: item.account, peer: item.peer)
+        }
+        
+        self.updateInteractionType(previousType,item.interactionType, item:item, animated:animated)
+        choiceControl?.removeFromSuperview()
+        choiceControl = nil
+        
+        switch item.type {
+        case let .switchable(stateback: stateback):
+            contextLabel?.removeFromSuperview()
+            contextLabel = nil
+            if switchView == nil {
+                switchView = SwitchView()
+                container.addSubview(switchView!)
             }
+            switchView?.stateChanged = item.action
+            switchView?.setIsOn(stateback(),animated:animated)
+            switchView?.isEnabled = item.enabled
+        case let .context(stateback:stateback):
+            switchView?.removeFromSuperview()
+            switchView = nil
             
-            self.updateInteractionType(previousType,item.interactionType, item:item, animated:animated)
-            choiceControl?.removeFromSuperview()
-            choiceControl = nil
-            
-            switch item.type {
-                case let .switchable(stateback: stateback):
-                    contextLabel?.removeFromSuperview()
-                    contextLabel = nil
-                    if switchView == nil {
-                        switchView = SwitchView()
-                        container.addSubview(switchView!)
-                    }
-                    switchView?.stateChanged = item.action
-                    switchView?.setIsOn(stateback(),animated:animated)
-                    switchView?.isEnabled = item.enabled
-            case let .context(stateback:stateback):
-                switchView?.removeFromSuperview()
-                switchView = nil
-                
-                let label = stateback()
-                if !label.isEmpty {
-                    if contextLabel == nil {
-                        contextLabel = TextViewLabel()
-                        addSubview(contextLabel!)
-                    }
-                    contextLabel?.attributedString = .initialize(string: label, color: theme.colors.grayText, font: item.statusStyle.font)
-                    contextLabel?.sizeToFit()
-                } else {
-                    contextLabel?.removeFromSuperview()
-                    contextLabel = nil
+            let label = stateback()
+            if !label.isEmpty {
+                if contextLabel == nil {
+                    contextLabel = TextViewLabel()
+                    addSubview(contextLabel!)
                 }
-            case let .selectable(stateback: stateback):
-                if stateback() {
-                    choiceControl = ImageView()
-                    choiceControl?.image = theme.icons.generalSelect
-                    choiceControl?.sizeToFit()
-                    addSubview(choiceControl!)
-                }
-               
-            default:
-                switchView?.removeFromSuperview()
-                switchView = nil
+                contextLabel?.attributedString = .initialize(string: label, color: theme.colors.grayText, font: item.statusStyle.font)
+                contextLabel?.sizeToFit()
+            } else {
                 contextLabel?.removeFromSuperview()
                 contextLabel = nil
-                break
+            }
+        case let .selectable(stateback: stateback):
+            if stateback() {
+                choiceControl = ImageView()
+                choiceControl?.image = theme.icons.generalSelect
+                choiceControl?.sizeToFit()
+                addSubview(choiceControl!)
             }
             
-            
+        default:
+            switchView?.removeFromSuperview()
+            switchView = nil
+            contextLabel?.removeFromSuperview()
+            contextLabel = nil
+            break
         }
         rightSeparatorView.backgroundColor = theme.colors.border
         contextLabel?.backgroundColor = backdorColor

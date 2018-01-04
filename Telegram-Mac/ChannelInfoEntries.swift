@@ -288,7 +288,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         } |> deliverOnMainQueue
         
         reportPeerDisposable.set(report.start(next: { [weak self] in
-            self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: tr(.peerInfoChannelReported)))
+            self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: tr(L10n.peerInfoChannelReported)))
         }))
     }
     
@@ -595,7 +595,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.updateEditingName(name)
             })
         case let .about(_, text):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(.peerInfoInfo), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, _, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoInfo), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, _, _ in
                 if toChat {
                     arguments.peerChat(peerId)
                 } else {
@@ -604,15 +604,15 @@ enum ChannelInfoEntry: PeerInfoEntry {
             }, hashtag: arguments.account.context.globalSearch)
         case let .userName(_, value):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(.peerInfoSharelink), text: link, account: arguments.account, isTextSelectable:false, callback:{
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoSharelink), text: link, account: arguments.account, isTextSelectable:false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.account, link: link)), for: mainWindow)
             }, selectFullWord: true)
         case .sharedMedia:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoSharedMedia), type: .none, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSharedMedia), type: .none, action: { () in
                 arguments.sharedMedia()
             })
         case let .notifications(_, settings):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoNotifications), type: .switchable(stateback: { () -> Bool in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(stateback: { () -> Bool in
                 
                 if let settings = settings as? TelegramPeerNotificationSettings, case .muted = settings.muteState {
                     return false
@@ -624,11 +624,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
                arguments.toggleNotifications()
             })
         case .report:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoReport), type: .none, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoReport), type: .none, action: { () in
                 arguments.report()
             })
         case let .members(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoMembers), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoMembers), type: .context(stateback: { () -> String in
                 if let count = count {
                     return "\(count)"
                 } else {
@@ -638,7 +638,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.members()
             })
         case let .admins(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoAdmins), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAdmins), type: .context(stateback: { () -> String in
                 if let count = count {
                     return "\(count)"
                 } else {
@@ -648,7 +648,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.admins()
             })
         case let .blocked(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoBlackList), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoBlackList), type: .context(stateback: { () -> String in
                 if let count = count {
                     return "\(count)"
                 } else {
@@ -658,13 +658,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.blocked()
             })
         case let .link(_, addressName: addressName):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoChannelType), type: .context(stateback: { () -> String in
-                return addressName.isEmpty ? tr(.channelPrivate) : tr(.channelPublic)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoChannelType), type: .context(stateback: { () -> String in
+                return addressName.isEmpty ? tr(L10n.channelPrivate) : tr(L10n.channelPublic)
             }), action: { () in
                 arguments.visibilitySetup()
             })
         case .setPhoto:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoSetChannelPhoto), nameStyle: blueActionButton, type: .none, action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSetChannelPhoto), nameStyle: blueActionButton, type: .none, action: { 
                 pickImage(for: mainWindow, completion: { image in
                     if let image = image {
                         _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { path in
@@ -675,22 +675,22 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 
             })
         case let .aboutInput(_, text):
-            return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
+            return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(L10n.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
                 arguments.updateEditingDescriptionText(updatedText)
             })
         case .aboutDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(.peerInfoSetAboutDescription))
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSetAboutDescription))
         case let .signMessages(_, sign):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(.peerInfoSignMessages), type: .switchable(stateback: { () -> Bool in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSignMessages), type: .switchable(stateback: { () -> Bool in
                 return sign
             }), action: { 
                 arguments.toggleSignatures(!sign)
             })
         case .signDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(.peerInfoSignMessagesDesc))
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSignMessagesDesc))
         case let .leave(_, isCreator):
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? tr(.peerInfoDeleteChannel) : tr(.peerInfoLeaveChannel), nameStyle:redActionButton, type: .none, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? tr(L10n.peerInfoDeleteChannel) : tr(L10n.peerInfoLeaveChannel), nameStyle:redActionButton, type: .none, action: { () in
                 arguments.delete()
             })
         case .section(_):

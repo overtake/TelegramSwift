@@ -173,7 +173,7 @@ enum TwoStepVerificationUnlockSettingsEntry: TableItemListNodeEntry {
     func item(_ arguments: TwoStepVerificationUnlockSettingsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .passwordEntry(_, text, value):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.twoStepAuthEnterPasswordPassword), text: value, limit: INT32_MAX, textChangeHandler: { updatedText in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.twoStepAuthEnterPasswordPassword), text: value, limit: INT32_MAX, textChangeHandler: { updatedText in
                 arguments.updatePasswordText(updatedText)
             }, inputType: .secure)
         case let .passwordEntryInfo(_, text):
@@ -358,7 +358,7 @@ enum TwoStepVerificationPasswordEntryEntry: TableItemListNodeEntry {
                 arguments.updateEntryText(updatedText)
             }, inputType: .plain)
         case let .emailEntry(_, text):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.twoStepAuthEmail), text: text, limit: 40, textChangeHandler: { updatedText in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.twoStepAuthEmail), text: text, limit: 40, textChangeHandler: { updatedText in
                 arguments.updateEntryText(updatedText)
             }, inputType: .plain)
         case let .emailInfo(_, text):
@@ -462,23 +462,23 @@ func twoStepVerificationPasswordEntryControllerEntries(state: TwoStepVerificatio
         let placeholder:String
         switch mode {
         case .change:
-            placeholder = tr(.twoStepAuthSetupPasswordEnterPasswordNew)
+            placeholder = tr(L10n.twoStepAuthSetupPasswordEnterPasswordNew)
         default:
-            placeholder = tr(.twoStepAuthSetupPasswordEnterPassword)
+            placeholder = tr(L10n.twoStepAuthSetupPasswordEnterPassword)
         }
         entries.append(.passwordEntry(sectionId: sectionId, text, placeholder))
     case let .reentry(_, text):
-        entries.append(.passwordEntry(sectionId: sectionId, text, tr(.twoStepAuthSetupPasswordConfirmPassword)))
+        entries.append(.passwordEntry(sectionId: sectionId, text, tr(L10n.twoStepAuthSetupPasswordConfirmPassword)))
     case let .hint(_, text):
-        entries.append(.hintEntry(sectionId: sectionId, text, tr(.twoStepAuthSetupHint)))
+        entries.append(.hintEntry(sectionId: sectionId, text, tr(L10n.twoStepAuthSetupHint)))
     case let .email(_, _, text):
         
-        var emailText = tr(.twoStepAuthEmailHelp)
+        var emailText = tr(L10n.twoStepAuthEmailHelp)
         switch mode {
         case .setupEmail:
             break
         default:
-            emailText += "\n\n[\(tr(.twoStepAuthEmailSkip))]()"
+            emailText += "\n\n[\(tr(L10n.twoStepAuthEmailSkip))]()"
         }
         entries.append(.emailEntry(sectionId: sectionId, text))
         entries.append(.emailInfo(sectionId: sectionId, emailText))
@@ -570,7 +570,7 @@ enum TwoStepVerificationResetEntry: TableItemListNodeEntry {
     func item(_ arguments: TwoStepVerificationResetControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .codeEntry(_, text):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.twoStepAuthRecoveryCode), text: text, limit: 6, textChangeHandler: { updatedText in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.twoStepAuthRecoveryCode), text: text, limit: 6, textChangeHandler: { updatedText in
                 arguments.updateEntryText(updatedText)
             }, textFilter: { text -> String in
                 return text.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)

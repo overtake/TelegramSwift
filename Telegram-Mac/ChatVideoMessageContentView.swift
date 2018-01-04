@@ -39,6 +39,17 @@ private let instantVideoMutedThumb = generateImage(NSMakeSize(30, 30), contextGe
     ctx.draw(icon, in: NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
 })
 
+private final class VideoMessageCorner : View {
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        //ctx.round(frame.size, frame.size.height / 2)
+        ctx.setStrokeColor(backgroundColor.cgColor)
+        ctx.setLineWidth(2.0)
+        ctx.setLineCap(.round)
+        
+        ctx.strokeEllipse(in: NSMakeRect(1, 1, bounds.width - 2, bounds.height - 2))
+    }
+}
+
 
 class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
 
@@ -51,7 +62,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     private let playerDisposable = MetaDisposable()
     
     private var durationView:TextView = TextView()
-    
+    private let videoCorner: VideoMessageCorner = VideoMessageCorner()
     private var path:String? {
         didSet {
             updatePlayerIfNeeded()
@@ -61,12 +72,14 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(player)
+        videoCorner.userInteractionEnabled = false
         playingProgressView.userInteractionEnabled = false
         stateThumbView.image = instantVideoMutedThumb
         stateThumbView.sizeToFit()
         player.addSubview(stateThumbView)
         addSubview(durationView)
         addSubview(playingProgressView)
+        addSubview(videoCorner)
     }
     
     required init?(coder: NSCoder) {
@@ -116,7 +129,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     private var singleWrapper:APSingleWrapper? {
         if let media = media as? TelegramMediaFile {
-            return APSingleWrapper(resource: media.resource, name: tr(.audioControllerVideoMessage), performer: parent?.author?.displayTitle, id: media.fileId)
+            return APSingleWrapper(resource: media.resource, name: tr(L10n.audioControllerVideoMessage), performer: parent?.author?.displayTitle, id: media.fileId)
         }
         return nil
     }
@@ -222,6 +235,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     override func layout() {
         super.layout()
         player.frame = bounds
+        videoCorner.frame = NSMakeRect(bounds.minX - 0.5, bounds.minY - 0.5, bounds.width + 1.0, bounds.height + 1.0)
         playingProgressView.frame = bounds
         progressView?.center()
         stateThumbView.centerX(y: 10)

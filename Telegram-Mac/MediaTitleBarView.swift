@@ -43,21 +43,21 @@ class MediaTitleBarView: TitledBarView {
             
             if let strongSelf = self, !hasPopover(mainWindow) {
                 var items:[SPopoverItem] = []
-                items.append(SPopoverItem(tr(.peerMediaPopoverSharedMedia), { [weak strongSelf] in
+                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedMedia), { [weak strongSelf] in
                     interactions.media()
-                    strongSelf?.button.set(text: tr(.peerMediaSharedMedia), for: .Normal)
+                    strongSelf?.button.set(text: tr(L10n.peerMediaSharedMedia), for: .Normal)
                 }))
-                items.append(SPopoverItem(tr(.peerMediaPopoverSharedFiles), { [weak strongSelf] in
+                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedFiles), { [weak strongSelf] in
                     interactions.files()
-                    strongSelf?.button.set(text: tr(.peerMediaPopoverSharedFiles), for: .Normal)
+                    strongSelf?.button.set(text: tr(L10n.peerMediaPopoverSharedFiles), for: .Normal)
                 }))
-                items.append(SPopoverItem(tr(.peerMediaPopoverSharedLinks), { [weak strongSelf] in
+                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedLinks), { [weak strongSelf] in
                     interactions.links()
-                    strongSelf?.button.set(text: tr(.peerMediaPopoverSharedLinks), for: .Normal)
+                    strongSelf?.button.set(text: tr(L10n.peerMediaPopoverSharedLinks), for: .Normal)
                 }))
-                items.append(SPopoverItem(tr(.peerMediaPopoverSharedAudio), { [weak strongSelf] in
+                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedAudio), { [weak strongSelf] in
                     interactions.audio()
-                    strongSelf?.button.set(text: tr(.peerMediaPopoverSharedAudio), for: .Normal)
+                    strongSelf?.button.set(text: tr(L10n.peerMediaPopoverSharedAudio), for: .Normal)
                 }))
                 
                 let controller = SPopoverViewController(items: items)
@@ -87,7 +87,7 @@ class MediaTitleBarView: TitledBarView {
     }
     
     override func updateLocalizationAndTheme() {
-        button.set(text: tr(.peerMediaSharedMedia), for: .Normal)
+        button.set(text: tr(L10n.peerMediaSharedMedia), for: .Normal)
         button.set(color: theme.colors.blueUI, for: .Normal)
         dropdownImage.set(image: theme.icons.mediaDropdown, for: .Normal)
         dropdownImage.sizeToFit()

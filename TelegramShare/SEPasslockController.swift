@@ -46,7 +46,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         self.backgroundColor = theme.colors.background
         nextButton.set(color: theme.colors.blueUI, for: .Normal)
         nextButton.set(font: .normal(.title), for: .Normal)
-        nextButton.set(text: tr(.shareExtensionPasscodeNext), for: .Normal)
+        nextButton.set(text: tr(L10n.shareExtensionPasscodeNext), for: .Normal)
         nextButton.sizeToFit()
         
         cancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
@@ -67,7 +67,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: tr(L10n.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.backgroundColor = theme.colors.background

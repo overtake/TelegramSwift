@@ -228,7 +228,7 @@ class ChatReportView : Control {
         super.init()
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
-        report.set(text: tr(.chatHeaderReportSpam), for: .Normal)
+        report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
         report.sizeToFit()
         
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
@@ -250,7 +250,7 @@ class ChatReportView : Control {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        report.set(text: tr(.chatHeaderReportSpam), for: .Normal)
+        report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
         report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
         report.sizeToFit()
         self.backgroundColor = theme.colors.background
@@ -287,7 +287,7 @@ class AddContactView : Control {
         super.init()
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
-        add.set(text: tr(.peerInfoAddContact), for: .Normal)
+        add.set(text: tr(L10n.peerInfoAddContact), for: .Normal)
         add.sizeToFit()
         
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
@@ -510,7 +510,7 @@ class ChatSearchHeader : View, Notifable {
                 strongSelf.updateSearchState()
                 switch strongSelf.searchView.tokenState {
                 case .none:
-                    if state.request == tr(.chatSearchFrom), let peer = strongSelf.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
+                    if state.request == tr(L10n.chatSearchFrom), let peer = strongSelf.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
                         strongSelf.query.set(.single(""))
                         strongSelf.searchView.initToken()
                     } else {

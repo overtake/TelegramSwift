@@ -41,7 +41,7 @@ fileprivate class AboutModalView : Control {
         
         _ = attr.append(string: "\n\n")
         
-        _ = attr.append(string: tr(.aboutDescription), color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: tr(L10n.aboutDescription), color: theme.colors.text, font: .normal(.text))
         
         let descLayout = TextViewLayout(attr, alignment: .center)
         descLayout.measure(width:frameRect.width - 40)

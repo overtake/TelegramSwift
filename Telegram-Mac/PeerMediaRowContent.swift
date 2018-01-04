@@ -50,7 +50,7 @@ class PeerMediaRowItem: TableRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         var items:[ContextMenuItem] = []
         if canForwardMessage(message, account: account) {
-            items.append(ContextMenuItem(tr(.messageContextForward), handler: { [weak self] in
+            items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.forwardMessages([strongSelf.message.id])
                 }
@@ -58,14 +58,14 @@ class PeerMediaRowItem: TableRowItem {
         }
         
         if canDeleteMessage(message, account: account) {
-            items.append(ContextMenuItem(tr(.messageContextDelete), handler: { [weak self] in
+            items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.deleteMessages([strongSelf.message.id])
                 }
             }))
         }
         
-        items.append(ContextMenuItem(tr(.messageContextGoto), handler: { [weak self] in
+        items.append(ContextMenuItem(tr(L10n.messageContextGoto), handler: { [weak self] in
             if let strongSelf = self {
                 strongSelf.interface.focusMessageId(nil, strongSelf.message.id, .center(id: 0, animated: false, focus: false, inset: 0))
             }

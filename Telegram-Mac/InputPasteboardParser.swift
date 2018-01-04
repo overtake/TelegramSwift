@@ -55,7 +55,7 @@ class InputPasteboardParser: NSObject {
             let afterSizeCheck = files.count
             
             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                alert(for: mainWindow, info: tr(.appMaxFileSize))
+                alert(for: mainWindow, info: tr(L10n.appMaxFileSize))
                 return false
             }
             

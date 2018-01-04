@@ -51,7 +51,7 @@ private enum GroupsInCommonEntry : Comparable, Identifiable {
     func item(arguments: GroupsInCommonArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case let .empty(loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(.groupsInCommonEmpty))
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(L10n.groupsInCommonEmpty))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, type: .none)
         case let .peer(_, peer):

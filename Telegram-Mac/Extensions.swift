@@ -102,11 +102,11 @@ public extension String {
     
     static func stringForShortCallDurationSeconds(for seconds: Int32) -> String {
         if seconds < 60 {
-            return tr(.callShortSecondsCountable(Int(seconds)))
+            return tr(L10n.callShortSecondsCountable(Int(seconds)))
         }
         else {
             let number = Int(seconds) / 60
-            return tr(.callShortMinutesCountable(number))
+            return tr(L10n.callShortMinutesCountable(number))
         }
     }
     
@@ -129,6 +129,8 @@ public extension String {
         var index: String.Index = copy.index(after: copy.startIndex)
         
         var newLineIndexEnd: String.Index? = nil
+        
+        
         
         while index != copy.endIndex {
             

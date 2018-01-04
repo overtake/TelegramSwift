@@ -172,7 +172,7 @@ private class PhoneCallWindowView : View {
     func updateState(_ state:CallSessionState, animated: Bool) {
         switch state {
         case .accepting:
-            statusTextView.stringValue = tr(.callStatusConnecting)
+            statusTextView.stringValue = tr(L10n.callStatusConnecting)
         case .active(_, let visual, _):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
@@ -181,33 +181,33 @@ private class PhoneCallWindowView : View {
             secureContainerView.setFrameSize(NSMakeSize(layout.layoutSize.width + 16, layout.layoutSize.height + 10))
             secureContainerView.layer?.cornerRadius = secureContainerView.frame.height / 2
             
-            statusTextView.stringValue = tr(.callStatusConnecting)
+            statusTextView.stringValue = tr(L10n.callStatusConnecting)
         case .ringing:
-            statusTextView.stringValue = tr(.callStatusCalling)
+            statusTextView.stringValue = tr(L10n.callStatusCalling)
         case .terminated(let error, _):
             switch error {
             case .ended(let reason):
                 
                 switch reason {
                 case .busy:
-                    statusTextView.stringValue = tr(.callStatusBusy)
+                    statusTextView.stringValue = tr(L10n.callStatusBusy)
                 case .missed:
-                    statusTextView.stringValue = tr(.callStatusEnded) 
+                    statusTextView.stringValue = tr(L10n.callStatusEnded) 
                 default:
-                    statusTextView.stringValue = tr(.callStatusEnded)
+                    statusTextView.stringValue = tr(L10n.callStatusEnded)
                     acceptControl.isEnabled = false
                     acceptControl.change(opacity: 0.8)
                 }
                 
             case .error:
-                 statusTextView.stringValue = tr(.callStatusFailed)
+                 statusTextView.stringValue = tr(L10n.callStatusFailed)
                  acceptControl.isEnabled = false
                  acceptControl.change(opacity: 0.8)
             }
             
             
         case .requesting(let ringing):
-            statusTextView.stringValue = !ringing ? tr(.callStatusRequesting) : tr(.callStatusRinging)
+            statusTextView.stringValue = !ringing ? tr(L10n.callStatusRequesting) : tr(L10n.callStatusRinging)
         default:
             break
         }
@@ -508,13 +508,13 @@ class PhoneCallWindowController {
                     if let peer = peerViewMainPeer(peerView) {
                         switch error {
                         case .privacyRestricted:
-                            alert(for: mainWindow, info: tr(.callPrivacyErrorMessage(peer.compactDisplayTitle)))
+                            alert(for: mainWindow, info: tr(L10n.callPrivacyErrorMessage(peer.compactDisplayTitle)))
                         case .notSupportedByPeer:
-                            alert(for: mainWindow, info: tr(.callParticipantVersionOutdatedError(peer.compactDisplayTitle)))
+                            alert(for: mainWindow, info: tr(L10n.callParticipantVersionOutdatedError(peer.compactDisplayTitle)))
                         case .serverProvided(let serverError):
                             alert(for: mainWindow, info: serverError)
                         case .generic:
-                            alert(for: mainWindow, info: tr(.callUndefinedError))
+                            alert(for: mainWindow, info: tr(L10n.callUndefinedError))
                         default:
                             break
                         }

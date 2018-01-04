@@ -36,9 +36,9 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         textView.background = theme.colors.background
         documentView?.background = theme.colors.background
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.channelIntroDescriptionHeader), color: theme.colors.text, font: .medium(.header))
+        _ = attr.append(string: tr(L10n.channelIntroDescriptionHeader), color: theme.colors.text, font: .medium(.header))
         _ = attr.append(string:"\n\n")
-        _ = attr.append(string: tr(.channelIntroDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: tr(L10n.channelIntroDescription), color: theme.colors.grayText, font: .normal(.text))
         textView.set(layout: TextViewLayout(attr, alignment:.center))
         
     }
@@ -65,7 +65,7 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
 
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(.channelCreate), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: tr(L10n.channelCreate), style: navigationButtonStyle, alignment:.Right)
     }
     
     override var removeAfterDisapper: Bool {

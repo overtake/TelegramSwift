@@ -190,21 +190,21 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            var string:String = tr(.peerStatusRecently)
+            var string:String = tr(L10n.peerStatusRecently)
             
             if case let .member(_, _, _, banInfo) = participant.participant {
                 if let banInfo = banInfo, let peer = participant.peers[banInfo.restrictedBy] {
                     if banInfo.rights.flags.contains(.banReadMessages) {
-                        string = tr(.channelBlacklistBlockedBy(peer.displayTitle))
+                        string = tr(L10n.channelBlacklistBlockedBy(peer.displayTitle))
                     } else {
-                        string = tr(.channelBlacklistRestrictedBy(peer.displayTitle))
+                        string = tr(L10n.channelBlacklistRestrictedBy(peer.displayTitle))
                     }
                 } else {
                     if let presence = participant.presences[participant.peer.id] as? TelegramUserPresence {
                         let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                         (string,_, _) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
                     } else if let peer = participant.peer as? TelegramUser, let botInfo = peer.botInfo {
-                        string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(.peerInfoBotStatusHasAccess) : tr(.peerInfoBotStatusHasNoAccess)
+                        string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
                     }
                 }
             }
@@ -217,13 +217,13 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 }
             })
         case let .empty(progress):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: tr(.channelBlacklistEmptyDescrpition))
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: tr(L10n.channelBlacklistEmptyDescrpition))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case .header(_, _, let text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .addMember:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.channelBlacklistAddMember), nameStyle: blueActionButton, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelBlacklistAddMember), nameStyle: blueActionButton, action: {
                 arguments.addMember()
             })
         }
@@ -294,7 +294,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
             }
             
             if !participants.restricted.isEmpty {
-                entries.append(.header(sectionId, index, tr(.channelBlacklistRestricted)))
+                entries.append(.header(sectionId, index, tr(L10n.channelBlacklistRestricted)))
                 index += 1
                 for participant in participants.restricted.sorted(by: <) {
                     
@@ -319,7 +319,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
                     sectionId += 1
                 }
                 
-                entries.append(.header(sectionId, index, tr(.channelBlacklistBlocked)))
+                entries.append(.header(sectionId, index, tr(L10n.channelBlacklistBlocked)))
                 index += 1
                 for participant in participants.banned.sorted(by: <) {
                     
@@ -448,7 +448,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         }, restrict: restrict, addMember: {
             let behavior = SelectChannelMembersBehavior(peerId: peerId, limit: 1)
             
-            _ = (selectModalPeers(account: account, title: tr(.channelBlacklistSelectNewUserTitle), limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(account: account, title: tr(L10n.channelBlacklistSelectNewUserTitle), limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {
@@ -463,7 +463,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                         }
                     }
                     if adminError {
-                        alert(for: mainWindow, info: tr(.channelBlacklistDemoteAdminError))
+                        alert(for: mainWindow, info: tr(L10n.channelBlacklistDemoteAdminError))
                         return .single(false)
                     }
                 }

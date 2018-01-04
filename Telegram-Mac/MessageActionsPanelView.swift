@@ -87,7 +87,7 @@ class MessageActionsPanelView: Control, Notifable {
         deleteButton.set(image: !deleteButton.userInteractionEnabled ? theme.icons.chatDeleteMessagesInactive : theme.icons.chatDeleteMessagesActive, for: .Normal)
         forwardButton.set(image: !forwardButton.userInteractionEnabled ? theme.icons.chatForwardMessagesInactive : theme.icons.chatForwardMessagesActive, for: .Normal)
         
-        countTitle.set(text: count == 0 ? tr(.messageActionsPanelEmptySelected) : tr(.messageActionsPanelSelectedCountCountable(count)), for: .Normal)
+        countTitle.set(text: count == 0 ? tr(L10n.messageActionsPanelEmptySelected) : tr(L10n.messageActionsPanelSelectedCountCountable(count)), for: .Normal)
         countTitle.set(color: (!canForward && !canDelete) || count == 0 ? theme.colors.grayText : theme.colors.text, for: .Normal)
         countTitle.sizeToFit(NSZeroSize, NSMakeSize(frame.width - deleteButton.frame.width - forwardButton.frame.width - 80, frame.height))
         countTitle.center()
@@ -147,8 +147,8 @@ class MessageActionsPanelView: Control, Notifable {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
-        deleteButton.set(text: tr(.messageActionsPanelDelete), for: .Normal)
-        forwardButton.set(text: tr(.messageActionsPanelForward), for: .Normal)
+        deleteButton.set(text: tr(L10n.messageActionsPanelDelete), for: .Normal)
+        forwardButton.set(text: tr(L10n.messageActionsPanelForward), for: .Normal)
         
         deleteButton.set(image: !deleteButton.userInteractionEnabled ? theme.icons.chatDeleteMessagesInactive : theme.icons.chatDeleteMessagesActive, for: .Normal)
         forwardButton.set(image: !forwardButton.userInteractionEnabled ? theme.icons.chatForwardMessagesInactive : theme.icons.chatForwardMessagesActive, for: .Normal)

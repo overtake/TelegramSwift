@@ -259,10 +259,9 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         genericView.deltaCorner = -1
         genericView.documentView = View(frame: genericView.bounds)
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: genericView.contentView, queue: nil, using: { [weak self] _ in
-            if let strongSelf = self {
-                strongSelf.updateVisibleItems()
-                strongSelf.pageDidScrolled?((documentSize: strongSelf.genericView.frame.size, position: strongSelf.genericView.scrollPosition().current))
-            }
+			guard let strongSelf = self else { return }
+			strongSelf.updateVisibleItems()
+			strongSelf.pageDidScrolled?((documentSize: strongSelf.genericView.frame.size, position: strongSelf.genericView.scrollPosition().current))
         })
         genericView.hasVerticalScroller = true
         selectManager = InstantPageSelectText(genericView)
@@ -333,6 +332,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         }))
 
     }
+	
     
     func containerLayoutUpdated(transition: ContainedViewLayoutTransition) {
         if visibleItemsWithViews.isEmpty && visibleTiles.isEmpty {
@@ -498,7 +498,35 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         }
     }
 
-
+	// Called when space button is enabled to trigger scrolling
+	enum Direction {
+		case up
+		case down
+	}
+	func scrollPage(direction: Direction) {
+		updateVisibleItems()
+		
+		var newOrigin = genericView.clipView.bounds.origin
+		switch direction {
+		case .up:
+            // without *2 we will stay at current position
+            newOrigin.y -= 50
+			if newOrigin.y < 0 {
+				newOrigin.y = 0
+			}
+		case .down:
+			newOrigin.y += 50
+			let maxY = genericView.documentSize.height - genericView.clipView.frame.height
+			if newOrigin.y > maxY {
+				newOrigin.y = maxY
+			}
+		}
+		
+		genericView.clipView.scroll(to: newOrigin, animated: true)
+		genericView.reflectScrolledClipView(genericView.clipView)
+		pageDidScrolled?((documentSize: genericView.frame.size, position: genericView.scrollPosition().current))
+	}
+	
     deinit {
         NotificationCenter.default.removeObserver(self)
         selectManager?.removeHandlers(for: mainWindow)

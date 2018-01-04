@@ -20,6 +20,7 @@ enum GeneralInteractedType {
     case image(stateback:()->CGImage)
     case button(stateback:()->String)
     case search(stateback:(String)->Bool)
+    case colorSelector(stateback:()->NSColor)
 }
 
 class GeneralRowItem: TableRowItem {

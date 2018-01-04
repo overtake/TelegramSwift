@@ -76,7 +76,7 @@ private class VideoPlayerView : AVPlayerView {
 }
 
 class MGalleryVideoItem: MGalleryItem {
-    
+    var startTime: TimeInterval = 0
     private var playAfter:Bool = false
     override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         super.init(account, entry, pagerSize)
@@ -84,7 +84,6 @@ class MGalleryVideoItem: MGalleryItem {
         let pathSignal = combineLatest(path.get() |> distinctUntilChanged |> deliverOnMainQueue, view.get() |> distinctUntilChanged) |> map { path, view -> (AVPlayer?,AVPlayerView) in
             let url = URL(string: path) ?? URL(fileURLWithPath: path)
             let player = AVPlayer(url: url)
-            player.seek(to: CMTime())
             return (player, view as! AVPlayerView)
         } 
         disposable.set(pathSignal.start(next: { [weak self] player, view in
@@ -93,7 +92,7 @@ class MGalleryVideoItem: MGalleryItem {
                 if strongSelf.playAfter {
                     strongSelf.playAfter = false
                     player?.play()
-                    
+                    player?.seek(to: CMTimeMake(Int64(strongSelf.startTime * 1000.0), 1000))
                     let controls = view.subviews.last?.subviews.last
                     if let controls = controls, let pip = strongSelf.pipButton {
                         controls.addSubview(pip)

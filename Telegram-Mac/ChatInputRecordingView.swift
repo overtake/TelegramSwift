@@ -95,7 +95,7 @@ class ChatInputRecordingView: View {
 
         if inside != self.inside {
             self.inside = inside
-            let descLayout = TextViewLayout(.initialize(string:tr(.audioRecordReleaseOut), color: inside ? theme.colors.text : theme.colors.redUI, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
+            let descLayout = TextViewLayout(.initialize(string:tr(L10n.audioRecordReleaseOut), color: inside ? theme.colors.text : theme.colors.redUI, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
             descLayout.measure(width: frame.width - 50 - 100 - 60)
             descView.update(descLayout)
         }

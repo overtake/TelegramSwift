@@ -27,11 +27,11 @@ func stringForUserPresence(day: UserPresenceDay, hours: Int32, minutes: Int32) -
     let dayString: String
     switch day {
     case .today:
-        dayString = tr(.peerStatusToday)
+        dayString = tr(L10n.peerStatusToday)
     case .yesterday:
-        dayString = tr(.peerStatusYesterday)
+        dayString = tr(L10n.peerStatusYesterday)
     }
-    return tr(.peerStatusLastSeenAt(dayString, stringForTime(hours: hours, minutes: minutes)))
+    return tr(L10n.peerStatusLastSeenAt(dayString, stringForTime(hours: hours, minutes: minutes)))
 }
 
 enum RelativeUserPresenceLastSeen {
@@ -75,18 +75,18 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, relativeTo tim
 func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> (String, Bool, NSColor) {
     switch presence.status {
     case .none:
-        return (tr(.peerStatusRecently), false, theme.colors.grayText)
+        return (tr(L10n.peerStatusRecently), false, theme.colors.grayText)
     case let .present(statusTimestamp):
         if statusTimestamp >= timestamp {
-            return (tr(.peerStatusOnline), true, theme.colors.blueText)
+            return (tr(L10n.peerStatusOnline), true, theme.colors.blueText)
         } else {
             let difference = timestamp - statusTimestamp
             if difference < 59 {
-                return (tr(.peerStatusJustNow), false, theme.colors.grayText)
+                return (tr(L10n.peerStatusJustNow), false, theme.colors.grayText)
             } else if difference < 60 * 60 {
                 let minutes = max(difference / 60, 1)
                 
-                return (tr(.peerStatusMinAgoCountable(Int(minutes))), false, theme.colors.grayText)
+                return (tr(L10n.peerStatusMinAgoCountable(Int(minutes))), false, theme.colors.grayText)
             } else {
                 var t: time_t = time_t(statusTimestamp)
                 var timeinfo: tm = tm()
@@ -97,7 +97,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, relative
                 localtime_r(&now, &timeinfoNow)
                 
                 if timeinfo.tm_year != timeinfoNow.tm_year {
-                    return ("\(tr(.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(tr(L10n.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
                 }
                 
                 let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
@@ -110,16 +110,16 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, relative
                     }
                     return (stringForUserPresence(day: day, hours: timeinfo.tm_hour, minutes: timeinfo.tm_min), false, theme.colors.grayText)
                 } else {
-                    return ("\(tr(.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(tr(L10n.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
                 }
             }
         }
     case .recently:
-        return (tr(.peerStatusRecently), false, theme.colors.grayText)
+        return (tr(L10n.peerStatusRecently), false, theme.colors.grayText)
     case .lastWeek:
-        return (tr(.peerStatusLastWeek), false, theme.colors.grayText)
+        return (tr(L10n.peerStatusLastWeek), false, theme.colors.grayText)
     case .lastMonth:
-        return (tr(.peerStatusLastMonth), false, theme.colors.grayText)
+        return (tr(L10n.peerStatusLastMonth), false, theme.colors.grayText)
     }
 }
 

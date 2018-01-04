@@ -19,7 +19,7 @@ private class AddContactControllerView : View, NSTextFieldDelegate {
     fileprivate let phoneNumber:NSTextField = NSTextField()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        let layout = TextViewLayout(.initialize(string: tr(.contactsAddContact), color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: tr(L10n.contactsAddContact), color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: frameRect.width)
         headerView.update(layout)
         addSubview(headerView)
@@ -54,9 +54,9 @@ private class AddContactControllerView : View, NSTextFieldDelegate {
         phoneNumber.focusRingType = .none
         
         
-        firstName.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
-        lastName.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsLastNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
-        phoneNumber.placeholderAttributedString = NSAttributedString.initialize(string: tr(.contactsPhoneNumberPlaceholder), color: theme.colors.grayText, font: .normal(13.5))
+        firstName.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.contactsFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
+        lastName.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.contactsLastNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
+        phoneNumber.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.contactsPhoneNumberPlaceholder), color: theme.colors.grayText, font: .normal(13.5))
         
         firstName.setFrameSize(NSMakeSize(frameRect.width - 40, 20))
         lastName.setFrameSize(NSMakeSize(frameRect.width - 40, 20))
@@ -146,16 +146,16 @@ class AddContactModalController: ModalViewController {
                 if let peerId = peerId, let account = self?.account {
                     account.context.mainNavigation?.push(ChatController(account: account, peerId: peerId))
                 } else {
-                    alert(for: mainWindow, header: tr(.contactsNotRegistredTitle), info: tr(.contactsNotRegistredDescription))
+                    alert(for: mainWindow, header: tr(L10n.contactsNotRegistredTitle), info: tr(L10n.contactsNotRegistredDescription))
                 }
             })
         }
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.contactsAddContact), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.contactsAddContact), accept: { [weak self] in
             self?.importAndCloseIfPossible()
-        }, cancelTitle: tr(.modalCancel), drawBorder: false)
+        }, cancelTitle: tr(L10n.modalCancel), drawBorder: false)
     }
     
 }

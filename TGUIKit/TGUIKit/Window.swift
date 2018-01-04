@@ -105,7 +105,7 @@ func <(lhs: MouseObserver, rhs: MouseObserver) -> Bool {
 
 public enum KeyHandlerResult {
     case invoked // invoke and return
-    case rejected // can invoke next priprity event
+    case rejected // can invoke next priority event
     case invokeNext // invoke and send global event
 }
 

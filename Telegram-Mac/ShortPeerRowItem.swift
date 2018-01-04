@@ -116,16 +116,16 @@ class ShortPeerRowItem: GeneralRowItem {
     
     private var titleAttr:NSAttributedString?
     private var statusAttr:NSAttributedString?
-    
+    let inputActivity: PeerInputActivity?
     let drawLastSeparator:Bool
     private let contextMenuItems:()->[ContextMenuItem]
-    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}) {
+    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, inputActivity: PeerInputActivity? = nil) {
         self.peer = peer
         self.contextMenuItems = contextMenuItems
         self.account = account
         self.photoSize = photoSize
         self.leftImage = leftImage
-        
+        self.inputActivity = inputActivity
         if let deleteInset = deleteInset {
             self.deleteInset = deleteInset
         } else {
@@ -145,7 +145,7 @@ class ShortPeerRowItem: GeneralRowItem {
         if isLookSavedMessage && account.peerId == peer.id {
             photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 20, photoSize.height - 20)))) |> map {($0, false)}
         }
-        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? tr(.peerSavedMessages) : peer.displayTitle, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
+        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? tr(L10n.peerSavedMessages) : peer.displayTitle, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
         
         if let titleAddition = titleAddition {
             _ = tAttr.append(string: titleAddition, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)

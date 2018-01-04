@@ -53,7 +53,7 @@ fileprivate class PreviewSenderView : Control {
     fileprivate weak var controller: PreviewSenderController? {
         didSet {
             let count = controller?.urls.count ?? 0
-            textView.setPlaceholderAttributedString(.initialize(string: count > 1 ? tr(.previewSenderCommentPlaceholder) : tr(.previewSenderCaptionPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
+            textView.setPlaceholderAttributedString(.initialize(string: count > 1 ? tr(L10n.previewSenderCommentPlaceholder) : tr(L10n.previewSenderCaptionPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
         }
     }
     let sendAsFile: ValuePromise<PreviewSendingState> = ValuePromise(ignoreRepeated: true)
@@ -68,9 +68,9 @@ fileprivate class PreviewSenderView : Control {
         closeButton.sizeToFit()
         
         
-        photoButton.toolTip = tr(.previewSenderMediaTooltip)
-        fileButton.toolTip = tr(.previewSenderFileTooltip)
-        collageButton.toolTip = tr(.previewSenderCollageTooltip)
+        photoButton.toolTip = tr(L10n.previewSenderMediaTooltip)
+        fileButton.toolTip = tr(L10n.previewSenderFileTooltip)
+        collageButton.toolTip = tr(L10n.previewSenderCollageTooltip)
         
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachPhoto), for: .Normal)
         photoButton.sizeToFit()
@@ -219,17 +219,17 @@ fileprivate class PreviewSenderView : Control {
         let text:String
         switch type {
         case .files:
-            text = tr(.previewSenderSendFileCountable(count))
+            text = tr(L10n.previewSenderSendFileCountable(count))
         case .photo:
-            text = tr(.previewSenderSendPhotoCountable(count))
+            text = tr(L10n.previewSenderSendPhotoCountable(count))
         case .video:
-            text = tr(.previewSenderSendVideoCountable(count))
+            text = tr(L10n.previewSenderSendVideoCountable(count))
         case .gif:
-            text = tr(.previewSenderSendGifCountable(count))
+            text = tr(L10n.previewSenderSendGifCountable(count))
         case .audio:
-            text = tr(.previewSenderSendAudioCountable(count))
+            text = tr(L10n.previewSenderSendAudioCountable(count))
         case .media:
-            text = tr(.previewSenderSendMediaCountable(count))
+            text = tr(L10n.previewSenderSendMediaCountable(count))
         }
         
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)

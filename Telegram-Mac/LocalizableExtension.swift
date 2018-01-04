@@ -36,6 +36,10 @@ extension Double {
 }
 
 
+ func tr(_ string: String) -> String {
+    return string
+}
+
 private func dictFromLocalization(_ value: Localization) -> [String: String] {
     var dict: [String: String] = [:]
     for entry in value.entries {
@@ -196,9 +200,6 @@ func extractArgumentRanges(_ value: String) -> [(Int, NSRange)] {
     return result
 }
 
-func t(_ key: L10n) -> String {
-    return key.string
-}
 
 
 let _appCurrentLanguage:Atomic<Language> = Atomic(value: Language(languageCode: "en", strings: [:]))

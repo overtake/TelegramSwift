@@ -142,7 +142,7 @@ class GalleryGeneralControls : GalleryControls {
         }
         
         disposable.set(index.get().start(next: {[weak self] (current, total) in
-            self?.counter.set(text: tr(.galleryCounter(current, total)), for: .Normal)
+            self?.counter.set(text: tr(L10n.galleryCounter(current, total)), for: .Normal)
         }))
         
         

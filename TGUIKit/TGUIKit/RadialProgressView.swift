@@ -393,8 +393,7 @@ public class RadialProgressView: Control {
             if firstSegment < 1.0 {
                 context.move(to: CGPoint(x: s.x + p1.x * firstSegment, y: s.y + p1.y * firstSegment))
                 context.addLine(to: CGPoint(x: s.x, y: s.y))
-            }
-            else {
+            } else {
                 let secondSegment: CGFloat = (checkValue - 0.33) * 1.5
                 context.move(to: CGPoint(x: s.x + p1.x + p2.x * secondSegment, y: s.y + p1.y + p2.y * secondSegment))
                 context.addLine(to: CGPoint(x: s.x + p1.x, y: s.y + p1.y))

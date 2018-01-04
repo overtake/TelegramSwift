@@ -250,9 +250,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             }
             if let subscribers = foundPeer.subscribers, let username = status {
                 if foundPeer.peer.isChannel {
-                    status = tr(.searchGlobalChannel1Countable(username, Int(subscribers)))
+                    status = tr(L10n.searchGlobalChannel1Countable(username, Int(subscribers)))
                 } else if foundPeer.peer.isSupergroup || foundPeer.peer.isGroup {
-                    status = tr(.searchGlobalGroup1Countable(username, Int(subscribers)))
+                    status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
                 }
             }
             return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right])
@@ -273,11 +273,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             let right:String?
             switch state {
             case .short:
-                right = tr(.separatorShowMore)
+                right = tr(L10n.separatorShowMore)
             case .all:
-                right = tr(.separatorShowLess)
+                right = tr(L10n.separatorShowLess)
             case .clear:
-                right = tr(.separatorClear)
+                right = tr(L10n.separatorClear)
                 
             default:
                 right = nil
@@ -335,7 +335,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     |> map { peers, contacts, accountPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
                         
-                        if tr(.peerSavedMessages).lowercased().hasPrefix(query.lowercased()) {
+                        if tr(L10n.peerSavedMessages).lowercased().hasPrefix(query.lowercased()) {
                             entries.append(.savedMessages(accountPeer))
                         }
                         
@@ -410,16 +410,16 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty {
-                            entries.append(.separator(text: tr(.searchSeparatorChatsAndContacts), index: 0, state: .none))
+                            entries.append(.separator(text: tr(L10n.searchSeparatorChatsAndContacts), index: 0, state: .none))
                             entries += localPeers
                             entries += remotePeers.0
                         }
                         if !remotePeers.1.isEmpty {
-                            entries.append(.separator(text: tr(.searchSeparatorGlobalPeers), index: 10000, state: .none))
+                            entries.append(.separator(text: tr(L10n.searchSeparatorGlobalPeers), index: 10000, state: .none))
                             entries += remotePeers.1
                         }
                         if !remoteMessages.0.isEmpty {
-                            entries.append(.separator(text: tr(.searchSeparatorMessages), index: 20000, state: .none))
+                            entries.append(.separator(text: tr(L10n.searchSeparatorMessages), index: 20000, state: .none))
                             entries += remoteMessages.0
                         }
                         if entries.isEmpty && !remotePeers.2 && !remoteMessages.1 {
@@ -444,7 +444,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     var recent = recent.filter({topIds[$0.peerId] == nil})
 
                     if top.count > 0 {
-                        entries.append(.separator(text: tr(.searchSeparatorPopular), index: i, state: recent.isEmpty ? .none : state.0))
+                        entries.append(.separator(text: tr(L10n.searchSeparatorPopular), index: i, state: recent.isEmpty ? .none : state.0))
                     }
                     
                     for peer in top {
@@ -455,7 +455,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             if case .short = state.0, (i == 4 && recent.count > 0) {
                                 stop = true
                             }
-                            entries.append(.localPeer(peer, i, nil, !stop))
+                            entries.append(.localPeer(peer, i, nil, true))
                             i += 1
                             if stop {
                                 break
@@ -465,7 +465,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                     
                     if recent.count > 0 {
-                        entries.append(.separator(text: tr(.searchSeparatorRecent), index: i, state: .clear))
+                        entries.append(.separator(text: tr(L10n.searchSeparatorRecent), index: i, state: .clear))
                         i += 1
                         for rendered in recent {
                             if ids[rendered.peerId] == nil {

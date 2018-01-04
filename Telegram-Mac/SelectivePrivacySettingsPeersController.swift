@@ -156,7 +156,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             })
 
         case .addItem:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsPeerSelectAddNew), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsPeerSelectAddNew), nameStyle: blueActionButton, type: .none, action: {
                 arguments.addPeer()
             })
         case .section:

@@ -55,6 +55,7 @@ CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 +(int)colorMask:(int)idValue mainId:(int)mainId;
 +(NSArray<NSString *> * __nonnull)notificationTones:(NSString * __nonnull)def;
 +(NSString * __nullable)youtubeIdentifier:(NSString * __nonnull)url;;
++ (NSString * __nullable)_youtubeVideoIdFromText:(NSString * __nullable)text originalUrl:(NSString * __nullable)originalUrl startTime:(NSTimeInterval *)startTime;
 @end
 
 int colorIndexForGroupId(int64_t groupId);

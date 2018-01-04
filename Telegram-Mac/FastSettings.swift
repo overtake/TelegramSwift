@@ -50,6 +50,8 @@ class FastSettings {
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
+	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
+	
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -111,6 +113,7 @@ class FastSettings {
     
     static func toggleIsNeedCollage(_ enable: Bool) -> Void {
         UserDefaults.standard.set(enable, forKey: kNeedCollage)
+        UserDefaults.standard.synchronize()
     }
     
     static func toggleRecordingState() {
@@ -123,6 +126,7 @@ class FastSettings {
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {
         UserDefaults.standard.set(action.rawValue, forKey: kForceTouchAction)
+        UserDefaults.standard.synchronize()
     }
     
     static func tooltipAbility(for tooltip: ContextTextTooltip) -> Bool {
@@ -133,15 +137,23 @@ class FastSettings {
     
     static func toggleSidebarShown(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kSidebarShownType)
+        UserDefaults.standard.synchronize()
     }
     
     static func toggleSidebar(_ enable: Bool) {
         UserDefaults.standard.set(enable, forKey: kSidebarType)
+        UserDefaults.standard.synchronize()
     }
     
     static func toggleInAppSouds(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kInAppSoundsType)
+        UserDefaults.standard.synchronize()
     }
+	
+	static func toggleInstantViewScrollBySpace(_ enable: Bool) {
+		UserDefaults.standard.set(enable, forKey: kInstantViewScrollBySpace)
+        UserDefaults.standard.synchronize()
+	}
     
     static var inAppSounds: Bool {
         return !UserDefaults.standard.bool(forKey: kInAppSoundsType)
@@ -149,11 +161,16 @@ class FastSettings {
     
     static func toggleAutomaticReplaceEmojies(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kAutomaticConvertEmojiesType)
+        UserDefaults.standard.synchronize()
     }
     
     static var isPossibleReplaceEmojies: Bool {
         return !UserDefaults.standard.bool(forKey: kAutomaticConvertEmojiesType)
     }
+	
+	static var instantViewScrollBySpace: Bool {
+		return UserDefaults.standard.bool(forKey: kInstantViewScrollBySpace)
+	}
     
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)

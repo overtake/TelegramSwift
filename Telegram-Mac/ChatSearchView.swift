@@ -70,7 +70,7 @@ class ChatSearchView: SearchView {
     }
     
     override func updateLocalizationAndTheme() {
-        let fromLayout = TextViewLayout(.initialize(string: "\(tr(.chatSearchFrom)) ", color: theme.colors.text, font: .normal(.text)))
+        let fromLayout = TextViewLayout(.initialize(string: "\(tr(L10n.chatSearchFrom)) ", color: theme.colors.text, font: .normal(.text)))
         fromLayout.measure(width: .greatestFiniteMagnitude)
         fromView.update(fromLayout)
         fromView.backgroundColor = theme.colors.grayBackground
@@ -78,7 +78,7 @@ class ChatSearchView: SearchView {
         
         countView.backgroundColor = theme.colors.grayBackground
 
-        let countLayout = TextViewLayout(.initialize(string: tr(.chatSearchCount(countValue.current, countValue.total)), color: theme.search.placeholderColor, font: .normal(.text)))
+        let countLayout = TextViewLayout(.initialize(string: tr(L10n.chatSearchCount(countValue.current, countValue.total)), color: theme.search.placeholderColor, font: .normal(.text)))
         countLayout.measure(width: .greatestFiniteMagnitude)
         countView.update(countLayout)
         super.updateLocalizationAndTheme()

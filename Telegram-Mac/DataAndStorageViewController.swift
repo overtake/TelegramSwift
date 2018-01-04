@@ -359,36 +359,36 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.storageUsage(sectionId, tr(.dataAndStorageStorageUsage)))
- //   entries.append(.networkUsage(sectionId, tr(.dataAndStorageNetworkUsage)))
+    entries.append(.storageUsage(sectionId, tr(L10n.dataAndStorageStorageUsage)))
+ //   entries.append(.networkUsage(sectionId, tr(L10n.dataAndStorageNetworkUsage)))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
 
 
-    entries.append(.automaticPhotoDownloadHeader(sectionId, tr(.dataAndStorageAutomaticPhotoDownloadHeader)))
-  //  entries.append(.automaticPhotoDownloadPrivateChats(sectionId, tr(.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.photo.privateChats))
-    entries.append(.automaticPhotoDownloadGroupsAndChannels(sectionId, tr(.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.photo.groupsAndChannels))
+    entries.append(.automaticPhotoDownloadHeader(sectionId, tr(L10n.dataAndStorageAutomaticPhotoDownloadHeader)))
+  //  entries.append(.automaticPhotoDownloadPrivateChats(sectionId, tr(L10n.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.photo.privateChats))
+    entries.append(.automaticPhotoDownloadGroupsAndChannels(sectionId, tr(L10n.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.photo.groupsAndChannels))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.automaticVoiceDownloadHeader(sectionId, tr(.dataAndStorageAutomaticAudioDownloadHeader)))
-   // entries.append(.automaticVoiceDownloadPrivateChats(sectionId, tr(.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.voice.privateChats))
-    entries.append(.automaticVoiceDownloadGroupsAndChannels(sectionId, tr(.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.voice.groupsAndChannels))
+    entries.append(.automaticVoiceDownloadHeader(sectionId, tr(L10n.dataAndStorageAutomaticAudioDownloadHeader)))
+   // entries.append(.automaticVoiceDownloadPrivateChats(sectionId, tr(L10n.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.voice.privateChats))
+    entries.append(.automaticVoiceDownloadGroupsAndChannels(sectionId, tr(L10n.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.voice.groupsAndChannels))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.automaticInstantVideoDownloadHeader(sectionId, tr(.dataAndStorageAutomaticVideoDownloadHeader)))
-   // entries.append(.automaticInstantVideoDownloadPrivateChats(sectionId, tr(.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.instantVideo.privateChats))
-    entries.append(.automaticInstantVideoDownloadGroupsAndChannels(sectionId, tr(.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.instantVideo.groupsAndChannels))
+    entries.append(.automaticInstantVideoDownloadHeader(sectionId, tr(L10n.dataAndStorageAutomaticVideoDownloadHeader)))
+   // entries.append(.automaticInstantVideoDownloadPrivateChats(sectionId, tr(L10n.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.instantVideo.privateChats))
+    entries.append(.automaticInstantVideoDownloadGroupsAndChannels(sectionId, tr(L10n.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.instantVideo.groupsAndChannels))
     
    // entries.append(.sectionId(sectionId))
    // sectionId += 1
     
-   // entries.append(.voiceCallsHeader(sectionId, tr(.dataAndStorageVoiceCallsHeader)))
-   // entries.append(.useLessVoiceData(sectionId, tr(.dataAndStorageVoiceCallsLessData), stringForUseLessDataSetting(data.voiceCallSettings)))
+   // entries.append(.voiceCallsHeader(sectionId, tr(L10n.dataAndStorageVoiceCallsHeader)))
+   // entries.append(.useLessVoiceData(sectionId, tr(L10n.dataAndStorageVoiceCallsLessData), stringForUseLessDataSetting(data.voiceCallSettings)))
     
   
     

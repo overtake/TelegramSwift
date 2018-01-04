@@ -215,23 +215,23 @@ private enum ProxySettingsEntry : TableItemListNodeEntry {
                 arguments.copyShareLink()
             })
         case .disabled(_, let value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.proxySettingsDisabled), type: .selectable(stateback: { () -> Bool in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.proxySettingsDisabled), type: .selectable(stateback: { () -> Bool in
                 return value
             }), action: { 
                 arguments.changeSettingsType(.disabled)
             })
         case .socks5(_, let value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.proxySettingsSocks5), type: .selectable(stateback: { () -> Bool in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.proxySettingsSocks5), type: .selectable(stateback: { () -> Bool in
                 return value
             }), action: {
                 arguments.changeSettingsType(.socks5)
             })
         case .server(_, let value):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.proxySettingsServer), text: value, limit: 250, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.proxySettingsServer), text: value, limit: 250, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
                 arguments.changeServerHandler(modified)
             })
         case .port(_, let value):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.proxySettingsPort), text: Int(value) == 0 ? "" : value, limit: 6, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.proxySettingsPort), text: Int(value) == 0 ? "" : value, limit: 6, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
                 arguments.changePortHandler(modified)
             }, textFilter: { value in
                 if let _ = Int32(value) {
@@ -241,15 +241,15 @@ private enum ProxySettingsEntry : TableItemListNodeEntry {
                 }
             })
         case .username(_, let value):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.proxySettingsUsername), text: value, limit: 250, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.proxySettingsUsername), text: value, limit: 250, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
                 arguments.changeUsernameHandler(modified)
             })
         case .password(_, let value):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.proxySettingsPassword), text: value, limit: 250, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.proxySettingsPassword), text: value, limit: 250, insets: NSEdgeInsets(left:25,right:25,top:10,bottom:3), textChangeHandler: { modified in
                 arguments.changePasswordHandler(modified)
             })
         case .exportProxy:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.proxySettingsExportLink), nameStyle: blueActionButton, type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.proxySettingsExportLink), nameStyle: blueActionButton, type: .next, action: {
                 arguments.exportProxy()
             })
         }
@@ -302,7 +302,7 @@ private func proxySettingsEntries(_ state: ProxySettingsState) -> [ProxySettings
     var headerIndex:Int32 = 1
     
     entries.append(.exportProxy(sectionId))
-    entries.append(.header(sectionId, headerIndex, tr(.proxySettingsExportDescription)))
+    entries.append(.header(sectionId, headerIndex, tr(L10n.proxySettingsExportDescription)))
     headerIndex += 1
     
     entries.append(.section(sectionId))
@@ -316,7 +316,7 @@ private func proxySettingsEntries(_ state: ProxySettingsState) -> [ProxySettings
         
         entries.append(.section(sectionId))
         sectionId += 1
-        entries.append(.header(sectionId, headerIndex, tr(.proxySettingsConnectionHeader)))
+        entries.append(.header(sectionId, headerIndex, tr(L10n.proxySettingsConnectionHeader)))
         headerIndex += 1
         
         entries.append(.server(sectionId, settings?.host ?? ""))
@@ -324,14 +324,14 @@ private func proxySettingsEntries(_ state: ProxySettingsState) -> [ProxySettings
         
         entries.append(.section(sectionId))
         sectionId += 1
-        entries.append(.header(sectionId, headerIndex, tr(.proxySettingsCredentialsHeader)))
+        entries.append(.header(sectionId, headerIndex, tr(L10n.proxySettingsCredentialsHeader)))
         headerIndex += 1
         
         entries.append(.username(sectionId, settings?.username ?? ""))
         entries.append(.password(sectionId, settings?.password ?? ""))
         
         if !(settings?.host ?? "").isEmpty && (settings?.port ?? 0) > 0 {
-            entries.append(.share(sectionId, headerIndex, tr(.proxySettingsShare)))
+            entries.append(.share(sectionId, headerIndex, tr(L10n.proxySettingsShare)))
         }
     }
     
@@ -395,7 +395,7 @@ class ProxySettingsViewController: EditableViewController<TableView> {
                     link += "&password=\(password)"
                 }
                 copyToClipboard(link)
-                self?.show(toaster: ControllerToaster(text: tr(.shareLinkCopied)))
+                self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied)))
             }
         }, exportProxy: {
             let link = NSPasteboard.general.string(forType: .string)
@@ -420,7 +420,7 @@ class ProxySettingsViewController: EditableViewController<TableView> {
                 })
             }
             if !found {
-                alert(for: mainWindow, info: tr(.proxySettingsProxyNotFound))
+                alert(for: mainWindow, info: tr(L10n.proxySettingsProxyNotFound))
             }
         })
         
@@ -465,7 +465,7 @@ class ProxySettingsViewController: EditableViewController<TableView> {
     }
     
     override var normalString: String {
-        return tr(.proxySettingsSave)
+        return tr(L10n.proxySettingsSave)
     }
     
     

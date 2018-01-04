@@ -215,7 +215,7 @@ final class Appearance : Equatable {
 }
 
 func ==(lhs:Appearance, rhs:Appearance) -> Bool {
-    return lhs.language === rhs.language && lhs.presentation == rhs.presentation
+    return lhs.language === rhs.language && lhs.presentation === rhs.presentation
 }
 
 var theme: TelegramPresentationTheme {

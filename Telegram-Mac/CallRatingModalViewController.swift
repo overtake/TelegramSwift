@@ -60,7 +60,7 @@ private class CallRatingModalView: View {
         addSubview(rating)
         rating.center()
         
-        feedback.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(.callRatingModalPlaceholder), color: .grayText, font: .normal(.text)), update: false)
+        feedback.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.callRatingModalPlaceholder), color: .grayText, font: .normal(.text)), update: false)
         
         feedback.textFont = NSFont.normal(FontSize.text)
         feedback.textColor = .text
@@ -126,12 +126,12 @@ class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegat
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             if let strongSelf = self, let stars = strongSelf.starsCount {
                 _ = rateCall(account: strongSelf.account, report: strongSelf.report, starsCount: stars, comment: strongSelf.comment).start()
             }
             self?.close()
-        }, cancelTitle: tr(.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
     }
     
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {

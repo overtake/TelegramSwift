@@ -134,7 +134,7 @@ class RecentGIFRowView: TableRowView {
     
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu()
-        menu.addItem(ContextMenuItem(tr(.contextRecentGifRemove), handler: { [weak self] in
+        menu.addItem(ContextMenuItem(tr(L10n.contextRecentGifRemove), handler: { [weak self] in
             if let item = self?.item as? RecentGIFRowItem, let point = self?.convert(mainWindow.mouseLocationOutsideOfEventStream, from: nil) {
                 var inset:CGFloat = 0
                 var i:Int = 0

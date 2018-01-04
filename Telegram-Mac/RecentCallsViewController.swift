@@ -118,9 +118,9 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             
             let statusText:String
             if failed {
-                statusText = tr(.callRecentMissed)
+                statusText = tr(L10n.callRecentMissed)
             } else {
-                let text = outgoing ? tr(.callRecentOutgoing) : tr(.callRecentIncoming)
+                let text = outgoing ? tr(L10n.callRecentOutgoing) : tr(L10n.callRecentIncoming)
                 if messages.count == 1 {
                     if let action = messages[0].media.first as? TelegramMediaAction, case .phoneCall(_,_,let duration) = action.action, let value = duration, value > 0 {
                         statusText = text + " (\(String.stringForShortCallDurationSeconds(for: value)))"
@@ -146,7 +146,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 }
             })
         case .empty(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(.recentCallsEmpty), border: [.Right])
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(L10n.recentCallsEmpty), border: [.Right])
         }
     }
 }

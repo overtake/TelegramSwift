@@ -335,7 +335,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         let doneButton = TitleButton()
         doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
-        doneButton.set(text: tr(.navigationDone), for: .Normal)
+        doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
         doneButton.sizeToFit()
         back.addSubview(doneButton)
         doneButton.center()
@@ -350,11 +350,11 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
             
             if !hasPopover(mainWindow), let strongSelf = self {
                 var items: [SPopoverItem] = []
-                items.append(SPopoverItem(tr(.accountSettingsAbout), {
+                items.append(SPopoverItem(tr(L10n.accountSettingsAbout), {
                     showModal(with: AboutModalController(), for: mainWindow)
                 }, theme.icons.settingsAbout))
-                items.append(SPopoverItem(tr(.accountSettingsLogout), { [weak strongSelf] in
-                    confirm(for: mainWindow, header: tr(.accountConfirmLogout), information: tr(.accountConfirmLogoutText), successHandler: {_ in
+                items.append(SPopoverItem(tr(L10n.accountSettingsLogout), { [weak strongSelf] in
+                    confirm(for: mainWindow, header: tr(L10n.accountConfirmLogout), information: tr(L10n.accountConfirmLogoutText), successHandler: {_ in
                         if let strongSelf = strongSelf {
                             let _ = logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager).start()
                         }
@@ -539,7 +539,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         index += 1
         entries.append(.privacy(index: index))
         index += 1
-        entries.append(.language(index: index, current: tr(.accountSettingsCurrentLanguage)))
+        entries.append(.language(index: index, current: tr(L10n.accountSettingsCurrentLanguage)))
         index += 1
 
         entries.append(.stickers(index: index))
@@ -599,34 +599,34 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     
                 })
             case  .updatePhoto:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsSetProfilePhoto), nameStyle: blueActionButton, type: .none, action: {}, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsSetProfilePhoto), nameStyle: blueActionButton, type: .none, action: {}, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case  .general:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsGeneral), icon: theme.icons.settingsGeneral, type: .none, action: {[weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsGeneral), icon: theme.icons.settingsGeneral, type: .none, action: {[weak self] in
                     if !(self?.navigation?.controller is GeneralSettingsViewController) {
                         self?.navigation?.push(GeneralSettingsViewController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .stickers:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsStickers), icon: theme.icons.settingsStickers, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsStickers), icon: theme.icons.settingsStickers, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is InstalledStickerPacksController) {
                         self?.navigation?.push(InstalledStickerPacksController(account))
                     }
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .notifications:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsNotifications), icon: theme.icons.settingsNotifications, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsNotifications), icon: theme.icons.settingsNotifications, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is NotificationSettingsViewController) {
                         self?.navigation?.push(NotificationSettingsViewController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case let .username(_, username):
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: username.isEmpty ? tr(.accountSettingsSetUsername) : username, icon: theme.icons.settingsUsername, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: username.isEmpty ? theme.colors.blueUI : theme.colors.text), type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: username.isEmpty ? tr(L10n.accountSettingsSetUsername) : username, icon: theme.icons.settingsUsername, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: username.isEmpty ? theme.colors.blueUI : theme.colors.text), type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is UsernameSettingsViewController) {
                         self?.navigation?.push(UsernameSettingsViewController(account))
                     }
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .bio(_, let about):
                 
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: about.isEmpty ? tr(.accountSettingsSetBio) : about, icon: theme.icons.settingsBio, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: about.isEmpty ? theme.colors.blueUI : theme.colors.text), type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: about.isEmpty ? tr(L10n.accountSettingsSetBio) : about, icon: theme.icons.settingsBio, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: about.isEmpty ? theme.colors.blueUI : theme.colors.text), type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is BioViewController) {
                         self?.navigation?.push(BioViewController(account))
                     }
@@ -638,7 +638,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     }
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case let .language(_, current):
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsLanguage), icon: theme.icons.settingsLanguage, type: .context(stateback: {
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsLanguage), icon: theme.icons.settingsLanguage, type: .context(stateback: {
                     return current
                 }), action: { [weak self] in
                     if !(self?.navigation?.controller is LanguageViewController) {
@@ -646,43 +646,43 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .appearance:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAppearance), icon: theme.icons.settingsAppearance, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsAppearance), icon: theme.icons.settingsAppearance, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is AppearanceViewController) {
                         self?.navigation?.push(AppearanceViewController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .privacy:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsPrivacyAndSecurity), icon: theme.icons.settingsSecurity, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsPrivacyAndSecurity), icon: theme.icons.settingsSecurity, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is PrivacyAndSecurityViewController) {
                         self?.navigation?.push(PrivacyAndSecurityViewController(account, initialSettings: .single(nil) |> then(requestAccountPrivacySettings(account: account) |> map { Optional($0) })))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .dataAndStorage:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsStorage), icon: theme.icons.settingsStorage, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsStorage), icon: theme.icons.settingsStorage, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is StorageUsageController) {
                         self?.navigation?.push(StorageUsageController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .accounts:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: "tr(.accountSettingsAccounts)", type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: "tr(L10n.accountSettingsAccounts)", type: .none, action: { [weak self] in
                     self?.navigation?.push(AccountsListViewController(account, accountManager: accountManager))
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .about:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAbout), icon: theme.icons.settingsFaq, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsAbout), icon: theme.icons.settingsFaq, type: .none, action: { [weak self] in
                     if let window = self?.window {
                         showModal(with: AboutModalController(), for: window)
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .faq:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsFAQ), icon: theme.icons.settingsFaq, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsFAQ), icon: theme.icons.settingsFaq, type: .none, action: { [weak self] in
                     
                     self?.openFaq()
                     
                 }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .ask:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsAskQuestion), icon: theme.icons.settingsAskQuestion, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsAskQuestion), icon: theme.icons.settingsAskQuestion, type: .none, action: { [weak self] in
                     
-                    confirm(for: mainWindow, information: tr(.accountConfirmAskQuestion), thridTitle: tr(.accountConfirmGoToFaq), successHandler: { [weak self] result in
+                    confirm(for: mainWindow, information: tr(L10n.accountConfirmAskQuestion), thridTitle: tr(L10n.accountConfirmGoToFaq), successHandler: { [weak self] result in
                         switch result {
                         case .basic:
                             _ = showModalProgress(signal: supportPeerId(account: account), for: mainWindow).start(next: { [weak self] peerId in
@@ -697,9 +697,9 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .logout:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(.accountSettingsLogout), nameStyle: redActionButton, type: .none, action: { [weak self] in
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsLogout), nameStyle: redActionButton, type: .none, action: { [weak self] in
                     
-                    confirm(for: mainWindow, header: tr(.accountConfirmLogout), information: tr(.accountConfirmLogoutText), successHandler: { [weak self] _ in
+                    confirm(for: mainWindow, header: tr(L10n.accountConfirmLogout), information: tr(L10n.accountConfirmLogoutText), successHandler: { [weak self] _ in
                         if let strongSelf = self {
                             let _ = logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager).start()
                         }

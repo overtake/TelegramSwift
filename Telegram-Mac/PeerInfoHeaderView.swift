@@ -197,17 +197,17 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.firstName ?? "", animated: false)
                     lastNameTextView.setString(item.lastTextEdited ?? peer.lastName ?? "", animated: false)
                     
-                    firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(.peerInfoFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
-                    lastNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    lastNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     
                     lastNameTextView.isHidden = false
                 } else {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.displayTitle, animated: false)
                     
                     if peer.isChannel {
-                        firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(.peerInfoChannelNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoChannelNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     } else {
-                        firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(.peerInfoGroupNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoGroupNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     }
                     lastNameTextView.isHidden = true
                 }
