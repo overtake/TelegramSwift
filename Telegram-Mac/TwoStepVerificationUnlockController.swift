@@ -25,28 +25,28 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
             switch configuration {
             case let .notSet(pendingEmailPattern):
                 if pendingEmailPattern.isEmpty {
-                    entries.append(.passwordSetup(sectionId: sectionId, tr(.twoStepAuthSetPassword)))
-                    entries.append(.passwordSetupInfo(sectionId: sectionId, tr(.twoStepAuthSetPasswordHelp)))
+                    entries.append(.passwordSetup(sectionId: sectionId, tr(L10n.twoStepAuthSetPassword)))
+                    entries.append(.passwordSetupInfo(sectionId: sectionId, tr(L10n.twoStepAuthSetPasswordHelp)))
                 } else {
-                    entries.append(.pendingEmailInfo(sectionId: sectionId, tr(.twoStepAuthConfirmationText) + "\n\n\(pendingEmailPattern)\n\n[" + tr(.twoStepAuthConfirmationAbort) + "]()"))
+                    entries.append(.pendingEmailInfo(sectionId: sectionId, tr(L10n.twoStepAuthConfirmationText) + "\n\n\(pendingEmailPattern)\n\n[" + tr(L10n.twoStepAuthConfirmationAbort) + "]()"))
                 }
             case let .set(hint, _, _):
-                entries.append(.passwordEntry(sectionId: sectionId, tr(.twoStepAuthEnterPasswordPassword), state.passwordText))
+                entries.append(.passwordEntry(sectionId: sectionId, tr(L10n.twoStepAuthEnterPasswordPassword), state.passwordText))
                 if hint.isEmpty {
-                    entries.append(.passwordEntryInfo(sectionId: sectionId, tr(.twoStepAuthEnterPasswordHelp) + "\n\n[" + tr(.twoStepAuthEnterPasswordForgot) + "](forgot)"))
+                    entries.append(.passwordEntryInfo(sectionId: sectionId, tr(L10n.twoStepAuthEnterPasswordHelp) + "\n\n[" + tr(L10n.twoStepAuthEnterPasswordForgot) + "](forgot)"))
                 } else {
-                    entries.append(.passwordEntryInfo(sectionId: sectionId, tr(.twoStepAuthEnterPasswordHint(hint)) + "\n\n" + tr(.twoStepAuthEnterPasswordHelp) + "\n\n[" + tr(.twoStepAuthEnterPasswordForgot) + "](forgot)"))
+                    entries.append(.passwordEntryInfo(sectionId: sectionId, tr(L10n.twoStepAuthEnterPasswordHint(hint)) + "\n\n" + tr(L10n.twoStepAuthEnterPasswordHelp) + "\n\n[" + tr(L10n.twoStepAuthEnterPasswordForgot) + "](forgot)"))
                 }
             }
         }
     case let .manage(_, emailSet, pendingEmailPattern):
-        entries.append(.changePassword(sectionId: sectionId, tr(.twoStepAuthChangePassword)))
-        entries.append(.turnPasswordOff(sectionId: sectionId, tr(.twoStepAuthRemovePassword)))
-        entries.append(.setupRecoveryEmail(sectionId: sectionId, emailSet ? tr(.twoStepAuthChangeEmail) : tr(.twoStepAuthSetupEmail)))
+        entries.append(.changePassword(sectionId: sectionId, tr(L10n.twoStepAuthChangePassword)))
+        entries.append(.turnPasswordOff(sectionId: sectionId, tr(L10n.twoStepAuthRemovePassword)))
+        entries.append(.setupRecoveryEmail(sectionId: sectionId, emailSet ? tr(L10n.twoStepAuthChangeEmail) : tr(L10n.twoStepAuthSetupEmail)))
         if pendingEmailPattern.isEmpty {
-            entries.append(.passwordInfo(sectionId: sectionId, tr(.twoStepAuthGenericHelp)))
+            entries.append(.passwordInfo(sectionId: sectionId, tr(L10n.twoStepAuthGenericHelp)))
         } else {
-            entries.append(.passwordInfo(sectionId: sectionId, tr(.twoStepAuthPendingEmailHelp(pendingEmailPattern))))
+            entries.append(.passwordInfo(sectionId: sectionId, tr(L10n.twoStepAuthPendingEmailHelp(pendingEmailPattern))))
         }
     }
     
@@ -140,10 +140,10 @@ class TwoStepVerificationUnlockController: TableViewController {
                                     updateState {
                                         $0.withUpdatedChecking(false)
                                     }
-                                    alert(for: mainWindow, info: tr(.twoStepAuthAnError))
+                                    alert(for: mainWindow, info: tr(L10n.twoStepAuthAnError))
                                 }))
                             } else {
-                                alert(for: mainWindow, info: tr(.twoStepAuthErrorHaventEmail))
+                                alert(for: mainWindow, info: tr(L10n.twoStepAuthErrorHaventEmail))
                             }
                         case .notSet:
                             break
@@ -191,7 +191,7 @@ class TwoStepVerificationUnlockController: TableViewController {
             }))
         }, openDisablePassword: {
             
-            confirm(for: mainWindow, information: tr(.twoStepAuthConfirmDisablePassword), successHandler: { _ in
+            confirm(for: mainWindow, information: tr(L10n.twoStepAuthConfirmDisablePassword), successHandler: { _ in
                 var disablePassword = false
                 updateState { state in
                     if state.checking {
@@ -279,7 +279,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                 
                 let entries = twoStepVerificationUnlockSettingsControllerEntries(state: state, data: data).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 
-                var title: String = tr(.twoStepAuthPasswordTitle)
+                var title: String = tr(L10n.twoStepAuthPasswordTitle)
                 switch data {
                 case let .access(configuration):
                     if let configuration = configuration {
@@ -288,9 +288,9 @@ class TwoStepVerificationUnlockController: TableViewController {
                         } else {
                             switch configuration {
                             case .notSet:
-                                title = tr(.telegramTwoStepVerificationUnlockController)
+                                title = tr(L10n.telegramTwoStepVerificationUnlockController)
                             case let .set(_, _, pendingEmailPattern):
-                                title = tr(.twoStepAuthPasswordTitle)
+                                title = tr(L10n.twoStepAuthPasswordTitle)
                                 nextAction = {
                                     
                                     var wasChecking = false
@@ -314,12 +314,12 @@ class TwoStepVerificationUnlockController: TableViewController {
                                             
                                             switch error {
                                             case .limitExceeded:
-                                                alert(for: mainWindow, info: tr(.twoStepAuthErrorLimitExceeded))
+                                                alert(for: mainWindow, info: tr(L10n.twoStepAuthErrorLimitExceeded))
                                             case .invalidPassword:
                                                 shake()
-                                                //text = tr(.twoStepAuthErrorInvalidPassword)
+                                                //text = tr(L10n.twoStepAuthErrorInvalidPassword)
                                             case .generic:
-                                                 alert(for: mainWindow, info: tr(.twoStepAuthErrorGeneric))
+                                                 alert(for: mainWindow, info: tr(L10n.twoStepAuthErrorGeneric))
                                             }
                                            
                                         }))
@@ -329,7 +329,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                         }
                     }
                 case .manage:
-                    title = tr(.telegramTwoStepVerificationUnlockController)
+                    title = tr(L10n.telegramTwoStepVerificationUnlockController)
                     if state.checking {
                        nextAction = nil
                     }
@@ -402,7 +402,7 @@ class TwoStepVerificationUnlockController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.composeNext))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.composeNext))
         
         button.button.set(handler: { [weak self] _ in
             self?.invokeNextAction?()

@@ -103,7 +103,7 @@ func execute(inapp:inAppLink) {
                 NSWorkspace.shared.open(url)
             }
             if needConfirm {
-                confirm(for: mainWindow, information: tr(.inAppLinksConfirmOpenExternal(url.absoluteString)), successHandler: {_ in success()})
+                confirm(for: mainWindow, information: tr(L10n.inAppLinksConfirmOpenExternal(url.absoluteString)), successHandler: {_ in success()})
             } else {
                 success()
             }
@@ -132,7 +132,7 @@ func execute(inapp:inAppLink) {
                 }
                 callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
             } else {
-                alert(for: mainWindow, info: tr(.alertUserDoesntExists))
+                alert(for: mainWindow, info: tr(L10n.alertUserDoesntExists))
             }
             
         })
@@ -143,7 +143,7 @@ func execute(inapp:inAppLink) {
             return selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, Void> in
                 if let peerId = peerIds.first {
                     return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
-                        return confirmSignal(for: mainWindow, information: tr(.confirmAddBotToGroup(peer.displayTitle)))
+                        return confirmSignal(for: mainWindow, information: tr(L10n.confirmAddBotToGroup(peer.displayTitle)))
                     }
                 }
                 return .single(false)
@@ -171,7 +171,7 @@ func execute(inapp:inAppLink) {
                     }
                 }), for: mainWindow)
             case .invalidHash:
-                alert(for: mainWindow, info: tr(.groupUnavailable))
+                alert(for: mainWindow, info: tr(L10n.groupUnavailable))
             }
         })
     case let .callback(param, interaction):

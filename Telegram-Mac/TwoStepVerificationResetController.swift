@@ -22,7 +22,7 @@ private func twoStepVerificationResetControllerEntries(state: TwoStepVerificatio
     sectionId += 1
     
     entries.append(.codeEntry(sectionId : sectionId, state.codeText))
-    entries.append(.codeInfo(sectionId : sectionId, tr(.twoStepAuthRecoveryCodeHelp) + "\n\n[\(tr(.twoStepAuthRecoveryEmailUnavailable(emailPattern)))]()"))
+    entries.append(.codeInfo(sectionId : sectionId, tr(L10n.twoStepAuthRecoveryCodeHelp) + "\n\n[\(tr(L10n.twoStepAuthRecoveryEmailUnavailable(emailPattern)))]()"))
     return entries
 }
 
@@ -48,7 +48,7 @@ class TwoStepVerificationResetController : TableViewController {
     }
     
     override var defaultBarTitle: String {
-        return tr(.twoStepAuthRecoveryTitle)
+        return tr(L10n.twoStepAuthRecoveryTitle)
     }
     
     deinit {
@@ -97,13 +97,13 @@ class TwoStepVerificationResetController : TableViewController {
                     let alertText: String
                     switch error {
                     case .generic:
-                        alertText = tr(.twoStepAuthGenericError)
+                        alertText = tr(L10n.twoStepAuthGenericError)
                     case .invalidCode:
-                        alertText = tr(.twoStepAuthRecoveryCodeInvalid)
+                        alertText = tr(L10n.twoStepAuthRecoveryCodeInvalid)
                     case .codeExpired:
-                        alertText = tr(.twoStepAuthRecoveryCodeExpired)
+                        alertText = tr(L10n.twoStepAuthRecoveryCodeExpired)
                     case .limitExceeded:
-                        alertText = tr(.twoStepAuthFloodError)
+                        alertText = tr(L10n.twoStepAuthFloodError)
                     }
                     alert(for: mainWindow, info: alertText)
 
@@ -123,7 +123,7 @@ class TwoStepVerificationResetController : TableViewController {
         }, next: {
             checkCode()
         }, openEmailInaccessible: {
-            alert(for: mainWindow, info: tr(.twoStepAuthErrorHaventEmail))
+            alert(for: mainWindow, info: tr(L10n.twoStepAuthErrorHaventEmail))
         })
         
         
@@ -159,7 +159,7 @@ class TwoStepVerificationResetController : TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.composeNext))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.composeNext))
         
         button.button.set(handler: { [weak self] _ in
             self?.nextAction?()

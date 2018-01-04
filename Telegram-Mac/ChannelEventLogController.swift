@@ -74,7 +74,7 @@ private class SearchContainerView : View {
         addSubview(searchView)
         addSubview(separator)
         cancelButton.set(font: .medium(.text), for: .Normal)
-        cancelButton.set(text: tr(.chatCancel), for: .Normal)
+        cancelButton.set(text: tr(L10n.chatCancel), for: .Normal)
         cancelButton.sizeToFit()
         
         cancelButton.set(handler: { [weak self] _ in
@@ -135,10 +135,10 @@ class ChannelEventLogView : View {
         emptyTextView.isSelectable = false
         separator.backgroundColor = .border
         whatButton.set(font: .medium(.title), for: .Normal)
-        whatButton.set(text: tr(.channelEventLogWhat), for: .Normal)
+        whatButton.set(text: tr(L10n.channelEventLogWhat), for: .Normal)
         
         whatButton.set(handler: { _ in
-            alert(for: mainWindow, header: tr(.channelEventLogAlertHeader), info: tr(.channelEventLogAlertInfo))
+            alert(for: mainWindow, header: tr(L10n.channelEventLogAlertHeader), info: tr(L10n.channelEventLogAlertInfo))
         }, for: .Click)
         setFrameSize(frameRect.size)
         updateLocalizationAndTheme()
@@ -479,7 +479,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                         _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
                     }
                     tableView.insert(items: transition.result, at: tableView.count)
-                    self?.genericView.updateState(tableView.isEmpty ? (transition.state.isEmpty && previousSearchState.modify({$0}).request.isEmpty ? .empty(peer.isChannel ? tr(.channelEventLogEmptyText) : tr(.groupEventLogEmptyText)) : .empty(tr(.channelEventLogEmptySearch))) : .history)
+                    self?.genericView.updateState(tableView.isEmpty ? (transition.state.isEmpty && previousSearchState.modify({$0}).request.isEmpty ? .empty(peer.isChannel ? tr(L10n.channelEventLogEmptyText) : tr(L10n.groupEventLogEmptyText)) : .empty(tr(L10n.channelEventLogEmptySearch))) : .history)
                 } else {
                     self?.genericView.updateState(.loading)
                     self?.genericView.tableView.removeAll()

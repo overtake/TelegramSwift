@@ -127,11 +127,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         if self.navigationController?.modalAction is FWDNavigationAction {
-            self.setCenterTitle(tr(.chatForwardActionHeader))
+            self.setCenterTitle(tr(L10n.chatForwardActionHeader))
         }
         
         if self.navigationController?.modalAction is ShareInlineResultNavigationAction {
-            self.setCenterTitle(tr(.chatShareInlineResultActionHeader))
+            self.setCenterTitle(tr(L10n.chatShareInlineResultActionHeader))
         }
         
         genericView.tableView.delegate = self
@@ -143,22 +143,22 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.compose.set(handler: { [weak self] control in
             if let strongSelf = self, !control.isSelected {
                 
-                let items = [SPopoverItem(tr(.composePopoverNewGroup), { [weak strongSelf] in
+                let items = [SPopoverItem(tr(L10n.composePopoverNewGroup), { [weak strongSelf] in
                     if let strongSelf = strongSelf, let navigation = strongSelf.navigationController {
                         createGroup(with: strongSelf.account, for: navigation)
                     }
                     
-                }, theme.icons.composeNewGroup),SPopoverItem(tr(.composePopoverNewSecretChat), { [weak strongSelf] in
+                }, theme.icons.composeNewGroup),SPopoverItem(tr(L10n.composePopoverNewSecretChat), { [weak strongSelf] in
                     if let strongSelf = strongSelf, let account = self?.account {
                         let confirmationImpl:([PeerId])->Signal<Bool,Void> = { peerIds in
                             if let first = peerIds.first, peerIds.count == 1 {
                                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                                    return confirmSignal(for: mainWindow, information: tr(.composeConfirmStartSecretChat(peer.displayTitle)))
+                                    return confirmSignal(for: mainWindow, information: tr(L10n.composeConfirmStartSecretChat(peer.displayTitle)))
                                 }
                             }
-                            return confirmSignal(for: mainWindow, information: tr(.peerInfoConfirmAddMembers1Countable(peerIds.count)))
+                            return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMembers1Countable(peerIds.count)))
                         }
-                        let select = selectModalPeers(account: account, title: tr(.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
+                        let select = selectModalPeers(account: account, title: tr(L10n.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
                         
                         let create = select |> map { $0.first! } |> mapToSignal { peerId in
                             return createSecretChat(account: account, peerId: peerId) |> mapError {_ in}
@@ -171,7 +171,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         }))
                         
                     }
-                }, theme.icons.composeNewSecretChat),SPopoverItem(tr(.composePopoverNewChannel), { [weak strongSelf] in
+                }, theme.icons.composeNewSecretChat),SPopoverItem(tr(L10n.composePopoverNewChannel), { [weak strongSelf] in
                     if let strongSelf = strongSelf, let navigation = strongSelf.navigationController {
                         createChannel(with: strongSelf.account, for: navigation)
                     }
@@ -370,12 +370,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return .invoked
         }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
         
-        //#if DEBUG
+        #if DEBUG
         self.window?.set(handler: { () -> KeyHandlerResult in
                 _ = updateBubbledSettings(postbox: self.account.postbox, bubbled: !theme.bubbled).start()
             return .invoked
         }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
-        //#endif
+        #endif
         
     }
     

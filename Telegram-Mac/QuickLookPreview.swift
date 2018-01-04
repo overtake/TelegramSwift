@@ -32,9 +32,9 @@ private class QuickLookPreviewItem : NSObject, QLPreviewItem {
     
     var previewItemTitle: String! {
         if let media = media as? TelegramMediaFile {
-            return media.fileName ?? tr(.quickLookPreview)
+            return media.fileName ?? tr(L10n.quickLookPreview)
         }
-        return tr(.quickLookPreview)
+        return tr(L10n.quickLookPreview)
     }
 }
 
@@ -100,7 +100,13 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
                     ext = fileName?.nsstring.pathExtension
                 }
                 if let ext = ext {
-                    strongSelf.item = QuickLookPreviewItem(with: strongSelf.media, path:path, ext:ext)
+                    
+                    let item = QuickLookPreviewItem(with: strongSelf.media, path:path, ext:ext)
+                    if ext == "pkpass" {
+                        NSWorkspace.shared.openFile(item.path)
+                        return
+                    }
+                    strongSelf.item = item
                     RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: nil, repeats: false), forMode: RunLoopMode.modalPanelRunLoopMode)
                 }
             }

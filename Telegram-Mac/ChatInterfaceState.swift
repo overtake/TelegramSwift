@@ -285,7 +285,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         
         var attributes:[ChatTextInputAttribute] = []
         
-        
+        var offsetRanges:[(NSRange, Int)] = []
         if let regex = markdownRegex {
             
             var rawOffset:Int = 0
@@ -304,6 +304,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                     rawOffset -= match.range(at: 2).length + match.range(at: 4).length
                     newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
                     attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
+                    offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 1).length, text.length), 6))
                 }
                 
                 pre = match.range(at: 8)
@@ -318,17 +319,19 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                     switch entity {
                     case "`":
                         attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 9).length * 2))
                     case "**":
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 9).length * 2))
                         attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
                     case "__":
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 9).length * 2))
                         attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
                     default:
                         break
                     }
-                    
+
                     rawOffset -= match.range(at: 7).length * 2
                 }
-                
                 
                 raw = raw.nsstring.substring(from: match.range.location + match.range(at: 0).length)
                 rawOffset += match.range.location + match.range(at: 0).length
@@ -342,21 +345,26 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         
         
         for attr in self.attributes {
-            let newRange = Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
+            var newRange = NSMakeRange(attr.range.lowerBound - range.location, (attr.range.upperBound - attr.range.lowerBound) - range.location) //Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
+            for offsetRange in offsetRanges {
+                if offsetRange.0.max < newRange.location {
+                    newRange.location -= offsetRange.1
+                }
+            }
             if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
                 switch attr {
                 case .bold:
-                    attributes.append(.bold(newRange))
+                    attributes.append(.bold(newRange.min ..< newRange.max))
                 case .italic:
-                    attributes.append(.italic(newRange))
+                    attributes.append(.italic(newRange.min ..< newRange.max))
                 case .pre:
-                    attributes.append(.pre(newRange))
+                    attributes.append(.pre(newRange.min ..< newRange.max))
                 case .code:
-                    attributes.append(.code(newRange))
+                    attributes.append(.code(newRange.min ..< newRange.max))
                 case let .uid(_, uid):
-                    attributes.append(.uid(newRange, uid))
+                    attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
-                    attributes.append(.url(newRange, url))
+                    attributes.append(.url(newRange.min ..< newRange.max, url))
                 }
             }
         }

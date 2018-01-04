@@ -116,13 +116,13 @@ class ChangePhoneNumberView : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
-        countryLabel.attributedString = .initialize(string: tr(.loginCountryLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
+        countryLabel.attributedString = .initialize(string: tr(L10n.loginCountryLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
         countryLabel.sizeToFit()
         
-        numberLabel.attributedString = .initialize(string: tr(.loginYourPhoneLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
+        numberLabel.attributedString = .initialize(string: tr(L10n.loginYourPhoneLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
         numberLabel.sizeToFit()
         
-        numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(.loginPhoneFieldPlaceholder), color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
+        numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.loginPhoneFieldPlaceholder), color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
         
         needsLayout = true
     }
@@ -131,9 +131,9 @@ class ChangePhoneNumberView : View {
         let text:String
         switch error {
         case .invalidPhoneNumber:
-            text = tr(.phoneNumberInvalid)
+            text = tr(L10n.phoneNumberInvalid)
         case .limitExceeded:
-            text = tr(.loginFloodWait)
+            text = tr(L10n.loginFloodWait)
         case .generic:
             text = "undefined error"
         }
@@ -296,7 +296,7 @@ class ChangePhoneNumberView : View {
     func update(selectedItem:CountryItem?, update:Bool, updateCode:Bool = true) -> Void {
         self.selectedItem = selectedItem
         if update {
-            countrySelector.set(text: selectedItem?.shortName ?? tr(.loginInvalidCountryCode), for: .Normal)
+            countrySelector.set(text: selectedItem?.shortName ?? tr(L10n.loginInvalidCountryCode), for: .Normal)
             countrySelector.sizeToFit()
             if updateCode {
                 codeText.stringValue = selectedItem != nil ? "+\(selectedItem!.code)" : "+"
@@ -339,13 +339,13 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
                 let text: String
                 switch error {
                 case .limitExceeded:
-                    text = tr(.changeNumberSendDataErrorLimitExceeded)
+                    text = tr(L10n.changeNumberSendDataErrorLimitExceeded)
                 case .invalidPhoneNumber:
-                    text = tr(.changeNumberSendDataErrorInvalidPhoneNumber)
+                    text = tr(L10n.changeNumberSendDataErrorInvalidPhoneNumber)
                 case .phoneNumberOccupied:
-                    text = tr(.changeNumberSendDataErrorPhoneNumberOccupied(phoneNumber))
+                    text = tr(L10n.changeNumberSendDataErrorPhoneNumberOccupied(phoneNumber))
                 case .generic:
-                    text = tr(.changeNumberSendDataErrorGeneric)
+                    text = tr(L10n.changeNumberSendDataErrorGeneric)
                 }
 
                 alert(for: mainWindow, info: text)
@@ -385,7 +385,7 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(.composeNext), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: tr(L10n.composeNext), style: navigationButtonStyle, alignment:.Right)
     }
     
 }

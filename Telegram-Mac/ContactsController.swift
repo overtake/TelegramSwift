@@ -185,7 +185,7 @@ private func entriesForView(_ view: ContactPeersView) -> [ContactsEntry] {
         }
         
         entries.append(.addContact)
-        //entries.append(.separator(tr(.contactsContacsSeparator)))
+        //entries.append(.separator(tr(L10n.contactsContacsSeparator)))
         //entries.append(.vcard(accountPeer))
         
         entries.sort()
@@ -223,7 +223,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
             case let .peer(peer, presence):
                 
                 var color:NSColor = theme.colors.grayText
-                var string:String = tr(.peerStatusRecently)
+                var string:String = tr(L10n.peerStatusRecently)
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))

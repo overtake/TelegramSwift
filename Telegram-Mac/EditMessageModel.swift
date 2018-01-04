@@ -25,7 +25,7 @@ class EditMessageModel: ChatAccessoryModel {
 
     
     func make(with message:Message) -> Void {
-        self.headerAttr = .initialize(string: tr(.chatInputAccessoryEditMessage), color: theme.colors.blueUI, font: .medium(.text))
+        self.headerAttr = .initialize(string: tr(L10n.chatInputAccessoryEditMessage), color: theme.colors.blueUI, font: .medium(.text))
         self.messageAttr = .initialize(string: pullText(from:message) as String, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
         nodeReady.set(.single(true))
         self.setNeedDisplay()

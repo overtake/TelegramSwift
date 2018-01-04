@@ -119,7 +119,7 @@ class UsernameSettingsViewController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.usernameSettingsDone))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.usernameSettingsDone))
         
         button.button.set(handler: { [weak self] _ in
             self?.saveUsername()
@@ -159,8 +159,8 @@ class UsernameSettingsViewController: TableViewController {
         let account = self.account
         let availability = self.availability
         var mutableItems:[UsernameEntries] = [.whiteSpace(0, 16),
-                                              .inputEntry(placeholder: tr(.usernameSettingsInputPlaceholder), state:.none(username: nil)),
-                                              .descEntry(tr(.usernameSettingsChangeDescription))]
+                                              .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:.none(username: nil)),
+                                              .descEntry(tr(L10n.usernameSettingsChangeDescription))]
         
         
 
@@ -203,7 +203,7 @@ class UsernameSettingsViewController: TableViewController {
             }
             |> deliverOnMainQueue
             |> mapToSignal { [weak self] (availability,address) -> Signal<Void, Void> in
-                mutableItems[1] = .inputEntry(placeholder: tr(.usernameSettingsInputPlaceholder), state:availability)
+                mutableItems[1] = .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:availability)
                 
                 switch availability {
                 case .none:
@@ -221,7 +221,7 @@ class UsernameSettingsViewController: TableViewController {
                     }
                     if address != username {
                         if username?.length != 0 {
-                            mutableItems.insert(.stateEntry(text:tr(.usernameSettingsAvailable(username ?? "")), color: theme.colors.blueUI), at: 2)
+                            mutableItems.insert(.stateEntry(text:tr(L10n.usernameSettingsAvailable(username ?? "")), color: theme.colors.blueUI), at: 2)
                         }
                     }
                     self?.doneButton?.isEnabled = address != username

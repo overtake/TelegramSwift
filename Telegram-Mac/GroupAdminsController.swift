@@ -173,7 +173,7 @@ private enum GroupAdminsEntry: Comparable, Identifiable {
     func item(_ arguments: GroupAdminsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .allAdmins(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.groupAdminsAllMembersAdmins), type: .switchable(stateback: { () -> Bool in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.groupAdminsAllMembersAdmins), type: .switchable(stateback: { () -> Bool in
                 return value
             }), action: { 
                 arguments.updateAllAreAdmins(!value)
@@ -185,14 +185,14 @@ private enum GroupAdminsEntry: Comparable, Identifiable {
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case let .peerItem(_, _, peer, presence, toggled, enabled):
             
-            var string:String = tr(.peerStatusRecently)
+            var string:String = tr(L10n.peerStatusRecently)
             var color:NSColor = theme.colors.grayText
             
             if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
             } else if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
-                string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(.peerInfoBotStatusHasAccess) : tr(.peerInfoBotStatusHasNoAccess)
+                string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
             }
             
             
@@ -269,9 +269,9 @@ private func groupAdminsControllerEntries(account: Account, view: PeerView, stat
         
         entries.append(.allAdmins(sectionId: sectionId, !effectiveAdminsEnabled))
         if effectiveAdminsEnabled {
-            entries.append(.allAdminsInfo(sectionId: sectionId, tr(.groupAdminsDescAdminInvites)))
+            entries.append(.allAdminsInfo(sectionId: sectionId, tr(L10n.groupAdminsDescAdminInvites)))
         } else {
-            entries.append(.allAdminsInfo(sectionId: sectionId, tr(.groupAdminsDescAllInvites)))
+            entries.append(.allAdminsInfo(sectionId: sectionId, tr(L10n.groupAdminsDescAllInvites)))
         }
         
         entries.append(.section(sectionId: sectionId))

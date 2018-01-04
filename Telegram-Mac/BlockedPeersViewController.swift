@@ -151,7 +151,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 arguments.openPeer(peer.id)
             }, contextMenuItems: {
                 if case .plain = interactionType {
-                    return [ContextMenuItem(tr(.chatInputUnblock), handler: {
+                    return [ContextMenuItem(tr(L10n.chatInputUnblock), handler: {
                         arguments.removePeer(peer.id)
                     })]
                 } else {
@@ -160,7 +160,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 
             })
         case let .empty(progress):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: tr(.blockedPeersEmptyDescrpition))
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: tr(L10n.blockedPeersEmptyDescrpition))
         case let .whiteSpace(height):
             return GeneralRowItem(initialSize, height: height, stableId: stableId)
         }

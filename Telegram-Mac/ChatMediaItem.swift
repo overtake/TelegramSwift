@@ -222,7 +222,7 @@ class ChatMediaItem: ChatRowItem {
     
 
     override var isBubbleFullFilled: Bool {
-        return media.isInteractiveMedia && isBubbled
+        return (media.isInteractiveMedia || isSticker) && isBubbled 
     }
     
     var positionFlags: GroupLayoutPositionFlags? = nil
@@ -321,7 +321,7 @@ class ChatMediaItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayout {
                 let text = captionLayout.attributedString.string
-                items.insert(ContextMenuItem(tr(.textCopy), handler: {
+                items.insert(ContextMenuItem(tr(L10n.textCopy), handler: {
                     copyToClipboard(text)
                 }), at: 1)
                 
@@ -337,13 +337,13 @@ class ChatMediaItem: ChatRowItem {
                             }
                             
                             for i in 0 ..< items.count {
-                                if items[i].title == tr(.messageContextCopyMessageLink) {
+                                if items[i].title == tr(L10n.messageContextCopyMessageLink) {
                                     items.remove(at: i)
                                     break
                                 }
                             }
                             
-                            items.insert(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
                                 copyToClipboard(text)
                             }), at: 1)
                         }

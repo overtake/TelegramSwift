@@ -174,8 +174,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .collecting(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, alignment: .center, additionLoading: true)
         case .clearAll(_, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.storageClearAll), type: .next, action: {
-                confirm(for: mainWindow, information: tr(.storageClearAllConfirmDescription), successHandler: { _ in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.storageClearAll), type: .next, action: {
+                confirm(for: mainWindow, information: tr(L10n.storageClearAllConfirmDescription), successHandler: { _ in
                     arguments.clearAll()
                 })
             }, enabled: enabled)
@@ -195,11 +195,11 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
 
 private func stringForKeepMediaTimeout(_ timeout: Int32) -> String {
     if timeout <= 7 * 24 * 60 * 60 {
-        return tr(.timerWeeksCountable(1))
+        return tr(L10n.timerWeeksCountable(1))
     } else if timeout <= 1 * 31 * 24 * 60 * 60 {
-        return tr(.timerMonthsCountable(1))
+        return tr(L10n.timerMonthsCountable(1))
     } else {
-        return tr(.timerForever)
+        return tr(L10n.timerForever)
     }
 }
 
@@ -211,8 +211,8 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.keepMedia(sectionId, tr(.storageUsageKeepMedia), stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout)))
-    entries.append(.keepMediaInfo(sectionId, tr(.storageUsageKeepMediaDescription)))
+    entries.append(.keepMedia(sectionId, tr(L10n.storageUsageKeepMedia), stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout)))
+    entries.append(.keepMediaInfo(sectionId, tr(L10n.storageUsageKeepMediaDescription)))
     
     var addedHeader = false
     
@@ -247,7 +247,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
                 if let peer = stats.peers[peerId], !peer.isSecretChat {
                     if !addedHeader {
                         addedHeader = true
-                        entries.append(.peersHeader(sectionId, tr(.storageUsageChatsHeader)))
+                        entries.append(.peersHeader(sectionId, tr(L10n.storageUsageChatsHeader)))
                     }
                     entries.append(.peer(sectionId, index, peer, dataSizeString(Int(size))))
                     index += 1
@@ -255,7 +255,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             }
         }
     } else {
-        entries.append(.collecting(sectionId, tr(.storageUsageCalculating)))
+        entries.append(.collecting(sectionId, tr(L10n.storageUsageCalculating)))
     }
     
     return entries
@@ -311,11 +311,11 @@ class StorageUsageController: TableViewController {
                 
                 if let item = strongSelf.genericView.item(stableId: StorageUsageEntry.keepMedia(0, "", "").stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
                     
-                    showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(tr(.timerWeeksCountable(1)), {
+                    showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(tr(L10n.timerWeeksCountable(1)), {
                         timeoutAction(7 * 24 * 60 * 60)
-                    }), SPopoverItem(tr(.timerMonthsCountable(1)), {
+                    }), SPopoverItem(tr(L10n.timerMonthsCountable(1)), {
                         timeoutAction(1 * 31 * 24 * 60 * 60)
-                    }), SPopoverItem(tr(.timerForever), {
+                    }), SPopoverItem(tr(L10n.timerForever), {
                         timeoutAction(Int32.max)
                     })]), edge: .minX, inset: NSMakePoint(0,-30))
                 }

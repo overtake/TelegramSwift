@@ -80,6 +80,14 @@
          contextName = "TextView.update(TextViewLayout) -&gt; ():TextView.swift">
       </ContextState>
       <ContextState
+         contextName = "VideoMessageCorner.draw(_:in:):ChatVideoMessageContentView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, table : TableView, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewTransitionReason) -&gt; Signal&lt;ChatTableTransaction, ()&gt;).(closure #1):ChatController.swift">
          <PersistentStrings>
             <PersistentString
@@ -423,10 +431,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -563,6 +571,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.rightSize.getter:ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #2 in transformOutgoingMessageMedia(postbox:network:media:opportunistic:):TransformOutgoingMessageMedia.swift">
       </ContextState>
       <ContextState
          contextName = "SuggestionLocalizationViewController.viewDidLoad() -&gt; ():SuggestionLocalizationViewController.swift">
@@ -887,7 +898,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -899,7 +910,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1386,6 +1397,9 @@
                value = "window.contentView?.subviews">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "chatMessageFileDatas(account:file:pathExtension:progressive:justThumbail:):MediaUtils.swift">
       </ContextState>
       <ContextState
          contextName = "__48-[TGOpusAudioRecorder prepareRecord:completion:]_block_invoke:TGOpusAudioRecorder.m">

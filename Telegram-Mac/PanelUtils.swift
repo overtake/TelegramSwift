@@ -94,7 +94,7 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = tr(.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = tr(L10n.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
     
     let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
     alert.show(completionHandler: { response in
@@ -113,7 +113,7 @@ func confirmSignal(for window:Window, header: String? = nil, information:String?
     let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
-        let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(.alertCancel), swapColors: swapColors)
+        let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(L10n.alertCancel), swapColors: swapColors)
         alert.show(completionHandler: { response in
             value.set(response == .OK)
         })

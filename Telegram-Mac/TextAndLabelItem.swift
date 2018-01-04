@@ -85,7 +85,7 @@ class TextAndLabelItem: GeneralRowItem {
     }
     
 //    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
-//        return .single([ContextMenuItem(tr(.textCopy), handler: { [weak self] in
+//        return .single([ContextMenuItem(tr(L10n.textCopy), handler: { [weak self] in
 //            if let strongSelf = self {
 //            copyToClipboard(strongSelf.textLayout.attributedString.string)
 //            }

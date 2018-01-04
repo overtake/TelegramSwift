@@ -21,16 +21,16 @@ class PeerMediaEmptyRowItem: TableRowItem {
         let attr:NSAttributedString
         if tags.contains(.file) {
             image = theme.icons.mediaEmptyFiles
-            attr = .initialize(string: tr(.peerMediaSharedFilesEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tr(L10n.peerMediaSharedFilesEmptyList), color: theme.colors.grayText, font: .normal(.header))
         } else if tags.contains(.music) {
             image = theme.icons.mediaEmptyMusic
-            attr = .initialize(string: tr(.peerMediaSharedMusicEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tr(L10n.peerMediaSharedMusicEmptyList), color: theme.colors.grayText, font: .normal(.header))
         } else if tags.contains(.webPage) {
             image = theme.icons.mediaEmptyLinks
-            attr = .initialize(string: tr(.peerMediaSharedLinksEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tr(L10n.peerMediaSharedLinksEmptyList), color: theme.colors.grayText, font: .normal(.header))
         } else {
             image = theme.icons.mediaEmptyShared
-            attr = .initialize(string: tr(.peerMediaSharedMediaEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tr(L10n.peerMediaSharedMediaEmptyList), color: theme.colors.grayText, font: .normal(.header))
         }
         textLayout = TextViewLayout(attr, alignment: .center)
         super.init(initialSize)

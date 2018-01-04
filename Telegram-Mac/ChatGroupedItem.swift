@@ -206,7 +206,7 @@ class ChatGroupedItem: ChatRowItem {
         
         var items: [ContextMenuItem] = []
         
-        items.append(ContextMenuItem(tr(.messageContextSelect), handler: { [weak self] in
+        items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: { [weak self] in
             guard let `self` = self else {return}
             let messageIds = self.layout.messages.map{$0.id}
             self.chatInteraction.update({ current in
@@ -227,7 +227,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         
         if canDelete {
-            items.append(ContextMenuItem(tr(.messageContextDelete), handler: { [weak self] in
+            items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
                 guard let `self` = self else {return}
                 self.chatInteraction.deleteMessages(self.layout.messages.map{$0.id})
             }))
@@ -235,7 +235,7 @@ class ChatGroupedItem: ChatRowItem {
         if let message = layout.messages.last {
             if let peer = message.peers[message.id.peerId] as? TelegramChannel, let address = peer.addressName {
                 
-                items.append(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
                     copyToClipboard("t.me/\(address)/\(message.id.id)")
                 }))
             }
@@ -253,7 +253,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         if let editMessage = editMessage {
             if canEditMessage(editMessage, account:account) {
-                items.append(ContextMenuItem(tr(.messageContextEdit), handler: { [weak self] in
+                items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [weak self] in
                     self?.chatInteraction.beginEditingMessage(editMessage)
                 }))
             }
@@ -263,7 +263,7 @@ class ChatGroupedItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayout {
                 let text = captionLayout.attributedString.string
-                items.insert(ContextMenuItem(tr(.textCopy), handler: {
+                items.insert(ContextMenuItem(tr(L10n.textCopy), handler: {
                     copyToClipboard(text)
                 }), at: 1)
                 
@@ -279,13 +279,13 @@ class ChatGroupedItem: ChatRowItem {
                             }
                             
                             for i in 0 ..< items.count {
-                                if items[i].title == tr(.messageContextCopyMessageLink) {
+                                if items[i].title == tr(L10n.messageContextCopyMessageLink) {
                                     items.remove(at: i)
                                     break
                                 }
                             }
                             
-                            items.insert(ContextMenuItem(tr(.messageContextCopyMessageLink), handler: {
+                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
                                 copyToClipboard(text)
                             }), at: 1)
                         }

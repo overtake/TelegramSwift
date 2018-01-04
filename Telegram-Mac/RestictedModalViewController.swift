@@ -193,7 +193,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case .info(_, let peer, let presence):
-            var string:String = peer.isBot ? tr(.presenceBot) : tr(.peerStatusRecently)
+            var string:String = peer.isBot ? tr(L10n.presenceBot) : tr(L10n.peerStatusRecently)
             var color:NSColor = theme.colors.grayText
             
             if let presence = presence {
@@ -211,9 +211,9 @@ private enum RestrictedEntry: TableItemListNodeEntry {
         case .description(_, _, let name):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: name)
         case .blockFor(_, _, let until):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.channelBlockUserBlockFor), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelBlockUserBlockFor), type: .context(stateback: { () -> String in
                 if until == 0 || until == .max {
-                    return tr(.channelBanForever)
+                    return tr(L10n.channelBanForever)
                 } else {
                     let formatter = DateFormatter()
                     formatter.dateStyle = .medium
@@ -312,7 +312,7 @@ private func RestrictedEntries(state: RestrictedControllerState, participant: Re
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, index, tr(.channelUserRestriction)))
+    entries.append(.description(sectionId, index, tr(L10n.channelUserRestriction)))
     index += 1
     
     if let peer = peerViewMainPeer(view) as? TelegramChannel {
@@ -320,7 +320,7 @@ private func RestrictedEntries(state: RestrictedControllerState, participant: Re
         case .member(_, _, _, let banInfo):
             
             if let banInfo = banInfo {
-                let restrictions:[(TelegramChannelBannedRightsFlags,String)] = [(.banReadMessages, tr(.channelBlockUserCanReadMessages)), (.banSendMessages, tr(.channelBlockUserCanSendMessages)), (.banSendMedia, tr(.channelBlockUserCanSendMedia)), ([.banSendStickers], tr(.channelBlockUserCanSendStickers)), (.banEmbedLinks, tr(.channelBlockUserCanEmbedLinks))]
+                let restrictions:[(TelegramChannelBannedRightsFlags,String)] = [(.banReadMessages, tr(L10n.channelBlockUserCanReadMessages)), (.banSendMessages, tr(L10n.channelBlockUserCanSendMessages)), (.banSendMedia, tr(L10n.channelBlockUserCanSendMedia)), ([.banSendStickers], tr(L10n.channelBlockUserCanSendStickers)), (.banEmbedLinks, tr(L10n.channelBlockUserCanEmbedLinks))]
                 let currentRightsFlags: TelegramChannelBannedRightsFlags
                 if let updatedFlags = state.updatedFlags {
                     currentRightsFlags = updatedFlags
@@ -441,22 +441,22 @@ class RestrictedModalViewController: TableModalViewController {
                 if let index = strongSelf.genericView.index(hash: RestrictedEntryStableId.blockFor) {
                     if let view = (strongSelf.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
                         var items:[SPopoverItem] = []
-                        items.append(SPopoverItem(tr(.timerDaysCountable(1)), {
+                        items.append(SPopoverItem(tr(L10n.timerDaysCountable(1)), {
                             updateState {
                                 $0.withUpdatedUntil(Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970 + 24 * 60 * 60))
                             }
                         }))
-                        items.append(SPopoverItem(tr(.timerWeeksCountable(1)), {
+                        items.append(SPopoverItem(tr(L10n.timerWeeksCountable(1)), {
                             updateState {
                                 $0.withUpdatedUntil(Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970 + 7 * 24 * 60 * 60))
                             }
                         }))
-                        items.append(SPopoverItem(tr(.timerMonthsCountable(1)), {
+                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(1)), {
                             updateState {
                                 $0.withUpdatedUntil(Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970 + 30 * 24 * 60 * 60))
                             }
                         }))
-                        items.append(SPopoverItem(tr(.channelBanForever), {
+                        items.append(SPopoverItem(tr(L10n.channelBanForever), {
                             updateState {
                                 $0.withUpdatedUntil(0)
                             }
@@ -491,7 +491,7 @@ class RestrictedModalViewController: TableModalViewController {
             })
             self?.modal?.interactions?.updateCancel({ button in
                 if unban {
-                    button.set(text: tr(.channelBlacklistUnban), for: .Normal)
+                    button.set(text: tr(L10n.channelBlacklistUnban), for: .Normal)
                     button.set(color: theme.colors.redUI, for: .Normal)
                 } else {
                     button.set(text: "", for: .Normal)
@@ -507,7 +507,7 @@ class RestrictedModalViewController: TableModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
                 switch strongSelf.participant.participant {
@@ -522,7 +522,7 @@ class RestrictedModalViewController: TableModalViewController {
                 }
                 
             }
-        }, cancelTitle: tr(.modalCancel), cancel: { [weak self] in
+        }, cancelTitle: tr(L10n.modalCancel), cancel: { [weak self] in
             self?.close()
             self?.updated(TelegramChannelBannedRights(flags: [], untilDate: 0))
         }, drawBorder: true, height: 40)

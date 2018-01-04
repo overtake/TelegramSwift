@@ -38,7 +38,7 @@ class RecentSessionRowItem: TableRowItem {
         
         descLayout = TextViewLayout(attr, lineSpacing: 2)
     
-        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(.peerStatusOnline) : DateUtils.string(forMessageListDate: session.creationDate), color: session.isCurrent ? theme.colors.blueText : theme.colors.grayText, font: .normal(.text)))
+        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(L10n.peerStatusOnline) : DateUtils.string(forMessageListDate: session.creationDate), color: session.isCurrent ? theme.colors.blueText : theme.colors.grayText, font: .normal(.text)))
         
         super.init(initialSize)
         
@@ -78,7 +78,7 @@ class RecentSessionRowView : TableRowView {
         
         reset.set(handler: { [weak self] _ in
             if let item = self?.item as? RecentSessionRowItem {
-                confirm(for: mainWindow, information: tr(.recentSessionsConfirmRevoke), successHandler: { _ in
+                confirm(for: mainWindow, information: tr(L10n.recentSessionsConfirmRevoke), successHandler: { _ in
                     item.revoke()
                 })
             }
@@ -103,7 +103,7 @@ class RecentSessionRowView : TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
         
-        reset.set(text: tr(.recentSessionsRevoke), for: .Normal)
+        reset.set(text: tr(L10n.recentSessionsRevoke), for: .Normal)
         reset.set(color: theme.colors.blueUI, for: .Normal)
         reset.set(background: theme.colors.background, for: .Normal)
         reset.sizeToFit()

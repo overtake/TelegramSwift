@@ -83,18 +83,18 @@ final class GridMessageItemNode: GridItemNode {
 
 
             if canForwardMessage(message, account: account) {
-                menu.addItem(ContextMenuItem(tr(.messageContextForward), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
                     self?.chatInteraction?.forwardMessages([message.id])
                 }))
             }
             
             if canDeleteMessage(message, account: account) {
-                menu.addItem(ContextMenuItem(tr(.messageContextDelete), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
                    self?.chatInteraction?.deleteMessages([message.id])
                 }))
             }
             
-            menu.addItem(ContextMenuItem(tr(.messageContextGoto), handler: { [weak self] in
+            menu.addItem(ContextMenuItem(tr(L10n.messageContextGoto), handler: { [weak self] in
                 self?.chatInteraction?.focusMessageId(nil, message.id, .center(id: 0, animated: false, focus: true, inset: 0))
             }))
             return menu

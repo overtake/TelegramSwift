@@ -189,7 +189,7 @@ public class TitleButton: ImageButton {
     
     override func prepare() {
         super.prepare()
-        text.truncationMode = "middle";
+        text.truncationMode = "end";
         text.alignmentMode = "center";
         self.layer?.addSublayer(text)
         

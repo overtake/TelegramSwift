@@ -184,11 +184,11 @@ class ReplyModel: ChatAccessoryModel {
             if text.isEmpty {
                 text = serviceMessageText(message, account: account)
             }
-            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(.chatHeaderPinnedMessage), color: presentation.title, font: .medium(.text))
+            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(L10n.chatHeaderPinnedMessage), color: presentation.title, font: .medium(.text))
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
         } else {
             self.headerAttr = nil
-            self.messageAttr = .initialize(string: isLoading ? tr(.messagesReplyLoadingLoading) : tr(.messagesDeletedMessage), color: presentation.disabledText, font: .normal(.text))
+            self.messageAttr = .initialize(string: isLoading ? tr(L10n.messagesReplyLoadingLoading) : tr(L10n.messagesDeletedMessage), color: presentation.disabledText, font: .normal(.text))
             display = true
         }
         

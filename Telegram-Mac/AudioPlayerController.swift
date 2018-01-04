@@ -152,9 +152,9 @@ class APSongItem : APItem {
                     performerName = ""
                 }
                 if file.isVoice {
-                    songName = tr(.audioControllerVoiceMessage)
+                    songName = tr(L10n.audioControllerVoiceMessage)
                 } else {
-                    songName = tr(.audioControllerVideoMessage)
+                    songName = tr(L10n.audioControllerVideoMessage)
                 }
             }  else {
                 var t:String?
@@ -170,12 +170,12 @@ class APSongItem : APItem {
                 if let t = t {
                     songName = t
                 } else {
-                    songName = tr(.audioUntitledSong) 
+                    songName = tr(L10n.audioUntitledSong) 
                 }
                 if let p = p {
                     performerName = p
                 } else {
-                    performerName = tr(.audioUnknownArtist)
+                    performerName = tr(L10n.audioUnknownArtist)
                 }
             }
             

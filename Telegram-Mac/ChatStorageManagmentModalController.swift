@@ -199,13 +199,13 @@ class ChatStorageManagmentModalController: ModalViewController {
     private func stringForCategory(_ category: PeerCacheUsageCategory) -> String {
         switch category {
         case .image:
-            return tr(.storageClearPhotos)
+            return tr(L10n.storageClearPhotos)
         case .video:
-            return tr(.storageClearVideos)
+            return tr(L10n.storageClearVideos)
         case .audio:
-            return tr(.storageClearAudio)
+            return tr(L10n.storageClearAudio)
         case .file:
-            return tr(.storageClearDocuments)
+            return tr(L10n.storageClearDocuments)
         }
     }
     
@@ -222,13 +222,13 @@ class ChatStorageManagmentModalController: ModalViewController {
         }
 
         
-        return ModalInteractions(acceptTitle: tr(.storageClear(dataSizeString(Int(totalSize)))), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.storageClear(dataSizeString(Int(totalSize)))), accept: { [weak self] in
             if let strongSelf = self {
                 self?.clear(strongSelf.sizeIndex)
             }
             
             self?.close()
-        }, cancelTitle: tr(.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
     }
     
     private var genericView:TableView {

@@ -302,12 +302,48 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                     instantController = nil
                 }
             }
-            
+			
             return .invoked
         }
         
+        _window.set(handler: { [weak page] in
+            page?.scrollPage(direction: .up)
+            return .invoked
+        }, with: self, for: .UpArrow, priority: .medium)
+        
+        _window.set(handler: { [weak page] in
+            page?.scrollPage(direction: .down)
+            return .invoked
+        }, with: self, for: .DownArrow, priority: .medium)
+
+        
         _window.set(handler: closeKeyboardHandler, with: self, for: .Escape)
-        _window.set(handler: closeKeyboardHandler, with: self, for: .Space)
+		if FastSettings.instantViewScrollBySpace {
+			let spaceScrollDownKeyboardHandler:()->KeyHandlerResult = { [weak self, weak page] in
+				if let window = self?._window {
+					if !window.styleMask.contains(.fullScreen) {
+						page?.scrollPage(direction: .down)
+					}
+				}
+				
+				return .invoked
+			}
+			_window.set(handler: spaceScrollDownKeyboardHandler, with: self, for: .Space, priority: .low)
+			
+			let spaceScrollUpKeyboardHandler:()->KeyHandlerResult = { [weak self, weak page] in
+				if let window = self?._window {
+					if !window.styleMask.contains(.fullScreen) {
+						page?.scrollPage(direction: .up)
+					}
+				}
+				
+				return .invoked
+			}
+			
+			_window.set(handler: spaceScrollUpKeyboardHandler, with: self, for: .Space, priority: .medium, modifierFlags: [.shift])
+		} else {
+			_window.set(handler: closeKeyboardHandler, with: self, for: .Space)
+		}
 
         
         if let titleView = titleView {

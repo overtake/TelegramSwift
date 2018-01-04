@@ -55,13 +55,13 @@ class AccountInfoItem: TableRowItem {
         
         switch connectionStatus {
         case .connecting(let toProxy):
-            statusAttributed = .initialize(string: toProxy ? tr(.connectingStatusConnectingToProxy) : tr(.connectingStatusConnecting), color: theme.colors.grayText, font: .normal(.text))
+            statusAttributed = .initialize(string: toProxy ? tr(L10n.connectingStatusConnectingToProxy) : tr(L10n.connectingStatusConnecting), color: theme.colors.grayText, font: .normal(.text))
         case .online:
-            statusAttributed = .initialize(string: tr(.connectingStatusOnline), color: theme.colors.blueUI, font: .normal(.text))
+            statusAttributed = .initialize(string: tr(L10n.connectingStatusOnline), color: theme.colors.blueUI, font: .normal(.text))
         case .updating:
-            statusAttributed = .initialize(string: tr(.connectingStatusUpdating), color: theme.colors.grayText, font: .normal(.text))
+            statusAttributed = .initialize(string: tr(L10n.connectingStatusUpdating), color: theme.colors.grayText, font: .normal(.text))
         case .waitingForNetwork:
-            statusAttributed = .initialize(string: tr(.connectingStatusWaitingNetwork), color: theme.colors.grayText, font: .normal(.text))
+            statusAttributed = .initialize(string: tr(L10n.connectingStatusWaitingNetwork), color: theme.colors.grayText, font: .normal(.text))
         }
         
         statusLayout = TextNode.layoutText(maybeNode: nil,  statusAttributed, nil, 1, .end, NSMakeSize(initialSize.width - 140, 20), nil, false, .left)

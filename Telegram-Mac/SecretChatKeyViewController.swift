@@ -63,7 +63,7 @@ class SecretChatKeyView : View {
         textView.update(layout)
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.encryptionKeyDescription(participant.compactDisplayTitle, participant.compactDisplayTitle)), color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: tr(L10n.encryptionKeyDescription(participant.compactDisplayTitle, participant.compactDisplayTitle)), color: theme.colors.text, font: .normal(.text))
     
         attr.detectBoldColorInString(with: .medium(.text))
         

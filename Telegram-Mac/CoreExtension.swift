@@ -88,7 +88,7 @@ extension Peer {
     public var displayTitle: String {
         switch self {
         case let user as TelegramUser:
-            return user.name.isEmpty ? tr(.peerDeletedUser) : user.name
+            return user.name.isEmpty ? tr(L10n.peerDeletedUser) : user.name
         case let group as TelegramGroup:
             return group.title
         case let channel as TelegramChannel:
@@ -106,7 +106,7 @@ extension Peer {
             } else if let lastName = user.lastName {
                 return lastName
             } else {
-                return tr(.peerDeletedUser)
+                return tr(L10n.peerDeletedUser)
             }
         case let group as TelegramGroup:
             return group.title
@@ -127,7 +127,7 @@ extension Peer {
             } else if let lastName = user.lastName, !lastName.isEmpty {
                 return [lastName.substring(to: lastName.index(after: lastName.startIndex)).uppercased()]
             } else {
-                let name = tr(.peerDeletedUser)
+                let name = tr(L10n.peerDeletedUser)
                 if !name.isEmpty {
                     return [name.substring(to: name.index(after: name.startIndex)).uppercased()]
                 }
@@ -216,23 +216,23 @@ extension TelegramChannelAdminRightsFlags {
         switch self {
             //EventLog.Service.Restriction.AddNewAdmins
         case TelegramChannelAdminRightsFlags.canAddAdmins:
-            return tr(.eventLogServicePromoteAddNewAdmins)
+            return tr(L10n.eventLogServicePromoteAddNewAdmins)
         case TelegramChannelAdminRightsFlags.canBanUsers:
-            return tr(.eventLogServicePromoteBanUsers)
+            return tr(L10n.eventLogServicePromoteBanUsers)
         case TelegramChannelAdminRightsFlags.canChangeInfo:
-            return tr(.eventLogServicePromoteChangeInfo)
+            return tr(L10n.eventLogServicePromoteChangeInfo)
         case TelegramChannelAdminRightsFlags.canInviteUsers:
-            return tr(.eventLogServicePromoteAddUsers)
+            return tr(L10n.eventLogServicePromoteAddUsers)
         case TelegramChannelAdminRightsFlags.canChangeInviteLink:
-            return tr(.eventLogServicePromoteInviteViaLink)
+            return tr(L10n.eventLogServicePromoteInviteViaLink)
         case TelegramChannelAdminRightsFlags.canDeleteMessages:
-            return tr(.eventLogServicePromoteDeleteMessages)
+            return tr(L10n.eventLogServicePromoteDeleteMessages)
         case TelegramChannelAdminRightsFlags.canEditMessages:
-            return tr(.eventLogServicePromoteEditMessages)
+            return tr(L10n.eventLogServicePromoteEditMessages)
         case TelegramChannelAdminRightsFlags.canPinMessages:
-            return tr(.eventLogServicePromotePinMessages)
+            return tr(L10n.eventLogServicePromotePinMessages)
         case TelegramChannelAdminRightsFlags.canPostMessages:
-            return tr(.eventLogServicePromotePostMessages)
+            return tr(L10n.eventLogServicePromotePostMessages)
         default:
             return "Undefined Promotion"
         }
@@ -243,21 +243,21 @@ extension TelegramChannelBannedRightsFlags {
     var localizedString:String {
         switch self {
         case TelegramChannelBannedRightsFlags.banSendGifs:
-            return tr(.eventLogServiceDemoteSendStickers)
+            return tr(L10n.eventLogServiceDemoteSendStickers)
         case TelegramChannelBannedRightsFlags.banEmbedLinks:
-            return tr(.eventLogServiceDemoteEmbedLinks)
+            return tr(L10n.eventLogServiceDemoteEmbedLinks)
         case TelegramChannelBannedRightsFlags.banReadMessages:
             return ""
         case TelegramChannelBannedRightsFlags.banSendGames:
-            return tr(.eventLogServiceDemoteEmbedLinks)
+            return tr(L10n.eventLogServiceDemoteEmbedLinks)
         case TelegramChannelBannedRightsFlags.banSendInline:
-            return tr(.eventLogServiceDemoteSendInline)
+            return tr(L10n.eventLogServiceDemoteSendInline)
         case TelegramChannelBannedRightsFlags.banSendMedia:
-            return tr(.eventLogServiceDemoteSendMedia)
+            return tr(L10n.eventLogServiceDemoteSendMedia)
         case TelegramChannelBannedRightsFlags.banSendMessages:
-            return tr(.eventLogServiceDemoteSendMessages)
+            return tr(L10n.eventLogServiceDemoteSendMessages)
         case TelegramChannelBannedRightsFlags.banSendStickers:
-            return tr(.eventLogServiceDemoteSendStickers)
+            return tr(L10n.eventLogServiceDemoteSendStickers)
         default:
             return ""
         }
@@ -298,7 +298,7 @@ extension TelegramChannelBannedRights {
 
 func alertForMediaRestriction(_ peer:Peer) {
     if let peer = peer as? TelegramChannel, let bannedRights = peer.bannedRights {
-        alert(for: mainWindow, info: bannedRights.untilDate != .max ? tr(.channelPersmissionDeniedSendMediaUntil(bannedRights.formattedUntilDate)) : tr(.channelPersmissionDeniedSendMediaForever))
+        alert(for: mainWindow, info: bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendMediaUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendMediaForever))
     }
 }
 
@@ -804,15 +804,15 @@ extension AddressNameFormatError {
     var description:String {
         switch self {
         case .startsWithUnderscore:
-            return tr(.errorUsernameUnderscopeStart)
+            return tr(L10n.errorUsernameUnderscopeStart)
         case .endsWithUnderscore:
-            return tr(.errorUsernameUnderscopeEnd)
+            return tr(L10n.errorUsernameUnderscopeEnd)
         case .startsWithDigit:
-            return tr(.errorUsernameNumberStart)
+            return tr(L10n.errorUsernameNumberStart)
         case .invalidCharacters:
-            return tr(.errorUsernameInvalid)
+            return tr(L10n.errorUsernameInvalid)
         case .tooShort:
-            return tr(.errorUsernameMinimumLength)
+            return tr(L10n.errorUsernameMinimumLength)
         }
     }
 }
@@ -823,9 +823,9 @@ extension AddressNameAvailability {
         case .available:
             return "available"
         case .invalid:
-            return tr(.errorUsernameInvalid)
+            return tr(L10n.errorUsernameInvalid)
         case .taken:
-            return tr(.errorUsernameAlreadyTaken)
+            return tr(L10n.errorUsernameAlreadyTaken)
         }
     }
 }
@@ -1037,20 +1037,20 @@ func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Voi
             switch peer.info {
             case .broadcast:
                 if peer.flags.contains(.isCreator) {
-                    text = tr(.confirmDeleteAdminedChannel)
-                    okTitle = tr(.confirmDelete)
+                    text = tr(L10n.confirmDeleteAdminedChannel)
+                    okTitle = tr(L10n.confirmDelete)
                 } else {
-                    text = tr(.peerInfoConfirmLeaveChannel)
+                    text = tr(L10n.peerInfoConfirmLeaveChannel)
                 }
             case .group:
-                text = tr(.peerInfoConfirmLeaveGroup)
+                text = tr(L10n.peerInfoConfirmLeaveGroup)
             }
         } else if let peer = peer as? TelegramGroup {
-            text = tr(.peerInfoConfirmDeleteChat(peer.title))
-            okTitle = tr(.confirmDelete)
+            text = tr(L10n.peerInfoConfirmDeleteChat(peer.title))
+            okTitle = tr(L10n.confirmDelete)
         } else {
-            text = tr(.confirmDeleteChatUser)
-            okTitle = tr(.confirmDelete)
+            text = tr(L10n.confirmDeleteChatUser)
+            okTitle = tr(L10n.confirmDelete)
         }
         
         return confirmSignal(for: mainWindow, information: text, okTitle: okTitle , swapColors: true) |> mapToSignal { result -> Signal<Bool, Void> in
@@ -1064,16 +1064,16 @@ func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Voi
 }
 
 func applyExternalProxy(_ proxy:ProxySettings, postbox:Postbox, network: Network) {
-    var textInfo = tr(.proxyForceEnableTextIP(proxy.host)) + "\n" + tr(.proxyForceEnableTextPort(Int(proxy.port)))
+    var textInfo = tr(L10n.proxyForceEnableTextIP(proxy.host)) + "\n" + tr(L10n.proxyForceEnableTextPort(Int(proxy.port)))
     if let user = proxy.username {
-        textInfo += "\n" + tr(.proxyForceEnableTextUsername(user))
+        textInfo += "\n" + tr(L10n.proxyForceEnableTextUsername(user))
     }
     if let pass = proxy.password {
-        textInfo += "\n" + tr(.proxyForceEnableTextPassword(pass))
+        textInfo += "\n" + tr(L10n.proxyForceEnableTextPassword(pass))
     }
-    textInfo += "\n\n" + tr(.proxyForceEnableText)
+    textInfo += "\n\n" + tr(L10n.proxyForceEnableText)
     
-    _ = (confirmSignal(for: mainWindow, header: tr(.proxyForceEnableHeader), information: textInfo)
+    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo)
         |> filter {$0} |> map {_ in} |> mapToSignal {
             return applyProxySettings(postbox: postbox, network: network, settings: proxy)
     }).start()

@@ -305,7 +305,7 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
         }
     }
     
-    entries.append(.description(sectionId, descriptionId, text: tr(.groupStickersCreateDescription)))
+    entries.append(.description(sectionId, descriptionId, text: tr(L10n.groupStickersCreateDescription)))
     descriptionId += 1
 
     
@@ -314,7 +314,7 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
     
     
     
-    entries.append(.description(sectionId, descriptionId, text: tr(.groupStickersChooseHeader)))
+    entries.append(.description(sectionId, descriptionId, text: tr(L10n.groupStickersChooseHeader)))
     descriptionId += 1
     if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
         if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
@@ -475,7 +475,7 @@ class GroupStickerSetController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.navigationDone))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.navigationDone))
         
         button.button.set(handler: { [weak self] _ in
             self?.saveGroupStickerSet?()

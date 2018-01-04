@@ -37,7 +37,7 @@ class ChatServiceItem: ChatRowItem {
                 switch media.action {
                 case let .groupCreated(title: title):
                     if !peer.isChannel {
-                        let _ =  attributedString.append(string: tr(.chatServiceGroupCreated(authorName, title)), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupCreated(authorName, title)), color: grayTextColor, font: .normal(theme.fontSize))
                         
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
@@ -45,15 +45,15 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     } else {
-                        let _ =  attributedString.append(string: tr(.chatServiceChannelCreated), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceChannelCreated), color: grayTextColor, font: .normal(theme.fontSize))
                     }
                     
                     
                 case let .addedMembers(peerIds):
                     if peerIds.first == authorId {
-                        let _ =  attributedString.append(string: tr(.chatServiceGroupAddedSelf(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupAddedSelf(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     } else {
-                        let _ =  attributedString.append(string: tr(.chatServiceGroupAddedMembers(authorName, "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupAddedMembers(authorName, "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         for peerId in peerIds {
                             
                             if let peer = message.peers[peerId] {
@@ -74,9 +74,9 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .removedMembers(peerIds):
                     if peerIds.first == message.author?.id {
-                        let _ =  attributedString.append(string: tr(.chatServiceGroupRemovedSelf(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupRemovedSelf(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
                     } else {
-                        let _ =  attributedString.append(string: tr(.chatServiceGroupRemovedMembers(authorName, "")), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupRemovedMembers(authorName, "")), color: grayTextColor, font: .normal(theme.fontSize))
                         for peerId in peerIds {
                             
                             if let peer = message.peers[peerId] {
@@ -97,11 +97,11 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .photoUpdated(image):
                     if let _ = image {
-                        let _ =  attributedString.append(string: peer.isChannel ? tr(.chatServiceChannelUpdatedPhoto) : tr(.chatServiceGroupUpdatedPhoto(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedPhoto) : tr(L10n.chatServiceGroupUpdatedPhoto(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
                         let size = NSMakeSize(70, 70)
                         imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                     } else {
-                        let _ =  attributedString.append(string: peer.isChannel ? tr(.chatServiceChannelRemovedPhoto) : tr(.chatServiceGroupRemovedPhoto(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelRemovedPhoto) : tr(L10n.chatServiceGroupRemovedPhoto(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         
                     }
                     if let authorId = authorId {
@@ -113,7 +113,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                 case let .titleUpdated(title):
-                    let _ =  attributedString.append(string: peer.isChannel ? tr(.chatServiceChannelUpdatedTitle(title)) : tr(.chatServiceGroupUpdatedTitle(authorName, title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle(authorName, title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .customText(let text):
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .pinnedMessageUpdated:
@@ -127,7 +127,7 @@ class ChatServiceItem: ChatRowItem {
                     if cutted.length != replyMessageText.length {
                         cutted += "..."
                     }
-                    let _ =  attributedString.append(string: tr(.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ =  attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
@@ -135,7 +135,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                 case .joinedByLink:
-                    let _ =  attributedString.append(string: tr(.chatServiceGroupJoinedByLink(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                    let _ =  attributedString.append(string: tr(L10n.chatServiceGroupJoinedByLink(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
@@ -143,21 +143,21 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                 case .channelMigratedFromGroup, .groupMigratedToChannel:
-                    let _ =  attributedString.append(string: tr(.chatServiceGroupMigratedToSupergroup), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ =  attributedString.append(string: tr(L10n.chatServiceGroupMigratedToSupergroup), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .messageAutoremoveTimeoutUpdated(seconds):
                     
                     if let authorId = authorId {
                         if authorId == account.peerId {
                             if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(.chatServiceSecretChatSetTimerSelf(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimerSelf(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             } else {
-                                let _ =  attributedString.append(string: tr(.chatServiceSecretChatDisabledTimerSelf), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                         } else {
                             if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             } else {
-                                let _ =  attributedString.append(string: tr(.chatServiceSecretChatDisabledTimer(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                             let range = attributedString.string.nsstring.range(of: authorName)
                             attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
@@ -165,7 +165,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                 case .historyScreenshot:
-                    let _ =  attributedString.append(string: tr(.chatServiceGroupTookScreenshot(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ =  attributedString.append(string: tr(L10n.chatServiceGroupTookScreenshot(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
@@ -175,25 +175,25 @@ class ChatServiceItem: ChatRowItem {
                     if let reason = reason {
                         switch reason {
                         case .busy:
-                            _ = attributedString.append(string: tr(.chatListServiceCallCancelled), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            _ = attributedString.append(string: tr(L10n.chatListServiceCallCancelled), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         case .disconnect:
-                            _ = attributedString.append(string: tr(.chatListServiceCallMissed), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            _ = attributedString.append(string: tr(L10n.chatListServiceCallMissed), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         case .hangup:
                             if let duration = duration {
                                 if message.author?.id == account.peerId {
-                                    _ = attributedString.append(string: tr(.chatListServiceCallOutgoing(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                    _ = attributedString.append(string: tr(L10n.chatListServiceCallOutgoing(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                                 } else {
-                                    _ = attributedString.append(string: tr(.chatListServiceCallIncoming(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                    _ = attributedString.append(string: tr(L10n.chatListServiceCallIncoming(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                                 }
                             }
                         case .missed:
-                            _ = attributedString.append(string: tr(.chatListServiceCallMissed), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            _ = attributedString.append(string: tr(L10n.chatListServiceCallMissed), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         }
                     } else if let duration = duration {
                         if authorId == account.peerId {
-                            _ = attributedString.append(string: tr(.chatListServiceCallOutgoing(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            _ = attributedString.append(string: tr(L10n.chatListServiceCallOutgoing(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         } else {
-                            _ = attributedString.append(string: tr(.chatListServiceCallIncoming(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            _ = attributedString.append(string: tr(L10n.chatListServiceCallIncoming(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         }
                     }
                 case let .gameScore(gameId: _, score: score):
@@ -216,7 +216,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
                         _ = attributedString.append(string: " ")
                     }
-                    _ = attributedString.append(string: tr(.chatListServiceGameScored1Countable(Int(score), gameName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    _ = attributedString.append(string: tr(L10n.chatListServiceGameScored1Countable(Int(score), gameName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .paymentSent(currency, totalAmount):
                     var paymentMessage:Message?
                     for attr in message.attributes {
@@ -228,10 +228,10 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     if let message = paymentMessage, let media = message.media.first as? TelegramMediaInvoice, let peer = messageMainPeer(message) {
-                        _ = attributedString.append(string: tr(.chatServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                     } else {
-                        _ = attributedString.append(string: tr(.chatServicePaymentSent("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     }
                 default:
                     
@@ -242,21 +242,21 @@ class ChatServiceItem: ChatRowItem {
             let text:String
             switch media.data {
             case .image:
-                text = tr(.serviceMessageExpiredPhoto)
+                text = tr(L10n.serviceMessageExpiredPhoto)
             case .file:
                 if message.id.peerId.namespace == Namespaces.Peer.SecretChat {
-                    text = tr(.serviceMessageExpiredFile)
+                    text = tr(L10n.serviceMessageExpiredFile)
                 } else {
-                    text = tr(.serviceMessageExpiredVideo)
+                    text = tr(L10n.serviceMessageExpiredVideo)
                 }
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
             let isPhoto: Bool = message.media.first is TelegramMediaImage
             if authorId == account.peerId {
-                _ = attributedString.append(string: isPhoto ? tr(.serviceMessageDesturctingPhotoYou(authorName)) : tr(.serviceMessageDesturctingVideoYou(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                _ = attributedString.append(string: isPhoto ? tr(L10n.serviceMessageDesturctingPhotoYou(authorName)) : tr(L10n.serviceMessageDesturctingVideoYou(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
             } else if let _ = authorId {
-                _ = attributedString.append(string:  isPhoto ? tr(.serviceMessageDesturctingPhoto(authorName)) : tr(.serviceMessageDesturctingVideo(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                _ = attributedString.append(string:  isPhoto ? tr(L10n.serviceMessageDesturctingPhoto(authorName)) : tr(L10n.serviceMessageDesturctingVideo(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
             }
         }
         
@@ -304,12 +304,12 @@ class ChatServiceItem: ChatRowItem {
             
             if let message = message, let peer = messageMainPeer(message) {
                 if peer.canSendMessage, !message.containsSecretMedia {
-                    items.append(ContextMenuItem(tr(.messageContextReply1), handler: {
+                    items.append(ContextMenuItem(tr(L10n.messageContextReply1), handler: {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }
                 if canDeleteMessage(message, account: account) {
-                    items.append(ContextMenuItem(tr(.messageContextDelete), handler: {
+                    items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: {
                         chatInteraction.deleteMessages([message.id])
                     }))
                 }

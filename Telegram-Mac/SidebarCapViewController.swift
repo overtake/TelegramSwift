@@ -40,11 +40,11 @@ class SidebarCapView : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         text.textColor = theme.colors.grayText
-        text.stringValue = tr(.sidebarAvalability);
+        text.stringValue = tr(L10n.sidebarAvalability);
         text.setFrameSize(text.sizeThatFits(NSMakeSize(300, 100)))
         self.background = theme.colors.background.withAlphaComponent(0.97)
         close.set(color: theme.colors.blueUI, for: .Normal)
-        close.set(text: tr(.navigationClose), for: .Normal)
+        close.set(text: tr(L10n.navigationClose), for: .Normal)
         close.sizeToFit()
         needsLayout = true
     }

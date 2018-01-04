@@ -239,7 +239,7 @@ class StickersControllerView : View {
     func updateRestricion(_ peer: Peer?) {
         if let peer = peer as? TelegramChannel {
             if peer.stickersRestricted, let bannedRights = peer.bannedRights {
-                restrictedView = RestrictionWrappedView(bannedRights.untilDate != .max ? tr(.channelPersmissionDeniedSendStickersUntil(bannedRights.formattedUntilDate)) : tr(.channelPersmissionDeniedSendStickersForever))
+                restrictedView = RestrictionWrappedView(bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendStickersUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendStickersForever))
                 addSubview(restrictedView!)
             } else {
                 restrictedView?.removeFromSuperview()

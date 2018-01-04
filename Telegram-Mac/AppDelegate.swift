@@ -106,7 +106,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             }
         }
         
-        if !isDebug {
+        #if !DEBUG
             #if BETA
 
                 let hockeyAppId:String = "6ed2ac3049e1407387c2f1ffcb74e81f"
@@ -122,7 +122,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 //                BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = false
 //            #endif
             
-        }
+        #endif
         
 
         telegramUIDeclareEncodables()

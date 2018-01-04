@@ -29,7 +29,7 @@ class EmptyChatView : View {
         imageView.image = theme.icons.chatEmpty
         imageView.sizeToFit()
         label.backgroundColor = theme.colors.background
-        label.update(TextViewLayout(.initialize(string: tr(.emptyPeerDescription), color: theme.colors.grayText, font: .normal(.header)), maximumNumberOfLines: 1))
+        label.update(TextViewLayout(.initialize(string: tr(L10n.emptyPeerDescription), color: theme.colors.grayText, font: .normal(.header)), maximumNumberOfLines: 1))
         needsLayout = true
     }
     

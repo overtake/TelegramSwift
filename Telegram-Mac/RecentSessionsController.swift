@@ -191,17 +191,17 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
     func item(_ arguments: RecentSessionsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .currentSessionHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.sessionsCurrentSessionHeader))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.sessionsCurrentSessionHeader))
         case let .currentSession(_, session):
             return RecentSessionRowItem(initialSize, session: session, stableId: stableId, revoke: {})
         case .terminateOtherSessions:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.sessionsTerminateOthers), nameStyle: redActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.sessionsTerminateOthers), nameStyle: redActionButton, type: .none, action: {
                 arguments.terminateOthers()
             })
         case .currentSessionInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.sessionsTerminateDescription))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.sessionsTerminateDescription))
         case .otherSessionsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.sessionsActiveSessionsHeader))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.sessionsActiveSessionsHeader))
         case let .session(_, _, session, _, _):
             return RecentSessionRowItem(initialSize, session: session, stableId: stableId, revoke: {
                 arguments.removeSession(session.hash)
@@ -364,7 +364,7 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            _ = (confirmSignal(for: mainWindow, information: tr(.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: account)}).start()
+            _ = (confirmSignal(for: mainWindow, information: tr(L10n.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: account)}).start()
         })
         
         let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(nil) |> then(requestRecentAccountSessions(account: account) |> map { Optional($0) })

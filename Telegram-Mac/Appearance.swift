@@ -518,6 +518,7 @@ struct TelegramIconsTheme {
     let successModalProgress: CGImage
     
     let settingsAppearance: CGImage
+    let accentColorSelect: CGImage
     
 }
 
@@ -872,7 +873,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatGroupToggleSelected: generateChatGroupToggleSelected(foregroundColor: palette.blueIcon),
                                                chatGroupToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
                                                successModalProgress: #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(),
-                                               settingsAppearance: #imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.blueIcon, flipVertical: true))
+                                               settingsAppearance: #imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.blueIcon, flipVertical: true),
+                                               accentColorSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white)
+    )
 }
 
 
@@ -899,7 +902,7 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.blueIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), tr(.searchFieldSearch), palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize)
+    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), tr(L10n.searchFieldSearch), palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize)
 }
 
 

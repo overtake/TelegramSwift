@@ -38,7 +38,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
         }
         
         let initialSize = atomicSize.modify {$0}
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(.reportReasonSpam), type: .selectable(stateback: { [weak self] () -> Bool in
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonSpam), type: .selectable(stateback: { [weak self] () -> Bool in
             if let current = self?.current {
                 return current == .spam
             }
@@ -47,7 +47,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
             updateState(.spam)
         }))
         
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(.reportReasonViolence), type: .selectable(stateback: { [weak self] () -> Bool in
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonViolence), type: .selectable(stateback: { [weak self] () -> Bool in
             if let current = self?.current {
                 return current == .violence
             }
@@ -56,7 +56,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
             updateState(.violence)
         }))
         
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(.reportReasonPorno), type: .selectable(stateback: { [weak self] () -> Bool in
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonPorno), type: .selectable(stateback: { [weak self] () -> Bool in
             if let current = self?.current {
                 return current == .porno
             }
@@ -69,12 +69,12 @@ fileprivate class ReportReasonModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             if let strongSelf = self {
                 self?._complete.set(.single(strongSelf.current))
                 self?.close()
             }
-        }, cancelTitle: tr(.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
     }
     
     override init() {

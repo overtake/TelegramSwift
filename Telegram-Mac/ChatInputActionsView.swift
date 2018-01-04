@@ -381,7 +381,7 @@ class ChatInputActionsView: View, Notifable {
         if let peer = chatInteraction.presentation.peer as? TelegramSecretChat {
             if peer.messageAutoremoveTimeout != nil {
                 
-                items.append(SPopoverItem(tr(.secretTimerOff), { [weak self] in
+                items.append(SPopoverItem(tr(L10n.secretTimerOff), { [weak self] in
                     self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(nil)
                 }))
             }
@@ -390,24 +390,24 @@ class ChatInputActionsView: View, Notifable {
         
         for i in 0 ..< 30 {
             
-            items.append(SPopoverItem(tr(.timerSecondsCountable(i + 1)), { [weak self] in
+            items.append(SPopoverItem(tr(L10n.timerSecondsCountable(i + 1)), { [weak self] in
                 self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(Int32(i + 1))
             }))
         }
         
-        items.append(SPopoverItem(tr(.timerMinutesCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerMinutesCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60)
         }))
         
-        items.append(SPopoverItem(tr(.timerHoursCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerHoursCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60 * 60)
         }))
         
-        items.append(SPopoverItem(tr(.timerDaysCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerDaysCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60 * 60 * 24)
         }))
         
-        items.append(SPopoverItem(tr(.timerWeeksCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerWeeksCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60 * 60 * 24 * 7)
         }))
         

@@ -155,7 +155,7 @@ class NotificationSettingsViewController: TableViewController {
         
         let interactions = NotificationSettingsInteractions(resetAllNotifications: { [weak self] in
             if let window = self?.window , let account = self?.account {
-                confirm(for: window, header: tr(.notificationSettingsConfirmReset), information: tr(.chatConfirmActionUndonable), successHandler: { _ in
+                confirm(for: window, header: tr(L10n.notificationSettingsConfirmReset), information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
                     _ = resetPeerNotificationSettings(network: account.network).start()
                 })
             }
@@ -291,13 +291,13 @@ class NotificationSettingsViewController: TableViewController {
                 
                 switch entry.entry {
                 case .notifications:
-                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.notificationSettingsToggleNotifications), type: .switchable(stateback: { () -> Bool in
+                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsToggleNotifications), type: .switchable(stateback: { () -> Bool in
                         return to.settings.enabled
                     }), action: { 
                         interactions.toggleNotifications()
                     })
                 case .messagePreview:
-                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.notificationSettingsMessagesPreview), type: .switchable(stateback: { () -> Bool in
+                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsMessagesPreview), type: .switchable(stateback: { () -> Bool in
                         return to.settings.displayPreviews
                     }), action: {
                         interactions.toggleMessagesPreview()
@@ -305,17 +305,17 @@ class NotificationSettingsViewController: TableViewController {
                 case let .whiteSpace(_, height):
                     return GeneralRowItem(initialSize, height: height, stableId: entry.stableId)
                 case .notificationTone:
-                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.notificationSettingsNotificationTone), type: .context(stateback: { () -> String in
-                        return to.settings.tone.isEmpty ? tr(.notificationSettingsToneDefault) : localizedString(to.settings.tone)
+                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsNotificationTone), type: .context(stateback: { () -> String in
+                        return to.settings.tone.isEmpty ? tr(L10n.notificationSettingsToneDefault) : localizedString(to.settings.tone)
                     }), action: { [weak self] in
                         self?.showToneOptions()
                     })
                 case .resetNotifications:
-                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.notificationSettingsResetNotifications), type: .next, action: {
+                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsResetNotifications), type: .next, action: {
                         interactions.resetAllNotifications()
                     })
                 case .resetText:
-                    return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: tr(.notificationSettingsResetNotificationsText))
+                    return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: tr(L10n.notificationSettingsResetNotificationsText))
                 case .searchField:
                     return SearchRowItem(initialSize, stableId: entry.stableId, searchInteractions:searchInteractions)
                 case let .peer(peerEntry):

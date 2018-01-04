@@ -442,28 +442,28 @@ struct ChatPresentationInterfaceState: Equatable {
             }
             if let peer = peer as? TelegramChannel {
                 if peer.participationStatus == .left {
-                    return .action(tr(.chatInputJoin), { chatInteraction in
+                    return .action(tr(L10n.chatInputJoin), { chatInteraction in
                         chatInteraction.joinChannel()
                     })
                 } else if peer.participationStatus == .kicked {
-                    return .action(tr(.chatInputDelete), { chatInteraction in
+                    return .action(tr(L10n.chatInputDelete), { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
                 } else if peer.hasBannedRights(.banSendMessages), let bannedRights = peer.bannedRights {
                     
-                    return .restricted(bannedRights.untilDate != Int32.max ? tr(.channelPersmissionDeniedSendMessagesUntil(bannedRights.formattedUntilDate)) : tr(.channelPersmissionDeniedSendMessagesForever))
+                    return .restricted(bannedRights.untilDate != Int32.max ? tr(L10n.channelPersmissionDeniedSendMessagesUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendMessagesForever))
                 } else if !peer.canSendMessage, let notificationSettings = notificationSettings {
-                    return .action(notificationSettings.isMuted ? tr(.chatInputUnmute) : tr(.chatInputMute), { chatInteraction in
+                    return .action(notificationSettings.isMuted ? tr(L10n.chatInputUnmute) : tr(L10n.chatInputMute), { chatInteraction in
                         chatInteraction.toggleNotifications()
                     })
                 }
             } else if let peer = peer as? TelegramGroup {
                 if  peer.membership == .Left {
-                    return .action(tr(.chatInputReturn),{ chatInteraction in
+                    return .action(tr(L10n.chatInputReturn),{ chatInteraction in
                         chatInteraction.returnGroup()
                     })
                 } else if peer.membership == .Removed {
-                    return .action(tr(.chatInputDelete), { chatInteraction in
+                    return .action(tr(L10n.chatInputDelete), { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
                 }
@@ -471,11 +471,11 @@ struct ChatPresentationInterfaceState: Equatable {
                 
                 switch peer.embeddedState {
                 case .terminated:
-                    return .action(tr(.chatInputDelete), { chatInteraction in
+                    return .action(tr(L10n.chatInputDelete), { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
                 case .handshake:
-                    return .action(tr(.chatInputSecretChatWaitingToOnline), { chatInteraction in
+                    return .action(tr(L10n.chatInputSecretChatWaitingToOnline), { chatInteraction in
                         
                     })
                 default:
@@ -484,7 +484,7 @@ struct ChatPresentationInterfaceState: Equatable {
             }
             
             if let blocked = isBlocked, blocked {
-                return .action(tr(.chatInputUnblock), { chatInteraction in
+                return .action(tr(L10n.chatInputUnblock), { chatInteraction in
                     chatInteraction.unblock()
                 })
             }
@@ -498,7 +498,7 @@ struct ChatPresentationInterfaceState: Equatable {
             }
 
             if let initialAction = initialAction, case .start(_) = initialAction  {
-                return .action(tr(.chatInputStartBot), { chatInteraction in
+                return .action(tr(L10n.chatInputStartBot), { chatInteraction in
                     chatInteraction.invokeInitialAction()
                 })
             }
@@ -506,7 +506,7 @@ struct ChatPresentationInterfaceState: Equatable {
             if let peer = peer as? TelegramUser {
                 
                 if peer.botInfo != nil, let historyCount = historyCount, historyCount == 0 {
-                    return .action(tr(.chatInputStartBot), { chatInteraction in
+                    return .action(tr(L10n.chatInputStartBot), { chatInteraction in
                         chatInteraction.startBot()
                     })
                 }

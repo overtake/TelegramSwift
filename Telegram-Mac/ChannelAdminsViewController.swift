@@ -296,9 +296,9 @@ private func ChannelAdminsControllerEntries(view: PeerView, state: ChannelAdmins
                 let infoText: String
                 switch selectedType {
                 case .everyoneCanAddMembers:
-                    infoText = tr(.adminsEverbodyCanAddMembers)
+                    infoText = tr(L10n.adminsEverbodyCanAddMembers)
                 case .adminsCanAddMembers:
-                    infoText = tr(.adminsOnlyAdminsCanAddMembers)
+                    infoText = tr(L10n.adminsOnlyAdminsCanAddMembers)
                 }
                 entries.append(.administrationInfo(sectionId: sectionId, infoText))
                 
@@ -311,7 +311,7 @@ private func ChannelAdminsControllerEntries(view: PeerView, state: ChannelAdmins
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.adminsHeader(sectionId: sectionId, isGroup ? tr(.adminsGroupAdmins) : tr(.adminsChannelAdmins)))
+        entries.append(.adminsHeader(sectionId: sectionId, isGroup ? tr(L10n.adminsGroupAdmins) : tr(L10n.adminsChannelAdmins)))
         
         var index: Int32 = 0
         for participant in participants.sorted(by: <) {
@@ -338,7 +338,7 @@ private func ChannelAdminsControllerEntries(view: PeerView, state: ChannelAdmins
             sectionId += 1
             
             entries.append(.addAdmin(sectionId: sectionId))
-            entries.append(.adminsInfo(sectionId: sectionId, isGroup ? tr(.adminsGroupDescription) : tr(.adminsChannelDescription)))
+            entries.append(.adminsInfo(sectionId: sectionId, isGroup ? tr(L10n.adminsGroupDescription) : tr(L10n.adminsChannelDescription)))
         }
     }
     
@@ -354,11 +354,11 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             let label: String
             switch type {
             case .adminsCanAddMembers:
-                label = tr(.adminsWhoCanInviteAdmins)
+                label = tr(L10n.adminsWhoCanInviteAdmins)
             case .everyoneCanAddMembers:
-                label = tr(.adminsWhoCanInviteEveryone)
+                label = tr(L10n.adminsWhoCanInviteEveryone)
             }
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.adminsWhoCanInviteText), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.adminsWhoCanInviteText), type: .context(stateback: { () -> String in
                 return label
             }), action: { 
                 arguments.updateCurrentAdministrationType()
@@ -370,12 +370,12 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             let peerText: String
             switch participant.participant {
             case .creator:
-                peerText = tr(.adminsCreator)
+                peerText = tr(L10n.adminsCreator)
             case let .member(_, _, adminInfo, _):
                 if let adminInfo = adminInfo, let peer = participant.peers[adminInfo.promotedBy] {
-                    peerText =  tr(.channelAdminsPromotedBy(peer.displayTitle))
+                    peerText =  tr(L10n.channelAdminsPromotedBy(peer.displayTitle))
                 } else {
-                    peerText = tr(.adminsAdmin)
+                    peerText = tr(L10n.adminsAdmin)
                 }
             }
             
@@ -396,11 +396,11 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             })
 
         case .addAdmin:
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.adminsAddAdmin),  nameStyle: blueActionButton, type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.adminsAddAdmin),  nameStyle: blueActionButton, type: .next, action: {
                  arguments.addAdmin()
             })
         case .eventLogs:
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(.channelAdminsRecentActions), type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.channelAdminsRecentActions), type: .next, action: {
                 arguments.eventLogs()
             })
         case .section:
@@ -498,10 +498,10 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                 if let view = (self?.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
                     let result = ValuePromise<Bool>()
                     
-                    let items = [SPopoverItem(tr(.adminsWhoCanInviteEveryone), {
+                    let items = [SPopoverItem(tr(L10n.adminsWhoCanInviteEveryone), {
                         result.set(true)
                         
-                    }), SPopoverItem(tr(.adminsWhoCanInviteAdmins), {
+                    }), SPopoverItem(tr(L10n.adminsWhoCanInviteAdmins), {
                         result.set(false)
                     })]
                     
@@ -549,7 +549,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                         case .member(_, _, let adminInfo, let banInfo):
                             if let adminInfo = adminInfo {
                                 //if channel.flags.contains(.isCreator) && adminInfo.promotedBy != account.peerId && !adminInfo.canBeEditedByAccountPeer {
-                                    //alert(for: mainWindow, info: tr(.channelAdminsAddAdminError))
+                                    //alert(for: mainWindow, info: tr(L10n.channelAdminsAddAdminError))
                                   //  return .single(false)
                                 //}
                                 return .single(true)
@@ -557,7 +557,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                                 if let _ = channel.adminRights {
                                     if let _ = banInfo {
                                         if !channel.hasAdminRights(.canBanUsers) {
-                                            alert(for: mainWindow, info: tr(.channelAdminsPromoteBannedAdminError))
+                                            alert(for: mainWindow, info: tr(L10n.channelAdminsPromoteBannedAdminError))
                                             return .single(false)
                                         }
                                     }
@@ -568,7 +568,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                         }
                     } else {
                         if !channel.hasAdminRights(.canInviteUsers) {
-                            alert(for: mainWindow, info: tr(.channelAdminsPromoteUnmemberAdminError))
+                            alert(for: mainWindow, info: tr(L10n.channelAdminsPromoteUnmemberAdminError))
                             return .single(false)
                         }
                     }

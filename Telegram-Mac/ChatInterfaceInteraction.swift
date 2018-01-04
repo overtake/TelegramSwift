@@ -113,7 +113,7 @@ final class ChatInteraction : InterfaceObserver  {
         disableProxyDisposable.set((account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> take(1) |> map { prefs -> ProxySettings? in
             return prefs.values[PreferencesKeys.proxySettings] as? ProxySettings
         } |> deliverOnMainQueue |> mapToSignal { setting in
-            return confirmSignal(for: mainWindow, information: tr(.proxyForceDisable(setting?.host ?? "")))
+            return confirmSignal(for: mainWindow, information: tr(L10n.proxyForceDisable(setting?.host ?? "")))
         } |> filter {$0} |> mapToSignal { _ in
             return applyProxySettings(postbox: account.postbox, network: account.network, settings: nil)
         }).start())
@@ -289,7 +289,7 @@ final class ChatInteraction : InterfaceObserver  {
                             }
                         }
                     case .payment:
-                        alert(for: mainWindow, info: tr(.paymentsUnsupported))
+                        alert(for: mainWindow, info: tr(L10n.paymentsUnsupported))
                     default:
                         break
                     }

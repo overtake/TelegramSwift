@@ -180,9 +180,9 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             let status:String
             switch participant.participant {
             case .creator:
-                status = tr(.adminsCreator)
+                status = tr(L10n.adminsCreator)
             case .member:
-                status = tr(.adminsAdmin)
+                status = tr(L10n.adminsAdmin)
             }
             return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(stateback: { () -> Bool in
                 return enabled
@@ -354,21 +354,21 @@ private enum FilterEvents {
     func localizedString(_ broadcast:Bool) -> String {
         switch self {
         case .newMembers:
-            return tr(.channelEventFilterNewMembers)
+            return tr(L10n.channelEventFilterNewMembers)
         case .newAdmins:
-            return tr(.channelEventFilterNewAdmins)
+            return tr(L10n.channelEventFilterNewAdmins)
         case .leavingMembers:
-            return  tr(.channelEventFilterLeavingMembers)
+            return  tr(L10n.channelEventFilterLeavingMembers)
         case .restrictions:
-            return tr(.channelEventFilterNewRestrictions)
+            return tr(L10n.channelEventFilterNewRestrictions)
         case .groupInfo:
-            return broadcast ? tr(.channelEventFilterChannelInfo) : tr(.channelEventFilterGroupInfo)
+            return broadcast ? tr(L10n.channelEventFilterChannelInfo) : tr(L10n.channelEventFilterGroupInfo)
         case .pinnedMessages:
-            return tr(.channelEventFilterPinnedMessages)
+            return tr(L10n.channelEventFilterPinnedMessages)
         case .editedMessages:
-            return tr(.channelEventFilterEditedMessages)
+            return tr(L10n.channelEventFilterEditedMessages)
         case .deletedMessages:
-            return tr(.channelEventFilterDeletedMessages)
+            return tr(L10n.channelEventFilterDeletedMessages)
         }
     }
 }
@@ -391,7 +391,7 @@ private func channelEventFilterEntries(state: ChannelEventFilterState, peer:Peer
     entries.append(.section(section))
     section += 1
     
-    entries.append(.header(section, index, text: tr(.channelEventFilterEventsHeader)))
+    entries.append(.header(section, index, text: tr(L10n.channelEventFilterEventsHeader)))
     index += 1
     entries.append(.allEvents(section, index, enabled: state.eventsException.isEmpty))
     index += 1
@@ -404,7 +404,7 @@ private func channelEventFilterEntries(state: ChannelEventFilterState, peer:Peer
     entries.append(.section(section))
     section += 1
     
-    entries.append(.header(section, index, text: tr(.channelEventFilterAdminsHeader)))
+    entries.append(.header(section, index, text: tr(L10n.channelEventFilterAdminsHeader)))
     index += 1
     
     entries.append(.allAdmins(section, index, enabled: state.adminsException.isEmpty))
@@ -526,9 +526,9 @@ class ChannelEventFilterModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             self?.noticeUpdated()
-        }, cancelTitle: tr(.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
     }
     
     deinit {

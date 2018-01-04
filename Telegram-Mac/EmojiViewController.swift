@@ -15,15 +15,15 @@ import TelegramCoreMac
 
 var segmentNames:(Int)->String = { value in
     var list:[String] = []
-    list.append(tr(.emojiRecent))
-    list.append(tr(.emojiSmilesAndPeople))
-    list.append(tr(.emojiAnimalsAndNature))
-    list.append(tr(.emojiFoodAndDrink))
-    list.append(tr(.emojiActivityAndSport))
-    list.append(tr(.emojiTravelAndPlaces))
-    list.append(tr(.emojiObjects))
-    list.append(tr(.emojiSymbols))
-    list.append(tr(.emojiFlags))
+    list.append(tr(L10n.emojiRecent))
+    list.append(tr(L10n.emojiSmilesAndPeople))
+    list.append(tr(L10n.emojiAnimalsAndNature))
+    list.append(tr(L10n.emojiFoodAndDrink))
+    list.append(tr(L10n.emojiActivityAndSport))
+    list.append(tr(L10n.emojiTravelAndPlaces))
+    list.append(tr(L10n.emojiObjects))
+    list.append(tr(L10n.emojiSymbols))
+    list.append(tr(L10n.emojiFlags))
     return list[value]
 }
 

@@ -104,7 +104,7 @@ class ChatFileContentView: ChatMediaContentView {
         switch status {
         case let .Fetching(_, progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                let _ = attr.append(string: tr(.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: presentation.grayText, font: .normal(.text))
+                let _ = attr.append(string: tr(L10n.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: presentation.grayText, font: .normal(.text))
             } else {
                 let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress))
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
@@ -116,12 +116,12 @@ class ChatFileContentView: ChatMediaContentView {
             
             if !(file.resource is LocalFileReferenceMediaResource) {
                 let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-                let range = attr.append(string: tr(.messagesFileStateLocal), color: presentation.link, font: NSFont.normal(FontSize.text))
+                let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: presentation.link, font: NSFont.normal(FontSize.text))
                 attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
             }
         case .Remote:
             let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: presentation.grayText, font: .normal(.text))
-            let range = attr.append(string: tr(.messagesFileStateRemote), color: presentation.link, font: .normal(.text))
+            let range = attr.append(string: tr(L10n.messagesFileStateRemote), color: presentation.link, font: .normal(.text))
             attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
         }
 

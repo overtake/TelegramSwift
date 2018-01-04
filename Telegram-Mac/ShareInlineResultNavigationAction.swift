@@ -17,7 +17,7 @@ class ShareInlineResultNavigationAction: NavigationModalAction {
     let payload:String
     init(payload:String, botName:String) {
         self.payload = payload
-        super.init(reason: tr(.inlineModalActionTitle), desc: tr(.inlineModalActionDesc(botName)))
+        super.init(reason: tr(L10n.inlineModalActionTitle), desc: tr(L10n.inlineModalActionDesc(botName)))
     }
     
     override func isInvokable(for value:Any) -> Bool {
@@ -29,7 +29,7 @@ class ShareInlineResultNavigationAction: NavigationModalAction {
     
     override func alertError(for value:Any, with window:Window) -> Void {
         if let _ = value as? Peer {
-            alert(for: window, info: tr(.alertForwardError))
+            alert(for: window, info: tr(L10n.alertForwardError))
         }
     }
 }

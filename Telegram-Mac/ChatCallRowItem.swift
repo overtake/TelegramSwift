@@ -30,7 +30,7 @@ class ChatCallRowItem: ChatRowItem {
         let action = message.media[0] as! TelegramMediaAction
         let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
         outgoing = !message.flags.contains(.Incoming)
-        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(.chatCallOutgoing) : tr(.chatCallIncoming), color: theme.chat.textColor(isIncoming), font: .medium(.text)), maximumNumberOfLines: 1)
+        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(L10n.chatCallOutgoing) : tr(L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
         case let .phoneCall(_, reason, duration):
             let attr = NSMutableAttributedString()
@@ -43,13 +43,13 @@ class ChatCallRowItem: ChatRowItem {
             } else if let reason = reason {
                 switch reason {
                 case .busy:
-                    _ = attr.append(string: outgoing ? tr(.chatServiceCallCancelled) : tr(.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
                 case .disconnect:
-                    _ = attr.append(string: outgoing ? tr(.chatServiceCallCancelled) : tr(.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
                 case .hangup:
-                    _ = attr.append(string: outgoing ? tr(.chatServiceCallCancelled) : tr(.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
                 case .missed:
-                    _ = attr.append(string: outgoing ? tr(.chatServiceCallCancelled) : tr(.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
                 }
                 failed = true
             } else {

@@ -99,9 +99,9 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
             let text:String
             switch id {
             case .recently:
-                text = tr(.quickSwitcherRecently)
+                text = tr(L10n.quickSwitcherRecently)
             case .popular:
-                text = tr(.quickSwitcherPopular)
+                text = tr(L10n.quickSwitcherPopular)
             }
             return SeparatorRowItem(initialSize, stableId, string: text.uppercased())
         case .empty:
@@ -162,7 +162,7 @@ private class QuickSwitcherView : View {
         separator.backgroundColor = theme.colors.border
         self.backgroundColor = theme.colors.background
         let attributed = NSMutableAttributedString()
-        _ = attributed.append(string: tr(.quickSwitcherDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attributed.append(string: tr(L10n.quickSwitcherDescription), color: theme.colors.grayText, font: .normal(.text))
         attributed.detectBoldColorInString(with: .medium(.text))
         let descLayout = TextViewLayout(attributed, alignment: .center)
         descLayout.measure(width: frameRect.width - 20)

@@ -93,17 +93,17 @@ class PhoneNumberInputCodeView : View, NSTextFieldDelegate {
                 var nextText: String = ""
                 switch nextType {
                 case .call:
-                    nextText = tr(.loginWillCall(minutes, secValue))
+                    nextText = tr(L10n.loginWillCall(minutes, secValue))
                     break
                 case .sms:
-                    nextText = tr(.loginWillSendSms(minutes, secValue))
+                    nextText = tr(L10n.loginWillSendSms(minutes, secValue))
                     break
                 default:
                     break
                 }
                 layout = TextViewLayout(.initialize(string: nextText, color: theme.colors.grayText, font: .normal(.text)))
             } else {
-                layout = TextViewLayout(.initialize(string: tr(.loginPhoneDialed), color: theme.colors.grayText, font: .normal(.text)))
+                layout = TextViewLayout(.initialize(string: tr(L10n.loginPhoneDialed), color: theme.colors.grayText, font: .normal(.text)))
             }
             layout.measure(width: frame.width - 60)
             callField.update(layout)
@@ -125,16 +125,16 @@ class PhoneNumberInputCodeView : View, NSTextFieldDelegate {
         yourCodeField.backgroundColor = theme.colors.grayBackground
         sentCodeField.backgroundColor = theme.colors.grayBackground
         callField.backgroundColor = theme.colors.grayBackground
-        let yourCodeLayout = TextViewLayout(.initialize(string: tr(.loginYourCodeLabel).uppercased(), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        let yourCodeLayout = TextViewLayout(.initialize(string: tr(L10n.loginYourCodeLabel).uppercased(), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         
-        let sentCodeLayout = TextViewLayout(.initialize(string: tr(.loginJustSentSms), color: theme.colors.grayText, font: .normal(.text)))
+        let sentCodeLayout = TextViewLayout(.initialize(string: tr(L10n.loginJustSentSms), color: theme.colors.grayText, font: .normal(.text)))
         
         yourCodeField.update(yourCodeLayout)
         sentCodeField.update(sentCodeLayout)
 
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.loginCodePlaceholder), color: theme.colors.grayText, font: .normal(.title))
+        _ = attr.append(string: tr(L10n.loginCodePlaceholder), color: theme.colors.grayText, font: .normal(.title))
         attr.setAlignment(.center, range: attr.range)
         codeText.placeholderAttributedString = attr
         backgroundColor = theme.colors.grayBackground
@@ -183,21 +183,21 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
             var alertText: String = ""
             switch error {
             case .generic:
-                alertText = tr(.changeNumberConfirmCodeErrorGeneric)
+                alertText = tr(L10n.changeNumberConfirmCodeErrorGeneric)
             case .invalidCode:
                 self?.genericView.codeText.shake()
                 self?.genericView.codeText.setSelectionRange(NSMakeRange(0, code.length)) 
                 return
             case .codeExpired:
-                alertText = tr(.changeNumberConfirmCodeErrorCodeExpired)
+                alertText = tr(L10n.changeNumberConfirmCodeErrorCodeExpired)
             case .limitExceeded:
-                alertText = tr(.changeNumberConfirmCodeErrorLimitExceeded)
+                alertText = tr(L10n.changeNumberConfirmCodeErrorLimitExceeded)
             }
             alert(for: mainWindow, info: alertText)
         }, completed: { [weak self] in
             if let strongSelf = self {
                 strongSelf.navigationController?.close(animated: true)
-                alert(for: mainWindow, info: tr(.changeNumberConfirmCodeSuccess(strongSelf.formattedNumber)))
+                alert(for: mainWindow, info: tr(L10n.changeNumberConfirmCodeSuccess(strongSelf.formattedNumber)))
             }
         }))
     }
@@ -262,6 +262,6 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(.composeNext), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: tr(L10n.composeNext), style: navigationButtonStyle, alignment:.Right)
     }
 }

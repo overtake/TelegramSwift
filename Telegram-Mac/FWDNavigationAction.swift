@@ -20,7 +20,7 @@ class FWDNavigationAction: NavigationModalAction {
     init(messages:[Message], displayName:String) {
         self.messages = messages
         
-        super.init(reason: tr(.forwardModalActionTitleCountable(messages.count)), desc: tr(.forwardModalActionDescriptionCountable(messages.count, displayName)))
+        super.init(reason: tr(L10n.forwardModalActionTitleCountable(messages.count)), desc: tr(L10n.forwardModalActionDescriptionCountable(messages.count, displayName)))
     }
     
     override func isInvokable(for value:Any) -> Bool {
@@ -36,7 +36,7 @@ class FWDNavigationAction: NavigationModalAction {
     
     override func alertError(for value:Any, with window:Window) -> Void {
         if let _ = value as? Peer {
-            alert(for: window, info: tr(.alertForwardError))
+            alert(for: window, info: tr(L10n.alertForwardError))
         }
     }
     

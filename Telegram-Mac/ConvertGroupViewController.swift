@@ -27,16 +27,16 @@ class ConvertGroupViewController: TableViewController {
         let initialSize = atomicSize.modify({$0})
         
         let desc = NSMutableAttributedString()
-        _ = desc.append(string: tr(.supergroupConvertDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = desc.append(string: tr(L10n.supergroupConvertDescription), color: theme.colors.grayText, font: .normal(.text))
         desc.detectBoldColorInString(with: .medium(.text))
         
         _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 16))
         _ = genericView.addItem(item: GeneralTextRowItem(initialSize, text: desc))
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(.supergroupConvertButton), nameStyle: blueActionButton, type: .none, action: { [weak self] in
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.supergroupConvertButton), nameStyle: blueActionButton, type: .none, action: { [weak self] in
             self?.convert()
         }))
         let undone = NSMutableAttributedString()
-        _ = undone.append(string: tr(.supergroupConvertUndone), color: theme.colors.grayText, font: .normal(.text))
+        _ = undone.append(string: tr(L10n.supergroupConvertUndone), color: theme.colors.grayText, font: .normal(.text))
         undone.detectBoldColorInString(with: .medium(.text))
         _ = genericView.addItem(item: GeneralTextRowItem(initialSize, text: undone))
         
@@ -46,7 +46,7 @@ class ConvertGroupViewController: TableViewController {
     func convert() {
         
         
-        confirm(for: mainWindow, information:  tr(.convertToSuperGroupConfirm)) { [weak self] result in
+        confirm(for: mainWindow, information:  tr(L10n.convertToSuperGroupConfirm)) { [weak self] result in
             
             if let strongSelf = self {
                 let signal = convertGroupToSupergroup(account: strongSelf.account, peerId: strongSelf.peerId)
@@ -60,7 +60,7 @@ class ConvertGroupViewController: TableViewController {
                     if let peerId = peerId, let account = strongSelf?.account {
                         strongSelf?.navigationController?.push(ChatController(account: account, peerId: peerId))
                     } else {
-                        alert(for: mainWindow, info: tr(.convertToSupergroupAlertError))
+                        alert(for: mainWindow, info: tr(L10n.convertToSupergroupAlertError))
                     }
                 }))
             }

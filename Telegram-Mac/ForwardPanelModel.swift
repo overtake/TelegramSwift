@@ -80,7 +80,7 @@ class ForwardPanelModel: ChatAccessoryModel {
         }
         
         self.headerAttr = NSAttributedString.initialize(string: names.joined(separator: ", "), color: theme.colors.blueUI, font: .medium(.text))
-        self.messageAttr = NSAttributedString.initialize(string: tr(.messageAccessoryPanelForwardedCountable(forwardMessages.count)), color: theme.colors.text, font: .normal(.text))
+        self.messageAttr = NSAttributedString.initialize(string: tr(L10n.messageAccessoryPanelForwardedCountable(forwardMessages.count)), color: theme.colors.text, font: .normal(.text))
 
         nodeReady.set(.single(true))
         self.setNeedDisplay()

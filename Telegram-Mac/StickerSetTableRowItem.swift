@@ -93,7 +93,7 @@ class StickerSetTableRowItem: TableRowItem {
         self.addPack = addPack
         self.removePack = removePack
         nameLayout = TextViewLayout(.initialize(string: info.title, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
-        countLayout = TextViewLayout(.initialize(string: tr(.stickersSetCount1Countable(Int(itemCount))), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        countLayout = TextViewLayout(.initialize(string: tr(L10n.stickersSetCount1Countable(Int(itemCount))), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         nameLayout.measure(width: initialSize.width - 50 - insets.left - insets.right)
         countLayout.measure(width: initialSize.width - 50 - insets.left - insets.right)
         super.init(initialSize)

@@ -26,7 +26,7 @@ private class ConnectionStatusView : View {
                 disableProxyButton = TitleButton()
                 disableProxyButton?.set(color: theme.colors.grayText, for: .Normal)
                 disableProxyButton?.set(font: .medium(.text), for: .Normal)
-                disableProxyButton?.set(text: tr(.connectingStatusDisableProxy), for: .Normal)
+                disableProxyButton?.set(text: tr(L10n.connectingStatusDisableProxy), for: .Normal)
                 disableProxyButton?.sizeToFit()
                 addSubview(disableProxyButton!)
                 
@@ -40,11 +40,11 @@ private class ConnectionStatusView : View {
             
             switch status {
             case .connecting(let toProxy):
-                attr = .initialize(string: toProxy ? tr(.chatConnectingStatusConnectingToProxy) : tr(.chatConnectingStatusConnecting), color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: toProxy ? tr(L10n.chatConnectingStatusConnectingToProxy) : tr(L10n.chatConnectingStatusConnecting), color: theme.colors.text, font: .medium(.header))
             case .updating:
-                attr = .initialize(string: tr(.chatConnectingStatusUpdating), color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: tr(L10n.chatConnectingStatusUpdating), color: theme.colors.text, font: .medium(.header))
             case .waitingForNetwork:
-                attr = .initialize(string: tr(.chatConnectingStatusWaitingNetwork), color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: tr(L10n.chatConnectingStatusWaitingNetwork), color: theme.colors.text, font: .medium(.header))
             case .online:
                 attr = NSAttributedString()
             }
@@ -349,8 +349,8 @@ class ChatTitleBarView: TitledBarView {
             var result = stringStatus(for: peerView, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
             
             if chatInteraction.account.peerId == peerView.peerId  {
-                //result = PeerStatusStringResult(result.title, .initialize(string: tr(.chatTitleSelf), color: theme.colors.grayText, font: .normal(.short)), presence: result.presence)
-                result = result.withUpdatedTitle(tr(.peerSavedMessages))
+                //result = PeerStatusStringResult(result.title, .initialize(string: tr(L10n.chatTitleSelf), color: theme.colors.grayText, font: .normal(.short)), presence: result.presence)
+                result = result.withUpdatedTitle(tr(L10n.peerSavedMessages))
             }
             if chatInteraction.account.peerId == peerView.peerId {
                 status = nil

@@ -16,8 +16,8 @@ import TGUIKit
 func createGroup(with account:Account, for navigation:NavigationViewController) {
     
     
-    let select = SelectPeersController(titles: ComposeTitles(tr(.composeSelectUsers), tr(.composeNext)), account: account, settings: [.contacts, .remote])
-    let chooseName =  CreateGroupViewController(titles: ComposeTitles(tr(.groupNewGroup), tr(.composeCreate)), account: account)
+    let select = SelectPeersController(titles: ComposeTitles(tr(L10n.composeSelectUsers), tr(L10n.composeNext)), account: account, settings: [.contacts, .remote])
+    let chooseName =  CreateGroupViewController(titles: ComposeTitles(tr(L10n.groupNewGroup), tr(L10n.composeCreate)), account: account)
     let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), Void> in
         let signal = showModalProgress(signal: createGroup(account: account, title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
         return signal
@@ -51,7 +51,7 @@ func createChannel(with account:Account, for navigation:NavigationViewController
     navigation.push(intro)
     
     let create = intro.onComplete.get() |> mapToSignal{ () -> Signal<PeerId?, Void> in
-        let create = CreateChannelViewController(titles: ComposeTitles(tr(.channelNewChannel), tr(.composeNext)), account: account)
+        let create = CreateChannelViewController(titles: ComposeTitles(tr(L10n.channelNewChannel), tr(L10n.composeNext)), account: account)
         navigation.push(create)
         return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, Void> in
             if let peerId = peerId {

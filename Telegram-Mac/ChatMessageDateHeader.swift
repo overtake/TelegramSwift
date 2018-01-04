@@ -59,7 +59,7 @@ class ChatDateStickItem : TableStickItem {
         
         let text: String
         if timeinfo.tm_year == timeinfoNow.tm_year && timeinfo.tm_yday == timeinfoNow.tm_yday {
-            text = tr(.dateToday)
+            text = tr(L10n.dateToday)
         } else {
             let dateFormatter = DateFormatter()
             dateFormatter.locale = Locale(identifier: appCurrentLanguage.languageCode)

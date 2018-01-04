@@ -473,7 +473,7 @@ func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Sig
                 confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), Void> in
                     return account.postbox.loadedPeerWithId(session.peerId) |> map {(new:peer, previous:$0)}
                 } |> mapToSignal { value in
-                    return confirmSignal(for: mainWindow, header: tr(.callConfirmDiscardCurrentHeader), information: tr(.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
+                    return confirmSignal(for: mainWindow, header: tr(L10n.callConfirmDiscardCurrentHeader), information: tr(L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
                 }
 
             } else {

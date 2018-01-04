@@ -160,7 +160,7 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case let .sticker(result, stableId):
             return ContextStickerRowItem(initialSize, account, result, stableId, chatInteraction)
         case .inlineRestricted(let until):
-            let text = until != nil ? tr(.channelPersmissionDeniedSendInlineUntil(until!)) : tr(.channelPersmissionDeniedSendInlineForever)
+            let text = until != nil ? tr(L10n.channelPersmissionDeniedSendInlineUntil(until!)) : tr(L10n.channelPersmissionDeniedSendInlineForever)
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, height: 40, text: text, alignment: .center, centerViewAlignment: true)
         }
         
@@ -575,9 +575,7 @@ class InputContextHelper: NSObject {
                             controller?.removeFromSuperview()
                             controller?.genericView.removeAll()
                             controller?.viewDidDisappear(animated)
-                        } else {
-                            controller?.genericView.isHidden = true
-                        }
+                        } 
                         
                     })
 
@@ -598,8 +596,12 @@ class InputContextHelper: NSObject {
                 var entries:[InputContextEntry] = []
                 switch result {
                 case let .mentions(peers):
+                    var mention:[PeerId: PeerId] = [:]
                     for i in 0 ..< peers.count {
-                        entries.append(.peer(peers[i],entries.count, Int64(arc4random())))
+                        if mention[peers[i].id] == nil {
+                            entries.append(.peer(peers[i],entries.count, Int64(arc4random())))
+                            mention[peers[i].id] = peers[i].id
+                        }
                     }
                 case let .contextRequestResult(_, result):
                     

@@ -238,6 +238,145 @@
     return nil;
 }
 
++ (NSString *)_youtubeVideoIdFromText:(NSString *)text originalUrl:(NSString *)originalUrl startTime:(NSTimeInterval *)startTime {
+    if ([text hasPrefix:@"http://www.youtube.com/watch?v="] || [text hasPrefix:@"https://www.youtube.com/watch?v="] || [text hasPrefix:@"http://m.youtube.com/watch?v="] || [text hasPrefix:@"https://m.youtube.com/watch?v="])
+    {
+        NSRange range1 = [text rangeOfString:@"?v="];
+        bool match = true;
+        for (NSInteger i = range1.location + range1.length; i < (NSInteger)text.length; i++)
+        {
+            unichar c = [text characterAtIndex:i];
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '=' || c == '&' || c == '#'))
+            {
+                match = false;
+                break;
+            }
+        }
+        
+        if (match)
+        {
+            NSString *videoId = nil;
+            NSRange ampRange = [text rangeOfString:@"&"];
+            NSRange hashRange = [text rangeOfString:@"#"];
+            if (ampRange.location != NSNotFound || hashRange.location != NSNotFound)
+            {
+                NSInteger location = MIN(ampRange.location, hashRange.location);
+                videoId = [text substringWithRange:NSMakeRange(range1.location + range1.length, location - range1.location - range1.length)];
+            }
+            else
+            videoId = [text substringFromIndex:range1.location + range1.length];
+            
+            if (videoId.length != 0)
+            return videoId;
+        }
+    }
+    else if ([text hasPrefix:@"http://youtu.be/"] || [text hasPrefix:@"https://youtu.be/"] || [text hasPrefix:@"http://www.youtube.com/embed/"] || [text hasPrefix:@"https://www.youtube.com/embed/"])
+    {
+        NSString *suffix = @"";
+        
+        NSMutableArray *prefixes = [NSMutableArray arrayWithArray:@
+                                    [
+                                     @"http://youtu.be/",
+                                     @"https://youtu.be/",
+                                     @"http://www.youtube.com/embed/",
+                                     @"https://www.youtube.com/embed/"
+                                     ]];
+        
+        while (suffix.length == 0 && prefixes.count > 0)
+        {
+            NSString *prefix = prefixes.firstObject;
+            if ([text hasPrefix:prefix])
+            {
+                suffix = [text substringFromIndex:prefix.length];
+                break;
+            }
+            else
+            {
+                [prefixes removeObjectAtIndex:0];
+            }
+        }
+        
+        NSString *queryString = nil;
+        for (int i = 0; i < (int)suffix.length; i++)
+        {
+            unichar c = [suffix characterAtIndex:i];
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '=' || c == '&' || c == '#'))
+            {
+                if (c == '?')
+                {
+                    queryString = [suffix substringFromIndex:i + 1];
+                    suffix = [suffix substringToIndex:i];
+                    break;
+                }
+                else
+                {
+                    return nil;
+                }
+            }
+        }
+        
+        if (startTime != NULL)
+        {
+            NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+            NSString *queryString = [NSURL URLWithString:originalUrl].query;
+            for (NSString *param in [queryString componentsSeparatedByString:@"&"])
+            {
+                NSArray *components = [param componentsSeparatedByString:@"="];
+                if (components.count < 2)
+                continue;
+                [params setObject:components.lastObject forKey:components.firstObject];
+            }
+            
+            NSString *timeParam = params[@"t"];
+            if (timeParam != nil)
+            {
+                NSTimeInterval position = 0.0;
+                if ([timeParam rangeOfString:@"s"].location != NSNotFound)
+                {
+                    NSString *value;
+                    NSUInteger location = 0;
+                    for (NSUInteger i = 0; i < timeParam.length; i++)
+                    {
+                        unichar c = [timeParam characterAtIndex:i];
+                        if ((c < '0' || c > '9'))
+                        {
+                            value = [timeParam substringWithRange:NSMakeRange(location, i - location)];
+                            location = i + 1;
+                            switch (c)
+                            {
+                                case 's':
+                                position += value.doubleValue;
+                                break;
+                                
+                                case 'm':
+                                position += value.doubleValue * 60.0;
+                                break;
+                                
+                                case 'h':
+                                position += value.doubleValue * 3600.0;
+                                break;
+                                
+                                default:
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    position = timeParam.doubleValue;
+                }
+                
+                *startTime = position;
+            }
+        }
+        
+        return suffix;
+    }
+    
+    return nil;
+}
+    
 + (NSArray<NSString *> *)getEmojiFromString:(NSString *)string {
     
     __block NSMutableDictionary *temp = [NSMutableDictionary dictionary];
@@ -343,6 +482,8 @@
     }
     return array;
 }
+    
+    
 
 
 +(NSString *) md5:(NSString *)string {

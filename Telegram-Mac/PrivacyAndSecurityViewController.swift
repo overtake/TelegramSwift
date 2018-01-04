@@ -179,57 +179,58 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     func item(_ arguments: PrivacyAndSecurityControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .privacyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsPrivacyHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+            
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsPrivacyHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .blockedPeers:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsBlockedUsers), type: .next, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsBlockedUsers), type: .next, action: {
                 arguments.openBlockedUsers()
             })
         case let .lastSeenPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsLastSeen), type: .context(stateback: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsLastSeen), type: .context(stateback: {
                 return text
             }), action: {
                 arguments.openLastSeenPrivacy()
             })
         case let .groupPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsGroups), type: .context(stateback: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsGroups), type: .context(stateback: {
                 return text
             }), action: {
                 arguments.openGroupsPrivacy()
             })
         case let .voiceCallPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsVoiceCalls), type: .context(stateback: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsVoiceCalls), type: .context(stateback: {
                 return text
             }), action: {
                 arguments.openVoiceCallPrivacy()
             })
         case .securityHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsSecurityHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsSecurityHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .passcode:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsPasscode), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsPasscode), action: {
                 arguments.openPasscode()
             })
         case .twoStepVerification:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsTwoStepVerification), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsTwoStepVerification), action: {
                 arguments.openTwoStepVerification()
             })
         case .activeSessions:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsActiveSessions), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsActiveSessions), action: {
                 arguments.openActiveSessions()
             })
         case .accountHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsDeleteAccountHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsDeleteAccountHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .accountTimeout(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsDeleteAccount), type: .context(stateback: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsDeleteAccount), type: .context(stateback: {
                 return text
             }), action: {
                 arguments.setupAccountAutoremove()
             })
         case .accountInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsDeleteAccountDescription))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsDeleteAccountDescription))
         case .proxyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsProxyHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsProxyHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .proxySettings(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsUseProxy), type: .context(stateback: { () -> String in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsUseProxy), type: .context(stateback: { () -> String in
                 return text
             }), action: {
                 arguments.openProxySettings()
@@ -244,25 +245,25 @@ private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> S
     switch settings {
     case let .disableEveryone(enableFor):
         if enableFor.isEmpty {
-            return tr(.privacySettingsControllerNobody)
+            return tr(L10n.privacySettingsControllerNobody)
         } else {
-            return tr(.privacySettingsLastSeenNobodyPlus("\(enableFor.count)"))
+            return tr(L10n.privacySettingsLastSeenNobodyPlus("\(enableFor.count)"))
         }
     case let .enableEveryone(disableFor):
         if disableFor.isEmpty {
-            return tr(.privacySettingsControllerEverbody)
+            return tr(L10n.privacySettingsControllerEverbody)
         } else {
-            return tr(.privacySettingsLastSeenEverybodyMinus("\(disableFor.count)"))
+            return tr(L10n.privacySettingsLastSeenEverybodyMinus("\(disableFor.count)"))
         }
     case let .enableContacts(enableFor, disableFor):
         if !enableFor.isEmpty && !disableFor.isEmpty {
-            return tr(.privacySettingsLastSeenContactsMinusPlus("\(enableFor.count)", "\(disableFor.count)"))
+            return tr(L10n.privacySettingsLastSeenContactsMinusPlus("\(enableFor.count)", "\(disableFor.count)"))
         } else if !enableFor.isEmpty {
-            return tr(.privacySettingsLastSeenContactsPlus("\(enableFor.count)"))
+            return tr(L10n.privacySettingsLastSeenContactsPlus("\(enableFor.count)"))
         } else if !disableFor.isEmpty {
-            return tr(.privacySettingsLastSeenContactsMinus("\(enableFor.count)"))
+            return tr(L10n.privacySettingsLastSeenContactsMinus("\(enableFor.count)"))
         } else {
-            return tr(.privacySettingsControllerMyContacts)
+            return tr(L10n.privacySettingsControllerMyContacts)
         }
     }
 }
@@ -335,7 +336,7 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     sectionId += 1
     
     entries.append(.proxyHeader(sectionId: sectionId))
-    entries.append(.proxySettings(sectionId: sectionId, proxy != nil ? tr(.proxySettingsSocks5) : tr(.proxySettingsDisabled)))
+    entries.append(.proxySettings(sectionId: sectionId, proxy != nil ? tr(L10n.proxySettingsSocks5) : tr(L10n.proxySettingsDisabled)))
     
 
     entries.append(.section(sectionId: sectionId))
@@ -357,6 +358,9 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         entries.append(.accountTimeout(sectionId: sectionId, ""))
     }
     entries.append(.accountInfo(sectionId: sectionId))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
     
     return entries
 }
@@ -523,16 +527,16 @@ class PrivacyAndSecurityViewController: TableViewController {
                         ]
                         var items: [SPopoverItem] = []
                         
-                        items.append(SPopoverItem(tr(.timerMonthsCountable(1)), {
+                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(1)), {
                             timeoutAction(timeoutValues[0])
                         }))
-                        items.append(SPopoverItem(tr(.timerMonthsCountable(3)), {
+                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(3)), {
                             timeoutAction(timeoutValues[1])
                         }))
-                        items.append(SPopoverItem(tr(.timerMonthsCountable(6)), {
+                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(6)), {
                             timeoutAction(timeoutValues[2])
                         }))
-                        items.append(SPopoverItem(tr(.timerYearsCountable(1)), {
+                        items.append(SPopoverItem(tr(L10n.timerYearsCountable(1)), {
                             timeoutAction(timeoutValues[3])
                         }))
                         

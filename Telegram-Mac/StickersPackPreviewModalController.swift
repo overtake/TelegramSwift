@@ -69,7 +69,7 @@ private class StickersModalView : View {
         add.set(background: theme.colors.blueFill, for: .Normal)
         add.set(background: theme.colors.blueFill, for: .Hover)
         add.set(background: theme.colors.blueFill, for: .Highlight)
-        add.set(text: tr(.stickerPackAdd1Countable(0)), for: .Normal)
+        add.set(text: tr(L10n.stickerPackAdd1Countable(0)), for: .Normal)
 
         addSubview(add)
         headerTitle.backgroundColor = theme.colors.background
@@ -104,7 +104,7 @@ private class StickersModalView : View {
             indicatorView.removeFromSuperview()
             dismiss.isHidden = !installed
             shareView.isHidden = false
-            add.set(text: tr(.stickerPackAdd1Countable(collectionItems .count)).uppercased(), for: .Normal)
+            add.set(text: tr(L10n.stickerPackAdd1Countable(collectionItems .count)).uppercased(), for: .Normal)
             add.isHidden = installed
             shadowView.isHidden = installed
             let attr = NSMutableAttributedString()

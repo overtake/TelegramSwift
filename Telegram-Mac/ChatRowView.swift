@@ -240,7 +240,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let location = self.convert(event.locationInWindow, from: nil)
                 if NSPointInRect(location, rightView.frame) {
                     if item.isFailed {
-                        confirm(for: mainWindow, header: tr(.alertSendErrorHeader), information: tr(.alertSendErrorText), okTitle: tr(.alertSendErrorResend), cancelTitle: tr(.alertSendErrorIgnore), thridTitle: tr(.alertSendErrorDelete), successHandler: { result in
+                        confirm(for: mainWindow, header: tr(L10n.alertSendErrorHeader), information: tr(L10n.alertSendErrorText), okTitle: tr(L10n.alertSendErrorResend), cancelTitle: tr(L10n.alertSendErrorIgnore), thridTitle: tr(L10n.alertSendErrorDelete), successHandler: { result in
                             
                             switch result {
                             case .thrid:

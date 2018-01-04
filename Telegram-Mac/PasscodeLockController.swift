@@ -44,7 +44,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         self.backgroundColor = .white
         nextButton.set(color: theme.colors.blueUI, for: .Normal)
         nextButton.set(font: .medium(.title), for: .Normal)
-        nextButton.set(text: tr(.passcodeNext), for: .Normal)
+        nextButton.set(text: tr(L10n.passcodeNext), for: .Normal)
         nextButton.sizeToFit()
         
         
@@ -61,7 +61,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.passcodeEnterPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: tr(L10n.passcodeEnterPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.font = .normal(.text)
@@ -69,7 +69,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.textView?.insertionPointColor = theme.colors.text
         input.sizeToFit()
         
-        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(L10n.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents,  {_ in}))
         }))
         
@@ -137,15 +137,15 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         
         switch state {
         case .login:
-            text = tr(.passcodeEnterPasscodePlaceholder)
+            text = tr(L10n.passcodeEnterPasscodePlaceholder)
         case let .change(inner), let .enable(inner), let .disable(inner):
             switch inner {
             case .old:
-                text = tr(.passcodeEnterCurrentPlaceholder)
+                text = tr(L10n.passcodeEnterCurrentPlaceholder)
             case .new:
-                text = tr(.passcodeEnterNewPlaceholder)
+                text = tr(L10n.passcodeEnterNewPlaceholder)
             case .confirm:
-                text = tr(.passcodeReEnterPlaceholder)
+                text = tr(L10n.passcodeReEnterPlaceholder)
             }
         }
         input.stringValue = ""
@@ -294,7 +294,7 @@ class PasscodeLockController: ModalViewController {
         let myContext = LAContext()
                 
         if myContext.canUseBiometric {
-            myContext.evaluatePolicy(.applicationPolicy, localizedReason: tr(.passcodeUnlockTouchIdReason)) { (success, evaluateError) in
+            myContext.evaluatePolicy(.applicationPolicy, localizedReason: tr(L10n.passcodeUnlockTouchIdReason)) { (success, evaluateError) in
                 if (success) {
                     Queue.mainQueue().async {
                         self._doneValue.set(.single(true))

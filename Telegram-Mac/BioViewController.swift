@@ -54,11 +54,11 @@ private enum BioEntry : TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case .text(_, let text):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(.bioPlaceholder), text: text, limit: bioLimit, textChangeHandler: { updated in
+            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.bioPlaceholder), text: text, limit: bioLimit, textChangeHandler: { updated in
                 arguments.updateText(updated)
             })
         case .description:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.bioDescription))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.bioDescription))
         }
     }
 }
@@ -187,7 +187,7 @@ class BioViewController: EditableViewController<TableView> {
     }
     
     override var normalString: String {
-        return tr(.bioSave)
+        return tr(L10n.bioSave)
     }
     
     override func changeState() {

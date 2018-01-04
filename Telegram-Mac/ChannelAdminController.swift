@@ -174,7 +174,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case .info(_, let peer, let presence):
-            var string:String = peer.isBot ? tr(.presenceBot) : tr(.peerStatusRecently)
+            var string:String = peer.isBot ? tr(L10n.presenceBot) : tr(L10n.peerStatusRecently)
             var color:NSColor = theme.colors.grayText
             if let presence = presence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
@@ -233,23 +233,23 @@ private struct ChannelAdminControllerState: Equatable {
 
 private func stringForRight(right: TelegramChannelAdminRightsFlags, isGroup: Bool) -> String {
     if right.contains(.canChangeInfo) {
-        return isGroup ? tr(.groupEditAdminPermissionChangeInfo) : tr(.channelEditAdminPermissionChangeInfo)
+        return isGroup ? tr(L10n.groupEditAdminPermissionChangeInfo) : tr(L10n.channelEditAdminPermissionChangeInfo)
     } else if right.contains(.canPostMessages) {
-        return tr(.channelEditAdminPermissionPostMessages)
+        return tr(L10n.channelEditAdminPermissionPostMessages)
     } else if right.contains(.canEditMessages) {
-        return tr(.channelEditAdminPermissionEditMessages)
+        return tr(L10n.channelEditAdminPermissionEditMessages)
     } else if right.contains(.canDeleteMessages) {
-        return tr(.channelEditAdminPermissionDeleteMessages)
+        return tr(L10n.channelEditAdminPermissionDeleteMessages)
     } else if right.contains(.canBanUsers) {
-        return tr(.channelEditAdminPermissionBanUsers)
+        return tr(L10n.channelEditAdminPermissionBanUsers)
     } else if right.contains(.canInviteUsers) {
-        return tr(.channelEditAdminPermissionInviteUsers)
+        return tr(L10n.channelEditAdminPermissionInviteUsers)
     } else if right.contains(.canChangeInviteLink) {
-        return "tr(.channelEditAdminPermissionInviteViaLink)"
+        return "tr(L10n.channelEditAdminPermissionInviteViaLink)"
     } else if right.contains(.canPinMessages) {
-        return tr(.channelEditAdminPermissionPinMessages)
+        return tr(L10n.channelEditAdminPermissionPinMessages)
     } else if right.contains(.canAddAdmins) {
-        return tr(.channelEditAdminPermissionAddNewAdmins)
+        return tr(L10n.channelEditAdminPermissionAddNewAdmins)
     } else {
         return ""
     }
@@ -318,7 +318,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.description(sectionId, 1, tr(.channelAdminWhatCanAdminDo)))
+        entries.append(.description(sectionId, 1, tr(L10n.channelAdminWhatCanAdminDo)))
         
         let isGroup: Bool
         let maskRightsFlags: TelegramChannelAdminRightsFlags
@@ -384,14 +384,14 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     index += 1
                 }
             }
-            entries.append(.description(sectionId, 50, addAdminsEnabled ? tr(.channelAdminAdminAccess) : tr(.channelAdminAdminRestricted)))
+            entries.append(.description(sectionId, 50, addAdminsEnabled ? tr(L10n.channelAdminAdminAccess) : tr(L10n.channelAdminAdminRestricted)))
         } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _) = initialParticipant, let adminInfo = maybeAdminInfo {
             var index = 0
             for right in rightsOrder {
                 entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup), right, adminInfo.rights.flags, adminInfo.rights.flags.contains(right), false))
                 index += 1
             }
-            entries.append(.description(sectionId, 50, tr(.channelAdminCantEditRights)))
+            entries.append(.description(sectionId, 50, tr(L10n.channelAdminCantEditRights)))
         }
     }
     
@@ -543,16 +543,16 @@ class ChannelAdminController: ModalViewController {
             self?.updateSize(updatedSize.swap(true))
             
             self?.modal?.interactions?.updateDone { button in
-                button.set(text: tr(.modalOK), for: .Normal)
+                button.set(text: tr(L10n.modalOK), for: .Normal)
                 let flags = (stateValue.modify({$0}).updatedFlags ?? []).subtracting(.canChangeInviteLink)
                 button.isEnabled = !flags.isEmpty
                 if !values.canEdit {
                     button.isEnabled = true
-                    button.set(text: tr(.navigationDone), for: .Normal)
+                    button.set(text: tr(L10n.navigationDone), for: .Normal)
                 }
             }
             self?.modal?.interactions?.updateCancel { button in
-                button.set(text: values.canDismiss ? tr(.channelAdminDismiss) : "", for: .Normal)
+                button.set(text: values.canDismiss ? tr(L10n.channelAdminDismiss) : "", for: .Normal)
                 button.set(color: values.canDismiss ? theme.colors.redUI : theme.colors.blueText, for: .Normal)
             }
         }))
@@ -581,7 +581,7 @@ class ChannelAdminController: ModalViewController {
         let updated = self.updated
         
         _ = showModalProgress(signal: updatePeerAdminRights(account: account, peerId: peerId, adminId: adminId, rights: TelegramChannelAdminRights(flags: updateFlags)) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-            alert(for: mainWindow, info: tr(.channelAdminsAddAdminError))
+            alert(for: mainWindow, info: tr(L10n.channelAdminsAddAdminError))
         }, completed: {
             updated(TelegramChannelAdminRights(flags: updateFlags))
         })
@@ -599,7 +599,7 @@ class ChannelAdminController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             if let _ = self?.initialParticipant {
                 if let updatedFlags = self?.stateValue.modify({$0}).updatedFlags {
                     self?.updateRights(updatedFlags)
@@ -612,7 +612,7 @@ class ChannelAdminController: ModalViewController {
                 }
             }
             
-        }, cancelTitle: tr(.modalCancel), cancel: { [weak self] in
+        }, cancelTitle: tr(L10n.modalCancel), cancel: { [weak self] in
             self?.arguments?.dismissAdmin()
         }, height: 40)
     }

@@ -48,7 +48,7 @@ class ChatInputAttachView: ImageButton {
                         let afterSizeCheck = result.count
                         
                         if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, info: tr(.appMaxFileSize))
+                            alert(for: mainWindow, info: tr(L10n.appMaxFileSize))
                         } else {
                             strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, false)
                         }
@@ -74,7 +74,7 @@ class ChatInputAttachView: ImageButton {
                         let afterSizeCheck = result.count
                         
                         if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, info: tr(.appMaxFileSize))
+                            alert(for: mainWindow, info: tr(L10n.appMaxFileSize))
                         } else {
                             strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true)
                         }
@@ -92,9 +92,9 @@ class ChatInputAttachView: ImageButton {
                     }
                 }
                 
-                let items = [SPopoverItem(tr(.inputAttachPopoverPhotoOrVideo), {
+                let items = [SPopoverItem(tr(L10n.inputAttachPopoverPhotoOrVideo), {
                     attachPhotoOrVideo()
-                }, theme.icons.chatAttachPhoto), SPopoverItem(tr(.inputAttachPopoverPicture), { [weak strongSelf] in
+                }, theme.icons.chatAttachPhoto), SPopoverItem(tr(L10n.inputAttachPopoverPicture), { [weak strongSelf] in
                     if  let strongSelf = strongSelf, let window = strongSelf.kitWindow {
                         pickImage(for: window, completion: { (image) in
                             if let image = image {
@@ -103,7 +103,7 @@ class ChatInputAttachView: ImageButton {
                         })
                     }
                     
-                }, theme.icons.chatAttachCamera), SPopoverItem(tr(.inputAttachPopoverFile), {
+                }, theme.icons.chatAttachCamera), SPopoverItem(tr(L10n.inputAttachPopoverFile), {
                     attachFile()
                 }, theme.icons.chatAttachFile)]
                 

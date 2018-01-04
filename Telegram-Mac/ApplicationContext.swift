@@ -230,7 +230,7 @@ final class PasscodeAccessContext {
         }
         
         rootController = PasscodeLockController(account, .login, logoutImpl: {
-            _ = (confirmSignal(for: window, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
+            _ = (confirmSignal(for: window, information: tr(L10n.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
         })
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
         
@@ -628,7 +628,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     
     
     func logout() {
-        self.logoutDisposable.set((confirmSignal(for: window, information: tr(.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
+        self.logoutDisposable.set((confirmSignal(for: window, information: tr(L10n.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
             if let strongSelf = self {
                 return logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager)
             }
@@ -819,7 +819,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         }
                         
                         if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
-                            text = tr(.notificationLockedPreview).nsstring
+                            text = tr(L10n.notificationLockedPreview).nsstring
                             subText = nil
                         }
                         
@@ -830,7 +830,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         notification.contentImage = images[message.id]
                         notification.hasReplyButton = hasReplyButton
                         
-                        if localizedString(inAppSettings.tone) != tr(.notificationSettingsToneNone) {
+                        if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
                             notification.soundName = inAppSettings.tone
                         } else {
                             notification.soundName = nil
@@ -915,11 +915,11 @@ private class LegacyPasscodeHeaderView : View {
         header.update(headerLayout)
         
         
-        let descLayout1 = TextViewLayout(NSAttributedString.initialize(string: tr(.legacyIntroDescription1), color: .grayText, font: .normal(FontSize.text)), alignment: .center)
+        let descLayout1 = TextViewLayout(NSAttributedString.initialize(string: tr(L10n.legacyIntroDescription1), color: .grayText, font: .normal(FontSize.text)), alignment: .center)
         descLayout1.measure(width: frameRect.width - 200)
         desc1.update(descLayout1)
         
-        let descLayout2 = TextViewLayout(NSAttributedString.initialize(string: tr(.legacyIntroDescription2), color: .grayText, font: NSFont.normal(FontSize.text)), alignment: .center)
+        let descLayout2 = TextViewLayout(NSAttributedString.initialize(string: tr(L10n.legacyIntroDescription2), color: .grayText, font: NSFont.normal(FontSize.text)), alignment: .center)
         descLayout2.measure(width: frameRect.width - 200)
         desc2.update(descLayout2)
         
@@ -964,7 +964,7 @@ class LegacyIntroView : View, NSTextFieldDelegate {
         
         
         doneButton.set(font: .medium(.header), for: .Normal)
-        doneButton.set(text: tr(.legacyIntroNext), for: .Normal)
+        doneButton.set(text: tr(L10n.legacyIntroNext), for: .Normal)
         
         doneButton.set(color: .blueUI, for: .Normal)
         
@@ -981,14 +981,14 @@ class LegacyIntroView : View, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()//Passcode.EnterPasscodePlaceholder
-        _ = attr.append(string: tr(.passcodeEnterPasscodePlaceholder), color: .grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: tr(L10n.passcodeEnterPasscodePlaceholder), color: .grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.font = NSFont.normal(FontSize.text)
         input.textColor = .text
         input.sizeToFit()
         
-        let logoutAttr = parseMarkdownIntoAttributedString(tr(.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+        let logoutAttr = parseMarkdownIntoAttributedString(tr(L10n.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, {_ in}))
         }))
         

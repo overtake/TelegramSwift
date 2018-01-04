@@ -73,7 +73,7 @@ class SuggestionLocalizationViewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
                 _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()

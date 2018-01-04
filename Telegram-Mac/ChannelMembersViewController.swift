@@ -217,15 +217,15 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                 }
             })
         case .addMembers:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.channelMembersAddMembers), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelMembersAddMembers), nameStyle: blueActionButton, type: .none, action: {
                 arguments.addMembers()
             })
         case .inviteLink:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.channelMembersInviteLink), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelMembersInviteLink), nameStyle: blueActionButton, type: .none, action: {
                 arguments.inviteLink()
             })
         case .membersDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.channelMembersMembersListDesc))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.channelMembersMembersListDesc))
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
@@ -412,7 +412,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 
             }))
         }, addMembers: {
-            peersPromise.set(selectModalPeers(account: account, title: tr(.channelMembersSelectTitle), settings: [.contacts, .remote]) |> mapToSignal { peers -> Signal<[RenderedChannelParticipant]?, Void> in
+            peersPromise.set(selectModalPeers(account: account, title: tr(L10n.channelMembersSelectTitle), settings: [.contacts, .remote]) |> mapToSignal { peers -> Signal<[RenderedChannelParticipant]?, Void> in
                 return showModalProgress(signal: addChannelMembers(account: account, peerId: peerId, memberIds: peers) |> mapToSignal {
                     return channelMembers(postbox: account.postbox, network: account.network, peerId: peerId) |> map { Optional($0) }
                     }, for: mainWindow)

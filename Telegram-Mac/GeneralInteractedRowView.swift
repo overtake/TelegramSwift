@@ -103,11 +103,18 @@ class GeneralInteractedRowView: GeneralRowView {
                 nextView.sizeToFit()
             }
             
+            var needNextImage: Bool = false
+            if case .colorSelector = item.type {
+                needNextImage = true
+            }
             if case .next = item.type {
+                needNextImage = true
+            }
+            
+            if needNextImage {
                 nextView.isHidden = false
                 nextView.image = theme.icons.generalNext
                 nextView.sizeToFit()
-                
             }
             
             
@@ -172,6 +179,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                 
                 nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor)
+            }
+            
+            if case let .colorSelector(stateback) = item.type {
+                ctx.setFillColor(stateback().cgColor)
+                ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels((frame.height - 14) / 2), 14, 14))
             }
         }
         

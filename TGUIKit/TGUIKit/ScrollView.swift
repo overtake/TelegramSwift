@@ -34,6 +34,11 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
 open class ScrollView: NSScrollView, CALayerDelegate{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
+    
+  
+    override open static var isCompatibleWithResponsiveScrolling: Bool {
+        return true
+    }
 
     public func scrollPosition(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0))  -> (current: ScrollPosition, previous: ScrollPosition) {
         
