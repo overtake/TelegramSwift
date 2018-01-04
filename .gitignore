@@ -7,3 +7,11 @@ fastlane/sparkle/dsa_priv.pem
 fastlane/sparkle/dsa_pub.pem
 fastlane/sparkle/sign_update
 Telegram-Mac/Config.swift
+Telegram-Mac.xcworkspace/xcuserdata/telegram.xcuserdatad/UserInterfaceState.xcuserstate
+Telegram-Mac.xcworkspace/xcuserdata/telegram.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
+Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/Hockeyapp.xcscheme
+Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/Release.xcscheme
+Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/Telegram.xcscheme
+Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/xcschememanagement.plist
+TGUIKit/TGUIKit.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/TGUIKit.xcscheme
+TGUIKit/TGUIKit.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/xcschememanagement.plist
