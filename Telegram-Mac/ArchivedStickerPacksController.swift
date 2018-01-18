@@ -30,13 +30,15 @@ private final class ArchivedStickerPacksControllerArguments {
 private enum ArchivedStickerPacksEntryId: Hashable {
     case index(Int32)
     case pack(ItemCollectionId)
-    
+    case loading
     var hashValue: Int {
         switch self {
         case let .index(index):
             return index.hashValue
         case let .pack(id):
             return id.hashValue
+        case .loading:
+            return -100
         }
     }
     
@@ -44,6 +46,12 @@ private enum ArchivedStickerPacksEntryId: Hashable {
         switch lhs {
         case let .index(index):
             if case .index(index) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .loading:
+            if case .loading = rhs {
                 return true
             } else {
                 return false
@@ -62,12 +70,14 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
     case section(sectionId:Int32)
     case info(sectionId:Int32, String)
     case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, ItemListStickerPackItemEditing)
-    
+    case loading(Bool)
     
     var stableId: ArchivedStickerPacksEntryId {
         switch self {
         case .info:
             return .index(0)
+        case .loading:
+            return .loading
         case let .pack(_, _, info, _, _, _, _):
             return .pack(info.id)
         case let .section(sectionId):
@@ -79,6 +89,12 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         switch lhs {
         case let .info(sectionId, text):
             if case .info(sectionId, text) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .loading(loading):
+            if case .loading(loading) = rhs {
                 return true
             } else {
                 return false
@@ -123,6 +139,8 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         switch self {
         case .info:
             return 0
+        case .loading:
+            return -1
         case .pack:
             fatalError("")
         case let .section(sectionId):
@@ -132,7 +150,8 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-       
+        case .loading:
+            return 0
         case let .info(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .pack( sectionId, index, _, _, _, _, _):
@@ -160,6 +179,8 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
             })
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+        case .loading(let loading):
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: L10n.archivedStickersEmpty)
         }
     }
 }
@@ -206,23 +227,29 @@ private func archivedStickerPacksControllerEntries(state: ArchivedStickerPacksCo
     sectionId += 1
     
     if let packs = packs {
-        entries.append(.info(sectionId: sectionId, tr(L10n.archivedStickersDescription)))
-        
-        entries.append(.section(sectionId: sectionId))
-        sectionId += 1
-        
-        var installedIds = Set<ItemCollectionId>()
-        if let view = installedView.views[.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionIdsView, let ids = view.idsByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
-            installedIds = ids
-        }
-        
-        var index: Int32 = 0
-        for item in packs {
-            if !installedIds.contains(item.info.id) {
-                entries.append(.pack(sectionId: sectionId, index, item.info, item.topItems.first, item.info.count, !state.removingPackIds.contains(item.info.id), ItemListStickerPackItemEditing(editable: true, editing: state.editing)))
-                index += 1
+        if packs.isEmpty {
+            entries.append(.loading(false))
+        } else {
+            entries.append(.info(sectionId: sectionId, tr(L10n.archivedStickersDescription)))
+            
+            entries.append(.section(sectionId: sectionId))
+            sectionId += 1
+            
+            var installedIds = Set<ItemCollectionId>()
+            if let view = installedView.views[.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionIdsView, let ids = view.idsByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
+                installedIds = ids
             }
-        }
+            
+            var index: Int32 = 0
+            for item in packs {
+                if !installedIds.contains(item.info.id) {
+                    entries.append(.pack(sectionId: sectionId, index, item.info, item.topItems.first, item.info.count, !state.removingPackIds.contains(item.info.id), ItemListStickerPackItemEditing(editable: true, editing: state.editing)))
+                    index += 1
+                }
+            }
+        } 
+    } else {
+        entries.append(.loading(true))
     }
     
     return entries

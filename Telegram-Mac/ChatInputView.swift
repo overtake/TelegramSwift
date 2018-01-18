@@ -137,7 +137,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
         
-        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(),false)
+        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(), false)
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         
         textView.delegate = self
@@ -351,7 +351,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             textView.setSelectedRange(range)
         }
     }
-    
+    private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         accessory.update(with: state, account: account, animated: animated)
         
@@ -360,6 +360,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 strongSelf.accessory.measureSize(strongSelf.frame.width - 40.0)
                 strongSelf.textViewHeightChanged(strongSelf.defaultContentHeight, animated: animated)
                 strongSelf.update()
+                if strongSelf.updateFirstTime {
+                    strongSelf.updateFirstTime = false
+                    strongSelf.textView.scrollToCursor()
+                }
             }
         }))
 
@@ -386,7 +390,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let keyboardWidth = frame.width - 40
         
         bottomView.setFrameSize( NSMakeSize(keyboardWidth, bottomHeight))
-
+        
         
         if let markup = replyMarkupModel, markup.hasButtons {
             markup.measureSize(keyboardWidth)

@@ -27,12 +27,13 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
         // self.layer = (self.layerClass() as! CALayer.Type).init()
         self.wantsLayer = true
-        
+        backgroundColor = .clear
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         self.layer?.delegate = self
-        self.layer?.drawsAsynchronously = System.drawAsync
-        canDrawSubviewsIntoLayer = true
+        self.layer?.backgroundColor = NSColor.clear.cgColor
         autoresizesSubviews = false
+        autoresizingMask = []
+     //   canDrawSubviewsIntoLayer = true
         pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
     }
     
@@ -54,12 +55,15 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open override func draw(_ dirtyRect: NSRect) {
-        
+        var bp:Int = 0
+        bp += 1
     }
+    
+
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(backdorColor.cgColor)
-        ctx.fill(layer.bounds)
+        ctx.fill(bounds)
         
         if let border = border {
             

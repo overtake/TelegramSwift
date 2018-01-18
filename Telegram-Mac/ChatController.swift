@@ -72,7 +72,7 @@ func ==(lhs:ChatHistoryState, rhs:ChatHistoryState) -> Bool {
 }
 
 
-class ChatControllerView : View, ChatInputDelegate {
+class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
     
     let tableView:TableView
     let inputView:ChatInputView
@@ -81,7 +81,7 @@ class ChatControllerView : View, ChatInputDelegate {
     private var searchInteractions:ChatSearchInteractions!
     private let scroller:ChatNavigateScroller
     private var mentions:ChatNavigationMention?
-    private var progressView:View?
+    private var progressView:ProgressIndicator?
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
@@ -241,27 +241,25 @@ class ChatControllerView : View, ChatInputDelegate {
             switch state {
             case .progress:
                 if progressView == nil {
-                    progressView = View(frame:tableView.bounds)
-                    progressView?.autoresizingMask = [.width, .height]
-                    let indicator = ProgressIndicator(frame: NSMakeRect(0,0,30,30))
-                    progressView?.addSubview(indicator)
-                    indicator.animates = true
-                    tableView.addSubview(progressView!)
-                    indicator.center()
+                    self.progressView = ProgressIndicator(frame: NSMakeRect(0,0,30,30))
+                    
+                    progressView!.animates = true
+                    addSubview(progressView!)
+                    progressView!.center()
                 }
-                progressView?.backgroundColor = theme.colors.background
+                progressView?.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+                progressView?.layer?.cornerRadius = 15
               //  (progressView?.subviews.first as? ProgressIndicator)?.color = theme.colors.indicatorColor
                 break
             case .visible:
                 if animated {
                     progressView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] (completed) in
                         self?.progressView?.removeFromSuperview()
-                        (self?.progressView?.subviews.first as? ProgressIndicator)?.animates = false
+                        self?.progressView?.animates = false
                         self?.progressView = nil
                     })
                 } else {
                     progressView?.removeFromSuperview()
-                    (progressView?.subviews.first as? ProgressIndicator)?.animates = false
                     progressView = nil
                 }
                 
@@ -327,6 +325,14 @@ class ChatControllerView : View, ChatInputDelegate {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
+        switch backgroundMode {
+        case let .color(color):
+            tableView.layer?.backgroundColor = color.cgColor
+        case .plain:
+            tableView.layer?.backgroundColor = theme.colors.background.cgColor
+        default:
+            tableView.layer?.backgroundColor = .clear
+        }
         self.backgroundColor = theme.colors.background
         progressView?.backgroundColor = theme.colors.background
         (progressView?.subviews.first as? ProgressIndicator)?.set(color: theme.colors.indicatorColor)
@@ -343,7 +349,6 @@ class ChatControllerView : View, ChatInputDelegate {
 fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHistoryView, account:Account, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scrollPosition:ChatHistoryViewScrollPosition?, reason:ChatHistoryViewUpdateType, animationInterface:TableAnimationInterface?) -> Signal<TableUpdateTransition,Void> {
     return Signal { subscriber in
     
-        
         
         var scrollToItem:TableScrollState? = nil
         var animated = animated
@@ -480,6 +485,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         let firstTransition = Queue.mainQueue().isCurrent()
         var cancelled = false
         
+        var lowFastFinished: Int? = nil
+        var highFastFinished: Int? = nil
         if fromView == nil && firstTransition, let state = scrollToItem {
             
             var initialIndex:Int = 0
@@ -577,21 +584,21 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     
                     while !lowSuccess || !highSuccess {
                         
-                        if  initialSize.height / 2 > lowHeight && !lowSuccess {
+                        if  (initialSize.height / 2) >= lowHeight && !lowSuccess {
                             let item = makeItem(entries[low].entry)
                             lowHeight += item.height
                             firstInsertion.append((low, item))
                         }
                         
-                        if initialSize.height / 2 > highHeight && !highSuccess  {
+                        if (initialSize.height / 2) >= highHeight && !highSuccess  {
                             let item = makeItem(entries[high].entry)
                             highHeight += item.height
                             firstInsertion.append((high, item))
                         }
                         
-                        if ((initialSize.height / 2 < lowHeight ) || low == entries.count - 1) {
+                        if (((initialSize.height / 2) <= lowHeight ) || low == entries.count - 1) {
                             lowSuccess = true
-                        } else {
+                        } else if !lowSuccess {
                             low += 1
                         }
                         
@@ -600,9 +607,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                             bp += 1
                         }
                         
-                        if ((initialSize.height / 2 < highHeight) || high == 0) {
+                        if (((initialSize.height / 2) <= highHeight) || high == 0) {
                             highSuccess = true
-                        } else {
+                        } else if !highSuccess {
                             high -= 1
                         }
                         
@@ -621,8 +628,10 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     for i in 0 ..< copy.count {
                         firstInsertion.append((i, copy[i].1))
                     }
-
+                    lowFastFinished = low
+                    highFastFinished = high
                 }
+                
                 
                 break
             default:
@@ -652,6 +661,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     
                     var insertions:[(Int, TableRowItem)] = []
                     let updates:[(Int, TableRowItem)] = []
+                    
                     for i in 0 ..< entries.count {
                         let item:TableRowItem
                         
@@ -662,8 +672,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                             item = makeItem(entries[i].entry)
                             insertions.append((i, item))
                         }
-                        
                     }
+                    
+                    
                     subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .saveVisible(.upper)))
                     subscriber.putCompletion()
                 }
@@ -880,7 +891,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
 
-        let historyViewTransition =  combineLatest(historyViewUpdate |> deliverOnMainQueue, autoremovingUnreadMark.get() |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> deliverOnMainQueue) |> mapToQueue { [weak self] update, autoremoving, appearance, adminIds -> Signal<(TableUpdateTransition, ChatHistoryCombinedInitialData), NoError> in
+        let historyViewTransition =  combineLatest(historyViewUpdate |> deliverOnMainQueue, autoremovingUnreadMark.get() |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> deliverOnMainQueue) |> mapToQueue { [weak self] update, autoremoving, appearance, adminIds -> Signal<(TableUpdateTransition, ChatHistoryCombinedInitialData, TelegramWallpaper), NoError> in
             if let strongSelf = self {
                 
                 switch update {
@@ -893,16 +904,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return .complete()
                     
                 case let .HistoryView(view, updateType, scrollPosition, initialData):
+                    let pAppearance = previousAppearance.swap(appearance)
                     
-                    var prepareOnMainQueue = previousAppearance.swap(appearance).presentation.dark != appearance.presentation.dark || previousAppearance.swap(appearance).presentation.bubbled != appearance.presentation.bubbled
+                    
+                    var prepareOnMainQueue = pAppearance.presentation != appearance.presentation
                     switch updateType {
                     case .Initial:
                         prepareOnMainQueue = firstInitialUpdate.swap(false) || prepareOnMainQueue
                     default:
                         break
                     }
-                    
-
                     
                     let animated = autoremoving == nil ? false : autoremoving!
                     
@@ -922,7 +933,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     
                     return prepareEntries(from: strongSelf.previousView.swap(proccesedView), to: proccesedView, account: strongSelf.account, initialSize: strongSelf.atomicSize.modify({$0}), interaction:strongSelf.chatInteraction, animated: animated, scrollPosition:scrollPosition, reason:updateType, animationInterface:animationInterface) |> map { transition in
-                        return (transition,initialData)
+                        return (transition,initialData, appearance.presentation.wallpaper)
                     } |> runOn(prepareOnMainQueue ? Queue.mainQueue(): messagesViewQueue)
                 }
             }
@@ -932,8 +943,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } |> deliverOnMainQueue
         
         
-        let appliedTransition = historyViewTransition |> map { [weak self] transition, initialData in
-            self?.applyTransition(transition, initialData: initialData)
+        let appliedTransition = historyViewTransition |> map { [weak self] transition, initialData, wallpaper in
+            self?.applyTransition(transition, initialData: initialData, wallpaper: wallpaper)
         }
         
         
@@ -1113,6 +1124,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if !canDeleteForEveryoneMessage(message, account: strongSelf.account) {
                                 canDeleteForEveryone = false
                             }
+                        }
+                        if messages.isEmpty {
+                            strongSelf.chatInteraction.update({$0.withoutSelectionState()})
+                            return
                         }
                         
                         if canDelete {
@@ -1693,7 +1708,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         break
                     }
                     if let messageIndex = messageIndex, currentLocation != messageIndex {
-                        strongSelf.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 100))
+                        strongSelf.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 300))
                     }
                     currentLocation = messageIndex
                 }
@@ -1773,6 +1788,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                
             }
         })
+        
     }
     
     
@@ -1832,8 +1848,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return nil
     }
     
+    private var previousWallpaper:TelegramWallpaper? = nil
     
-    func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData) {
+    func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, wallpaper: TelegramWallpaper) {
+        
+        if previousWallpaper != wallpaper {
+            previousWallpaper = wallpaper
+            
+            switch wallpaper {
+            case .builtin:
+                genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            case let.color(color):
+                genericView.backgroundMode = .color(color: NSColor(UInt32(color)))
+            case let .image(representation):
+                if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource))) {
+                    genericView.backgroundMode = .background(image: image)
+                } else {
+                    genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                }
+            case .none:
+                genericView.backgroundMode = .plain
+            }
+            
+        }
         
         let wasEmpty = genericView.tableView.isEmpty
         

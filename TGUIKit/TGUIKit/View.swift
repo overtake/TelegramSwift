@@ -110,7 +110,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public var flip:Bool = true
     
-    public var border:BorderType?
+    open var border:BorderType?
     
 
     open override func layout() {
@@ -163,13 +163,15 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return flip
     }
     
+
+    
     public init() {
         super.init(frame: NSZeroRect)
         assertOnMainThread()
         self.wantsLayer = true
         acceptsTouchEvents = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-
+        self.autoresizesSubviews = false
        // self.layer?.delegate = self
       //  self.layer?.isOpaque = false
        // self.autoresizesSubviews = false
@@ -314,6 +316,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
        // self.window?.makeFirstResponder(nil)
         super.mouseDown(with: event)
     }
+    
     
     open override func draw(_ dirtyRect: NSRect) {
        

@@ -56,6 +56,7 @@ public class SectionControllerView : View {
             let title: TextView = TextView()
             title.isSelectable = false
             title.userInteractionEnabled = false
+            title.backgroundColor = presentation.colors.background
             title.update(TextViewLayout(.initialize(string: section.title(), color: i == selected ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
             headerContainer.addSubview(title)
             header.addSubview(headerContainer)

@@ -19,6 +19,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(InstantViewAppearance.self, f: { InstantViewAppearance(decoder: $0) })
     declareEncodable(IVReadState.self, f: { IVReadState(decoder: $0) })
     declareEncodable(AdditionalSettings.self, f: { AdditionalSettings(decoder: $0) })
+    declareEncodable(TelegramWallpaper.self, f: { TelegramWallpaper(decoder: $0) })
     return
 }()
 

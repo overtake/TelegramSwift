@@ -81,13 +81,13 @@ class ChatMapRowItem: ChatMediaItem {
     }
     
     var isLiveLocationView: Bool {
-        if let media = media as? TelegramMediaMap, let message = message {
-            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-                if message.timestamp < message.timestamp + liveBroadcastingTimeout {
-                    return true
-                }
-            }
-        }
+//        if let media = media as? TelegramMediaMap, let message = message {
+//            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+//                if message.timestamp < message.timestamp + liveBroadcastingTimeout {
+//                    return true
+//                }
+//            }
+//        }
         return false
     }
     
@@ -134,8 +134,7 @@ private class LiveLocationRowView : ChatMediaView {
     private let updatedText: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(liveText)
-        //addSubview(updatedText)
+        addSubview(updatedText)
     }
     
     
@@ -145,14 +144,21 @@ private class LiveLocationRowView : ChatMediaView {
         
         liveText.update(item.liveText)
         super.set(item: item, animated: animated)
+        addSubview(liveText)
 
     }
+    
+    override func updateColors() {
+        super.updateColors()
+        liveText.backgroundColor = contentColor
+    }
+    
     
     override func layout() {
         super.layout()
         guard let item = item as? ChatMapRowItem else {return}
 
-        liveText.setFrameOrigin(contentFrame.minX + item.elementsContentInset, item.contentSize.height + item.defaultContentTopOffset)
+        liveText.setFrameOrigin(item.elementsContentInset, 50)
     }
     
     required init?(coder: NSCoder) {

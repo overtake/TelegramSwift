@@ -8,25 +8,24 @@
 
 import Cocoa
 import SwiftSignalKitMac
-
+import TGUIKit
 fileprivate var mimestore:[String:String] = [:]
 fileprivate var extensionstore:[String:String] = [:]
 
 
-private func initializeMimeStore() {
-    do {
-        if mimestore.isEmpty && extensionstore.isEmpty {
-            let path = Bundle.main.path(forResource: "mime-types", ofType: "txt")
-            let content = try? String(contentsOfFile: path ?? "")
-            let mimes = content?.components(separatedBy: CharacterSet.newlines)
-            
-            if let mimes = mimes {
-                for mime in mimes {
-                    let single = mime.components(separatedBy: ":")
-                    if single.count == 2 {
-                        extensionstore[single[0]] = single[1]
-                        mimestore[single[1]] = single[0]
-                    }
+func initializeMimeStore() {
+    assertOnMainThread()
+    if mimestore.isEmpty && extensionstore.isEmpty {
+        let path = Bundle.main.path(forResource: "mime-types", ofType: "txt")
+        let content = try? String(contentsOfFile: path ?? "")
+        let mimes = content?.components(separatedBy: CharacterSet.newlines)
+        
+        if let mimes = mimes {
+            for mime in mimes {
+                let single = mime.components(separatedBy: ":")
+                if single.count == 2 {
+                    extensionstore[single[0]] = single[1]
+                    mimestore[single[1]] = single[0]
                 }
             }
         }
@@ -35,12 +34,13 @@ private func initializeMimeStore() {
 
 func resourceType(mimeType:String? = nil, orExt:String? = nil) -> Signal<String?,Void> {
     
-    initializeMimeStore()
     
     assert(mimeType != nil || orExt != nil)
     assert((mimeType != nil && orExt == nil) || (mimeType == nil && orExt != nil))
     
     return Signal<String?,Void> { (subscriber) -> Disposable in
+        
+        initializeMimeStore()
         
         var result:String?
         
@@ -55,12 +55,11 @@ func resourceType(mimeType:String? = nil, orExt:String? = nil) -> Signal<String?
         
         return EmptyDisposable
         
-    } |> runOn(resourcesQueue)
+    } |> runOn(Queue.mainQueue())
 }
 
 func MIMEType(_ fileExtension: String) -> String {
     
-    initializeMimeStore()
 
     if let ext = extensionstore[fileExtension] {
         return ext

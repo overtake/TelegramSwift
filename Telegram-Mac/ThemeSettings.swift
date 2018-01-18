@@ -26,14 +26,15 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     
     let bubbled: Bool
     let fontSize: CGFloat
-    
+    let wallpaper: TelegramWallpaper
     init(palette: ColorPalette,
          bubbled: Bool,
-         fontSize: CGFloat) {
+         fontSize: CGFloat, wallpaper: TelegramWallpaper) {
         
         self.palette = palette
         self.bubbled = bubbled
         self.fontSize = fontSize
+        self.wallpaper = wallpaper
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -44,6 +45,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         }
     }
     init(decoder: PostboxDecoder) {
+        
+        self.wallpaper = (decoder.decodeObjectForKey("w", decoder: { TelegramWallpaper(decoder: $0) }) as? TelegramWallpaper) ?? .none
         
         let dark = decoder.decodeBoolForKey("dark", orElse: false)
         let name = decoder.decodeStringForKey("name", orElse: "Default")
@@ -147,7 +150,11 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             peerAvatarBlueTop: parseColor(decoder, "peerAvatarBlueTop") ?? palette.peerAvatarBlueTop,
             peerAvatarBlueBottom: parseColor(decoder, "peerAvatarBlueBottom") ?? palette.peerAvatarBlueBottom,
             peerAvatarPinkTop: parseColor(decoder, "peerAvatarPinkTop") ?? palette.peerAvatarPinkTop,
-            peerAvatarPinkBottom: parseColor(decoder, "peerAvatarPinkBottom") ?? palette.peerAvatarPinkBottom)
+            peerAvatarPinkBottom: parseColor(decoder, "peerAvatarPinkBottom") ?? palette.peerAvatarPinkBottom,
+            bubbleBackgroundHighlight_incoming:  parseColor(decoder, "bubbleBackgroundHighlight_incoming") ?? palette.bubbleBackgroundHighlight_incoming,
+            bubbleBackgroundHighlight_outgoing:  parseColor(decoder, "bubbleBackgroundHighlight_outgoing") ?? palette.bubbleBackgroundHighlight_outgoing,
+            chatDateActive: parseColor(decoder, "chatDateActive") ?? palette.chatDateActive,
+            chatDateText: parseColor(decoder, "chatDateText") ?? palette.chatDateText)
         
         
         
@@ -168,18 +175,20 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeBool(palette.isDark, forKey: "dark")
         encoder.encodeBool(bubbled, forKey: "bubbled")
         encoder.encodeDouble(Double(fontSize), forKey: "fontSize")
+         encoder.encodeObject(wallpaper, forKey: "w")
     }
     
     
     static var defaultTheme: ThemePaletteSettings {
-        return ThemePaletteSettings(palette: whitePalette, bubbled: false, fontSize: 13.0)
+        return ThemePaletteSettings(palette: dayClassic, bubbled: true, fontSize: 13.0, wallpaper: .builtin)
     }
 }
 
 func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
     return lhs.palette === rhs.palette &&
     lhs.fontSize == rhs.fontSize &&
-    lhs.bubbled == rhs.bubbled
+    lhs.bubbled == rhs.bubbled &&
+    lhs.wallpaper == rhs.wallpaper
 }
 
 
@@ -187,7 +196,16 @@ func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void
     return postbox.modify { modifier -> Void in
         modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-            return ThemePaletteSettings(palette: palette, bubbled: current.bubbled, fontSize: current.fontSize)
+            return ThemePaletteSettings(palette: palette, bubbled: current.bubbled, fontSize: current.fontSize, wallpaper: current.wallpaper)
+        })
+    }
+}
+
+func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, Void> {
+    return postbox.modify { modifier -> Void in
+        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+            let current = f(entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme)
+            return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: current.fontSize, wallpaper: current.wallpaper)
         })
     }
 }
@@ -196,7 +214,7 @@ func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void
     return postbox.modify { modifier -> Void in
         modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-            return ThemePaletteSettings(palette: current.palette, bubbled: bubbled, fontSize: current.fontSize)
+            return ThemePaletteSettings(palette: current.palette, bubbled: bubbled, fontSize: current.fontSize, wallpaper: !bubbled ? .none : current.wallpaper)
         })
     }
 }
@@ -205,7 +223,16 @@ func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Vo
     return postbox.modify { modifier -> Void in
         modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-            return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: fontSize)
+            return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: fontSize, wallpaper: current.wallpaper)
+        })
+    }
+}
+
+func updateApplicationWallpaper(postbox: Postbox, wallpaper: TelegramWallpaper) -> Signal<Void, Void> {
+    return postbox.modify { modifier -> Void in
+        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+            let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
+            return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: current.fontSize, wallpaper: wallpaper)
         })
     }
 }

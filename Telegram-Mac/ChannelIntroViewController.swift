@@ -88,7 +88,7 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] control in
+        (self.rightBarView as? TextButtonBarView)?.set(handler:{ [weak self] control in
             self?.executeNext()
         }, for: .Click)
         

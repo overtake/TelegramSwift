@@ -217,8 +217,9 @@ class ChatSelectText : NSObject {
                     self?.beginInnerLocation = documentPoint
                 }
                 
-                if chatInteraction.presentation.state == .selecting {
-                    if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
+                
+                if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
+                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame)) {
                         if self?.startMessageId == nil {
                             self?.startMessageId = item.message?.id
                         }
@@ -251,13 +252,18 @@ class ChatSelectText : NSObject {
                 }
                 
                 let point = self?.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
-                if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index) as? ChatRowItem, let view = item.view as? ChatRowView {
+                if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index), let view = item.view as? ChatRowView {
                     
-                    if item.message?.id == self?.startMessageId, view.canDropSelection(in: window.mouseLocationOutsideOfEventStream) {
-                        if let result = item.chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
+                    if view.canDropSelection(in: window.mouseLocationOutsideOfEventStream) {
+                        if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
                             self?.startMessageId = nil
-                            item.chatInteraction.update({$0.withoutSelectionState()})
+                            chatInteraction.update({$0.withoutSelectionState()})
                         }
+                    }
+                } else {
+                    if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
+                        self?.startMessageId = nil
+                        chatInteraction.update({$0.withoutSelectionState()})
                     }
                 }
                 if cleanStartId {
@@ -318,6 +324,9 @@ class ChatSelectText : NSObject {
         var startIndex = table.row(at: beginInnerLocation)
         var endIndex = table.row(at: endInnerLocation)
         
+        
+      
+        
         let reversed = endIndex < startIndex;
         
         if(endIndex < startIndex) {
@@ -326,10 +335,26 @@ class ChatSelectText : NSObject {
             startIndex = startIndex - endIndex;
         }
         
-        if startIndex < 0 && endIndex < 0 {
+        if startIndex < 0 || endIndex < 0 {
             return
         }
         
+        let beginRow = table.row(at: beginInnerLocation)
+        if theme.bubbled, let view = table.item(at: beginRow).view as? ChatRowView, selectingText {
+            if !NSPointInRect(view.convert(beginInnerLocation, from: table.documentView), view.bubbleFrame) {
+                if startIndex != endIndex {
+                    for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
+                        let item = table.item(at: i) as? ChatRowItem
+                        if let view = item?.view as? ChatRowView {
+                            view.toggleSelected(deselect, in: window.mouseLocationOutsideOfEventStream)
+                        }
+                    }
+                }
+                
+                return
+            }
+        }
+
         if selectingText {
             
             selectManager.removeAll()
@@ -400,7 +425,6 @@ class ChatSelectText : NSObject {
                         view.toggleSelected(deselect, in: window.mouseLocationOutsideOfEventStream)
                     }
                 }
-                
             }
             
         }

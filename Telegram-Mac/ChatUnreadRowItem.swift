@@ -56,7 +56,7 @@ private class ChatUnreadRowView: TableRowView {
     
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(theme.colors.background.cgColor)
+        ctx.setFillColor(.clear)
         ctx.fill(bounds)
         
         ctx.setFillColor(theme.colors.grayBackground.cgColor)

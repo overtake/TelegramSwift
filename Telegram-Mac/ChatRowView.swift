@@ -61,8 +61,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        rowView.setFrameSize(newSize)
+        if !inLiveResize || !NSIsEmptyRect(visibleRect) {
+            super.setFrameSize(newSize)
+            rowView.setFrameSize(newSize)
+        }
+        
     }
     
     var selectableTextViews: [TextView] {
@@ -90,7 +93,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             if (value.selectionState != oldValue.selectionState) {
                 updateSelectingState(!NSIsEmptyRect(visibleRect), selectingMode:value.selectionState != nil, item: self.item as? ChatRowItem, needUpdateColors: true)
-                updateColors()
                 self.needsLayout = true
             } else if let item = item as? ChatRowItem, let message = item.message {
                 if value.selectionState?.selectedIds.contains(message.id) != oldValue.selectionState?.selectedIds.contains(message.id) {
@@ -113,22 +115,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if !item.isBubbled {
                 rightView.change(pos: NSMakePoint(defRight, rightView.frame.minY), animated: animated)
             } else {
-                rowView.change(pos: rowPoint, animated: animated)
+                if rowView.frame.origin != rowPoint {
+                    rowView.change(pos: rowPoint, animated: animated)
+                }
             }
             
             
             updateMouse()
             
             if selectingMode {
+                let force: Bool = selectingView == nil
                 if selectingView == nil {
-                    selectingView = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    selectingView = SelectingControl(unselectedImage: theme.icons.chatGroupToggleUnselected, selectedImage: theme.icons.chatGroupToggleSelected, selected: item.isSelectedMessage)
                     selectingView?.setFrameOrigin(NSMakePoint(frame.width, selectingPoint.y))
                     selectingView?.layer?.opacity = 0
                     super.addSubview(selectingView!)
                 }
-                selectingView?.change(opacity: 1.0, animated: animated)
-               
-                selectingView?.change(pos: selectingPoint, animated: animated)
+                if selectingView!.isSelected != item.isSelectedMessage || force {
+                    selectingView?.change(opacity: 1.0, animated: animated)
+                    selectingView?.change(pos: selectingPoint, animated: animated)
+                }
+                
             } else {
                 if animated {
                     selectingView?.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
@@ -146,6 +153,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             updateSelectionViewAfterUpdateState(item: item, animated: animated)
             if needUpdateColors {
+                renderLayoutType(item, animated: animated)
                 updateColors()
             }
             if item.chatInteraction.presentation.state == .selecting {
@@ -184,18 +192,19 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override var backdorColor: NSColor {
-        return contextMenu != nil || isSelect ? theme.colors.selectMessage : theme.colors.background
+        return theme.bubbled ? .clear : contextMenu != nil || isSelect ? theme.colors.selectMessage : theme.colors.background
     }
     
     var contentColor: NSColor {
         guard let item = item as? ChatRowItem else {return backdorColor}
         
         if item.hasBubble {
-            return theme.chat.backgroundColor(item.isIncoming)
+            return isSelect || contextMenu != nil ? theme.chat.backgoundSelectedColor(item.isIncoming) : theme.chat.backgroundColor(item.isIncoming)
         } else {
             return backdorColor
         }
     }
+
     
     override func updateColors() -> Void {
         guard let item = item as? ChatRowItem else {return}
@@ -203,12 +212,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? NSColor.black.withAlphaComponent(0.5) : contentColor
         contentView.backgroundColor = .clear
-        item.replyModel?.backgroundColor = item.hasBubble ? theme.chat.backgroundColor(item.isIncoming) : item.isBubbled ? theme.colors.bubbleBackground_incoming : contentColor
+        item.replyModel?.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? theme.colors.bubbleBackground_incoming : contentColor
         nameView?.backgroundColor = contentColor
         forwardName?.backgroundColor = contentColor
         captionView?.backgroundColor = contentColor
         replyMarkupView?.backgroundColor = backdorColor
         self.backgroundColor = backdorColor
+        
         for view in contentView.subviews {
             if let view = view as? View {
                 view.backgroundColor = contentColor
@@ -266,14 +276,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func onShowContextMenu() {
+        guard let item = item as? ChatRowItem else {return}
+        renderLayoutType(item, animated: true)
         updateColors()
-        if let item = item as? ChatRowItem {
-            item.chatInteraction.focusInputField()
-        }
+        item.chatInteraction.focusInputField()
         super.onCloseContextMenu()
     }
     
     override func onCloseContextMenu() {
+        guard let item = item as? ChatRowItem else {return}
+        renderLayoutType(item, animated: true)
         updateColors()
         super.onCloseContextMenu()
     }
@@ -381,7 +393,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if item.isBubbled {
             rect.origin = NSMakePoint((item.hasBubble ? bubbleFrame.maxX : contentFrame.maxX) - item.rightSize.width - item.bubbleContentInset - (item.isIncoming ? 0 : item.additionBubbleInset), bubbleFrame.maxY - item.rightSize.height - 6 - (item.isStateOverlayLayout && !item.hasBubble ? 2 : 0))
             if item is ChatVideoMessageItem {
-                rect.origin.x = item.isIncoming ? contentFrame.maxX - 50 : contentFrame.maxX - item.rightSize.width
+                rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - item.rightSize.width
+                rect.origin.y += 3
             }
         }
         
@@ -394,7 +407,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var rect = NSMakeRect(item.leftInset, 6, 36, 36)
 
         if item.isBubbled {
-            rect.origin.y = frame.height - item.additionBubbleInset - 36
+            rect.origin.y = frame.height - 36
         }
         
         return rect
@@ -626,11 +639,24 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rowView.addSubview(shareControl!)
             }
             
+          
+            
             guard let shareControl = shareControl else {return}
             
-            shareControl.set(image: item.isStorage ? theme.icons.chatGoMessage : theme.icons.chatForwardMessagesActive, for: .Normal)
-            shareControl.sizeToFit()
+            
 
+            if item.isBubbled && theme.wallpaper != .none {
+                shareControl.set(image: item.isStorage ? theme.icons.chatGotoMessageWallpaper : theme.icons.chatShareWallpaper, for: .Normal)
+                _ = shareControl.sizeToFit()
+                shareControl.setFrameSize(NSMakeSize(shareControl.frame.width + 10, shareControl.frame.height + 10))
+                shareControl.background = theme.colors.background
+                shareControl.layer?.cornerRadius = shareControl.frame.height / 2
+            } else {
+                shareControl.set(image: item.isStorage ? theme.icons.chatGoMessage : theme.icons.chatForwardMessagesActive, for: .Normal)
+                _ = shareControl.sizeToFit()
+                shareControl.background = .clear
+            }
+            
 //
 //            if item.isBubbled {
 //                shareControl.setFrameSize(shareControl.frame.width + 5, shareControl.frame.height + 5)
@@ -729,7 +755,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
-            bubbleView.data = item.modernBubbleImage
+            bubbleView.data = isSelect || contextMenu != nil ? item.selectedBubbleImage : item.modernBubbleImage
             
         } else {
             bubbleView.data = nil

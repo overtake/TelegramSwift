@@ -30,7 +30,7 @@ class PeerInfoTitleBarView : TitledBarView {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         search.set(image: theme.icons.chatSearch, for: .Normal)
-        search.sizeToFit()
+        _ = search.sizeToFit()
         backgroundColor = theme.colors.background
         needsLayout = true
     }

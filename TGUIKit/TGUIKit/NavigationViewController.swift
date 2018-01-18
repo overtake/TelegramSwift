@@ -255,10 +255,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.controller = controller
     }
     
-    var navigationBar:NavigationBarView = NavigationBarView()
+    private(set) public var navigationBar:NavigationBarView = NavigationBarView()
     
-    var pushDisposable:MetaDisposable = MetaDisposable()
-    var popDisposable:MetaDisposable = MetaDisposable()
+    private(set) var pushDisposable:MetaDisposable = MetaDisposable()
+    private(set) var popDisposable:MetaDisposable = MetaDisposable()
     
     private(set) public var header:NavigationHeader?
     private(set) public var callHeader:CallNavigationHeader?
@@ -306,11 +306,14 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle)
         
         containerView.addSubview(controller.view)
+        
         Queue.mainQueue().justDispatch {
             self.controller.viewDidAppear(false)
         }
 
     }
+    
+
     
     
     
@@ -395,7 +398,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         controller.navigationController = self
 
         
-        if(previous === controller) {
+        if(previous === controller && stackCount > 1) {
             previous.viewWillDisappear(false)
             previous.viewDidDisappear(false)
             

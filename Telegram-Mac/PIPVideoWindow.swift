@@ -11,6 +11,8 @@ import TGUIKit
 import AVKit
 import SwiftSignalKitMac
 
+private let pipFrameKey: String = "kPipFrameKey"
+
 fileprivate class PIPVideoWindow: NSPanel {
     fileprivate let playerView:AVPlayerView
     private let rect:NSRect
@@ -90,6 +92,7 @@ fileprivate class PIPVideoWindow: NSPanel {
     
     
     func hide() {
+        UserDefaults.standard.setValue(NSStringFromRect(frame), forKey: pipFrameKey)
         orderOut(nil)
         window = nil
     }
@@ -151,7 +154,11 @@ fileprivate class PIPVideoWindow: NSPanel {
         
         Queue.mainQueue().justDispatch {
             if let screen = NSScreen.main {
-                let convert_s = self.playerView.frame.size.fitted(NSMakeSize(300, 300))
+                var savedRect: NSRect = NSMakeRect(0, 0, 300, 300)
+                if let value = UserDefaults.standard.value(forKey: pipFrameKey) as? String {
+                    savedRect = NSRectFromString(value)
+                }
+                let convert_s = self.playerView.frame.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
                 self.minSize = convert_s
                 self.aspectRatio = convert_s
                 

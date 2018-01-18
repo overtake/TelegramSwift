@@ -16,6 +16,10 @@ class ChatHoleRowView: TableRowView {
         addSubview(progress)
     }
     
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

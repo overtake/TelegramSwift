@@ -55,7 +55,7 @@ private class VideoPlayerView : AVPlayerView {
         let controls = subviews.last?.subviews.last
         if let controls = controls {
             if let pip = controls.subviews.last as? ImageButton {
-                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, 34)
+                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, controls.frame.height - pip.frame.height - 20)
             }
             controls.centerX(y: 95)
             
@@ -92,7 +92,9 @@ class MGalleryVideoItem: MGalleryItem {
                 if strongSelf.playAfter {
                     strongSelf.playAfter = false
                     player?.play()
-                    player?.seek(to: CMTimeMake(Int64(strongSelf.startTime * 1000.0), 1000))
+                    if strongSelf.startTime > 0 {
+                        player?.seek(to: CMTimeMake(Int64(strongSelf.startTime * 1000.0), 1000))
+                    }
                     let controls = view.subviews.last?.subviews.last
                     if let controls = controls, let pip = strongSelf.pipButton {
                         controls.addSubview(pip)
@@ -133,8 +135,10 @@ class MGalleryVideoItem: MGalleryItem {
         pip.set(handler: { [weak view, weak self] _ in
             if let view = view, let strongSelf = self, let viewer = viewer {
                 let frame = view.window!.convertToScreen(view.convert(view.bounds, to: nil))
-                closeGalleryViewer(false)
-                showPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
+                if !viewer.pager.isFullScreen {
+                    closeGalleryViewer(false)
+                    showPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
+                }
             }
         }, for: .Down)
         
@@ -183,6 +187,10 @@ class MGalleryVideoItem: MGalleryItem {
             view.player?.pause()
         }
         playAfter = false
+    }
+    
+    override var status:Signal<MediaResourceStatus, Void> {
+        return chatMessageFileStatus(account: account, file: media)
     }
     
     var media:TelegramMediaFile {

@@ -43,11 +43,17 @@ class WPLayout: Equatable {
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble {
-            if let block = instantPage.blocks.last, case let .slideshow(items) = block {
-                if items.items.count == 1 {
-                    return nil
+            if let block = instantPage.blocks.last {
+                switch block {
+                case let .slideshow(items, _), let .collage(items , _):
+                    if items.count == 1 {
+                        return nil
+                    }
+                    return items.count
+                default:
+                    break
                 }
-                return items.items.count
+               
             }
         }
         return nil

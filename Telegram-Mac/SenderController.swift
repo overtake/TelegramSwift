@@ -268,17 +268,19 @@ class Sender: NSObject {
             }
             attrs.append(.Audio(isVoice: false, duration: Int(CMTimeGetSeconds(asset.duration)), title: defaultTitle, performer: defaultPerformer, waveform: nil))
         }
-        
         if mime.hasPrefix("video"), isMedia {
             let asset = AVURLAsset(url: URL(fileURLWithPath: path))
             let video = asset.tracks(withMediaType: AVMediaType.video).first
             let audio = asset.tracks(withMediaType: AVMediaType.audio).first
             if let video = video {
                 attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: video.naturalSize, flags: []))
+                attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
+                if audio == nil {
+                    attrs.append(TelegramMediaFileAttribute.Animated)
+                }
+                return attrs
             }
-            if audio == nil {
-                attrs.append(TelegramMediaFileAttribute.Animated)
-            }
+
         }
         
         if mime.hasSuffix("gif"), isMedia {
@@ -286,6 +288,9 @@ class Sender: NSObject {
             attrs.append(TelegramMediaFileAttribute.Animated)
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
 
+        } else if mime.hasPrefix("image"), let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
+            attrs.append(TelegramMediaFileAttribute.ImageSize(size: image.size))
+            attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent))
         } else {
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent))
         }

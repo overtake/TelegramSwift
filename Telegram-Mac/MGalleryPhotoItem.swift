@@ -83,6 +83,10 @@ class MGalleryPhotoItem: MGalleryItem {
         return .single(pagerSize)
     }
     
+    override var status:Signal<MediaResourceStatus, Void> {
+        return chatMessagePhotoStatus(account: account, photo: media)
+    }
+    
     override func request(immediately: Bool) {
         
         let account = self.account

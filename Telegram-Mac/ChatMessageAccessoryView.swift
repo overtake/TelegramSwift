@@ -15,6 +15,11 @@ class ChatMessageAccessoryView: View {
     private var text:(TextNodeLayout, TextNode)?
     private var textNode:TextNode?
 
+    var isUnread: Bool = false {
+        didSet {
+            needsDisplay = true
+        }
+    }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
 
         ctx.round(frame.size, frame.height / 2)
@@ -23,14 +28,22 @@ class ChatMessageAccessoryView: View {
         ctx.fill(bounds)
         
         if let text = text {
-            text.1.draw(focus(text.0.size), in: ctx, backingScaleFactor: backingScaleFactor)
+            var rect = focus(text.0.size)
+            rect.origin.x = 6
+            text.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor)
+            
+            if isUnread {
+                ctx.setFillColor(.white)
+                ctx.fillEllipse(in: NSMakeRect(rect.maxX + 3, floorToScreenPixels((frame.height - 5)/2), 5, 5))
+            }
         }
+        
     }
     
     func updateText(_ text: String, maxWidth: CGFloat) -> Void {
         let updatedText = TextNode.layoutText(maybeNode: textNode, .initialize(string: text, color: .white, font: .normal(11.0)), nil, 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
         self.text = updatedText
-        setFrameSize(NSMakeSize(updatedText.0.size.width + 12, updatedText.0.size.height + 4))
+        setFrameSize(NSMakeSize(updatedText.0.size.width + 12 + (isUnread ? 8 : 0), updatedText.0.size.height + 4))
         needsDisplay = true
     }
     

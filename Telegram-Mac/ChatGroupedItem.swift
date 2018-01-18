@@ -109,6 +109,7 @@ class ChatGroupedItem: ChatRowItem {
         var frame = super.bubbleFrame
         
         if isBubbleFullFilled {
+            frame.size.height -= 2
             frame.size.width = contentSize.width + additionBubbleInset
             if hasBubble {
                 frame.size.width += self.mediaBubbleCornerInset * 2
@@ -232,6 +233,13 @@ class ChatGroupedItem: ChatRowItem {
                 self.chatInteraction.deleteMessages(self.layout.messages.map{$0.id})
             }))
         }
+        
+        if let message = layout.messages.first, let peer = peer, peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
+            items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: { [weak self] in
+                self?.chatInteraction.setupReplyMessage(message.id)
+            }))
+        }
+        
         if let message = layout.messages.last {
             if let peer = message.peers[message.id.peerId] as? TelegramChannel, let address = peer.addressName {
                 
@@ -257,6 +265,20 @@ class ChatGroupedItem: ChatRowItem {
                     self?.chatInteraction.beginEditingMessage(editMessage)
                 }))
             }
+        }
+        var canForward: Bool = true
+        for message in layout.messages {
+            if !canForwardMessage(message, account: account) {
+                canForward = false
+                break
+            }
+        }
+        
+        if canForward {
+            items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
+                guard let `self` = self else {return}
+                self.chatInteraction.forwardMessages(self.layout.messages.map {$0.id})
+            }))
         }
         
         return .single(items) |> map { [weak self] items in
@@ -478,17 +500,32 @@ private class ChatGroupedView : ChatRowView {
         guard let item = item as? ChatGroupedItem else { return }
         
         let location = contentView.convert(point, from: nil)
-        for i in 0 ..< item.layout.count {
-            if NSPointInRect(location, item.layout.frame(at: i)) {
-                let id = item.layout.messages[i].id
-                item.chatInteraction.update({ current in
-                    if (select && !current.isSelectedMessageId(id)) || (!select && current.isSelectedMessageId(id)) {
-                        return current.withToggledSelectedMessage(id)
+        var applied: Bool = contentView.mouseInside()
+        if contentView.mouseInside() {
+            for i in 0 ..< item.layout.count {
+                if NSPointInRect(location, item.layout.frame(at: i)) {
+                    let id = item.layout.messages[i].id
+                    item.chatInteraction.update({ current in
+                        if (select && !current.isSelectedMessageId(id)) || (!select && current.isSelectedMessageId(id)) {
+                            return current.withToggledSelectedMessage(id)
+                        }
+                        return current
+                    })
+                    applied = true
+                    break
+                }
+            }
+        }
+        
+        if !applied {
+            item.chatInteraction.update({ current in
+                return item.layout.messages.reduce(current, { current, message -> ChatPresentationInterfaceState in
+                    if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
+                        return current.withToggledSelectedMessage(message.id)
                     }
                     return current
                 })
-                break
-            }
+            })
         }
         
     }
@@ -515,16 +552,19 @@ private class ChatGroupedView : ChatRowView {
         
         let location = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
-        var selected: Bool = false
-        for i in 0 ..< item.layout.count {
-            if NSPointInRect(location, item.layout.frame(at: i)) {
-                item.chatInteraction.update({
-                    $0.withToggledSelectedMessage(item.layout.messages[i].id)
-                })
-                selected = true
-                break
+        var selected: Bool = contentView.mouseInside()
+        if contentView.mouseInside() {
+            for i in 0 ..< item.layout.count {
+                if NSPointInRect(location, item.layout.frame(at: i)) {
+                    item.chatInteraction.update({
+                        $0.withToggledSelectedMessage(item.layout.messages[i].id)
+                    })
+                    selected = true
+                    break
+                }
             }
         }
+        
 
         if !selected {
             let select = !isHasSelectedItem
@@ -595,13 +635,15 @@ private class ChatGroupedView : ChatRowView {
     }
     
     override var backdorColor: NSColor {
+        guard let item = item as? ChatGroupedItem, !item.isBubbled else {
+            return super.backdorColor
+        }
+        
         
         if let _ = contextMenu {
             return theme.colors.selectMessage
         }
-        guard let item = item as? ChatGroupedItem else {
-            return theme.colors.background
-        }
+
         
         for message in item.layout.messages {
             if item.chatInteraction.presentation.isSelectedMessageId(message.id) {
@@ -609,7 +651,7 @@ private class ChatGroupedView : ChatRowView {
             }
         }
         
-        return theme.colors.background
+        return super.backdorColor
     }
     
     
@@ -644,7 +686,13 @@ private class ChatGroupedView : ChatRowView {
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
-        return false
+        let point = contentView.convert(location, from: nil)
+        for content in contents {
+            if NSPointInRect(point, content.frame) {
+                return false
+            }
+        }
+        return true
     }
     
     override var contentFrame: NSRect {

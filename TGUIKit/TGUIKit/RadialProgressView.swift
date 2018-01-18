@@ -149,7 +149,7 @@ private class RadialProgressOverlayLayer: Layer {
                 self.progress = 0
                 self._progress = 0
             case let .Fetching(progress, f), let  .ImpossibleFetching(progress, f):
-                self.progress = progress
+                self.progress = max(progress, 0.05)
                 if f {
                     _progress = progress
                 }

@@ -19,10 +19,10 @@ public struct SearchTheme {
     public let backgroundColor: NSColor
     public let searchImage:CGImage
     public let clearImage:CGImage
-    public let placeholder:String
+    public let placeholder:()->String
     public let textColor: NSColor
     public let placeholderColor: NSColor
-    public init(_ backgroundColor: NSColor, _ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:String, _ textColor: NSColor, _ placeholderColor: NSColor) {
+    public init(_ backgroundColor: NSColor, _ searchImage:CGImage, _ clearImage:CGImage, _ placeholder:@escaping()->String, _ textColor: NSColor, _ placeholderColor: NSColor) {
         self.backgroundColor = backgroundColor
         self.searchImage = searchImage
         self.clearImage = clearImage
@@ -140,7 +140,12 @@ public final class ColorPalette : Equatable {
     public let peerAvatarBlueBottom: NSColor
     public let peerAvatarPinkTop: NSColor
     public let peerAvatarPinkBottom: NSColor
+    
+    public let bubbleBackgroundHighlight_incoming: NSColor
+    public let bubbleBackgroundHighlight_outgoing: NSColor
   
+    public let chatDateActive: NSColor
+    public let chatDateText: NSColor
     
     public func peerColors(_ index: Int) -> (top: NSColor, bottom: NSColor) {
         let colors: [(top: NSColor, bottom: NSColor)] = [
@@ -253,7 +258,11 @@ public final class ColorPalette : Equatable {
                 peerAvatarBlueTop: NSColor,
                 peerAvatarBlueBottom: NSColor,
                 peerAvatarPinkTop: NSColor,
-                peerAvatarPinkBottom: NSColor) {
+                peerAvatarPinkBottom: NSColor,
+                bubbleBackgroundHighlight_incoming: NSColor,
+                bubbleBackgroundHighlight_outgoing: NSColor,
+                chatDateActive: NSColor,
+                chatDateText: NSColor) {
         self.isDark = isDark
         self.name = name
         self.background = background
@@ -354,6 +363,12 @@ public final class ColorPalette : Equatable {
         self.peerAvatarBlueBottom = peerAvatarBlueBottom
         self.peerAvatarPinkTop = peerAvatarPinkTop
         self.peerAvatarPinkBottom = peerAvatarPinkBottom
+        self.bubbleBackgroundHighlight_incoming = bubbleBackgroundHighlight_incoming
+        self.bubbleBackgroundHighlight_outgoing = bubbleBackgroundHighlight_outgoing
+        self.chatDateActive = chatDateActive
+        self.chatDateText = chatDateText
+        
+        
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -378,7 +393,7 @@ public final class ColorPalette : Equatable {
         var saturation: CGFloat = 0.0
         var brightness: CGFloat = 0.0
         color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
-        let lessColor = NSColor(hue: hue, saturation: saturation * 0.9, brightness: min(1.0, brightness * 0.85), alpha: 1.0)
+        let highlightColor = NSColor(hue: hue, saturation: saturation * 0.9, brightness: min(1.0, brightness * 0.85), alpha: 1.0)
         
         return ColorPalette(isDark: isDark,
                                  name: name,
@@ -394,7 +409,7 @@ public final class ColorPalette : Equatable {
                                  grayUI: grayUI,
                                  darkGrayText: darkGrayText,
                                  blueText: color,
-                                 blueSelect: lessColor,
+                                 blueSelect: color,
                                  selectText: selectText,
                                  blueFill: color,
                                  border: border,
@@ -415,9 +430,9 @@ public final class ColorPalette : Equatable {
                                  selectTextBubble_incoming: selectTextBubble_incoming,
                                  selectTextBubble_outgoing: selectTextBubble_outgoing,
                                  bubbleBackground_incoming: bubbleBackground_incoming,
-                                 bubbleBackground_outgoing: lessColor,
+                                 bubbleBackground_outgoing: color,
                                  bubbleBorder_incoming: bubbleBorder_incoming,
-                                 bubbleBorder_outgoing: lessColor,
+                                 bubbleBorder_outgoing: color,
                                  grayTextBubble_incoming: grayTextBubble_incoming,
                                  grayTextBubble_outgoing: grayTextBubble_outgoing,
                                  grayIconBubble_incoming: grayIconBubble_incoming,
@@ -434,7 +449,7 @@ public final class ColorPalette : Equatable {
                                  fileActivityBackgroundBubble_incoming: color,
                                  fileActivityBackgroundBubble_outgoing: fileActivityBackgroundBubble_outgoing,
                                  fileActivityForegroundBubble_incoming: fileActivityForegroundBubble_incoming,
-                                 fileActivityForegroundBubble_outgoing: lessColor,
+                                 fileActivityForegroundBubble_outgoing: color,
                                  waveformBackground: waveformBackground,
                                  waveformForeground: color,
                                  waveformBackgroundBubble_incoming: waveformBackgroundBubble_incoming,
@@ -477,7 +492,11 @@ public final class ColorPalette : Equatable {
                                  peerAvatarBlueTop: peerAvatarBlueTop,
                                  peerAvatarBlueBottom: peerAvatarBlueBottom,
                                  peerAvatarPinkTop: peerAvatarPinkTop,
-                                 peerAvatarPinkBottom: peerAvatarPinkBottom)
+                                 peerAvatarPinkBottom: peerAvatarPinkBottom,
+                                 bubbleBackgroundHighlight_incoming: bubbleBackgroundHighlight_incoming,
+                                 bubbleBackgroundHighlight_outgoing: highlightColor,
+                                 chatDateActive: chatDateActive,
+                                 chatDateText: chatDateText)
     }
 }
 
@@ -525,7 +544,7 @@ public var switchViewAppearance: SwitchViewAppearance {
 }
 //0xE3EDF4
 public let whitePalette = ColorPalette(isDark: false,
-                                       name: "Default",
+                                       name: "Day",
                                        background: .white,
                                        text: NSColor(0x000000),
                                        grayText: NSColor(0x999999),
@@ -561,7 +580,7 @@ public let whitePalette = ColorPalette(isDark: false,
                                        bubbleBackground_incoming: NSColor(0xF4F4F4),
                                        bubbleBackground_outgoing: NSColor(0x4c91c7),//0x007ee5
                                        bubbleBorder_incoming: NSColor(0xeaeaea),
-                                       bubbleBorder_outgoing: NSColor(0xeaeaea),
+                                       bubbleBorder_outgoing: NSColor(0x4c91c7),
                                        grayTextBubble_incoming: NSColor(0x999999),
                                        grayTextBubble_outgoing: NSColor(0xEFFAFF, 0.8),
                                        grayIconBubble_incoming: NSColor(0x999999),
@@ -572,7 +591,7 @@ public let whitePalette = ColorPalette(isDark: false,
                                        linkBubble_outgoing: NSColor(0xffffff),
                                        textBubble_incoming: NSColor(0x000000),
                                        textBubble_outgoing: NSColor(0xffffff),
-                                       selectMessageBubble: NSColor(0xEDF4F9),
+                                       selectMessageBubble: NSColor(0xEDF4F9, 0.6),
                                        fileActivityBackground: NSColor(0x4ba3e2),
                                        fileActivityForeground: NSColor(0xffffff),
                                        fileActivityBackgroundBubble_incoming: NSColor(0x4ba3e2),
@@ -621,7 +640,12 @@ public let whitePalette = ColorPalette(isDark: false,
                                        peerAvatarBlueTop: NSColor(0x72d5fd),
                                        peerAvatarBlueBottom: NSColor(0x2a9ef1),
                                        peerAvatarPinkTop: NSColor(0xe0a2f3),
-                                       peerAvatarPinkBottom: NSColor(0xd669ed))
+                                       peerAvatarPinkBottom: NSColor(0xd669ed),
+                                       bubbleBackgroundHighlight_incoming: NSColor(0xeaeaea),
+                                       bubbleBackgroundHighlight_outgoing: NSColor(0x4b7bad),
+                                       chatDateActive: NSColor(0xffffff, 0.6),
+                                       chatDateText: NSColor(0x333333)
+)
 
 /*
  colors[0] = NSColor(0xfc5c51); // red
@@ -648,7 +672,7 @@ public let darkPalette = ColorPalette(isDark: true,
     darkGrayText: NSColor(0xb1c3d5),
     blueText: NSColor(0x62bcf9),
     blueSelect: NSColor(0x3d6a97),
-    selectText: NSColor(0x0F161E),
+    selectText: NSColor(0x3e6b9b),
     blueFill: NSColor(0x2ea6ff),
     border: NSColor(0x213040),
     grayBackground: NSColor(0x213040),
@@ -657,7 +681,7 @@ public let darkPalette = ColorPalette(isDark: true,
     blueIcon: NSColor(0x2ea6ff),
     badgeMuted: NSColor(0xb1c3d5),
     badge: NSColor(0x2ea6ff),
-    indicatorColor: NSColor(0x2ea6ff),
+    indicatorColor: NSColor(0xffffff),
     selectMessage: NSColor(0x0F161E),
     monospacedPre: NSColor(0xffffff),
     monospacedCode: NSColor(0xffffff),
@@ -665,7 +689,7 @@ public let darkPalette = ColorPalette(isDark: true,
     monospacedPreBubble_outgoing: NSColor(0xffffff),
     monospacedCodeBubble_incoming: NSColor(0xffffff),
     monospacedCodeBubble_outgoing: NSColor(0xffffff),
-    selectTextBubble_incoming: NSColor(0x1a2632),
+    selectTextBubble_incoming: NSColor(0x3e6b9b),
     selectTextBubble_outgoing: NSColor(0x355a80),
     bubbleBackground_incoming: NSColor(0x213040),
     bubbleBackground_outgoing: NSColor(0x3d6a97),
@@ -730,8 +754,117 @@ public let darkPalette = ColorPalette(isDark: true,
     peerAvatarBlueTop: NSColor(0x9de3ff),
     peerAvatarBlueBottom: NSColor(0x6cc2ff),
     peerAvatarPinkTop: NSColor(0xf1c4ff),
-    peerAvatarPinkBottom: NSColor(0xee9cff)
+    peerAvatarPinkBottom: NSColor(0xee9cff),
+    bubbleBackgroundHighlight_incoming: NSColor(0x2D3A49),
+    bubbleBackgroundHighlight_outgoing: NSColor(0x5079A1),
+    chatDateActive: NSColor(0x18222d),
+    chatDateText: NSColor(0xb1c3d5)
 )
+
+public let dayClassic = ColorPalette(isDark: false,
+    name:"Day Classic",
+    background: NSColor(0xffffff),
+    text: NSColor(0x000000),
+    grayText: NSColor(0x999999),
+    link: NSColor(0x2481cc),
+    blueUI: NSColor(0x2481cc),
+    redUI: NSColor(0xff3b30),
+    greenUI: NSColor(0x63DA6E),
+    blackTransparent: NSColor(0x000000,0.6),
+    grayTransparent: NSColor(0xf4f4f4,0.4),
+    grayUI: NSColor(0xFaFaFa),
+    darkGrayText: NSColor(0x333333),
+    blueText: NSColor(0x2481CC),
+    blueSelect: NSColor(0x4c91c7),
+    selectText: NSColor(0xeaeaea),
+    blueFill: NSColor(0x4ba3e2),
+    border: NSColor(0xeaeaea),
+    grayBackground: NSColor(0xf4f4f4),
+    grayForeground: NSColor(0xe4e4e4),
+    grayIcon: NSColor(0x9e9e9e),
+    blueIcon: NSColor(0x0f8fe4),
+    badgeMuted: NSColor(0xd7d7d7),
+    badge: NSColor(0x4ba3e2),
+    indicatorColor: NSColor(0x464a57),
+    selectMessage: NSColor(0xeaeaea),
+    monospacedPre: NSColor(0x000000),
+    monospacedCode: NSColor(0xff3b30),
+    monospacedPreBubble_incoming: NSColor(0xff3b30),
+    monospacedPreBubble_outgoing: NSColor(0x000000),
+    monospacedCodeBubble_incoming: NSColor(0xff3b30),
+    monospacedCodeBubble_outgoing: NSColor(0x000000),
+    selectTextBubble_incoming: NSColor(0xCCDDEA),
+    selectTextBubble_outgoing: NSColor(0xCCDDEA),
+    bubbleBackground_incoming: NSColor(0xffffff),
+    bubbleBackground_outgoing: NSColor(0xE1FFC7),
+    bubbleBorder_incoming: NSColor(0x86A9C9,0.5),
+    bubbleBorder_outgoing: NSColor(0x86A9C9,0.5),
+    grayTextBubble_incoming: NSColor(0x999999),
+    grayTextBubble_outgoing: NSColor(0x008c09,0.8),
+    grayIconBubble_incoming: NSColor(0x999999),
+    grayIconBubble_outgoing: NSColor(0x008c09,0.8),
+    blueIconBubble_incoming: NSColor(0x999999),
+    blueIconBubble_outgoing: NSColor(0x008c09,0.8),
+    linkBubble_incoming: NSColor(0x2481cc),
+    linkBubble_outgoing: NSColor(0x004bad),
+    textBubble_incoming: NSColor(0x000000),
+    textBubble_outgoing: NSColor(0x000000),
+    selectMessageBubble: NSColor(0xEDF4F9),
+    fileActivityBackground: NSColor(0x4ba3e2),
+    fileActivityForeground: NSColor(0xffffff),
+    fileActivityBackgroundBubble_incoming: NSColor(0x3ca7fe),
+    fileActivityBackgroundBubble_outgoing: NSColor(0x00a700),
+    fileActivityForegroundBubble_incoming: NSColor(0xffffff),
+    fileActivityForegroundBubble_outgoing: NSColor(0xffffff),
+    waveformBackground: NSColor(0x9e9e9e,0.7),
+    waveformForeground: NSColor(0x4ba3e2),
+    waveformBackgroundBubble_incoming: NSColor(0x3ca7fe,0.6),
+    waveformBackgroundBubble_outgoing: NSColor(0x00a700,0.6),
+    waveformForegroundBubble_incoming: NSColor(0x3ca7fe),
+    waveformForegroundBubble_outgoing: NSColor(0x00a700),
+    webPreviewActivity: NSColor(0x2481cc),
+    webPreviewActivityBubble_incoming: NSColor(0x2481cc),
+    webPreviewActivityBubble_outgoing: NSColor(0x00a700),
+    redBubble_incoming: NSColor(0xff3b30),
+    redBubble_outgoing: NSColor(0xff3b30),
+    greenBubble_incoming: NSColor(0x63DA6E),
+    greenBubble_outgoing: NSColor(0x63DA6E),
+    chatReplyTitle: NSColor(0x2481cc),
+    chatReplyTextEnabled: NSColor(0x000000),
+    chatReplyTextDisabled: NSColor(0x999999),
+    chatReplyTitleBubble_incoming: NSColor(0x2481cc),
+    chatReplyTitleBubble_outgoing: NSColor(0x00a700),
+    chatReplyTextEnabledBubble_incoming: NSColor(0x000000),
+    chatReplyTextEnabledBubble_outgoing: NSColor(0x000000),
+    chatReplyTextDisabledBubble_incoming: NSColor(0x999999),
+    chatReplyTextDisabledBubble_outgoing: NSColor(0x008c09,0.8),
+    groupPeerNameRed: NSColor(0xfc5c51),
+    groupPeerNameOrange: NSColor(0xfa790f),
+    groupPeerNameViolet: NSColor(0x895dd5),
+    groupPeerNameGreen: NSColor(0x0fb297),
+    groupPeerNameCyan: NSColor(0x00c1a6),
+    groupPeerNameLightBlue: NSColor(0x3ca5ec),
+    groupPeerNameBlue: NSColor(0x3d72ed),
+    peerAvatarRedTop: NSColor(0xff885e),
+    peerAvatarRedBottom: NSColor(0xff516a),
+    peerAvatarOrangeTop: NSColor(0xffcd6a),
+    peerAvatarOrangeBottom: NSColor(0xffa85c),
+    peerAvatarVioletTop: NSColor(0x82b1ff),
+    peerAvatarVioletBottom: NSColor(0x665fff),
+    peerAvatarGreenTop: NSColor(0xa0de7e),
+    peerAvatarGreenBottom: NSColor(0x54cb68),
+    peerAvatarCyanTop: NSColor(0x53edd6),
+    peerAvatarCyanBottom: NSColor(0x28c9b7),
+    peerAvatarBlueTop: NSColor(0x72d5fd),
+    peerAvatarBlueBottom: NSColor(0x2a9ef1),
+    peerAvatarPinkTop: NSColor(0xe0a2f3),
+    peerAvatarPinkBottom: NSColor(0xd669ed),
+    bubbleBackgroundHighlight_incoming: NSColor(0xd9f4ff),
+    bubbleBackgroundHighlight_outgoing: NSColor(0xc8ffa6),
+    chatDateActive: NSColor(0xffffff, 0.7),
+    chatDateText: NSColor(0x999999)
+)
+
 
 
 
@@ -743,7 +876,7 @@ public let darkPalette = ColorPalette(isDark: true,
 
 private var _theme:Atomic<PresentationTheme> = Atomic(value: whiteTheme)
 
-public let whiteTheme = PresentationTheme(colors: whitePalette, search: SearchTheme(.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), localizedString("SearchField.Search"), .text, .grayText))
+public let whiteTheme = PresentationTheme(colors: whitePalette, search: SearchTheme(.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), {localizedString("SearchField.Search")}, .text, .grayText))
 
 
 

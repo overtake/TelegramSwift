@@ -38,6 +38,10 @@ class MGalleryExternalVideoItem: MGalleryVideoItem {
         self.startTime = startTime
     
     }
+    
+    override var status: Signal<MediaResourceStatus, Void> {
+        return .single(.Local)
+    }
  
     override var sizeValue: NSSize {
         return NSMakeSize(1280, 720).fitted(pagerSize)

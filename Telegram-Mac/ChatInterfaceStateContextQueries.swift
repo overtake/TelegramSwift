@@ -68,7 +68,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     case let .mention(query: query, includeRecent: includeRecent):
         let normalizedQuery = query.lowercased()
         
-        if let peer = chatPresentationInterfaceState.peer {
+        if let global = chatPresentationInterfaceState.peer {
             var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
             if let currentQuery = currentQuery {
                 switch currentQuery {
@@ -84,7 +84,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 inlineSignal = recentlyUsedInlineBots(postbox: account.postbox)
             }
             
-            let participants = combineLatest(inlineSignal, peerParticipants(postbox: account.postbox, id: peer.id))
+            let participants = combineLatest(inlineSignal, peerParticipants(postbox: account.postbox, id: global.id))
                 |> map { recent, participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     
                     let filteredRecent = recent.filter ({ recent in
@@ -102,6 +102,10 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     
                     let filteredParticipants = participants.filter ({ peer in
                         if peer.id == account.peerId {
+                            return false
+                        }
+                        
+                        if global.isChannel, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder == nil {
                             return false
                         }
                         if peer.indexName.matchesByTokens(normalizedQuery) {
@@ -220,13 +224,17 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     case let .mention(query: query, includeRecent: _):
                         let normalizedQuery = query.lowercased()
                         
-                        if let peer = chatPresentationInterfaceState.peer {
-                            return peerParticipants(postbox: account.postbox, id: peer.id)
+                        if let global = chatPresentationInterfaceState.peer {
+                            return peerParticipants(postbox: account.postbox, id: global.id)
                                 |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                                     let filteredParticipants = participants.filter ({ peer in
                                         if peer.id == account.peerId {
                                             return false
                                         }
+                                        if global.isChannel, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder == nil {
+                                            return false
+                                        }
+                                        
                                         if peer.indexName.matchesByTokens(normalizedQuery) {
                                             return true
                                         }

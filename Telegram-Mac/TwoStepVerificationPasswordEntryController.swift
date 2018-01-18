@@ -165,7 +165,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
             }
         }, next: { [weak self] in
             
-            if (self?.rightBarView as? TextButtonBarView)?.button.isEnabled == false {
+            if self?.rightBarView.isEnabled == false {
                 NSSound.beep()
                 return
             }
@@ -260,7 +260,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
             self?.genericView.merge(with: transition)
             self?.readyOnce()
             self?.setCenterTitle(title)
-            (self?.rightBarView as? TextButtonBarView)?.button.isEnabled = nextEnabled
+            self?.rightBarView.isEnabled = nextEnabled
         }))
     }
     
@@ -271,7 +271,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
     override func getRightBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.composeNext))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.nextAction?()
         }, for: .Click)
         

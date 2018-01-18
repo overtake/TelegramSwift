@@ -12,7 +12,7 @@
 
 static NSString* (^localizationFunc)(NSString *key);
 
-void setDateLocalizationFunc(NSString* (^localizationF)(NSString *key)) {
+void setInputLocalizationFunc(NSString* (^localizationF)(NSString *key)) {
     localizationFunc = localizationF;
 }
 
@@ -748,6 +748,41 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
 }
 
+- (NSRect) highlightRectForRange:(NSRange)aRange
+{
+    NSRange r = aRange;
+    NSRange startLineRange = [[self string] lineRangeForRange:NSMakeRange(r.location, 0)];
+    NSInteger er = NSMaxRange(r)-1;
+    NSString *text = [self string];
+    
+    if (er >= [text length]) {
+        return NSZeroRect;
+    }
+    if (er < r.location) {
+        er = r.location;
+    }
+    
+    
+    NSRange gr = [[self.textView layoutManager] glyphRangeForCharacterRange:aRange
+                                              actualCharacterRange:NULL];
+    NSRect br = [[self.textView layoutManager] boundingRectForGlyphRange:gr inTextContainer:[self.textView textContainer]];
+    NSRect b = [self bounds];
+    CGFloat h = br.size.height;
+    CGFloat w = b.size.width;
+    CGFloat y = br.origin.y;
+    NSPoint containerOrigin = [self.textView textContainerOrigin];
+    NSRect aRect = NSMakeRect(0, y, w, h);
+    // Convert from view coordinates to container coordinates
+    aRect = NSOffsetRect(aRect, containerOrigin.x, containerOrigin.y);
+    return aRect;
+}
+
+-(void)scrollToCursor {
+    NSRect lineRect = [self highlightRectForRange:self.selectedRange];
+    
+    [self.scrollView.contentView scrollToPoint:lineRect.origin];
+}
+
 -(void)updatePlaceholder:(BOOL)animated newSize:(NSSize)newSize {
     if(_placeholderAttributedString) {
         
@@ -885,8 +920,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         
         [_textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
         
-        
-        
+
         __block NSMutableArray<TGInputTextTagAndRange *> *inputTextTags = [[NSMutableArray alloc] init];
         [string enumerateAttribute:TGCustomLinkAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
             if ([value isKindOfClass:[TGInputTextTag class]]) {
@@ -1064,9 +1098,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString:attributedString];
     
     [attributedString enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, attributedString.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
-        
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
-        
     }];
     
     

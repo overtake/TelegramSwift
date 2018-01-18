@@ -250,19 +250,18 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         _window = Window(contentRect: center, styleMask: [.closable, .resizable, .miniaturizable, .fullSizeContentView, .titled, .unifiedTitleAndToolbar, .texturedBackground], backing: .buffered, defer: true)
        
         super.init(account)
-        
+        _window.isMovableByWindowBackground = false
         _window.name = "Telegram.InstantViewWindow"
         _window.initSaver()
         _window.contentView = genericView
         _window.titleVisibility = .hidden
         navigation._frameRect = NSMakeRect(0, 0, genericView.frame.width, genericView.frame.height - barHeight)
-
+        
         _window.titlebarAppearsTransparent = true
         _window.minSize = NSMakeSize(500, 600)
         genericView.customHandler.layout = { [weak self] _ in
             self?.windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))
         }
-        
         
         windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))
         

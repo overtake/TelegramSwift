@@ -165,6 +165,8 @@ internal final class L10n {
   internal static var appearanceSettingsTextSizeHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.TextSize.Header") }
   /// You can have up to 200 sticker sets installed. Unused stickers are archived when you add more.
   internal static var archivedStickersDescription: String  { return L10n.tr("Localizable", "ArchivedStickers.Description") }
+  /// Your archived sticker packs will appear here
+  internal static var archivedStickersEmpty: String  { return L10n.tr("Localizable", "ArchivedStickers.Empty") }
   /// Unknown Artist
   internal static var audioUnknownArtist: String  { return L10n.tr("Localizable", "Audio.UnknownArtist") }
   /// Untitled
@@ -1167,6 +1169,10 @@ internal final class L10n {
   internal static var generalSettingsAccentColor: String  { return L10n.tr("Localizable", "GeneralSettings.AccentColor") }
   /// APPEARANCE SETTINGS
   internal static var generalSettingsAppearanceSettings: String  { return L10n.tr("Localizable", "GeneralSettings.AppearanceSettings") }
+  /// Autoplay GIFs
+  internal static var generalSettingsAutoplayGifs: String  { return L10n.tr("Localizable", "GeneralSettings.AutoplayGifs") }
+  /// Chat Background
+  internal static var generalSettingsChatBackground: String  { return L10n.tr("Localizable", "GeneralSettings.ChatBackground") }
   /// Dark Mode
   internal static var generalSettingsDarkMode: String  { return L10n.tr("Localizable", "GeneralSettings.DarkMode") }
   /// Automatic replace emojis
@@ -1475,7 +1481,7 @@ internal final class L10n {
   internal static var messageContextEdit: String  { return L10n.tr("Localizable", "Message.Context.Edit") }
   /// Forward
   internal static var messageContextForward: String  { return L10n.tr("Localizable", "Message.Context.Forward") }
-  /// Save to Cloud Storage
+  /// Forward to Saved Messages
   internal static var messageContextForwardToCloud: String  { return L10n.tr("Localizable", "Message.Context.ForwardToCloud") }
   /// Show Message
   internal static var messageContextGoto: String  { return L10n.tr("Localizable", "Message.Context.Goto") }

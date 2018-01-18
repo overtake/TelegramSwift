@@ -399,8 +399,8 @@ public extension NSView {
             var presentY = NSMinY(self.frame)
             let presentation:CALayer? = self.layer?.presentation()
             if let presentation = presentation, self.layer?.animation(forKey:"position") != nil {
-                presentY =  NSMinY(presentation.frame)
-                presentX = NSMinX(presentation.frame)
+                presentY =  presentation.frame.minY
+                presentX = presentation.frame.minX
             }
             
             self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)

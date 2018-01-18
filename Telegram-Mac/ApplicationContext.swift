@@ -383,14 +383,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
         window.minSize = NSMakeSize(380, 440)
         
+       
+
+        if let localization = localization {
+            applyUILocalization(localization)
+        }
+        
         if let themeSettings = themeSettings {
             updateTheme(with: themeSettings, for: window)
         } else {
             setDefaultTheme(for: window)
-        }
-
-        if let localization = localization {
-            applyUILocalization(localization)
         }
         
         
@@ -410,7 +412,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         self.splitView = SplitView(frame:mainWindow.contentView!.bounds)
         
-
+        
         
         splitView.setProportion(proportion: SplitProportion(min:380, max:300+350), state: .single);
         splitView.setProportion(proportion: SplitProportion(min:300+350, max:300+350+600), state: .dual)
@@ -428,7 +430,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }))
 
         
+        
         applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), network: account.network)
+        
+       
+        
         account.applicationContext = applicationContext
         
         
@@ -440,6 +446,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
        
         
         super.init()
+        
+        applicationContext.switchSplitLayout = { [weak self] layout in
+            self?.splitView.state = layout
+        }
+        
         startNotifyListener(with: account)
         NSUserNotificationCenter.default.delegate = self
      
@@ -592,11 +603,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             
             let preferences = preferences.values[PreferencesKeys.suggestedLocalization] as? SuggestedLocalizationEntry
             if preferences == nil || !preferences!.isSeen, preferences?.languageCode != appCurrentLanguage.languageCode, preferences?.languageCode != "en" {
-                return suggestedLocalizationInfo(network: account.network, languageCode: Locale.current.languageCode ?? "en", extractKeys: ["Suggest.Localization.Header", "Suggest.Localization.Other"]) |> take(1)
+                let current = Locale.preferredLanguages[0]
+                let split = current.split(separator: "-")
+                let lan: String = !split.isEmpty ? String(split[0]) : "en"
+                if lan != "en" {
+                    return suggestedLocalizationInfo(network: account.network, languageCode: lan, extractKeys: ["Suggest.Localization.Header", "Suggest.Localization.Other"]) |> take(1)
+                }
             }
             return .complete()
         } |> deliverOnMainQueue).start(next: { suggestionInfo in
+            if suggestionInfo.availableLocalizations.count >= 2 {
                 showModal(with: SuggestionLocalizationViewController(account, suggestionInfo: suggestionInfo), for: window)
+            }
         }))
 
         

@@ -75,7 +75,7 @@ class TwoStepVerificationResetController : TableViewController {
         
         let checkCode: () -> Void = { [weak self] in
             
-            if (self?.rightBarView as? TextButtonBarView)?.button.isEnabled == false {
+            if self?.rightBarView.isEnabled == false {
                 NSSound.beep()
                 return
             }
@@ -154,14 +154,14 @@ class TwoStepVerificationResetController : TableViewController {
         disposable.set(signal.start(next: { [weak self] transition, enabled in
             self?.genericView.merge(with: transition)
             self?.readyOnce()
-            (self?.rightBarView as? TextButtonBarView)?.button.isEnabled = enabled
+            self?.rightBarView.isEnabled = enabled
         }))
     }
     
     override func getRightBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.composeNext))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.nextAction?()
         }, for: .Click)
         

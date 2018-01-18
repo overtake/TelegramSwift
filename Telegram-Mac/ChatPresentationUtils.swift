@@ -114,8 +114,12 @@ struct TelegramChatColors {
         return bubbled ? incoming ? palette.bubbleBackground_incoming : palette.bubbleBackground_outgoing : palette.background
     }
     
+    func backgoundSelectedColor(_ incoming: Bool) -> NSColor {
+        return bubbled ? incoming ? palette.bubbleBackgroundHighlight_incoming : palette.bubbleBackgroundHighlight_outgoing : palette.background
+    }
+    
     func bubbleBorderColor(_ incoming: Bool) -> NSColor {
-        return incoming ? palette.bubbleBorder_incoming : palette.bubbleBackground_outgoing//.clear//palette.bubbleBorder_outgoing
+        return incoming ? palette.bubbleBorder_incoming : palette.bubbleBorder_outgoing//.clear//palette.bubbleBorder_outgoing
     }
     
     func textColor(_ incoming: Bool) -> NSColor {

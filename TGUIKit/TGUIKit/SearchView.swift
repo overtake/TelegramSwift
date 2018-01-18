@@ -93,7 +93,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
         input.backgroundColor = presentation.colors.background
-        placeholder.attributedString = NSAttributedString.initialize(string: presentation.search.placeholder, color: presentation.search.placeholderColor, font: .normal(.text))
+        placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
         placeholder.sizeToFit()
@@ -102,7 +102,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(placeholder.frame.height, search.frame.height)))
         
         clear.set(image: presentation.search.clearImage, for: .Normal)
-        clear.sizeToFit()
+       _ =  clear.sizeToFit()
         
         placeholder.centerY(x: placeholderTextInset + 2)
         search.centerY()
@@ -375,6 +375,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 
                 clear.layer?.opacity = 0.0
             }
+            updateLoading()
             self.needsLayout = true
         }
   
@@ -389,7 +390,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     func updateLoading() {
-        if isLoading {
+        if isLoading && state == .Focus {
             if progressIndicator.superview == nil {
                 addSubview(progressIndicator)
             }

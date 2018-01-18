@@ -467,17 +467,14 @@ class GroupStickerSetController: TableViewController {
         }))
     }
 
-    var doneButton:Button? {
-        if let button = rightBarView as? TextButtonBarView {
-            return button.button
-        }
-        return nil
+    var doneButton:Control? {
+        return rightBarView
     }
     
     override func getRightBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.navigationDone))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.saveGroupStickerSet?()
         }, for: .Click)
         

@@ -27,6 +27,7 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
             self.border = item.border
         }
         self.needsDisplay = true
+        
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -45,7 +46,8 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        guard let item = item as? GeneralRowItem else {return theme.colors.background}
+        return item.backgroundColor//theme.colors.background
     }
     
 }

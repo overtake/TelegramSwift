@@ -61,7 +61,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     private let fetchDisposable = MetaDisposable()
     private let playerDisposable = MetaDisposable()
     
-    private var durationView:TextView = TextView()
+    private var durationView:ChatMessageAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
     private let videoCorner: VideoMessageCorner = VideoMessageCorner()
     private var path:String? {
         didSet {
@@ -77,9 +77,9 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         stateThumbView.image = instantVideoMutedThumb
         stateThumbView.sizeToFit()
         player.addSubview(stateThumbView)
-        addSubview(durationView)
         addSubview(playingProgressView)
         addSubview(videoCorner)
+        addSubview(durationView)
     }
     
     required init?(coder: NSCoder) {
@@ -88,18 +88,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        
-        if let parent = parent, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters  {
-            for attr in parent.attributes {
-                if let attr = attr as? ConsumableContentMessageAttribute {
-                    if !attr.consumed {
-                        ctx.setFillColor(theme.colors.blueUI.cgColor)
-                        ctx.fillEllipse(in: NSMakeRect(parameters.durationLayout.layoutSize.width + 3, frame.height - floorToScreenPixels((durationView.frame.height - 5)/2) - 4, 5, 5))
-                    }
-                    break
-                }
-            }
-        }
     }
     
     var isIncomingConsumed:Bool {
@@ -165,23 +153,19 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 switch song.state {
                 case let .playing(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
-                    let layout = parameters.duration(for: data.current)
-                    layout.measure(width: frame.width - 50)
-                    durationView.update(layout)
+                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50)
                     break
                 case .stoped, .waiting, .fetching:
                     playingProgressView.state = .None
-                    durationView.update(parameters.durationLayout)
+                    durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
                 case let .paused(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: true)
-                    let layout = parameters.duration(for: data.current)
-                    layout.measure(width: frame.width - 50)
-                    durationView.update(layout)
+                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50)
                 }
                 
             } else {
                 playingProgressView.state = .None
-                durationView.update(parameters.durationLayout)
+                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
             }
         }
     }
@@ -287,9 +271,12 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         updateListeners()
         
         if let media = media as? TelegramMediaFile {
+            durationView.isUnread = !isIncomingConsumed
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                durationView.update(parameters.durationLayout)
+                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
             }
+            
+            
             
             if mediaUpdated {
                 

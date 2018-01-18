@@ -18,6 +18,13 @@ public enum TableSeparator {
     case none;
 }
 
+public enum TableBackgroundMode {
+    case plain
+    case color(color: NSColor)
+    case background(image: NSImage)
+    case tiled(image: NSImage)
+}
+
 public class UpdateTransition<T> {
     public let inserted:[(Int,T)]
     public let updated:[(Int,T)]
@@ -215,7 +222,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        backgroundColor = .clear
         self.autoresizesSubviews = false
+        usesAlternatingRowBackgroundColors = false
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     required init?(coder: NSCoder) {
@@ -230,18 +240,21 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
        
     }
 
-//    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-//        
-//    }
+    
+
     
     override func addSubview(_ view: NSView) {
         super.addSubview(view)
     }
     
     func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(presentation.colors.background.cgColor)
-        ctx.fill(self.bounds)
+        //presentation.colors.background.cgColor
+        ctx.clear(frame)
+      //  ctx.setFillColor(NSColor.red.withAlphaComponent(0.5).cgColor)
+      //  ctx.fill(frame)
         
+        
+       
         if let border = border {
             
             ctx.setFillColor(presentation.colors.border.cgColor)
@@ -321,10 +334,11 @@ public class TableScrollListener : NSObject {
     
 }
 
-open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol {
+open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol, AppearanceViewProtocol {
     
     public var separator:TableSeparator = .none
     
+
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
     weak public var delegate:TableViewDelegate?
@@ -342,6 +356,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var needUpdateVisibleAfterScroll:Bool = false
     private var scrollHandler:(_ scrollPosition:ScrollPosition) ->Void = {_ in}
     
+    private var backgroundView: ImageView? 
     
     private var scrollListeners:[TableScrollListener] = []
     
@@ -366,6 +381,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
+    open override func viewDidChangeBackingProperties() {
+        
+    }
+    
+    open func updateLocalizationAndTheme() {
+        if super.layer?.backgroundColor != .clear {
+            super.layer?.backgroundColor = presentation.colors.background.cgColor
+        }
+        self.needsDisplay = true
+      //  tableView.needsDisplay = true
+      //  clipView.needsDisplay = true
+    }
     
     
     public func removeScroll(listener:TableScrollListener) {
@@ -391,9 +418,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    open override func setNeedsDisplay(_ invalidRect: NSRect) {
-        
-    }
+//    open override func setNeedsDisplay(_ invalidRect: NSRect) {
+//
+//    }
 
     open override var isFlipped: Bool {
         return true
@@ -412,11 +439,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     open override var backgroundColor: NSColor {
         didSet {
-            documentView?.background = backgroundColor
-            contentView.background = backgroundColor
-            self.clipView.backgroundColor = backgroundColor
-            self.clipView.needsDisplay = true
-            documentView?.needsDisplay = true
+//            documentView?.background = backgroundColor
+//            contentView.background = backgroundColor
+//            self.clipView.backgroundColor = backgroundColor
+//            self.clipView.needsDisplay = true
+//            documentView?.needsDisplay = true
         }
     }
     
@@ -428,15 +455,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         let table = TGFlipableTableView(frame:frameRect)
         table.flip = isFlipped
-        
+
         self.tableView = table
         self.tableView.wantsLayer = true
         
         self.tableView.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        
+        tableView.autoresizesSubviews = false
 
         super.init(frame: frameRect);
-        
+        self.autoresizesSubviews = false
+
         table.table = self
         
         self.bottomInset = bottomInset
@@ -456,12 +484,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
         self.tableView.sdelegate = self
-        self.tableView.allowsColumnReordering = true
+        self.tableView.allowsColumnReordering = false
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         
         let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
         tableColumn.width = frame.width
+        
         self.tableView.addTableColumn(tableColumn)
 
         
@@ -480,10 +509,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    open override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-    }
     
     func layoutIfNeeded(with range:NSRange, oldWidth:CGFloat) {
         for i in range.min ..< range.max {
@@ -580,7 +605,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     stickView = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), stickItem.height))
                     stickView!.header = true
                     stickView!.set(item: stickItem, animated: false)
-                    tableView.addSubview(stickView!)
+                 //   tableView.addSubview(stickView!)
                 }
             }
             
@@ -658,7 +683,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     private let stickTimeoutDisposable = MetaDisposable()
-    
+    private var previousStickMinY: CGFloat = -1
     public func updateStickAfterScroll(_ animated: Bool) -> Void {
         let range = self.visibleRows()
         
@@ -710,9 +735,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     (viewNecessary(at: item.index) as? TableStickView)?.updateIsVisible(false, animated: false)
                     
                     if let stickView = stickView {
-                        if tableView.subviews.last != stickView {
+                        if subviews.last != stickView {
                             stickView.removeFromSuperview()
-                            tableView.addSubview(stickView)
+                            addSubview(stickView)
                         }
                     }
                     
@@ -727,11 +752,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         } else {
                             dif = item.height
                         }
-                        let yTopOffset:CGFloat = min(max(scrollInset - dif, 0), documentSize.height - item.height)
-                        if stickView.frame.minY != yTopOffset {
+                        var yTopOffset:CGFloat = min((scrollInset - rect.maxY) - rect.height, 0) 
+                        if yTopOffset <= -rect.height {
+                            yTopOffset = 0
+                        }
+                        if previousStickMinY != documentOffset.y {
                             stickView.isHidden = firstTime
+                            previousStickMinY = documentOffset.y
                             if !animated || stickView.layer?.opacity != 0 {
-                                stickView.change(opacity: firstTime ? 0 : 1, animated: !firstTime)
+                                stickView.change(opacity: 1, animated: !firstTime)
                                 firstTime = false
                             }
                         }
@@ -745,13 +774,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                                     }
                                 })
                             }
-                            
+
                         }))
                         
                     }
                     
                 } else if let stickView = stickView {
-                    stickView.setFrameOrigin(0, max(0,scrollInset))
+                    stickView.setFrameOrigin(0, 0)
                     stickView.header = true
                 }
 
@@ -1233,6 +1262,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
+
   
     public func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
         let item:TableRowItem = self.item(at: row);
@@ -1733,6 +1763,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let visible = visibleItems()
         let oldWidth = frame.width
         super.setFrameSize(newSize)
+    
+        
         //updateStickAfterScroll(false)
         if oldWidth != newSize.width {
             saveScrollState(visible)

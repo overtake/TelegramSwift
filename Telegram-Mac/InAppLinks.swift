@@ -343,6 +343,12 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                     let post = userAndPost[1].isEmpty ? nil : userAndPost[1].nsstring.intValue
                     if name.hasPrefix("iv?") {
                         return .external(link: url as String, false)
+                    } else if name.hasPrefix("share") {
+                        let params = urlVars(with: url as String)
+                        if let url = params["url"] {
+                            return .shareUrl(account, url)
+                        }
+                        return .external(link: url as String, false)
                     } else {
                         return .followResolvedName(username: name, postId: post, account: account, action:nil, callback: openInfo)
                     }

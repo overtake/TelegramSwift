@@ -11,19 +11,57 @@ import TGUIKit
 import SwiftSignalKitMac
 import AVFoundation
 import AVKit
-
+import TelegramCoreMac
+import PostboxMac
 fileprivate class GMagnifyView : MagnifyView  {
+    private let progressView: RadialProgressView = RadialProgressView()
+    fileprivate let statusDisposable = MetaDisposable()
+    
     var minX:CGFloat {
         if contentView.frame.minX > 0 {
             return frame.minX + contentView.frame.minX
         }
         return frame.minX
     }
+    
+    func updateStatus(_ status: Signal<MediaResourceStatus, Void>) {
+        statusDisposable.set((status |> deliverOnMainQueue).start(next: { [weak self] status in
+            self?.updateProgress(status)
+        }))
+    }
+    private func updateProgress(_ status: MediaResourceStatus) {
+        progressView.isHidden = true
+        switch status {
+        case let .Fetching(_, progress):
+            progressView.state = .ImpossibleFetching(progress: progress, force: false)
+            progressView.isHidden = false
+        case .Local:
+            progressView.state = .Play
+        case .Remote:
+            progressView.state = .Remote
+            progressView.isHidden = false
+        }
+        
+        progressView.userInteractionEnabled = status != .Local
+    }
+    
+    deinit {
+        statusDisposable.dispose()
+    }
+    
     private let fillFrame:(GMagnifyView)->NSRect
     
     init(_ contentView: NSView, contentSize: NSSize, fillFrame:@escaping(GMagnifyView)->NSRect) {
         self.fillFrame = fillFrame
         super.init(contentView, contentSize: contentSize)
+        addSubview(progressView)
+        progressView.isHidden = true
+        progressView.center()
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        progressView.center()
     }
     
     required init?(coder: NSCoder) {
@@ -70,6 +108,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     let thumbsControl: GalleryThumbsControl
     private let indexDisposable = MetaDisposable()
     fileprivate let reversed: Bool
+    private let navigationDisposable = MetaDisposable()
     init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window, reversed: Bool) {
         self.contentInset = contentInset
         self.window = window
@@ -184,6 +223,20 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         return false
     }
     
+    func exitFullScreen() {
+        if let view = controller.selectedViewController?.view as? MagnifyView {
+            if let view = view.contentView as? AVPlayerView {
+
+                let controls = view.subviews.last?.subviews.last
+                if let view = controls?.subviews.first?.subviews.last?.subviews.first?.subviews.last?.subviews.last?.subviews.last {
+                    if let view = view as? NSButton {
+                        view.performClick(self)
+                    }
+                }
+            }
+        }
+    }
+    
     var itemView:NSView? {
         return (controller.selectedViewController?.view as? MagnifyView)?.contentView
     }
@@ -263,13 +316,29 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func next() {
         if !lockedTransition {
-            set(index: min(controller.selectedIndex + 1, controller.arrangedObjects.count - 1), animated: false)
+            let item = self.item(at: min(controller.selectedIndex + 1, controller.arrangedObjects.count - 1))
+            item.size.set(.single(item.pagerSize))
+            item.request()
+            navigationDisposable.set((item.image.get() |> deliverOnMainQueue).start(next: { [weak self] _ in
+                guard let `self` = self else {return}
+                if let index = self.items.index(of: item) {
+                    self.set(index: index, animated: false)
+                }
+            }))
         }
     }
     
     func prev() {
         if !lockedTransition {
-            set(index: max(controller.selectedIndex - 1, 0), animated: false)
+            let item = self.item(at: max(controller.selectedIndex - 1, 0))
+            item.size.set(.single(item.pagerSize))
+            item.request()
+            navigationDisposable.set((item.image.get() |> deliverOnMainQueue).start(next: { [weak self] _ in
+                guard let `self` = self else {return}
+                if let index = self.items.index(of: item) {
+                    self.set(index: index, animated: false)
+                }
+            }))
         }
     }
     
@@ -428,12 +497,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let item = identifiers[identifier]!
             let view = item.singleView()
             view.wantsLayer = true
-            view.background = theme.colors.background
-            controller.view = GMagnifyView(view, contentSize:item.sizeValue, fillFrame: { [weak self] view in
+            let magnify = GMagnifyView(view, contentSize:item.sizeValue, fillFrame: { [weak self] view in
                 guard let `self` = self else {return NSZeroRect}
                 
                 return self.view.focus(self.contentFrame.size, inset: self.contentInset)
             })
+            controller.view = magnify
+            magnify.updateStatus(item.status)
             cache.setObject(controller, forKey: identifier as AnyObject)
             item.request()
             return controller
@@ -540,10 +610,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         newView.wantsLayer = true
         newView.layer?.opacity = Float(newAlphaFrom)
         newView.layer?.contents = contents
-        newView.layer?.backgroundColor = theme.colors.background.cgColor
+        newView.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
         
         let copyView = oldView.copy() as! NSView
-        copyView.layer?.backgroundColor = theme.colors.background.cgColor
+
+        
         copyView.frame = oldRect
         copyView.wantsLayer = true
         copyView.layer?.opacity = Float(oldAlphaFrom)
@@ -553,6 +624,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         CATransaction.begin()
         
         let duration:Double = 0.2
+        
+        
+        
         
         newView._change(pos: newRect.origin, animated: true, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
         newView._change(size: newRect.size, animated: true, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
@@ -614,6 +688,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     deinit {
         window.removeAllHandlers(for: self)
         ioDisposabe.dispose()
+        navigationDisposable.dispose()
         autohideCaptionDisposable.dispose()
         magnifyDisposable.dispose()
         indexDisposable.dispose()

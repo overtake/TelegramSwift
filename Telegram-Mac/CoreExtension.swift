@@ -1117,3 +1117,24 @@ func clearCache(_ path: String) -> Signal<Void, Void> {
         return EmptyDisposable
     } |> runOn(resourcesQueue)
 }
+
+func moveWallpaperToCache(postbox: Postbox, _ resource: TelegramMediaResource) -> Signal<String, Void> {
+    return Signal { subscriber in
+        
+        let wallpapers = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath
+        try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
+        
+        if let path = postbox.mediaBox.completedResourcePath(resource) {
+            try? FileManager.default.copyItem(atPath: path, toPath: wallpapers + "/" + path.nsstring.lastPathComponent + ".jpg")
+            subscriber.putNext(wallpapers + path.nsstring.lastPathComponent)
+        }
+        
+        subscriber.putCompletion()
+        return EmptyDisposable
+        
+    }
+}
+
+func wallpaperPath(_ resource: TelegramMediaResource) -> String {
+    return "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath + "/" + resource.id.uniqueId + ".jpg"
+}

@@ -56,24 +56,25 @@ private class TitledContainerView : View {
     fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(presentation.colors.background.cgColor)
         ctx.fill(bounds)
-        if let text = text {
-            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - inset, NSHeight(layer.bounds)), nil,false, .left)
-            var tY = NSMinY(focus(textLayout.size))
+        if let text = text, let superview = superview?.superview {
+            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(frame.width - inset, frame.height), nil,false, .left)
+            var tY = focus(textLayout.size).minY
             
             if let status = status {
                 
-                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(NSWidth(layer.bounds) - inset, NSHeight(layer.bounds)), nil,false, .left)
+                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset, frame.height), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
-                tY = (NSHeight(self.frame) - t) / 2.0
+                tY = (frame.height - t) / 2.0
                 
                 let sY = tY + textLayout.size.height + 2.0
                 if !hiddenStatus {
-                    statusApply.draw(NSMakeRect(textInset == nil ? floorToScreenPixels((layer.bounds.width - statusLayout.size.width)/2.0) : textInset!, sY, statusLayout.size.width, statusLayout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    statusApply.draw(NSMakeRect(textInset == nil ? floorToScreenPixels((frame.width - statusLayout.size.width)/2.0) : textInset!, sY, statusLayout.size.width, statusLayout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
                 }
             }
             
-            var textRect = NSMakeRect(textInset == nil ? floorToScreenPixels((layer.bounds.width - textLayout.size.width)/2.0) : textInset!, tY, textLayout.size.width, textLayout.size.height)
+            let point = convert( NSMakePoint(floorToScreenPixels((superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
+            var textRect = NSMakeRect(min(max(textInset == nil ? point.x : textInset!, 0), frame.width - textLayout.size.width), point.y, textLayout.size.width, textLayout.size.height)
             
             if let titleImage = titleImage {
                 ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))

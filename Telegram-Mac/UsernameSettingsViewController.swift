@@ -107,11 +107,8 @@ class UsernameSettingsViewController: TableViewController {
         return true
     }
     
-    var doneButton:Button? {
-        if let button = rightBarView as? TextButtonBarView {
-            return button.button
-        }
-        return nil
+    var doneButton:Control? {
+        return rightBarView
     }
     
     override func backKeyAction() -> KeyHandlerResult {
@@ -121,7 +118,7 @@ class UsernameSettingsViewController: TableViewController {
     override func getRightBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.usernameSettingsDone))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.saveUsername()
         }, for: .Click)
         
@@ -140,7 +137,7 @@ class UsernameSettingsViewController: TableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let rightView = self?.rightBarView as? TextButtonBarView, rightView.button.isEnabled  {
+            if let rightView = self?.rightBarView as? TextButtonBarView, rightView.isEnabled  {
                 self?.saveUsername()
                 return .rejected
             }

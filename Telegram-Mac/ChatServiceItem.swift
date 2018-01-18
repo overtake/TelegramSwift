@@ -273,7 +273,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override var isBubbled: Bool {
-        return false
+        return theme.wallpaper != .none
     }
     
     override var height: CGFloat {
@@ -287,7 +287,7 @@ class ChatServiceItem: ChatRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
         if isBubbled {
-            text.generateAutoBlock(backgroundColor: theme.colors.grayForeground)
+            text.generateAutoBlock(backgroundColor: theme.colors.chatDateActive)
         }
         return true
     }
@@ -333,7 +333,7 @@ class ChatServiceRowView: TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
     }
     
     required init?(coder: NSCoder) {
@@ -354,6 +354,7 @@ class ChatServiceRowView: TableRowView {
             
         }
     }
+    
     
     override func doubleClick(in location: NSPoint) {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {

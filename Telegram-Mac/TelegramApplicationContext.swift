@@ -39,12 +39,16 @@ class TelegramApplicationContext : NSObject {
     
     private let logoutDisposable = MetaDisposable()
     
+    var switchSplitLayout:((SplitViewState)->Void)?
+    
     weak var mainNavigation:NavigationViewController?
     private let updateDifferenceDisposable = MetaDisposable()
     init(_ mainNavigation:NavigationViewController?, _ entertainment:EntertainmentViewController, network: Network) {
         self.mainNavigation = mainNavigation
         self.entertainment = entertainment
-        timeDifference = network.globalTime - Date().timeIntervalSince1970
+        if network.globalTime > 0 {
+            timeDifference = network.globalTime - Date().timeIntervalSince1970
+        }
         super.init()
         
         
@@ -54,7 +58,7 @@ class TelegramApplicationContext : NSObject {
         
         updateDifferenceDisposable.set((Signal<Void, Void>.single(Void())
             |> delay(5 * 60, queue: Queue.mainQueue()) |> restart).start(next: { [weak self, weak network] in
-                if let network = network {
+                if let network = network, network.globalTime > 0 {
                     self?.timeDifference = network.globalTime - Date().timeIntervalSince1970
                 }
             }))

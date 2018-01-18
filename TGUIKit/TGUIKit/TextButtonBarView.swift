@@ -16,18 +16,20 @@ public enum TextBarAligment {
 
 open class TextButtonBarView: BarView {
 
-    private(set) public var button:TitleButton
+    private let button:TitleButton = TitleButton(frame:NSZeroRect)
     
     public var alignment:TextBarAligment = .Center
-    
+    private var _isFitted: Bool
     public init(controller: ViewController, text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center) {
     
         
-        button = TitleButton(frame:NSZeroRect)
-        button.style = style
+        button.userInteractionEnabled = false
+        button.set(font: navigationButtonStyle.font, for: .Normal)
+        button.set(color: navigationButtonStyle.foregroundColor, for: .Normal)
         button.set(text: text, for: .Normal)
+
         button.disableActions()
-        
+        _isFitted = false
         super.init(controller: controller)
         
         self.alignment = alignment
@@ -37,6 +39,69 @@ open class TextButtonBarView: BarView {
         
     }
     
+    public func set(image:CGImage, for state:ControlState) -> Void {
+        button.set(image: image, for: state)
+        _isFitted = false
+        (superview as? NavigationBarView)?.viewFrameChanged(Notification(name: NSView.frameDidChangeNotification))
+    }
+    
+    public func set(color:NSColor, for state:ControlState) -> Void {
+        button.set(color: color, for: state)
+    }
+    
+    public func set(font:NSFont, for state:ControlState) -> Void {
+        button.set(font: font, for: state)
+        _isFitted = false
+        (superview as? NavigationBarView)?.viewFrameChanged(Notification(name: NSView.frameDidChangeNotification))
+    }
+    
+    public func set(text:String, for state:ControlState) -> Void {
+        button.set(text: text, for: state)
+        _isFitted = false
+        (superview as? NavigationBarView)?.viewFrameChanged(Notification(name: NSView.frameDidChangeNotification))
+    }
+    
+    public func removeImage(for state:ControlState) {
+        button.removeImage(for: state)
+    }
+    
+    override var isFitted: Bool {
+        return _isFitted
+    }
+    
+    override func fit(to maxWidth: CGFloat) -> CGFloat {
+        
+        var width: CGFloat = 20
+        switch alignment {
+        case .Center:
+            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height - .borderSize), thatFit: false)
+            width += button.frame.width + 16
+        case .Left:
+            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height - .borderSize))
+            width += button.frame.width
+        case .Right:
+            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height - .borderSize), thatFit: false)
+            width += button.frame.width + 16
+            let f = focus(button.frame.size)
+            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
+        }
+        return width
+    }
+    public override var style: ControlStyle {
+        didSet {
+            button.set(color: style.foregroundColor, for: .Normal)
+            button.set(font: style.font, for: .Normal)
+            button.style = style
+        }
+    }
+    
+    open override var isEnabled: Bool {
+        didSet {
+            button.isEnabled = isEnabled
+        }
+    }
+    
+    
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
@@ -44,17 +109,17 @@ open class TextButtonBarView: BarView {
     }
     
     open override func layout() {
+        super.layout()
         switch alignment {
         case .Center:
-            button.sizeToFit(NSZeroSize,NSMakeSize(frame.width, frame.height - .borderSize))
+            button.center()
         case .Left:
-            button.sizeToFit(NSZeroSize,NSMakeSize(frame.width, frame.height - .borderSize))
+            let f = focus(button.frame.size)
+            button.setFrameOrigin(16, f.minY)
         case .Right:
-            button.sizeToFit(NSZeroSize,NSMakeSize(frame.width - 20, frame.height - .borderSize), thatFit: true)
             let f = focus(button.frame.size)
             button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
         }
-        super.layout()
     }
     
     

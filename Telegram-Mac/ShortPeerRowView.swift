@@ -23,7 +23,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var switchView:SwitchView?
     private var contextLabel:TextViewLabel?
     private var choiceControl:ImageView?
+     #if !SHARE
     private var activities: ChatActivitiesModel?
+    #endif
     private let rightSeparatorView:View = View()
     private var hiddenStatus: Bool = true
     required init(frame frameRect: NSRect) {
@@ -140,11 +142,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             if let choiceControl = choiceControl {
                 choiceControl.centerY(x: frame.width - choiceControl.frame.width - item.inset.right)
             }
-            
+            #if !SHARE
             if let view = activities?.view {
                 view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(frame.height / 2 + 1))
             }
-            
+            #endif
         }
     }
     
@@ -208,9 +210,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 addSubview(deleteControl!)
                 deleteControl?.layer?.opacity = 0
+                deleteControl?.centerY(x: -theme.icons.deleteItem.backingSize.width)
             }
             
-            deleteControl?.centerY(x: -theme.icons.deleteItem.backingSize.width)
             
             if item.enabled {
                 deleteControl?.set(image: theme.icons.deleteItem, for: .Normal)
@@ -251,7 +253,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         super.set(item: item, animated: animated)
         
-        
+        #if !SHARE
         if let activity = item.inputActivity {
             if activities == nil {
                 activities = ChatActivitiesModel()
@@ -272,6 +274,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             hiddenStatus = true
             activities?.view?.removeFromSuperview()
         }
+        #endif
         
         switch previousType {
         case let .selectable(interaction):

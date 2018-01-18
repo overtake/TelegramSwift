@@ -16,13 +16,13 @@ public class SelectingControl: Control {
     private var unselectedImage:CGImage
     private var selectedImage:CGImage
     
-    public init(unselectedImage:CGImage, selectedImage:CGImage) {
+    public init(unselectedImage:CGImage, selectedImage:CGImage, selected: Bool = false) {
         self.unselectedImage = unselectedImage
         self.selectedImage = selectedImage
-        imageView.image = unselectedImage
+        imageView.image = selected ? selectedImage : unselectedImage
         super.init(frame:NSMakeRect(0, 0, max(unselectedImage.backingSize.width ,selectedImage.backingSize.width ), max(unselectedImage.backingSize.height,selectedImage.backingSize.height )))
         userInteractionEnabled = false
-
+        self.isSelected = selected
         addSubview(imageView)
         
     }

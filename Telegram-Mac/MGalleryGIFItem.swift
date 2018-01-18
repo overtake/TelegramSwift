@@ -28,6 +28,10 @@ class MGalleryGIFItem: MGalleryItem {
         
     }
     
+    override var status:Signal<MediaResourceStatus, Void> {
+        return chatMessageFileStatus(account: account, file: media)
+    }
+    
     var media:TelegramMediaFile {
         switch entry {
         case .message(let entry):

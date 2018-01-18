@@ -13,7 +13,7 @@ open class BarView: OverlayControl {
     
     public var clickHandler:()->Void = {}
     
-    public var minWidth:CGFloat = 80
+    public var minWidth:CGFloat = 20
     public private(set) weak var controller: ViewController?
     
     
@@ -22,12 +22,20 @@ open class BarView: OverlayControl {
     }
     
     
+    var isFitted: Bool {
+        return true
+    }
+    
+    func fit(to maxWidth: CGFloat) -> CGFloat {
+        return frame.width
+    }
+    
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         self.setNeedsDisplay()
     }
     
-    public init(_ width:CGFloat = 80, controller: ViewController) {
+    public init(_ width:CGFloat = 20, controller: ViewController) {
         self.minWidth = width
         self.controller = controller
         super.init()

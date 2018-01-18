@@ -24,7 +24,6 @@ open class ImageButton: Button {
     public func set(image:CGImage, for state:ControlState) -> Void {
         
         images[state] = image
-        
         apply(state: self.controlState)
     }
     
@@ -61,8 +60,8 @@ open class ImageButton: Button {
     }
     
     
-    override public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) {
-        super.sizeToFit(addition)
+    override public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
+        _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
         if let image = images[.Normal] {
             var size = image.backingSize
@@ -75,6 +74,7 @@ open class ImageButton: Button {
             size.height += addition.height
             self.setFrameSize(size)
         }
+        return true
     }
     
     public override func updateLayout() {

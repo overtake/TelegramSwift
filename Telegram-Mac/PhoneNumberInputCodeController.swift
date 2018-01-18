@@ -230,7 +230,7 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
         
         readyOnce()
         
-        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] _ in
+        self.rightBarView.set(handler:{ [weak self] _ in
             self?.executeNext()
         }, for: .Click)
         

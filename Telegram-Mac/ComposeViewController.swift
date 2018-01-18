@@ -37,7 +37,7 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
     
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
-        (self.rightBarView as? TextButtonBarView)?.button.style = navigationButtonStyle
+        rightBarView.style = navigationButtonStyle
     }
 
     public override func returnKeyAction() -> KeyHandlerResult {
@@ -47,7 +47,7 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
 
     func nextEnabled(_ enable:Bool) {
         self.enableNext = enable
-        (self.rightBarView as? TextButtonBarView)?.button.isEnabled = enable
+        rightBarView.isEnabled = enable
     }
     
     func executeNext() -> Void {
@@ -62,7 +62,7 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
         super.loadView()
         
         setCenterTitle(titles.center)
-        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] _ in
+        self.rightBarView.set(handler:{ [weak self] _ in
             self?.executeNext()
         }, for: .Click)
     }

@@ -404,7 +404,7 @@ class TwoStepVerificationUnlockController: TableViewController {
     override func getRightBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.composeNext))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.invokeNextAction?()
         }, for: .Click)
         

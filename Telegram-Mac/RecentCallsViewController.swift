@@ -159,7 +159,17 @@ class RecentCallsViewController: NavigationViewController {
         self.layoutController = LayoutRecentCallsViewController(account)
         super.init(layoutController)
         bar = .init(height: 0)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
         self.push(layoutController, false)
+    }
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        navigationBar.frame = NSMakeRect(0, 0, bounds.width, layoutController.bar.height)
+        layoutController.frame = NSMakeRect(0, layoutController.bar.height, bounds.width, bounds.height - layoutController.bar.height)
     }
     
     
@@ -293,7 +303,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     private let callDisposable:MetaDisposable = MetaDisposable()
     private let againDisposable:MetaDisposable = MetaDisposable()
     private var first:Bool = false
-
+    private let disposable = MetaDisposable()
     
     
     var navigation:NavigationViewController? {
@@ -313,16 +323,6 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         genericView.border = [.Right]
         self.rightBarView.border = [.Right]
         
-    }
-    
-    override func update(with state: ViewControllerState) {
-        super.update(with: state)
-        self.statePromise.set(stateValue.modify({$0.withUpdatedEditing(state == .Edit)}))
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        updateLocalizationAndTheme()
         let previous = self.previous
         let initialSize = self.atomicSize
         let account = self.account
@@ -338,33 +338,38 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             self?.callDisposable.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
                 applyUIPCallResult(account, result)
             }))
-        }, removeCalls: { [weak self] messageIds in
-            _ = deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
-            updateState({$0.withAdditionalIgnoringIds(messageIds)})
-            
-            if let strongSelf = self {
-                strongSelf.againDisposable.set((Signal<()->Void, Void>.single({ [weak strongSelf] in
-                    strongSelf?.viewWillAppear(false)
-                }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
-            }
-            self?.viewWillAppear(false)
+            }, removeCalls: { [weak self] messageIds in
+                _ = deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                updateState({$0.withAdditionalIgnoringIds(messageIds)})
+                
+                if let strongSelf = self {
+                    strongSelf.againDisposable.set((Signal<()->Void, Void>.single({ [weak strongSelf] in
+                        strongSelf?.viewWillAppear(false)
+                    }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
+                }
+                self?.viewWillAppear(false)
         })
         
         
         let callListView:Atomic<CallListView?> = Atomic(value: nil)
         
         let location:ValuePromise<MessageIndex> = ValuePromise()
-       
+        
         let first:Atomic<Bool> = Atomic(value: true)
-        let signal = location.get() |> distinctUntilChanged |> mapToSignal { index in
+        let signal: Signal<CallListView, NoError> = location.get() |> distinctUntilChanged |> mapToSignal { index in
             return account.viewTracker.callListView(type: .all, index: index, count: 200)
         }
         
-        genericView.merge(with: combineLatest(signal |> deliverOn(prepareQueue), statePromise.get() |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue)) |> map { result in
+        let transition:Signal<TableUpdateTransition, Void> = combineLatest(signal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result in
             _ = callListView.swap(result.0)
             let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))
-        } |> deliverOnMainQueue)
+            } |> deliverOnMainQueue
+        
+        disposable.set(transition.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+        }))
+        
         
         readyOnce()
         
@@ -393,6 +398,16 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         
     }
     
+    override func update(with state: ViewControllerState) {
+        super.update(with: state)
+        self.statePromise.set(stateValue.modify({$0.withUpdatedEditing(state == .Edit)}))
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateLocalizationAndTheme()
+    }
+    
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -403,6 +418,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     deinit {
         callDisposable.dispose()
         againDisposable.dispose()
+        disposable.dispose()
     }
     
 }

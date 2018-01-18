@@ -179,6 +179,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         return .single(pagerSize)
     }
     
+    var status:Signal<MediaResourceStatus, Void> {
+        return .single(.Local)
+    }
+    
     init(_ account:Account, _ entry:GalleryEntry, _ pagerSize:NSSize) {
         self.entry = entry
         self.account = account
@@ -196,7 +200,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
         let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] image, view  in
             view.layer?.contents = image
-            view.layer?.backgroundColor = theme.colors.background.cgColor
+            view.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
 
             if first, let slf = self, let magnify = view.superview?.superview as? MagnifyView {
                 self?.modifiedSize = image?.size

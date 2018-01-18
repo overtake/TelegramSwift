@@ -122,8 +122,8 @@ class GalleryGeneralControls : GalleryControls {
         dismiss.set(handler: {_ in _ = interactions.dismiss()}, for: .Click)
         
         if let view = view {
-            
-            counter.sizeToFit(NSZeroSize, NSMakeSize(190, view.frame.height))
+            counter.set(text: "1 of 5", for: .Normal)
+            _ = counter.sizeToFit(NSZeroSize, NSMakeSize(190, view.frame.height), thatFit: true)
             counter.center(view)
             
             let bwidth = (view.frame.width - counter.frame.width) / 4.0
@@ -138,11 +138,14 @@ class GalleryGeneralControls : GalleryControls {
             view.addSubview(counter)
             view.addSubview(more)
             view.addSubview(dismiss)
-            
         }
         
         disposable.set(index.get().start(next: {[weak self] (current, total) in
-            self?.counter.set(text: tr(L10n.galleryCounter(current, total)), for: .Normal)
+            guard let `self` = self else {return}
+            self.counter.set(text: tr(L10n.galleryCounter(current, total)), for: .Normal)
+            if let view = self.view {
+                _ = self.counter.sizeToFit(NSZeroSize, NSMakeSize(190, view.frame.height), thatFit: true)
+            }
         }))
         
         

@@ -21,6 +21,12 @@ class AccountViewController: NavigationViewController {
         layoutController.navigationController = self
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        navigationBar.frame = NSMakeRect(0, 0, bounds.width, layoutController.bar.height)
+        layoutController.frame = NSMakeRect(0, layoutController.bar.height, bounds.width, bounds.height - layoutController.bar.height)
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         layoutController.viewWillAppear(animated)

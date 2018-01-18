@@ -20,6 +20,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case darkMode(sectionId:Int, enabled: Bool)
     case fontSize(sectionId:Int, enabled: Bool)
     case sidebar(sectionId:Int, enabled: Bool)
+    case autoplayGifs(sectionId:Int, enabled: Bool)
     case inAppSounds(sectionId:Int, enabled: Bool)
     case enterBehavior(sectionId:Int, enabled: Bool)
     case cmdEnterBehavior(sectionId:Int, enabled: Bool)
@@ -44,18 +45,20 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 4
         case .sidebar:
             return 5
-        case .inAppSounds:
+        case .autoplayGifs:
             return 6
-        case .emojiReplacements:
+        case .inAppSounds:
             return 7
-        case .forceTouchReply:
+        case .emojiReplacements:
             return 8
-        case .forceTouchEdit:
+        case .forceTouchReply:
             return 9
-        case .forceTouchForward:
+        case .forceTouchEdit:
             return 10
+        case .forceTouchForward:
+            return 11
 		case .instantViewScrollBySpace:
-			return 11
+			return 12
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -70,6 +73,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .darkMode(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .sidebar(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .autoplayGifs(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .inAppSounds(sectionId, _):
             return (sectionId * 1000) + stableId
@@ -122,6 +127,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
                 return enabled
             }), action: {
                 arguments.toggleSidebar(!enabled)
+            })
+        case let .autoplayGifs(sectionId: _, enabled: enabled):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAutoplayGifs), type: .switchable(stateback: { () -> Bool in
+                return enabled
+            }), action: {
+                arguments.toggleAutoplayGifs(!enabled)
             })
         case let .inAppSounds(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInAppSounds), type: .switchable(stateback: { () -> Bool in
@@ -210,6 +221,12 @@ private func ==(lhs: GeneralSettingsEntry, rhs: GeneralSettingsEntry) -> Bool {
         } else {
             return false
         }
+    case let .autoplayGifs(sectionId, enabled):
+        if case .autoplayGifs(sectionId, enabled) = rhs {
+            return true
+        } else {
+            return false
+        }
     case let .inAppSounds(sectionId, enabled):
         if case .inAppSounds(sectionId, enabled) = rhs {
             return true
@@ -281,7 +298,8 @@ private final class GeneralSettingsArguments {
     let toggleEmojiReplacements:(Bool) -> Void
     let toggleForceTouchAction:(ForceTouchAction) -> Void
 	let toggleInstantViewScrollBySpace:(Bool) -> Void
-    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void) {
+    let toggleAutoplayGifs:(Bool) -> Void
+    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void) {
         self.account = account
         self.toggleFonts = toggleFonts
         self.toggleInAppKeys = toggleInAppKeys
@@ -291,6 +309,7 @@ private final class GeneralSettingsArguments {
         self.toggleEmojiReplacements = toggleEmojiReplacements
         self.toggleForceTouchAction = toggleForceTouchAction
 		self.toggleInstantViewScrollBySpace = toggleInstantViewScrollBySpace
+        self.toggleAutoplayGifs = toggleAutoplayGifs
     }
    
 }
@@ -334,6 +353,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
         entries.append(.handleInAppKeys(sectionId: sectionId, enabled: baseSettings.handleInAppKeys))
     #endif
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled))
+    entries.append(.autoplayGifs(sectionId: sectionId, enabled: FastSettings.gifsAutoPlay))
+
     entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies))
     
@@ -404,7 +425,9 @@ class GeneralSettingsViewController: TableViewController {
             forceTouchPromise.set(action)
 		}, toggleInstantViewScrollBySpace: { enable in
 			FastSettings.toggleInstantViewScrollBySpace(enable)
-		})
+        }, toggleAutoplayGifs: { enable in
+            FastSettings.toggleAutoPlayGifs(enable)
+        })
         
         let initialSize = atomicSize
         
