@@ -14,23 +14,26 @@ import SwiftSignalKitMac
 
 private final class AppearanceViewArguments {
     let account:Account
-    let togglePalette:(ColorPalette)->Void
+    let togglePalette:(ColorPalette, TelegramWallpaper)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(Int32)->Void
     let selectAccentColor:()->Void
-    init(account:Account, togglePalette: @escaping(ColorPalette)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void) {
+    let selectChatBackground:()->Void
+    init(account:Account, togglePalette: @escaping(ColorPalette, TelegramWallpaper)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void) {
         self.account = account
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
         self.toggleFontSize = toggleFontSize
         self.selectAccentColor = selectAccentColor
+        self.selectChatBackground = selectChatBackground
     }
 }
 
 private enum AppearanceViewEntry : TableItemListNodeEntry {
-    case colorPalette(Int32, Int32, Bool, ColorPalette)
+    case colorPalette(Int32, Int32, Bool, ColorPalette, TelegramWallpaper)
     case chatView(Int32, Int32, Bool, Bool)
     case accentColor(Int32, Int32, NSColor)
+    case chatBackground(Int32, Int32)
     case section(Int32)
     case preview(Int32, Int32, ChatHistoryEntry)
     case font(Int32, Int32, Int32, [Int32])
@@ -38,11 +41,13 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     
     var stableId: Int32 {
         switch self {
-        case .colorPalette(_, let index, _, _):
+        case .colorPalette(_, let index, _, _, _):
             return index
         case .chatView(_, let index, _, _):
             return index
         case .accentColor(_, let index, _):
+            return index
+        case .chatBackground(_, let index):
             return index
         case .section(let section):
             return section + 1000
@@ -57,11 +62,13 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case let .colorPalette(section, index, _, _):
+        case let .colorPalette(section, index, _, _, _):
             return (section * 1000) + index
         case let .chatView(section, index, _, _):
             return (section * 1000) + index
         case let .accentColor(section, index, _):
+            return (section * 1000) + index
+        case let .chatBackground(section, index):
             return (section * 1000) + index
         case .section(let section):
             return (section + 1) * 1000 - section
@@ -76,14 +83,14 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     
     func item(_ arguments: AppearanceViewArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .colorPalette(_, _, selected, palette):
+        case let .colorPalette(_, _, selected, palette, wallpaper):
             let localizationKey = "AppearanceSettings.ColorTheme." + palette.name.lowercased().replacingOccurrences(of: " ", with: "_")
             let localized = _NSLocalizedString(localizationKey)
             
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: localized != localizationKey ? localized : palette.name, type: .selectable(stateback: { () -> Bool in
                 return selected
             }), action: {
-                arguments.togglePalette(palette)
+                arguments.togglePalette(palette, wallpaper)
             })
         case let .chatView(_, _, selected, value):
             //, description: tr(L10n.generalSettingsDarkModeDescription)
@@ -91,6 +98,10 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
                 return selected
             }), action: {
                 arguments.toggleBubbles(value)
+            })
+        case .chatBackground:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsChatBackground, type: .next, action: {
+                arguments.selectChatBackground()
             })
         case let .accentColor(_, _, color):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(stateback: { () -> NSColor in
@@ -101,7 +112,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case .description(_, _, let text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, backgroundColor: theme.colors.background)
         case let .font(_, _, current, sizes):
             return TextSizeSettingsRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, selectAction: { index in
                 arguments.toggleFontSize(sizes[index])
@@ -115,9 +126,9 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
 }
 private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
     switch lhs {
-    case let .colorPalette(lhsSection, lhsIndex, lhsSelected, lhsPalette):
-        if case let .colorPalette(rhsSection, rhsIndex, rhsSelected, rhsPalette) = rhs {
-            return lhsSection == rhsSection && lhsIndex == rhsIndex && lhsSelected == rhsSelected && lhsPalette == rhsPalette
+    case let .colorPalette(lhsSection, lhsIndex, lhsSelected, lhsPalette, lhsWallpaper):
+        if case let .colorPalette(rhsSection, rhsIndex, rhsSelected, rhsPalette, rhsWallpaper) = rhs {
+            return lhsSection == rhsSection && lhsIndex == rhsIndex && lhsSelected == rhsSelected && lhsPalette == rhsPalette && lhsWallpaper == rhsWallpaper
         } else {
             return false
         }
@@ -129,6 +140,12 @@ private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
         }
     case let .accentColor(section, index, color):
         if case .accentColor(section, index, color) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .chatBackground(section, index):
+        if case .chatBackground(section, index) = rhs {
             return true
         } else {
             return false
@@ -202,7 +219,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewZeroText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
 
     
-    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
+    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
     
     let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
     
@@ -216,16 +233,22 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.preview(sectionId, index, secondEntry))
     index += 1
     
-    #if BETA || DEBUG
-        if settings.colors == whitePalette {
-            
-            entries.append(.section(sectionId))
-            sectionId += 1
-            
-            entries.append(.accentColor(sectionId, index, theme.colors.blueUI))
-            index += 1
-        }
-    #endif
+    if settings.bubbled  {
+        entries.append(.chatBackground(sectionId, index))
+        index += 1
+    }
+    
+    
+    if settings.colors == whitePalette {
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
+        entries.append(.accentColor(sectionId, index, theme.colors.blueUI))
+        index += 1
+    }
+    
+   
     
     
     entries.append(.section(sectionId))
@@ -239,19 +262,18 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
 
     installed[whitePalette.name] = whitePalette
     installed[darkPalette.name] = darkPalette
-    
-    entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette))
+    installed[dayClassic.name] = dayClassic
+
+    entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, .builtin))
     index += 1
     
-    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette))
+    entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .none))
     index += 1
     
-    if installed[settings.colors.name] == nil {
-        installed[settings.colors.name] = settings.colors
-        entries.append(.colorPalette(sectionId, index, true, settings.colors))
-        index += 1
-    }
+    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette, .none))
+    index += 1
     
+
     
     var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")
     let globalPalettes = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Palettes/".nsstring.expandingTildeInPath + "/"
@@ -262,13 +284,17 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     for palette in palettes {
         if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
             installed[palette.name] = palette
-            entries.append(.colorPalette(sectionId, index, false, palette))
+            entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name, palette, .none))
             index += 1
         }
     }
     
-    var bp:Int = 0
-    bp += 1
+    if installed[settings.colors.name] == nil {
+        installed[settings.colors.name] = settings.colors
+        entries.append(.colorPalette(sectionId, index, true, settings.colors, settings.wallpaper))
+        index += 1
+    }
+    
     
     entries.append(.section(sectionId))
     sectionId += 1
@@ -302,35 +328,105 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<AppearanceViewEn
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-class AppearanceViewController: TableViewController {
+final class AppeaanceView : ChatBackgroundView {
+    fileprivate let tableView: TableView = TableView()
+    private let bottomHolder: View = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(tableView)
+        tableView.verticalScrollElasticity = .none
+        tableView.layer?.backgroundColor = .clear
+        addSubview(bottomHolder)
+    }
     
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        bottomHolder.backgroundColor = theme.colors.background
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        tableView.frame = bounds
+        let height = frame.height - tableView.listHeight
+        bottomHolder.frame = NSMakeRect(0, frame.height - height, frame.width, height)
+    }
+}
+
+class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
+    private let disposable = MetaDisposable()
     override func viewDidLoad() {
         super.viewDidLoad()
         let account = self.account
-        let arguments = AppearanceViewArguments(account: account, togglePalette: { palette in
-            _ = updateThemeSettings(postbox: account.postbox, palette: palette).start()
+        let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, wallpaper in
+            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: wallpaper)
+            }).start()
         }, toggleBubbles: { enabled in
             _ = updateBubbledSettings(postbox: account.postbox, bubbled: enabled).start()
         }, toggleFontSize: { size in
             _ = updateApplicationFontSize(postbox: account.postbox, fontSize: CGFloat(size)).start()
         }, selectAccentColor: {
             showModal(with: AccentColorModalController(account, current: theme.colors.blueUI), for: mainWindow)
+        }, selectChatBackground: {
+            showModal(with: ChatWallpaperModalController(account: account), for: mainWindow)
         })
         
         let initialSize = self.atomicSize
 
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
-        genericView.merge(with: combineLatest(appearanceSignal |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, selfPeer in
+        
+        let signal:Signal<(TableUpdateTransition, TelegramWallpaper), Void> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, selfPeer in
             let entries = AppearanceViewEntries(settings: appearance.presentation, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
-        } |> deliverOnMainQueue)
+            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
+        } |> deliverOnMainQueue
+        
+        disposable.set(signal.start(next: { [weak self] transition, wallpaper in
+            self?.genericView.tableView.merge(with: transition)
+            self?.updateWallpaper(wallpaper)
+        }))
+        
         readyOnce()
         
     }
     
+    override var enableBack: Bool {
+        return true
+    }
+    
+    private var previousWallpaper:TelegramWallpaper? = nil
+    
+    func updateWallpaper(_ wallpaper: TelegramWallpaper) {
+        if previousWallpaper != wallpaper {
+            previousWallpaper = wallpaper
+            
+            switch wallpaper {
+            case .builtin:
+                genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            case let.color(color):
+                genericView.backgroundMode = .color(color: NSColor(UInt32(color)))
+            case let .image(representation):
+                if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource))) {
+                    genericView.backgroundMode = .background(image: image)
+                } else {
+                    genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                }
+            case .none:
+                genericView.backgroundMode = .plain
+            }
+            
+        }
+        genericView.needsLayout = true
+    }
+    deinit {
+        disposable.dispose()
+    }
+    
     override func firstResponder() -> NSResponder? {
-       return genericView.item(stableId: Int32(1))?.view?.firstResponder
+       return genericView.tableView.item(stableId: Int32(1))?.view?.firstResponder
     }
     
 }

@@ -80,6 +80,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             return _NSLocalizedString(key)
         })
         
+        setInputLocalizationFunc { (key) -> String in
+            return _NSLocalizedString(key)
+        }
+        
         
        // applyMainMenuLocalization(window)
         
@@ -106,7 +110,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             }
         }
         
-        #if !DEBUG
+        //#if !DEBUG
             #if BETA
 
                 let hockeyAppId:String = "6ed2ac3049e1407387c2f1ffcb74e81f"
@@ -122,7 +126,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 //                BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = false
 //            #endif
             
-        #endif
+     //   #endif
         
 
         telegramUIDeclareEncodables()
@@ -137,6 +141,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             MTLogSetEnabled(true)
             logger.logToFile = true
         #endif
+        
+        initializeMimeStore()
         
 //        #if APP_STORE || STABLE
 //            logger.logToConsole = false

@@ -51,6 +51,8 @@ class FastSettings {
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
+    private static let kAutomaticallyPlayGifs = "kAutomaticallyPlayGifs"
+
 	
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -149,15 +151,17 @@ class FastSettings {
         UserDefaults.standard.set(!enable, forKey: kInAppSoundsType)
         UserDefaults.standard.synchronize()
     }
+    
+    static var inAppSounds: Bool {
+        return !UserDefaults.standard.bool(forKey: kInAppSoundsType)
+    }
 	
 	static func toggleInstantViewScrollBySpace(_ enable: Bool) {
 		UserDefaults.standard.set(enable, forKey: kInstantViewScrollBySpace)
         UserDefaults.standard.synchronize()
 	}
     
-    static var inAppSounds: Bool {
-        return !UserDefaults.standard.bool(forKey: kInAppSoundsType)
-    }
+    
     
     static func toggleAutomaticReplaceEmojies(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kAutomaticConvertEmojiesType)
@@ -171,6 +175,16 @@ class FastSettings {
 	static var instantViewScrollBySpace: Bool {
 		return UserDefaults.standard.bool(forKey: kInstantViewScrollBySpace)
 	}
+    
+    static func toggleAutoPlayGifs(_ enable: Bool) {
+        UserDefaults.standard.set(!enable, forKey: kAutomaticallyPlayGifs)
+        UserDefaults.standard.synchronize()
+    }
+    
+    static var gifsAutoPlay:Bool {
+        return !UserDefaults.standard.bool(forKey: kAutomaticallyPlayGifs)
+    }
+    
     
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)

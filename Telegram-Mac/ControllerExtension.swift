@@ -150,13 +150,13 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     func updateEditStateTitles() -> Void {
         switch state {
         case .Edit:
-            editBar.button.set(text: doneString, for: .Normal)
+            editBar.set(text: doneString, for: .Normal)
         case .Normal:
-            editBar.button.set(text: normalString, for: .Normal)
+            editBar.set(text: normalString, for: .Normal)
         case .Some:
-            editBar.button.set(text: someString, for: .Normal)
+            editBar.set(text: someString, for: .Normal)
         }
-        editBar.button.set(color: presentation.colors.blueUI, for: .Normal)
+        editBar.set(color: presentation.colors.blueUI, for: .Normal)
         self.editBar.needsLayout = true
     }
     
@@ -166,7 +166,7 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
     
     func addHandler() -> Void {
-        editBar.button.set (handler:{[weak self] _ in
+        editBar.set (handler:{[weak self] _ in
             if let strongSelf = self {
                 strongSelf.changeState()
             }
@@ -184,11 +184,11 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
     
     public func set(editable: Bool) ->Void {
-        editBar.button.isHidden = !editable
+        editBar.isHidden = !editable
     }
     
     public func set(enabled: Bool) ->Void {
-        editBar.button.isEnabled = enabled
+        editBar.isEnabled = enabled
     }
     
     override func updateNavigation(_ navigation: NavigationViewController?) {

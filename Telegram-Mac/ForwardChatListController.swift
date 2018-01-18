@@ -13,7 +13,7 @@ class ForwardChatListController: ChatListController {
     override func getLeftBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.chatCancel))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.navigationController?.back()
             }, for: .Click)
         

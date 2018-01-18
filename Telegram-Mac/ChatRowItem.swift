@@ -142,7 +142,7 @@ class ChatRowItem: TableRowItem {
     }
     var defaultContentTopOffset:CGFloat {
         if isBubbled {
-            return 12
+            return 10
         } else {
             return 6
         }
@@ -265,10 +265,12 @@ class ChatRowItem: TableRowItem {
             if let additional = additionalLineForDateInBubbleState {
                 height += additional
             }
-            height = max(height, 40)
+   
+            //height = max(height, 40)
            // height += 4
             //height = max(height, 48)
         }
+        
 
         return max(rightSize.height + 8, height)
     }
@@ -403,7 +405,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
             if apply {
-                top += max(34, replyModel.size.height) + 8
+                top += max(34, replyModel.size.height) + ((!isBubbleFullFilled && isBubbled && self is ChatMediaItem) ? 0 : 8)
                 if authorText != nil && self is ChatMessageItem {
                     top += topInset
                     //top -= defaultContentInnerInset
@@ -465,7 +467,13 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
-   
+    var isSelectedMessage: Bool {
+        if let message = message {
+            return chatInteraction.presentation.isSelectedMessageId(message.id)
+        }
+        return false
+    }
+    
     
     func gotoSourceMessage() {
         if let message = message {
@@ -636,7 +644,8 @@ class ChatRowItem: TableRowItem {
     
     let renderType: ChatItemRenderType
     var modernBubbleImage:(CGImage, NSEdgeInsets)? = nil
-    private(set) var bubbleImage: CGImage?
+    var selectedBubbleImage:(CGImage, NSEdgeInsets)? = nil
+
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ object: ChatHistoryEntry) {
         self.entry = object
         self.account = account
@@ -718,6 +727,7 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: theme.chat.backgroundColor(isIncoming), strokeColor: theme.chat.bubbleBorderColor(isIncoming), neighbors: isFull ? .none : .both)
+                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: theme.chat.backgoundSelectedColor(isIncoming), strokeColor: theme.chat.backgoundSelectedColor(isIncoming), neighbors: isFull ? .none : .both)
             }
             
             self.itemType = itemType
@@ -752,7 +762,7 @@ class ChatRowItem: TableRowItem {
             if let info = message.forwardInfo {
                 
                 
-                var accept:Bool = !isHasSource
+                var accept:Bool = !isHasSource && message.id.peerId != account.peerId
                 
                 if let media = message.media.first as? TelegramMediaFile {
                     for attr in media.attributes {
@@ -760,7 +770,7 @@ class ChatRowItem: TableRowItem {
                         case .Sticker:
                             accept = false
                         case let .Audio(isVoice, _, _, _, _):
-                            accept = isVoice
+                            accept = isVoice && accept
                         default:
                             break
                         }
@@ -792,20 +802,28 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                     
+                    var isInstantVideo: Bool {
+                        if let media = message.media.first as? TelegramMediaFile {
+                            return media.isInstantVideo
+                        }
+                        return false
+                    }
                     
-                    
+                    let forwardNameColor: NSColor
+                    if !hasBubble {
+                        forwardNameColor = theme.colors.grayText
+                    } else if isIncoming, theme.colors.name == dayClassic.name {
+                        forwardNameColor = theme.chat.linkColor(isIncoming)
+                    } else {
+                        forwardNameColor = theme.chat.grayText(isIncoming || isInstantVideo)
+                    }
                     
                     if renderType == .bubble {
                         
-                        var isInstantVideo: Bool {
-                            if let media = message.media.first as? TelegramMediaFile {
-                                return media.isInstantVideo
-                            }
-                            return false
-                        }
                         
                         
-                        let newAttr = parseMarkdownIntoAttributedString(tr(L10n.chatBubblesForwardedFrom(attr.string)), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming || isInstantVideo)), link: MarkdownAttributeSet(font: .normal(.short), textColor: theme.chat.linkColor(isIncoming || isInstantVideo)), linkAttribute: { contents in
+                        
+                        let newAttr = parseMarkdownIntoAttributedString(L10n.chatBubblesForwardedFrom(attr.string), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor:forwardNameColor), link: MarkdownAttributeSet(font: hasBubble ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { contents in
                             if let link = attr.attribute(NSAttributedStringKey.link, at: 0, effectiveRange: nil) {
                                 return (NSAttributedStringKey.link.rawValue, link)
                             }
@@ -814,7 +832,7 @@ class ChatRowItem: TableRowItem {
                         attr = newAttr.mutableCopy() as! NSMutableAttributedString
                     } else {
                         _ = attr.append(string: " ")
-                        _ = attr.append(string: DateUtils.string(forLastSeen: info.date), color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.short))
+                        _ = attr.append(string: DateUtils.string(forLastSeen: info.date), color: forwardNameColor, font: .normal(.short))
                     }
 
                     
@@ -1084,7 +1102,7 @@ class ChatRowItem: TableRowItem {
             replyMarkupModel?.measureSize(bubbleFrame.width - additionBubbleInset)
         } else {
             if !(self is ChatMessageItem) {
-                replyMarkupModel?.measureSize(widthForContent)
+                replyMarkupModel?.measureSize(_contentSize.width)
             } else {
                 replyMarkupModel?.measureSize(max(_contentSize.width, blockWidth))
             }
@@ -1155,7 +1173,7 @@ class ChatRowItem: TableRowItem {
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) : 0
         let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
-        var rect = NSMakeRect(defLeftInset, 3, contentSize.width, height - 6)
+        var rect = NSMakeRect(defLeftInset, 1, contentSize.width, height - 2)
         
        
         if isBubbled, let replyMarkup = replyMarkupModel {
@@ -1244,6 +1262,9 @@ class ChatRowItem: TableRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        if chatInteraction.disableSelectAbility {
+            return super.menuItems(in: location)
+        }
         if let message = message, let peer = peer {
             return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
         }

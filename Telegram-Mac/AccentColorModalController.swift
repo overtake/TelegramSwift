@@ -98,7 +98,9 @@ class AccentColorModalController: ModalViewController {
             } else {
                 _ = updateThemeSettings(postbox: postbox, palette: whitePalette.withAccentColor(color)).start()    
             }
-            self?.close()
+            delay(0.3, closure: {
+                self?.close()
+            })
         })
         readyOnce()
     }

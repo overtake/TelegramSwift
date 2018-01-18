@@ -153,7 +153,9 @@ class GalleryMessagesBehavior {
 }
 
 final class GalleryBackgroundView : View {
-    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+    }
 }
 
 
@@ -163,7 +165,7 @@ class GalleryViewer: NSResponder {
     
     private var window:Window
     private var controls:GalleryControls!
-    private let pager:GalleryPageController
+    let pager:GalleryPageController
     private let backgroundView: GalleryBackgroundView = GalleryBackgroundView()
     private let ready = Promise<Bool>()
     private var didSetReady = false
@@ -215,7 +217,8 @@ class GalleryViewer: NSResponder {
         interactions.dismiss = { [weak self] () -> KeyHandlerResult in
             if let pager = self?.pager {
                 if pager.isFullScreen {
-                    return .invokeNext
+                    pager.exitFullScreen()
+                    return .invoked
                 }
                 if !pager.lockedTransition {
                     self?.close(true)
@@ -438,12 +441,12 @@ class GalleryViewer: NSResponder {
                             for i in 1 ..< instantMedias.count {
                                 let media = instantMedias[i]
                                 if media.media is TelegramMediaImage {
-                                    inserted.append((media.index, MGalleryPhotoItem(account, .instantMedia(media), pagerSize)))
+                                    inserted.append((i, MGalleryPhotoItem(account, .instantMedia(media), pagerSize)))
                                 } else if let file = media.media as? TelegramMediaFile {
                                     if file.isVideo && file.isAnimated {
-                                        inserted.append((media.index, MGalleryGIFItem(account, .instantMedia(media), pagerSize)))
+                                        inserted.append((i, MGalleryGIFItem(account, .instantMedia(media), pagerSize)))
                                     } else if file.isVideo {
-                                        inserted.append((media.index, MGalleryVideoItem(account, .instantMedia(media), pagerSize)))
+                                        inserted.append((i, MGalleryVideoItem(account, .instantMedia(media), pagerSize)))
                                     }
                                 }
                             }
@@ -492,14 +495,18 @@ class GalleryViewer: NSResponder {
                     }
 
                     
-                    for i in 0 ..< new.count {
-                        if let message = new[i].message {
-                            if message.id == id {
-                                _ = currentIndex.swap(i)
+                    var current:Int? = currentIndex.modify({$0})
+                    if current == nil || !reversed {
+                        for i in 0 ..< new.count {
+                            if let message = new[i].message {
+                                if message.id == id {
+                                    current = i
+                                }
                             }
                         }
                     }
                     
+//
                     
                     
                     let isEmpty = strongSelf.pager.merge(with: transition)
@@ -507,7 +514,7 @@ class GalleryViewer: NSResponder {
                     if !isEmpty {
                         
                         
-                        if let newIndex = currentIndex.modify({$0}) {                           
+                        if let newIndex = current {                           
                             strongSelf.pager.selectedIndex.set(newIndex)
                             strongSelf.pager.set(index: newIndex, animated: false)
                             if let attribute = new[newIndex].message?.autoremoveAttribute {

@@ -123,11 +123,15 @@ class GIFPlayerView: TransformImageView {
         sampleLayer.frame = bounds
     }
     
+    func pause() {
+        sampleLayer.stopRequestingMediaData()
+    }
+    
     func set(path:String?, timebase:CMTimebase? = nil) -> Void {
         assertOnMainThread()
         
  
-        let realPath:String? = link(path:path, ext:"mov")
+        let realPath:String? = link(path:path, ext:"mp4")
         
         
         if realPath != self._path.modify({$0}) {

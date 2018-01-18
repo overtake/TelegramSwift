@@ -134,6 +134,7 @@ class ChatMediaItem: ChatRowItem {
         var frame = super.bubbleFrame
         
         if isBubbleFullFilled {
+            frame.size.height -= 2
             frame.size.width = contentSize.width + additionBubbleInset
             if hasBubble {
                 frame.size.width += self.mediaBubbleCornerInset * 2
@@ -147,8 +148,10 @@ class ChatMediaItem: ChatRowItem {
         if isBubbled && !hasBubble {
             return defaultContentInnerInset
         }
-        return super.defaultContentTopOffset
+        return isBubbled && !isBubbleFullFilled ? 14 : super.defaultContentTopOffset
     }
+    
+
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
@@ -167,12 +170,15 @@ class ChatMediaItem: ChatRowItem {
         return offset
     }
     
+    
     override var elementsContentInset: CGFloat {
         if hasBubble && isBubbleFullFilled {
             return bubbleContentInset
         }
         return super.elementsContentInset
     }
+    
+    
     
     override var _defaultHeight: CGFloat {
         if hasBubble && isBubbleFullFilled && captionLayout == nil {
@@ -356,6 +362,10 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        if let view = view as? ChatMediaView, let content = view.contentNode {
+            let point = view.contentView.convert(location, from: nil)
+            return !NSPointInRect(point, content.frame)
+        }
         return false
     }
     

@@ -14,7 +14,8 @@ open class Button: Control {
     
     public var autohighlight:Bool = true
     public var highlightHovered:Bool = false
-    
+    private(set) var _thatFit: Bool = false
+
     private var stateBackground:[ControlState:NSColor] = [:]
     
     open override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -64,8 +65,9 @@ open class Button: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) {
-        
+    public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
+        self._thatFit = thatFit
+        return true
     }
     
     open override func viewDidChangeBackingProperties() {

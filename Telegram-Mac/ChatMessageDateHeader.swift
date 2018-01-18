@@ -68,8 +68,7 @@ class ChatDateStickItem : TableStickItem {
 
         }
         
-        let attributedString =  NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
-        self.layout = TextViewLayout(attributedString, maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.layout = TextViewLayout(.initialize(string: text, color: theme.colors.chatDateText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 
         
         super.init(initialSize)
@@ -111,14 +110,12 @@ class ChatDateStickView : TableStickView {
     required init(frame frameRect: NSRect) {
         self.textView = TextView()
         self.textView.isSelectable = false
-        self.textView.userInteractionEnabled = false
+       // self.textView.userInteractionEnabled = false
         self.containerView.wantsLayer = true
-        textView.isEventLess = true
+       // textView.isEventLess = false
         super.init(frame: frameRect)
-        addSubview(containerView)
         addSubview(textView)
-        addSubview(borderView)
-        containerView.set(handler: { [weak self] _ in
+        textView.set(handler: { [weak self] _ in
              if let strongSelf = self, let item = strongSelf.item as? ChatDateStickItem, strongSelf.header {
                 
                 var calendar = NSCalendar.current
@@ -132,17 +129,18 @@ class ChatDateStickView : TableStickView {
         }, for: .Click)
     }
     
+
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     override var backdorColor: NSColor {
-        return header ? .clear : theme.colors.background
+        return .clear
     }
     
     override func updateIsVisible(_ visible: Bool, animated: Bool) {
         textView.change(opacity: visible ? 1 : 0, animated: false)
-        containerView.change(opacity: visible ? 1 : 0, animated: false)
     }
     
     
@@ -156,14 +154,10 @@ class ChatDateStickView : TableStickView {
         super.updateColors()
         
 
-        textView.backgroundColor = theme.colors.background
+        textView.backgroundColor = theme.colors.chatDateActive
         
-        containerView.backgroundColor = .clear
-        containerView.layer?.borderColor = theme.colors.border.cgColor
-        containerView.layer?.borderWidth = header ? 1.0 : 0
-        
-        containerView.backgroundColor = theme.colors.background
-        
+        //containerView.layer?.borderColor = theme.colors.border.cgColor
+       // containerView.layer?.borderWidth = header || (theme.wallpaper != .none) ? 1.0 : 0
         
 
     }
@@ -175,16 +169,13 @@ class ChatDateStickView : TableStickView {
     override func layout() {
         super.layout()
         textView.center()
-        containerView.center()
-        borderView.center()
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         if let item = item as? ChatDateStickItem {
             textView.update(item.layout)
-            containerView.setFrameSize(textView.frame.width + 16, textView.frame.height + 8)
-            containerView.layer?.cornerRadius = containerView.frame.height / 2
-            borderView.layer?.cornerRadius = containerView.frame.height / 2
+            textView.setFrameSize(item.layout.layoutSize.width + 16, item.layout.layoutSize.height + 6)
+            textView.layer?.cornerRadius = textView.frame.height / 2
 //            if animated {
 //                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
 //            }

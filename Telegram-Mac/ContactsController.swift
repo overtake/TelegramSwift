@@ -260,7 +260,7 @@ class ContactsController: PeersListController {
     
     private var previousEntries:Atomic<[AppearanceWrapperEntry<ContactsEntry>]?> = Atomic(value:nil)
     private let index: PeerNameIndex = .lastNameFirst
-
+    private let disposable = MetaDisposable()
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -278,7 +278,6 @@ class ContactsController: PeersListController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.tableView.startMerge()
         genericView.tableView.clipView.scroll(to: NSZeroPoint)
 
         let account = self.account
@@ -307,7 +306,10 @@ class ContactsController: PeersListController {
             }
         |> deliverOnMainQueue
         
-        genericView.tableView.merge(with: transition)
+        disposable.set(transition.start(next: { [weak self] transition in
+            self?.genericView.tableView.merge(with: transition)
+        }))
+        
     }
     
     override func scrollup() {
@@ -316,11 +318,13 @@ class ContactsController: PeersListController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        genericView.tableView.stopMerge()
         _ = previousEntries.swap(nil)
         genericView.tableView.removeAll()
     }
 
+    deinit {
+        disposable.dispose()
+    }
     
     init(_ account:Account) {
         super.init(account)

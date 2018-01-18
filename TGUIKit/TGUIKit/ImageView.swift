@@ -30,6 +30,7 @@ public class ImageView: NSView {
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true
+        layerContentsRedrawPolicy = .never
     }
     
     required public init?(coder: NSCoder) {

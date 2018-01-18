@@ -116,12 +116,12 @@ class ChatFileContentView: ChatMediaContentView {
             
             if !(file.resource is LocalFileReferenceMediaResource) {
                 let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-                let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: presentation.link, font: NSFont.normal(FontSize.text))
+                let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
                 attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
             }
         case .Remote:
             let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: presentation.grayText, font: .normal(.text))
-            let range = attr.append(string: tr(L10n.messagesFileStateRemote), color: presentation.link, font: .normal(.text))
+            let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled ? presentation.grayText : presentation.link, font: .medium(.text))
             attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
         }
 
@@ -139,7 +139,7 @@ class ChatFileContentView: ChatMediaContentView {
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         let parameters = parameters as? ChatFileLayoutParameters
-
+        actionText.backgroundColor = theme.colors.background
         
         if mediaUpdated {
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -157,7 +157,7 @@ class ChatFileContentView: ChatMediaContentView {
             
             if !file.previewRepresentations.isEmpty {
                 
-                let arguments = TransformImageArguments(corners: ImageCorners(radius: 4), imageSize: file.previewRepresentations[0].dimensions, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
+                let arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: file.previewRepresentations[0].dimensions, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
                 
                 if !animated {
                     thumbView.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor))

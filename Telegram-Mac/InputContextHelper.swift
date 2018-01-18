@@ -171,7 +171,7 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
 }
 
 
-class InputContextView : TableView, AppearanceViewProtocol {
+class InputContextView : TableView {
     //let tableView:TableView
     let separatorView:View
     weak var relativeView: NSView?
@@ -194,7 +194,7 @@ class InputContextView : TableView, AppearanceViewProtocol {
     }
     
     
-     func updateLocalizationAndTheme() {
+     override func updateLocalizationAndTheme() {
         separatorView.backgroundColor = theme.colors.border
         //backgroundColor = theme.colors.background
     }

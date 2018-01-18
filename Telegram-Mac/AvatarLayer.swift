@@ -78,6 +78,7 @@ class AvatarControl: NSView {
         self.font = font
         super.init(frame: NSZeroRect)
         wantsLayer = true
+        layerContentsRedrawPolicy = .never
     }
     
 

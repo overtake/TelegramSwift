@@ -1,0 +1,162 @@
+//
+//  ThemeGridControllerItem.swift
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 11/01/2018.
+//  Copyright © 2018 Telegram. All rights reserved.
+//
+
+import Cocoa
+import TGUIKit
+import TelegramCoreMac
+import SwiftSignalKitMac
+import PostboxMac
+
+
+final class SettingsThemeWallpaperView: View {
+    private var wallpaper: TelegramWallpaper?
+    
+    let imageView = TransformImageView()
+    
+    var pressed: (() -> Void)?
+    
+    override init() {
+        super.init()
+        backgroundColor = .black
+        self.addSubview(self.imageView)
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    func setWallpaper(account: Account, wallpaper: TelegramWallpaper, size: CGSize) {
+        self.imageView.frame = CGRect(origin: CGPoint(), size: size)
+        
+        if self.wallpaper != wallpaper {
+            self.wallpaper = wallpaper
+            switch wallpaper {
+            case .builtin:
+                self.imageView.isHidden = false
+                self.imageView.setSignal(settingsBuiltinWallpaperImage(account: account))
+                self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                
+            case let .color(color):
+                self.imageView.isHidden = true
+            case let .image(representations):
+                self.imageView.isHidden = false
+                self.imageView.setSignal(chatAvatarGalleryPhoto(account: account, representations: representations, autoFetchFullSize: true))
+                self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            default:
+                break
+            }
+        } else if let wallpaper = self.wallpaper {
+            switch wallpaper {
+            case .builtin:
+                self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            case .color:
+                break
+            case let .image(representations):
+                self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            default:
+                break
+            }
+        }
+    }
+    
+    @objc func buttonPressed() {
+        self.pressed?()
+    }
+}
+
+final class ThemeGridControllerItem: GridItem {
+    let account: Account
+    let wallpaper: TelegramWallpaper
+    let interaction: ThemeGridControllerInteraction
+    
+    let section: GridSection? = nil
+    let isSelected: Bool
+    init(account: Account, wallpaper: TelegramWallpaper, interaction: ThemeGridControllerInteraction, isSelected: Bool) {
+        self.account = account
+        self.isSelected = isSelected
+        self.wallpaper = wallpaper
+        self.interaction = interaction
+    }
+    
+
+    func node(layout: GridNodeLayout, gridNode: GridNode) -> GridItemNode {
+        let node = ThemeGridControllerItemNode(gridNode)
+        node.setup(account: self.account, wallpaper: self.wallpaper, interaction: self.interaction, isSelected: isSelected)
+        return node
+    }
+    
+    func update(node: GridItemNode) {
+        guard let node = node as? ThemeGridControllerItemNode else {
+            assertionFailure()
+            return
+        }
+        node.setup(account: self.account, wallpaper: self.wallpaper, interaction: self.interaction, isSelected: self.isSelected)
+    }
+}
+
+final class ThemeGridControllerItemNode: GridItemNode {
+    private let wallpaperView: SettingsThemeWallpaperView
+    
+    private var currentState: (Account, TelegramWallpaper)?
+    private var interaction: ThemeGridControllerInteraction?
+    private let imageView: ImageView = ImageView()
+    override init(_ grid: GridNode) {
+        self.wallpaperView = SettingsThemeWallpaperView()
+        wallpaperView.userInteractionEnabled = false 
+        
+        super.init(grid)
+        self.addSubview(self.wallpaperView)
+        addSubview(imageView)
+        imageView.image = theme.icons.chatGroupToggleSelected
+        imageView.sizeToFit()
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    
+    func setup(account: Account, wallpaper: TelegramWallpaper, interaction: ThemeGridControllerInteraction, isSelected: Bool) {
+        self.interaction = interaction
+        
+        if self.currentState == nil || self.currentState!.0 !== account || wallpaper != self.currentState!.1 {
+            self.currentState = (account, wallpaper)
+            self.needsLayout = true
+        }
+        imageView.isHidden = !isSelected
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        if mouseInside() {
+            if let (_, wallpaper) = self.currentState {
+                self.interaction?.openWallpaper(wallpaper)
+            }
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        let bounds = self.bounds
+        self.wallpaperView.frame = bounds
+        if let (account, wallpaper) = self.currentState {
+            self.wallpaperView.setWallpaper(account: account, wallpaper: wallpaper, size: bounds.size)
+        }
+        imageView.setFrameOrigin(frame.width - imageView.frame.width - 10, 10)
+    }
+}

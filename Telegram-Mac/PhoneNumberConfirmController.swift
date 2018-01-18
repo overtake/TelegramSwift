@@ -355,7 +355,7 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
         
         genericView.container.arguments = arguments
         
-        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] _ in
+        self.rightBarView.set(handler:{ [weak self] _ in
             if let strongSelf = self {
                 arguments.sendCode(strongSelf.genericView.container.number)
             }

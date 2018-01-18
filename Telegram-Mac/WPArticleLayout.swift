@@ -10,6 +10,8 @@ import Cocoa
 import TelegramCoreMac
 import PostboxMac
 import TGUIKit
+import SwiftSignalKitMac
+
 class WPArticleLayout: WPLayout {
     
     
@@ -20,6 +22,7 @@ class WPArticleLayout: WPLayout {
     
     private(set) var duration:(TextNodeLayout, TextNode)?
     private let durationAttributed:NSAttributedString?
+    private let fetchDisposable = MetaDisposable()
     override init(with content: TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
         if let duration = content.duration {
             self.durationAttributed = .initialize(string: String.durationTransformed(elapsed: duration), color: .white, font: .normal(.text))
@@ -37,7 +40,13 @@ class WPArticleLayout: WPLayout {
             }
            
         }
-        
+        if ExternalVideoLoader.isPlayable(content) {
+            _ = sharedVideoLoader.fetch(for: content).start()
+        }
+    }
+    
+    deinit {
+        fetchDisposable.dispose()
     }
     
     private let mediaTypes:[String] = ["photo","video"]

@@ -105,6 +105,7 @@ private class StickersModalView : View {
             dismiss.isHidden = !installed
             shareView.isHidden = false
             add.set(text: tr(L10n.stickerPackAdd1Countable(collectionItems .count)).uppercased(), for: .Normal)
+            _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
             add.isHidden = installed
             shadowView.isHidden = installed
             let attr = NSMutableAttributedString()

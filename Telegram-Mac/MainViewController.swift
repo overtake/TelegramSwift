@@ -185,6 +185,7 @@ class MainViewController: TelegramViewController {
     }
     
     func showPreferences() {
+        account.context.switchSplitLayout?(.dual)
         if self.account.context.layout != .minimisize {
             self.tabController.select(index:3)
         }

@@ -512,15 +512,16 @@ public final class TextViewLayout : Equatable {
             
             for i in 0 ..< rects.count {
                 rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - 20.0) / 2.0))
-                rects[i].size.height = 18
+                rects[i].size.height = 22
                 rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
-                rects[i].size.width += 12
+                rects[i].size.width += 20
             }
             
             self.blockImage = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: rects[0].height / 2, innerRadius: .cornerRadius)
             self.blockImage.0 = NSMakePoint(0, 0)
             
-            layoutSize.width += 12
+            layoutSize.width += 20
+            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range)
             layoutSize.height = rects.last!.maxY
         }
         
@@ -877,7 +878,7 @@ public class TextView: Control {
     
     public override init() {
         super.init();
-        self.style = ControlStyle(backgroundColor:.white)
+        self.style = ControlStyle(backgroundColor: presentation.colors.background)
 //        wantsLayer = false
 //        self.layer?.delegate = nil
     }

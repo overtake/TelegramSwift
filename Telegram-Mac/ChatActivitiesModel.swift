@@ -99,7 +99,6 @@ class ChatActivitiesView : View {
             isAnimating = false
         }
         animationView.layer?.removeAllAnimations()
-        animationView.image = nil
         animationView.sizeToFit()
     }
     

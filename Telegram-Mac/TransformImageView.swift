@@ -26,6 +26,7 @@ open class TransformImageView: NSView {
         self.wantsLayer = true
         self.layer?.disableActions()
         self.background = .clear
+        layerContentsRedrawPolicy = .never
     }
     
     required public override init(frame frameRect: NSRect) {
@@ -33,6 +34,7 @@ open class TransformImageView: NSView {
         self.wantsLayer = true
         self.layer?.disableActions()
         self.background = .clear
+        layerContentsRedrawPolicy = .never
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -94,13 +96,35 @@ open class TransformImageView: NSView {
     override open func copy() -> Any {
         let view = NSView()
         view.wantsLayer = true
+        
+        
+        
+        
         view.background = .clear
-        view.layer?.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 : visibleRect.height - frame.height, frame.width,  frame.height)
         view.layer?.contents = self.layer?.contents
-        view.layer?.masksToBounds = true
         view.frame = self.visibleRect
+        view.layer?.masksToBounds = true
+   
+        
+        if bounds != visibleRect {
+            if let image = self.layer?.contents {
+                view.layer?.contents = generateImage(bounds.size, contextGenerator: { size, ctx in
+                    ctx.clear(bounds)
+                    ctx.setFillColor(.clear)
+                    ctx.fill(bounds)
+                    if visibleRect.minY == 0  {
+                        ctx.clip(to: NSMakeRect(0, 0, bounds.width, bounds.height - ( bounds.height - visibleRect.height)))
+                    } else {
+                        ctx.clip(to: NSMakeRect(0, (bounds.height - visibleRect.height), bounds.width, bounds.height - ( bounds.height - visibleRect.height)))
+                    }
+                    ctx.draw(image as! CGImage, in: bounds)
+                }, opaque: false)
+            }
+        }
+
         view.layer?.shouldRasterize = true
         view.layer?.rasterizationScale = backingScaleFactor
+
         return view
     }
     

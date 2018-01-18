@@ -50,13 +50,15 @@ class GeneralRowItem: TableRowItem {
     private(set) var action:()->Void
     private(set) var type:GeneralInteractedType
     
+    let backgroundColor: NSColor
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true) {
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor = .clear) {
         self.type = type
         _height = height
         _stableId = stableId
         self.border = border
         self.inset = inset
+        self.backgroundColor = backgroundColor
         self.drawCustomSeparator = drawCustomSeparator
         self.action = action
         self.enabled = enabled

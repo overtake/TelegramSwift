@@ -505,8 +505,8 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             switch gridLayout.type {
             case let .fixed(itemSize, lineSpacing):
                 
-                let s = floorToScreenPixels(gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
-                let itemSize = NSMakeSize(s, s)
+               // let s = floorToScreenPixels(gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
+               // let itemSize = NSMakeSize(s, s)
                 
                 let itemsInRow = Int(gridLayout.size.width / itemSize.width)
                 let itemsInRowWidth = CGFloat(itemsInRow) * itemSize.width
@@ -849,7 +849,6 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         
         self.documentView?.setFrameSize(presentationLayoutTransition.layout.contentSize)
         self.contentView.contentInsets = presentationLayoutTransition.layout.layout.insets
-        
        
         if !documentOffset.equalTo(presentationLayoutTransition.layout.contentOffset) || self.bounds.size != presentationLayoutTransition.layout.layout.size {
             //self.scrollView.contentOffset = presentationLayoutTransition.layout.contentOffset

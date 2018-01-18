@@ -152,7 +152,11 @@ func importPalette(_ path: String) -> ColorPalette? {
                                      peerAvatarBlueTop: colors["peerAvatarBlueTop"]!,
                                      peerAvatarBlueBottom: colors["peerAvatarBlueBottom"]!,
                                      peerAvatarPinkTop: colors["peerAvatarPinkTop"]!,
-                                     peerAvatarPinkBottom: colors["peerAvatarPinkBottom"]!)
+                                     peerAvatarPinkBottom: colors["peerAvatarPinkBottom"]!,
+                                     bubbleBackgroundHighlight_incoming: colors["bubbleBackgroundHighlight_incoming"]!,
+                                     bubbleBackgroundHighlight_outgoing: colors["bubbleBackgroundHighlight_outgoing"]!,
+                                     chatDateActive: colors["chatDateActive"]!,
+                                     chatDateText: colors["chatDateText"]!)
             }
         }
         

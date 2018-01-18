@@ -331,6 +331,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let searchItems = searchQuery.get() |> mapToSignal { (query) -> Signal<([ChatListSearchEntry], Bool), Void> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
+                
                 let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: query.lowercased()),account.postbox.searchContacts(query: query.lowercased()), account.postbox.loadedPeerWithId(account.peerId))
                     |> map { peers, contacts, accountPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
@@ -409,7 +410,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     |> map { localPeers, remotePeers, remoteMessages -> ([ChatListSearchEntry], Bool) in
                         
                         var entries:[ChatListSearchEntry] = []
-                        if !localPeers.isEmpty {
+                        if !localPeers.isEmpty || !remotePeers.0.isEmpty {
                             entries.append(.separator(text: tr(L10n.searchSeparatorChatsAndContacts), index: 0, state: .none))
                             entries += localPeers
                             entries += remotePeers.0
@@ -539,7 +540,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 }
             }
             return .invoked
-        }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.option])
+        }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.genericView.selectNext()
@@ -547,7 +548,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 self?.genericView.selectNext()
             }
             return .invoked
-        }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.option])
+        }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.command])
     }
     
 

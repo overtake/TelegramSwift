@@ -425,6 +425,10 @@ public class Window: NSWindow {
         
     }
     
+    public override func swipe(with event: NSEvent) {
+        super.swipe(with: event)
+    }
+    
 //    public func set(copy handler:@escaping()->Void) -> (()-> Void,NSEventModifierFlags?)? {
 //        return self.set(handler: handler, for: .C, priority:.low, modifierFlags: [.command])
 //    }
@@ -464,6 +468,7 @@ public class Window: NSWindow {
         return CGWindowListCreateImage(CGRect.null, [.optionIncludingWindow], CGWindowID(windowNumber), [.boundsIgnoreFraming])
     }
     
+    
 
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
@@ -471,6 +476,7 @@ public class Window: NSWindow {
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
 
+        
         
         self.contentView?.acceptsTouchEvents = true
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)

@@ -53,7 +53,7 @@ class AuthHeaderView : View {
         nextButton.style = ControlStyle(font: NSFont.medium(16.0), foregroundColor: .white, backgroundColor: NSColor(0x32A3E2), highlightColor: .white)
         nextButton.set(background: .blueUI, for: .Highlight)
         nextButton.set(text: tr(L10n.loginNext), for: .Normal)
-        nextButton.sizeToFit()
+        _ = nextButton.sizeToFit(thatFit: true)
         nextButton.setFrameSize(76, 36)
         nextButton.layer?.cornerRadius = 18
         

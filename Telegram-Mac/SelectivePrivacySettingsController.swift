@@ -523,9 +523,16 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
         }
 
         dismissImpl = { [weak self] in
-            self?.navigationController?.back()
+            if self?.navigationController?.controller == self {
+                self?.navigationController?.back()
+            }
         }
         
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        savePressed?()
     }
     
     override func didRemovedFromStack() {

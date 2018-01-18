@@ -101,7 +101,7 @@ class AlertControllerView: View {
 
     func layoutButtons(okTitle: String, cancelTitle: String?, thridTitle: String?, swapColors: Bool, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void, thridHandler:@escaping()->Void) -> CGFloat {
         okButton.set(text: okTitle, for: .Normal)
-        okButton.sizeToFit(NSMakeSize(40, 0))
+        _ = okButton.sizeToFit(NSMakeSize(40, 0))
         
         var width: CGFloat = okButton.frame.width + 40
         
@@ -114,7 +114,7 @@ class AlertControllerView: View {
         
         if let cancelTitle = cancelTitle  {
             cancelButton.set(text: cancelTitle, for: .Normal)
-            cancelButton.sizeToFit()
+            _ = cancelButton.sizeToFit()
             containerView.addSubview(cancelButton)
             cancelButton.set(handler: { _ in
                 cancelHandler()
@@ -124,7 +124,7 @@ class AlertControllerView: View {
         
         if let thridTitle = thridTitle  {
             thridButton.set(text: thridTitle, for: .Normal)
-            thridButton.sizeToFit(NSZeroSize, NSMakeSize(200, 20))
+            _ = thridButton.sizeToFit(NSZeroSize, NSMakeSize(200, 16))
             containerView.addSubview(thridButton)
             thridButton.set(handler: { _ in
                 thridHandler()

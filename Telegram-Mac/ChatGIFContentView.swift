@@ -16,6 +16,8 @@ class ChatGIFContentView: ChatMediaContentView {
     private var player:GIFPlayerView = GIFPlayerView()
     private var progressView:RadialProgressView?
     
+    private var canPlayForce: Bool = FastSettings.gifsAutoPlay
+    
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
     private let playerDisposable = MetaDisposable()
@@ -58,7 +60,12 @@ class ChatGIFContentView: ChatMediaContentView {
     
     override func open() {
         if let parent = parent, let account = account {
-            showChatGallery(account:account, message:parent, table)
+            if !canPlayForce {
+                canPlayForce = true
+                updatePlayerIfNeeded()
+            } else if !(parent.media.first is TelegramMediaGame) {
+                showChatGallery(account:account, message:parent, table)
+            }
         }
     }
 
@@ -90,9 +97,9 @@ class ChatGIFContentView: ChatMediaContentView {
 
     @objc func updatePlayerIfNeeded() {
         
-        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        let accept = canPlayForce && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
         player.set(path: accept ? path : nil)
-
+        progressView?.isHidden = !FastSettings.gifsAutoPlay && canPlayForce
         
        /* var s:Signal<Void, Void> = .single()
         s = s |> delay(0.01, queue: Queue.mainQueue())
@@ -171,18 +178,19 @@ class ChatGIFContentView: ChatMediaContentView {
                     
                     self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
                         if let strongSelf = self {
-                            
+                            if resource.complete {
+                                strongSelf.path = resource.path
+                            }
                             strongSelf.fetchStatus = status
-                            if case .Local = status {
+                            if case .Local = status, FastSettings.gifsAutoPlay {
                                 if let progressView = strongSelf.progressView {
                                     progressView.removeFromSuperview()
                                     strongSelf.progressView = nil
                                 }
-                                strongSelf.path = resource.path
                                 
                             } else {
                                 if strongSelf.progressView == nil, parent != nil {
-                                    let progressView = RadialProgressView()
+                                    let progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
                                     progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: 40.0, height: 40.0))
                                     strongSelf.progressView = progressView
                                     strongSelf.addSubview(progressView)
@@ -215,17 +223,36 @@ class ChatGIFContentView: ChatMediaContentView {
         bp += 1
     }
     
-    override func copy() -> Any {
-        let view = View()
-        view.backgroundColor = .clear
-        let layer:CALayer = CALayer()
-        layer.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 :  player.visibleRect.height - player.frame.height, player.frame.width,  player.frame.height)
-        layer.contents = player.layer?.contents
-        layer.masksToBounds = true
-        view.frame = player.visibleRect
-        layer.shouldRasterize = true
-        layer.rasterizationScale = backingScaleFactor
-        view.layer?.addSublayer(layer)
+    override open func copy() -> Any {
+        let view = NSView()
+        view.wantsLayer = true
+        
+         view.background = .clear
+        view.layer?.contents = player.layer?.contents
+        view.frame = self.visibleRect
+        view.layer?.masksToBounds = true
+        
+        
+        if bounds != visibleRect {
+            if let image = player.layer?.contents {
+                view.layer?.contents = generateImage(player.bounds.size, contextGenerator: { size, ctx in
+                    ctx.clear(player.bounds)
+                    ctx.setFillColor(.clear)
+                    ctx.fill(player.bounds)
+                    
+                    if player.visibleRect.minY == 0  {
+                        ctx.clip(to: NSMakeRect(0, 0, player.bounds.width, player.bounds.height - ( player.bounds.height - player.visibleRect.height)))
+                    } else {
+                        ctx.clip(to: NSMakeRect(0, (player.bounds.height - player.visibleRect.height), player.bounds.width, player.bounds.height - ( player.bounds.height - player.visibleRect.height)))
+                    }
+                    ctx.draw(image as! CGImage, in: player.bounds)
+                }, opaque: false)
+            }
+        }
+        
+        view.layer?.shouldRasterize = true
+        view.layer?.rasterizationScale = backingScaleFactor
+        
         return view
     }
     

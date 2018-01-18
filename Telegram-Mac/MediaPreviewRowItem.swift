@@ -113,7 +113,7 @@ fileprivate class MediaPreviewRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        self.contentNode?.setFrameOrigin(10, 6)
+        self.contentNode?.setFrameOrigin(12, 6)
     }
     
     open override func interactionContentView(for innerId: AnyHashable ) -> NSView {

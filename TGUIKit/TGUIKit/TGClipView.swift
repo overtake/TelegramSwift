@@ -16,6 +16,24 @@ public class TGClipView: NSClipView,CALayerDelegate {
     var displayLink:CVDisplayLink?
     var shouldAnimateOriginChange:Bool = false
     var destinationOrigin:NSPoint?
+    
+    var backgroundMode: TableBackgroundMode = .plain {
+        didSet {
+            needsDisplay = true
+        }
+    }
+    
+    public override var needsDisplay: Bool {
+        set {
+            self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+            super.needsDisplay = needsDisplay
+            self.layerContentsRedrawPolicy = .never
+        }
+        get {
+            return super.needsDisplay
+        }
+    }
+    
     weak var containingScrollView:NSScrollView? {
         
         if let scroll = self.enclosingScrollView {
@@ -44,11 +62,21 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
         super.init(frame: frameRect)
         self.wantsLayer = true
-        //self.canDrawSubviewsIntoLayer = true
+        backgroundColor = .clear
+        self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         self.layer?.delegate = self
         createDisplayLink()
 
+    }
+    
+    public override var backgroundColor: NSColor {
+        set {
+            super.backgroundColor = .clear
+        }
+        get {
+            return .clear
+        }
     }
     
     required public init?(coder: NSCoder) {
@@ -59,13 +87,17 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     
-//    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-//        
-//    }
+    override public func setNeedsDisplay(_ invalidRect: NSRect) {
+        
+    }
     
     public func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(presentation.colors.background.cgColor)
-        ctx.fill(self.bounds)
+       // ctx.clear(bounds)
+
+        
+            ctx.setFillColor(NSColor.clear.cgColor)
+            ctx.fill(bounds)
+        
 
         if let border = border {
             

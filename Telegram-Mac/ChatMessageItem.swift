@@ -374,7 +374,7 @@ class ChatMessageItem: ChatRowItem {
                     } else {
                         items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: {
                             copyToClipboard(text)
-                        }), at: 1)
+                        }), at: items.isEmpty ? 0 : 1)
                     }
                 }
             }

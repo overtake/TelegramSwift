@@ -242,7 +242,7 @@ open class ViewController : NSObject {
     }
     
     open func requestUpdateRightBar() {
-        (self.rightBarView as? TextButtonBarView)?.button.style = navigationButtonStyle
+        (self.rightBarView as? TextButtonBarView)?.style = navigationButtonStyle
         self.rightBarView.style = navigationButtonStyle
     }
     

@@ -31,7 +31,7 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
     return NSEqualRects(lhs.rect, rhs.rect) && lhs.direction == rhs.direction && NSEqualRanges(lhs.visibleRows, rhs.visibleRows)
 }
 
-open class ScrollView: NSScrollView, CALayerDelegate{
+open class ScrollView: NSScrollView{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
     
@@ -80,10 +80,6 @@ open class ScrollView: NSScrollView, CALayerDelegate{
        
     }
     
-    open func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(presentation.colors.background.cgColor)
-        ctx.fill(bounds)
-    }
     
     public var clipView:TGClipView {
         return self.contentView as! TGClipView
@@ -93,9 +89,9 @@ open class ScrollView: NSScrollView, CALayerDelegate{
      override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        self.wantsLayer = true;
+      
 
-        self.layer?.delegate = self
+       // self.layer?.delegate = self
 //        self.canDrawSubviewsIntoLayer = true
 //        self.layer?.drawsAsynchronously = System.drawAsync
         
@@ -103,23 +99,31 @@ open class ScrollView: NSScrollView, CALayerDelegate{
      //   self.contentView.layerContentsRedrawPolicy = .onSetNeedsDisplay
      //   self.contentView.layer?.drawsAsynchronously = System.drawAsync
         
-     //   self.layerContentsRedrawPolicy = .onSetNeedsDisplay;
-       // self.layer?.isOpaque = false
+       // self.layerContentsRedrawPolicy = .never;
+        //self.layer?.isOpaque = true
         
         let clipView = TGClipView(frame:self.contentView.frame)
         self.contentView = clipView;
         
+        drawsBackground = false
+        layerContentsRedrawPolicy = .never
         
-        
-        self.horizontalScroller?.scrollerStyle = .overlay
+        self.horizontalScrollElasticity = .none
         self.verticalScroller?.scrollerStyle = .overlay
-        
+        autoresizingMask = []
+        self.wantsLayer = true;
+        layer?.backgroundColor = presentation.colors.background.cgColor
+
       //  verticalScrollElasticity = .automatic
         //allowsMagnification = true
         //self.hasVerticalScroller = false
         
        // self.scrollerStyle = .overlay
  
+    }
+    
+    open override func setNeedsDisplay(_ invalidRect: NSRect) {
+        
     }
     
     open override var scrollerStyle: NSScroller.Style {

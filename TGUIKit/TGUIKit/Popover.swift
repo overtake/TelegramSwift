@@ -182,11 +182,15 @@ open class Popover: NSObject {
                     strongSelf.isShown = true
                     
                     if let _ = strongSelf.overlay {
+                        
+                        var lastInWindow: Bool = false
+
+                        
                         if strongSelf.animates {
                             
                             var once:Bool = false
                             
-                            for sub in strongSelf.background.subviews {
+                             for sub in strongSelf.background.subviews {
                                 sub.layer?.animate(from: (-strongSelf.background.frame.height) as NSNumber, to: (sub.frame.minY) as NSNumber, keyPath: "position.y", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration, removeOnCompletion: true, additive: false, completion:{ [weak controller] (comple) in
                                     if let strongSelf = self, !once {
                                         once = true
@@ -198,13 +202,11 @@ open class Popover: NSObject {
                                 //   sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
                             }
                             
-                            
-                            
                         }
                         
                         let nHandler:(Control) -> Void = { [weak strongSelf] control in
                             if let strongSelf = strongSelf {
-                                let s = Signal<Void,NoError>.single(Void()) |> delay(0.2, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single(Void()) |> delay(0.1, queue: Queue.mainQueue()) |> restart)
+                                let s = Signal<Void,NoError>.single(Void()) |> delay(lastInWindow ? 0.3 : 0.1, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single(Void()) |> delay(0.1, queue: Queue.mainQueue()) |> restart)
                                 
                                 strongSelf.disposable.set(s.start(next: { [weak strongSelf] () in
                                     if let strongSelf = strongSelf {
@@ -219,30 +221,29 @@ open class Popover: NSObject {
                             
                         }
                         
-                        var first: Bool = true
                         
                         control.kitWindow?.set(mouseHandler: { [weak strongSelf, weak control] _ -> KeyHandlerResult in
-                            if let strongSelf = strongSelf, first, let control = control {
+                            if let strongSelf = strongSelf, let control = control {
                                 if !strongSelf.inside() && !control.mouseInside() {
-                                    first = false
                                     nHandler(control)
+                                } else {
+                                    strongSelf.disposable.set(nil)
+                                    lastInWindow = strongSelf.inside()
                                 }
                             }
                             return .invokeNext
-                            },  with: strongSelf, for: .mouseMoved, priority: .high)
+                        },  with: strongSelf, for: .mouseMoved, priority: .high)
                         
                         let hHandler:(Control) -> Void = { [weak strongSelf] _ in
-                            
                             strongSelf?.disposable.set(nil)
-                            
                         }
                         
-                        strongSelf.background.set(handler: nHandler, for: .Normal)
-                        strongSelf.background.set(handler: hHandler, for: .Hover)
+                      //  strongSelf.background.set(handler: nHandler, for: .Normal)
+                      //  strongSelf.background.set(handler: hHandler, for: .Hover)
                         
                         
-                        control.set(handler: nHandler, for: .Normal)
-                        control.set(handler: hHandler, for: .Hover)
+                     //   control.set(handler: nHandler, for: .Normal)
+                   //     control.set(handler: hHandler, for: .Hover)
                         
                         
                     }
@@ -299,10 +300,7 @@ open class Popover: NSObject {
         overlay?.removeLastStateHandler()
         overlay?.removeLastStateHandler()
         
-        if removeHandlers {
-            control?.removeLastStateHandler()
-            control?.removeLastStateHandler()
-        }
+
         
         self.disposable.dispose()
         self.readyDisposable.dispose()

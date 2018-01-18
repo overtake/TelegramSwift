@@ -34,7 +34,6 @@ public class TitleButton: ImageButton {
     private var stateColor:[ControlState:NSColor] = [:]
     private var stateFont:[ControlState:NSFont] = [:]
     
-    
     public var direction: TitleButtonImageDirection = .left {
         didSet {
             if direction != oldValue {
@@ -50,7 +49,8 @@ public class TitleButton: ImageButton {
     public func set(text:String, for state:ControlState) -> Void {
         stateText[state] = text
         apply(state: self.controlState)
-        sizeToFit(NSZeroSize, self.frame.size)
+        _ = sizeToFit(NSZeroSize, self.frame.size, thatFit: _thatFit)
+
     }
     
     public func set(color:NSColor, for state:ControlState) -> Void {
@@ -99,8 +99,8 @@ public class TitleButton: ImageButton {
         
     }
     
-    public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) {
-        super.sizeToFit(addition)
+    public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
+        _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
         
         let size:NSSize = self.size(with: self.text.string as! String?, font:NSFont(name: self.text.font as! String, size: text.fontSize))
@@ -113,7 +113,7 @@ public class TitleButton: ImageButton {
             }
         }
        
-        let maxWidth:CGFloat = !thatFit ? ( maxSize.width > 0 ? maxSize.width : msize.width ) : min(maxSize.width, size.width)
+        var maxWidth:CGFloat = !thatFit ? ( maxSize.width > 0 ? maxSize.width : msize.width ) : maxSize.width
 
         
         
@@ -122,21 +122,31 @@ public class TitleButton: ImageButton {
         if let image = imageView.image {
             
             textSize = min(maxWidth,size.width)
-            
             let iwidth:CGFloat = (image.backingSize.width + 12)
             
             if textSize == maxWidth {
                 textSize -= iwidth
             } else {
                 textSize = (maxWidth - size.width) >= iwidth ? size.width : maxWidth - iwidth
+                maxWidth = textSize + iwidth
             }
+        } else {
+            maxWidth = min(size.width, textSize)
+            textSize =  min(size.width, textSize)
         }
        
+        if thatFit {
+            maxWidth = maxSize.width
+        } else {
+            maxWidth += addition.width
+        }
 
 
         self.text.frame = NSMakeRect(0, 0, textSize, size.height)
+        
+        
         self.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: maxWidth, height: max(size.height,maxSize.height))
-
+        return frame.width >= maxWidth
     }
     
     public override func updateLayout() {

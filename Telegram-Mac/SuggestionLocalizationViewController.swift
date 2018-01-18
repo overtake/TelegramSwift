@@ -24,10 +24,12 @@ private class SuggestionControllerView : View {
         addSubview(tableView)
         addSubview(suggestTextView)
        
+        textView.backgroundColor = theme.colors.background
+        suggestTextView.backgroundColor = theme.colors.background
         
         tableView.setFrameSize(NSMakeSize(frameRect.width, frameRect.height - 50))
         separatorView.setFrameSize(frameRect.width, .borderSize)
-        separatorView.backgroundColor = .border
+        separatorView.backgroundColor = theme.colors.border
         layout()
     }
     

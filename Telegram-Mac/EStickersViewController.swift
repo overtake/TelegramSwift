@@ -388,7 +388,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        let layout = GridNodeLayout(size: CGSize(width: frame.width, height: frame.height - 50), insets: NSEdgeInsets(left: 10, right: 10, top: 10), preloadSize: size.height, type: .fixed(itemSize: CGSize(width: 80, height: 80), lineSpacing: 0))
+        let layout = GridNodeLayout(size: CGSize(width: frame.width - 20, height: frame.height - 50), insets: NSEdgeInsets(left: 0, right: 0, top: 10), preloadSize: size.height, type: .fixed(itemSize: CGSize(width: 80, height: 80), lineSpacing: 0))
         let updateLayout = GridNodeUpdateLayout(layout: layout, transition: .immediate)
         
         self.genericView.gridView.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: updateLayout, itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })

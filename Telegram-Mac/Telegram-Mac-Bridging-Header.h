@@ -137,7 +137,7 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 @end
 
 
-
+void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
 
 @interface TGGrowingTextView : NSTextView
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
@@ -178,7 +178,7 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 -(void)appendText:(id __nonnull)aString;
 -(void)insertText:(id __nonnull)aString replacementRange:(NSRange)replacementRange;
 -(void)addInputTextTag:(TGInputTextTag * __nonnull)tag range:(NSRange)range;
-
+-(void)scrollToCursor;
 -(void)replaceMention:(NSString * __nonnull)mention username:(bool)username userId:(int32_t)userId;
 
 -(void)paste:(id __nonnull)sender;

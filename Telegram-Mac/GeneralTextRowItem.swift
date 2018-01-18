@@ -54,7 +54,7 @@ class GeneralTextRowItem: GeneralRowItem {
     
     init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false) {
         let attr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(11.5)).mutableCopy() as! NSMutableAttributedString
-        attr.detectBoldColorInString(with: .medium(.text))
+        attr.detectBoldColorInString(with: .medium(11.5))
         self.text = attr
         self.alignment = alignment
         self.additionLoading = additionLoading
@@ -102,6 +102,10 @@ class GeneralTextRowView : GeneralRowView {
         }
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -125,7 +129,7 @@ class GeneralTextRowView : GeneralRowView {
         }
         
         
-        
+        needsDisplay = true
         needsLayout = true
     }
     
@@ -136,6 +140,8 @@ class GeneralTextRowView : GeneralRowView {
             super.mouseUp(with: event)
         }
     }
+    
+
     
     override func layout() {
         super.layout()

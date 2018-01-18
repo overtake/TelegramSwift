@@ -744,11 +744,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
         statePromise.set(stateValue.modify { f($0) })
     }
     
-    var doneButton:Button? {
-        if let button = rightBarView as? TextButtonBarView {
-            return button.button
-        }
-        return nil
+    var doneButton:Control? {
+        return rightBarView
     }
     
     override func getRightBarViewOnce() -> BarView {

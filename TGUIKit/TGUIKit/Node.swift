@@ -69,7 +69,8 @@ open class Node: NSObject, ViewDisplayDelegate {
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(backgroundColor!.cgColor)
+        guard let backgroundColor = backgroundColor else {return}
+        ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(layer.bounds)
     }
     

@@ -29,8 +29,8 @@ class ChatSwitchInlineController: ChatController {
         return (tr(L10n.navigationCancel),nil)
     }
     
-    override func applyTransition(_ transition: TableUpdateTransition, initialData: ChatHistoryCombinedInitialData) {
-        super.applyTransition(transition, initialData: initialData)
+    override func applyTransition(_ transition: TableUpdateTransition, initialData: ChatHistoryCombinedInitialData, wallpaper: TelegramWallpaper) {
+        super.applyTransition(transition, initialData: initialData, wallpaper: wallpaper)
         
         if case let .none(interface) = transition.state, let _ = interface {
             for (_, item) in transition.inserted {

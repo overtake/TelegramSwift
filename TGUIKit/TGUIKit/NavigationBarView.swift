@@ -17,13 +17,13 @@ public struct NavigationBarStyle {
     }
 }
 
-class NavigationBarView: View {
+public class NavigationBarView: View {
     
     private var bottomBorder:View = View()
     
-    private var leftView:View = View()
-    private var centerView:View = View()
-    private var rightView:View = View()
+    private var leftView:BarView = BarView(frame: NSZeroRect)
+    private var centerView:BarView = BarView(frame: NSZeroRect)
+    private var rightView:BarView = BarView(frame: NSZeroRect)
     
     override init() {
         super.init()
@@ -31,13 +31,13 @@ class NavigationBarView: View {
         updateLocalizationAndTheme()
     }
     
-    required init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.autoresizingMask = [.width]
         updateLocalizationAndTheme()
     }
     
-    override func updateLocalizationAndTheme() {
+    override public func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         bottomBorder.backgroundColor = presentation.colors.border
         backgroundColor = presentation.colors.background
@@ -57,23 +57,33 @@ class NavigationBarView: View {
 //        ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
     }
     
-    override func layout() {
+    override public func layout() {
         super.layout()
         self.bottomBorder.setNeedsDisplay()
     }
 
-    override func setFrameSize(_ newSize: NSSize) {
+    override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         self.bottomBorder.frame = NSMakeRect(0, newSize.height - .borderSize, newSize.width, .borderSize)
         self.layout(left: leftView, center: centerView, right: rightView)
     }
     
+    public override var mouseDownCanMoveWindow: Bool {
+        return true
+    }
     
-    func layout(left: View, center: View, right: View) -> Void {
+    
+    func layout(left: BarView, center: BarView, right: BarView) -> Void {
         if frame.height > 0 {
-            left.frame = NSMakeRect(0, 0, NSWidth(left.frame), frame.height - .borderSize);
-            center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (left.frame.width + right.frame.width), frame.height - .borderSize);
-            right.frame = NSMakeRect(center.frame.maxX, 0, NSWidth(right.frame), frame.height - .borderSize);
+            //proportions = 50 / 25 / 25
+            
+            
+            let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? frame.width / 3 : frame.width / 4))
+            let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? frame.width / 3 : frame.width / 4))
+            
+            left.frame = NSMakeRect(0, 0, leftWidth, frame.height - .borderSize);
+            center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (leftWidth + rightWidth), frame.height - .borderSize);
+            right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height - .borderSize);
         }
     }
     
@@ -87,13 +97,25 @@ class NavigationBarView: View {
     // old center -> right
     // old right -> fade
     
-    
+    @objc func viewFrameChanged(_ notification:Notification) {
+       layout(left: leftView, center: centerView, right: rightView)
+    }
     
     public func switchViews(left:BarView, center:BarView, right:BarView, controller:ViewController, style:ViewControllerStyle, animationStyle:AnimationStyle) {
         
         layout(left: left, center: center, right: right)
         self.bottomBorder.isHidden = !controller.bar.enableBorder
         if style != .none {
+            
+            
+            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: leftView)
+            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: centerView)
+            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: rightView)
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: left)
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: center)
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: right)
+
             
             CATransaction.begin()
             

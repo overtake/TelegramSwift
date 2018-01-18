@@ -73,7 +73,7 @@ class WPContentView: View, MultipleSelectable {
             if !textView.isEqual(to: content.textLayout) {
                 textView.update(content.textLayout)
             }
-            instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 30), thatFit: false)
+            instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 30), thatFit: true)
             instantPageButton?.setFrameOrigin(0, content.contentRect.height - 30)
         }
         needsDisplay = true
