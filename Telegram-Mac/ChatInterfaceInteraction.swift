@@ -26,7 +26,21 @@ final class ReplyMarkupInteractions {
 
 final class ChatInteraction : InterfaceObserver  {
     
-    let peerId:PeerId
+    let chatLocation: ChatLocation
+    
+    var peerId : PeerId {
+        switch chatLocation {
+        case let .peer(peerId):
+            return peerId
+        case .group:
+            return PeerId(0)
+        }
+    }
+    
+    var peer: Peer? {
+        return presentation.peer
+    }
+    
     let account:Account
     let isLogInteraction:Bool
     let disableSelectAbility: Bool
@@ -37,12 +51,12 @@ final class ChatInteraction : InterfaceObserver  {
     private let requestSessionId:MetaDisposable = MetaDisposable()
     private let disableProxyDisposable = MetaDisposable()
     private let enableProxyDisposable = MetaDisposable()
-    init(peerId:PeerId, account:Account, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
-        self.peerId = peerId
+    init(chatLocation: ChatLocation, account:Account, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
+        self.chatLocation = chatLocation
         self.account = account
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
-        self.presentation = ChatPresentationInterfaceState()
+        self.presentation = ChatPresentationInterfaceState(chatLocation)
         super.init()
         
         let signal = mediaPromise.get() |> deliverOnMainQueue |> mapToQueue { [weak self] (media) -> Signal<Void, Void> in
@@ -68,12 +82,14 @@ final class ChatInteraction : InterfaceObserver  {
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([MessageId]) -> Void = {_ in}
     var sendMessage: () -> Void = {}
-    var forceSendMessage: (String) -> Void = {_ in}
+    var forceSendMessage: (ChatTextInputState) -> Void = {_ in}
+    var sendPlainText: (String) -> Void = {_ in}
+
     //
     var focusMessageId: (MessageId?, MessageId, TableScrollState) -> Void = {_,_,_  in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
-    var sendMedias:([Media], String, Bool) -> Void = {_,_,_ in}
+    var sendMedias:([Media], ChatTextInputState, Bool) -> Void = {_,_,_ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -102,6 +118,9 @@ final class ChatInteraction : InterfaceObserver  {
     var toggleSidebar:()->Void = {}
     var mentionPressed:()->Void = {}
     var jumpToDate:(Date)->Void = {_ in}
+    var openFeedInfo: (PeerGroupId)->Void = {_ in}
+    var showNextPost:()->Void = {}
+    
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     func addContact() {
@@ -265,7 +284,7 @@ final class ChatInteraction : InterfaceObserver  {
                 if let strongSelf = self {
                     switch button.action {
                     case let .url(url):
-                        execute(inapp: inApp(for: url.nsstring, account: strongSelf.account, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.forceSendMessage))
+                        execute(inapp: inApp(for: url.nsstring, account: strongSelf.account, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText))
                     case .text:
                         _ = (enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], media: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil)]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)

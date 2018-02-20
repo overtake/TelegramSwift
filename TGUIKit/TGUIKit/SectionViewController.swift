@@ -124,7 +124,10 @@ public class SectionControllerView : View {
             hContainer.background = presentation.colors.background
             for t in hContainer.subviews {
                 if let t = t as? TextView {
-                    t.update(TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
+                    let layout = TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle)
+                    layout.measure(width: hContainer.frame.width - 20)
+                    t.update(layout)
+                    t.center()
                 }
                 
                 t.background = presentation.colors.background
@@ -136,7 +139,7 @@ public class SectionControllerView : View {
     public override func layout() {
         super.layout()
         header.setFrameSize(NSMakeSize(frame.width, 50))
-        let width = floorToScreenPixels(frame.width / CGFloat(max(header.subviews.count, 3)))
+        let width = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / CGFloat(max(header.subviews.count, 3)))
         
         selector.frame = NSMakeRect(CGFloat(selectorIndex) * width, 50 - .borderSize, width, .borderSize)
         container.frame = NSMakeRect(0, header.frame.maxY, frame.width, frame.height - header.frame.height)

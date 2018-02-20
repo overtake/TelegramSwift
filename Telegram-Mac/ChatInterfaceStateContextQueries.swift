@@ -262,8 +262,13 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     }
 }
 
+enum ContextQueryForSearchMentionFilter {
+    case plain(includeNameless: Bool, includeInlineBots: Bool)
+    case filterSelf(includeNameless: Bool, includeInlineBots: Bool)
+}
 
-func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentationInputQuery, currentQuery: ChatPresentationInputQuery?,  account:Account)  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
+
+func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentationInputQuery, currentQuery: ChatPresentationInputQuery?,  account:Account, filter: ContextQueryForSearchMentionFilter = .plain(includeNameless: true, includeInlineBots: false))  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
     switch inputQuery {
     case let .mention(query: query, includeRecent: _):
         let normalizedQuery = query.lowercased()
@@ -280,15 +285,37 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
         
         let participants = peerParticipants(postbox: account.postbox, id: peer.id)
             |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                let filteredParticipants = participants.filter ({ peer in
+                let filteredParticipants = participants.filter { peer in
+                    
+                    switch filter {
+                    case let .plain(includeNameless, includeInlineBots):
+                        if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
+                            return false
+                        }
+                        if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
+                            return false
+                        }
+                    case let .filterSelf(includeNameless, includeInlineBots):
+                        if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
+                            return false
+                        }
+                        if peer.id == account.peerId {
+                            return false
+                        }
+                        if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
+                            return false
+                        }
+                    }
+                    
                     if peer.indexName.matchesByTokens(normalizedQuery) {
                         return true
                     }
                     if let addressName = peer.addressName, addressName.lowercased().hasPrefix(normalizedQuery) {
                         return true
                     }
+                    
                     return peer.addressName == nil && normalizedQuery.isEmpty
-                }).sorted(by: { lhs, rhs in
+                }.sorted(by: { lhs, rhs in
                     let result = lhs.indexName.indexName(.lastNameFirst).compare(rhs.indexName.indexName(.lastNameFirst))
                     return result == .orderedAscending
                 })
@@ -306,6 +333,12 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
 private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType([.link]).rawValue)
 
 func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, account: Account, currentQuery: String?) -> (String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)? {
+    
+    if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.editState?.message.media.first {
+        if media is TelegramMediaFile || media is TelegramMediaImage {
+            return (nil, .single({ _ in return nil }))
+        }
+    }
     
     if let dataDetector = dataDetector {
         

@@ -423,7 +423,7 @@ class GroupStickerSetController: TableViewController {
         }, installStickerset: { info in
             updateState({$0.withUpdatedLoadedPack(info).withUpdatedText(info.0.shortName)})
         }, openChat: { [weak self] peerId in
-            self?.navigationController?.push(ChatController(account: account, peerId: peerId))
+            self?.navigationController?.push(ChatController(account: account, chatLocation: .peer(peerId)))
         })
         
         saveGroupStickerSet = { [weak self] in

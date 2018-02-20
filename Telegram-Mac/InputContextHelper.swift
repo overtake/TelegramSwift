@@ -139,8 +139,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             })
         case let .peer(peer, _, _):
             var status:String?
-            if let user = peer as? TelegramUser {
-                status = user.username
+            if let user = peer as? TelegramUser, let address = user.addressName {
+                status = "@\(address)"
             }
             let titleStyle:ControlStyle = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.text, backgroundColor: theme.colors.background, highlightColor:.white)
             let statusStyle:ControlStyle = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor:.white)
@@ -226,6 +226,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     private let account:Account
     private let chatInteraction:ChatInteraction
+    fileprivate weak var superview: NSView?
     override func loadView() {
         super.loadView()
         genericView.delegate = self
@@ -241,21 +242,21 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             let prev = self?.deselectSelectedSticker()
             self?.genericView.selectNext(true,true)
             self?.selectFirstInRowIfCan(prev)
             return .invoked
         }, with: self, for: .DownArrow, priority: .high)
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             let prev = self?.deselectSelectedSticker()
             self?.genericView.selectPrev(true,true)
             self?.selectFirstInRowIfCan(prev)
             return .invoked
         }, with: self, for: .UpArrow, priority: .high)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectPreviousSticker()
@@ -265,7 +266,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invokeNext
         }, with: self, for: .LeftArrow, priority: .high)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectNextSticker()
@@ -275,7 +276,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invokeNext
         }, with: self, for: .RightArrow, priority: .high)
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.invoke()
             }
@@ -283,14 +284,14 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         }, with: self, for: .Return, priority: .high)
         
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.invokeTab()
             }
             return .invokeNext
         }, with: self, for: .Tab, priority: .high)
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+        mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             if self?.genericView.selectedItem() != nil {
                 _ = self?.deselectSelectedSticker()
                 self?.genericView.cancelSelection()
@@ -438,7 +439,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     }
     
     func cleanup() {
-        self.window?.removeAllHandlers(for: self)
+        mainWindow.removeAllHandlers(for: self)
     }
     
     deinit {
@@ -473,23 +474,24 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     }
     
     func layout(_ animated:Bool) {
-        let future = NSMakeSize(frame.width, min(genericView.listHeight,140))
-      //  genericView.change(size: future, animated: animated)
-      //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
-        
-        genericView.change(size: future, animated: animated)
-        
-        switch genericView.position {
-        case .above:
-            genericView.separatorView.change(pos: NSZeroPoint, animated: true)
-        case .below:
-            genericView.separatorView.change(pos: NSMakePoint(0, frame.height - genericView.separatorView.frame.height), animated: true)
-        }
-        
-        if let relativeView = genericView.relativeView {
+        if let superview = superview, let relativeView = genericView.relativeView {
+            let future = NSMakeSize(frame.width, min(genericView.listHeight,min(superview.frame.height - 50 - relativeView.frame.height, 140)))
+            //  genericView.change(size: future, animated: animated)
+            //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
+            
+            genericView.change(size: future, animated: animated)
+            
+            switch genericView.position {
+            case .above:
+                genericView.separatorView.change(pos: NSZeroPoint, animated: true)
+            case .below:
+                genericView.separatorView.change(pos: NSMakePoint(0, frame.height - genericView.separatorView.frame.height), animated: true)
+            }
+            
             let y = genericView.position == .above ? relativeView.frame.minY - frame.height : relativeView.frame.maxY
             genericView.change(pos: NSMakePoint(0, y), animated: animated)
         }
+        
     }
 
     
@@ -527,7 +529,7 @@ class InputContextHelper: NSObject {
         
         controller._frameRect = NSMakeRect(0, 0, view.frame.width, 140)
         controller.loadViewIfNeeded()
-        
+        controller.superview = view
         controller.genericView.relativeView = relativeView
         controller.genericView.position = position
         let initialSize = controller.atomicSize
@@ -567,7 +569,6 @@ class InputContextHelper: NSObject {
                 
             } else if let controller = self?.controller {
                 controller.viewWillDisappear(animated)
-                controller.genericView.cancelSelection()
                 if animated {
                     controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak controller] completed in
                         
@@ -575,6 +576,7 @@ class InputContextHelper: NSObject {
                             controller?.removeFromSuperview()
                             controller?.genericView.removeAll()
                             controller?.viewDidDisappear(animated)
+                            controller?.genericView.cancelSelection()
                         } 
                         
                     })
@@ -583,6 +585,7 @@ class InputContextHelper: NSObject {
                 } else {
                     controller.removeFromSuperview()
                     controller.viewDidDisappear(animated)
+                    controller.genericView.cancelSelection()
                 }
             }
     

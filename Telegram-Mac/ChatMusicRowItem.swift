@@ -20,7 +20,7 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
     let showPlayer:(APController) -> Void
     let durationLayout:TextViewLayout
     let sizeLayout:TextViewLayout
-    init(nameLayout:TextViewLayout, durationLayout:TextViewLayout, sizeLayout:TextViewLayout, resource:TelegramMediaResource, isWebpage: Bool, title:String?, performer:String?, showPlayer:@escaping(APController) -> Void, presentation: ChatMediaPresentation, media: Media) {
+    init(nameLayout:TextViewLayout, durationLayout:TextViewLayout, sizeLayout:TextViewLayout, resource:TelegramMediaResource, isWebpage: Bool, title:String?, performer:String?, showPlayer:@escaping(APController) -> Void, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.nameLayout = nameLayout
         self.sizeLayout = sizeLayout
         self.durationLayout = durationLayout
@@ -29,7 +29,7 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
         self.title = title
         self.performer = performer
         self.resource = resource
-        super.init(presentation: presentation, media: media)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload)
     }
     
     var file: TelegramMediaFile {
@@ -46,11 +46,11 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
 class ChatMusicRowItem: ChatMediaItem {
     
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
-        super.init(initialSize, chatInteraction, account, object)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
         
 
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {

@@ -66,16 +66,15 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
    
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
         }
-        open()
     }
     
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            chatMessageFileCancelInteractiveFetch(account: account, file: media)
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
+            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
         }
     }
     
@@ -187,7 +186,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         return view
     }
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return self.progressView
     }
     

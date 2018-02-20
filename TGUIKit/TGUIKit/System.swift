@@ -7,17 +7,20 @@
 //
 
 import Cocoa
+import SwiftSignalKitMac
 
 public struct System {
 
+    public static var scaleFactor: Atomic<CGFloat> = Atomic(value: 2.0)
+    
     public static var isRetina:Bool {
         get {
-            return NSScreen.main?.backingScaleFactor == 2.0
+            return scaleFactor.modify({$0}) == 2.0
         }
     }
     
     public static var backingScale:CGFloat {
-        return CGFloat(NSScreen.main?.backingScaleFactor ?? 2.0)
+        return CGFloat(scaleFactor.modify({$0}))
     }
     
     public static var drawAsync:Bool {

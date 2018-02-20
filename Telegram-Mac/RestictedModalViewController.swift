@@ -217,7 +217,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
                 } else {
                     let formatter = DateFormatter()
                     formatter.dateStyle = .medium
-                    formatter.locale = Locale(identifier: appCurrentLanguage.languageCode)
+                    formatter.timeZone = NSTimeZone.local
                     formatter.timeStyle = .short
                     return formatter.string(from: Date(timeIntervalSince1970: TimeInterval(until)))
                 }

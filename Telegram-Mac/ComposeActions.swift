@@ -16,7 +16,7 @@ import TGUIKit
 func createGroup(with account:Account, for navigation:NavigationViewController) {
     
     
-    let select = SelectPeersController(titles: ComposeTitles(tr(L10n.composeSelectUsers), tr(L10n.composeNext)), account: account, settings: [.contacts, .remote])
+    let select = SelectPeersController(titles: ComposeTitles(tr(L10n.composeSelectUsers), tr(L10n.composeNext)), account: account, settings: [.contacts, .remote], isNewGroup: true)
     let chooseName =  CreateGroupViewController(titles: ComposeTitles(tr(L10n.groupNewGroup), tr(L10n.composeCreate)), account: account)
     let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), Void> in
         let signal = showModalProgress(signal: createGroup(account: account, title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
@@ -41,21 +41,27 @@ func createGroup(with account:Account, for navigation:NavigationViewController) 
     
     _ = signal.start(next: { [weak navigation] peerId, complete in
         if let peerId = peerId, complete {
-            navigation?.push(ChatController(account: account, peerId: peerId))
+            navigation?.push(ChatController(account: account, chatLocation: .peer(peerId)))
         }
     })
 }
 
 func createChannel(with account:Account, for navigation:NavigationViewController) {
-    let intro = ChannelIntroViewController(account)
-    navigation.push(intro)
     
-    let create = intro.onComplete.get() |> mapToSignal{ () -> Signal<PeerId?, Void> in
+    let intro = ChannelIntroViewController(account)
+    if FastSettings.needShowChannelIntro {
+        navigation.push(intro)
+    }
+    
+    let introCompletion: Signal<Void, Void> = FastSettings.needShowChannelIntro ? intro.onComplete.get() : Signal<Void, Void>.single(Void())
+    
+    let create = introCompletion |> mapToSignal { () -> Signal<PeerId?, Void> in
         let create = CreateChannelViewController(titles: ComposeTitles(tr(L10n.channelNewChannel), tr(L10n.composeNext)), account: account)
         navigation.push(create)
         return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, Void> in
             if let peerId = peerId {
-                navigation.push(ChatController(account: account, peerId: peerId), style: .none)
+                FastSettings.markChannelIntroHasSeen()
+                navigation.push(ChatController(account: account, chatLocation: .peer(peerId)), style: .none)
                 let visibility = ChannelVisibilityController(account: account, peerId: peerId)
                 navigation.push(visibility)
                 return visibility.onComplete.get() |> filter {$0} |> map {_ in return peerId}
@@ -66,7 +72,7 @@ func createChannel(with account:Account, for navigation:NavigationViewController
     
     _ = create.start(next: { peerId in
         if let peerId = peerId {
-            navigation.push(ChatController(account: account, peerId: peerId))
+            navigation.push(ChatController(account: account, chatLocation: .peer(peerId)))
         } else {
             navigation.close()
         }

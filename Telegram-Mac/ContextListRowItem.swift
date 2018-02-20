@@ -39,12 +39,12 @@ class ContextListRowItem: TableRowItem {
         self.chatInteraction = chatInteraction
         self._index = index
         self.account = account
-        var imageResource: TelegramMediaResource?
+        var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil
         switch result {
-        case let .externalReference(_, _, title, description, url, thumbnailUrl, contentUrl, contentType, _, _, _):
+        case let .externalReference(_, _, title, description, url, thumbnailUrl, contentUrl, contentType, dimensions, _, _):
             if let thumbnailUrl = thumbnailUrl {
-                imageResource = HttpReferenceMediaResource(url: thumbnailUrl, size: nil)
+                representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(50, 50), resource: HttpReferenceMediaResource(url: thumbnailUrl, size: nil))
             }
             if let contentUrl = contentUrl {
                 fileResource = HttpReferenceMediaResource(url: contentUrl, size: nil)
@@ -79,23 +79,22 @@ class ContextListRowItem: TableRowItem {
                 }
             }
             if let image = image {
-                imageResource = smallestImageRepresentation(image.representations)?.resource
+                representation = smallestImageRepresentation(image.representations)
             } else if let file = file {
-                imageResource = smallestImageRepresentation(file.previewRepresentations)?.resource
+                representation = smallestImageRepresentation(file.previewRepresentations)
             }
         }
         
         
         
-        if let imageResource = imageResource {
-            let iconRepresentation = TelegramMediaImageRepresentation(dimensions: CGSize(width: 55.0, height: 55.0), resource: imageResource)
-            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconRepresentation], reference: nil)
+        if let representation = representation {
+            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil)
             iconSignal = chatWebpageSnippetPhoto(account: account, photo: tmpImage, scale: 2.0, small:true)
             
-            let iconSize = iconRepresentation.dimensions.aspectFilled(CGSize(width: 50, height: 50))
+            let iconSize = representation.dimensions.aspectFilled(CGSize(width: 50, height: 50))
             
             let imageCorners = ImageCorners(topLeft: .Corner(2.0), topRight: .Corner(2.0), bottomLeft: .Corner(2.0), bottomRight: .Corner(2.0))
-            arguments = TransformImageArguments(corners: imageCorners, imageSize: iconSize, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+            arguments = TransformImageArguments(corners: imageCorners, imageSize: representation.dimensions, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
             iconText = nil
         } else {
             arguments = nil
@@ -171,7 +170,7 @@ class ContextListRowView : TableRowView {
             
             if let layout = item.textLayout {
                 let f = focus(layout.0.size)
-                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
         }
@@ -224,7 +223,7 @@ class ContextListImageView : TableRowView {
             
             if let layout = item.textLayout {
                 let f = focus(layout.0.size)
-                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             needsLayout = true
         }
@@ -241,6 +240,7 @@ class ContextListImageView : TableRowView {
                 image.setSignal( item.iconSignal)
             }
         }
+        needsDisplay = true
     }
 
     required init?(coder: NSCoder) {

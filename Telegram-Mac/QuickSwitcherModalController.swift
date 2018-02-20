@@ -173,9 +173,9 @@ private class QuickSwitcherView : View {
     
     override func layout() {
         super.layout()
-        searchView.centerX(y: floorToScreenPixels((50 - 30)/2))
+        searchView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - 30)/2))
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 100)
-        textView.centerX(y: frame.height - floorToScreenPixels((50 - textView.frame.height)/2) - textView.frame.height)
+        textView.centerX(y: frame.height - floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - textView.frame.height)/2) - textView.frame.height)
         separator.frame = NSMakeRect(0, frame.height - 50, frame.width, .borderSize)
     }
     
@@ -264,7 +264,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
             } else  {
                 let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
                 
-                let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased()) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
+                let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
                 
                 return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
                     return (uniquePeers(from: (values.1 + values.0)), false)
@@ -360,7 +360,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let selectedItem = genericView.tableView.selectedItem() as? ShortPeerRowItem {
-            account.context.mainNavigation?.push(ChatController(account: account, peerId: selectedItem.peer.id))
+            account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(selectedItem.peer.id)))
             close()
         }
         return .rejected

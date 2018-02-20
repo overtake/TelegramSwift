@@ -107,7 +107,7 @@ open class Control: View {
         if let color = backgroundState[state] {
             self.layer?.backgroundColor = color.cgColor
         } else {
-            self.layer?.backgroundColor = self.backgroundColor.cgColor
+            self.layer?.backgroundColor = backgroundState[.Normal]?.cgColor ?? self.backgroundColor.cgColor
         }
         if animates {
             self.layer?.animateBackground()
@@ -357,7 +357,8 @@ open class Control: View {
     required public init(frame frameRect: NSRect) {
         self.isSelected = false
         super.init(frame: frameRect)
-        animates = true
+        animates = false
+        layer?.disableActions()
         guard #available(OSX 10.12, *) else {
             layer?.opacity = 0.99
             return
@@ -369,8 +370,8 @@ open class Control: View {
     public override init() {
         self.isSelected = false
         super.init(frame: NSZeroRect)
-        animates = true
-        
+        animates = false
+        layer?.disableActions()
         guard #available(OSX 10.12, *) else {
             layer?.opacity = 0.99
             return

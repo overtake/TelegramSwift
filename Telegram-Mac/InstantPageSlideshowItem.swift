@@ -79,6 +79,11 @@ class InstantPageSlideshowView : View, InstantPageView {
         
     }
     
+    override func layout() {
+        super.layout()
+        slideView.center()
+    }
+    
     var indexOfDisplayedSlide: Int {
         return Int(slideView.indexOfDisplayedSlide)
     }

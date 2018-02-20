@@ -135,7 +135,7 @@ public class TabBarView: View {
         for subview in subviews {
             subview.background = presentation.colors.background
             for container in subview.subviews {
-                container.background = presentation.colors.background
+                //container.background = presentation.colors.background
             }
         }
         self.backgroundColor = presentation.colors.background
@@ -149,7 +149,7 @@ public class TabBarView: View {
        // if previous != newSize.width {
             let width = NSWidth(self.bounds)
             let height = NSHeight(self.bounds) - .borderSize
-            let defWidth = floorToScreenPixels(width / CGFloat( max(1, self.tabs.count) ))
+            let defWidth = floorToScreenPixels(scaleFactor: backingScaleFactor, width / CGFloat( max(1, self.tabs.count) ))
             var xOffset:CGFloat = 0
             
             var idx:Int = 0

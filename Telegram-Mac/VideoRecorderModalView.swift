@@ -84,13 +84,13 @@ class VideoRecorderModalView: View {
     }
     
     func updateProgress(_ progress: Float) {
-        progressView.state = .ImpossibleFetching(progress: progress, force: false)
+        progressView.state = .ImpossibleFetching(progress: progress, force: true)
     }
     
     func didStartedRecording() {
-        placeholderView.change(opacity: 0)
         captureLayer.opacity = 1
-        captureLayer.animateAlpha(from: 0, to: 1, duration: 0.2)
+        placeholderView.change(opacity: 0.0, duration: 1.0)
+       
     }
     
     required init?(coder: NSCoder) {

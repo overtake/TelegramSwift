@@ -46,8 +46,8 @@ fileprivate final class SelectAccentColorView : View {
         
         let textNode = TextNode.layoutText(NSAttributedString.initialize(string: tr(L10n.generalSettingsAccentColor), color: theme.colors.text, font: .normal(.text)), theme.colors.background, 1, .end, NSMakeSize(frame.width - 40, 20), nil, false, .center)
         
-        let point = NSMakePoint(floorToScreenPixels((frame.width - textNode.0.size.width)/2), floorToScreenPixels((50 - textNode.0.size.height)/2))
-        textNode.1.draw(NSMakeRect(point.x, point.y, textNode.0.size.width, textNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+        let point = NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.width - textNode.0.size.width)/2), floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - textNode.0.size.height)/2))
+        textNode.1.draw(NSMakeRect(point.x, point.y, textNode.0.size.width, textNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
         ctx.setFillColor(theme.colors.border.cgColor)
         ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))

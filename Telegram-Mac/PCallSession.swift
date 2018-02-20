@@ -281,7 +281,7 @@ class PCallSession {
         self.callSessionValue = session
         
         switch session.state {
-        case .active(let key, _, let connection):
+        case .active(let key, _, let connection, _):
             playTone(.callToneConnecting)
             
             let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)})

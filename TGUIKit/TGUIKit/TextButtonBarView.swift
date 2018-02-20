@@ -16,7 +16,7 @@ public enum TextBarAligment {
 
 open class TextButtonBarView: BarView {
 
-    private let button:TitleButton = TitleButton(frame:NSZeroRect)
+    private let button:TitleButton = TitleButton()
     
     public var alignment:TextBarAligment = .Center
     private var _isFitted: Bool
@@ -27,13 +27,13 @@ open class TextButtonBarView: BarView {
         button.set(font: navigationButtonStyle.font, for: .Normal)
         button.set(color: navigationButtonStyle.foregroundColor, for: .Normal)
         button.set(text: text, for: .Normal)
-
         button.disableActions()
+        
         _isFitted = false
         super.init(controller: controller)
         
         self.alignment = alignment
-        
+        button.style = style
         
         self.addSubview(button)
         
@@ -89,7 +89,8 @@ open class TextButtonBarView: BarView {
     }
     public override var style: ControlStyle {
         didSet {
-            button.set(color: style.foregroundColor, for: .Normal)
+            //button.set(color: style.foregroundColor, for: .Normal)
+
             button.set(font: style.font, for: .Normal)
             button.style = style
         }
@@ -104,7 +105,7 @@ open class TextButtonBarView: BarView {
     
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        
+
         button.set(background: presentation.colors.background, for: .Normal)
     }
     

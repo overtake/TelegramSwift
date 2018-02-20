@@ -135,7 +135,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         
         let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, presentation: appearance, openChannel: { [weak self] channel in
             if let account = self?.account {
-                self?.account.context.mainNavigation?.push(ChatController(account: account, peerId: channel.id))
+                self?.account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(channel.id)))
                self?.closeModal()
             }
         }, joinChannel: { [weak self] channel in
@@ -226,7 +226,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
     func openInfo(_ peerId:PeerId, _ openChat: Bool, _ postId:MessageId?, _ action:ChatInitialAction?) {
         if openChat {
-            account.context.mainNavigation?.push(ChatController(account: account, peerId: peerId, messageId: postId, initialAction: action))
+            account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
             closeModal()
         } else {
             openPeerInfoDisposable.set((account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in

@@ -70,6 +70,10 @@ class GeneralRowItem: TableRowItem {
         return true
     }
     
+    override var isUniqueView: Bool {
+        return true
+    }
+    
     override func viewClass() -> AnyClass {
         return GeneralRowView.self
     }

@@ -105,11 +105,11 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         self.peerId = peerId
         self.tagMask = tagMask
         
-        interactions = ChatInteraction(peerId: peerId, account: account)
+        interactions = ChatInteraction(chatLocation: .peer(peerId), account: account)
         
         
-        mediaGrid = PeerMediaGridController(account: account, peerId: peerId, messageId: nil, tagMask: tagMask, chatInteraction: interactions)
-        mediaList = PeerMediaListController(account: account, peerId: peerId, chatInteraction: interactions)
+        mediaGrid = PeerMediaGridController(account: account, chatLocation: .peer(peerId), messageId: nil, tagMask: tagMask, chatInteraction: interactions)
+        mediaList = PeerMediaListController(account: account, chatLocation: .peer(peerId), chatInteraction: interactions)
         
         
         super.init(account)
@@ -210,7 +210,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
         interactions.focusMessageId = { [weak self] _, focusMessageId, animated in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(account: strongSelf.account, peerId: strongSelf.peerId, messageId: focusMessageId))
+                strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(strongSelf.peerId), messageId: focusMessageId))
             }
         }
         
@@ -228,7 +228,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
                 if toChat {
-                    strongSelf.navigationController?.push(ChatController(account: strongSelf.account, peerId: peerId, messageId: postId, initialAction: action))
+                    strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                 } else {
                     strongSelf.openPeerInfoDisposable.set((strongSelf.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak strongSelf] peer in
                         if let strongSelf = strongSelf {
@@ -240,39 +240,61 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         }
         
         interactions.deleteMessages = { [weak self] messageIds in
-            if  let account = self?.account {
-                self?.messagesActionDisposable.set((account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue).start( next:{ [weak self] messages in
-                    
-                    var canDelete:Bool = true
-                    var canDeleteForEveryone = true
-                    
-                    for message in messages {
-                        if !canDeleteMessage(message, account: account) {
-                            canDelete = false
-                        }
-                        if !canDeleteForEveryoneMessage(message, account: account) {
-                            canDeleteForEveryone = false
-                        }
-                    }
-                    
-                    if canDelete {
-                        let thrid:String? = canDeleteForEveryone ? tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
+            if let strongSelf = self, let peer = strongSelf.peer {
+                let channelAdmin:Signal<[ChannelParticipant]?, Void> = peer.isSupergroup ? channelAdmins(account: strongSelf.account, peerId: strongSelf.interactions.peerId)
+                    |> mapError {_ in return} |> map { admins -> [ChannelParticipant]? in
+                        return admins.map({$0.participant})
+                    } : .single(nil)
+                
+                
+                self?.messagesActionDisposable.set(combineLatest(strongSelf.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue, channelAdmin |> deliverOnMainQueue).start( next:{ [weak strongSelf] messages, admins in
+                    if let strongSelf = strongSelf {
+                        var canDelete:Bool = true
+                        var canDeleteForEveryone = true
                         
-                        if let window = self?.window {
-                            confirm(for: window, header: tr(L10n.chatConfirmActionUndonable), information: tr(L10n.chatConfirmDeleteMessages), thridTitle:thrid, successHandler: { [weak self] result in
-                                let type:InteractiveMessagesDeletionType
-                                switch result {
-                                case .basic:
-                                    type = .forLocalPeer
-                                case .thrid:
-                                    type = .forEveryone
+                        for message in messages {
+                            if !canDeleteMessage(message, account: strongSelf.account) {
+                                canDelete = false
+                            }
+                            if !canDeleteForEveryoneMessage(message, account: strongSelf.account) {
+                                canDeleteForEveryone = false
+                            }
+                        }
+                        if messages.isEmpty {
+                            strongSelf.interactions.update({$0.withoutSelectionState()})
+                            return
+                        }
+                        
+                        if canDelete {
+                            let isAdmin = admins?.filter({$0.peerId == messages[0].author?.id}).first != nil
+                            if mustManageDeleteMessages(messages, for: peer, account: strongSelf.account), let memberId = messages[0].author?.id, !isAdmin {
+                                showModal(with: DeleteSupergroupMessagesModalController(account: strongSelf.account, messageIds: messages.map {$0.id}, peerId: peer.id, memberId: memberId, onComplete: { [weak strongSelf] in
+                                    strongSelf?.interactions.update({$0.withoutSelectionState()})
+                                }), for: mainWindow)
+                            } else {
+                                let thrid:String? = canDeleteForEveryone ? peer.isUser ? tr(L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle)) : tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
+                                var okTitle: String? = tr(L10n.confirmDelete)
+                                if peer.isUser || peer.isGroup {
+                                    okTitle = peer.id == strongSelf.account.peerId ? tr(L10n.confirmDelete) : tr(L10n.chatMessageDeleteForMe)
+                                } else {
+                                    okTitle = tr(L10n.chatMessageDeleteForEveryone)
                                 }
-                                _ = deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: type).start()
-                                self?.interactions.update({$0.withoutSelectionState()})
-                            })
+                                if let window = self?.window {
+                                    confirm(for: window, header: tr(L10n.chatConfirmActionUndonable), information: tr(L10n.chatConfirmDeleteMessages), okTitle: okTitle, thridTitle:thrid, swapColors: true, successHandler: { result in
+                                        let type:InteractiveMessagesDeletionType
+                                        switch result {
+                                        case .basic:
+                                            type = .forLocalPeer
+                                        case .thrid:
+                                            type = .forEveryone
+                                        }
+                                        _ = deleteMessagesInteractively(postbox: strongSelf.account.postbox, messageIds: messageIds, type: type).start()
+                                        strongSelf.interactions.update({$0.withoutSelectionState()})
+                                    })
+                                }
+                            }
                         }
                     }
-                    
                 }))
             }
         }

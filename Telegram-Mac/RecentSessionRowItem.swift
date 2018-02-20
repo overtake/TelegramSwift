@@ -106,7 +106,7 @@ class RecentSessionRowView : TableRowView {
         reset.set(text: tr(L10n.recentSessionsRevoke), for: .Normal)
         reset.set(color: theme.colors.blueUI, for: .Normal)
         reset.set(background: theme.colors.background, for: .Normal)
-        reset.sizeToFit()
+        _ = reset.sizeToFit()
         
         if let item = item as? RecentSessionRowItem {
             reset.isHidden = item.session.isCurrent
@@ -121,7 +121,7 @@ class RecentSessionRowView : TableRowView {
             headerTextView.update(item.headerLayout, origin: NSMakePoint(30, 10))
             descTextView.update(item.descLayout, origin: NSMakePoint(30, headerTextView.frame.maxY + 4))
             dateTextView.update(item.dateLayout, origin: NSMakePoint(frame.width - 30 - item.dateLayout.layoutSize.width, 10))
-            reset.setFrameOrigin(frame.width - 30 - reset.frame.width, frame.height - reset.frame.height - 10)
+            reset.setFrameOrigin(frame.width - 25 - reset.frame.width, frame.height - reset.frame.height - 10)
         }
     }
     

@@ -110,7 +110,23 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         textLayout?.interactions = globalLinkExecutor
-        linkLayout?.interactions = TextViewInteractions.init(processURL: { [weak self] url in
+        
+        textLayout?.interactions.menuItems = { [weak self] inside in
+            guard let `self` = self else {return .complete()}
+            return self.menuItems(in: NSZeroPoint) |> map { items in
+                var items = items
+                if let layout = self.textLayout, layout.selectedRange.hasSelectText {
+                    let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
+                    items.insert(ContextMenuItem(L10n.textCopy, handler: {
+                        copyToClipboard(text.string)
+                    }), at: 0)
+                    items.insert(ContextSeparatorItem(), at: 1)
+                }
+                return items
+            }
+        }
+        
+        linkLayout?.interactions = TextViewInteractions(processURL: { [weak self] url in
             if let webpage = self?.message.media.first as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content {
                     if let _ = content.instantPage {
@@ -120,6 +136,12 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 }
             }
             globalLinkExecutor.processURL(url)
+        }, copy: { [weak self] in
+            guard let `self` = self else {return false}
+            if let string = self.linkLayout?.attributedString.string {
+                copyToClipboard(string)
+            }
+            return true
         })
         
     }

@@ -22,15 +22,33 @@ class ChatBackgroundView: View {
                     self.addSubview(backgroundView!, positioned: .below, relativeTo: subviews.first)
                     backgroundView?.centerX(y: 0)
                 }
-                
+                backgroundColor = .clear
+
                 backgroundView?.layer?.contents = image
                 backgroundView?.layer?.contentsScale = backingScaleFactor
+            case let .color(color):
+                backgroundView?.removeFromSuperview()
+                backgroundView = nil
+                backgroundColor = color
+                needsDisplay = true
             default:
                 backgroundView?.removeFromSuperview()
                 backgroundView = nil
+                backgroundColor = theme.colors.background
                 needsDisplay = true
             }
-            updateLocalizationAndTheme()
+            updateBackgroundColor()
+        }
+    }
+    
+    func updateBackgroundColor() {
+        switch backgroundMode {
+        case .background:
+            backgroundColor = .clear
+        case let .color(color):
+            backgroundColor = color
+        default:
+            backgroundColor = theme.colors.background
         }
     }
     
@@ -59,20 +77,6 @@ class ChatBackgroundView: View {
         super.setFrameSize(newSize)
         updateLayout()
     }
-    
-    open override func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.clear(bounds)
-        switch backgroundMode {
-        case .plain:
-            ctx.setFillColor(presentation.colors.background.cgColor)
-            ctx.fill(bounds)
-        case let .color(color):
-            ctx.setFillColor(color.cgColor)
-            ctx.fill(bounds)
-        default:
-            break
-        }
-        
-    }
+
     
 }

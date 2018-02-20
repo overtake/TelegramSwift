@@ -14,14 +14,15 @@ import SwiftSignalKitMac
 
 class ChatGroupedItem: ChatRowItem {
 
+    fileprivate var parameters: ChatMediaGalleryParameters?
     fileprivate let layout: GroupedLayout
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ entry: ChatHistoryEntry) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         var captionLayout: TextViewLayout?
         
         if case let .groupedPhotos(messages, _) = entry {
             
-            let messages = messages.map{$0.message!}
+            let messages = messages.map{$0.message!}.filter({!$0.media.isEmpty})
             self.layout = GroupedLayout(messages)
             
             var captionMessage: Message? = nil
@@ -41,7 +42,7 @@ class ChatGroupedItem: ChatRowItem {
 
                 var caption:NSMutableAttributedString = NSMutableAttributedString()
                 NSAttributedString.initialize()
-                _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming), font: NSFont.normal(theme.fontSize))
+                _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
                 var types:ParsingType = [.Links, .Mentions, .Hashtags]
                 
                 if let peer = messageMainPeer(message) as? TelegramUser {
@@ -67,12 +68,12 @@ class ChatGroupedItem: ChatRowItem {
                     }
                 }
                 if hasEntities {
-                    caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy).mutableCopy() as! NSMutableAttributedString
+                    caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
                 }
                 
                 
-                caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.modalSearch, command: chatInteraction.forceSendMessage)
-                captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
+                caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText)
+                captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
                 captionLayout?.interactions = globalLinkExecutor
                 
             }
@@ -81,9 +82,45 @@ class ChatGroupedItem: ChatRowItem {
             fatalError("")
         }
         
-        super.init(initialSize, chatInteraction, account, entry)
+        super.init(initialSize, chatInteraction, account, entry, downloadSettings)
         
-        self.captionLayout = captionLayout
+         self.captionLayout = captionLayout
+        
+        guard let message = message else {return}
+        
+        self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
+            guard let `self` = self else {return}
+            
+            var type:GalleryAppearType = .history
+            if let parameters = self.parameters, parameters.isWebpage {
+                type = .alone
+            } else if message.containsSecretMedia {
+                type = .secret
+            }
+            showChatGallery(account: account, message: message, self.table, self.parameters, type: type)
+            
+        }, showMessage: { [weak self] message in
+                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: true, inset: 0))
+        }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: account, renderType: entry.renderType), media: message.media.first!, automaticDownload: downloadSettings.isDownloable(message))
+        
+        self.parameters?.automaticDownloadFunc = { message in
+            return downloadSettings.isDownloable(message)
+        }
+        
+        if isBubbleFullFilled, layout.messages.count == 1  {
+            var positionFlags: GroupLayoutPositionFlags = []
+            if captionLayout == nil {
+                positionFlags.insert(.bottom)
+                positionFlags.insert(.left)
+                positionFlags.insert(.right)
+            }
+            if authorText == nil && replyModel == nil && forwardNameLayout == nil {
+                positionFlags.insert(.top)
+                positionFlags.insert(.left)
+                positionFlags.insert(.right)
+            }
+            self.positionFlags = positionFlags
+        }
     }
     
     override func share() {
@@ -94,7 +131,7 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override var hasBubble: Bool {
-        return isBubbled && (captionLayout != nil || replyModel != nil || forwardNameLayout != nil)
+        return isBubbled && (captionLayout != nil || message?.replyAttribute != nil || forwardNameLayout != nil || layout.messages.count == 1)
     }
     
     override var isBubbleFullFilled: Bool {
@@ -109,7 +146,6 @@ class ChatGroupedItem: ChatRowItem {
         var frame = super.bubbleFrame
         
         if isBubbleFullFilled {
-            frame.size.height -= 2
             frame.size.width = contentSize.width + additionBubbleInset
             if hasBubble {
                 frame.size.width += self.mediaBubbleCornerInset * 2
@@ -121,16 +157,18 @@ class ChatGroupedItem: ChatRowItem {
     
     override var defaultContentTopOffset: CGFloat {
         if isBubbled && !hasBubble {
-            return defaultContentInnerInset
+            return 2
         }
         return super.defaultContentTopOffset
     }
+    
+    fileprivate var positionFlags: GroupLayoutPositionFlags?
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
         //
         if hasBubble {
-            if  (forwardNameLayout != nil) {
+            if  forwardNameLayout != nil {
                 offset.y += defaultContentInnerInset
             } else if authorText == nil, !isBubbleFullFilled  {
                 offset.y += (defaultContentInnerInset + 2)
@@ -138,7 +176,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         
         if hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil {
-            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2)
+            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2 - 1)
         }
         return offset
     }
@@ -201,8 +239,8 @@ class ChatGroupedItem: ChatRowItem {
                 break
             }
         }
-        if let message = message, let peer = peer {
-            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
+        if let message = message {
+            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction)
         }
         
         var items: [ContextMenuItem] = []
@@ -292,7 +330,7 @@ class ChatGroupedItem: ChatRowItem {
                 if let view = self?.view as? ChatRowView, let textView = view.captionView, let window = textView.window {
                     let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                     if let layout = textView.layout {
-                        if let (link, range, _) = layout.link(at: point) {
+                        if let (link, _, range, _) = layout.link(at: point) {
                             var text:String = layout.attributedString.string.nsstring.substring(with: range)
                             if let link = link as? inAppLink {
                                 if case let .external(link, _) = link {
@@ -343,7 +381,7 @@ private class ChatGroupedView : ChatRowView {
     
     override func canDropSelection(in location: NSPoint) -> Bool {
         let point = self.convert(location, from: nil)
-        return !NSPointInRect(point, contentView.frame)
+        return true//!NSPointInRect(point, contentView.frame)
     }
     
     override func draw(_ dirtyRect: NSRect) {
@@ -455,7 +493,7 @@ private class ChatGroupedView : ChatRowView {
         
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
-            var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.layout.position(at: i) : []
+            var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
                 if item.captionLayout != nil {
@@ -467,7 +505,7 @@ private class ChatGroupedView : ChatRowView {
             }
 
             
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, animated: animated, positionFlags: positionFlags)
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, parameters: item.parameters, animated: animated, positionFlags: positionFlags)
             
             contents[i].change(pos: item.layout.frame(at: i).origin, animated: animated)
         }
@@ -588,7 +626,7 @@ private class ChatGroupedView : ChatRowView {
         }
     }
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         
         if let innerId = innerId.base as? ChatHistoryEntryId {
             switch innerId {
@@ -603,7 +641,60 @@ private class ChatGroupedView : ChatRowView {
             }
         }
         
-        return super.interactionContentView(for: innerId)
+        return super.interactionContentView(for: innerId, animateIn: animateIn)
+    }
+    
+    override func interactionControllerDidFinishAnimation(interactive: Bool, innerId: AnyHashable) {
+        guard let item = item as? ChatRowItem else {return}
+//        if let innerId = innerId.base as? ChatHistoryEntryId, interactive {
+//            switch innerId {
+//            case .message(let message):
+//                for content in contents {
+//                    if content.parent?.id == message.id {
+//                        content.interactionControllerDidFinishAnimation(interactive: interactive)
+//                        let rect = rightView.convert(rightView.bounds, to: content.superview)
+//                        if NSIntersectsRect(rect, content.frame), item.isStateOverlayLayout {
+//                            animateInStateView()
+//                        }
+//                    }
+//                }
+//            default:
+//                break
+//            }
+//        }
+    }
+    
+    override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        
+        guard let item = item as? ChatRowItem else {return}
+        if let innerId = innerId.base as? ChatHistoryEntryId {
+            switch innerId {
+            case .message(let message):
+                for content in contents {
+                    if content.parent?.id == message.id {
+                        let rect = rightView.convert(rightView.bounds, to: content.superview)
+                        if NSIntersectsRect(rect, content.frame), item.isStateOverlayLayout {
+                            let rightView = ChatRightView(frame: NSZeroRect)
+                            rightView.set(item: item, animated: false)
+                            var rect = self.rightView.convert(self.rightView.bounds, to: content)
+                            
+                            if content.visibleRect.minY < rect.midY && content.visibleRect.minY + content.visibleRect.height > rect.midY {
+                                rect.origin.y = content.frame.height - rect.maxY
+                                rightView.frame = rect
+                                view.addSubview(rightView)
+                            }
+                           
+                        }
+                        content.addAccesoryOnCopiedView(view: view)
+
+                    }
+                }
+            default:
+                break
+            }
+        }
+        
+        
     }
     
     
@@ -668,7 +759,19 @@ private class ChatGroupedView : ChatRowView {
             if NSPointInRect(point, item.layout.frame(at: i)) {
                 selectionBackground.removeFromSuperview()
                 selectionBackground.setFrameSize(item.layout.frame(at: i).size)
-                selectionBackground.positionFlags = item.isBubbled ? item.layout.position(at: i) : nil
+                
+                var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
+                
+                if item.hasBubble  {
+                    if item.captionLayout != nil {
+                        positionFlags.remove(.bottom)
+                    }
+                    if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                        positionFlags.remove(.top)
+                    }
+                }
+                
+                selectionBackground.positionFlags = positionFlags
                 contents[i].addSubview(selectionBackground)
                 selected = true
                 break

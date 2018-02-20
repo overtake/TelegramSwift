@@ -10,6 +10,21 @@ import Cocoa
 import SwiftSignalKitMac
 
 
+public enum LinkType {
+    case plain
+    case email
+    case username
+    case hashtag
+    case command
+    case stickerPack
+    case inviteLink
+}
+
+public func isValidEmail(_ checkString:String) -> Bool {
+    let emailRegex = ".+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*"
+    let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+    return emailTest.evaluate(with: checkString)
+}
 
 private enum CornerType {
     case topLeft
@@ -166,13 +181,15 @@ private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat,
 public final class TextViewInteractions {
     public var processURL:(Any!)->Void // link, isPresent
     public var copy:(()->Bool)?
-    public var menuItems:((Bool)->Signal<[ContextMenuItem], Void>)?
+    public var menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)?
     public var isDomainLink:(String)->Bool
-    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((Bool)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}) {
+    public var makeLinkType:(Any)->LinkType
+    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping(Any) -> LinkType = {_ in return .plain}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
         self.isDomainLink = isDomainLink
+        self.makeLinkType = makeLinkType
     }
 }
 
@@ -211,7 +228,7 @@ private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
     
-    
+    public var selectWholeText: Bool = false
     public fileprivate(set) var attributedString:NSAttributedString
     public fileprivate(set) var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
@@ -305,7 +322,6 @@ public final class TextViewLayout : Equatable {
             cutoutEnabled = true
         }
         
-        let stringLength = attributedString.length
         var first = true
         var breakInset: CGFloat = 0
         var isWasPreformatted: Bool = false
@@ -702,7 +718,7 @@ public final class TextViewLayout : Equatable {
         
     }
 
-    public func link(at point:NSPoint) -> (Any, NSRange, NSRect)? {
+    public func link(at point:NSPoint) -> (Any, LinkType, NSRange, NSRect)? {
         
         let index = findIndex(location: point)
         
@@ -724,11 +740,11 @@ public final class TextViewLayout : Equatable {
             let attrs = attributedString.attributes(at: pos, effectiveRange: &range)
             
             let link:Any? = attrs[NSAttributedStringKey.link]
-            
             if let link = link {
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
-                return (link, range, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
+                
+                return (link, interactions.makeLinkType(link), range, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
             }
         }
         return nil
@@ -767,6 +783,12 @@ public final class TextViewLayout : Equatable {
     }
     
     public func selectWord(at point:NSPoint) -> Void {
+        
+        if selectWholeText {
+            self.selectedRange = TextSelectedRange(range: attributedString.range, color: selectText, def: true)
+            return
+        }
+        
         let startIndex = findCharacterIndex(at: point)
         if startIndex == -1 {
             return
@@ -878,6 +900,7 @@ public class TextView: Control {
     
     public override init() {
         super.init();
+        layer?.disableActions()
         self.style = ControlStyle(backgroundColor: presentation.colors.background)
 //        wantsLayer = false
 //        self.layer?.delegate = nil
@@ -889,7 +912,8 @@ public class TextView: Control {
 
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
-        self.style = ControlStyle(backgroundColor:.white)
+        layer?.disableActions()
+        self.style = ControlStyle(backgroundColor: presentation.colors.background)
 //        wantsLayer = false
 //        self.layer?.delegate = nil
        // self.layer?.drawsAsynchronously = System.drawAsync
@@ -902,12 +926,20 @@ public class TextView: Control {
 
         if let layout = layout {
             
-
+           
+            
             
             ctx.setAllowsAntialiasing(true)
             
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
+            
+            if backingScaleFactor == 1.0 {
+                ctx.setFillColor(backgroundColor.cgColor)
+                for line in layout.lines {
+                    ctx.fill(NSMakeRect(0, line.frame.minY - line.frame.height - 2, line.frame.width, line.frame.height + 6))
+                }
+            }
             
             
             if let image = layout.blockImage.1 {
@@ -992,12 +1024,16 @@ public class TextView: Control {
             
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             
+            
             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
                 
                 let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(frame.width))) + line.frame.minX
                 
                 ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY)
+                
+               
+                
                 CTLineDraw(line.line, ctx)
                 
             }
@@ -1023,7 +1059,10 @@ public class TextView: Control {
             }
             self.setNeedsDisplayLayer()
             if layout.selectedRange.hasSelectText || !layout.alwaysStaticItems {
-                if let menuItems = layout.interactions.menuItems?(layout.link(at: convert(event.locationInWindow, from: nil)) != nil) {
+                let link = layout.link(at: convert(event.locationInWindow, from: nil))
+                
+                
+                if let menuItems = layout.interactions.menuItems?(link?.1) {
                     menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
                         if let strongSelf = self {
                             let menu = NSMenu()
@@ -1073,7 +1112,6 @@ public class TextView: Control {
     
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.layout = layout
-        
         
         if let layout = layout {
             self.set(selectedRange: layout.selectedRange.range, display: false)
@@ -1199,7 +1237,7 @@ public class TextView: Control {
                 layout.selectWord(at : point)
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
             } else if !layout.selectedRange.hasSelectText || !isSelectable && event.clickCount == 1 {
-                if let (link, _, _) = layout.link(at: point) {
+                if let (link, _, _, _) = layout.link(at: point) {
                     layout.interactions.processURL(link)
                 }
             } else if layout.selectedRange.hasSelectText && event.clickCount == 1 && event.modifierFlags.contains(.shift) {
@@ -1224,7 +1262,7 @@ public class TextView: Control {
         
         if self.mouse(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
             
-            if let layout = layout, let (_, _, _) = layout.link(at: location) {
+            if let layout = layout, let (_, _, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand.set()
             } else if isSelectable {
                 NSCursor.iBeam.set()
@@ -1287,6 +1325,10 @@ public class TextView: Control {
     
     @objc func paste(_ sender:Any) {
         
+    }
+    
+    public override func removeFromSuperview() {
+        super.removeFromSuperview()
     }
     
  

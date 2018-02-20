@@ -8,17 +8,19 @@
 
 import Cocoa
 import TGUIKit
+import TelegramCoreMac
+import PostboxMac
 
 class AlertControllerView: View {
 
     private let okButton: TitleButton = TitleButton()
     private let cancelButton: TitleButton = TitleButton()
-    private let thridButton: TitleButton = TitleButton()
     
     private let headerTextView: TextView = TextView()
     private let informativeTextView: TextView = TextView()
-    
-    private let logoView: ImageView = ImageView()
+    let checkbox: CheckBox = CheckBox(selectedImage: theme.icons.alertCheckBoxSelected, unselectedImage: theme.icons.alertCheckBoxUnselected)
+    private let photoView: AvatarControl = AvatarControl(font: .avatar(22))
+    private let accessoryImage: ImageView = ImageView()
     private let containerView: View = View()
     private let borderView: View = View()
     required init(frame frameRect: NSRect) {
@@ -27,23 +29,21 @@ class AlertControllerView: View {
         headerTextView.backgroundColor = theme.colors.background
         headerTextView.isSelectable = false
         
-        
-       // let icons = Bundle.main.infoDictionary?["CFBundleIconFiles"]
-        // [[[NSBundle mainBundle] infoDictionary] valueForKeyPath:@"CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles"];
-
-        
         informativeTextView.backgroundColor = theme.colors.background
         
-        logoView.image = #imageLiteral(resourceName: "Icon_TelegramLogin").precomposed()
-        logoView.setFrameSize(50, 50)
+        photoView.setFrameSize(50, 50)
         
         containerView.addSubview(headerTextView)
         containerView.addSubview(informativeTextView)
-        containerView.addSubview(logoView)
-        //border = [.Bottom, .Left, .Right]
-        logoView.setFrameOrigin(30, 27)
+        containerView.addSubview(photoView)
+        containerView.addSubview(accessoryImage)
+        containerView.addSubview(checkbox)
         
+        photoView.setFrameOrigin(30, 30)
+        
+        containerView.backgroundColor = theme.colors.background
         containerView.layer?.cornerRadius = .cornerRadius
+        
         containerView.layer?.borderWidth = .borderSize
         containerView.layer?.borderColor = theme.colors.border.cgColor
         
@@ -57,41 +57,65 @@ class AlertControllerView: View {
         addSubview(containerView)
         addSubview(borderView)
         
+        cancelButton.autohighlight = false
+        okButton.autohighlight = false
         
         self.okButton.set(font: .medium(.text), for: .Normal)
         self.okButton.set(color: theme.colors.blueUI, for: .Normal)
         
         self.cancelButton.set(font: .medium(.text), for: .Normal)
-        self.cancelButton.set(color: theme.colors.redUI, for: .Normal)
+        okButton.set(background: theme.colors.blueUI, for: .Normal)
+        okButton.set(background: theme.colors.blueIcon, for: .Highlight)
         
-        self.thridButton.set(font: .medium(.text), for: .Normal)
-        self.thridButton.set(color: theme.colors.blueUI, for: .Normal)
+        cancelButton.layer?.borderWidth = .borderSize
+        cancelButton.layer?.borderColor = theme.colors.blueUI.cgColor
         
         containerView.addSubview(okButton)
+        
+        
+        checkbox.set(handler: { _ in
+            
+        }, for: .Click)
+        
     }
     
-    func layoutTexts(with header: String, information: String, maxWidth: CGFloat) -> Void {
+    func layoutTexts(with header: String, information: String?, account: Account, peer: Peer?, thridTitle: String?, accessory: CGImage?, maxWidth: CGFloat) -> Void {
         
         var height: CGFloat = 130
         var width: CGFloat = frame.width
         
-        let headerLayout = TextViewLayout(.initialize(string: header, color: theme.colors.text, font: .bold(.title)), maximumNumberOfLines: 1)
-        headerLayout.measure(width: frame.width - logoView.frame.maxX - 50)
-        headerTextView.update(headerLayout, origin: NSMakePoint(logoView.frame.maxX + 20, 30))
+        photoView.setPeer(account: account, peer: peer)
+        accessoryImage.image = accessory
+        accessoryImage.sizeToFit()
         
-        
-        let textLayout = TextViewLayout(.initialize(string: information, color: theme.colors.text, font: .normal(.text)))
-        textLayout.measure(width: frame.width - logoView.frame.maxX - 50)
-        informativeTextView.update(textLayout, origin: NSMakePoint(logoView.frame.maxX + 20, headerTextView.frame.maxY + 10))
-        
-        let lineHeight = textLayout.layoutSize.height / CGFloat(textLayout.lines.count)
-        
-        if textLayout.lines.count == 1 {
-            width = max(logoView.frame.maxX + 80 + textLayout.layoutSize.width, 350)
+        if let thridTitle = thridTitle {
+            checkbox.update(with: thridTitle, maxWidth: maxWidth - photoView.frame.maxX - 60)
+            height += checkbox.frame.height + 20
         }
         
-        height -= lineHeight
-        height += lineHeight * CGFloat(textLayout.lines.count)
+        let headerLayout = TextViewLayout(.initialize(string: header, color: theme.colors.text, font: .bold(.title)), maximumNumberOfLines: 1)
+        headerLayout.measure(width: frame.width - photoView.frame.maxX - 50)
+        headerTextView.update(headerLayout, origin: NSMakePoint(photoView.frame.maxX + 30, 34))
+        
+        
+        informativeTextView.isHidden = information == nil
+        checkbox.isHidden = thridTitle == nil
+        accessoryImage.isHidden = accessory == nil
+        photoView.isHidden = peer == nil
+        
+        if let information = information {
+            let textLayout = TextViewLayout(.initialize(string: information, color: theme.colors.text, font: .normal(.text)))
+            textLayout.measure(width: frame.width - photoView.frame.maxX - 60)
+            informativeTextView.update(textLayout, origin: NSMakePoint(photoView.frame.maxX + 30, headerTextView.frame.maxY + 10))
+                    
+            width = photoView.frame.maxX + 60 + max(max(textLayout.layoutSize.width, headerLayout.layoutSize.width), checkbox.frame.width)
+            
+            height += textLayout.layoutSize.height + 10
+            
+        } else {
+            width = photoView.frame.maxX + 60 + max(headerLayout.layoutSize.width, checkbox.frame.width)
+        }
+        
         
         setFrameSize(width, height)
         containerView.frame = bounds
@@ -99,14 +123,16 @@ class AlertControllerView: View {
     }
     
 
-    func layoutButtons(okTitle: String, cancelTitle: String?, thridTitle: String?, swapColors: Bool, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void, thridHandler:@escaping()->Void) -> CGFloat {
+    func layoutButtons(okTitle: String, cancelTitle: String?, okHandler: @escaping()->Void, cancelHandler:@escaping()->Void) -> CGFloat {
         okButton.set(text: okTitle, for: .Normal)
-        _ = okButton.sizeToFit(NSMakeSize(40, 0))
+        _ = okButton.sizeToFit(NSMakeSize(40, 10))
         
-        var width: CGFloat = okButton.frame.width + 40
+        okButton.layer?.cornerRadius = okButton.frame.height / 2
         
-        self.okButton.set(color: swapColors ? theme.colors.redUI : theme.colors.blueUI, for: .Normal)
-        self.cancelButton.set(color: !swapColors ? theme.colors.redUI : theme.colors.blueUI, for: .Normal)
+        
+        self.okButton.set(color: .white, for: .Normal)
+
+        self.cancelButton.set(color: theme.colors.blueUI, for: .Normal)
         
         okButton.set(handler: { _ in
             okHandler()
@@ -114,41 +140,42 @@ class AlertControllerView: View {
         
         if let cancelTitle = cancelTitle  {
             cancelButton.set(text: cancelTitle, for: .Normal)
-            _ = cancelButton.sizeToFit()
+            _ = cancelButton.sizeToFit(NSMakeSize(40, 10))
+            cancelButton.layer?.cornerRadius = cancelButton.frame.height / 2
+            
             containerView.addSubview(cancelButton)
             cancelButton.set(handler: { _ in
                 cancelHandler()
             }, for: .Click)
-            width += cancelButton.frame.width + 40
         }
         
-        if let thridTitle = thridTitle  {
-            thridButton.set(text: thridTitle, for: .Normal)
-            _ = thridButton.sizeToFit(NSZeroSize, NSMakeSize(200, 16))
-            containerView.addSubview(thridButton)
-            thridButton.set(handler: { _ in
-                thridHandler()
-            }, for: .Click)
-            width += thridButton.frame.width + 40
-        }
+        
         
         needsLayout = true
         
-        return max(400, width)
+        return frame.width
     }
     
     override func layout() {
         super.layout()
-        logoView.setFrameOrigin(30, 27)
+        photoView.setFrameOrigin(30, 30)
         containerView.frame = bounds
         borderView.frame = NSMakeRect(0, 0, frame.width, 4)
 
         
-        okButton.setFrameOrigin(frame.width - okButton.frame.width - 40, frame.height - okButton.frame.height - 20)
+        headerTextView.setFrameOrigin(NSMakePoint(photoView.frame.maxX + 30, 34))
+        informativeTextView.setFrameOrigin(NSMakePoint(photoView.frame.maxX + 30, headerTextView.frame.maxY + 10))
         
-        cancelButton.setFrameOrigin(okButton.frame.minX - cancelButton.frame.width - 20, frame.height - cancelButton.frame.height - 20)
+        checkbox.setFrameOrigin(NSMakePoint(photoView.frame.maxX + 30, (informativeTextView.isHidden ? headerTextView : informativeTextView).frame.maxY + 14))
         
-        thridButton.setFrameOrigin(logoView.frame.minX, frame.height - thridButton.frame.height - 20 )
+        okButton.setFrameOrigin(frame.width - okButton.frame.width - 40, frame.height - okButton.frame.height - 30)
+        
+        cancelButton.setFrameOrigin(okButton.frame.minX - cancelButton.frame.width - 20, frame.height - cancelButton.frame.height - 30)
+        if photoView.isHidden {
+            accessoryImage.frame = photoView.frame
+        } else {
+            accessoryImage.setFrameOrigin(photoView.frame.maxX - accessoryImage.frame.width / 2, photoView.frame.midY)
+        }
     }
     
     required init?(coder: NSCoder) {

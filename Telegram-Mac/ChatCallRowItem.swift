@@ -24,13 +24,13 @@ class ChatCallRowItem: ChatRowItem {
         return ChatCallRowView.self
     }
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         let message = object.message!
         let action = message.media[0] as! TelegramMediaAction
         let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
         outgoing = !message.flags.contains(.Incoming)
-        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(L10n.chatCallOutgoing) : tr(L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming), font: .medium(.text)), maximumNumberOfLines: 1)
+        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(L10n.chatCallOutgoing) : tr(L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
         case let .phoneCall(_, reason, duration):
             let attr = NSMutableAttributedString()
@@ -38,18 +38,18 @@ class ChatCallRowItem: ChatRowItem {
            
 
             if let duration = duration, duration > 0 {
-                _ = attr.append(string: String.stringForShortCallDurationSeconds(for: duration), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                _ = attr.append(string: String.stringForShortCallDurationSeconds(for: duration), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 failed = false
             } else if let reason = reason {
                 switch reason {
                 case .busy:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .disconnect:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .hangup:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .missed:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 }
                 failed = true
             } else {
@@ -61,7 +61,7 @@ class ChatCallRowItem: ChatRowItem {
             failed = true
         }
         
-        super.init(initialSize, chatInteraction, account, object)
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

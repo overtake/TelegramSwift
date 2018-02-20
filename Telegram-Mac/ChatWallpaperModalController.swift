@@ -105,16 +105,34 @@ class ChatWallpaperModalController: ModalViewController {
     
     init(account: Account) {
         self.account = account
-        
-        super.init(frame: NSMakeRect(0, 0, 380, 400))
-        
 
+        super.init(frame: NSMakeRect(0, 0, 380, 400))
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
+        let postbox = account.postbox
+        let interactions = ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
             self?.close()
-        }, drawBorder: true, height: 50)
+        }, cancelTitle: L10n.appearanceCustomBackground, cancel: { [weak self] in
+            if let strongSelf = self {
+                filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { [weak strongSelf] paths in
+                    if let path = paths?.first {
+                        let fs = fileSize(path)
+                        if let fs = fs, fs < 10 * 1024 * 1024, let image = NSImage(contentsOf: URL(fileURLWithPath: path)), image.size.width > 500 && image.size.height > 500 {
+                            _ = (moveWallpaperToCache(postbox: postbox, path, randomName: true) |> mapToSignal { path in
+                                return updateApplicationWallpaper(postbox: postbox, wallpaper: .custom(path))
+                                }).start()
+                            strongSelf?.close()
+                        } else {
+                            alert(for: mainWindow, header: appName, info: L10n.appearanceCustomBackgroundFileError)
+                        }
+                    }
+                })
+            }
+            
+        }, drawBorder: true, height: 50, alignCancelLeft: true)
+       
+        return interactions
     }
     
     override var dynamicSize: Bool {
@@ -129,9 +147,21 @@ class ChatWallpaperModalController: ModalViewController {
         containerLayoutUpdated()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        modal?.interactions?.updateDone { button in
+            button.set(color: theme.colors.redUI, for: .Normal)
+        }
+        modal?.interactions?.updateCancel { button in
+            button.set(color: theme.colors.blueUI, for: .Normal)
+        }
+        
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+    
        containerLayoutUpdated()
         
         let account = self.account

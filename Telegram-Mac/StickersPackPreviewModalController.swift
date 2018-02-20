@@ -138,7 +138,7 @@ private class StickersModalView : View {
             
             grid.removeAllItems()
             
-            grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: insert, updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(left: 10, right: 10, top: 10, bottom: installed ? 0 : 60), preloadSize: self.bounds.width, type: .fixed(itemSize: CGSize(width: 80, height: 80), lineSpacing: 10)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
+            grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: insert, updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(left: 0, right: 0, top: 10, bottom: installed ? 0 : 60), preloadSize: self.bounds.width, type: .fixed(itemSize: CGSize(width: 80, height: 80), lineSpacing: 10)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
             
             grid.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             self.needsLayout = true
@@ -181,12 +181,12 @@ private class StickersModalView : View {
         
         grid.frame = NSMakeRect(0, headerHeight, frame.width, frame.height - headerHeight)
         
-        headerTitle.centerX(y : floorToScreenPixels((headerHeight - headerTitle.frame.height)/2) + 1)
+        headerTitle.centerX(y : floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - headerTitle.frame.height)/2) + 1)
         headerSeparatorView.frame = NSMakeRect(0, headerHeight - .borderSize, frame.width, .borderSize)
-        shareView.setFrameOrigin(frame.width - close.frame.width - 12, floorToScreenPixels((headerHeight - shareView.frame.height)/2))
-        close.setFrameOrigin(12, floorToScreenPixels((headerHeight - shareView.frame.height)/2))
+        shareView.setFrameOrigin(frame.width - close.frame.width - 12, floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - shareView.frame.height)/2))
+        close.setFrameOrigin(12, floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - shareView.frame.height)/2))
         add.centerX(y: frame.height - add.frame.height - 15)
-        dismiss.setFrameOrigin(NSMakePoint(shareView.frame.minX - dismiss.frame.width - 15, floorToScreenPixels((headerHeight - shareView.frame.height)/2)))
+        dismiss.setFrameOrigin(NSMakePoint(shareView.frame.minX - dismiss.frame.width - 15, floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - shareView.frame.height)/2)))
         
         shadowView.setFrameOrigin(0, frame.height - shadowView.frame.height)
     }

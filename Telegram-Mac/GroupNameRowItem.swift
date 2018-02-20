@@ -77,6 +77,8 @@ class GroupNameRowView : GeneralInputRowView {
         imageView.sizeToFit()
     }
     
+    
+    
     override func mouseUp(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         if NSPointInRect(point, photoView.frame) {
@@ -98,10 +100,10 @@ class GroupNameRowView : GeneralInputRowView {
         super.layout()
         textView.frame = NSMakeRect(100, 0, frame.width - 140 ,textView.frame.height)
         textView.centerY()
-        imageView.setFrameOrigin(30 + floorToScreenPixels((50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels((50 - imageView.frame.height)/2.0))
+        imageView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - imageView.frame.height)/2.0))
         sepator.frame = NSMakeRect(105, textView.frame.maxY - .borderSize, frame.width - 140, .borderSize)
-        photoView.setFrameOrigin(30 + floorToScreenPixels((50 - photoView.frame.width)/2.0), 17 + floorToScreenPixels((50 - photoView.frame.height)/2.0))
-        tranparentView.setFrameOrigin(30 + floorToScreenPixels((50 - tranparentView.frame.width)/2.0), 17 + floorToScreenPixels((50 - tranparentView.frame.height)/2.0))
+        photoView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - photoView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - photoView.frame.height)/2.0))
+        tranparentView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - tranparentView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - tranparentView.frame.height)/2.0))
 
     }
     
@@ -110,14 +112,12 @@ class GroupNameRowView : GeneralInputRowView {
     }
     
     override func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        textView._change(pos: NSMakePoint(100, floorToScreenPixels((frame.height - height)/2.0)), animated: animated)
+        textView._change(pos: NSMakePoint(100, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - height)/2.0)), animated: animated)
         super.textViewHeightChanged(height, animated: animated)
         sepator._change(pos: NSMakePoint(105, textView.frame.maxY - .borderSize), animated: animated)
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(theme.colors.background.cgColor)
-        ctx.fill(bounds)
         ctx.setStrokeColor(theme.colors.grayIcon.cgColor)
         ctx.setLineWidth(1.0)
         ctx.strokeEllipse(in: NSMakeRect(30, 17, 50, 50))

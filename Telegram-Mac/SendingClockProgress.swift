@@ -80,6 +80,7 @@ class SendingClockProgress: View {
         animation.duration = (minute_duration * 4.0) + 0.6
         animation.repeatCount = .greatestFiniteMagnitude
         animation.toValue = (Double.pi * 2.0) as NSNumber
+        animation.isRemovedOnCompletion = false
         clockHour.add(animation, forKey: "rotate")
     }
     
@@ -90,6 +91,7 @@ class SendingClockProgress: View {
         animation.duration = minute_duration
         animation.repeatCount = .greatestFiniteMagnitude
         animation.toValue = (Double.pi * 2.0) as NSNumber
+        animation.isRemovedOnCompletion = false
         clockMin.add(animation, forKey: "rotate")
     }
     
@@ -105,18 +107,18 @@ class SendingClockProgress: View {
     
     
     override func viewDidMoveToSuperview() {
-        if superview != nil {
+        if window != nil && superview != nil {
             startAnimating()
         } else {
             stopAnimating()
         }
     }
     override func viewDidMoveToWindow() {
-//        if window != nil {
-//            startAnimating()
-//        } else {
-//            stopAnimating()
-//        }
+        if window != nil && superview != nil {
+            startAnimating()
+        } else {
+            stopAnimating()
+        }
     }
     
 }

@@ -17,9 +17,7 @@ public class Layer: CALayer {
     public override func didChangeValue(forKey key: String) {
         super.didChangeValue(forKey: key)
         
-        if s != self.superlayer {
-             self.layerMoved(to: self.superlayer)
-        }
+        self.layerMoved(to: self.superlayer)
         
         s = self.superlayer
         

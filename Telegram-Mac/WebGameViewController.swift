@@ -52,6 +52,7 @@ class WebGameViewController: TelegramGenericViewController<WebView>, WebFrameLoa
     
     override func getRightBarViewOnce() -> BarView {
         let view = ImageBarView(controller: self, theme.icons.webgameShare)
+        
         let account = self.account
         view.button.set(handler: {_ in 
             showModal(with: ShareModalController(ShareLinkObject(account, link: "https://t.me/gamebot")), for: mainWindow)

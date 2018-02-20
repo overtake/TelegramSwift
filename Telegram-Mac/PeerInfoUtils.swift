@@ -25,8 +25,8 @@ extension Peer {
         var canManageMembers = false
         var isCreator = false
         if let group = self as? TelegramGroup {
+            highlightAdmins = true
             if group.flags.contains(.adminsEnabled) {
-                highlightAdmins = true
                 switch group.role {
                 case .creator:
                     canManageGroup = true

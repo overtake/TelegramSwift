@@ -17,8 +17,8 @@ public class ImageBarView: BarView {
         if let highlight = highlightImage {
             button.set(image: highlight, for: .Highlight)
         }
-        button.sizeToFit()
-        self.needsLayout = true
+        _ = button.sizeToFit()
+        setFrameSize(NSMakeSize(max(60, image.backingSize.width), frame.height))
     }
     
     

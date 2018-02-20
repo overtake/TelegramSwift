@@ -145,7 +145,7 @@ public class TitleButton: ImageButton {
         self.text.frame = NSMakeRect(0, 0, textSize, size.height)
         
         
-        self.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: maxWidth, height: max(size.height,maxSize.height))
+        self.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: maxWidth, height: max(size.height,maxSize.height) + addition.height)
         return frame.width >= maxWidth
     }
     
@@ -212,7 +212,7 @@ public class TitleButton: ImageButton {
     
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-       
+        disableActions()
     }
     
     public override var backgroundColor: NSColor {

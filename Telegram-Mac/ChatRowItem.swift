@@ -229,7 +229,7 @@ class ChatRowItem: TableRowItem {
         size.width = max(isBubbled ? size.width : 54, size.width)
         
         size.width += stateOverlayAdditionCorner * 2
-        
+        size.height = isStateOverlayLayout ? 17 : size.height
         return size
         
     }
@@ -266,8 +266,17 @@ class ChatRowItem: TableRowItem {
                 height += additional
             }
    
+            if hasPhoto || replyModel?.isSideAccessory == true {
+                height = max(48, height)
+            }
+            
+//            if self is ChatMessageItem {
+//                height += 4
+//            } else {
+//                height += 2
+//            }
             //height = max(height, 40)
-           // height += 4
+            
             //height = max(height, 48)
         }
         
@@ -287,7 +296,7 @@ class ChatRowItem: TableRowItem {
         var top:CGFloat = defaultContentTopOffset
         if isBubbled && authorText != nil {
             top -= topInset
-        }
+        } 
         if let author = authorText {
             top += author.layoutSize.height + defaultContentInnerInset
         }
@@ -365,11 +374,17 @@ class ChatRowItem: TableRowItem {
             }
         } else {
             if case .Full = itemType, let message = message, let peer = message.peers[message.id.peerId] {
-                if isIncoming && message.id.peerId == account.peerId {
+                
+                switch chatInteraction.chatLocation {
+                case .group:
                     return true
-                }
-                if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
-                    return true
+                case .peer:
+                    if isIncoming && message.id.peerId == account.peerId {
+                        return true
+                    }
+                    if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
+                        return true
+                    }
                 }
             }
         }
@@ -406,7 +421,7 @@ class ChatRowItem: TableRowItem {
             }
             if apply {
                 top += max(34, replyModel.size.height) + ((!isBubbleFullFilled && isBubbled && self is ChatMediaItem) ? 0 : 8)
-                if authorText != nil && self is ChatMessageItem {
+                if (authorText != nil) && self is ChatMessageItem {
                     top += topInset
                     //top -= defaultContentInnerInset
                 } else if hasBubble && self is ChatMessageItem {
@@ -433,7 +448,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if isBubbled, self is ChatMessageItem {
-            top -= 1
+            //top -= 1
         }
         
         
@@ -553,14 +568,14 @@ class ChatRowItem: TableRowItem {
         }
         
         for peer in peers {
-            if let peer = peer as? TelegramChannel {
-                switch peer.info {
-                case .broadcast:
-                    return false
-                default:
-                    break
-                }
-            }
+//            if let peer = peer as? TelegramChannel {
+//                switch peer.info {
+//                case .broadcast:
+//                    return false
+//                default:
+//                    break
+//                }
+//            }
             if let peer = peer as? TelegramUser {
                 if peer.botInfo != nil {
                     return false
@@ -581,18 +596,53 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        return !chatInteraction.isLogInteraction && message?.groupingKey == nil
+        return !chatInteraction.isLogInteraction && message?.groupingKey == nil && message?.id.peerId != account.peerId
+    }
+    
+    private static func canFillAuthorName(_ message: Message, chatInteraction: ChatInteraction, renderType: ChatItemRenderType, isIncoming: Bool, hasBubble: Bool) -> Bool {
+        var canFillAuthorName: Bool = true
+        switch chatInteraction.chatLocation {
+        case .group:
+            canFillAuthorName = true
+            if let media = message.media.first as? TelegramMediaFile {
+                canFillAuthorName = !media.isSticker
+            }
+        case .peer:
+            if renderType == .bubble, let peer = messageMainPeer(message) {
+                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.account.peerId)
+                if let media = message.media.first {
+                    canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
+                }
+            }
+        }
+        return canFillAuthorName
+    }
+    
+    var canFillAuthorName: Bool {
+        if let message = message {
+            return ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
+        }
+        return true
     }
     
     var isBubbled: Bool {
         return renderType == .bubble
     }
     var hasBubble: Bool {
-        return isBubbled && ChatRowItem.hasBubble(message, type: itemType)
+        return isBubbled && ChatRowItem.hasBubble(message, entry: entry, type: itemType)
     }
     
-    static func hasBubble(_ message: Message?, type: ChatItemType) -> Bool {
+    static func hasBubble(_ message: Message?, entry: ChatHistoryEntry, type: ChatItemType) -> Bool {
         if let message = message, let media = message.media.first {
+            
+            if let file = media as? TelegramMediaFile {
+                if file.isSticker {
+                    return false
+                }
+                if file.isInstantVideo {
+                    return false //!message.text.isEmpty || (message.replyAttribute != nil && !file.isInstantVideo) || (message.forwardInfo != nil && !file.isInstantVideo)
+                }
+            }
             
             for attr in message.attributes {
                 if let _ = attr as? InlineBotMessageAttribute {
@@ -621,17 +671,15 @@ class ChatRowItem: TableRowItem {
             }
             
             if message.groupInfo != nil {
-                return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil
+                switch entry {
+                case .groupedPhotos(let entries, _):
+                    return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1
+                default:
+                    return true
+                }
             }
             
-            if let file = media as? TelegramMediaFile {
-                if file.isSticker {
-                    return false
-                }
-                if file.isInstantVideo {
-                    return false //!message.text.isEmpty || (message.replyAttribute != nil && !file.isInstantVideo) || (message.forwardInfo != nil && !file.isInstantVideo)
-                }
-            }
+            
 //            if media is TelegramMediaImage {
 //                if case .Full = type {
 //                    return true
@@ -645,12 +693,18 @@ class ChatRowItem: TableRowItem {
     let renderType: ChatItemRenderType
     var modernBubbleImage:(CGImage, NSEdgeInsets)? = nil
     var selectedBubbleImage:(CGImage, NSEdgeInsets)? = nil
+    
+    private let downloadSettings: AutomaticMediaDownloadSettings
+    
+    let presentation: TelegramPresentationTheme
 
-    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ object: ChatHistoryEntry) {
+
+    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         self.entry = object
         self.account = account
+        self.presentation = theme
         self.chatInteraction = chatInteraction
-        
+        self.downloadSettings = downloadSettings
         var message: Message?
         var isRead: Bool = true
         var itemType: ChatItemType = .Full(isAdmin: false)
@@ -662,7 +716,7 @@ class ChatRowItem: TableRowItem {
 
         var hasGroupCaption: Bool = object.message?.text.isEmpty == false
         if case let .groupedPhotos(entries, _) = object {
-            object = entries.last!
+            object = entries.filter({!$0.message!.media.isEmpty}).last!
             
             loop: for entry in entries {
                 if let _ = captionMessage, !entry.message!.text.isEmpty {
@@ -708,14 +762,16 @@ class ChatRowItem: TableRowItem {
         }
         self.renderType = renderType
         self.message = message
+        
+
                 
         if let message = message {
             
-            let hasBubble = ChatRowItem.hasBubble(captionMessage ?? message, type: itemType)
+            let hasBubble = ChatRowItem.hasBubble(captionMessage ?? message, entry: entry, type: itemType)
             
             let isIncoming: Bool = message.isIncoming(account, renderType == .bubble)
             
-           
+
             
             if case .bubble = renderType , hasBubble{
                 let isFull: Bool
@@ -726,8 +782,8 @@ class ChatRowItem: TableRowItem {
                     isFull = false
                 }
                 
-                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: theme.chat.backgroundColor(isIncoming), strokeColor: theme.chat.bubbleBorderColor(isIncoming), neighbors: isFull ? .none : .both)
-                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: theme.chat.backgoundSelectedColor(isIncoming), strokeColor: theme.chat.backgoundSelectedColor(isIncoming), neighbors: isFull ? .none : .both)
+                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull ? .none : .both)
+                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull ? .none : .both)
             }
             
             self.itemType = itemType
@@ -747,8 +803,8 @@ class ChatRowItem: TableRowItem {
             if let peer = peer, peer.isChannel {
                 for attr in message.attributes {
                     if let attr = attr as? AuthorSignatureMessageAttribute {
-                        if !message.flags.contains(.Unsent), !message.flags.contains(.Failed) {
-                            postAuthorAttributed = .initialize(string: attr.signature, color: isStateOverlayLayout ? .white : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                        if !message.flags.contains(.Failed) {
+                            postAuthorAttributed = .initialize(string: attr.signature, color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                         }
                         break
                     }
@@ -770,7 +826,11 @@ class ChatRowItem: TableRowItem {
                         case .Sticker:
                             accept = false
                         case let .Audio(isVoice, _, _, _, _):
-                            accept = isVoice && accept
+                            if !isVoice, let forwardInfo = message.forwardInfo, let source = forwardInfo.source, source.isChannel {
+                                accept = accept && forwardInfo.author.id == forwardInfo.source?.id
+                            } else {
+                                accept = accept && isVoice
+                            }
                         default:
                             break
                         }
@@ -782,15 +842,15 @@ class ChatRowItem: TableRowItem {
                     forwardType = fwdType
                     var attr = NSMutableAttributedString()
                     if let source = info.source, source.isChannel {
-                        var range = attr.append(string: source.displayTitle, color: theme.chat.linkColor(isIncoming), font: .medium(.text))
+                        var range = attr.append(string: source.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                         if info.author.id != source.id {
-                            let subrange = attr.append(string: " (\(info.author.displayTitle))", color: theme.chat.linkColor(isIncoming), font: .medium(.text))
+                            let subrange = attr.append(string: " (\(info.author.displayTitle))", color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                             range.length += subrange.length
                         }
                         attr.add(link: inAppLink.peerInfo(peerId: source.id, action:nil, openChat: true, postId: nil, callback:chatInteraction.openInfo), for: range)
                         
                     } else {
-                        let range = attr.append(string: info.author.displayTitle, color: theme.chat.linkColor(isIncoming), font: .medium(.text))
+                        let range = attr.append(string: info.author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                         var linkAbility: Bool = true
                         if let channel = info.author as? TelegramChannel {
                             if channel.username == nil && channel.participationStatus != .member {
@@ -811,18 +871,14 @@ class ChatRowItem: TableRowItem {
                     
                     let forwardNameColor: NSColor
                     if !hasBubble {
-                        forwardNameColor = theme.colors.grayText
-                    } else if isIncoming, theme.colors.name == dayClassic.name {
-                        forwardNameColor = theme.chat.linkColor(isIncoming)
+                        forwardNameColor = presentation.colors.grayText
+                    } else if isIncoming {
+                        forwardNameColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                     } else {
-                        forwardNameColor = theme.chat.grayText(isIncoming || isInstantVideo)
+                        forwardNameColor = presentation.chat.grayText(isIncoming || isInstantVideo, object.renderType == .bubble)
                     }
                     
                     if renderType == .bubble {
-                        
-                        
-                        
-                        
                         let newAttr = parseMarkdownIntoAttributedString(L10n.chatBubblesForwardedFrom(attr.string), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor:forwardNameColor), link: MarkdownAttributeSet(font: hasBubble ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { contents in
                             if let link = attr.attribute(NSAttributedStringKey.link, at: 0, effectiveRange: nil) {
                                 return (NSAttributedStringKey.link.rawValue, link)
@@ -832,7 +888,7 @@ class ChatRowItem: TableRowItem {
                         attr = newAttr.mutableCopy() as! NSMutableAttributedString
                     } else {
                         _ = attr.append(string: " ")
-                        _ = attr.append(string: DateUtils.string(forLastSeen: info.date), color: forwardNameColor, font: .normal(.short))
+                        _ = attr.append(string: DateUtils.string(forLastSeen: info.date), color: renderType == .bubble ? forwardNameColor : presentation.colors.grayText, font: .normal(.short))
                     }
 
                     
@@ -843,13 +899,9 @@ class ChatRowItem: TableRowItem {
             
             if case .Full(let isAdmin) = itemType {
                 
-                var canFillAuthorName: Bool = true
-                if renderType == .bubble, let peer = messageMainPeer(message) {
-                    canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == account.peerId)
-                    if let media = message.media.first {
-                        canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
-                    }
-                }
+                
+                let canFillAuthorName: Bool = ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
+
                 
                 var titlePeer:Peer? = self.peer
                 
@@ -862,14 +914,14 @@ class ChatRowItem: TableRowItem {
                 let attr:NSMutableAttributedString = NSMutableAttributedString()
                 
                 if let peer = titlePeer {
-                    var nameColor:NSColor = theme.chat.linkColor(isIncoming)
+                    var nameColor:NSColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                     
                     if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
                         if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
-                            nameColor = theme.chat.linkColor(isIncoming)
+                            nameColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                         } else if account.peerId != peer.id {
                             let value = abs(Int(peer.id.id) % 7)
-                            nameColor = theme.chat.peerName(value)
+                            nameColor = presentation.chat.peerName(value)
                         }
                     }
                     if canFillAuthorName {
@@ -883,16 +935,19 @@ class ChatRowItem: TableRowItem {
                             if attr.length > 0 {
                                 _ = attr.append(string: " ")
                             }
-                            _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font:.medium(.text))
-                            let range = attr.append(string: "@" + address, color: theme.chat.linkColor(isIncoming), font:.medium(.text))
+                            _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                            let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font:.medium(.text))
                             attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.callback("@" + address, { (parameter) in
                                 chatInteraction.updateInput(with: parameter + " ")
                             }), range: range)
+                            
+                            
+                            break
                         }
                     }
                     
                     if isAdmin, canFillAuthorName {
-                        _ = attr.append(string: " \(tr(L10n.chatAdminBadge))", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.short))
+                        _ = attr.append(string: " \(tr(L10n.chatAdminBadge))", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                     }
                     if attr.length > 0 {
                         authorText = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
@@ -903,7 +958,13 @@ class ChatRowItem: TableRowItem {
             }
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= account.context.timeDifference
-            date = TextNode.layoutText(maybeNode: nil, .initialize(string: DateUtils.string(forShortTime: Int32(time)), color: isStateOverlayLayout ? .white : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.timeStyle = .short
+            dateFormatter.dateStyle = .none
+            dateFormatter.timeZone = NSTimeZone.local
+            
+            date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? .white : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
 
         }
         
@@ -914,12 +975,12 @@ class ChatRowItem: TableRowItem {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             formatter.timeStyle = .medium
-            formatter.locale = Locale(identifier: appCurrentLanguage.languageCode)
+            formatter.timeZone = NSTimeZone.local
             var fullDate: String = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - account.context.timeDifference))
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute  {
-                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? theme.chat.backgroundColor(isIncoming) : isBubbled ?   theme.colors.grayForeground : theme.colors.background, title: theme.chat.replyTitle(self), enabledText: theme.chat.replyText(self), disabledText: theme.chat.replyDisabledText(self), border: theme.chat.replyTitle(self))
+                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?   presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
                     self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account:account, replyMessage:message.associatedMessages[attribute.messageId], presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let strongSelf = self else {return}
@@ -929,7 +990,7 @@ class ChatRowItem: TableRowItem {
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
-                    channelViewsAttributed = .initialize(string: attribute.count.prettyNumber, color: isStateOverlayLayout ? .white : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    channelViewsAttributed = .initialize(string: attribute.count.prettyNumber, color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
                     if attribute.count >= 1000 {
                         fullDate = "\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
@@ -937,79 +998,84 @@ class ChatRowItem: TableRowItem {
                 }
                 if let attribute = attribute as? EditedMessageAttribute {
                     if isEditMarkVisible {
-                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? .white : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                     }
                     
                     let formatterEdited = DateFormatter()
                     formatterEdited.dateStyle = .short
                     formatterEdited.timeStyle = .medium
-                    formatterEdited.locale = Locale(identifier: appCurrentLanguage.languageCode)
+                    formatterEdited.timeZone = NSTimeZone.local
                     fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message))
                 }
+                
+              
             }
             
+           
             
             self.fullDate = fullDate
         }
     }
     
-    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry) {
+    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         self.entry = entry
         self.message = entry.message
         self.chatInteraction = chatInteraction
         self.renderType = entry.renderType
+        self.downloadSettings = downloadSettings
+        self.presentation = theme
         super.init(initialSize)
     }
     
-    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, with account:Account, interaction:ChatInteraction) -> ChatRowItem {
+    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, with account:Account, interaction:ChatInteraction, downloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings) -> ChatRowItem {
         
         if let message = entry.message {
             if message.media.count == 0 || (message.media.count == 1 && message.media[0] is TelegramMediaWebpage) {
-                return ChatMessageItem(initialSize, interaction, account,entry)
+                return ChatMessageItem(initialSize, interaction, account,entry, downloadSettings)
             } else {
                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                    return ChatServiceItem(initialSize,interaction,account,entry)
+                    return ChatServiceItem(initialSize,interaction,account,entry, downloadSettings)
                 } else if let file = message.media[0] as? TelegramMediaFile {
                     if file.isInstantVideo {
-                        return ChatVideoMessageItem(initialSize,interaction,account,entry)
+                        return ChatVideoMessageItem(initialSize, interaction, account,entry, downloadSettings)
                     } else if file.isVideo && !file.isAnimated {
-                        return ChatMediaItem(initialSize,interaction,account,entry)
+                        return ChatMediaItem(initialSize, interaction, account, entry, downloadSettings)
                     } else if file.isSticker {
-                        return ChatMediaItem(initialSize,interaction,account,entry)
+                        return ChatMediaItem(initialSize, interaction, account, entry, downloadSettings)
                     } else if file.isVoice {
-                        return ChatVoiceRowItem(initialSize,interaction,account,entry)
+                        return ChatVoiceRowItem(initialSize,interaction, account,entry, downloadSettings)
                     } else if file.isVideo && file.isAnimated {
-                        return ChatGIFMediaItem(initialSize,interaction,account,entry)
+                        return ChatGIFMediaItem(initialSize, interaction, account, entry, downloadSettings)
                     } else if !file.isVideo && file.isAnimated {
-                        return ChatMediaItem(initialSize,interaction,account,entry)
+                        return ChatMediaItem(initialSize, interaction, account, entry, downloadSettings)
                     } else if file.isMusic {
-                        return ChatMusicRowItem(initialSize,interaction,account,entry)
+                        return ChatMusicRowItem(initialSize,interaction, account, entry, downloadSettings)
                     }
-                    return ChatFileMediaItem(initialSize,interaction,account,entry)
+                    return ChatFileMediaItem(initialSize,interaction, account, entry, downloadSettings)
                 } else if let action = message.media[0] as? TelegramMediaAction {
                     switch action.action {
                     case .phoneCall:
-                        return ChatCallRowItem(initialSize, interaction, account, entry)
+                        return ChatCallRowItem(initialSize, interaction, account, entry, downloadSettings)
                     default:
-                        return ChatServiceItem(initialSize, interaction, account, entry)
+                        return ChatServiceItem(initialSize, interaction, account, entry, downloadSettings)
                     }
                     
                 } else if message.media[0] is TelegramMediaMap {
-                    return ChatMapRowItem(initialSize,interaction,account,entry)
+                    return ChatMapRowItem(initialSize,interaction, account, entry, downloadSettings)
                 } else if message.media[0] is TelegramMediaContact {
-                    return ChatContactRowItem(initialSize,interaction,account,entry)
+                    return ChatContactRowItem(initialSize, interaction, account, entry, downloadSettings)
                 } else if message.media[0] is TelegramMediaInvoice {
-                    return ChatInvoiceItem(initialSize,interaction,account,entry)
+                    return ChatInvoiceItem(initialSize, interaction,account, entry, downloadSettings)
                 } else if message.media[0] is TelegramMediaExpiredContent {
-                    return ChatServiceItem(initialSize,interaction,account,entry)
+                    return ChatServiceItem(initialSize, interaction, account, entry, downloadSettings)
                 } else if message.media.first is TelegramMediaGame {
-                    return ChatMessageItem(initialSize, interaction, account, entry)
+                    return ChatMessageItem(initialSize, interaction, account, entry, downloadSettings)
                 }
                 
-                return ChatMediaItem(initialSize,interaction,account,entry)
+                return ChatMediaItem(initialSize, interaction, account, entry, downloadSettings)
             }
             
         }
@@ -1024,10 +1090,10 @@ class ChatRowItem: TableRowItem {
         isForceRightLine = false
         
         if let channelViewsAttributed = channelViewsAttributed {
-            channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
+            channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
         if let postAuthorAttributed = postAuthorAttributed {
-            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), 1, .end, NSMakeSize(hasBubble ? 60 : (width - contentOffset.x - 44) / 2, 20), nil, false, .left)
+            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : (width - contentOffset.x - 44) / 2, 20), nil, false, .left)
         }
 
        
@@ -1035,18 +1101,20 @@ class ChatRowItem: TableRowItem {
         
         _contentSize = self.makeContentSize(widthForContent)
 
-        if hasBubble {
-            func layout() -> Bool {
-                if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
-                    if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent {
-                        widthForContent = _contentSize.width - 5
-                        self.isForceRightLine = true
-                        //_contentSize = self.makeContentSize(widthForContent)
-                        return true
-                    }
+        func layout() -> Bool {
+            if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
+                if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent, replyMarkupModel == nil {
+                    widthForContent = _contentSize.width - 5
+                    self.isForceRightLine = true
+                    //_contentSize = self.makeContentSize(widthForContent)
+                    return true
                 }
-                return true
             }
+            return true
+        }
+        
+        if hasBubble {
+           
             while !layout() {}
         }
         
@@ -1066,7 +1134,6 @@ class ChatRowItem: TableRowItem {
             captionLayout.measure(width: maxContentWidth)
         }
         
-        authorText?.measure(width: widthForContent)
 
         
         if let forwardNameLayout = forwardNameLayout {
@@ -1078,7 +1145,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if forwardType == .FullHeader || forwardType == .ShortHeader {
-            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: tr(L10n.messagesForwardHeader), color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
+            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: tr(L10n.messagesForwardHeader), color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
         } else {
             forwardHeader = nil
         }
@@ -1090,28 +1157,30 @@ class ChatRowItem: TableRowItem {
                 replyModel?.measureSize(widthForContent, sizeToFit: true)
             } else {
                 if !hasBubble {
-                    replyModel?.measureSize(min(width - _contentSize.width - contentOffset.x - 100, 300), sizeToFit: true)
+                    replyModel?.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
                 } else {
-                    replyModel?.measureSize(widthForContent, sizeToFit: true)
+                    replyModel?.measureSize(min(_contentSize.width - bubbleDefaultInnerInset, 300), sizeToFit: true)
                 }
             }
         }
         
-        
-        if isBubbled {
-            replyMarkupModel?.measureSize(bubbleFrame.width - additionBubbleInset)
+        if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, isStateOverlayLayout {
+            authorText.measure(width: replyModel.size.width - 10)
+            replyModel.topOffset = authorText.layoutSize.height + 6
+            replyModel.measureSize(replyModel.width, sizeToFit: replyModel.sizeToFit)
         } else {
-            if !(self is ChatMessageItem) {
-                replyMarkupModel?.measureSize(_contentSize.width)
-            } else {
-                replyMarkupModel?.measureSize(max(_contentSize.width, blockWidth))
-            }
+            authorText?.measure(width: widthForContent)
         }
+      
         
-        if isBubbled {
+        if hasBubble && isBubbleFullFilled {
             if let postAuthor = postAuthor, let postAuthorAttributed = postAuthorAttributed {
-                let size = rightSize.width - postAuthor.0.size.width - 8
-                self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), 1, .end, NSMakeSize( _contentSize.width - size - bubbleContentInset - additionBubbleInset - 10, 20), nil, false, .left)
+                let width: CGFloat = _contentSize.width - (rightSize.width - postAuthor.0.size.width - 8) - bubbleContentInset - additionBubbleInset - 10
+                if width < 0 {
+                    self.postAuthor = nil
+                } else {
+                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( width, 20), nil, false, .left)
+                }
             }
         }
         
@@ -1123,10 +1192,19 @@ class ChatRowItem: TableRowItem {
                     if let _ = self as? ChatMessageItem, additionalLineForDateInBubbleState != nil {
                         w = _contentSize.width - size
                     }
-                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming), 1, .end, NSMakeSize( w, 20), nil, false, .left)
+                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( w, 20), nil, false, .left)
+                } else if bubbleFrame.width > _contentSize.width + rightSize.width + bubbleDefaultInnerInset {
+                    var size = bubbleFrame.width - (_contentSize.width + rightSize.width + bubbleDefaultInnerInset)
+                    if !postAuthor.0.isPerfectSized {
+                        size = bubbleFrame.width - (_contentSize.width + bubbleDefaultInnerInset)
+                    }
+                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( size, 20), nil, false, .left)
+                    while !layout() {}
                 }
                 
             }
+            
+            
             
             if _contentSize.width < rightSize.width {
                 if !(self is ChatMessageItem)  {
@@ -1134,6 +1212,16 @@ class ChatRowItem: TableRowItem {
                 } else if additionalLineForDateInBubbleState != nil {
                     _contentSize.width = rightSize.width
                 }
+            }
+        }
+        
+        if isBubbled {
+            replyMarkupModel?.measureSize(bubbleFrame.width - additionBubbleInset)
+        } else {
+            if !(self is ChatMessageItem) {
+                replyMarkupModel?.measureSize(_contentSize.width)
+            } else {
+                replyMarkupModel?.measureSize(max(_contentSize.width, blockWidth))
             }
         }
         
@@ -1173,7 +1261,7 @@ class ChatRowItem: TableRowItem {
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) : 0
         let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
-        var rect = NSMakeRect(defLeftInset, 1, contentSize.width, height - 2)
+        var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
         
        
         if isBubbled, let replyMarkup = replyMarkupModel {
@@ -1191,11 +1279,12 @@ class ChatRowItem: TableRowItem {
         }
         
         
+        
         rect.size.width = max(nameWidth + bubbleDefaultInnerInset, rect.width)
         
-        rect.size.width = max(rect.size.width, replyWidth  + bubbleDefaultInnerInset)
+        rect.size.width = max(rect.size.width, replyWidth + bubbleDefaultInnerInset)
         
-        rect.size.width = max(rect.size.width, forwardWidth  + bubbleDefaultInnerInset)
+        rect.size.width = max(rect.size.width, forwardWidth + bubbleDefaultInnerInset)
         
         return rect
     }
@@ -1214,6 +1303,20 @@ class ChatRowItem: TableRowItem {
                 modifier.deleteMessages([message.id])
             }
         }.start()
+    }
+    
+    func openInfo() {
+        switch chatInteraction.chatLocation {
+        case .group:
+            if let peer = peer {
+                chatInteraction.openInfo(peer.id, true, message?.id, nil)
+            }
+        case .peer:
+            if let peer = peer {
+                chatInteraction.openInfo(peer.id, false, nil, nil)
+            }
+        }
+        
     }
     
     func resendMessage() {
@@ -1265,14 +1368,14 @@ class ChatRowItem: TableRowItem {
         if chatInteraction.disableSelectAbility {
             return super.menuItems(in: location)
         }
-        if let message = message, let peer = peer {
-            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
+        if let message = message {
+            return chatMenuItems(for: message, account: account, chatInteraction: chatInteraction)
         }
         return super.menuItems(in: location)
     }
 }
 
-func chatMenuItems(for message: Message, account: Account, chatInteraction: ChatInteraction, peer: Peer) -> Signal<[ContextMenuItem], Void> {
+func chatMenuItems(for message: Message, account: Account, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], Void> {
     
     if chatInteraction.isLogInteraction || chatInteraction.presentation.state == .selecting {
         return .single([])
@@ -1280,7 +1383,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
     var items:[ContextMenuItem] = []
     
-    if peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
+    if let peer = chatInteraction.peer, peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
         items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
         }))
@@ -1300,7 +1403,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
         items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
             if peer.isSupergroup {
-                confirm(for: mainWindow, information: tr(L10n.messageContextConfirmPin), thridTitle: tr(L10n.messageContextConfirmOnlyPin), successHandler: { result in
+                modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmPinAccessory, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
                     chatInteraction.updatePinned(message.id, false, result == .thrid)
                 })
             } else {

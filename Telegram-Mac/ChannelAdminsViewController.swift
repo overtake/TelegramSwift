@@ -580,6 +580,8 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                     showModal(with: ChannelAdminController(account: account, peerId: peerId, adminId: adminId, initialParticipant: behavior.participants[adminId]?.participant, updated: { updatedRights in
                         if let participant = behavior.participants[adminId] {
                             applyAdmin(participant, adminId, updatedRights)
+                        } else if let peer = behavior.result[adminId]?.peer {
+                            applyAdmin(RenderedChannelParticipant(participant: ChannelParticipant.member(id: adminId, invitedAt: 0, adminInfo: nil, banInfo: nil), peer: peer), adminId, updatedRights)
                         }
                         
                     }), for: mainWindow)

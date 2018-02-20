@@ -39,8 +39,7 @@ open class Button: Control {
     }
     
     func prepare() -> Void {
-        
-        
+        layer?.removeAllAnimations()
     }
     
     override public func apply(state:ControlState) -> Void {

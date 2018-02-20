@@ -16,10 +16,10 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
     var name:(TextNodeLayout, TextNode)?
     let hasThumb:Bool
     let fileName:String
-    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media) {
+    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.fileName = fileName
         self.hasThumb = hasThumb
-        super.init(presentation: presentation, media: media)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload)
     }
     override func makeLabelsForWidth(_ width: CGFloat) {
         self.name = TextNode.layoutText(maybeNode: nameNode, .initialize(string: fileName , color: presentation.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (hasThumb ? 80 : 50), 20), nil,false, .left)
@@ -31,9 +31,9 @@ class ChatFileMediaItem: ChatMediaItem {
 
     
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
-        super.init(initialSize, chatInteraction, account, object)
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

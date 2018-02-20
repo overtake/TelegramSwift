@@ -198,6 +198,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        if let trimmed = replacementString?.trimmed, trimmed.isEmpty, affectedCharRange.min == 0 && affectedCharRange.max == 0 {
+            return false
+        }
         return true
     }
     
@@ -225,6 +228,19 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
+    open override func mouseUp(with event: NSEvent) {
+        if isLoading {
+            let point = convert(event.locationInWindow, from: nil)
+            if NSPointInRect(point, progressIndicator.frame) {
+                setString("")
+            } else {
+                super.mouseUp(with: event)
+            }
+        } else {
+            super.mouseUp(with: event)
+        }
+    }
+    
     public func textViewDidChangeSelection(_ notification: Notification) {
         if let storage = input.textStorage {
             let size = storage.size()
@@ -238,8 +254,19 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 let index = max(0, input.selectedRange().max - 1)
                 let point = layout.location(forGlyphAt: layout.glyphIndexForCharacter(at: index))
                 
+                let additionalInset: CGFloat
+                if index + 2 < input.string.length {
+                    let nextPoint = layout.location(forGlyphAt: layout.glyphIndexForCharacter(at: index + 2))
+                    additionalInset = nextPoint.x - point.x
+                } else {
+                    additionalInset = 8
+                }
+                
                 if defWidth < size.width && point.x > defWidth {
-                    input.setFrameOrigin(defWidth - point.x, input.frame.minY)
+                    input.setFrameOrigin(floorToScreenPixels(scaleFactor: backingScaleFactor, defWidth - point.x - additionalInset), input.frame.minY)
+                    if input.frame.maxX < inputContainer.frame.width {
+                        input.setFrameOrigin(inputContainer.frame.width - input.frame.width + 4, input.frame.minY)
+                    }
                 } else {
                     input.setFrameOrigin(0, input.frame.minY)
                 }
@@ -431,7 +458,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
         placeholder.centerY()
         clear.centerY(x: frame.width - inset - clear.frame.width)
-        progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width)
+        progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
         inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
         search.centerY()
     }

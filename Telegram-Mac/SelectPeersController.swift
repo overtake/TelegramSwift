@@ -209,7 +209,7 @@ private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], sear
                 }
                 entries.append(.peer(peer,index,view.peerPresences[peer.id], !excludeIds.contains(peer.id)))
                 index += 1
-                if index == 150 {
+                if index == 230 {
                     break
                 }
             }
@@ -261,6 +261,9 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
             }
+            if peer.isBot {
+                string = L10n.presenceBot.lowercased()
+            }
             
             let interactionType:ShortPeerItemInteractionType
             if singleAction != nil {
@@ -311,12 +314,15 @@ public struct SelectPeerSettings: OptionSet {
         if flags.contains(SelectPeerSettings.contacts) {
             rawValue |= SelectPeerSettings.contacts.rawValue
         }
-
+        if flags.contains(SelectPeerSettings.excludeBots) {
+            rawValue |= SelectPeerSettings.excludeBots.rawValue
+        }
         self.rawValue = rawValue
     }
     
     public static let remote = SelectPeerSettings(rawValue: 1)
     public static let contacts = SelectPeerSettings(rawValue: 2)
+    public static let excludeBots = SelectPeerSettings(rawValue: 4)
 }
 
 class SelectPeersBehavior {
@@ -348,8 +354,8 @@ class SelectPeersBehavior {
 
 class SelectChannelMembersBehavior : SelectPeersBehavior {
     fileprivate let peerId:PeerId
-    private let _renderedResult:Atomic<[PeerId:RenderedChannelParticipant]> = Atomic(value: [:])
-    
+    private let _renderedResult:Atomic<[PeerId:RenderedChannelParticipant]> = Atomic(value: [:])    
+
     var participants:[PeerId:RenderedChannelParticipant] {
         return _renderedResult.modify({$0})
     }
@@ -398,8 +404,8 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
                     }
                     |> map { value -> ([TemporaryPeer], [TemporaryPeer], Bool) in
                         
-                        let contacts = value.0.map({TemporaryPeer(peer: $0, presence: value.2.presences[$0.id])})
-                        let global = value.1.map({TemporaryPeer(peer: $0, presence: value.2.presences[$0.id])})
+                        let contacts = value.0.filter {$0.isUser || ($0.isBot && !settings.contains(.excludeBots))}.map({TemporaryPeer(peer: $0, presence: value.2.presences[$0.id])})
+                        let global = value.1.filter {$0.isUser || ($0.isBot && !settings.contains(.excludeBots))}.map({TemporaryPeer(peer: $0, presence: value.2.presences[$0.id])})
                         
                         let _ = _peersResult.swap((contacts + global).reduce([:], { current, peer in
                             var current = current
@@ -498,7 +504,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
         return search |> distinctUntilChanged |> mapToSignal { search -> Signal<[SelectPeerEntry], Void> in
             
             if search.request.isEmpty {
-                return account.viewTracker.tailChatListView(count: 200) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<[SelectPeerEntry], Void> in
+                return account.viewTracker.tailChatListView(groupId: nil, count: 200) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<[SelectPeerEntry], Void> in
                     var entries:[Peer] = []
                     
 
@@ -528,7 +534,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                     return .single(common)
                 }
             } else {
-                return  account.postbox.searchPeers(query: search.request.lowercased()) |> map {
+                return  account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
                     return $0.flatMap({$0.chatMainPeer}).filter {($0.isSupergroup || $0.isGroup) && $0.canInviteUsers}
                 } |> deliverOn(prepareQueue) |> map { entries -> [SelectPeerEntry] in
                     var common:[SelectPeerEntry] = []
@@ -579,9 +585,14 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                 
                 return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
                     return (uniquePeers(from: (values.0 + values.1.0 + values.1.1)), values.1.2 && search.request.length >= 5)
-                    }
+                }
                     |> runOn(prepareQueue)
                     |> mapToSignal { values -> Signal<[SelectPeerEntry], Void> in
+                        var values = values
+                        if settings.contains(.excludeBots) {
+                            values.0 = values.0.filter {!$0.isBot}
+                        }
+                        values.0 = values.0.filter {!$0.isChannel && !$0.isSupergroup && !$0.isGroup}
                         return account.postbox.multiplePeersView(values.0.map {$0.id}) |> take(1) |> map { view -> [SelectPeerEntry] in
                             return searchEntriesForPeers(values.0, account: account, view: view, isLoading: values.1, excludeIds: excludePeerIds)
                         }
@@ -614,6 +625,7 @@ final class SelectPeersControllerView: View, TokenizedProtocol {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
+        backgroundColor = theme.colors.background
         separatorView.backgroundColor = theme.colors.border
     }
     
@@ -645,12 +657,31 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
     let interactions:SelectPeerInteraction = SelectPeerInteraction()
     private var previous:Atomic<[SelectPeerEntry]?> = Atomic(value:nil)
     private let tokenDisposable: MetaDisposable = MetaDisposable()
+    private let isNewGroup: Bool
+    private var limitsConfiguration: LimitsConfiguration? {
+        didSet {
+            if oldValue == nil {
+                requestUpdateCenterBar()
+                return
+            }
+            if let limitsConfiguration = limitsConfiguration {
+                self.interactions.update({$0.withUpdateLimit(limitsConfiguration.maxGroupMemberCount)})
+                if limitsConfiguration.isEqual(to: oldValue!) == false  {
+                    requestUpdateCenterBar()
+                }
+            }
+        }
+    }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
             
             let added = value.selected.subtracting(oldValue.selected)
             let removed = oldValue.selected.subtracting(value.selected)
+            
+            if added.count == 0 && value.isLimitReached {
+                alert(for: mainWindow, info: L10n.composeCreateGroupLimitError)
+            }
             
             for item in added {
                 genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
@@ -661,7 +692,24 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
             }
             
             self.nextEnabled(!value.selected.isEmpty)
+            
+            
+            
+            if let limits = limitsConfiguration {
+                let attributed = NSMutableAttributedString()
+                _ = attributed.append(string: L10n.telegramSelectPeersController, color: theme.colors.text, font: .medium(.title))
+                _ = attributed.append(string: "   ")
+                _ = attributed.append(string: "\(interactions.presentation.selected.count)/\(limits.maxSupergroupMemberCount)", color: theme.colors.grayText, font: .normal(.title))
+                self.centerBarView.text = attributed
+            } else {
+                setCenterTitle(defaultBarTitle)
+            }
+            
         }
+    }
+    
+    override func requestUpdateCenterBar() {
+        notify(with: interactions.presentation, oldValue: interactions.presentation, animated: false)
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -694,15 +742,22 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
         let previous = self.previous
         let initialSize = atomicSize
         
-        let transition = behavior.start(account: account, search: search.get() |> distinctUntilChanged |> map {SearchState(state: .None, request: $0)}) |> deliverOn(prepareQueue) |> map { entries -> TableUpdateTransition in
-            return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: true, interactions:interactions)
+        let limitsSignal:Signal<LimitsConfiguration?, Void> = isNewGroup ? account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]) |> map { values -> LimitsConfiguration? in
+            return values.values[PreferencesKeys.limitsConfiguration] as? LimitsConfiguration
+        } : .single(nil)
+        
+        
+        let transition = combineLatest(behavior.start(account: account, search: search.get() |> distinctUntilChanged |> map {SearchState(state: .None, request: $0)}) |> deliverOn(prepareQueue), limitsSignal |> deliverOnPrepareQueue) |> map { entries, limits -> (TableUpdateTransition, LimitsConfiguration?) in
+            return (prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: true, interactions:interactions), limits)
         } |> deliverOnMainQueue
         
-        disposable.set(transition.start(next: { [weak self] transition in
+        disposable.set(transition.start(next: { [weak self] transition, limits in
             self?.genericView.tableView.merge(with: transition)
+            self?.limitsConfiguration = limits
             self?.readyOnce()
         }))
     }
+    
     
     
     var tokenView:TokenizedView {
@@ -710,8 +765,9 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
     }
     
     
-    init(titles: ComposeTitles, account: Account, settings:SelectPeerSettings = [.contacts], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX) {
+    init(titles: ComposeTitles, account: Account, settings:SelectPeerSettings = [.contacts], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, isNewGroup: Bool = false) {
         self.behavior = SelectContactsBehavior(settings: settings, excludePeerIds: excludePeerIds, limit: limit)
+        self.isNewGroup = isNewGroup
         super.init(titles: titles, account: account)
     }
 

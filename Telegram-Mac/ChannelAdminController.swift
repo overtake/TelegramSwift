@@ -571,6 +571,11 @@ class ChannelAdminController: ModalViewController {
     }
     
     
+    override func close() {
+        disposable.set(nil)
+        super.close()
+    }
+    
     func updateRights(_ updateFlags: TelegramChannelAdminRightsFlags) {
         close()
         

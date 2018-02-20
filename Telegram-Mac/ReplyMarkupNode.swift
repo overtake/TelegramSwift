@@ -147,7 +147,7 @@ class ReplyMarkupNode: Node {
     override func measureSize(_ width: CGFloat) {
         for row in markup {
             let count = row.count
-            let single:CGFloat = floorToScreenPixels((width - CGFloat(6 * (count - 1))) / CGFloat(count))
+            let single:CGFloat = floorToScreenPixels(scaleFactor: System.backingScale, (width - CGFloat(6 * (count - 1))) / CGFloat(count))
             for button in row {
                 button.measure(single)
             }

@@ -240,8 +240,14 @@ public class TextNode: NSObject {
     }
     
 
-    open func draw(_ dirtyRect: NSRect, in ctx: CGContext, backingScaleFactor: CGFloat) {
+    open func draw(_ dirtyRect: NSRect, in ctx: CGContext, backingScaleFactor: CGFloat, backgroundColor: NSColor) {
        
+        
+        if backingScaleFactor == 1.0 {
+            ctx.setFillColor(backgroundColor.cgColor)
+            ctx.fill(dirtyRect)
+        }
+        
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort
         let context:CGContext = ctx //unsafeBitCast(contextPtr, to: CGContext.self)
         
@@ -276,7 +282,11 @@ public class TextNode: NSObject {
                 
                 let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, penFlush, Double(dirtyRect.width)))
 
+                
                 context.textPosition = CGPoint(x: penOffset + NSMinX(dirtyRect), y: line.frame.origin.y + NSMinY(dirtyRect))
+                
+               
+                
                 CTLineDraw(line.line, context)
                 
             }

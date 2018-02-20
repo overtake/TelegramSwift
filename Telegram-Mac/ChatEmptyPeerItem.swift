@@ -69,11 +69,17 @@ class ChatEmptyPeerView : TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
     }
     
     override func updateColors() {
         super.updateColors()
-        textView.background = backdorColor
+        textView.background = theme.colors.background
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     override func layout() {
@@ -81,7 +87,10 @@ class ChatEmptyPeerView : TableRowView {
         if let item = item as? ChatEmptyPeerItem {
             item.textViewLayout.measure(width: frame.width - 40)
             textView.update(item.textViewLayout)
+            textView.setFrameSize(item.textViewLayout.layoutSize.width + 20, item.textViewLayout.layoutSize.height + 8)
             textView.center()
+            
+            textView.layer?.cornerRadius = item.textViewLayout.lines.count == 1 ? textView.frame.height / 2 : .cornerRadius
         }
     }
     

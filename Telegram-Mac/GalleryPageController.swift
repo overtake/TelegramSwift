@@ -551,7 +551,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         return nil
     }
     
-    func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil) ->Void {
+    func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) ->Void {
         
         
         captionView.change(opacity: 0, animated: false)
@@ -572,7 +572,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                                 selectedView?.isHidden = false
                                 strongSelf?.lockedTransition = false
                                 strongSelf?.captionView.change(opacity: 1.0)
-                            })
+                            }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                         } else {
                             selectedView?.isHidden = false
                             self?.lockedTransition = false
@@ -599,41 +599,54 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
     }
     
-    func animate(oldRect:NSRect, newRect:NSRect, newAlphaFrom:CGFloat, newAlphaTo:CGFloat, oldAlphaFrom:CGFloat, oldAlphaTo:CGFloat, contents:CGImage?, oldView:NSView, completion:@escaping ()->Void) {
+    func animate(oldRect:NSRect, newRect:NSRect, newAlphaFrom:CGFloat, newAlphaTo:CGFloat, oldAlphaFrom:CGFloat, oldAlphaTo:CGFloat, contents:CGImage?, oldView:NSView, completion:@escaping ()->Void, stableId: AnyHashable, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) {
         
         lockedTransition = true
         
         
         let view = self.view
         
-        let newView:NSView = NSView(frame: oldRect)
+        let newView:NSView = NSView(frame: NSMakeRect(oldRect.minX, oldRect.minY, newRect.width, newRect.height))
         newView.wantsLayer = true
-        newView.layer?.opacity = Float(newAlphaFrom)
+        newView.layer?.opacity = Float(newAlphaFrom) + 0.5
         newView.layer?.contents = contents
         newView.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
         
-        let copyView = oldView.copy() as! NSView
-
         
-        copyView.frame = oldRect
+        let copyView = oldView.copy() as! NSView
+        addAccesoryOnCopiedView?((stableId, copyView))
+
+        copyView.frame = NSMakeRect(oldRect.minX, oldRect.minY, oldAlphaFrom == 0 ? newRect.width : oldRect.width, oldAlphaFrom == 0 ? newRect.height : oldRect.height)
         copyView.wantsLayer = true
         copyView.layer?.opacity = Float(oldAlphaFrom)
         view.addSubview(newView)
         view.addSubview(copyView)
         
+
+        
         CATransaction.begin()
         
-        let duration:Double = 0.2
+        let duration:Double = 0.25
         
-        
+
         
         
         newView._change(pos: newRect.origin, animated: true, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
-        newView._change(size: newRect.size, animated: true, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
         newView._change(opacity: newAlphaTo, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
         
-        copyView._change(pos: newRect.origin, animated: true, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
-        copyView._change(size: newRect.size, animated: true, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
+        
+        newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: false)
+        newView.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: duration, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: false)
+
+        
+        copyView._change(pos: newRect.origin, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
+        copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: false)
+        copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: false)
+        
+        
+        //.animateBounds(from: NSMakeRect(0, 0, oldRect.width, oldRect.height), to: NSMakeRect(0, 0, newRect.width, newRect.height), duration: duration, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: false)
+
+     //   copyView._change(size: newRect.size, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
         copyView._change(opacity: oldAlphaTo, duration: duration, timingFunction: kCAMediaTimingFunctionSpring) { [weak self] _ in
             completion()
             self?.lockedTransition = false
@@ -652,7 +665,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
 
     }
     
-    func animateOut( to:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil) ->Void {
+    func animateOut( to:@escaping(AnyHashable)->NSView?, completion:(((Bool, AnyHashable?))->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) ->Void {
         
         lockedTransition = true
         
@@ -668,19 +681,18 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 ioDisposabe.set((item.image.get() |> take(1)).start(next: { [weak self] (image) in
                     self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: image, oldView: oldView, completion: {
-                        completion?()
-                    })
-
+                        completion?((true, item.stableId))
+                    }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                 }))
 
             } else {
                 view._change(opacity: 0, completion: { (_) in
-                    completion?()
+                    completion?((false, item.stableId))
                 })
             }
         } else {
             view._change(opacity: 0, completion: { (_) in
-                completion?()
+                completion?((false, nil))
             })
         }
     }

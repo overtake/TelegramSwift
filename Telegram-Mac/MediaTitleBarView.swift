@@ -61,7 +61,7 @@ class MediaTitleBarView: TitledBarView {
                 }))
                 
                 let controller = SPopoverViewController(items: items)
-                showPopover(for: strongSelf, with: controller, edge: .maxY, inset: NSMakePoint( floorToScreenPixels(strongSelf.frame.width / 2) - floorToScreenPixels(controller.frame.width/2),-50))
+                showPopover(for: strongSelf, with: controller, edge: .maxY, inset: NSMakePoint( floorToScreenPixels(scaleFactor: System.backingScale, strongSelf.frame.width / 2) - floorToScreenPixels(scaleFactor: System.backingScale, controller.frame.width/2),-50))
                 
             }
         }

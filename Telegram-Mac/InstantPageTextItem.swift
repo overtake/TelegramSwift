@@ -54,7 +54,7 @@ final class InstantPageTextLine {
 
         switch alignment {
         case .center:
-            let additional = floorToScreenPixels((boundingWidth - frame.width) / 2)
+            let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
         default:
@@ -65,7 +65,7 @@ final class InstantPageTextLine {
         return attributedString.attributedSubstring(from: NSMakeRange(startIndex, endIndex - startIndex))
     }
     
-    func selectWord(in point: NSPoint, boundingWidth: CGFloat, alignment: NSTextAlignment) -> NSAttributedString {
+    func selectWord(in point: NSPoint, boundingWidth: CGFloat, alignment: NSTextAlignment, rect: NSRect) -> NSAttributedString {
         
         
         let startIndex: CFIndex = CTLineGetStringIndexForPosition(line, point)
@@ -120,7 +120,7 @@ final class InstantPageTextLine {
 
         switch alignment {
         case .center:
-            let additional = floorToScreenPixels((boundingWidth - frame.width) / 2)
+            let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
         default:
@@ -163,7 +163,7 @@ final class InstantPageTextItem: InstantPageItem {
             var point = NSMakePoint(min(max(point.x, 0), frame.width), point.y)
             switch alignment {
             case .center:
-                point.x -= floorToScreenPixels((frame.width - line.frame.width) / 2)
+                point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
             default:
                 break
             }

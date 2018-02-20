@@ -36,13 +36,28 @@ private let instantVideoMutedThumb = generateImage(NSMakeSize(30, 30), contextGe
     ctx.round(size, size.width / 2.0)
     ctx.fill(CGRect(origin: CGPoint(), size: size))
     let icon = #imageLiteral(resourceName: "Icon_VideoMessageMutedIcon").precomposed()
-    ctx.draw(icon, in: NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
+    ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
 })
 
-private final class VideoMessageCorner : View {
+final class VideoMessageCorner : View {
+    
+    override var backgroundColor: NSColor {
+        set {
+            super.backgroundColor = .clear
+            borderBackground = newValue
+        }
+        get {
+            return super.backgroundColor
+        }
+    }
+    private var borderBackground: NSColor = .black {
+        didSet {
+            needsLayout = true
+        }
+    }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         //ctx.round(frame.size, frame.size.height / 2)
-        ctx.setStrokeColor(backgroundColor.cgColor)
+        ctx.setStrokeColor(theme.colors.background.cgColor)
         ctx.setLineWidth(2.0)
         ctx.setLineCap(.round)
         
@@ -77,8 +92,8 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         stateThumbView.image = instantVideoMutedThumb
         stateThumbView.sizeToFit()
         player.addSubview(stateThumbView)
+        player.addSubview(videoCorner)
         addSubview(playingProgressView)
-        addSubview(videoCorner)
         addSubview(durationView)
     }
     
@@ -117,7 +132,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     private var singleWrapper:APSingleWrapper? {
         if let media = media as? TelegramMediaFile {
-            return APSingleWrapper(resource: media.resource, name: tr(L10n.audioControllerVideoMessage), performer: parent?.author?.displayTitle, id: media.fileId)
+            return APSingleWrapper(resource: media.resource, mimeType: media.mimeType, name: tr(L10n.audioControllerVideoMessage), performer: parent?.author?.displayTitle, id: media.fileId)
         }
         return nil
     }
@@ -149,7 +164,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     func songDidChangedState(song: APSongItem, for controller: APController) {
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-            if song.entry.isEqual(to: parent) {
+            var singleEqual: Bool = false
+            if let single = singleWrapper {
+                singleEqual = song.entry.isEqual(to: single)
+            }
+            if song.entry.isEqual(to: parent) || singleEqual {
                 switch song.state {
                 case let .playing(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
@@ -205,14 +224,14 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            chatMessageFileCancelInteractiveFetch(account: account, file: media)
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
+            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
         }
     }
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
         }
     }
     
@@ -220,7 +239,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         super.layout()
         player.frame = bounds
         videoCorner.frame = NSMakeRect(bounds.minX - 0.5, bounds.minY - 0.5, bounds.width + 1.0, bounds.height + 1.0)
-        playingProgressView.frame = bounds
+        playingProgressView.frame = NSMakeRect(1.5, 1.5, bounds.width - 3, bounds.height - 3)
         progressView?.center()
         stateThumbView.centerX(y: 10)
         durationView.setFrameOrigin(0, frame.height - durationView.frame.height)
@@ -346,9 +365,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                         }
                     }))
                 }
-                
-                fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
-                
+                                
             }
             
         }

@@ -245,13 +245,13 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let maxInset = max(yourPhoneLabel.frame.width, codeLabel.frame.width)
         let contentInset = maxInset + 20 + 5 + defaultInset
         
-        yourPhoneLabel.setFrameOrigin(maxInset - yourPhoneLabel.frame.width + defaultInset, floorToScreenPixels(25 - yourPhoneLabel.frame.height/2))
-        codeLabel.setFrameOrigin(maxInset - codeLabel.frame.width + defaultInset, floorToScreenPixels(75 - codeLabel.frame.height/2))
+        yourPhoneLabel.setFrameOrigin(maxInset - yourPhoneLabel.frame.width + defaultInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        codeLabel.setFrameOrigin(maxInset - codeLabel.frame.width + defaultInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeLabel.frame.height/2))
         
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
         
-        numberText.setFrameOrigin(contentInset, floorToScreenPixels(25 - yourPhoneLabel.frame.height/2))
-        editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(25 - yourPhoneLabel.frame.height/2))
+        numberText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
         
         
         textView.centerX(y: codeText.frame.maxY + 60 + (passwordEnabled ? inputPassword.frame.height : 0))
@@ -592,6 +592,10 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
             text = tr(L10n.loginFloodWait)
         case .generic:
             text = "undefined error"
+        case .phoneLimitExceeded:
+            text = "undefined error"
+        case .phoneBanned:
+            text = "PHONE BANNED"
         }
         errorLabel.state.set(.single(.error(text)))
     }
@@ -612,13 +616,13 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
         let maxInset = max(countryLabel.frame.width,numberLabel.frame.width)
         let contentInset = maxInset + 20 + 5
-        countrySelector.setFrameOrigin(contentInset, floorToScreenPixels(25 - countrySelector.frame.height/2))
+        countrySelector.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countrySelector.frame.height/2))
         
-        countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(25 - countryLabel.frame.height/2))
-        numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(75 - numberLabel.frame.height/2))
+        countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countryLabel.frame.height/2))
+        numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - numberLabel.frame.height/2))
         
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(75 - codeText.frame.height/2))
-        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
         errorLabel.centerX(y: 120)
     }
     
@@ -907,6 +911,12 @@ class LoginAuthInfoView : View {
                     self?.codeInputContainer.isHidden = true
                 }
             })
+        case .passwordRecovery(let hint, let number, let code, let emailPattern):
+            //TODO
+            break
+        case .awaitingAccountReset(let protectedUntil, let number):
+            //TODO
+            break
         }
         window?.makeFirstResponder(firstResponder())
     }

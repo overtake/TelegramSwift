@@ -318,14 +318,14 @@ struct ChatTextInputState: PostboxCoding, Equatable {
 
                     switch entity {
                     case "`":
-                        attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 9).length * 2))
+                        attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 6).length * 2))
                     case "**":
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 9).length * 2))
-                        attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 6).length * 2))
+                        attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     case "__":
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 9).length * 2))
-                        attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 9).length + text.length))
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 6).length * 2))
+                        attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     default:
                         break
                     }

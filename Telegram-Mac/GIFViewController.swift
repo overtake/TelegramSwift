@@ -159,14 +159,37 @@ struct RecentGifsArguments {
 
 final class TableContainer : View {
     fileprivate var tableView: TableView?
+    fileprivate var restrictedView:RestrictionWrappedView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+    }
+    
+    func updateRestricion(_ peer: Peer?) {
+        if let peer = peer as? TelegramChannel {
+            if peer.stickersRestricted, let bannedRights = peer.bannedRights {
+                restrictedView?.removeFromSuperview()
+                restrictedView = RestrictionWrappedView(bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendGifsUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendGifsForever))
+                addSubview(restrictedView!)
+            } else {
+                restrictedView?.removeFromSuperview()
+                restrictedView = nil
+            }
+        } else {
+            restrictedView?.removeFromSuperview()
+            restrictedView = nil
+        }
+        setFrameSize(frame.size)
+        needsLayout = true
     }
     
     func reinstall() {
         tableView?.removeFromSuperview()
         tableView = TableView(frame: bounds)
         addSubview(tableView!)
+        restrictedView?.removeFromSuperview()
+        if let restrictedView = restrictedView {
+            addSubview(restrictedView)
+        }
     }
     
 
@@ -175,9 +198,15 @@ final class TableContainer : View {
         tableView = nil
     }
     
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        self.restrictedView?.updateLocalizationAndTheme()
+    }
+    
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         tableView?.setFrameSize(newSize)
+        restrictedView?.setFrameSize(newSize)
     }
     
     required init?(coder: NSCoder) {
@@ -185,16 +214,35 @@ final class TableContainer : View {
     }
 }
 
-class GIFViewController: TelegramGenericViewController<TableContainer> {
+class GIFViewController: TelegramGenericViewController<TableContainer>, Notifable {
     private var interactions:EntertainmentInteractions?
+    private var chatInteraction: ChatInteraction?
     private let disposable = MetaDisposable()
     init(account:Account) {
         super.init(account)
         bar = .init(height: 0)
     }
     
-    func update(with interactions:EntertainmentInteractions?) {
+    func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
         self.interactions = interactions
+        self.chatInteraction?.remove(observer: self)
+        self.chatInteraction = chatInteraction
+        chatInteraction.add(observer: self)
+        if isLoaded() {
+            genericView.updateRestricion(chatInteraction.presentation.peer)
+        }
+    }
+    
+    func notify(with value: Any, oldValue: Any, animated: Bool) {
+        if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let peer = value.peer, let oldPeer = oldValue.peer {
+            if peer.stickersRestricted != oldPeer.stickersRestricted {
+                genericView.updateRestricion(peer)
+            }
+        }
+    }
+    
+    func isEqual(to other: Notifable) -> Bool {
+        return other === self
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -213,6 +261,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer> {
         super.viewDidAppear(animated)
         
         genericView.reinstall()
+        
+        genericView.updateRestricion(chatInteraction?.presentation.peer)
         
         _ = atomicSize.swap(_frameRect.size)
         let arguments = RecentGifsArguments(sendGif: { [weak self] file in
@@ -239,7 +289,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer> {
     
     deinit {
         disposable.dispose()
-        NSLog("deinit gifs controller")
+        chatInteraction?.remove(observer: self)
     }
     
 }

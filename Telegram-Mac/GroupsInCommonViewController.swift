@@ -125,7 +125,7 @@ class GroupsInCommonViewController: TableViewController {
         
         let arguments = GroupsInCommonArguments(account: account, open: { [weak self] peerId in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(account: strongSelf.account, peerId: peerId))
+                strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(peerId)))
             }
         })
         

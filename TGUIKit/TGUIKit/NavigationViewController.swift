@@ -19,7 +19,7 @@ open class NavigationHeaderView : View {
     public let ready:Promise<Bool> = Promise()
     public init(_ header:NavigationHeader) {
         self.header = header
-        super.init()
+        super.init(frame: NSMakeRect(0, 0, 0, header.height))
         self.autoresizingMask = [.width]
     }
     
@@ -35,7 +35,7 @@ open class NavigationHeaderView : View {
 
 open class NavigationHeader {
     fileprivate var callHeader:NavigationHeader?
-    let height:CGFloat
+    public let height:CGFloat
     let initializer:(NavigationHeader)->NavigationHeaderView
     weak var navigation:NavigationViewController?
     fileprivate var _view:NavigationHeaderView?
@@ -80,14 +80,15 @@ open class NavigationHeader {
                     if let callHeader = self?.callHeader, callHeader.needShown {
                         inset += callHeader.height
                     }
-                    
+                    CATransaction.begin()
+                    navigation.controller.navigationHeaderDidNoticeAnimation(height, 0, animated)
                     view.change(pos: NSMakePoint(0, inset), animated: animated, completion: { [weak navigation] completed in
                         if let navigation = navigation, completed {
                             navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
                             navigation.controller.view.needsLayout = true
                         }
                     })
-                    
+                    CATransaction.commit()
                 }
             }))
         }
@@ -103,6 +104,8 @@ open class NavigationHeader {
         isShown = false
         
         if let navigation = navigation {
+            CATransaction.begin()
+            navigation.controller.navigationHeaderDidNoticeAnimation(0, height, animated)
             if animated {
                 view.change(pos: NSMakePoint(0, 0), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
                     self?._view?.removeFromSuperview()
@@ -112,7 +115,7 @@ open class NavigationHeader {
                 view.removeFromSuperview()
                 _view = nil
             }
-            
+            CATransaction.commit()
             var inset:CGFloat = navigation.controller.bar.height
             
             if let callHeader = callHeader, callHeader.needShown  {
@@ -292,6 +295,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         containerView.frame = bounds
         self.view.autoresizesSubviews = true
+        containerView.autoresizesSubviews = true
         containerView.autoresizingMask = [.width, .height]
         self.view.addSubview(containerView, positioned: .below, relativeTo: self.view.subviews.first)
         controller._frameRect = bounds

@@ -49,11 +49,6 @@ class ChatInputActionsView: View, Notifable {
             self?.voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
         }, for: .Click)
         
-        voice.set(handler: { [weak self] _ in
-            if let peer = self?.chatInteraction.presentation.peer, peer.mediaRestricted {
-                alertForMediaRestriction(peer)
-            }
-        }, for: .Up)
         
         voice.set(handler: { [weak self] _ in
             self?.stop()
@@ -71,12 +66,7 @@ class ChatInputActionsView: View, Notifable {
                 }
             }
         }, for: .LongMouseDown)
-        
-        voice.set(handler: { [weak self] _ in
-            if let peer = self?.chatInteraction.presentation.peer, peer.mediaRestricted {
-                alertForMediaRestriction(peer)
-            }
-        }, for: .Up)
+
         
         muteChannelMessages.set(handler: { [weak self] _ in
             if let chatInteraction = self?.chatInteraction {
@@ -113,23 +103,39 @@ class ChatInputActionsView: View, Notifable {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         send.set(image: theme.icons.chatSendMessage, for: .Normal)
-        send.sizeToFit()
+        _ = send.sizeToFit()
         voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
-        voice.sizeToFit()
+        _ = voice.sizeToFit()
         
         let muted = FastSettings.isChannelMessagesMuted(chatInteraction.peerId)
         muteChannelMessages.set(image: !muted ? theme.icons.inputChannelMute : theme.icons.inputChannelUnmute, for: .Normal)
-        muteChannelMessages.sizeToFit()
+        _ = muteChannelMessages.sizeToFit()
         
+        
+        updateEntertainmentIcon()
         
         keyboard.set(image: theme.icons.chatActiveReplyMarkup, for: .Normal)
-        keyboard.sizeToFit()
+        _ = keyboard.sizeToFit()
         inlineCancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
-        inlineCancel.sizeToFit()
-        entertaiments.set(image: chatInteraction.presentation.isEmojiSection ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
-        entertaiments.sizeToFit()
+        _ = inlineCancel.sizeToFit()
         secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
 
+    }
+    
+    private func updateEntertainmentIcon() {
+        entertaiments.set(image: chatInteraction.presentation.isEmojiSection || chatInteraction.presentation.state == .editing ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
+        _ = entertaiments.sizeToFit()
+    }
+    
+    var entertaimentsPopover: ViewController {
+        if chatInteraction.presentation.state == .editing {
+            let emoji = EmojiViewController(chatInteraction.account)
+            if let interactions = chatInteraction.account.context.entertainment.interactions {
+                emoji.update(with: interactions)
+            }
+            return emoji
+        }
+        return chatInteraction.account.context.entertainment
     }
     
     private func addHoverObserver() {
@@ -145,9 +151,9 @@ class ChatInputActionsView: View, Notifable {
                 if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
                     if !hasPopover(mainWindow) {
                         let rect = NSMakeRect(0, 0, 350, 350)
-                        chatInteraction.account.context.entertainment._frameRect = rect
-                        chatInteraction.account.context.entertainment.view.frame = rect
-                        showPopover(for: strongSelf.entertaiments, with: chatInteraction.account.context.entertainment, edge: .maxX, inset:NSMakePoint(strongSelf.frame.width - strongSelf.entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
+                        strongSelf.entertaimentsPopover._frameRect = rect
+                        strongSelf.entertaimentsPopover.view.frame = rect
+                        showPopover(for: strongSelf.entertaiments, with: strongSelf.entertaimentsPopover, edge: .maxX, inset:NSMakePoint(strongSelf.frame.width - strongSelf.entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
                     }
                     
                 }
@@ -320,11 +326,11 @@ class ChatInputActionsView: View, Notifable {
                 }
                 self.change(size: size, animated: false)
                 
-           
+                updateEntertainmentIcon()
                 
                 self.needsLayout = true
             } else if value.isEmojiSection != oldValue.isEmojiSection {
-                entertaiments.set(image: value.isEmojiSection ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
+                updateEntertainmentIcon()
             }
         }
     }
@@ -351,7 +357,7 @@ class ChatInputActionsView: View, Notifable {
         if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
             secretTimer = ImageButton()
             secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
-            secretTimer?.sizeToFit()
+            _ = secretTimer?.sizeToFit()
             addSubview(secretTimer!)
             
             secretTimer?.set(handler: { [weak self] control in

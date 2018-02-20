@@ -327,7 +327,7 @@ class ContactsController: PeersListController {
     }
     
     init(_ account:Account) {
-        super.init(account)
+        super.init(account, searchOptions: [.chats])
     }
     
     override func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
@@ -351,7 +351,7 @@ class ContactsController: PeersListController {
                     navigation.controller.invokeNavigation(action: modalAction)
                 }
             } else {
-                let chat:ChatController = ChatController(account: self.account, peerId:item.peer.id)
+                let chat:ChatController = ChatController(account: self.account, chatLocation: .peer(item.peer.id))
                 navigation.push(chat)
                 
             }

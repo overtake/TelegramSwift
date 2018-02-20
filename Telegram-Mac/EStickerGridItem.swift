@@ -183,19 +183,21 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
         super.init(grid)
         layer?.cornerRadius = .cornerRadius
         self.autohighlight = false
+        disableActions()
         
         set(handler: { [weak self] _ in
             if let (_, file, _, _) = self?.currentState {
                 self?.inputNodeInteraction?.sendSticker(file)
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         set(handler: { [weak self] (control) in
             if let window = self?.window as? Window, let currentState = self?.currentState, let grid = self?.grid {
                 _ = startStickerPreviewHandle(grid, window: window, account: currentState.0)
             }
-            }, for: .LongMouseDown)
+            
+        }, for: .LongMouseDown)
         set(background: theme.colors.background, for: .Normal)
     }
     
@@ -226,7 +228,12 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             set(background: theme.colors.background, for: .Normal)
             set(background: theme.colors.background, for: .Hover)
             
-            imageView.setSignal( chatMessageSticker(account: account, file: file, type: .small, scale: backingScaleFactor))
+            imageView.setSignal(signal: cachedMedia(media: file, size: dimensions, scale: backingScaleFactor))
+            
+            imageView.setSignal(chatMessageSticker(account: account, file: file, type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, Void> in
+                return cacheMedia(signal: image, media: file, size: dimensions, scale: System.backingScale)
+            })
+
             stickerFetchedDisposable.set(fileInteractiveFetched(account: account, file: file).start())
             
             let imageSize = dimensions.aspectFitted(eStickerSize)

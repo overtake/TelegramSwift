@@ -25,15 +25,18 @@ struct PhotoCachedRecord {
 enum PhotoCacheKeyEntry : Hashable {
     case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
     case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat)
-    case media(Media, NSSize, CGFloat)
+    case media(Media, NSSize, CGFloat, GroupLayoutPositionFlags?)
+    case messageId(stableId: Int64, NSSize, CGFloat, GroupLayoutPositionFlags)
     var hashValue:Int {
         switch self {
         case let .avatar(peerId, _, _, _):
             return peerId.id.hashValue
         case let .emptyAvatar(peerId, _, _, _, _):
             return peerId.id.hashValue
-        case .media:
-            return 0
+        case let .messageId(stableId, _, _, _):
+            return stableId.hashValue
+        case let .media(media, _, _, _):
+            return media.id?.id.hashValue ?? 0
         }
     }
     
@@ -63,17 +66,26 @@ enum PhotoCacheKeyEntry : Hashable {
             } else {
                 return false
             }
-        case let .media(lhsMedia, lhsSize, lhsScale):
-            if case let .media(rhsMedia, rhsSize, rhsScale) = rhs {
+        case let .media(lhsMedia, lhsSize, lhsScale, lhsPositionFlags):
+            if case let .media(rhsMedia, rhsSize, rhsScale, rhsPositionFlags) = rhs {
                 if !lhsMedia.isEqual(rhsMedia) {
                     return false
                 }
                 if lhsSize != rhsSize {
                     return false
                 }
+                if lhsPositionFlags != rhsPositionFlags {
+                    return false
+                }
                 if lhsScale != rhsScale {
                     return false
                 }
+                return true
+            } else {
+                return false
+            }
+        case let .messageId(stableId, size, scale, positionFlags):
+            if case .messageId(stableId, size, scale, positionFlags) = rhs {
                 return true
             } else {
                 return false
@@ -139,12 +151,27 @@ class PhotoCache {
             self.values.removeValue(forKey: key)
         }
     }
+    
+    func clearAll() {
+        queue.justDispatch {
+            self.values.removeAll()
+        }
+    }
 }
 
 
 private let peerPhotoCache = PhotoCache()
 private let stickersCache = PhotoCache(32 * 1024 * 1024)
 
+
+func clearImageCache() -> Signal<Void, Void> {
+    return Signal<Void, Void> { subscriber -> Disposable in
+        stickersCache.clearAll()
+        subscriber.putNext(Void())
+        subscriber.putCompletion()
+        return EmptyDisposable
+    }
+}
 
 func cachedPeerPhoto(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> Signal<CGImage?, Void> {
     let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
@@ -167,16 +194,32 @@ func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NS
 }
 
 
-func cachedMedia(media: Media, size: NSSize, scale: CGFloat) -> Signal<CGImage?, Void> {
-    let entry:PhotoCacheKeyEntry = .media(media, size, scale)
+func cachedMedia(media: Media, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal<CGImage?, Void> {
+    let entry:PhotoCacheKeyEntry = .media(media, size, scale, positionFlags)
     return .single(stickersCache.cachedImage(for: entry))
 }
 
-func cacheMedia(signal:Signal<CGImage?, Void>, media: Media, size: NSSize, scale: CGFloat) -> Signal <Void, Void> {
+func cachedMedia(messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal<CGImage?, Void> {
+    let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, size, scale, positionFlags ?? [])
+    return .single(stickersCache.cachedImage(for: entry))
+}
+
+func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, media: Media, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal <Void, Void> {
     
-    return signal |> mapToSignal { image -> Signal<Void, Void> in
+    return signal |> filter {$0.1} |> mapToSignal { (image, _) -> Signal<Void, Void> in
         if let image = image {
-            let entry:PhotoCacheKeyEntry = .media(media, size, scale)
+            let entry:PhotoCacheKeyEntry = .media(media, size, scale, positionFlags)
+            return .single(stickersCache.cacheImage(image, for: entry))
+        }
+        return .complete()
+    }
+}
+
+func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal <Void, Void> {
+    
+    return signal |> filter {$0.1} |> take(1) |> mapToSignal { (image, _) -> Signal<Void, Void> in
+        if let image = image {
+            let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, size, scale, positionFlags ?? [])
             return .single(stickersCache.cacheImage(image, for: entry))
         }
         return .complete()

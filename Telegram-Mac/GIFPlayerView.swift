@@ -98,8 +98,7 @@ class GIFPlayerView: TransformImageView {
         
 
         layer?.addSublayer(sampleLayer)
-       // sampleLayer.mask = maskLayer
-       // maskLayer.delegate = self
+
 
     }
 
@@ -154,6 +153,8 @@ class GIFPlayerView: TransformImageView {
                 let _ = asset.swap(avAsset)
                 let t = avAsset.tracks(withMediaType: .video).first
                 if let track = t {
+                    let transform = track.preferredTransform.inverted()
+                    let naturalSize = track.naturalSize
                     layer.setAffineTransform(track.preferredTransform.inverted())
                 }
 

@@ -47,6 +47,8 @@ private class ContextHashtagRowView : TableRowView {
     private let textView: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
         addSubview(textView)
     }
     

@@ -43,9 +43,13 @@ class TelegramApplicationContext : NSObject {
     
     weak var mainNavigation:NavigationViewController?
     private let updateDifferenceDisposable = MetaDisposable()
-    init(_ mainNavigation:NavigationViewController?, _ entertainment:EntertainmentViewController, network: Network) {
+    
+    let fetchManager: FetchManager
+    
+    init(_ mainNavigation:NavigationViewController?, _ entertainment:EntertainmentViewController, network: Network, postbox: Postbox) {
         self.mainNavigation = mainNavigation
         self.entertainment = entertainment
+        self.fetchManager = FetchManager(postbox: postbox)
         if network.globalTime > 0 {
             timeDifference = network.globalTime - Date().timeIntervalSince1970
         }

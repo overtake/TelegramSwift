@@ -27,7 +27,7 @@ private class ConnectionStatusView : View {
                 disableProxyButton?.set(color: theme.colors.grayText, for: .Normal)
                 disableProxyButton?.set(font: .medium(.text), for: .Normal)
                 disableProxyButton?.set(text: tr(L10n.connectingStatusDisableProxy), for: .Normal)
-                disableProxyButton?.sizeToFit()
+                _ = disableProxyButton?.sizeToFit()
                 addSubview(disableProxyButton!)
                 
                 disableProxyButton?.set(handler: { [weak self] _ in
@@ -100,8 +100,8 @@ private class ConnectionStatusView : View {
             textView.update(textViewLayout)
             
             if let disableProxyButton = disableProxyButton {
-                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 4, floorToScreenPixels(frame.height / 2) + 2)
-                textView.setFrameOrigin(indicator.frame.maxX + 8, floorToScreenPixels(frame.height / 2) - textView.frame.height + 2)
+                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 4, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) + 2)
+                textView.setFrameOrigin(indicator.frame.maxX + 8, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) - textView.frame.height + 2)
             } else {
                 textView.setFrameOrigin(NSMakePoint(indicator.frame.maxX + 4, f.origin.y))
             }
@@ -155,7 +155,7 @@ class ChatTitleBarView: TitledBarView {
         }
     }
    
-    var peerView:PeerView? {
+    var postboxView:PostboxView? {
         didSet {
            updateStatus()
         }
@@ -243,7 +243,7 @@ class ChatTitleBarView: TitledBarView {
         closeButton.set(handler: { [weak self] _ in
             self?.chatInteraction.account.context.mainNavigation?.back()
         }, for: .Click)
-        closeButton.sizeToFit()
+        _ = closeButton.sizeToFit()
         closeButton.setFrameSize(closeButton.frame.width, frame.height)
         addSubview(closeButton)
         
@@ -269,7 +269,12 @@ class ChatTitleBarView: TitledBarView {
                 if chatInteraction.peerId == chatInteraction.account.peerId {
                     chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
                 } else {
-                    chatInteraction.openInfo(chatInteraction.peerId, false, nil, nil)
+                    switch chatInteraction.chatLocation {
+                    case let .group(groupId):
+                        chatInteraction.openFeedInfo(groupId)
+                    case let .peer(peerId):
+                        chatInteraction.openInfo(peerId, false, nil, nil)
+                    }
                 }
             } else {
                 chatInteraction.account.context.mainNavigation?.back()
@@ -278,7 +283,12 @@ class ChatTitleBarView: TitledBarView {
             if chatInteraction.peerId == chatInteraction.account.peerId {
                 chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
             } else {
-                chatInteraction.openInfo(chatInteraction.peerId, false, nil, nil)
+                switch chatInteraction.chatLocation {
+                case let .group(groupId):
+                    chatInteraction.openFeedInfo(groupId)
+                case let .peer(peerId):
+                    chatInteraction.openInfo(peerId, false, nil, nil)
+                }
             }
         }
     }
@@ -318,7 +328,7 @@ class ChatTitleBarView: TitledBarView {
 
     func updateStatus(_ force:Bool = false) {
         var shouldUpdateLayout = false
-        if let peerView = self.peerView {
+        if let peerView = self.postboxView as? PeerView {
             
             if let peer = peerViewMainPeer(peerView) {
                 callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.account.peerId
@@ -326,15 +336,10 @@ class ChatTitleBarView: TitledBarView {
                 callButton.isHidden = true
             }
             
-           // if let peer = peerView.peers[peerView.peerId] {
-           //     searchButton.isHidden = peer is TelegramSecretChat
-          //  }
-            
             if let peer = peerViewMainPeer(peerView) {
                 if peer.id == chatInteraction.account.peerId {
                     let icon = theme.icons.peerSavedMessages
                     avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 20, avatarControl.frame.size.height - 20)))) |> map {($0, false)})
-
                 } else {
                     avatarControl.setPeer(account: chatInteraction.account, peer: peer)
                 }
@@ -349,7 +354,6 @@ class ChatTitleBarView: TitledBarView {
             var result = stringStatus(for: peerView, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
             
             if chatInteraction.account.peerId == peerView.peerId  {
-                //result = PeerStatusStringResult(result.title, .initialize(string: tr(L10n.chatTitleSelf), color: theme.colors.grayText, font: .normal(.short)), presence: result.presence)
                 result = result.withUpdatedTitle(tr(L10n.peerSavedMessages))
             }
             if chatInteraction.account.peerId == peerView.peerId {
@@ -370,6 +374,10 @@ class ChatTitleBarView: TitledBarView {
             if shouldUpdateLayout {
                 self.setNeedsDisplay()
             }
+        } else  if let view = postboxView as? ChatListTopPeersView {
+            avatarControl.setState(account: chatInteraction.account, state: .GroupAvatar(view.peers))
+            status = nil
+            text = .initialize(string: L10n.chatTitleFeed, color: theme.colors.text, font: .medium(.title))
         }
     }
     
@@ -378,16 +386,16 @@ class ChatTitleBarView: TitledBarView {
         super.updateLocalizationAndTheme()
         
         searchButton.set(image: theme.icons.chatSearch, for: .Normal)
-        searchButton.sizeToFit()
+        _ = searchButton.sizeToFit()
         
         callButton.set(image: theme.icons.chatCall, for: .Normal)
-        callButton.sizeToFit()
+        _ = callButton.sizeToFit()
         
         closeButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
         
-        if let peerView = peerView, peerView.peers[peerView.peerId] is TelegramSecretChat {
+        if let peerView = postboxView as? PeerView, peerView.peers[peerView.peerId] is TelegramSecretChat {
             titleImage = theme.icons.chatSecretTitle
         } else {
             titleImage = nil

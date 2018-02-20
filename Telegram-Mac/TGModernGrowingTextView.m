@@ -576,10 +576,15 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                 cancel = false;
                 *stop = YES;
             }
+            if (self.isWhitespaceDisabled && range.length == 0 && [replacementStrings[idx] isEqualToString:@" "]) {
+                cancel = false;
+                *stop = YES;
+            }
         }];
         if (cancel) {
             [self setSelectedRange:NSMakeRange(textView.string.length, 0)];
         }
+        
         return cancel;
     }
     return true;
@@ -589,7 +594,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 
 - (void)textDidChange:(NSNotification *)notification {
-    
     
     
     int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit];
@@ -629,7 +633,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     NSSize newSize = NSMakeSize(size.width, size.height);
 
     
-    newSize.height+= 8;
+    newSize.height+= 2;
     
     
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);

@@ -92,8 +92,15 @@ private class InstantViewContentInteractive : InteractionContentViewProtocol {
     init(_ callback:@escaping(AnyHashable)->NSView?) {
         self.callback = callback
     }
-    func contentInteractionView(for stableId: AnyHashable) -> NSView? {
+    func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
         return callback(stableId)
+    }
+    func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable) {
+        
+    }
+    
+    public func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        
     }
 }
 
@@ -196,7 +203,7 @@ class InstantPageSelectText : NSObject {
                     var minX:CGFloat = item.frame.minX
                     switch item.alignment {
                     case .center:
-                        minX += floorToScreenPixels((item.frame.width - line.frame.width) / 2)
+                        minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.frame.width - line.frame.width) / 2)
                     default:
                         break
                     }
@@ -207,7 +214,7 @@ class InstantPageSelectText : NSObject {
                     let beginX = point.x - minX
                     
                     if rect.intersects(line.frame) {
-                        instantSelectManager.add(line: line, attributedString: line.selectWord(in: NSMakePoint(beginX, 0), boundingWidth: 1, alignment: item.alignment))
+                        instantSelectManager.add(line: line, attributedString: line.selectWord(in: NSMakePoint(beginX, 0), boundingWidth: item.frame.width, alignment: item.alignment, rect: rect))
                     }
                     
                 }
@@ -215,7 +222,7 @@ class InstantPageSelectText : NSObject {
             } else if event.clickCount == 3, let textItem = textItem {
                 instantSelectManager.removeAll()
                 for line in textItem.lines {
-                    instantSelectManager.add(line: line, attributedString: line.selectText(in: NSMakeRect(0, 0, line.frame.width, 1), boundingWidth: line.frame.width, alignment: textItem.alignment))
+                    instantSelectManager.add(line: line, attributedString: line.selectText(in: NSMakeRect(0, 0, line.frame.width, 1), boundingWidth: textItem.frame.width, alignment: textItem.alignment))
                 }
                 result = .rejected
             } else if event.clickCount == 1 {
@@ -287,14 +294,26 @@ class InstantPageSelectText : NSObject {
                         
                         var index = medias.index(of: item.medias.first!)!
                         
-                        let view = self?.interactive?.contentInteractionView(for: AnyHashable(index))
+                        let view = self?.interactive?.contentInteractionView(for: AnyHashable(index), animateIn: false)
                         
                         if let view = view as? InstantPageSlideshowView {
                             index += view.indexOfDisplayedSlide
                         }
                         
+                        if let v = view?.hitTest(point) as? RadialProgressView {
+                            switch v.state {
+                            case .Fetching:
+                                return .invokeNext
+                            case .Remote:
+                                return .invokeNext
+                            default:
+                                break
+                            }
+                        }
+                        
                         showInstantViewGallery(account: account, medias: medias, firstIndex: index, self?.interactive)
                         result = .rejected
+                        
                     } else {
                         result = .invokeNext
                     }
@@ -387,7 +406,7 @@ class InstantPageSelectText : NSObject {
                 var minX:CGFloat = item.frame.minX
                 switch item.alignment {
                 case .center:
-                    minX += floorToScreenPixels((item.frame.width - line.frame.width) / 2)
+                    minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.frame.width - line.frame.width) / 2)
                 default:
                     break
                 }

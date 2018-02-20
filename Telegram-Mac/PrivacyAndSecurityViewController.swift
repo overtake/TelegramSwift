@@ -261,7 +261,7 @@ private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> S
         } else if !enableFor.isEmpty {
             return tr(L10n.privacySettingsLastSeenContactsPlus("\(enableFor.count)"))
         } else if !disableFor.isEmpty {
-            return tr(L10n.privacySettingsLastSeenContactsMinus("\(enableFor.count)"))
+            return tr(L10n.privacySettingsLastSeenContactsMinus("\(disableFor.count)"))
         } else {
             return tr(L10n.privacySettingsControllerMyContacts)
         }
@@ -561,7 +561,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         
         let previous:Atomic<[AppearanceWrapperEntry<PrivacyAndSecurityEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
-        let privacySettings: Signal<AccountPrivacySettings?, NoError> = .single(nil) |> then(requestAccountPrivacySettings(account: account) |> map { Optional($0) })
+        let privacySettings: Signal<AccountPrivacySettings?, NoError> = initialSettings |> then(requestAccountPrivacySettings(account: account) |> map { Optional($0) })
         |> deliverOnMainQueue
         
         let proxySettings:Signal<ProxySettings?, Void> = account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in

@@ -155,8 +155,9 @@ class ChatPinnedView : Control {
         self.chatInteraction = chatInteraction
         super.init()
         
+        dismiss.disableActions()
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        self.dismiss.sizeToFit()
+        _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] _ in
             self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, animated: true, focus: true, inset: 0))
@@ -189,17 +190,20 @@ class ChatPinnedView : Control {
         container.backgroundColor = theme.colors.background
     }
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
  
     override func layout() {
         node.measureSize(frame.width - 70)
         container.setFrameSize(frame.width - 70, node.size.height)
         container.centerY(x: 20)
-        dismiss.centerY(x: frame.width - 21 - dismiss.frame.width)
+        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         node.setNeedDisplay()
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
         ctx.setFillColor(theme.colors.border.cgColor)
         ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
     }
@@ -226,13 +230,15 @@ class ChatReportView : Control {
     init(_ chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init()
+        dismiss.disableActions()
+        
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
         report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
-        report.sizeToFit()
+        _ = report.sizeToFit()
         
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        self.dismiss.sizeToFit()
+        _ = self.dismiss.sizeToFit()
         
         report.set(handler: { _ in
             chatInteraction.reportSpamAndClose()
@@ -252,7 +258,7 @@ class ChatReportView : Control {
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
         report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
-        report.sizeToFit()
+        _ = report.sizeToFit()
         self.backgroundColor = theme.colors.background
         needsLayout = true
     }
@@ -286,12 +292,12 @@ class AddContactView : Control {
         self.chatInteraction = chatInteraction
         super.init()
         self.style = ControlStyle(backgroundColor: theme.colors.background)
-        
+        dismiss.disableActions()
         add.set(text: tr(L10n.peerInfoAddContact), for: .Normal)
-        add.sizeToFit()
+        _ = add.sizeToFit()
         
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        dismiss.sizeToFit()
+        _ = dismiss.sizeToFit()
 
         add.set(handler: { _ in
             chatInteraction.addContact()
@@ -395,7 +401,7 @@ class ChatSearchHeader : View, Notifable {
     }
     init(_ interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
-        self.chatInteraction = ChatInteraction(peerId: chatInteraction.peerId, account: chatInteraction.account)
+        self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: chatInteraction.account)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: self.chatInteraction)
         super.init()
@@ -407,6 +413,15 @@ class ChatSearchHeader : View, Notifable {
         
         initialize()
         inputInteraction.add(observer: self)
+    }
+    
+    private var calendarAbility: Bool {
+        switch chatInteraction.chatLocation {
+        case .peer:
+            return true
+        default:
+            return false
+        }
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
@@ -421,7 +436,7 @@ class ChatSearchHeader : View, Notifable {
                     messages = []
                     currentIndex = -1
                     from.isHidden = false
-                    calendar.isHidden = false
+                    calendar.isHidden = !calendarAbility
                     needsLayout = true
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
                     inputInteraction.update(animated: animated, {
@@ -559,14 +574,18 @@ class ChatSearchHeader : View, Notifable {
         next.autohighlight = false
         prev.autohighlight = false
 
-        calendar.sizeToFit()
+        _ = calendar.sizeToFit()
         
         addSubview(next)
         addSubview(prev)
         addSubview(from)
+        
+        
         addSubview(calendar)
         
-        cancel.sizeToFit()
+        calendar.isHidden = !calendarAbility
+        
+        _ = cancel.sizeToFit()
         
         let interactions = self.interactions
         let searchView = self.searchView
@@ -603,19 +622,19 @@ class ChatSearchHeader : View, Notifable {
         super.updateLocalizationAndTheme()
         backgroundColor = theme.colors.background
         next.set(image: theme.icons.chatSearchDown, for: .Normal)
-        next.sizeToFit()
+        _ = next.sizeToFit()
         
         prev.set(image: theme.icons.chatSearchUp, for: .Normal)
-        prev.sizeToFit()
+        _ = prev.sizeToFit()
 
         calendar.set(image: theme.icons.chatSearchCalendar, for: .Normal)
-        calendar.sizeToFit()
+        _ = calendar.sizeToFit()
         
         cancel.set(image: theme.icons.chatSearchCancel, for: .Normal)
-        cancel.sizeToFit()
+        _ = cancel.sizeToFit()
 
         from.set(image: theme.icons.chatSearchFrom, for: .Normal)
-        from.sizeToFit()
+        _ = from.sizeToFit()
         
         separator.backgroundColor = theme.colors.border
         self.backgroundColor = theme.colors.background

@@ -68,7 +68,7 @@ fileprivate class SearchResultModalView : View {
         super.layout()
         textView.layout?.measure(width: frame.width - 40)
         textView.update(textView.layout)
-        textView.centerX(y:floorToScreenPixels((50 - textView.frame.height)/2.0))
+        textView.centerX(y:floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - textView.frame.height)/2.0))
         separator.frame = NSMakeRect(0, 50 - .borderSize, frame.width, .borderSize)
         table.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
         

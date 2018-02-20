@@ -19,14 +19,14 @@ class ChatMediaVideoMessageLayoutParameters : ChatMediaLayoutParameters {
     let isMarked:Bool
     let duration:Int
     let durationLayout:TextViewLayout
-    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media) {
+    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.showPlayer = showPlayer
         self.duration = duration
         self.isMarked = isMarked
         self.isWebpage = isWebpage
         self.resource = resource
         self.durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
-        super.init(presentation: presentation, media: media)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload)
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {
@@ -36,11 +36,11 @@ class ChatMediaVideoMessageLayoutParameters : ChatMediaLayoutParameters {
 
 class ChatVideoMessageItem: ChatMediaItem {
 
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
-        super.init(initialSize, chatInteraction, account, object)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
 
 
-        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
     }
     
     override var instantlyResize: Bool {

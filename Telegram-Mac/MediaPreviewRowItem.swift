@@ -22,9 +22,9 @@ class MediaPreviewRowItem: TableRowItem {
     init(_ initialSize: NSSize, media: Media, account: Account) {
         self.media = media
         self.account = account
-        self.chatInteraction = ChatInteraction(peerId: PeerId(0), account: account)
+        self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), account: account)
         if let media = media as? TelegramMediaFile {
-            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty)
+            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true)
         } else {
             parameters = nil
         }
@@ -107,7 +107,6 @@ fileprivate class MediaPreviewRowView : TableRowView {
             self.addSubview(self.contentNode!)
         }
         
-        
         self.contentNode?.update(with: item.media, size: item.contentSize, account: item.account, parent: nil, table: item.table, parameters: item.parameters, animated: animated)
     }
     
@@ -116,8 +115,8 @@ fileprivate class MediaPreviewRowView : TableRowView {
         self.contentNode?.setFrameOrigin(12, 6)
     }
     
-    open override func interactionContentView(for innerId: AnyHashable ) -> NSView {
-        if let content = self.contentNode?.interactionContentView(for: innerId) {
+    open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
+        if let content = self.contentNode?.interactionContentView(for: innerId, animateIn: animateIn) {
             return content
         }
         return self

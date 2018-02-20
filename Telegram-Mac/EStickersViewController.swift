@@ -239,6 +239,7 @@ class StickersControllerView : View {
     func updateRestricion(_ peer: Peer?) {
         if let peer = peer as? TelegramChannel {
             if peer.stickersRestricted, let bannedRights = peer.bannedRights {
+                restrictedView?.removeFromSuperview()
                 restrictedView = RestrictionWrappedView(bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendStickersUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendStickersForever))
                 addSubview(restrictedView!)
             } else {
@@ -257,6 +258,8 @@ class StickersControllerView : View {
         self.restrictedView?.updateLocalizationAndTheme()
         self.separator.backgroundColor = theme.colors.border
         gridView.updateLocalizationAndTheme()
+        gridView.backgroundColor = theme.colors.background
+        gridView.documentView?.background = theme.colors.background
     }
     
     override func setFrameSize(_ newSize: NSSize) {

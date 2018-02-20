@@ -114,11 +114,11 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, backgroundColor: theme.colors.background)
         case let .font(_, _, current, sizes):
-            return TextSizeSettingsRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, selectAction: { index in
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: true, selectAction: { index in
                 arguments.toggleFontSize(sizes[index])
             })
         case let .preview(_, _, entry):
-            let item = ChatRowItem.item(initialSize, from: entry, with: arguments.account, interaction: ChatInteraction(peerId: PeerId(0), account: arguments.account, disableSelectAbility: true))
+            let item = ChatRowItem.item(initialSize, from: entry, with: arguments.account, interaction: ChatInteraction(chatLocation: .peer(PeerId(0)), account: arguments.account, disableSelectAbility: true))
             _ = item.makeSize(initialSize.width, oldWidth: 0)
             return item
         }
@@ -194,10 +194,8 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     descIndex += 1
     
     let sizes:[Int32] = [11, 12, 13, 14, 15]
-    
-    let current = sizes.index(of: Int32(settings.fontSize)) ?? 2
-        
-    entries.append(.font(sectionId, index, Int32(current), sizes))
+            
+    entries.append(.font(sectionId, index, Int32(settings.fontSize), sizes))
     index += 1
     
     
@@ -208,25 +206,25 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsChatPreviewHeader)))
     descIndex += 1
     
-    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName1), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
+    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName1), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     
-    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName2), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, flags: [])
+    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName2), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
 
     
     entries.append(.section(sectionId))
     sectionId += 1
     
-    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewZeroText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewZeroText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
 
     
-    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
+    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
     
     let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
     
     entries.append(.preview(sectionId, index, firstEntry))
     index += 1
     
-    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewSecondText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewSecondText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     
     let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
     
@@ -261,18 +259,23 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     var installed:[String: ColorPalette] = [:]
 
     installed[whitePalette.name] = whitePalette
-    installed[darkPalette.name] = darkPalette
+    installed[nightBluePalette.name] = nightBluePalette
     installed[dayClassic.name] = dayClassic
+    installed[darkPalette.name] = darkPalette
 
-    entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, .builtin))
+
+    entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .color(Int32(dayClassic.background.rgb))))
     index += 1
     
-    entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .none))
+    entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .color(Int32(whitePalette.background.rgb))))
     index += 1
     
-    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette, .none))
+    entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
     index += 1
     
+    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette, .color(Int32(darkPalette.background.rgb))))
+    index += 1
+
 
     
     var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")
@@ -337,10 +340,12 @@ final class AppeaanceView : ChatBackgroundView {
         tableView.verticalScrollElasticity = .none
         tableView.layer?.backgroundColor = .clear
         addSubview(bottomHolder)
+        updateLocalizationAndTheme()
     }
     
     override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+      //  super.updateLocalizationAndTheme()
+        tableView.updateLocalizationAndTheme()
         bottomHolder.backgroundColor = theme.colors.background
     }
     
@@ -361,8 +366,11 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         super.viewDidLoad()
         let account = self.account
         let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, wallpaper in
+            
             _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
-                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: wallpaper)
+                
+                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: wallpaper, defaultNightName: palette.isDark ? palette.name : settings.defaultNightName, defaultDayName: !palette.isDark ? palette.name : settings.defaultDayName)
+                
             }).start()
         }, toggleBubbles: { enabled in
             _ = updateBubbledSettings(postbox: account.postbox, bubbled: enabled).start()
@@ -407,9 +415,15 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             case .builtin:
                 genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
             case let.color(color):
-                genericView.backgroundMode = .color(color: NSColor(UInt32(color)))
+                genericView.backgroundMode = .color(color: NSColor(UInt32(abs(color))))
             case let .image(representation):
                 if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource))) {
+                    genericView.backgroundMode = .background(image: image)
+                } else {
+                    genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                }
+            case let .custom(path):
+                if  let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
                     genericView.backgroundMode = .background(image: image)
                 } else {
                     genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))

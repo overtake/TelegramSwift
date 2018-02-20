@@ -73,7 +73,7 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
     
 }
 
-func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil) -> NSAttributedString {
+func chatListText(account:Account, location: ChatLocation, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil) -> NSAttributedString {
     
     if let embeddedState = embeddedState as? ChatEmbeddedInterfaceState {
         let mutableAttributedText = NSMutableAttributedString()
@@ -133,6 +133,13 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
                 _ = mutableAttributedText.append(string: peerText as String, color: theme.chatList.peerTextColor, font: .normal(.text))
                 _ = mutableAttributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
                 attributedText = mutableAttributedText;
+            } else if location.groupId != nil {
+                let peerText = messageMainPeer(message)?.displayTitle ?? ""
+                let mutableAttributedText = NSMutableAttributedString()
+                
+                _ = mutableAttributedText.append(string: "\(peerText)\n", color: theme.chatList.peerTextColor, font: .normal(.text))
+                _ = mutableAttributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
+                attributedText = mutableAttributedText
             } else {
                 attributedText = NSAttributedString.initialize(string: messageText as String, color: theme.chatList.grayTextColor, font: NSFont.normal(FontSize.text)).mutableCopy() as! NSMutableAttributedString
             }
@@ -164,7 +171,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
 func serviceMessageText(_ message:Message, account:Account) -> String {
     
     var authorName:String = ""
-    if let displayTitle = message.author?.compactDisplayTitle {
+    if let displayTitle = message.author?.displayTitle {
         if message.author?.id == account.peerId {
             authorName = tr(L10n.chatServiceYou)
         } else {
@@ -172,6 +179,14 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
         }
     }
     
+    if let media = message.media.first as? TelegramMediaExpiredContent {
+        switch media.data {
+        case .image:
+            return L10n.chatListPhoto
+        case .file:
+            return L10n.chatListVideo
+        }
+    }
    
     
     let authorId:PeerId? = message.author?.id
@@ -285,8 +300,10 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             return tr(L10n.chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency)))
         case .unknown:
             break
-        case .customText(let text):
+        case .customText(let text, _):
             return text
+        case let .botDomainAccessGranted(domain):
+            return L10n.chatServiceBotPermissionAllowed(domain)
         }
     }
     

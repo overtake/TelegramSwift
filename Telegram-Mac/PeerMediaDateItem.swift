@@ -34,7 +34,7 @@ class PeerMediaDateItem: TableRowItem {
         
         let text: String
         let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: appCurrentLanguage.languageCode)
+        dateFormatter.timeZone = NSTimeZone.local
         dateFormatter.dateFormat = "MMMM yyyy";
         text = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
         

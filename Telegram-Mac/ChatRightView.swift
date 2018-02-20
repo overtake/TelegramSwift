@@ -60,7 +60,7 @@ class ChatRightView: View {
                         self.addSubview(stateView!)
                     }
                     
-                    if item.isRead && !item.isFailed && item.chatInteraction.peerId != item.account.peerId {
+                    if item.isRead && !item.isFailed && !item.isStorage {
                         if readImageView == nil {
                             readImageView = ImageView()
                             addSubview(readImageView!)
@@ -110,55 +110,60 @@ class ChatRightView: View {
                 if item.isFailed {
                     rightInset -= 2
                 }
-                stateView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, item.isFailed ? 0 : 2)
+                stateView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, item.isFailed ? (item.isStateOverlayLayout ? 2 : 1) : (item.isStateOverlayLayout ? 3 : 2))
             }
             
             if let sendingView = sendingView {
                 if isReversed {
-                    sendingView.setFrameOrigin(frame.width - sendingView.frame.width - item.stateOverlayAdditionCorner, 2)
+                    sendingView.setFrameOrigin(frame.width - sendingView.frame.width - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 3 : 2))
                 } else {
-                    sendingView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, 2)
+                    sendingView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 3 : 2))
                 }
             }
 
             
             if let readImageView = readImageView {
-                readImageView.setFrameOrigin((frame.width - rightInset) + 4 - item.stateOverlayAdditionCorner, 2)
+                readImageView.setFrameOrigin((frame.width - rightInset) + 4 - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 3 : 2))
             }
         }
         self.setNeedsDisplay()
     }
     
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         if let item = item {
+            
             if item.isStateOverlayLayout {
                 ctx.round(frame.size, frame.height/2)
+                ctx.setFillColor(theme.colors.blackTransparent.cgColor)
+                ctx.fill(layer.bounds)
             }
             
-            super.draw(layer, in: ctx)
+           // super.draw(layer, in: ctx)
 
-            let additional: CGFloat = item.isBubbled && item.isFailed ? 2 : 0
+            let additional: CGFloat = 0
             
             if let date = item.date {
-                date.1.draw(NSMakeRect(frame.width - date.0.size.width - (isReversed ? 16 : 0) - item.stateOverlayAdditionCorner - additional, item.isBubbled ? 1 : 0, date.0.size.width, date.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                date.1.draw(NSMakeRect(frame.width - date.0.size.width - (isReversed ? 16 : 0) - item.stateOverlayAdditionCorner - additional, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, date.0.size.width, date.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                
+                if let editLabel = item.editedLabel {
+                    editLabel.1.draw(NSMakeRect(frame.width - date.0.size.width - editLabel.0.size.width - item.stateOverlayAdditionCorner - (isReversed || (stateView != nil) ? 23 : 5), item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, editLabel.0.size.width, editLabel.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                }
             }
             if let channelViews = item.channelViews {
                 let icon = theme.chat.channelViewsIcon(item)
-                ctx.draw(icon, in: NSMakeRect(channelViews.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? 0 : 0, icon.backingSize.width, icon.backingSize.height))
+                ctx.draw(icon, in: NSMakeRect(channelViews.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
                 
-                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? 1 : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 0) : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
                 
                 if let postAuthor = item.postAuthor {
-                    postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner, item.isBubbled ? 1 : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
                 
-            } else {
-                if let editLabel = item.editedLabel {
-                    editLabel.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? 1 : 0, editLabel.0.size.width, editLabel.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
-                }
             }
+            
         }
         
     }

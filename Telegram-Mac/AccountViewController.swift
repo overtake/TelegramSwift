@@ -63,7 +63,7 @@ enum AccountInfoEntry : Comparable, Identifiable {
     case language(index: Int, current: String)
     case appearance(index: Int)
     case phone(index: Int, phone: String)
-    case privacy(index: Int)
+    case privacy(index: Int, AccountPrivacySettings?)
     case dataAndStorage(index: Int)
     case accounts(index: Int)
     case about(index: Int)
@@ -135,7 +135,7 @@ enum AccountInfoEntry : Comparable, Identifiable {
             return index
         case let .phone(index, _):
             return index
-        case let .privacy(index):
+        case let .privacy(index, _):
             return index
         case let .dataAndStorage(index):
             return index
@@ -216,9 +216,9 @@ enum AccountInfoEntry : Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .privacy(lhsIndex):
-            if case let .privacy(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
+        case let .privacy(lhsIndex, lhsPrivacy):
+            if case let .privacy(rhsIndex, rhsPrivacy) = rhs {
+                return lhsIndex == rhsIndex && lhsPrivacy == rhsPrivacy
             } else {
                 return false
             }
@@ -384,7 +384,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
     
     override func navigationWillChangeController() {
         if let navigation = navigation as? ExMajorNavigationController {
-            if navigation.controller is StorageUsageController {
+            if navigation.controller is DataAndStorageViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.dataAndStorage(index: 0).stableId)) {
                     _ = genericView.select(item: item)
                 }
@@ -397,7 +397,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.privacy(index: 0).stableId)) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.privacy(index: 0, nil).stableId)) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is LanguageViewController {
@@ -440,10 +440,12 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        let apply = combineLatest(account.viewTracker.peerView( account.peerId), connectionPromise.get(), statePromise.get(), appearanceSignal) |> deliverOn(Queue.mainQueue()) |> map { [weak self] peerView, connection, state, appearance -> TableUpdateTransition in
+        let privacySettings: Signal<AccountPrivacySettings?, NoError> = .single(nil) |> then(requestAccountPrivacySettings(account: account) |> map { Optional($0) })
+        
+        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue, connectionPromise.get() |> deliverOnMainQueue, statePromise.get() |> deliverOnMainQueue, appearanceSignal, privacySettings |> deliverOnMainQueue) |> map { [weak self] peerView, connection, state, appearance, privacySettings -> TableUpdateTransition in
             
             if let strongSelf = self {
-                let entries = strongSelf.entries(for: state, account: strongSelf.account, connection: connection, peerView: peerView, language: appearance.language).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = strongSelf.entries(for: state, account: strongSelf.account, connection: connection, peerView: peerView, language: appearance.language, privacySettings: privacySettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 let previous = strongSelf.entries.swap(entries)
                 return strongSelf.prepareEntries(left: previous, right: entries, account: strongSelf.account, accountManager: strongSelf.accountManager, animated: true, atomicSize: strongSelf.atomicSize.modify({$0}))
             }
@@ -506,7 +508,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         super.init(account)
     }
     
-    func entries(for state:ViewControllerState, account:Account, connection:ConnectionStatus, peerView:PeerView, language: Language) -> [AccountInfoEntry] {
+    func entries(for state:ViewControllerState, account:Account, connection:ConnectionStatus, peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?) -> [AccountInfoEntry] {
         var entries:[AccountInfoEntry] = []
         
         var index:Int = 0
@@ -543,7 +545,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         index += 1
         entries.append(.dataAndStorage(index: index))
         index += 1
-        entries.append(.privacy(index: index))
+        entries.append(.privacy(index: index, privacySettings))
         index += 1
         entries.append(.language(index: index, current: tr(L10n.accountSettingsCurrentLanguage)))
         index += 1
@@ -657,16 +659,16 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                         self?.navigation?.push(AppearanceViewController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-            case .privacy:
+            case .privacy(_, let settings):
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsPrivacyAndSecurity), icon: theme.icons.settingsSecurity, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is PrivacyAndSecurityViewController) {
-                        self?.navigation?.push(PrivacyAndSecurityViewController(account, initialSettings: .single(nil) |> then(requestAccountPrivacySettings(account: account) |> map { Optional($0) })))
+                        self?.navigation?.push(PrivacyAndSecurityViewController(account, initialSettings: .single(settings)))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .dataAndStorage:
-                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsStorage), icon: theme.icons.settingsStorage, type: .none, action: { [weak self] in
-                    if !(self?.navigation?.controller is StorageUsageController) {
-                        self?.navigation?.push(StorageUsageController(account))
+                return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsDataAndStorage), icon: theme.icons.settingsStorage, type: .none, action: { [weak self] in
+                    if !(self?.navigation?.controller is DataAndStorageViewController) {
+                        self?.navigation?.push(DataAndStorageViewController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .accounts:
@@ -693,7 +695,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                         case .basic:
                             _ = showModalProgress(signal: supportPeerId(account: account), for: mainWindow).start(next: { [weak self] peerId in
                                 if let peerId = peerId {
-                                    self?.navigation?.push(ChatController(account: account, peerId: peerId))
+                                    self?.navigation?.push(ChatController(account: account, chatLocation: .peer(peerId)))
                                 }
                             })
                         case .thrid:
@@ -750,8 +752,9 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
     
     override func scrollup() {
         if let currentEvent = NSApp.currentEvent, currentEvent.clickCount == 5 {
-            account.context.mainNavigation?.push(DeveloperViewController(account))
+            account.context.mainNavigation?.push(DeveloperViewController(account, accountManager))
         }
+        
         genericView.scroll(to: .up(true))
     }
     

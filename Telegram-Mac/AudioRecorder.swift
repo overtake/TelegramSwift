@@ -166,6 +166,7 @@ final class ManagedAudioRecorderContext {
     
     private var micLevelPeak: Int16 = 0
     private var micLevelPeakCount: Int = 0
+    private var sampleRate: Int32 = 0
     
     fileprivate var isPaused = false
     
@@ -265,12 +266,14 @@ final class ManagedAudioRecorderContext {
                 break
             }
         }
+        NSLog("\(inputSampleRate)")
         deviceDataRequest.mSelector = kAudioDevicePropertyNominalSampleRate
         guard AudioObjectSetPropertyData(deviceId, &deviceDataRequest, 0, nil, UInt32(MemoryLayout<AudioValueRange>.size), &inputSampleRate) == noErr else {
             return
         }
         
         var audioStreamDescription = audioRecorderNativeStreamDescription(inputSampleRate.mMinimum)
+        sampleRate = Int32(inputSampleRate.mMinimum)
         guard AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &audioStreamDescription, UInt32(MemoryLayout<AudioStreamBasicDescription>.size)) == noErr else {
             AudioComponentInstanceDispose(audioUnit)
             return
@@ -348,6 +351,24 @@ final class ManagedAudioRecorderContext {
     
     func processAndDisposeAudioBuffer(_ buffer: AudioBuffer) {
         assert(self.queue.isCurrent())
+        
+        var buffer = buffer
+        
+        if(sampleRate==16000){
+            let initialBuffer=malloc(Int(buffer.mDataByteSize+2));
+            memcpy(initialBuffer, buffer.mData, Int(buffer.mDataByteSize));
+            buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*3))
+            let values = initialBuffer!.assumingMemoryBound(to: Int16.self)
+            let resampled = buffer.mData!.assumingMemoryBound(to: Int16.self)
+            values[Int(buffer.mDataByteSize/2)]=values[Int(buffer.mDataByteSize/2)-1]
+            for i: Int in 0 ..< Int(buffer.mDataByteSize/2) {
+                resampled[i*3]=values[i]
+                resampled[i*3+1]=values[i]/3+values[i+1]/3*2
+                resampled[i*3+2]=values[i]/3*2+values[i+1]/3
+            }
+            free(initialBuffer)
+            buffer.mDataByteSize*=3
+        }
         
         defer {
             free(buffer.mData)

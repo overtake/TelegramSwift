@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 class WPMediaContentView: WPContentView {
     
-    var contentNode:ChatMediaContentView?
+    private(set) var contentNode:ChatMediaContentView?
     
     override func draw(_ dirtyRect: NSRect) {
         
@@ -47,8 +47,8 @@ class WPMediaContentView: WPContentView {
         }
     }
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
-        return contentNode?.interactionContentView(for: innerId) ?? self
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
+        return contentNode?.interactionContentView(for: innerId, animateIn: animateIn) ?? self
     }
     
 }

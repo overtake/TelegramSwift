@@ -41,7 +41,7 @@ class TextAndLabelItem: GeneralRowItem {
         
         textLayout = TextViewLayout(attr)
         textLayout.interactions = globalLinkExecutor
-        
+        textLayout.selectWholeText = !detectLinks
         if selectFullWord {
             textLayout.interactions.copy = {
                 copyToClipboard(text)
@@ -110,7 +110,7 @@ class TextAndLabelRowView: GeneralRowView {
         
         if let item = item as? TextAndLabelItem, let label = item.labelLayout {
             
-            label.1.draw(NSMakeRect(item.inset.left, item.labelY, label.0.size.width, label.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            label.1.draw(NSMakeRect(item.inset.left, item.labelY, label.0.size.width, label.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             if item.drawCustomSeparator {
                 ctx.setFillColor(theme.colors.border.cgColor)
                 ctx.fill(NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.left - item.inset.right, .borderSize))

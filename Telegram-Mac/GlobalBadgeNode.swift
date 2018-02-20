@@ -35,7 +35,7 @@ class GlobalBadgeNode: Node {
                         if strongSelf.layoutChanged == nil {
                             var origin:NSPoint = NSZeroPoint
                             let center = view.focus(strongSelf.size)
-                            origin = NSMakePoint(floorToScreenPixels(center.midX) + 4 + strongSelf.xInset, 4)
+                            origin = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, center.midX) + 4 + strongSelf.xInset, 4)
                             strongSelf.frame = NSMakeRect(origin.x,origin.y,strongSelf.size.width,strongSelf.size.height)
                         } else {
                             strongSelf.view?.setFrameSize(strongSelf.size)
@@ -102,7 +102,7 @@ class GlobalBadgeNode: Node {
             
             if let textLayout = textLayout {
                 let focus = view.focus(textLayout.0.size)
-                textLayout.1.draw(focus, in: ctx, backingScaleFactor: view.backingScaleFactor)
+                textLayout.1.draw(focus, in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: view.backgroundColor)
             }
         }
     }

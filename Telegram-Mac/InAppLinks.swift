@@ -60,7 +60,50 @@ var globalLinkExecutor:TextViewInteractions {
                 return true
             }
             return false
+        }, makeLinkType: { link in
+            if let link = link as? inAppLink {
+                switch link {
+                case .botCommand:
+                    return .command
+                case .hashtag:
+                    return .hashtag
+                case .followResolvedName:
+                    return .username
+                case let .external(link, _):
+                    if isValidEmail(link) {
+                        return .email
+                    } else {
+                        return .plain
+                    }
+                case .stickerPack:
+                    return .stickerPack
+                case .joinchat:
+                    return .inviteLink
+                default:
+                    return .plain
+                }
+            }
+            return .plain
         })
+    }
+}
+
+func copyContextText(from type: LinkType) -> String {
+    switch type {
+    case .username:
+        return L10n.textContextCopyUsername
+    case .command:
+        return L10n.textContextCopyCommand
+    case .hashtag:
+        return L10n.textContextCopyHashtag
+    case .email:
+        return L10n.textContextCopyEmail
+    case .plain:
+        return L10n.textContextCopyLink
+    case .inviteLink:
+        return L10n.textContextCopyInviteLink
+    case .stickerPack:
+        return L10n.textContextCopyStickerPack
     }
 }
 
@@ -76,7 +119,8 @@ func execute(inapp:inAppLink) {
                 url = "http://" + url
             }
         }
-        if let url = URL(string: escape(with:url)) {
+        let escaped = escape(with:url)
+        if let url = URL(string: escaped) {
             let success:()->Void = {
                 
                 var path = url.absoluteString
@@ -97,9 +141,7 @@ func execute(inapp:inAppLink) {
                         return
                     }
                 }
-                
-                
-                
+
                 NSWorkspace.shared.open(url)
             }
             if needConfirm {
@@ -233,11 +275,7 @@ private func urlVars(with url:String) -> [String:String] {
     return vars
 }
 
-private func isValidEmail(_ checkString:String) -> Bool {
-    let emailRegex = ".+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*"
-    let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
-    return emailTest.evaluate(with: checkString)
-}
+
 
 
 enum inAppLink {
@@ -320,7 +358,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                             break loop;
                         case keyURLStartGroup:
                             if let openInfo = openInfo {
-                                return .inviteBotToGroup(username: username, account: account, action: .start(parameter: value, behavior: .none), callback: openInfo)
+                                return .inviteBotToGroup(username: username, account: account, action: nil, callback: openInfo)
                             }
                             break loop;
                         default:

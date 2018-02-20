@@ -50,8 +50,8 @@ class AuthHeaderView : View {
         textHeaderView.userInteractionEnabled = false
         textHeaderView.isSelected = false
         
+        nextButton.autohighlight = false
         nextButton.style = ControlStyle(font: NSFont.medium(16.0), foregroundColor: .white, backgroundColor: NSColor(0x32A3E2), highlightColor: .white)
-        nextButton.set(background: .blueUI, for: .Highlight)
         nextButton.set(text: tr(L10n.loginNext), for: .Normal)
         _ = nextButton.sizeToFit(thatFit: true)
         nextButton.setFrameSize(76, 36)
@@ -81,7 +81,7 @@ class AuthHeaderView : View {
         switchLanguage.set(font: .medium(.title), for: .Normal)
         switchLanguage.set(color: .blueUI, for: .Normal)
         switchLanguage.set(text: "Continue on English", for: .Normal)
-        switchLanguage.sizeToFit()
+        _ = switchLanguage.sizeToFit()
     }
     
     func hideSwitchButton() {
@@ -94,7 +94,7 @@ class AuthHeaderView : View {
     func showLanguageButton(title: String, callback:@escaping()->Void) -> Void {
         needShowSuggestedButton = true
         switchLanguage.set(text: title, for: .Normal)
-        switchLanguage.sizeToFit()
+        _ = switchLanguage.sizeToFit()
         switchLanguage.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         switchLanguage.set(handler: { _ in
             callback()
@@ -155,7 +155,7 @@ class AuthHeaderView : View {
             intro.change(pos: NSMakePoint(intro.frame.minX, 50), animated: animated)
             intro.change(opacity: 1, animated: animated)
             loginView.change(pos: NSMakePoint(loginView.frame.minX, intro.frame.maxY + 50), animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, floorToScreenPixels((frame.height - textHeaderView.frame.height)/2)), animated: animated)
+            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - textHeaderView.frame.height)/2)), animated: animated)
             switchLanguage.isHidden = !needShowSuggestedButton
         case .confirmationCodeEntry:
             nextButton.change(opacity: 1, animated: animated)
@@ -194,6 +194,10 @@ class AuthHeaderView : View {
             intro.change(opacity: 0, animated: animated)
             loginView.change(pos: NSMakePoint(loginView.frame.minX, 160), animated: animated)
             switchLanguage.isHidden = true
+        case .passwordRecovery(let hint, let number, let code, let emailPattern):
+            break
+        case .awaitingAccountReset(let protectedUntil, let number):
+            break
         }
     }
     

@@ -77,7 +77,7 @@ class SuccessModalController : ModalViewController {
         imageView?.image = icon
         imageView?.sizeToFit()
         
-        view.background = presentation.colors.grayBackground.withAlphaComponent(0.8)
+        view.background = presentation.colors.grayBackground.withAlphaComponent(0.86)
         view.addSubview(imageView!)
         imageView!.center()
         

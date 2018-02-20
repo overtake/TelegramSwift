@@ -83,11 +83,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         
                         let sY = tY + title.0.size.height + 1.0
                         if hiddenStatus {
-                            status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                            status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         }
                     }
                     
-                    title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             } else {
                 super.draw(layer, in: ctx)
@@ -144,7 +144,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
             #if !SHARE
             if let view = activities?.view {
-                view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(frame.height / 2 + 1))
+                view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2 + 1))
             }
             #endif
         }

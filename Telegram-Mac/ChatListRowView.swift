@@ -22,6 +22,7 @@ class ChatListRowView: TableRowView {
     private var activeDragging:Bool = false
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
+    private var removeControl:ImageButton? = nil
     override var isFlipped: Bool {
         return true
     }
@@ -114,9 +115,12 @@ class ChatListRowView: TableRowView {
     
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-        ctx.setFillColor(theme.colors.background.cgColor)
-        ctx.fill(bounds)
+        if backingScaleFactor == 1.0 {
+            ctx.setFillColor(backdorColor.cgColor)
+            ctx.fill(layer.bounds)
+        }
+       // ctx.setFillColor(theme.colors.background.cgColor)
+       // ctx.fill(bounds)
         super.draw(layer, in: ctx)
 //
          if let item = self.item as? ChatListRowItem {
@@ -150,7 +154,7 @@ class ChatListRowView: TableRowView {
                     addition += theme.icons.secretImage.backingSize.height
                     
                 }
-                displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
                 
                 var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
@@ -161,7 +165,7 @@ class ChatListRowView: TableRowView {
                 }
                 
                 if let messageLayout = item.ctxMessageLayout, !hiddemMessage {
-                    messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 , messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 , messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
                 
                 if item.isMuted {
@@ -172,29 +176,26 @@ class ChatListRowView: TableRowView {
                     ctx.draw(highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - theme.icons.chatListMentionActive.backingSize.width - item.margin, frame.height - theme.icons.chatListMention.backingSize.height - item.margin + 1, theme.icons.chatListMention.backingSize.width, theme.icons.chatListMention.backingSize.height))
                 }
                 
-                if let dateLayout = item.ctxDateLayout, !item.hasDraft {
+                if let dateLayout = item.ctxDateLayout, !item.hasDraft, item.state == .plain {
                     let dateX = frame.width - dateLayout.0.size.width - item.margin
-                    dateLayout.1.draw(NSMakeRect(dateX, item.margin, dateLayout.0.size.width, dateLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    dateLayout.1.draw(NSMakeRect(dateX, item.margin, dateLayout.0.size.width, dateLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
-                    if item.isOutMessage {
-                        if !item.isFailed {
-                            if item.isSending {
-                                let outX = dateX - theme.icons.sendingImage.backingSize.width - 4
-                                ctx.draw(highlighted ? theme.icons.sendingImageSelected : theme.icons.sendingImage, in: NSMakeRect(outX,item.margin + 2, theme.icons.sendingImage.backingSize.width, theme.icons.sendingImage.backingSize.height))
-                            } else {
+                    if !item.isFailed {
+                        if item.isSending {
+                            let outX = dateX - theme.icons.sendingImage.backingSize.width - 4
+                            ctx.draw(highlighted ? theme.icons.sendingImageSelected : theme.icons.sendingImage, in: NSMakeRect(outX,item.margin + 2, theme.icons.sendingImage.backingSize.width, theme.icons.sendingImage.backingSize.height))
+                        } else {
+                            if item.isOutMessage {
                                 let outX = dateX - theme.icons.outgoingMessageImage.backingSize.width - (item.isRead ? 4.0 : 0.0) - 2
                                 ctx.draw(highlighted ? theme.icons.outgoingMessageImageSelected : theme.icons.outgoingMessageImage, in: NSMakeRect(outX, item.margin + 2, theme.icons.outgoingMessageImage.backingSize.width, theme.icons.outgoingMessageImage.backingSize.height))
                                 if item.isRead {
                                     ctx.draw(highlighted ? theme.icons.readMessageImageSelected : theme.icons.readMessageImage, in: NSMakeRect(outX + 4, item.margin + 2, theme.icons.readMessageImage.backingSize.width, theme.icons.readMessageImage.backingSize.height))
                                 }
-                                
                             }
-                        } else {
-                            let outX = dateX - theme.icons.errorImageSelected.backingSize.width - 4
-                            ctx.draw(highlighted ? theme.icons.errorImageSelected : theme.icons.errorImage, in: NSMakeRect(outX,item.margin, theme.icons.errorImage.backingSize.width, theme.icons.errorImage.backingSize.height))
-
                         }
-                      
+                    } else {
+                        let outX = dateX - theme.icons.errorImageSelected.backingSize.width - 4
+                        ctx.draw(highlighted ? theme.icons.errorImageSelected : theme.icons.errorImage, in: NSMakeRect(outX,item.margin, theme.icons.errorImage.backingSize.width, theme.icons.errorImage.backingSize.height))
                     }
                     
                 }
@@ -237,7 +238,7 @@ class ChatListRowView: TableRowView {
                     return false
                 }
                 if !list.isEmpty {
-                    context.mainNavigation?.push(ChatController(account: item.account, peerId: item.peerId, initialAction: .files(list: list, behavior: .automatic)))
+                    context.mainNavigation?.push(ChatController(account: item.account, chatLocation: .peer(item.peerId), initialAction: .files(list: list, behavior: .automatic)))
                 }
             }
             return true
@@ -271,16 +272,13 @@ class ChatListRowView: TableRowView {
                 
          if let item = self.item as? ChatListRowItem {
             
-            if let peer = item.peer {
-                if item.account.peerId == peer.id {
-                    let icon = theme.icons.peerSavedMessages
-                    photo.setPeer(account: item.account, peer: nil)
-                    photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 25, photo.frame.size.height - 25)))) |> map {($0, false)})
-                } else {
-                    photo.setPeer(account: item.account, peer: peer)
-                }
-            }
             
+            photo.setState(account: item.account, state: item.photo)
+
+            if item.isSavedMessage {
+                let icon = theme.icons.peerSavedMessages
+                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 25, photo.frame.size.height - 25)))) |> map {($0, false)})
+            } 
             if let badgeNode = item.ctxBadgeNode {
                 if badgeView == nil {
                     badgeView = View()
@@ -292,6 +290,42 @@ class ChatListRowView: TableRowView {
             } else {
                 badgeView?.removeFromSuperview()
                 badgeView = nil
+            }
+
+            switch item.state {
+            case .plain:
+                if let removeControl = removeControl {
+                    removeControl.change(pos: NSMakePoint(frame.width, removeControl.frame.minY), animated: animated, completion: { [weak self] completed in
+                        if completed {
+                            self?.removeControl?.removeFromSuperview()
+                            self?.removeControl = nil
+                        }
+                    })
+                    removeControl.change(opacity: 0, animated: animated)
+                }
+                
+            case let .deletable(onRemove, _):
+                var isNew: Bool = false
+                if removeControl == nil {
+                    removeControl = ImageButton()
+                    removeControl?.autohighlight = false
+                    removeControl?.set(image: theme.icons.deleteItem, for: .Normal)
+                    removeControl?.frame = NSMakeRect(frame.width, 0, 60, frame.height)
+                    removeControl?.layer?.opacity = 0
+                    addSubview(removeControl!)
+                    isNew = true
+                }
+                guard let removeControl = removeControl else {return}
+                removeControl.removeAllHandlers()
+                removeControl.set(handler: { [weak item] _ in
+                    if let location = item?.chatLocation {
+                        onRemove(location)
+                    }
+                }, for: .Click)
+                let f = focus(removeControl.frame.size)
+                removeControl.change(pos: NSMakePoint(frame.width - removeControl.frame.width, f.minY), animated: isNew && animated)
+                removeControl.change(opacity: 1, animated: isNew && animated)
+                
             }
             
             if !(item is ChatListMessageRowItem) {

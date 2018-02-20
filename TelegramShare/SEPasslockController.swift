@@ -121,7 +121,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         super.layout()
         
         photoView.center()
-        photoView.setFrameOrigin(photoView.frame.minX, photoView.frame.minY - floorToScreenPixels((20 + input.frame.height + 60)/2.0) - 20)
+        photoView.setFrameOrigin(photoView.frame.minX, photoView.frame.minY - floorToScreenPixels(scaleFactor: backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
         input.setFrameSize(200, input.frame.height)
         nameView.centerX(y: photoView.frame.maxY + 20)
         input.centerX(y: nameView.frame.minY + 30 + 20)

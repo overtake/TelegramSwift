@@ -20,7 +20,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let defaultImageSize:NSSize
     let url:String
     fileprivate(set) var arguments:TransformImageArguments
-    init(map:TelegramMediaMap, resource:HttpReferenceMediaResource, presentation: ChatMediaPresentation) {
+    init(map:TelegramMediaMap, resource:HttpReferenceMediaResource, presentation: ChatMediaPresentation, automaticDownload: Bool) {
         self.map = map
         self.isVenue = map.venue != nil
         self.resource = resource
@@ -29,7 +29,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         let representation = TelegramMediaImageRepresentation(dimensions: defaultImageSize, resource: resource)
         self.image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil)
         
-        self.arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: defaultImageSize, boundingSize: defaultImageSize, intrinsicInsets: NSEdgeInsets())
+        self.arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: defaultImageSize, boundingSize: defaultImageSize, intrinsicInsets: NSEdgeInsets())
         if let venue = map.venue {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: venue.title, color: presentation.text, font: .normal(.text))
@@ -39,7 +39,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         } else {
             venueText = nil
         }
-        super.init(presentation: presentation, media: map)
+        super.init(presentation: presentation, media: map, automaticDownload: automaticDownload)
     }
 }
 
@@ -50,20 +50,29 @@ func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> B
 class ChatMapRowItem: ChatMediaItem {
     fileprivate var liveText: TextViewLayout?
     fileprivate var updatedText: TextViewLayout?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
-        super.init(initialSize, chatInteraction, account, object)
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
         let map = media as! TelegramMediaMap
         let isVenue = map.venue != nil
         let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
-        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType))
+        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         
         if isLiveLocationView {
-            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
         }
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
+        if let parameters = parameters as? ChatMediaMapLayoutParameters {
+            if parameters.isVenue {
+                return rightSize.width > (_contentSize.width - 70) ? rightSize.height : nil
+            }
+        }
         return nil
+    }
+    
+    override var isFixedRightPosition: Bool {
+        return true
     }
     
     override var instantlyResize:Bool {
@@ -98,6 +107,7 @@ class ChatMapRowItem: ChatMediaItem {
     override var isStateOverlayLayout: Bool {
         return !isLiveLocationView && hasBubble && isBubbleFullFilled
     }
+    
     
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

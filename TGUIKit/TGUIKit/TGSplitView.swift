@@ -100,7 +100,7 @@ fileprivate class SplitMinimisizeView : Control {
         if let splitView = splitView {
             if let drawBorder = splitView.delegate?.splitViewDrawBorder(), drawBorder {
                 ctx.setFillColor(presentation.colors.border.cgColor)
-                ctx.fill(NSMakeRect(floorToScreenPixels(frame.width / 2), 0, .borderSize, frame.height))
+                ctx.fill(NSMakeRect(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2), 0, .borderSize, frame.height))
             }
         }
     }
@@ -170,8 +170,8 @@ public class SplitView : View {
     required public init(frame frameRect: NSRect)  {
         container = View(frame: NSMakeRect(0,0,frameRect.width, frameRect.height))
         super.init(frame: frameRect);
-        self.autoresizingMask = [.width, .height]
         self.autoresizesSubviews = true
+        self.autoresizingMask = [.width, .height]
         container.autoresizesSubviews = false
         container.autoresizingMask = [.width, .height]
         addSubview(container)

@@ -29,18 +29,19 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.wantsLayer = true
         backgroundColor = .clear
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        self.layer?.delegate = self
-        self.layer?.backgroundColor = NSColor.clear.cgColor
+      //  self.layer?.delegate = self
+        self.layer?.backgroundColor = backdorColor.cgColor
         autoresizesSubviews = false
-        autoresizingMask = []
      //   canDrawSubviewsIntoLayer = true
         pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
     }
     
     
     open func updateColors() {
-        
+        self.layer?.backgroundColor = backdorColor.cgColor
     }
+    
+
     
     open func layerClass() ->AnyClass {
         return CALayer.self;
@@ -62,9 +63,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
 
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(backdorColor.cgColor)
-        ctx.fill(bounds)
+//        ctx.setFillColor(backdorColor.cgColor)
+//        ctx.fill(layer.bounds)
+       // layer.draw(in: ctx)
         
+
         if let border = border {
             
             ctx.setFillColor(presentation.colors.border.cgColor)
@@ -86,8 +89,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    open func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    open func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return self
+    }
+    open func interactionControllerDidFinishAnimation(interactive: Bool, innerId: AnyHashable) {
+        
+    }
+    open func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        
     }
     
     open var firstResponder:NSResponder? {
@@ -278,6 +287,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open func focusAnimation() {
+        
+    }
+    
+    open func shakeView() {
         
     }
     

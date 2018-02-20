@@ -18,20 +18,18 @@ class ChatNavigateScroller: ImageButton {
     private let disposable:MetaDisposable = MetaDisposable()
     private var badge:BadgeNode?
     private var badgeView:View = View()
-    private let peerId:PeerId
     private let account:Account
-    init(_ account:Account, _ peerId:PeerId) {
+    init(_ account:Account, _ chatLocation: ChatLocation) {
         self.account = account
-        self.peerId = peerId
         super.init()
         autohighlight = false
         set(image: theme.icons.chatScrollUp, for: .Normal)
         set(image: theme.icons.chatScrollUpActive, for: .Highlight)
         self.setFrameSize(60,60)
         
-        self.disposable.set((account.postbox.unreadMessageCountsView(items: [.peer(peerId)]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
+        self.disposable.set((account.postbox.unreadMessageCountsView(items: [chatLocation.unreadMessageCountsItem]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
             if let strongSelf = self {
-                let count = unreadView.count(for: .peer(peerId)) ?? 0
+                let count = unreadView.count(for: chatLocation.unreadMessageCountsItem) ?? 0
                 if count > 0 {
                     strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.blueUI)
                     strongSelf.badge!.view = strongSelf.badgeView

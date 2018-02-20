@@ -15,7 +15,14 @@ fileprivate class PickerObserver {
     
     @objc fileprivate func validated(_ picker:IKPictureTaker, _ code:Int, _ contextInfo:Any?) {
         if code == NSApplication.ModalResponse.OK.rawValue {
-            let image = picker.outputImage()
+            var image = picker.outputImage()
+            if let img = image {
+                let size = img.size.aspectFilled(NSMakeSize(640, 640))
+                let resized = generateImage(size, contextGenerator: { size, ctx in
+                    ctx.draw(img.precomposed(), in: NSMakeRect(0, 0, size.width, size.height))
+                })!
+                image = NSImage(cgImage: resized, size: size)
+            }
             completion(image)
         }
     }

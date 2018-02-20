@@ -86,7 +86,7 @@ func generateExtensionImage(colors: (UInt32, UInt32), ext:String) -> CGImage? {
         if !layout.lines.isEmpty {
             let line = layout.lines[0]
             context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-            context.textPosition = NSMakePoint(floorToScreenPixels((size.width - line.frame.width)/2.0) - 1, floorToScreenPixels((size.height )/2.0) + 4)
+            context.textPosition = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - line.frame.width)/2.0) - 1, floorToScreenPixels(scaleFactor: System.backingScale, (size.height )/2.0) + 4)
             
             CTLineDraw(line.line, context)
         } 
@@ -107,7 +107,7 @@ func generateMediaEmptyLinkThumb(color: NSColor, host:String) -> CGImage? {
             let line = layout.lines[0]
             
             context.textMatrix = CGAffineTransform(scaleX: 1.0, y: 1.0)
-            context.textPosition = NSMakePoint(floorToScreenPixels((size.width - line.frame.width)/2.0) , floorToScreenPixels((size.height - line.frame.width)/2.0))
+            context.textPosition = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - line.frame.width)/2.0) , floorToScreenPixels(scaleFactor: System.backingScale, (size.height - line.frame.width)/2.0))
             CTLineDraw(line.line, context)
         }
     })
@@ -151,7 +151,7 @@ func capIcon(for text:NSAttributedString, size:NSSize = NSMakeSize(50, 50), corn
         
 
         ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: 1.0)
-        ctx.textPosition = NSMakePoint(floorToScreenPixels((size.width - rect.width)/2.0), floorToScreenPixels((size.height - rect.height)/2.0) + 6 )
+        ctx.textPosition = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - rect.width)/2.0), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - rect.height)/2.0) + 6 )
         
         CTLineDraw(line, ctx)
         

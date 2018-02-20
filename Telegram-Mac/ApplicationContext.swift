@@ -59,114 +59,7 @@ enum MigrationData {
 
 
 func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, Void> {
-       
-    return accountManager.modify { modifier -> Signal<MigrationData, Void> in
-        
-        if modifier.getCurrentId() == nil {
-            
-            let auth = legacyAuthData(passcode: emptyPasscodeData())
-            let promise:Promise<AuthorizationLegacyData> = Promise()
-            
-            switch auth {
-            case .data:
-                break
-            case .passcodeRequired:
-                break
-            case .none:
-                return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
-            }
-            
-            return .single(.migrationIntro(promise, auth)) |> then ( promise.get() |> take(1) |> mapToSignal { result in
-                return accountManager.modify { modifier -> Signal<MigrationData, Void> in
-                
-                    switch result {
-                    case let .data(migration):
-                        let accountId = modifier.createRecord([])
-                        
-                        let provider = ImportAccountProvider(mtProtoKeychain: {
-                            return .single(migration.groups)
-                        }, accountState: {
-                            return .single(AuthorizedAccountState(masterDatacenterId: migration.masterDatacenterId, peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: migration.userId), state: nil))
-                        }, peers:  {
-                            return .single([])
-                        })
-                        //if !isDebug {
-                            clearLegacyData()
-                       // }
-                        return accountWithId(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), id: accountId, supplementary: false, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods, shouldKeepAutoConnection: false) |> mapToSignal { accountResult in
-                            switch accountResult {
-                            case .unauthorized(let left):
-                                return importAccount(account: left, provider: provider) |> mapToSignal {
-                                    return accountManager.modify { modifier -> Void in
-                                        modifier.setCurrentId(accountId)
-                                        } |> mapToSignal {
-                                            return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { accountResult  -> Signal<MigrationData, Void> in
-                                                
-                                                if let accountResult = accountResult {
-                                                    switch accountResult {
-                                                    case .authorized(let account):
-                                                        for (resource, data) in migration.resources {
-                                                            account.postbox.mediaBox.storeResourceData(resource.id, data: data)
-                                                        }
-                                                        return account.postbox.modify { modifier -> MigrationData in
-                                                            
-                                                            updatePeers(modifier: modifier, peers: migration.peers, update: { (_, updated) -> Peer? in
-                                                                return updated
-                                                            })
-                                                            
-                                                            for (peerId, state) in migration.secretState {
-                                                                modifier.setPeerChatState(peerId, state: terminateLegacySecretChat(modifier: modifier, peerId: peerId, state: state))
-                                                            }
-                                                            
-                                                            if let passcode = migration.passcode {
-                                                                modifier.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: 60 * 60, attempts: nil))
-                                                            }
-                                                            _ = modifier.addMessages(migration.secretMessages, location: .Random)
-                                                            
-                                                            for message in migration.secretMessages {
-                                                                if let attribute = message.attributes.first as? AutoremoveTimeoutMessageAttribute {
-                                                                    switch message.id {
-                                                                    case let .Id(id):
-                                                                        let begin:Int32 = attribute.countdownBeginTime ?? Int32(Date().timeIntervalSince1970)
-                                                                        modifier.addTimestampBasedMessageAttribute(tag: 0, timestamp: begin + attribute.timeout, messageId: id)
-                                                                    default:
-                                                                        break
-                                                                    }
-                                                                }
-                                                            }
-                                                            
-                                                            return .auth(accountResult, ignorepasslock: true)
-                                                        }
-                                                    default:
-                                                        break
-                                                    }
-                                                }
-                                                
-                                                return .single(.auth(accountResult, ignorepasslock: false))
-                                            } |> switchToLatest 
-                                    }
-                                }
-                            default:
-                                break
-                            }
-                            return currentAccount(networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
-                        }
-                    case .none:
-                        clearLegacyData()
-                    default:
-                        assertionFailure()
-                    }
-                    
-                    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
-                } |> switchToLatest
-                
-            })
-
-        }
-        return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
-
-    } |> switchToLatest
-    
+    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
 
@@ -229,7 +122,7 @@ final class PasscodeAccessContext {
             setDefaultTheme(for: window)
         }
         
-        rootController = PasscodeLockController(account, .login, logoutImpl: {
+        rootController = PasscodeLockController(account, .login(hasTouchId: false), logoutImpl: {
             _ = (confirmSignal(for: window, information: tr(L10n.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
         })
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
@@ -369,6 +262,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     private let localizationDisposable = MetaDisposable()
     private let suggestedLocalizationDisposable = MetaDisposable()
     private let appearanceDisposable = MetaDisposable()
+    private let requestAccessDisposable = MetaDisposable()
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
         lockedScreenPromise.set(.single(_lockedValue))
@@ -431,7 +325,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 
         
         
-        applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), network: account.network)
+        applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), network: account.network, postbox: account.postbox)
         
        
         
@@ -494,7 +388,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             }
         }))
         
-        let passlock = Signal<Void, Void>.single(Void()) |> delay(60, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, Void> in
+        let passlock = Signal<Void, Void>.single(Void()) |> delay(15, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, Void> in
             return account.postbox.modify { modifier -> Int32? in
                 return modifier.getAccessChallengeData().timeout
             }
@@ -527,7 +421,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         passlockDisposable.set((_passlock.get() |> deliverOnMainQueue |> mapToSignal { [weak self] show -> Signal<Bool, Void> in
             if show {
-                let controller = PasscodeLockController(account, .login, logoutImpl: { [weak self] in
+                let controller = PasscodeLockController(account, .login(hasTouchId: false), logoutImpl: { [weak self] in
                     self?.logout()
                 })
                 closeAllModals()
@@ -558,7 +452,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }))
         
         
-       // NotificationCenter.default.addObserver(self, selector: #selector(windiwDidChangeBackingProperties), name: NSNotification.Name.NSWindowDidChangeBackingProperties, object: window)
+        NotificationCenter.default.addObserver(self, selector: #selector(windiwDidChangeBackingProperties), name: NSWindow.didChangeBackingPropertiesNotification, object: window)
 
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
@@ -590,7 +484,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
-                strongSelf.applicationContext.mainNavigation?.push(ChatController(account: strongSelf.account, peerId: strongSelf.account.peerId))
+                strongSelf.applicationContext.mainNavigation?.push(ChatController(account: strongSelf.account, chatLocation: .peer(strongSelf.account.peerId)))
             }
             return .invoked
         }, with: self, for: .Zero, priority: .low, modifierFlags: [.command])
@@ -657,6 +551,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     
     @objc open func windowDidBecomeKey() {
         self.resignTimestamp = nil
+    }
+    
+    @objc open func windiwDidChangeBackingProperties() {
+        _ = System.scaleFactor.swap(window.backingScaleFactor)
     }
     
     
@@ -760,7 +658,15 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         localizationDisposable.dispose()
         suggestedLocalizationDisposable.dispose()
         appearanceDisposable.dispose()
-        //query.stop()
+        requestAccessDisposable.dispose()
+        
+        viewer?.close()
+        
+        for window in NSApp.windows {
+            if window != self.window {
+                window.orderOut(nil)
+            }
+        }
     }
     
     
@@ -768,8 +674,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         let lockedSreenSignal = lockedScreenPromise.get()
         
-        self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([Message], InAppNotificationSettings), Void> in
-            return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([Message], InAppNotificationSettings), Void> in
+        self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), Void> in
+            return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), Void> in
                 
                 let inAppSettings: InAppNotificationSettings
                 if let settings = settings.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings {
@@ -777,6 +683,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 } else {
                     inAppSettings = InAppNotificationSettings.defaultSettings
                 }
+                
                 if inAppSettings.enabled && inAppSettings.muteUntil < Int32(Date().timeIntervalSince1970) {
                     return .single((messages, inAppSettings))
                 } else {
@@ -785,20 +692,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 
             }
             }
-            |> mapToSignal { messages, inAppSettings -> Signal<([Message],[MessageId:NSImage], InAppNotificationSettings), Void> in
+            |> mapToSignal { messages, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings), Void> in
                 
                 var photos:[Signal<(MessageId, CGImage?),Void>] = []
                 for message in messages {
-                    var peer = message.author
-                    if let mainPeer = messageMainPeer(message) {
+                    var peer = message.0.author
+                    if let mainPeer = messageMainPeer(message.0) {
                         if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
                             peer = mainPeer
                         }
                     }
                     if let peer = peer {
-                        if let image = peerAvatarImage(account: account, peer: peer, genCap: false) {
-                            photos.append(image |> map { data in return (message.id, data.0)})
-                        }
+                        photos.append(peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters), genCap: false) |> map { data in return (message.0.id, data.0)})
                     }
                 }
                 
@@ -809,9 +714,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                             images[messageId] = NSImage(cgImage: image, size: NSMakeSize(50,50))
                         }
                     }
-                    return (messages,images, inAppSettings)
+                    return (messages, images, inAppSettings)
                 }
-            } |> mapToSignal { messages, images, inAppSettings -> Signal<([Message],[MessageId:NSImage], InAppNotificationSettings, Bool), Void> in
+            } |> mapToSignal { messages, images, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings, Bool), Void> in
                 return lockedSreenSignal |> take(1)
                     |> map { data in return (messages, images, inAppSettings, data.isLocked)}
             }
@@ -820,15 +725,22 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                     return (values.0, values.1, values.2, values.3, s != nil)
                 }
             } |> deliverOnMainQueue).start(next: { messages, images, inAppSettings, screenIsLocked, inCall in
-                for message in messages {
+                for (message, groupId) in messages {
                     if message.author?.id != account.peerId {
                         var title:String = message.author?.displayTitle ?? ""
-                        var hasReplyButton:Bool = true
-                        if let peer = message.peers[message.id.peerId], peer is TelegramChannel || peer is TelegramGroup {
-                            title = peer.displayTitle
-                            hasReplyButton = peer.canSendMessage
+                        var hasReplyButton:Bool = !screenIsLocked
+                        if let peer = message.peers[message.id.peerId] {
+                            if peer.isSupergroup || peer.isGroup {
+                                title = peer.displayTitle
+                                hasReplyButton = peer.canSendMessage
+                            } else if peer.isChannel {
+                                hasReplyButton = false
+                            }
                         }
-                        var text = chatListText(account: account, for: message).string.nsstring
+                        if screenIsLocked {
+                            title = appName
+                        }
+                        var text = chatListText(account: account, location: .peer(message.id.peerId), for: message).string.nsstring
                         var subText:String?
                         if text.contains("\n") {
                             let parts = text.components(separatedBy: "\n")
@@ -845,8 +757,37 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         notification.title = title
                         notification.informativeText = text as String
                         notification.subtitle = subText
-                        notification.contentImage = images[message.id]
+                        notification.contentImage = screenIsLocked ? nil : images[message.id]
                         notification.hasReplyButton = hasReplyButton
+
+
+                        var dict: [String : Any] = [:]
+
+                        
+                        if let row = message.replyMarkup?.rows.first, message.id.peerId.id == 777000, row.buttons.count == 2 && !screenIsLocked {
+                            notification.hasReplyButton = false
+                            notification.hasActionButton = true
+                            notification.actionButtonTitle = row.buttons[0].title
+                            notification.otherButtonTitle = row.buttons[1].title
+                            if let _ = notification.value(forKey: "_showsButtons") {
+                                notification.setValue(true, forKey: "_showsButtons")
+                            }
+                            
+                            switch row.buttons[0].action {
+                            case .callback(let data):
+                                dict["inline.callbackDecline"] = data.makeData()
+                            default:
+                                break
+                            }
+                            
+                            switch row.buttons[1].action {
+                            case .callback(let data):
+                                
+                                dict["inline.callbackConfirm"] = data.makeData()
+                            default:
+                                break
+                            }
+                        }
                         
                         if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
                             notification.soundName = inAppSettings.tone
@@ -859,12 +800,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         }
                         
                         
-                        var dict: [String : Any] = [:]
                         
                         dict["message.id"] =  message.id.id
                         dict["message.namespace"] =  message.id.namespace
                         dict["peer.id"] =  message.id.peerId.id
                         dict["peer.namespace"] =  message.id.peerId.namespace
+                        dict["groupId"] = groupId?.rawValue
+                        
+                        if screenIsLocked {
+                            dict = [:]
+                        }
                         
                         notification.userInfo = dict
                         NSUserNotificationCenter.default.deliver(notification)
@@ -880,15 +825,37 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     }
 
 
+     @objc private func userNotificationCenter(_ center: NSUserNotificationCenter, didDismissAlert notification: NSUserNotification) {
+        if let userInfo = notification.userInfo, let msgId = userInfo["message.id"] as? Int32, let msgNamespace = userInfo["message.namespace"] as? Int32, let namespace = userInfo["peer.namespace"] as? Int32, let id = userInfo["peer.id"] as? Int32, let callbackData = userInfo["inline.callbackConfirm"] as? Data {
+            let messageId = MessageId(peerId: PeerId(namespace: namespace, id: id), namespace: msgNamespace, id: msgId)
+            
+            requestAccessDisposable.set(requestMessageActionCallback(account: account, messageId: messageId, isGame: false, data: MemoryBuffer(data: callbackData)).start())
+            _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, network: self.account.network, stateManager: self.account.stateManager, index: MessageIndex.upperBound(peerId: messageId.peerId)).start()
+        }
+    }
     
     func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
         
         
-        if let msgId = notification.userInfo?["message.id"] as? Int32, let msgNamespace = notification.userInfo?["message.namespace"] as? Int32, let namespace = notification.userInfo?["peer.namespace"] as? Int32, let id = notification.userInfo?["peer.id"] as? Int32 {
+        if let userInfo = notification.userInfo, let msgId = userInfo["message.id"] as? Int32, let msgNamespace = userInfo["message.namespace"] as? Int32, let namespace = userInfo["peer.namespace"] as? Int32, let id = userInfo["peer.id"] as? Int32 {
             
             let messageId = MessageId(peerId: PeerId(namespace: namespace, id: id), namespace: msgNamespace, id: msgId)
             
-            rightController.push(ChatController(account: account, peerId: messageId.peerId), false)
+            if let callbackData = userInfo["inline.callbackDecline"] as? Data {
+                requestAccessDisposable.set(requestMessageActionCallback(account: account, messageId: messageId, isGame: false, data: MemoryBuffer(data: callbackData)).start())
+                _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, network: self.account.network, stateManager: self.account.stateManager, index: MessageIndex.upperBound(peerId: messageId.peerId)).start()
+                return
+            }
+            
+            
+            let location: ChatLocation
+            if let groupId = notification.userInfo?["groupId"] as? Int32 {
+                location = .group(PeerGroupId(rawValue: groupId))
+            } else {
+                location = .peer(messageId.peerId)
+            }
+            
+            rightController.push(ChatController(account: account, chatLocation: location), false)
             
             if notification.activationType == .replied, let text = notification.response?.string {
                 var replyToMessageId:MessageId?
@@ -979,14 +946,14 @@ class LegacyIntroView : View, NSTextFieldDelegate {
         input.stringValue = ""
         legacyIntro = LegacyPasscodeHeaderView(frame: NSMakeRect(0,0, frameRect.width, 300))
         super.init(frame: frameRect)
-        
+        backgroundColor = .white
         
         doneButton.set(font: .medium(.header), for: .Normal)
         doneButton.set(text: tr(L10n.legacyIntroNext), for: .Normal)
         
         doneButton.set(color: .blueUI, for: .Normal)
         
-        doneButton.sizeToFit()
+        _ = doneButton.sizeToFit()
         addSubview(doneButton)
         
         addSubview(input)

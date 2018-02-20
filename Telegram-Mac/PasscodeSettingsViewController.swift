@@ -189,9 +189,9 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
             if let time = time {
                 if time < 60 {
                     text = tr(L10n.timerSecondsCountable(Int(time)))
-                } else if time <= 60 * 60  {
+                } else if time < 60 * 60  {
                     text = tr(L10n.timerMinutesCountable(Int(time / 60)))
-                } else if time <= 60 * 60 * 24  {
+                } else if time < 60 * 60 * 24  {
                     text = tr(L10n.timerHoursCountable(Int(time / 60) / 60))
                 } else {
                     text = tr(L10n.timerDaysCountable(Int(time / 60) / 60 / 24))

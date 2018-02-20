@@ -62,7 +62,7 @@ class WPContentView: View, MultipleSelectable {
         ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
         
         if let siteName = content.siteName {
-            siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     
@@ -115,12 +115,13 @@ class WPContentView: View, MultipleSelectable {
              addSubview(instantPageButton!)
             }
             instantPageButton?.layer?.borderColor = theme.colors.blueIcon.cgColor
+
             instantPageButton?.set(color: theme.colors.blueIcon, for: .Normal)
             instantPageButton?.set(image: theme.icons.chatInstantView, for: .Normal)
             instantPageButton?.set(font: .medium(.title), for: .Normal)
-            instantPageButton?.set(background: theme.colors.background, for: .Normal)
+            instantPageButton?.set(background: .clear, for: .Normal)
             instantPageButton?.set(text: tr(L10n.chatInstantView), for: .Normal)
-            instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
+            _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
             
             instantPageButton?.removeAllHandlers()
             instantPageButton?.set(handler : { [weak layout] _ in
@@ -137,7 +138,7 @@ class WPContentView: View, MultipleSelectable {
         self.needsLayout = true
     }
     
-    func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return self.containerView
     }
     

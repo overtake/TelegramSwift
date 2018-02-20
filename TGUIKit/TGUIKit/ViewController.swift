@@ -224,6 +224,10 @@ open class ViewController : NSObject {
         }
     }
     
+    open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) {
+        
+    }
+    
     open func requestUpdateBackBar() {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
             leftBarView.requestUpdate()

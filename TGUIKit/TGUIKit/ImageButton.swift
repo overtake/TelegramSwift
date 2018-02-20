@@ -56,7 +56,9 @@ open class ImageButton: Button {
     public func disableActions() {
         animates = false
         self.layer?.disableActions()
+        layer?.removeAllAnimations()
         imageView.animates = false
+        imageView.layer?.disableActions()
     }
     
     

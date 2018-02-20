@@ -11,7 +11,7 @@ import TGUIKit
 import AVKit
 import SwiftSignalKitMac
 
-private let pipFrameKey: String = "kPipFrameKey"
+private let pipFrameKey: String = "kPipFrameKey3"
 
 fileprivate class PIPVideoWindow: NSPanel {
     fileprivate let playerView:AVPlayerView
@@ -21,10 +21,11 @@ fileprivate class PIPVideoWindow: NSPanel {
     fileprivate var forcePaused: Bool = false
     fileprivate let item: MGalleryVideoItem
     fileprivate weak var _delegate: InteractionContentViewProtocol?
-    fileprivate let _contentInteractions:ChatMediaGalleryParameters?
+    fileprivate let _contentInteractions:ChatMediaLayoutParameters?
     fileprivate let _type: GalleryAppearType
     fileprivate let viewer: GalleryViewer
-    init(_ player:AVPlayerView, item: MGalleryVideoItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
+    fileprivate var canSaveInEvent: Bool = true
+    init(_ player:AVPlayerView, item: MGalleryVideoItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
         self.viewer = viewer
         self._delegate = delegate
         self._contentInteractions = contentInteractions
@@ -33,7 +34,7 @@ fileprivate class PIPVideoWindow: NSPanel {
         self.playerView = player
         self.rect = NSMakeRect(origin.x, origin.y, player.frame.width, player.frame.height)
         self.item = item
-        super.init(contentRect: rect, styleMask: [.closable, .borderless, .resizable, .nonactivatingPanel], backing: .buffered, defer: true)
+        super.init(contentRect: rect, styleMask: [.closable, .resizable, .nonactivatingPanel], backing: .buffered, defer: true)
         
         
         close.autohighlight = false
@@ -69,7 +70,7 @@ fileprivate class PIPVideoWindow: NSPanel {
         self.contentView?.wantsLayer = true;
         self.contentView?.layer?.cornerRadius = 4;
         
-        self.contentView?.layer?.backgroundColor = NSColor.clear.cgColor;
+        self.contentView?.layer?.backgroundColor = NSColor.random.cgColor;
         self.backgroundColor = .clear;
         
         player.autoresizingMask = [.width, .height];
@@ -82,22 +83,35 @@ fileprivate class PIPVideoWindow: NSPanel {
         self.contentView?.addSubview(close)
         self.contentView?.addSubview(openGallery)
 
-        
+       
         self.level = .screenSaver
         self.isMovableByWindowBackground = true
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: self)
 
+
+        
+    }
+
+    private func updateCursor() {
+        let point = mouseLocationOutsideOfEventStream
     }
     
-    
     func hide() {
-        UserDefaults.standard.setValue(NSStringFromRect(frame), forKey: pipFrameKey)
         orderOut(nil)
         window = nil
     }
     
+    override func orderOut(_ sender: Any?) {
+        super.orderOut(sender)
+        window = nil
+        if playerView.controlsStyle != .floating {
+            playerView.player?.pause()
+        }
+    }
+    
     func _openGallery() {
+        canSaveInEvent = false
         close.change(opacity: 0, removeOnCompletion: false) { [weak close] completed in
             close?.removeFromSuperview()
         }
@@ -123,11 +137,15 @@ fileprivate class PIPVideoWindow: NSPanel {
     override func setFrame(_ frameRect: NSRect, display displayFlag: Bool, animate animateFlag: Bool) {
         super.setFrame(frameRect, display: displayFlag, animate: animateFlag)
     }
-    
-    
 
-    override func mouseMoved(with event: NSEvent) {
-        super.mouseMoved(with: event)
+    override func sendEvent(_ event: NSEvent) {
+        super.sendEvent(event)
+        
+        if canSaveInEvent {
+            UserDefaults.standard.setValue(NSStringFromRect(frame), forKey: pipFrameKey)
+        }
+        
+        updateCursor()
     }
     
     override func mouseEntered(with event: NSEvent) {
@@ -147,10 +165,16 @@ fileprivate class PIPVideoWindow: NSPanel {
         let openPoint = NSMakePoint(closePoint.x + close.frame.width + 10, frame.height - 50)
         self.close.setFrameOrigin(closePoint)
         self.openGallery.setFrameOrigin(openPoint)
+        
+    }
+    
+    override var isResizable: Bool {
+        return true
     }
     
     override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
+        
         
         Queue.mainQueue().justDispatch {
             if let screen = NSScreen.main {
@@ -159,9 +183,8 @@ fileprivate class PIPVideoWindow: NSPanel {
                     savedRect = NSRectFromString(value)
                 }
                 let convert_s = self.playerView.frame.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-                self.minSize = convert_s
                 self.aspectRatio = convert_s
-                
+                self.minSize = convert_s.aspectFilled(NSMakeSize(100, 100))
                 let closePoint = NSMakePoint(10, convert_s.height - 50)
                 let openPoint = NSMakePoint(closePoint.x + self.close.frame.width + 10, convert_s.height - 50)
                 
@@ -180,7 +203,8 @@ fileprivate class PIPVideoWindow: NSPanel {
 
 private var window: PIPVideoWindow?
 
-func showPipVideo(_ player:AVPlayerView, viewer: GalleryViewer, item: MGalleryVideoItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType) {
+func showPipVideo(_ player:AVPlayerView, viewer: GalleryViewer, item: MGalleryVideoItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
+    closePipVideo()
     window = PIPVideoWindow(player, item: item, viewer: viewer, origin: origin, delegate: delegate, contentInteractions: contentInteractions, type: type)
     window?.makeKeyAndOrderFront(nil)
 }
@@ -200,5 +224,7 @@ func playPipIfNeeded() {
 
 func closePipVideo() {
     window?.hide()
+    window?.playerView.player?.pause()
     window = nil
+    
 }

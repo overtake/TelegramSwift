@@ -96,7 +96,7 @@ class PeerInfoArguments {
     }
     
     func peerChat(_ peerId:PeerId) {
-        pushViewController(ChatController(account: account, peerId: peerId))
+        pushViewController(ChatController(account: account, chatLocation: .peer(peerId)))
     }
     
     func toggleNotifications() {
@@ -284,6 +284,7 @@ class PeerInfoController: EditableViewController<TableView> {
             return .rejected
         }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
     }
+    
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

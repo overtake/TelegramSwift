@@ -30,7 +30,7 @@ class EStickView: TableStickView {
             var f = focus(item.layout.0.size)
             f.origin.x = 20
             f.origin.y -= 1
-            item.layout.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor)
+            item.layout.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     

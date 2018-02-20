@@ -20,6 +20,9 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(IVReadState.self, f: { IVReadState(decoder: $0) })
     declareEncodable(AdditionalSettings.self, f: { AdditionalSettings(decoder: $0) })
     declareEncodable(TelegramWallpaper.self, f: { TelegramWallpaper(decoder: $0) })
+    declareEncodable(AutomaticMediaDownloadCategoryPeers.self, f: { AutomaticMediaDownloadCategoryPeers(decoder: $0) })
+    declareEncodable(AutomaticMediaDownloadCategories.self, f: { AutomaticMediaDownloadCategories(decoder: $0) })
+    declareEncodable(AutomaticMediaDownloadSettings.self, f: { AutomaticMediaDownloadSettings(decoder: $0) })
     return
 }()
 

@@ -35,13 +35,13 @@ private class InputFormatterView : View, NSTextFieldDelegate {
         addSubview(dismissLink)
  
         dismissLink.set(image: theme.icons.recentDismiss, for: .Normal)
-        dismissLink.sizeToFit()
+        _ = dismissLink.sizeToFit()
         
         linkField.placeholderAttributedString = NSAttributedString.initialize(string: "Set a Link", color: theme.colors.grayText, font: .normal(.text))
         linkField.font = .normal(.text)
         linkField.wantsLayer = true
         linkField.maximumNumberOfLines = 1
-        linkField.backgroundColor = theme.colors.background
+        linkField.backgroundColor = .clear
         linkField.drawsBackground = true
         linkField.isBezeled = false
         linkField.isBordered = false

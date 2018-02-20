@@ -116,7 +116,7 @@ private class SPopoverRowView: TableRowView {
                 item.clickHandler()
             }, for: .Click)
             image.sizeToFit()
-            image.centerY(self, x: floorToScreenPixels((45 - image.frame.width) / 2))
+            image.centerY(self, x: floorToScreenPixels(scaleFactor: backingScaleFactor, (45 - image.frame.width) / 2))
             
             text.update(item.title)
             

@@ -137,7 +137,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
         
-        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(), false)
+        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(interaction.chatLocation), false)
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         
         textView.delegate = self
@@ -367,6 +367,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }
         }))
 
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        textView.setSelectedRange(NSMakeRange(textView.string().length, 0))
     }
     
     func update() {

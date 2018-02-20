@@ -73,13 +73,13 @@ class ChatGIFContentView: ChatMediaContentView {
     
     override func cancelFetching() {
         if let account = account, let media = media as? TelegramMediaFile {
-            chatMessageFileCancelInteractiveFetch(account: account, file: media)
+            cancelFreeMediaFileInteractiveFetch(account: account, file: media)
         }
     }
     
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
+            fetchDisposable.set(freeMediaFileInteractiveFetched(account: account, file: media).start())
         }
     }
     
@@ -98,6 +98,7 @@ class ChatGIFContentView: ChatMediaContentView {
     @objc func updatePlayerIfNeeded() {
         
         let accept = canPlayForce && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        player.setFrameSize(frame.size)
         player.set(path: accept ? path : nil)
         progressView?.isHidden = !FastSettings.gifsAutoPlay && canPlayForce
         
@@ -144,6 +145,27 @@ class ChatGIFContentView: ChatMediaContentView {
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
 
+        var topLeftRadius: CGFloat = .cornerRadius
+        var bottomLeftRadius: CGFloat = .cornerRadius
+        var topRightRadius: CGFloat = .cornerRadius
+        var bottomRightRadius: CGFloat = .cornerRadius
+        
+        
+        if let positionFlags = positionFlags {
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                bottomLeftRadius = bottomLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                bottomRightRadius = bottomRightRadius * 3 + 2
+            }
+        }
+
         
         updateListeners()
         
@@ -157,7 +179,7 @@ class ChatGIFContentView: ChatMediaContentView {
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
                 player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
-                let arguments = TransformImageArguments(corners: ImageCorners(radius:.cornerRadius), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 player.set(arguments: arguments)
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -176,10 +198,12 @@ class ChatGIFContentView: ChatMediaContentView {
                 if let updatedStatusSignal = updatedStatusSignal {
                     
                     
-                    self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
+                    self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnMainQueue).start(next: { [weak self] status,resource in
                         if let strongSelf = self {
                             if resource.complete {
                                 strongSelf.path = resource.path
+                            } else if status == .Local, let resource = media.resource as? LocalFileReferenceMediaResource {
+                                strongSelf.path = resource.localFilePath
                             }
                             strongSelf.fetchStatus = status
                             if case .Local = status, FastSettings.gifsAutoPlay {
@@ -211,11 +235,11 @@ class ChatGIFContentView: ChatMediaContentView {
                     }))
                 }
                 
-                fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
 
             }
 
         }
+        
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

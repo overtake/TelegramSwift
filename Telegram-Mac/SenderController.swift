@@ -55,7 +55,7 @@ class Sender: NSObject {
         options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
 
         
-        if path.nsstring.pathExtension.hasPrefix("mp4") {
+        if MIMEType(path.nsstring.pathExtension).hasPrefix("video") {
             let asset = AVAsset(url: URL(fileURLWithPath: path))
             let imageGenerator = AVAssetImageGenerator(asset: asset)
             imageGenerator.maximumSize = CGSize(width: 200, height: 200)
@@ -116,12 +116,8 @@ class Sender: NSObject {
             inset += message.length
             
 
-            
-            
-            
             var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities)]
 
-            
             if disablePreview {
                 attributes.append(OutgoingContentInfoMessageAttribute(flags: [.disableLinkPreviews]))
             }
@@ -275,12 +271,11 @@ class Sender: NSObject {
             if let video = video {
                 attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: video.naturalSize, flags: []))
                 attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
-                if audio == nil {
+                if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024) {
                     attrs.append(TelegramMediaFileAttribute.Animated)
                 }
                 return attrs
             }
-
         }
         
         if mime.hasSuffix("gif"), isMedia {
@@ -350,23 +345,24 @@ class Sender: NSObject {
     }
     
     public static func enqueue(media:Media, account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {
-        return enqueue(media: [media], caption: "", account: account, peerId: peerId, chatInteraction: chatInteraction)
+        return enqueue(media: [media], caption: ChatTextInputState(), account: account, peerId: peerId, chatInteraction: chatInteraction)
     }
     
-    public static func enqueue(media:[Media], caption: String, account:Account, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, account:Account, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false) ->Signal<[MessageId?],NoError> {
         
-        var attributes:[MessageAttribute] = []
+        var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: caption.messageTextEntities)]
+
         if FastSettings.isChannelMessagesMuted(peerId) {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
         let localGroupingKey = isCollage ? arc4random64() : nil
         
-        let messages = media.map({EnqueueMessage.message(text: caption, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: localGroupingKey)})
+        let messages = media.map({EnqueueMessage.message(text: caption.inputText, attributes: attributes, media: $0, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: localGroupingKey)})
         
         return enqueueMessages(account: account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
-        }
+        } |> take(1)
     }
     
     

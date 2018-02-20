@@ -321,13 +321,13 @@ class ServiceEventLogItem: TableRowItem {
                             
                             for right in result.rightsHelp.order {
                                 if addedRights.contains(right) {
-                                    _ = message.append(string: "\n+ \(right.localizedString)")
+                                    _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
                                 }
                             }
                             if !removedRights.isEmpty {
                                 for right in result.rightsHelp.order {
                                     if removedRights.contains(right) {
-                                        _ = message.append(string: "\n- \(right.localizedString)")
+                                        _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
                                     }
                                 }
                             }
@@ -391,13 +391,13 @@ class ServiceEventLogItem: TableRowItem {
                             if !addedRights.contains(.banReadMessages) {
                                 for right in result.banHelp {
                                     if addedRights.contains(right) {
-                                        _ = message.append(string: "\n- \(right.localizedString)")
+                                        _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
                                     }
                                 }
                                 if !removedRights.isEmpty {
                                     for right in result.banHelp {
                                         if removedRights.contains(right) {
-                                            _ = message.append(string: "\n+ \(right.localizedString)")
+                                            _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
                                         }
                                     }
                                 }

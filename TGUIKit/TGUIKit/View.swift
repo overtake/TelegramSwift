@@ -99,9 +99,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public let customHandler:CustomViewHandlers = CustomViewHandlers()
     
-    open var backgroundColor:NSColor = presentation.colors.background {
+    open var backgroundColor:NSColor = .clear {
         didSet {
-            if oldValue != backgroundColor {
+            if oldValue != self.backgroundColor {
+                layer?.backgroundColor = self.backgroundColor.cgColor
                 setNeedsDisplay()
             }
         }
@@ -126,11 +127,13 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if let displayDelegate = displayDelegate {
             displayDelegate.draw(layer, in: ctx)
         } else {
+          //  layer.backgroundColor = backgroundColor.cgColor
+           // layer.backgroundColor = self.backgroundColor.cgColor
             
           //  ctx.setShadow(offset: NSMakeSize(5.0, 5.0), blur: 0.0, color: .shadow.cgColor)
             
-            ctx.setFillColor(self.backgroundColor.cgColor)
-            ctx.fill(bounds)
+           // ctx.setFillColor(self.backgroundColor.cgColor)
+           // ctx.fill(layer.bounds)
             
             if let border = border {
                 ctx.setFillColor(presentation.colors.border.cgColor)
@@ -172,6 +175,8 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         acceptsTouchEvents = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         self.autoresizesSubviews = false
+        layer?.disableActions()
+        layer?.backgroundColor = backgroundColor.cgColor
        // self.layer?.delegate = self
       //  self.layer?.isOpaque = false
        // self.autoresizesSubviews = false
@@ -184,9 +189,9 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         assertOnMainThread()
         acceptsTouchEvents = true
         self.wantsLayer = true
-        
-        
-        
+       // self.autoresizesSubviews = false
+        layer?.disableActions()
+        layer?.backgroundColor = backgroundColor.cgColor
      //   self.layer?.delegate = self
       //  self.layer?.isOpaque = false
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay

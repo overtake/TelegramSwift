@@ -47,14 +47,26 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, me
                 if data.0.complete {
                     return Signal { subscriber in
                         
+                        let resource = (file.resource as? LocalFileReferenceMediaResource)
+                        var size = resource?.size
+                        
+                        if resource == nil {
+                            size = Int32(data.0.size)
+                        }
+                        
                         var thumbImage:CGImage? = nil
                         
                         let thumbedFile:String
-                        if file.isVideo && file.isAnimated {
-                            thumbedFile = data.0.path + ".mp4"
+                        if let resource = resource {
+                            thumbedFile = resource.localFilePath
                         } else {
-                            thumbedFile = data.0.path.appending(".\(file.fileName?.nsstring.pathExtension ?? data.1 ?? "txt")")
+                            if file.isVideo && file.isAnimated {
+                                thumbedFile = data.0.path + ".mp4"
+                            } else {
+                                thumbedFile = data.0.path.appending(".\(file.fileName?.nsstring.pathExtension ?? data.1 ?? "jpg")")
+                            }
                         }
+                        
                         try? FileManager.default.linkItem(atPath: data.0.path, toPath: thumbedFile)
                         
                         if file.mimeType.hasPrefix("image/") {
@@ -87,14 +99,14 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, me
                             if let compressedData = compressedData {
                                 let thumbnailResource = LocalFileMediaResource(fileId: arc4random64())
                                 postbox.mediaBox.storeResourceData(thumbnailResource.id, data: compressedData)
-                                subscriber.putNext(file.withUpdatedSize(data.0.size).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: thumbImage.size, resource: thumbnailResource)]))
+                                subscriber.putNext(file.withUpdatedSize(Int(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: thumbImage.size, resource: thumbnailResource)]))
                                 
                                 return EmptyDisposable
                             }
                         }
                         
                         
-                        subscriber.putNext(file.withUpdatedSize(data.0.size))
+                        subscriber.putNext(file.withUpdatedSize(Int(size ?? 0)))
                         subscriber.putCompletion()
                         
                         

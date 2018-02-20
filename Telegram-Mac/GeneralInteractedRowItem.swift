@@ -43,7 +43,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
     }
     
    
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: NSFont.normal(.title), foregroundColor: theme.colors.text), description: String? = nil, type:GeneralInteractedType = .none, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance) {
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, type:GeneralInteractedType = .none, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance) {
         self.name = name
         if let description = description {
             descLayout = TextViewLayout(.initialize(string: description, color: theme.colors.grayText, font: .normal(.text)))

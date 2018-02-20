@@ -126,6 +126,9 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     var header:(TextNodeLayout,  TextNode)?
     var message:(TextNodeLayout, TextNode)?
     
+    var topOffset: CGFloat = 0
+    
+    
     func measureSize(_ width:CGFloat = 0, sizeToFit: Bool = false) -> Void {
         self.sizeToFit = sizeToFit
         header = TextNode.layoutText(maybeNode: headerNode, headerAttr, nil, 1, .end, NSMakeSize(width - leftInset, 20), nil,false, .left)
@@ -133,6 +136,7 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
         //max(header!.0.size.width,message!.0.size.width) + leftInset
         self.width = width
         size = NSMakeSize(sizeToFit ? max(header!.0.size.width,message!.0.size.width) + leftInset + (isSideAccessory ? 20 : 0) : width, max(34, header!.0.size.height + message!.0.size.height + yInset + (isSideAccessory ? 10 : 0)))
+        size.height += topOffset
         
       //  super.measureSize(width)
     }
@@ -148,16 +152,16 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
             ctx.setFillColor(presentation.border.cgColor)
             
             let radius:CGFloat = 1.0
-            ctx.fill(NSMakeRect((isSideAccessory ? 10 : 0), radius + (isSideAccessory ? 5 : 0), 2, layer.bounds.height - radius * 2 - (isSideAccessory ? 10 : 0)))
-            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
-            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : (isSideAccessory ? 5 : 0)), y: layer.bounds.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
+            ctx.fill(NSMakeRect((isSideAccessory ? 10 : 0), radius + (isSideAccessory ? 5 : 0) + topOffset, 2, size.height - topOffset - radius * 2 - (isSideAccessory ? 10 : 0)))
+            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: (isSideAccessory ? 5 : 0) + topOffset), size: CGSize(width: radius + radius, height: radius + radius)))
+            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : (isSideAccessory ? 5 : 0) + topOffset), y: size.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
             
             if  let header = header, let message = message {
-                header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0), header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
+                header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0) + topOffset, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
                 if headerAttr == nil {
-                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels((size.height - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels(scaleFactor: view.backingScaleFactor, topOffset + (size.height - topOffset - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
                 } else {
-                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0) + topOffset, message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
         }

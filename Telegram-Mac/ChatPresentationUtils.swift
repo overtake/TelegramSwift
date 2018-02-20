@@ -41,13 +41,13 @@ final class ChatMediaPresentation : Equatable {
         let isIncoming: Bool = message.isIncoming(account, renderType == .bubble)
         return ChatMediaPresentation(isIncoming: isIncoming,
                                      isBubble: renderType == .bubble,
-                                     activityBackground: theme.chat.activityBackground(isIncoming),
-                                     activityForeground: theme.chat.activityForeground(isIncoming),
-                                     text: theme.chat.textColor(isIncoming),
-                                     grayText: theme.chat.grayText(isIncoming),
-                                     link: theme.chat.linkColor(isIncoming),
-                                     waveformBackground: theme.chat.waveformBackground(isIncoming),
-                                     waveformForeground: theme.chat.waveformForeground(isIncoming))
+                                     activityBackground: theme.chat.activityBackground(isIncoming, renderType == .bubble),
+                                     activityForeground: theme.chat.activityForeground(isIncoming, renderType == .bubble),
+                                     text: theme.chat.textColor(isIncoming, renderType == .bubble),
+                                     grayText: theme.chat.grayText(isIncoming, renderType == .bubble),
+                                     link: theme.chat.linkColor(isIncoming, renderType == .bubble),
+                                     waveformBackground: theme.chat.waveformBackground(isIncoming, renderType == .bubble),
+                                     waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))
     }
     
     var fileThumb: CGImage {
@@ -86,62 +86,60 @@ final class ChatMediaPresentation : Equatable {
 struct TelegramChatColors {
     
     private let palette: ColorPalette
-    private let bubbled: Bool
     init(_ palette: ColorPalette, _ bubbled: Bool) {
         self.palette = palette
-        self.bubbled = bubbled
     }
     
-    func activityBackground(_ incoming: Bool) -> NSColor {
+    func activityBackground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.fileActivityBackgroundBubble_incoming : palette.fileActivityBackgroundBubble_outgoing : palette.fileActivityBackground
     }
-    func activityForeground(_ incoming: Bool) -> NSColor {
+    func activityForeground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.fileActivityForegroundBubble_incoming : palette.fileActivityForegroundBubble_outgoing : palette.fileActivityForeground
     }
     
-    func webPreviewActivity(_ incoming: Bool) -> NSColor {
+    func webPreviewActivity(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
     }
     
-    func waveformBackground(_ incoming: Bool) -> NSColor {
+    func waveformBackground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.waveformBackgroundBubble_incoming : palette.waveformBackgroundBubble_outgoing : palette.waveformBackground
     }
-    func waveformForeground(_ incoming: Bool) -> NSColor {
+    func waveformForeground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.waveformForegroundBubble_incoming : palette.waveformForegroundBubble_outgoing : palette.waveformForeground
     }
     
-    func backgroundColor(_ incoming: Bool) -> NSColor {
+    func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.bubbleBackground_incoming : palette.bubbleBackground_outgoing : palette.background
     }
     
-    func backgoundSelectedColor(_ incoming: Bool) -> NSColor {
+    func backgoundSelectedColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.bubbleBackgroundHighlight_incoming : palette.bubbleBackgroundHighlight_outgoing : palette.background
     }
     
-    func bubbleBorderColor(_ incoming: Bool) -> NSColor {
+    func bubbleBorderColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return incoming ? palette.bubbleBorder_incoming : palette.bubbleBorder_outgoing//.clear//palette.bubbleBorder_outgoing
     }
     
-    func textColor(_ incoming: Bool) -> NSColor {
+    func textColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.textBubble_incoming : palette.textBubble_outgoing : palette.text
     }
     
-    func monospacedPreColor(_ incoming: Bool) -> NSColor {
+    func monospacedPreColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.monospacedPreBubble_incoming : palette.monospacedPreBubble_outgoing : palette.monospacedPre
     }
-    func monospacedCodeColor(_ incoming: Bool) -> NSColor {
+    func monospacedCodeColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.monospacedCodeBubble_incoming : palette.monospacedCodeBubble_outgoing : palette.monospacedCode
     }
     
-    func selectText(_ incoming: Bool) -> NSColor {
+    func selectText(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.selectTextBubble_incoming : palette.selectTextBubble_outgoing : palette.selectText
     }
     
-    func grayText(_ incoming: Bool) -> NSColor {
+    func grayText(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.grayTextBubble_incoming : palette.grayTextBubble_outgoing : palette.grayText
     }
     
-    func linkColor(_ incoming: Bool) -> NSColor {
+    func linkColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.linkBubble_incoming : palette.linkBubble_outgoing : palette.link
     }
     
@@ -155,7 +153,7 @@ struct TelegramChatColors {
         return item.isStateOverlayLayout ? theme.icons.chatReadMarkOverlayBubble2 : item.hasBubble ? item.isIncoming ? theme.icons.chatReadMarkInBubble2_incoming : theme.icons.chatReadMarkInBubble2_outgoing : theme.icons.chatReadMarkOutBubble2
     }
     
-    func instantPageIcon(_ incoming: Bool) -> CGImage {
+    func instantPageIcon(_ incoming: Bool, _ bubbled: Bool) -> CGImage {
         return bubbled ? incoming ? theme.icons.chatInstantViewBubble_incoming : theme.icons.chatInstantViewBubble_outgoing : theme.icons.chatInstantView
     }
     

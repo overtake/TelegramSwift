@@ -32,6 +32,32 @@ fileprivate enum PreviewSendingState : Int32 {
     case collage = 2
 }
 
+private final class PreviewContextState : Equatable {
+    let inputQueryResult: ChatPresentationInputQueryResult?
+    init(inputQueryResult: ChatPresentationInputQueryResult? = nil) {
+        self.inputQueryResult = inputQueryResult
+    }
+    func updatedInputQueryResult(_ f: (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?) -> PreviewContextState {
+        return PreviewContextState(inputQueryResult: f(self.inputQueryResult))
+    }
+}
+
+private func ==(lhs: PreviewContextState, rhs: PreviewContextState) -> Bool {
+    return lhs.inputQueryResult == rhs.inputQueryResult
+}
+
+private final class PreviewContextInteraction : InterfaceObserver {
+    private(set) var state: PreviewContextState = PreviewContextState()
+    
+    func update(animated:Bool = true, _ f:(PreviewContextState)->PreviewContextState) -> Void {
+        let oldValue = self.state
+        self.state = f(state)
+        if oldValue != state {
+            notifyObservers(value: state, oldValue:oldValue, animated: animated)
+        }
+    }
+}
+
 
 fileprivate class PreviewSenderView : Control {
     fileprivate let tableView:TableView = TableView()
@@ -40,7 +66,7 @@ fileprivate class PreviewSenderView : Control {
     fileprivate let emojiButton = ImageButton()
     fileprivate let actionsContainerView: View = View()
     fileprivate let headerView: View = View()
-    
+    fileprivate let draggingView = DraggingView(frame: NSZeroRect)
     fileprivate let closeButton = ImageButton()
     fileprivate let title: TextView = TextView()
     
@@ -61,11 +87,12 @@ fileprivate class PreviewSenderView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        
+        backgroundColor = theme.colors.background
         separator.backgroundColor = theme.colors.border
+        textContainerView.backgroundColor = theme.colors.background
         
         closeButton.set(image: theme.icons.modalClose, for: .Normal)
-        closeButton.sizeToFit()
+        _ = closeButton.sizeToFit()
         
         
         photoButton.toolTip = tr(L10n.previewSenderMediaTooltip)
@@ -73,7 +100,7 @@ fileprivate class PreviewSenderView : Control {
         collageButton.toolTip = tr(L10n.previewSenderCollageTooltip)
         
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachPhoto), for: .Normal)
-        photoButton.sizeToFit()
+        _ = photoButton.sizeToFit()
         
         disposable.set(sendAsFile.get().start(next: { [weak self] value in
             self?.fileButton.isSelected = value == .file
@@ -102,10 +129,10 @@ fileprivate class PreviewSenderView : Control {
         }, for: .Click)
         
         fileButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachFile), for: .Normal)
-        fileButton.sizeToFit()
+        _ = fileButton.sizeToFit()
         
         collageButton.set(image: theme.icons.previewCollage, for: .Normal)
-        collageButton.sizeToFit()
+        _ = collageButton.sizeToFit()
         
         title.backgroundColor = theme.colors.background
         
@@ -119,10 +146,10 @@ fileprivate class PreviewSenderView : Control {
         title.userInteractionEnabled = false
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
-        sendButton.sizeToFit()
+        _ = sendButton.sizeToFit()
         
         emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
-        emojiButton.sizeToFit()
+        _ = emojiButton.sizeToFit()
         
         actionsContainerView.addSubview(sendButton)
         actionsContainerView.addSubview(emojiButton)
@@ -160,7 +187,7 @@ fileprivate class PreviewSenderView : Control {
         addSubview(actionsContainerView)
         
         addSubview(separator)
-
+        addSubview(draggingView)
     }
     
     deinit {
@@ -168,7 +195,7 @@ fileprivate class PreviewSenderView : Control {
     }
     
     var additionHeight: CGFloat {
-        return max(50, textView.frame.height + 16) + headerView.frame.height - 12
+        return max(50, textView.frame.height + 16) + headerView.frame.height
     }
     
     func updateTitle(_ medias: [Media], state: PreviewSendingState) -> Void {
@@ -192,14 +219,24 @@ fileprivate class PreviewSenderView : Control {
                 
                 if file.isVideo && !file.isAnimated {
                     return true
+                } else if file.isAnimated {
+                    return false
                 }
                 if let ext = file.fileName?.nsstring.pathExtension.lowercased() {
+                    let mime = MIMEType(ext)
+                    if let resource = file.resource as? LocalFileReferenceMediaResource {
+                        if mime.hasPrefix("image"), let image = NSImage(contentsOf: URL(fileURLWithPath: resource.localFilePath)) {
+                            if image.size.width / 10 > image.size.height || image.size.height < 40 {
+                                return false
+                            }
+                        }
+                    }
                     return photoExts.contains(ext) || videoExts.contains(ext)
                 }
                 return false
             }).count
             
-            isMedia = count == (files.count + imagesCount) || count == files.count
+            isMedia = (count == (files.count + imagesCount)) || count == files.count
             
             if files.filter({$0.isMusic}).count == files.count {
                 type = imagesCount > 0 ? .media : .audio
@@ -235,7 +272,7 @@ fileprivate class PreviewSenderView : Control {
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         title.update(layout)
         needsLayout = true
-        separator.isHidden = tableView.listHeight <= frame.height - additionHeight
+        separator.isHidden = false//tableView.listHeight <= frame.height - additionHeight
     }
     
     func updateHeight(_ height: CGFloat, _ animated: Bool) {
@@ -263,11 +300,13 @@ fileprivate class PreviewSenderView : Control {
         actionsContainerView.setFrameOrigin(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height)
         headerView.setFrameSize(frame.width, 50)
         
-        
         tableView.setFrameSize(NSMakeSize(frame.width, frame.height - additionHeight))
         tableView.centerX(y: headerView.frame.maxY - 6)
         
-        title.layout?.measure(width: frame.width - 100)
+        draggingView.frame = tableView.frame
+
+        
+        title.layout?.measure(width: frame.width - (collageButton.isHidden ? 100 : 160))
         title.update(title.layout)
         title.centerX()
         title.centerY()
@@ -295,9 +334,11 @@ fileprivate class PreviewSenderView : Control {
     }
 }
 
-class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
+class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Notifable {
+   
+    
 
-    fileprivate let urls:[URL]
+    fileprivate var urls:[URL]
     private let account:Account
     private let chatInteraction:ChatInteraction
     private var sendingState:PreviewSendingState = .file
@@ -306,15 +347,27 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
     private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
     
     private let isFileDisposable = MetaDisposable()
-    
+    private let pasteDisposable = MetaDisposable()
     override func viewClass() -> AnyClass {
         return PreviewSenderView.self
     }
     
+    private var formatterPopover: InputFormatterPopover?
+
+    private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
+    private let inputContextHelper: InputContextHelper
+    private let inputInteraction:PreviewContextInteraction = PreviewContextInteraction()
+    private let contextChatInteraction: ChatInteraction
     private var genericView:PreviewSenderView {
         return self.view as! PreviewSenderView
     }
     
+    override var responderPriority: HandlerPriority {
+        return .high
+    }
+    
+    private let animated: Atomic<Bool> = Atomic(value: false)
+
     
     func makeItems(_ urls:[URL])  {
         
@@ -322,11 +375,12 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
             return
         }
         
-        let initialSize = atomicSize
+        let initialSize = NSMakeSize(320, 320)
         let account = self.account
         
         let options = takeSenderOptions(for: urls)
         genericView.applyOptions(options)
+        let animated = self.animated
         
         let reorder: (Int, Int) -> Void = { [weak self] from, to in
             guard let `self` = self else {return}
@@ -341,11 +395,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         }
         
         let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), Void> in
-            if let cached = self?.cachedMedia[state] {
+            if let cached = self?.cachedMedia[state], cached.media.count == urls.count {
                 return .single((cached.media, cached.items, state))
             } else if state == .collage {
-                
-                
                 
                 return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
                     |> map { $0.map({$0.0})}
@@ -356,41 +408,40 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
                             return Message(media, stableId: UInt32(id), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: id))
                         }).chunks(10)
                         
-                        return (media, groups.map({MediaGroupPreviewRowItem(initialSize.modify{$0}, messages: $0, account: account, reorder: reorder)}), state)
-                        
+                        return (media, groups.map({MediaGroupPreviewRowItem(initialSize, messages: $0, account: account, reorder: reorder)}), state)
                     }
             } else {
                 return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
                     |> map { $0.map({$0.0})}
-                    |> map { ($0, $0.map{MediaPreviewRowItem(initialSize.modify{$0}, media: $0, account: account)}, state) }
+                    |> map { ($0, $0.map{MediaPreviewRowItem(initialSize, media: $0, account: account)}, state) }
             }
         } |> deliverOnMainQueue
         
-        let animated: Atomic<Bool> = Atomic(value: false)
         
         disposable.set(signal.start(next: { [weak self] medias, items, state in
             if let strongSelf = self {
                 strongSelf.sendingState = state
-                strongSelf.cachedMedia[state] = (media: medias, items: items)
-                strongSelf.genericView.updateTitle(medias, state: state)
-                strongSelf.genericView.tableView.beginTableUpdates()
-                strongSelf.genericView.tableView.removeAll(animation: .effectFade)
-                strongSelf.genericView.tableView.insert(items: items, animation: .effectFade)
-                strongSelf.genericView.tableView.endTableUpdates()
-                strongSelf.genericView.layout()
                 
                 let animated = animated.swap(true)
                 
-                let maxWidth = animated ? strongSelf.frame.width : max(items.map({$0.layoutSize.width}).max()! + 20, 350)
+                strongSelf.cachedMedia[state] = (media: medias, items: items)
+                strongSelf.genericView.updateTitle(medias, state: state)
+                strongSelf.genericView.tableView.removeAll(animation: .effectFade)
+                strongSelf.genericView.tableView.insert(items: items, animation: .effectFade)
+                strongSelf.genericView.layout()
+                
+                let maxWidth: CGFloat = 320
                 strongSelf.updateSize(maxWidth, animated: animated)
+
+                
                 strongSelf.readyOnce()
             }
         }))
     }
     
     private func updateSize(_ width: CGFloat, animated: Bool) {
-        if let contentSize = self.window?.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 70, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: animated)
+        if let contentSize = mainWindow.contentView?.frame.size {
+            self.modal?.resize(with: NSMakeSize(width, min(contentSize.height - 70, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: animated)
         }
     }
   
@@ -398,8 +449,32 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         return true
     }
     
+    override func draggingItems(for pasteboard: NSPasteboard) -> [DragItem] {
+        if let types = pasteboard.types, types.contains(.kFilenames) {
+            let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
+            if let list = list {
+                return [DragItem(title: L10n.previewDraggingAddItemsCountable(list.count), desc: "", handler: { [weak self] in
+                    self?.insertAdditionUrls(list.map({URL(fileURLWithPath: $0)}))
+                    
+                })]
+            }
+        }
+        return []
+    }
+    
+    private func insertAdditionUrls(_ list: [URL]) {
+        self.urls.append(contentsOf: list)
+        
+        let canCollage: Bool = canCollagesFromUrl(self.urls)
+        self.disposable.set(nil)
+        self.genericView.sendAsFile.set(self.sendingState == .collage ? canCollage ? .collage : .media : self.sendingState)
+        self.makeItems(self.urls)
+    }
     override func returnKeyAction() -> KeyHandlerResult {
         if let currentEvent = NSApp.currentEvent {
+            if inputInteraction.state.inputQueryResult != nil {
+                return .rejected
+            }
             if FastSettings.checkSendingAbility(for: currentEvent) {
                 send()
                 return .invoked
@@ -412,13 +487,21 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
     func send() {
         emoji.popover?.hide()
         self.modal?.close(true)
-        var caption = genericView.textView.string()
+        
+        let attributed = self.genericView.textView.attributedString()
+
+        var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
+        
+        if input.attributes.isEmpty {
+            input = ChatTextInputState(inputText: input.inputText.trimmed)
+        }
+        
         if let cached = cachedMedia[sendingState] {
-            if cached.media.count > 1 && !caption.isEmpty {
-                chatInteraction.forceSendMessage(caption)
-                caption = ""
+            if cached.media.count > 1 && !input.inputText.isEmpty {
+                chatInteraction.forceSendMessage(input)
+                input = ChatTextInputState()
             }
-            chatInteraction.sendMedias(cached.media, caption, sendingState == .collage)
+            chatInteraction.sendMedias(cached.media, input, sendingState == .collage)
         }
     }
     
@@ -427,11 +510,69 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: false)
     }
     
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        
+        window?.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .LeftArrow, priority: .modal)
+        
+        window?.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .RightArrow, priority: .modal)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if self?.inputInteraction.state.inputQueryResult != nil {
+                return .rejected
+            }
+            return .invokeNext
+        }, with: self, for: .UpArrow, priority: .modal)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if self?.inputInteraction.state.inputQueryResult != nil {
+                return .rejected
+            }
+            return .invokeNext
+        }, with: self, for: .DownArrow, priority: .modal)
+        
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.textView.boldWord()
+            return .invoked
+        }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            self.makeUrl(of: self.genericView.textView.selectedRange())
+            return .invoked
+        }, with: self, for: .U, priority: .modal, modifierFlags: [.command])
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.textView.italicWord()
+            return .invoked
+        }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.textView.codeWord()
+            return .invoked
+        }, with: self, for: .K, priority: .modal, modifierFlags: [.command, .shift])
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        genericView.draggingView.controller = self
         genericView.controller = self
         genericView.textView.delegate = self
         genericView.sendAsFile.set(sendingState)
+        inputInteraction.add(observer: self)
+        
+       
+        
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
         interactions.sendEmoji = { [weak self] emoji in
@@ -444,8 +585,14 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
     }
     
     deinit {
+        inputInteraction.remove(observer: self)
         disposable.dispose()
         isFileDisposable.dispose()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
     }
     
     override func becomeFirstResponder() -> Bool? {
@@ -460,18 +607,50 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         self.account = account
         self.emoji = EmojiViewController(account)
         
-        var canCollage: Bool = urls.count > 1
-        for url in urls {
-            if !photoExts.contains(url.pathExtension.lowercased()) && !videoExts.contains(url.pathExtension.lowercased()) {
-                canCollage = false
-                break
+        let canCollage: Bool = canCollagesFromUrl(urls)
+        
+        self.contextChatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: account)
+        
+        inputContextHelper = InputContextHelper(account: account, chatInteraction: contextChatInteraction)
+        self.sendingState = asMedia ? FastSettings.isNeedCollage && canCollage ? .collage : .media : .file
+        self.chatInteraction = chatInteraction
+        super.init(frame:NSMakeRect(0, 0, 320, mainWindow.frame.height - 80))
+        bar = .init(height: 0)
+        
+        contextChatInteraction.movePeerToInput = { [weak self] peer in
+            if let strongSelf = self {
+                let string = strongSelf.genericView.textView.string()
+                let range = strongSelf.genericView.textView.selectedRange()
+                let textInputState = ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: chatTextAttributes(from: strongSelf.genericView.textView.attributedString()))
+                strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(textInputState)})
+                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                    let inputText = textInputState.inputText
+                    
+                    let name:String = peer.addressName ?? peer.compactDisplayTitle
+
+                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                    let replacementText = name + " "
+                    
+                    let atLength = peer.addressName != nil ? 0 : 1
+                    
+                    let range = strongSelf.contextChatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                    
+                    if peer.addressName == nil {
+                        let state = strongSelf.contextChatInteraction.presentation.effectiveInput
+                        var attributes = state.attributes
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id))
+                        let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
+                        strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
+                    }
+                    
+                    let updatedText = strongSelf.contextChatInteraction.presentation.effectiveInput
+                    
+                    strongSelf.genericView.textView.setAttributedString(updatedText.attributedString, animated: true)
+                    strongSelf.genericView.textView.setSelectedRange(NSMakeRange(updatedText.selectionRange.lowerBound, updatedText.selectionRange.lowerBound + updatedText.selectionRange.upperBound))
+                }
             }
         }
         
-        self.sendingState = asMedia ? FastSettings.isNeedCollage && canCollage ? .collage : .media : .file
-        self.chatInteraction = chatInteraction
-        super.init(frame:NSMakeRect(0,0,300, 300))
-        bar = .init(height: 0)
     }
     
     func showEmoji(for control: Control) {
@@ -497,16 +676,123 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate {
         
     }
     
+    func isEqual(to other: Notifable) -> Bool {
+        return false
+    }
+    
+    func notify(with value: Any, oldValue: Any, animated: Bool) {
+        if let value = value as? PreviewContextState, let oldValue = oldValue as? PreviewContextState {
+            if value.inputQueryResult != oldValue.inputQueryResult {
+                inputContextHelper.context(with: value.inputQueryResult, for: self.genericView, relativeView: self.genericView.textContainerView, animated: animated)
+            }
+        }
+    }
+    
+    
     func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         
+        let animated: Bool = true
+        let string = genericView.textView.string()
+
+        if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, !string.isEmpty, let (possibleQueryRange, possibleTypes, _) = textInputStateContextQueryRangeAndType(ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: []), includeContext: false) {
+            
+            if possibleTypes.contains(.mention) {
+                let query = String(string[possibleQueryRange])
+                if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, account: account, filter: .filterSelf(includeNameless: true, includeInlineBots: false)) {
+                    self.contextQueryState?.1.dispose()
+                    var inScope = true
+                    var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
+                    self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
+                        if let strongSelf = self {
+                            if Thread.isMainThread && inScope {
+                                inScope = false
+                                inScopeResult = result
+                            } else {
+                                strongSelf.inputInteraction.update(animated: animated, {
+                                    $0.updatedInputQueryResult { previousResult in
+                                        return result(previousResult)
+                                    }
+                                })
+                                
+                            }
+                        }
+                    }))
+                    inScope = false
+                    if let inScopeResult = inScopeResult {
+                        inputInteraction.update(animated: animated, {
+                            $0.updatedInputQueryResult { previousResult in
+                                return inScopeResult(previousResult)
+                            }
+                        })
+                    }
+                }
+            } else {
+                inputInteraction.update(animated: animated, {
+                    $0.updatedInputQueryResult { _ in
+                        return nil
+                    }
+                })
+            }
+            
+            
+        } else {
+            inputInteraction.update(animated: animated, {
+                $0.updatedInputQueryResult { _ in
+                    return nil
+                }
+            })
+        }
     }
     
     func textViewDidReachedLimit(_ textView: Any) {
         genericView.textView.shake()
     }
     
+    func canTransformInputText() -> Bool {
+        return true
+    }
+    
+    
+    func makeUrl(of range: NSRange) {
+        guard range.min != range.max else {
+            return
+        }
+        
+        let close:()->Void = { [weak self] in
+            if let strongSelf = self {
+                strongSelf.formatterPopover?.close()
+                strongSelf.genericView.textView.setSelectedRange(NSMakeRange(strongSelf.genericView.textView.selectedRange().max, 0))
+                strongSelf.formatterPopover = nil
+            }
+        }
+        
+        if formatterPopover == nil {
+            self.formatterPopover = InputFormatterPopover(InputFormatterArguments(bold: {
+                close()
+            }, italic: {
+                close()
+            }, code: {
+                close()
+            }, link: { [weak self] url in
+                self?.genericView.textView.addLink(url)
+                close()
+            }), window: mainWindow)
+        }
+        
+        formatterPopover?.show(relativeTo: genericView.textView.inputView.selectedRangeRect, of: genericView.textView, preferredEdge: .maxY)
+    }
+    
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        return false
+        
+        let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
+        
+        if !result {
+            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
+                self?.insertAdditionUrls(urls)
+            }))
+        }
+        
+        return !result
     }
     
     func textViewSize() -> NSSize {

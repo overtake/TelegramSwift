@@ -168,7 +168,7 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
 }
 
 func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSize:NSSize = NSMakeSize(80, 80)) -> [InputMediaStickersRow] {
-    let s = floorToScreenPixels(initialSize.width/floor(initialSize.width/maxSize.width))
+    let s = floorToScreenPixels(scaleFactor: System.backingScale, initialSize.width/floor(initialSize.width/maxSize.width))
     let perRow = Int(initialSize.width / s)
     
     var entries:[InputMediaContextEntry] = []

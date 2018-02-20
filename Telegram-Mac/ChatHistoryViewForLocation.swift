@@ -41,17 +41,41 @@ func ==(lhs: ChatHistoryLocation, rhs: ChatHistoryLocation) -> Bool {
 
 
 
-enum ChatHistoryViewScrollPosition {
+enum ChatHistoryViewScrollPosition : Equatable {
     case unread(index: MessageIndex)
     case positionRestoration(index: MessageIndex, relativeOffset: CGFloat)
     case index(index: MessageHistoryAnchorIndex, position: TableScrollState, directionHint: ListViewScrollToItemDirectionHint, animated: Bool)
+}
+
+func ==(lhs: ChatHistoryViewScrollPosition, rhs: ChatHistoryViewScrollPosition) -> Bool {
+    switch lhs {
+    case let .unread(index):
+        if case .unread(index: index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .positionRestoration(index, relativeOffset):
+        if case .positionRestoration(index: index, relativeOffset: relativeOffset) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .index(index, position, directionHint, animated):
+        if case .index(index: index, position: position, directionHint: directionHint, animated: animated) = rhs {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 public struct ChatHistoryCombinedInitialData {
     let initialData: InitialMessageHistoryData?
     let buttonKeyboardMessage: Message?
     let cachedData: CachedPeerData?
-    let readStateData: ChatHistoryCombinedInitialReadStateData?
+    let cachedDataMessages:[MessageId: Message]?
+    let readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
 }
 
 enum ChatHistoryViewUpdateType {
@@ -62,47 +86,35 @@ enum ChatHistoryViewUpdateType {
 public struct ChatHistoryCombinedInitialReadStateData {
     public let unreadCount: Int32
     public let totalUnreadCount: Int32
+    public let notificationSettings: PeerNotificationSettings?
 }
 
 enum ChatHistoryViewUpdate {
-    case Loading(initialData: InitialMessageHistoryData?)
+    case Loading(initialData: ChatHistoryCombinedInitialData)
     case HistoryView(view: MessageHistoryView, type: ChatHistoryViewUpdateType, scrollPosition: ChatHistoryViewScrollPosition?, initialData: ChatHistoryCombinedInitialData)
 }
 
 
-func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Account, peerId: PeerId, fixedCombinedReadState: CombinedPeerReadState?, tagMask: MessageTags?, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = []) -> Signal<ChatHistoryViewUpdate, NoError> {
+func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Account, chatLocation: ChatLocation, fixedCombinedReadStates: MessageHistoryViewReadState?, tagMask: MessageTags?, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = []) -> Signal<ChatHistoryViewUpdate, NoError> {
+    
     switch location {
     case let .Initial(count):
         var preloaded = false
         var fadeIn = false
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         if let tagMask = tagMask {
-            
-            signal = account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: count, fixedCombinedReadState: nil, tagMask: tagMask, orderStatistics: orderStatistics)
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: count, clipHoles: true, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         } else {
-            signal = account.viewTracker.aroundMessageOfInterestHistoryViewForPeerId(peerId, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocation, count: count, clipHoles: true, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         }
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+            
+            let (cachedData, cachedDataMessages, readStateData) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData)
 
             
             if preloaded {
-                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: combinedInitialData)
             } else {
                 var scrollPosition: ChatHistoryViewScrollPosition?
                 
@@ -121,7 +133,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                     let maxIndex = min(view.entries.count, targetIndex + count / 2)
                     if maxIndex >= targetIndex {
                         for i in targetIndex ..< maxIndex {
-                            if case .HoleEntry = view.entries[i] {
+                            if case let .HoleEntry(hole) = view.entries[i] {
                                 var incomingCount: Int32 = 0
                                 inner: for entry in view.entries.reversed() {
                                     switch entry {
@@ -133,11 +145,10 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                                         }
                                     }
                                 }
-                                if let combinedReadState = view.combinedReadState, combinedReadState.count == incomingCount {
-                                    
+                                if let combinedReadStates = view.combinedReadStates, case let .peer(readStates) = combinedReadStates, let readState = readStates[hole.0.maxIndex.id.peerId], readState.count == incomingCount {
                                 } else {
                                     fadeIn = true
-                                    return .Loading(initialData: initialData)
+                                    return .Loading(initialData: combinedInitialData)
                                 }
                             }
                         }
@@ -149,7 +160,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                     for entry in view.entries.reversed() {
                         if case .HoleEntry = entry {
                             fadeIn = true
-                            return .Loading(initialData: initialData)
+                            return .Loading(initialData: combinedInitialData)
                         } else {
                             messageCount += 1
                         }
@@ -160,7 +171,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                 }
                 
                 preloaded = true
-                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: scrollPosition, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: scrollPosition, initialData: combinedInitialData)
             }
         }
     case let .InitialSearch(searchLocation, count):
@@ -170,32 +181,18 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch searchLocation {
         case let .index(index):
-            
-            signal = account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, fixedCombinedReadState: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, clipHoles: true, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         case let .id(id):
-            signal = account.viewTracker.aroundIdMessageHistoryViewForPeerId(peerId, count: count, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocation, count: count, clipHoles: true, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+            let (cachedData, cachedDataMessages, readStateData) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData)
+
             
             if preloaded {
-                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: combinedInitialData)
             } else {
                 let anchorIndex = view.anchorIndex
                 
@@ -214,7 +211,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                     for i in targetIndex ..< maxIndex {
                         if case .HoleEntry = view.entries[i] {
                             fadeIn = true
-                            return .Loading(initialData: initialData)
+                            return .Loading(initialData: combinedInitialData)
                         }
                     }
                 }
@@ -228,28 +225,16 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                     scroll = .none(nil)
                 }
                 
-                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: .index(index: anchorIndex, position: scroll, directionHint: .Down, animated: false), initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: .index(index: anchorIndex, position: scroll, directionHint: .Down, animated: false), initialData: combinedInitialData)
             }
         }
     case let .Navigation(index, anchorIndex, count):
         var first = true
-        return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadState: fixedCombinedReadState, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+        
+        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, clipHoles: true, fixedCombinedReadStates: fixedCombinedReadStates, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
+            
+            let (cachedData, cachedDataMessages, readStateData) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData)
             
             let genericType: ViewUpdateType
             if first {
@@ -258,29 +243,16 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
             } else {
                 genericType = updateType
             }
-            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: nil, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: nil, initialData: combinedInitialData)
         }
     case let .Scroll(index, anchorIndex, sourceIndex, scrollPosition, animated):
         let directionHint: ListViewScrollToItemDirectionHint = sourceIndex > index ? .Down : .Up
         let chatScrollPosition = ChatHistoryViewScrollPosition.index(index: index, position: scrollPosition, directionHint: directionHint, animated: animated)
         var first = true
-        return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, anchorIndex: anchorIndex, count: 140, fixedCombinedReadState: fixedCombinedReadState, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+        
+        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: 140, clipHoles: true, fixedCombinedReadStates: fixedCombinedReadStates, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
+            let (cachedData, cachedDataMessages, readStateData) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData)
             
             let genericType: ViewUpdateType
             let scrollPosition: ChatHistoryViewScrollPosition? = first ? chatScrollPosition : nil
@@ -290,7 +262,58 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
             } else {
                 genericType = updateType
             }
-            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: scrollPosition, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: scrollPosition, initialData: combinedInitialData)
         }
     }
+}
+
+private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatLocation) -> (
+    cachedData: CachedPeerData?,
+    cachedDataMessages: [MessageId: Message]?,
+    readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
+    ) {
+        var cachedData: CachedPeerData?
+        var cachedDataMessages: [MessageId: Message]?
+        var readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData] = [:]
+        var notificationSettings: PeerNotificationSettings?
+        
+        loop: for data in view.additionalData {
+            switch data {
+            case let .peerNotificationSettings(value):
+                notificationSettings = value
+                break loop
+            default:
+                break
+            }
+        }
+        
+        for data in view.additionalData {
+            switch data {
+            case let .peerNotificationSettings(value):
+                notificationSettings = value
+            case let .cachedPeerData(peerIdValue, value):
+                if case .peer(peerIdValue) = chatLocation {
+                    cachedData = value
+                }
+            case let .cachedPeerDataMessages(peerIdValue, value):
+                if case .peer(peerIdValue) = chatLocation {
+                    cachedDataMessages = value
+                }
+            case let .totalUnreadCount(totalUnreadCount):
+                switch chatLocation {
+                case let .peer(peerId):
+                    if let combinedReadStates = view.combinedReadStates {
+                        if case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId] {
+                            readStateData[peerId] = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount, notificationSettings: notificationSettings)
+                        }
+                    }
+                case .group:
+                    break
+                }
+            default:
+                break
+            }
+        }
+        
+        return (cachedData, cachedDataMessages, readStateData)
 }

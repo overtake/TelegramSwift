@@ -186,7 +186,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: item.account, file: item.file).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, file: item.file).start())
         }
         open()
     }
@@ -194,7 +194,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func cancelFetching() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: item.account, file: item.file).start())
+            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, file: item.file)
         }
     }
     

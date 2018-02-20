@@ -39,7 +39,7 @@ class EntertainmentViewController: NavigationViewController {
 
     private var account:Account
     private var chatInteraction:ChatInteraction?
-    private var interactions:EntertainmentInteractions?
+    private(set) var interactions:EntertainmentInteractions?
     private let cap:SidebarCapViewController
     
     private let section: SectionViewController
@@ -76,7 +76,7 @@ class EntertainmentViewController: NavigationViewController {
         
         emoji.update(with: interactions)
         stickers.update(with: interactions, chatInteraction: chatInteraction)
-        gifs.update(with: interactions)
+        gifs.update(with: interactions, chatInteraction: chatInteraction)
     }
     
 

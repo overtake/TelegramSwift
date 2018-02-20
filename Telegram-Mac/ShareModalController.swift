@@ -87,6 +87,11 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
             return translate(key: key, [])
         }, placeholderKey: "ShareModal.Search.Placeholder")
         super.init(frame: frameRect)
+        
+        backgroundColor = theme.colors.background
+        textContainerView.backgroundColor = theme.colors.background
+        actionsContainerView.backgroundColor = theme.colors.background
+        
         addSubview(searchView)
         addSubview(tableView)
         addSubview(topSeparator)
@@ -98,8 +103,8 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         share.set(image: theme.icons.modalShare, for: .Normal)
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         
-        share.sizeToFit()
-        dismiss.sizeToFit()
+        _ = share.sizeToFit()
+        _ = dismiss.sizeToFit()
         
         addSubview(share)
         addSubview(dismiss)
@@ -107,10 +112,10 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
   
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
-        sendButton.sizeToFit()
+        _ = sendButton.sizeToFit()
         
         emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
-        emojiButton.sizeToFit()
+        _ = emojiButton.sizeToFit()
         
         actionsContainerView.addSubview(sendButton)
         actionsContainerView.addSubview(emojiButton)
@@ -622,9 +627,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 
                 switch(location) {
                 case let .Initial(count, _):
-                    signal = account.viewTracker.tailChatListView(count: count)
+                    signal = account.viewTracker.tailChatListView(groupId: nil, count: count)
                 case let .Index(index):
-                    signal = account.viewTracker.aroundChatListView(index: index, count: 30)
+                    signal = account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 30)
                 }
                 
                 return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult]), Void> in
@@ -676,7 +681,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                 }
             } else {
-                return account.postbox.searchPeers(query: search.lowercased()) |> map {
+                return account.postbox.searchPeers(query: search.lowercased(), groupId: nil) |> map {
                     return $0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 } |> mapToSignal { peers -> Signal<([Peer], [PeerId: PeerStatusStringResult]), Void> in
                     let keys = peers.map {PostboxViewKey.peer(peerId: $0.id)}

@@ -188,11 +188,12 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
             return .none
         }
         
+        
         let query = String(inputState.inputText[possibleQueryRange]) //.substring(with: possibleQueryRange)
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
         } else if possibleTypes == [.mention] {
-            return .mention(query: query, includeRecent: inputState.inputText.startIndex == inputState.inputText.index(before: possibleQueryRange.lowerBound))
+            return .mention(query: query, includeRecent: inputState.inputText.startIndex == inputState.inputText.index(before: possibleQueryRange.lowerBound) && chatPresentationInterfaceState.state == .normal)
         } else if possibleTypes == [.command] {
             return .command(query)
         } else if possibleTypes == [.contextRequest], let additionalStringRange = additionalStringRange {

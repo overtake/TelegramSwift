@@ -69,7 +69,7 @@ class MainViewController: TelegramViewController {
 
     
     private let settingsDisposable = MetaDisposable()
-    
+    private var quickController: ViewController?
     private func showFastSettings(_ control:Control) {
         
         let passcodeData = account.postbox.modify { modifier -> PostboxAccessChallengeData in
@@ -107,7 +107,22 @@ class MainViewController: TelegramViewController {
         
         items.append(SPopoverItem(theme.colors.isDark ? tr(L10n.fastSettingsDisableDarkMode) : tr(L10n.fastSettingsEnableDarkMode), { [weak self] in
             if let strongSelf = self {
-                _ = updateThemeSettings(postbox: strongSelf.account.postbox, palette: !theme.colors.isDark ? darkPalette : whitePalette).start()
+               _ = updateThemeInteractivetly(postbox: strongSelf.account.postbox, f: { settings -> ThemePaletteSettings in
+                let palette: ColorPalette
+                var palettes:[String : ColorPalette] = [:]
+                palettes[dayClassic.name] = dayClassic
+                palettes[whitePalette.name] = whitePalette
+                palettes[darkPalette.name] = darkPalette
+                palettes[nightBluePalette.name] = nightBluePalette
+                
+                if !theme.colors.isDark {
+                    palette = palettes[settings.defaultNightName] ?? nightBluePalette
+                } else {
+                    palette = palettes[settings.defaultDayName] ?? dayClassic
+                }
+                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName)
+            }).start()
+               // _ = updateThemeSettings(postbox: strongSelf.account.postbox, palette: !theme.colors.isDark ? darkPalette : dayClassic).start()
             }
         }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
         
@@ -124,6 +139,7 @@ class MainViewController: TelegramViewController {
         if self.tabController.current != settings {
             showPopover(for: control, with: controller, edge: .maxX, inset: NSMakePoint(control.frame.width - 12, 0))
         }
+        self.quickController = controller
     }
     
     override func updateLocalizationAndTheme() {
@@ -147,7 +163,6 @@ class MainViewController: TelegramViewController {
         if index == 3 && account.context.layout != .single {
             account.context.mainNavigation?.push(GeneralSettingsViewController(account), false)
         } else {
-            
             account.context.mainNavigation?.enumerateControllers( { controller, index in
                 if (controller is ChatController) || (controller is PeerInfoController) || (controller is GroupAdminsController) || (controller is GroupAdminsController)  || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
                     self.backFromSettings(index)
@@ -156,6 +171,7 @@ class MainViewController: TelegramViewController {
                 return false
             })
         }
+        quickController?.popover?.hide()
     }
     
     private func backFromSettings(_ index:Int) {

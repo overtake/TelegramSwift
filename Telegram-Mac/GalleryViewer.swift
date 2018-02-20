@@ -154,7 +154,7 @@ class GalleryMessagesBehavior {
 
 final class GalleryBackgroundView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
+       // super.draw(layer, in: ctx)
     }
 }
 
@@ -163,7 +163,7 @@ class GalleryViewer: NSResponder {
     
     fileprivate var viewCache:[AnyHashable: NSView] = [:]
     
-    private var window:Window
+    let window:Window
     private var controls:GalleryControls!
     let pager:GalleryPageController
     private let backgroundView: GalleryBackgroundView = GalleryBackgroundView()
@@ -180,17 +180,18 @@ class GalleryViewer: NSResponder {
     
     
     let interactions:GalleryInteractions = GalleryInteractions()
-    let contentInteractions:ChatMediaGalleryParameters?
+    let contentInteractions:ChatMediaLayoutParameters?
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     let type:GalleryAppearType
     private let reversed: Bool
-    private init(account:Account, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType, reversed:Bool = false) {
+    private init(account:Account, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType, reversed:Bool = false) {
         self.account = account
         self.delegate = delegate
         self.type = type
         self.reversed = reversed
+        
         self.contentInteractions = contentInteractions
         if let screen = NSScreen.main {
             let bounds = NSMakeRect(0, 0, screen.frame.width, screen.frame.height)
@@ -199,6 +200,7 @@ class GalleryViewer: NSResponder {
             
             self.window.level = .screenSaver
             self.window.isOpaque = false
+          
             self.window.backgroundColor = .clear
             self.window.appearance = theme.appearance
             backgroundView.backgroundColor = .blackTransparent
@@ -212,7 +214,9 @@ class GalleryViewer: NSResponder {
         
         super.init()
         
-       
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
+        
         
         interactions.dismiss = { [weak self] () -> KeyHandlerResult in
             if let pager = self?.pager {
@@ -285,17 +289,28 @@ class GalleryViewer: NSResponder {
         default:
              self.controls = GalleryGeneralControls(View(frame:NSMakeRect(0, 10, 460, 75)), interactions:interactions)
         }
+        self.controls.view?.backgroundColor = NSColor.black.withAlphaComponent(0.8)
 
         self.pager.view.addSubview(self.backgroundView)
         self.window.contentView?.addSubview(self.pager.view)
         self.window.contentView?.addSubview(self.controls.view!)
     }
     
+    @objc open func windowDidBecomeKey() {
+        
+    }
+    
+    
+    @objc open func windowDidResignKey() {
+        self.window.makeKeyAndOrderFront(self)
+        window.makeFirstResponder(self)
+    }
+    
     var pagerSize: NSSize {
         return NSMakeSize(pager.frame.size.width - pager.contentInset.right - pager.contentInset.left, pager.frame.size.height - pager.contentInset.bottom - pager.contentInset.top)
     }
     
-    fileprivate convenience init(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, reversed:Bool = false) {
+    fileprivate convenience init(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, reversed:Bool = false) {
         self.init(account: account, delegate, contentInteractions, type: .profile(peerId), reversed: reversed)
 
         let pagerSize = self.pagerSize
@@ -352,7 +367,7 @@ class GalleryViewer: NSResponder {
         }))
     }
     
-    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, reversed:Bool = false) {
+    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, reversed:Bool = false) {
         self.init(account: account, delegate, contentInteractions, type: .history, reversed: reversed)
         
         let pagerSize = self.pagerSize
@@ -394,7 +409,7 @@ class GalleryViewer: NSResponder {
     
    
     
-    fileprivate convenience init(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil, reversed: Bool = false) {
+    fileprivate convenience init(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil, reversed: Bool = false) {
         
         self.init(account: account, delegate, contentInteractions, type: type, reversed: reversed)
 
@@ -424,7 +439,8 @@ class GalleryViewer: NSResponder {
                 if tags == nil {
                    type = .alone
                 }
-                let view = account.viewTracker.aroundIdMessageHistoryViewForPeerId(message.id.peerId, count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation])
+
+                let view = account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, clipHoles: true, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
             
                 switch type {
                 case .alone:
@@ -458,7 +474,14 @@ class GalleryViewer: NSResponder {
 
                 case .history:
                     return view |> mapToQueue { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), Void> in
-                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false)
+                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
+                            switch entry {
+                            case let .MessageEntry(message, _, _, _, _, _):
+                                return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia
+                            default:
+                                return true
+                            }
+                        }
                         let previous = previous.swap(entries)
                         return prepareEntries(from: previous, to: entries, account: account, pagerSize: pagerSize) |> deliverOnMainQueue |> map { transition in
                             _ = indexes.swap((view.earlierId, view.laterId))
@@ -704,11 +727,15 @@ class GalleryViewer: NSResponder {
                 strongSelf.backgroundView.change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if ignoreStableId != stableId {
-                        return strongSelf?.delegate?.contentInteractionView(for: stableId)
+                        return strongSelf?.delegate?.contentInteractionView(for: stableId, animateIn: false)
                     }
                     return nil
                 }, completion:{ [weak strongSelf] in
                     strongSelf?.controls.animateIn()
+                }, addAccesoryOnCopiedView: { [weak self] stableId, view in
+                    if let stableId = stableId {
+                        self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
+                    }
                 })
                 strongSelf.window.makeKeyAndOrderFront(nil)
             }
@@ -720,16 +747,23 @@ class GalleryViewer: NSResponder {
         disposable.dispose()
         readyDispose.dispose()
         didSetReady = false
-        
+        NotificationCenter.default.removeObserver(self)
         if animated {
             backgroundView.change(opacity: 0, duration: 0.15, timingFunction: kCAMediaTimingFunctionSpring)
             controls.animateOut()
             self.pager.animateOut(to: {[weak self] (stableId) -> NSView? in
-                return self?.delegate?.contentInteractionView(for: stableId)
-            }, completion: { [weak self] in
+                return self?.delegate?.contentInteractionView(for: stableId, animateIn: true)
+            }, completion: { [weak self] interactive, stableId in
+                if let stableId = stableId {
+                    self?.delegate?.interactionControllerDidFinishAnimation(interactive: interactive, for: stableId)
+                }
                 self?.window.orderOut(nil)
                 viewer = nil
                 playPipIfNeeded()
+            }, addAccesoryOnCopiedView: { [weak self] stableId, view in
+                if let stableId = stableId {
+                    self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
+                }
             })
         } else {
             window.orderOut(nil)
@@ -803,27 +837,27 @@ func closeGalleryViewer(_ animated: Bool) {
     viewer?.close(animated)
 }
 
-func showChatGallery(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false) {
+func showChatGallery(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false) {
     if viewer == nil {
         let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type, reversed: reversed)
         gallery.show()
     }
 }
 
-func showGalleryFromPip(item: MGalleryItem, gallery: GalleryViewer, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaGalleryParameters? = nil, type: GalleryAppearType = .history) {
+func showGalleryFromPip(item: MGalleryItem, gallery: GalleryViewer, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history) {
     if viewer == nil {
         gallery.show(true, item.stableId)
     }
 }
 
-func showPhotosGallery(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil) {
+func showPhotosGallery(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
     if viewer == nil {
         let gallery = GalleryViewer(account: account, peerId: peerId, firstStableId: firstStableId, delegate, contentInteractions)
         gallery.show()
     }
 }
 
-func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaGalleryParameters? = nil) {
+func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
     if viewer == nil {
         let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, delegate, contentInteractions)
         gallery.show()

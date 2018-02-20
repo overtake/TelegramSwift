@@ -426,11 +426,11 @@ class GroupedLayout {
         
         
         for (_, layout) in layouts {
-            layout.layoutFrame = NSMakeRect(floorToScreenPixels(layout.layoutFrame.minX), floorToScreenPixels(layout.layoutFrame.minY), floorToScreenPixels(layout.layoutFrame.width), floorToScreenPixels(layout.layoutFrame.height))
+            layout.layoutFrame = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, layout.layoutFrame.minX), floorToScreenPixels(scaleFactor: System.backingScale, layout.layoutFrame.minY), floorToScreenPixels(scaleFactor: System.backingScale, layout.layoutFrame.width), floorToScreenPixels(scaleFactor: System.backingScale, layout.layoutFrame.height))
         }
         
         self.layouts = layouts
-        self.dimensions = NSMakeSize(floorToScreenPixels(dimensions.width), floorToScreenPixels(dimensions.height))
+        self.dimensions = NSMakeSize(floorToScreenPixels(scaleFactor: System.backingScale, dimensions.width), floorToScreenPixels(scaleFactor: System.backingScale, dimensions.height))
     }
     
     func frame(for messageId: MessageId) -> NSRect {

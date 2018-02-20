@@ -12,16 +12,20 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import TGUIKit
 
+enum PeerPhoto {
+    case peer(PeerId, TelegramMediaImageRepresentation?, [String])
+    case group([PeerId], [PeerId : TelegramMediaImageRepresentation], [PeerId : [String]])
+}
 
+private var capHolder:[String : CGImage] = [:]
 
-public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true) -> Signal<(CGImage?, Bool), NoError>? {
-    if let smallProfileImage = peer.smallProfileImage {
-        
-        return cachedPeerPhoto(peer.id, representation: smallProfileImage, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
+private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool) -> Signal<(CGImage?, Bool), NoError> {
+    if let representation = representation {
+        return cachedPeerPhoto(peerId, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                let resourceData = account.postbox.mediaBox.resourceData(smallProfileImage.resource)
+                let resourceData = account.postbox.mediaBox.resourceData(representation.resource)
                 let imageData = resourceData
                     |> take(1)
                     |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
@@ -39,7 +43,7 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
                                 }, completed: {
                                     subscriber.putCompletion()
                                 })
-                                let fetchedDataDisposable = account.postbox.mediaBox.fetchedResource(smallProfileImage.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .image)).start()
+                                let fetchedDataDisposable = account.postbox.mediaBox.fetchedResource(representation.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .image)).start()
                                 return ActionDisposable {
                                     resourceDataDisposable.dispose()
                                     fetchedDataDisposable.dispose()
@@ -49,8 +53,14 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
                 }
                 
                 let def = deferred({ () -> Signal<(CGImage?, Bool), Void> in
-                    return .single((generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: displayDimensions), false))
-                }) |> deliverOn(account.graphicsThreadPool)
+                    let key = NSStringFromSize(displayDimensions)
+                    if let image = capHolder[key] {
+                        return .single((image, false))
+                    } else {
+                        capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: displayDimensions)
+                        return .single((capHolder[key]!, false))
+                    }
+                }) |> deliverOnMainQueue
                 
                 
                 let img = imageData
@@ -64,14 +74,14 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
                             image = nil
                         }
                         if let image = image {
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: smallProfileImage, size: displayDimensions, scale: scale) |> map {
+                            return cachePeerPhoto(image: image, peerId: peerId, representation: representation, size: displayDimensions, scale: scale) |> map {
                                 return (image, animated)
                             }
                         } else {
                             return .single((image, animated))
                         }
                         
-                    }
+                }
                 if genCap {
                     return def |> then(img)
                 } else {
@@ -82,7 +92,7 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
         
     } else {
         
-        var letters = peer.displayLetters
+        var letters = displayLetters
         if letters.count < 2 {
             while letters.count != 2 {
                 letters.append("")
@@ -90,20 +100,20 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
         }
         
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id % 7)))
+        let color = theme.colors.peerColors(Int(abs(peerId.id % 7)))
         
         
         let symbol = letters.reduce("", { (current, letter) -> String in
             return current + letter
         })
         
-        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
+        return cachedEmptyPeerPhoto(peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
                 return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), Void> in
                     if let image = image {
-                        return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
+                        return cacheEmptyPeerPhoto(image: image, peerId: peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
                             return (image, false)
                         }
                     } else {
@@ -113,6 +123,53 @@ public func peerAvatarImage(account: Account, peer: Peer, displayDimensions: CGS
             }
         }
         
+    }
+}
+
+func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true) -> Signal<(CGImage?, Bool), NoError> {
+   
+    switch photo {
+    case let .peer(peerId, representation, displayLetters):
+        return peerImage(account: account, peerId: peerId, displayDimensions: displayDimensions, representation: representation, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap)
+    case let .group(peerIds, representations, displayLetters):
+        var combine:[Signal<(CGImage?, Bool), NoError>] = []
+        let inGroupSize = NSMakeSize(displayDimensions.width / 2 - 2, displayDimensions.height / 2 - 2)
+        for peerId in peerIds {
+            let representation: TelegramMediaImageRepresentation? = representations[peerId]
+            let letters = displayLetters[peerId] ?? ["", ""]
+            combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap))
+        }
+        return combineLatest(combine) |> deliverOn(account.graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
+            var animated: Bool = false
+            for image in images {
+                if image.1 {
+                    animated = true
+                    break
+                }
+            }
+            return (generateImage(displayDimensions, rotatedContext: { size, ctx in
+                var x: CGFloat = 0
+                var y: CGFloat = 0
+                ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                for i in 0 ..< images.count {
+                    let image = images[i].0
+                    if let image = image {
+                        let img = generateImage(image.size, rotatedContext: { size, ctx in
+                            ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                            ctx.draw(image, in: NSMakeRect(0, 0, image.size.width, image.size.height))
+                        })!
+                        ctx.draw(img, in: NSMakeRect(x, y, inGroupSize.width, inGroupSize.height))
+                    }
+                    x += inGroupSize.width + 4
+                    if (i + 1) % 2 == 0 {
+                        x = 0
+                        y += inGroupSize.height + 4
+                    }
+                }
+                
+            }), animated)
+            
+        }
     }
 }
 
@@ -168,7 +225,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
                 let line = CTLineCreateWithAttributedString(attributedString)
                 let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
                 
-                let lineOrigin = CGPoint(x: floorToScreenPixels(-lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(-lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
+                let lineOrigin = CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
                 
                 ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
                 ctx.scaleBy(x: 1.0, y: 1.0)
@@ -215,7 +272,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
             let line = CTLineCreateWithAttributedString(attributedString)
             let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
             
-            let lineOrigin = CGPoint(x: floorToScreenPixels(-lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(-lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
+            let lineOrigin = CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
             
             ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
             ctx.scaleBy(x: 1.0, y: 1.0)

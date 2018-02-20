@@ -567,7 +567,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case membersBlacklist(section:Int, count: Int)
     
     case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, enabled:Bool)
-    case leave(section:Int)
+    case leave(section:Int, text: String)
     case section(Int)
     
     func isEqual(to: PeerInfoEntry) -> Bool {
@@ -766,8 +766,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case .leave:
-            if case .leave = entry {
+        case let .leave(sectionId, text):
+            if case .leave(sectionId, text) = entry {
                 return true
             } else {
                 return false
@@ -882,7 +882,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .member(sectionId, index, _, _, _, _, _, _, _):
             return (sectionId * 1000) + index + 200
-        case let .leave(sectionId):
+        case let .leave(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .convertToSuperGroup(sectionId):
             return (sectionId * 1000) + stableIndex
@@ -953,7 +953,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupDescriptionSetup(section: _, text: text):
             return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(L10n.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
                 arguments.updateEditingDescriptionText(updatedText)
-            })
+            }, font: .normal(.title))
         case let .preHistory(_, enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoPreHistory), type: .context(stateback: { () -> String in
                 return enabled ? tr(L10n.peerInfoPreHistoryVisible) : tr(L10n.peerInfoPreHistoryHidden)
@@ -1039,8 +1039,8 @@ enum GroupInfoEntry: PeerInfoEntry {
                 arguments.peerInfo(peer!.id)
             }, inputActivity: inputActivity)
 
-        case .leave:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoDeleteAndExit), nameStyle: redActionButton, type: .none, action: {
+        case .leave(_, let text):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, action: {
                 arguments.delete()
             })
         case .convertToSuperGroup:
@@ -1162,6 +1162,8 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             
             var updatedParticipants = participants.participants
             let existingParticipantIds = Set(updatedParticipants.map { $0.peerId })
+            
+            
             var peerPresences: [PeerId: PeerPresence] = view.peerPresences
             var peers: [PeerId: Peer] = view.peers
             var disabledPeerIds = state.removingParticipantIds
@@ -1328,11 +1330,11 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if state.editingState != nil && access.isCreator {
                     entries.append(GroupInfoEntry.convertToSuperGroup(section: sectionId))
                 }
-                entries.append(GroupInfoEntry.leave(section: sectionId))
+                entries.append(GroupInfoEntry.leave(section: sectionId, text: L10n.peerInfoDeleteAndExit))
             }
         } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
             if case .member = channel.participationStatus {
-                entries.append(GroupInfoEntry.leave(section: sectionId))
+                entries.append(GroupInfoEntry.leave(section: sectionId, text: channel.addressName != nil ? L10n.peerInfoLeaveGroup : L10n.peerInfoDeleteAndExit))
             }
         }
 

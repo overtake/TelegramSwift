@@ -27,18 +27,17 @@ class ChannelEventLogTitledView : TitledBarView {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        ctx.setFillColor(theme.colors.background.cgColor)
-        ctx.fill(bounds)
+        layer.backgroundColor = theme.colors.background.cgColor
         
-       let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode, attributedText, nil, 1, .end, NSMakeSize(bounds.width - 40, bounds.height), nil,false, .left)
+        let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode, attributedText, nil, 1, .end, NSMakeSize(bounds.width - 40, bounds.height), nil,false, .left)
         let textRect = focus(textLayout.size)
-        textApply.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor)
+        textApply.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
         var iconRect = focus(theme.icons.eventLogTriangle.backingSize)
         iconRect.origin.x = textRect.maxX + 6
         iconRect.origin.y += 1
         ctx.draw(theme.icons.eventLogTriangle, in: iconRect)
-      
+        
         
     }
     
@@ -75,11 +74,11 @@ private class SearchContainerView : View {
         addSubview(separator)
         cancelButton.set(font: .medium(.text), for: .Normal)
         cancelButton.set(text: tr(L10n.chatCancel), for: .Normal)
-        cancelButton.sizeToFit()
+        _ = cancelButton.sizeToFit()
         
         cancelButton.set(handler: { [weak self] _ in
             self?.hideSearch?()
-        }, for: .Click)
+            }, for: .Click)
         addSubview(cancelButton)
         updateLocalizationAndTheme()
     }
@@ -314,7 +313,7 @@ private func eventLogItems(_ result:AdminLogEventsResult, initialSize: NSSize, c
         }
         
         index += 1
-
+        
     }
     for item in items {
         _ = item.makeSize(initialSize.width, oldWidth: initialSize.width)
@@ -331,6 +330,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     private let disposable = MetaDisposable()
     private let openPeerDisposable = MetaDisposable()
     private let searchState:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+    private let filterDisposable = MetaDisposable()
     override func viewClass() -> AnyClass {
         return ChannelEventLogView.self
     }
@@ -345,24 +345,32 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
         bar.set(handler: { [weak self] _ in
             self?.showFilter()
-        }, for: .Click)
+            }, for: .Click)
         
         return bar
     }
     
     private func showFilter() {
         if let state = state.modify({$0}) {
-            showModal(with: ChannelEventFilterModalController(account: account, peerId: peerId, state: state, updated: { [weak self] updatedState in
-                self?.history.set(.single((0, updatedState)))
-                _ = self?.state.swap(updatedState)
-            }), for: mainWindow)
+            let account = self.account
+            let peerId = self.peerId 
+            filterDisposable.set(showModalProgress(signal: channelAdmins(account: account, peerId: peerId) |> take(1) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] admins in
+                showModal(with: ChannelEventFilterModalController(account: account, peerId: peerId, admins: admins, state: state, updated: { [weak self] updatedState in
+                    self?.history.set(.single((0, updatedState)))
+                    _ = self?.state.swap(updatedState)
+                }), for: mainWindow)
+                
+            }))
+            
         }
     }
     
     init(_ account:Account, peerId:PeerId) {
         self.peerId = peerId
-        chatInteraction = ChatInteraction(peerId: peerId, account: account, isLogInteraction: true)
+        chatInteraction = ChatInteraction(chatLocation: .peer(peerId), account: account, isLogInteraction: true)
+        
         super.init(account)
+        
     }
     
     override var enableBack: Bool {
@@ -372,6 +380,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     deinit {
         disposable.dispose()
         openPeerDisposable.dispose()
+        filterDisposable.dispose()
     }
     
     override func requestUpdateRightBar() {
@@ -383,7 +392,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         let bar = ImageBarView(controller: self, theme.icons.chatSearch)
         bar.button.set(handler: { [weak self] _ in
             self?.genericView.showSearch()
-        }, for: .Click)
+            }, for: .Click)
         return bar
     }
     
@@ -391,7 +400,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         if genericView.inSearch {
             genericView.hideSearch()
             return .invoked
-        } 
+        }
         return super.escapeKeyAction()
     }
     
@@ -406,7 +415,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 }
             }
             return .invoked
-        }, with: self, for: .F, modifierFlags: [.command])
+            }, with: self, for: .F, modifierFlags: [.command])
     }
     
     override func viewDidLoad() {
@@ -452,44 +461,52 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         let previousAppearance:Atomic<Appearance?> = Atomic(value: nil)
         let previousSearchState:Atomic<SearchState> = Atomic(value: SearchState(state: .None, request: nil))
         disposable.set((combineLatest(searchState.get() |> map {SearchState(state: .None, request: $0.request)} |> distinctUntilChanged, history.get() |> filter {$0.0 != -1}) |> mapToSignal { values -> Signal<EventLogTableTransition?, Void> in
-            
+
             let state = values.1.1
             let searchState = values.0
-            return .single(nil) |> then (combineLatest(channelAdminLogEvents(account, peerId: peerId, maxId: values.1.0, minId: -1, limit: 50, query: searchState.request, filter: state.selectedFlags, admins: state.selectedAdmins) |> mapError { _ in} |> deliverOnPrepareQueue, appearanceSignal) |> map { result, appearance in
-
+            return .single(nil) |> then (combineLatest(channelAdminLogEvents(postbox: account.postbox, network: account.network, peerId: peerId, maxId: values.1.0, minId: -1, limit: 50, query: searchState.request, filter: state.selectedFlags, admins: state.selectedAdmins) |> mapError { _ in} |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result, appearance -> (EventLogTableTransition, [Peer]) in
+                
                 
                 let maxId = result.events.min(by: { (lhs, rhs) -> Bool in
                     return lhs.id < rhs.id
                 })?.id ?? -1
                 
+                
+                
                 let items = eventLogItems(result, initialSize: initialSize.modify({$0}), chatInteraction: chatInteraction)
                 let _previousState = previousState.swap(state)
                 let _previousAppearance = previousAppearance.swap(appearance)
                 let _previousSearchState = previousSearchState.swap(searchState)
-                return EventLogTableTransition(result: items, addition: _previousState == state && _previousSearchState == searchState && _previousAppearance == appearance, state: state, maxId: maxId, eventLog: result)
-
-            }  |> map {Optional($0)})
-            
-        }
-        |> deliverOnMainQueue).start(next: { [weak self] transition in
-            if let tableView = self?.genericView.tableView {
-                if let transition = transition, let peer = transition.eventLog.peers[transition.eventLog.peerId] {
-                    if !transition.addition {
-                        tableView.removeAll()
+                return (EventLogTableTransition(result: items, addition: _previousState == state && _previousSearchState == searchState && _previousAppearance == appearance, state: state, maxId: maxId, eventLog: result), result.peers.map {$0.value})
+                
+                }  |> mapToSignal { transition, peers in
+                    return account.postbox.modify { modifier in
+                        updatePeers(modifier: modifier, peers: peers, update: { (previous, updated) -> Peer? in
+                            return updated
+                        })
+                        return Optional(transition)
+                    }
+                })
+            }
+            |> deliverOnMainQueue).start(next: { [weak self] transition in
+                if let tableView = self?.genericView.tableView {
+                    if let transition = transition, let peer = transition.eventLog.peers[transition.eventLog.peerId] {
+                        if !transition.addition {
+                            tableView.removeAll()
+                            _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
+                        }
+                        tableView.insert(items: transition.result, at: tableView.count)
+                        self?.genericView.updateState(tableView.isEmpty ? (transition.state.isEmpty && previousSearchState.modify({$0}).request.isEmpty ? .empty(peer.isChannel ? tr(L10n.channelEventLogEmptyText) : tr(L10n.groupEventLogEmptyText)) : .empty(tr(L10n.channelEventLogEmptySearch))) : .history)
+                    } else {
+                        self?.genericView.updateState(.loading)
+                        self?.genericView.tableView.removeAll()
                         _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
                     }
-                    tableView.insert(items: transition.result, at: tableView.count)
-                    self?.genericView.updateState(tableView.isEmpty ? (transition.state.isEmpty && previousSearchState.modify({$0}).request.isEmpty ? .empty(peer.isChannel ? tr(L10n.channelEventLogEmptyText) : tr(L10n.groupEventLogEmptyText)) : .empty(tr(L10n.channelEventLogEmptySearch))) : .history)
-                } else {
-                    self?.genericView.updateState(.loading)
-                    self?.genericView.tableView.removeAll()
-                    _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
+                    
+                    tableView.resetScrollNotifies()
+                    _ = currentMaxId.swap(transition?.maxId ?? -1)
                 }
-                
-                tableView.resetScrollNotifies()
-                _ = currentMaxId.swap(transition?.maxId ?? -1)
-            }
-        }))
+            }))
         
         genericView.tableView.setScrollHandler { [weak self] scroll in
             if let strongSelf = self {
@@ -497,7 +514,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 case .bottom:
                     strongSelf.history.set(strongSelf.history.get() |> take(1) |> map { (_, state) in
                         return (currentMaxId.modify({$0}), state)
-                    })
+                        })
                 default:
                     break
                 }
@@ -511,3 +528,4 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     
     
 }
+

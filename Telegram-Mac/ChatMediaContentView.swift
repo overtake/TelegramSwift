@@ -34,7 +34,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) {
                     view.background = newValue
                 }
             }
@@ -43,11 +43,12 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     weak var table:TableView?
     
-
+    
     override init() {
         super.init()
         fetchControls = FetchControls(fetch: { [weak self] in
             self?.executeInteraction(true)
+            self?.open()
         })
     }
     
@@ -65,20 +66,26 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     func addGlobalAudioToVisible() {
         if let controller = globalAudio {
             table?.enumerateViews(with: { (view) in
-                if let view = (view as? ChatRowView)?.contentView.subviews.last as? ChatAudioContentView {
+                var contentView: NSView? = (view as? ChatRowView)?.contentView.subviews.last
+                if let view = ((view as? ChatMessageView)?.webpageContent as? WPMediaContentView)?.contentNode {
+                    contentView = view
+                }
+                
+                if let view = contentView as? ChatAudioContentView {
                     controller.add(listener: view)
-                } else if let view = (view as? ChatRowView)?.contentView.subviews.last as? ChatVideoMessageContentView {
+                } else if let view = contentView as? ChatVideoMessageContentView {
                     controller.add(listener: view)
-                } else if let view = (view as? ChatRowView)?.contentView.subviews.last as? WPMediaContentView {
+                } else if let view = contentView as? WPMediaContentView {
                     if let contentNode = view.contentNode as? ChatAudioContentView {
                         controller.add(listener: contentNode)
                     }
                 }
                 return true
             })
+            controller.notifyGlobalStateChanged()
         }
     }
-
+    
     func willRemove() -> Void {
         //self.cancel()
     }
@@ -125,7 +132,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                 }
             case .Remote:
                 fetch()
-                //open()
+            //open()
             case .Local:
                 open()
                 break
@@ -140,12 +147,28 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) -> Void  {
         self.setContent(size: size)
-        self.media = media
         self.parameters = parameters
         self.positionFlags = positionFlags
         self.account = account
         self.parent = parent
         self.table = table
+        
+       
+        
+        let updated = self.media == nil || !self.media!.isEqual(media)
+        self.media = media
+        
+        if let parameters = parameters {
+            if let parent = parent, parameters.automaticDownloadFunc(parent) {
+                fetch()
+            } else if parameters.automaticDownload {
+                fetch()
+            }
+        }
+        
+        if updated {
+            addGlobalAudioToVisible()
+        }
     }
     
     func addSublayer(_ layer:CALayer) -> Void {
@@ -162,8 +185,16 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         return view
     }
     
-    func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return self
+    }
+    
+    func interactionControllerDidFinishAnimation(interactive: Bool) {
+        
+    }
+    
+    func addAccesoryOnCopiedView(view: NSView) {
+
     }
     
     func draggingAbility(_ event:NSEvent) -> Bool {
@@ -189,7 +220,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             super.superview?.mouseDown(with: event)
         }
     }
-
+    
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         switch context {
         case .outsideApplication:
@@ -199,7 +230,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         }
     }
     private var dragpath:String? = nil
-
+    
     func pasteboard(_ pasteboard: NSPasteboard?, item: NSPasteboardItem, provideDataForType type: NSPasteboard.PasteboardType) {
         if let dragpath = dragpath {
             pasteboard?.declareTypes([.kFilenames, .string], owner: self)
@@ -210,7 +241,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     
-
+    
     
     override func mouseDragged(with event: NSEvent) {
         if self.fetchStatus == .Local {
@@ -253,11 +284,11 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                 } else {
                     super.mouseDragged(with: event)
                 }
-
+                
             } else {
                 super.mouseDragged(with: event)
             }
-
+            
         }
         
     }
@@ -277,3 +308,4 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     
 }
+
