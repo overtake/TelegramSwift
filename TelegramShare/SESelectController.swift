@@ -71,8 +71,8 @@ class ShareModalView : View {
         searchView.frame = NSMakeRect(10, 10, frame.width - 20, 30)
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50 - 40)
         borderView.frame = NSMakeRect(0, tableView.frame.maxY, frame.width, .borderSize)
-        acceptView.setFrameOrigin(frame.width - acceptView.frame.width - 30, floorToScreenPixels(tableView.frame.maxY + (40 - acceptView.frame.height) / 2.0))
-        cancelView.setFrameOrigin(acceptView.frame.minX - cancelView.frame.width - 30, floorToScreenPixels(tableView.frame.maxY + (40 - cancelView.frame.height) / 2.0))
+        acceptView.setFrameOrigin(frame.width - acceptView.frame.width - 30, floorToScreenPixels(scaleFactor: backingScaleFactor, tableView.frame.maxY + (40 - acceptView.frame.height) / 2.0))
+        cancelView.setFrameOrigin(acceptView.frame.minX - cancelView.frame.width - 30, floorToScreenPixels(scaleFactor: backingScaleFactor, tableView.frame.maxY + (40 - cancelView.frame.height) / 2.0))
     }
     
     required init?(coder: NSCoder) {

@@ -303,7 +303,8 @@ func legacyAuthData(passcode:Data, textPasscode:String? = nil) -> AuthorizationL
                                     flags.insert(.Incoming)
                                 }
                                 let tags = tagsForStoreMessage(incoming: message.fromId == peer.id.id, attributes: [], media: media, textEntities: nil)
-                                messages.append(StoreMessage(id: MessageId(peerId: peer.id, namespace: Namespaces.Message.SecretIncoming, id: message.id), globallyUniqueId: message.random, groupingKey: nil, timestamp: message.date, flags: flags, tags: tags.0, globalTags: tags.1, forwardInfo: nil, authorId: PeerId(namespace: Namespaces.Peer.CloudUser, id: message.fromId), text: text, attributes: attributes, media: media))
+                                //id: MessageId, globallyUniqueId: Int64?, groupingKey: Int64?, timestamp: Int32, flags: StoreMessageFlags, tags: MessageTags, globalTags: GlobalMessageTags, localTags: LocalMessageTags, forwardInfo: StoreMessageForwardInfo?, authorId: PeerId?, text: String, attributes: [MessageAttribute], media: [Media]
+                                messages.append(StoreMessage(id: MessageId(peerId: peer.id, namespace: Namespaces.Message.SecretIncoming, id: message.id), globallyUniqueId: message.random, groupingKey: nil, timestamp: message.date, flags: flags, tags: tags.0, globalTags: tags.1, localTags: [], forwardInfo: nil, authorId: PeerId(namespace: Namespaces.Peer.CloudUser, id: message.fromId), text: text, attributes: attributes, media: media))
                             }
                         }
                         return true
@@ -330,7 +331,7 @@ func legacyAuthData(passcode:Data, textPasscode:String? = nil) -> AuthorizationL
                                     break
                                 }
                             }
-                            peers.append(TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: user.id), accessHash: user.accessHash, firstName: user.firstName, lastName: user.lastName, username: user.username, phone: user.phone, photo: representations, botInfo: nil, flags: []))
+                            peers.append(TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: user.id), accessHash: user.accessHash, firstName: user.firstName, lastName: user.lastName, username: user.username, phone: user.phone, photo: representations, botInfo: nil, restrictionInfo: nil, flags: []))
                         default:
                             break
                         }

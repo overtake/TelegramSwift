@@ -16,6 +16,7 @@ private class JoinLinkPreviewView : View {
     private let imageView:AvatarControl = AvatarControl(font: .avatar(.huge))
     private let titleView:TextView = TextView()
     private let basicContainer:View = View()
+    private let usersContainer: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.backgroundColor = theme.colors.background
@@ -25,9 +26,10 @@ private class JoinLinkPreviewView : View {
         titleView.backgroundColor = theme.colors.background
         basicContainer.addSubview(imageView)
         basicContainer.addSubview(titleView)
+        addSubview(usersContainer)
     }
     
-    func update(with peer:TelegramGroup, account:Account, participants:[Peer] = []) -> Void {
+    func update(with peer:TelegramGroup, account:Account, participants:[Peer]? = nil, groupUserCount: Int32 = 0) -> Void {
         imageView.setPeer(account: account, peer: peer)
         let attr = NSMutableAttributedString()
         _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .normal(.title))
@@ -40,14 +42,72 @@ private class JoinLinkPreviewView : View {
         
         basicContainer.setFrameSize(frame.width, imageView.frame.height + titleView.frame.height + 10)
         
+        usersContainer.removeAllSubviews()
+        
+        if let participants = participants {
+            for participant in participants {
+                if usersContainer.subviews.count < 3 {
+                    let avatar = AvatarControl(font: .avatar(20))
+                    avatar.setFrameSize(50, 50)
+                    avatar.setPeer(account: account, peer: participant)
+                    usersContainer.addSubview(avatar)
+                } else {
+                    let additionCount = Int(groupUserCount) - usersContainer.subviews.count
+                    if additionCount > 0 {
+                        let avatar = AvatarControl(font: .avatar(20))
+                        avatar.setFrameSize(50, 50)
+                        avatar.setState(account: account, state: .Empty)
+                        let icon = generateImage(NSMakeSize(46, 46), contextGenerator: { size, ctx in
+                            ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                            var fontSize: CGFloat = 13
+                            
+                            if additionCount.prettyNumber.length == 1 {
+                                fontSize = 18
+                            } else if additionCount.prettyNumber.length == 2 {
+                                fontSize = 15
+                            }
+                            let layout = TextViewLayout(.initialize(string: "+\(additionCount.prettyNumber)", color: .white, font: .medium(fontSize)), maximumNumberOfLines: 1, truncationType: .middle)
+                            layout.measure(width: size.width - 4)
+                            if !layout.lines.isEmpty {
+                                let line = layout.lines[0]
+                               // ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+                                ctx.textPosition = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - line.frame.width)/2.0) - 1, floorToScreenPixels(scaleFactor: System.backingScale, (size.height - line.frame.height)/2.0) + 4)
+                                
+                                CTLineDraw(line.line, ctx)
+                            }
+                        })!
+                        avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize)) |> map {($0, false)})
+                        usersContainer.addSubview(avatar)
+                    }
+                    break
+                }
+               
+            }
+        }
+        
         needsLayout = true
+        
+        
     }
     
     override func layout() {
         super.layout()
-        basicContainer.center()
         imageView.centerX(y: 0)
         titleView.centerX(y: 80)
+        
+        if !usersContainer.subviews.isEmpty {
+            basicContainer.centerX(y: 20)
+            var x:CGFloat = 0
+            for avatar in usersContainer.subviews {
+                avatar.setFrameOrigin(NSMakePoint(x, 0))
+                x += avatar.frame.width + 10
+            }
+            usersContainer.setFrameSize(x - 10, usersContainer.subviews[0].frame.height)
+        } else {
+            basicContainer.center()
+        }
+        
+        usersContainer.centerX(y: basicContainer.frame.maxY + 20)
     }
     
     required init?(coder: NSCoder) {
@@ -66,8 +126,7 @@ class JoinLinkPreviewModalController: ModalViewController {
         switch join {
         case let .invite(data):
             let peer = TelegramGroup(id: PeerId(namespace: 0, id: 0), title: data.title, photo: data.photoRepresentation != nil ? [data.photoRepresentation!] : [], participantCount: Int(data.participantsCount), role: .member, membership: .Left, flags: [], migrationReference: nil, creationDate: 0, version: 0)
-            
-            genericView.update(with: peer, account: account)
+            genericView.update(with: peer, account: account, participants: data.participants, groupUserCount: data.participantsCount)
         default:
             break
         }
@@ -87,7 +146,18 @@ class JoinLinkPreviewModalController: ModalViewController {
         self.join = join
         self.joinhash = hash
         self.interaction = interaction
-        super.init(frame: NSMakeRect(0, 0, 250, 200))
+        
+        var rect = NSMakeRect(0, 0, 270, 180)
+        switch join {
+        case let .invite(_, _, _, participants):
+            if let participants = participants, participants.count > 0 {
+                rect.size.height = 230
+            }
+        default:
+            break
+        }
+        super.init(frame: rect)
+        bar = .init(height: 0)
     }
     
     override var modalInteractions: ModalInteractions? {

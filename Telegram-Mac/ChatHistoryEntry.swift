@@ -243,7 +243,19 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         }
     case let .MessageEntry(lhsMessage, lhsRenderType, lhsRead, lhsType, lhsFwdType, _):
         switch rhs {
-        case let .MessageEntry(rhsMessage, rhsRenderType, rhsRead, rhsType, rhsFwdType, _) where lhsRead == rhsRead && lhsType == rhsType && lhsFwdType == rhsFwdType && lhsRenderType == rhsRenderType:
+        case let .MessageEntry(rhsMessage, rhsRenderType, rhsRead, rhsType, rhsFwdType, _):
+            if lhsRead != rhsRead {
+                return false
+            }
+            if lhsType != rhsType {
+                return false
+            }
+            if lhsFwdType != rhsFwdType {
+                return false
+            }
+            if lhsRenderType != rhsRenderType {
+                return false
+            }
             return isEqualMessages(lhsMessage, rhsMessage)
         default:
             return false
@@ -417,7 +429,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         if peer.isChannel || ((peer.isGroup || peer.isSupergroup) && message.flags.contains(.Incoming)) {
                             itemType = .Full(isAdmin: isAdmin)
                         } else {                            
-                            itemType = .Short
+                            itemType = message.inlinePeer == nil ? .Short : .Full(isAdmin: isAdmin)
                         }
                     } else {
                         itemType = .Full(isAdmin: isAdmin)
@@ -472,7 +484,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             let entry: ChatHistoryEntry = .MessageEntry(message,read, renderType,itemType,fwdType, location)
             
             
-            if let key = message.groupInfo, groupingPhotos {
+            if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
+                
                 if groupInfo == nil {
                     groupInfo = key
                     groupedPhotos.append(entry)
@@ -491,9 +504,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
             } else {
                 entries.append(entry)
-                
-                
-
             }
             
             prev = nil

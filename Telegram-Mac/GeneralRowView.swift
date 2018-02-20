@@ -31,8 +31,14 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
+        if backingScaleFactor == 1.0 {
+            ctx.setFillColor(backdorColor.cgColor)
+            ctx.fill(layer.bounds)
+        }
         super.draw(layer, in: ctx)
     }
+    
+
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

@@ -72,6 +72,22 @@ class SeparatorRowView: TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func mouseDown(with event: NSEvent) {
+        guard let item = item as? SeparatorRowItem else {return}
+        let point = convert(event.locationInWindow, from: nil)
+        
+        if let text = item.rightText {
+            let (layout, _) = TextNode.layoutText(maybeNode: stateText, text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil, false, .left)
+
+            let rect = NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, frame.height)
+            if NSPointInRect(point, rect) {
+                super.mouseDown(with: event)
+            }
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         
@@ -84,13 +100,13 @@ class SeparatorRowView: TableRowView {
             if let text = item.rightText {
                 textPoint = NSMakePoint(10, round((frame.height - layout.size.height)/2.0))
                 let (layout, apply) = TextNode.layoutText(maybeNode: stateText, text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil, false, .left)
-                apply.draw(NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                apply.draw(NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
             } else {
                 textPoint = NSMakePoint(10, round((frame.height - layout.size.height)/2.0))
                 
             }
-            apply.draw(NSMakeRect(textPoint.x, textPoint.y, layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            apply.draw(NSMakeRect(textPoint.x, textPoint.y, layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     

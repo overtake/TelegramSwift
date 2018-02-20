@@ -438,9 +438,11 @@ class ChannelEventFilterModalController: ModalViewController {
     
     private let disposable = MetaDisposable()
     private let updated:(ChannelEventFilterState) -> Void
-    init(account:Account, peerId:PeerId, state: ChannelEventFilterState = ChannelEventFilterState(), updated:@escaping(ChannelEventFilterState) -> Void) {
+    private let admins: [RenderedChannelParticipant]
+    init(account:Account, peerId:PeerId, admins: [RenderedChannelParticipant], state: ChannelEventFilterState = ChannelEventFilterState(), updated:@escaping(ChannelEventFilterState) -> Void) {
         self.account = account
         self.peerId = peerId
+        self.admins = admins
         self.updated = updated
         _ = self.stateValue.swap(state)
         super.init(frame: NSMakeRect(0, 0, 300, 300))
@@ -493,11 +495,11 @@ class ChannelEventFilterModalController: ModalViewController {
         let previous: Atomic<[ChannelEventFilterEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let adminsSignal = Signal<[RenderedChannelParticipant]?, Void>.single(nil) |> then ( channelAdmins(account: account, peerId: peerId) |> map {Optional($0)})
+        let adminsSignal = Signal<[RenderedChannelParticipant], Void>.single(admins)
         let updatedSize:Atomic<Bool> = Atomic(value: false)
         let signal:Signal<TableUpdateTransition, Void> = combineLatest(statePromise.get(), account.postbox.loadedPeerWithId(peerId), adminsSignal) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
             
-            let state = stateValue.swap(state.withUpdatedAllAdmins(Set(admins?.map {$0.peer.id} ?? [])).withUpdatedAllEvents(Set(eventFilters(peer.isChannel))))
+            let state = stateValue.swap(state.withUpdatedAllAdmins(Set(admins.map {$0.peer.id})).withUpdatedAllEvents(Set(eventFilters(peer.isChannel))))
             
             return (state, peer, admins)
         } |> map { state, peer, admins in

@@ -263,7 +263,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 canRemoveFromRecent = true
             }
             
-            let item = RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.blueUI : theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, canRemoveFromRecent: canRemoveFromRecent, removeAction: {
+            let item = RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.blueUI : theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: canRemoveFromRecent, removeAction: {
                 arguments.removeRecentPeerId(peer.id)
             })
             return item
@@ -288,10 +288,39 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
         }
     })
     
-    return TableEntriesTransition(deleted: deleted, inserted: inserted, updated:updated, entries: to, animated:true, state: .none(nil))
+    return TableEntriesTransition(deleted: deleted, inserted: inserted, updated:updated, entries: to, animated: false, state: .none(nil))
 
 }
 
+
+struct AppSearchOptions : OptionSet {
+    public var rawValue: UInt32
+    
+    init(rawValue: UInt32) {
+        self.rawValue = rawValue
+    }
+    
+    init() {
+        self.rawValue = 0
+    }
+    
+    init(_ flags: AppSearchOptions) {
+        var rawValue: UInt32 = 0
+        
+        if flags.contains(AppSearchOptions.messages) {
+            rawValue |= AppSearchOptions.messages.rawValue
+        }
+        
+        if flags.contains(AppSearchOptions.chats) {
+            rawValue |= AppSearchOptions.chats.rawValue
+        }
+        
+        self.rawValue = rawValue
+    }
+    
+    static let messages = AppSearchOptions(rawValue: 1)
+    static let chats = AppSearchOptions(rawValue: 2)
+}
 
 class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
@@ -305,7 +334,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let account:Account
     private let arguments:SearchControllerArguments
     private var open:(PeerId, Message?, Bool) -> Void = {_,_,_  in}
-    
+    private let groupId: PeerGroupId?
     private let searchQuery:Promise = Promise<String?>()
     private let openPeerDisposable:MetaDisposable = MetaDisposable()
     private let statePromise:Promise<(SeparatorBlockState,SeparatorBlockState)> = Promise((SeparatorBlockState.short, SeparatorBlockState.short))
@@ -320,21 +349,22 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.border = [.Right]
         
         let account = self.account
-
+        let options = self.options
 
       
         let arguments = self.arguments
         let statePromise = self.statePromise.get()
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
-
+        let groupId: PeerGroupId? = self.groupId
         let searchItems = searchQuery.get() |> mapToSignal { (query) -> Signal<([ChatListSearchEntry], Bool), Void> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
                 
-                let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: query.lowercased()),account.postbox.searchContacts(query: query.lowercased()), account.postbox.loadedPeerWithId(account.peerId))
-                    |> map { peers, contacts, accountPeer -> [ChatListSearchEntry] in
+                let foundLocalPeers: Signal<[ChatListSearchEntry], Void> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(account.postbox.searchPeers(query: query.lowercased(), groupId: groupId), account.postbox.loadedPeerWithId(account.peerId))
+                    |> map { peers, accountPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
+                        
                         
                         if tr(L10n.peerSavedMessages).lowercased().hasPrefix(query.lowercased()) {
                             entries.append(.savedMessages(accountPeer))
@@ -359,39 +389,51 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return entries
                 }
                 
-                let foundRemotePeers: Signal<([ChatListSearchEntry], [ChatListSearchEntry], Bool), NoError> = .single(([], [], true)) |> then(searchPeers(account: account, query: query)
-                    |> delay(0.2, queue: prepareQueue)
-                    |> map { founds -> ([FoundPeer], [FoundPeer]) in
-                        
-                        return (founds.0.filter { found -> Bool in
-                            let first = ids[found.peer.id] == nil
-                            ids[found.peer.id] = found.peer.id
-                            return first
-                        }, founds.1.filter { found -> Bool in
-                                let first = ids[found.peer.id] == nil
-                                ids[found.peer.id] = found.peer.id
-                                return first
-                        })
-                        
-                    }
-                    |> map { _local, _remote -> ([ChatListSearchEntry], [ChatListSearchEntry], Bool) in
-                        var local: [ChatListSearchEntry] = []
-                        var index = 1000
-                        for peer in _local {
-                            local.append(.localPeer(peer.peer, index, nil, true))
-                            index += 1
-                        }
-                        
-                        var remote: [ChatListSearchEntry] = []
-                        index = 10001
-                        for peer in _remote {
-                            remote.append(.globalPeer(peer, index))
-                            index += 1
-                        }
-                        return (local, remote, false)
-                    })
+                let foundRemotePeers: Signal<([ChatListSearchEntry], [ChatListSearchEntry], Bool), NoError>
                 
-                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool), NoError> = .single(([], true)) |> then(searchMessages(account: account, location: .general , query: query)
+                let location: SearchMessagesLocation
+                if let groupId = groupId {
+                    location = .group(groupId)
+                    foundRemotePeers = .single(([], [], false))
+                } else if query.hasPrefix("#") || !options.contains(.chats) {
+                    location = .general
+                    foundRemotePeers = .single(([], [], false))
+                } else {
+                    location = .general
+                    foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: account, query: query)
+                            |> delay(0.2, queue: prepareQueue)
+                            |> map { founds -> ([FoundPeer], [FoundPeer]) in
+                                
+                                return (founds.0.filter { found -> Bool in
+                                    let first = ids[found.peer.id] == nil
+                                    ids[found.peer.id] = found.peer.id
+                                    return first
+                                    }, founds.1.filter { found -> Bool in
+                                        let first = ids[found.peer.id] == nil
+                                        ids[found.peer.id] = found.peer.id
+                                        return first
+                                })
+                                
+                            }
+                            |> map { _local, _remote -> ([ChatListSearchEntry], [ChatListSearchEntry], Bool) in
+                                var local: [ChatListSearchEntry] = []
+                                var index = 1000
+                                for peer in _local {
+                                    local.append(.localPeer(peer.peer, index, nil, true))
+                                    index += 1
+                                }
+                                
+                                var remote: [ChatListSearchEntry] = []
+                                index = 10001
+                                for peer in _remote {
+                                    remote.append(.globalPeer(peer, index))
+                                    index += 1
+                                }
+                                return (local, remote, false)
+                            })
+                }
+                
+                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool), NoError> = !options.contains(.messages) ? .single(([], false)) : .single(([], true)) |> then(searchMessages(account: account, location: location , query: query)
                     |> delay(0.2, queue: prepareQueue)
                     |> map { messages -> ([ChatListSearchEntry], Bool) in
                         
@@ -442,7 +484,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     for t in top {
                         topIds[t.id] = t.id
                     }
-                    var recent = recent.filter({topIds[$0.peerId] == nil})
+                    var recent = recent.filter({ rendered in
+                        for i in 0 ..< top.count {
+                            if i <= 4 {
+                                return top[i].id != rendered.peerId
+                            }
+                        }
+                        return true
+                    })
 
                     if top.count > 0 {
                         entries.append(.separator(text: tr(L10n.searchSeparatorPopular), index: i, state: recent.isEmpty ? .none : state.0))
@@ -493,19 +542,18 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
         }
         
-        isLoading.set(searchItems |> mapToSignal { values -> Signal<Bool, Void> in
-            return .single(values.1)
-        })
         
-        let transition = combineLatest(searchItems, appearanceSignal) |> map { value, appearance in
-            return value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { value, appearance in
+            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1)
         }
-        |> map { entries -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> in
-            return prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, initialSize:atomicSize.modify { $0 })
+        |> map { entries, loading -> (TableUpdateTransition, Bool) in
+            let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, initialSize:atomicSize.modify { $0 })
+            return (transition, loading)
         } |> deliverOnMainQueue
         
-        disposable.set(transition.start(next: { [weak self] transition in
+        disposable.set(transition.start(next: { [weak self] transition, loading in
             self?.genericView.merge(with: transition)
+            self?.isLoading.set(.single(loading))
         }))
 
         
@@ -561,7 +609,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         super.viewDidDisappear(animated)
     }
     
-   private let globalDisposable = MetaDisposable()
+    private let globalDisposable = MetaDisposable()
+    private let options: AppSearchOptions
     
     deinit {
         openPeerDisposable.dispose()
@@ -569,9 +618,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         disposable.dispose()
     }
     
-    init(account: Account, open:@escaping(PeerId,Message?, Bool) ->Void , frame:NSRect = NSZeroRect) {
+    init(account: Account, open:@escaping(PeerId,Message?, Bool) ->Void, options: AppSearchOptions = [.chats, .messages], frame:NSRect = NSZeroRect, groupId: PeerGroupId? = nil) {
         self.account = account
         self.open = open
+        self.options = options
+        self.groupId = groupId
         self.arguments = SearchControllerArguments(account: account, removeRecentPeerId: { peerId in
             _ = removeRecentlySearchedPeer(postbox: account.postbox, peerId: peerId).start()
         }, clearRecent: {

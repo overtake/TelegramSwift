@@ -255,9 +255,9 @@ class AccountInfoView : TableRowView, TGModernGrowingDelegate {
                 tY = (NSHeight(self.frame) - t) / 2.0
                 
                 let sY = tY + item.statusLayout.0.size.height + 4.0
-                item.statusLayout.1.draw(NSMakeRect(100, floorToScreenPixels(sY), item.statusLayout.0.size.width, item.statusLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                item.statusLayout.1.draw(NSMakeRect(100, floorToScreenPixels(scaleFactor: backingScaleFactor, sY), item.statusLayout.0.size.width, item.statusLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
-                item.nameLayout.1.draw(NSMakeRect(100, floorToScreenPixels(tY), item.nameLayout.0.size.width, item.nameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                item.nameLayout.1.draw(NSMakeRect(100, floorToScreenPixels(scaleFactor: backingScaleFactor, tY), item.nameLayout.0.size.width, item.nameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             } else {
                 ctx.fill(NSMakeRect((avatarView.frame.maxX + 12), 46, frame.width - (avatarView.frame.maxX + 20), .borderSize))
                 ctx.fill(NSMakeRect((avatarView.frame.maxX + 12), 74, frame.width - (avatarView.frame.maxX + 20), .borderSize))
@@ -278,7 +278,7 @@ class AccountInfoView : TableRowView, TGModernGrowingDelegate {
     }
     
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return avatarView
     }
     

@@ -14,8 +14,18 @@
 		9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */; };
 		9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */; };
 		9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */; };
+		9F5B6E792011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
+		9F5B6E7A2011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
+		9F62AE7E202D85B7007FB557 /* FetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE7D202D85B7007FB557 /* FetchManager.swift */; };
+		9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */; };
+		9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */; };
+		9F670A9D201126FC0029AB32 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
+		9F670A9E201126FC0029AB32 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		9F670A9F201127040029AB32 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F670AA0201127040029AB32 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9F88A134200FD425007B899E /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
-		9F88A13C2010A38E007B899E /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9F9483B1202AF816006E873D /* CrashHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9483B0202AF816006E873D /* CrashHandler.swift */; };
+		9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
@@ -31,7 +41,6 @@
 		C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB971EE71127003711DF /* ChannelAdminController.swift */; };
 		C205DB9D1EE88765003711DF /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205DB9C1EE88762003711DF /* Views.swift */; };
 		C205FEA61EB39DE400455808 /* SidebarCapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205FEA51EB39DE400455808 /* SidebarCapViewController.swift */; };
-		C2084F041F5D5C6F004713C4 /* ChatReplyPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2084F031F5D5C6F004713C4 /* ChatReplyPreviewController.swift */; };
 		C209C3731F262537009231FE /* emoji_suggestions_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C209C36F1F262537009231FE /* emoji_suggestions_data.cpp */; };
 		C209C3741F262537009231FE /* emoji_suggestions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C209C3711F262537009231FE /* emoji_suggestions.cpp */; };
 		C209C3771F26271B009231FE /* EmojiSuggestionBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = C209C3761F26271B009231FE /* EmojiSuggestionBridge.mm */; };
@@ -63,7 +72,6 @@
 		C218FF9A1F42030B00DD7D35 /* InstantPageChannelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C218FF991F42030B00DD7D35 /* InstantPageChannelItem.swift */; };
 		C218FF9C1F4204C400DD7D35 /* InstantPageChannelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C218FF9B1F4204C400DD7D35 /* InstantPageChannelView.swift */; };
 		C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1D61D8869F20042F0C8 /* ChatHoleRowItem.swift */; };
-		C219E1D91D886A160042F0C8 /* ChatHoleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1D81D886A160042F0C8 /* ChatHoleRowView.swift */; };
 		C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1DA1D8884290042F0C8 /* ChatHistoryEntry.swift */; };
 		C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1E31D8AC8370042F0C8 /* ChatUnreadRowItem.swift */; };
 		C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C219E1E71D8AC90B0042F0C8 /* ChatUnreadRowView.swift */; };
@@ -336,8 +344,6 @@
 		C2777B661DCFC649008B69DD /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B651DCFC649008B69DD /* Localizable.swift */; };
 		C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B671DD20DD2008B69DD /* ChatTitleBarView.swift */; };
 		C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B691DD211E5008B69DD /* PeerPresenceStatusManager.swift */; };
-		C2786FF81FEC137D001FB044 /* night-blue.palette in Resources */ = {isa = PBXBuildFile; fileRef = C2786FF71FEC137C001FB044 /* night-blue.palette */; };
-		C2786FF91FEC230D001FB044 /* night-blue.palette in Palettes */ = {isa = PBXBuildFile; fileRef = C2786FF71FEC137C001FB044 /* night-blue.palette */; };
 		C27A6F711ECF604A00C65577 /* TGCurrencyFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = C27A6F701ECF604A00C65577 /* TGCurrencyFormatter.m */; };
 		C27A6F731ECF610C00C65577 /* currencies.json in Resources */ = {isa = PBXBuildFile; fileRef = C27A6F721ECF610C00C65577 /* currencies.json */; };
 		C27A8E991EC9D48000C8E7E7 /* QuickSwitcherModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27A8E981EC9D48000C8E7E7 /* QuickSwitcherModalController.swift */; };
@@ -549,16 +555,6 @@
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		9F88A13A2010A389007B899E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
-			remoteInfo = TelegramShare;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -566,6 +562,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				9F670A9F201127040029AB32 /* Sparkle.framework in Copy Files */,
+				9F670AA0201127040029AB32 /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -581,7 +579,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				9F88A13C2010A38E007B899E /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -613,7 +610,6 @@
 			dstPath = palettes;
 			dstSubfolderSpec = 7;
 			files = (
-				C2786FF91FEC230D001FB044 /* night-blue.palette in Palettes */,
 			);
 			name = Palettes;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -630,6 +626,12 @@
 		9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeGridControllerItem.swift; sourceTree = "<group>"; };
 		9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "builtin-wallpaper-0.jpg"; sourceTree = "<group>"; };
 		9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBackgroundView.swift; sourceTree = "<group>"; };
+		9F5B6E78201145FA00C58B2A /* MergeLists.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MergeLists.swift; sourceTree = "<group>"; };
+		9F62AE7D202D85B7007FB557 /* FetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchManager.swift; sourceTree = "<group>"; };
+		9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchManagerLocation.swift; sourceTree = "<group>"; };
+		9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchMediaUtils.swift; sourceTree = "<group>"; };
+		9F9483B0202AF816006E873D /* CrashHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashHandler.swift; sourceTree = "<group>"; };
+		9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadSettingsViewController.swift; sourceTree = "<group>"; };
 		C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerRowItem.swift; sourceTree = "<group>"; };
 		C2016F431EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/ShareViewController.strings"; sourceTree = "<group>"; };
 		C2016F451EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -643,7 +645,6 @@
 		C205DB971EE71127003711DF /* ChannelAdminController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelAdminController.swift; sourceTree = "<group>"; };
 		C205DB9C1EE88762003711DF /* Views.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		C205FEA51EB39DE400455808 /* SidebarCapViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SidebarCapViewController.swift; sourceTree = "<group>"; };
-		C2084F031F5D5C6F004713C4 /* ChatReplyPreviewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatReplyPreviewController.swift; sourceTree = "<group>"; };
 		C209C36F1F262537009231FE /* emoji_suggestions_data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = emoji_suggestions_data.cpp; sourceTree = "<group>"; };
 		C209C3701F262537009231FE /* emoji_suggestions_data.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = emoji_suggestions_data.h; sourceTree = "<group>"; };
 		C209C3711F262537009231FE /* emoji_suggestions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = emoji_suggestions.cpp; sourceTree = "<group>"; };
@@ -693,7 +694,6 @@
 		C218FF991F42030B00DD7D35 /* InstantPageChannelItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageChannelItem.swift; sourceTree = "<group>"; };
 		C218FF9B1F4204C400DD7D35 /* InstantPageChannelView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageChannelView.swift; sourceTree = "<group>"; };
 		C219E1D61D8869F20042F0C8 /* ChatHoleRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHoleRowItem.swift; sourceTree = "<group>"; };
-		C219E1D81D886A160042F0C8 /* ChatHoleRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHoleRowView.swift; sourceTree = "<group>"; };
 		C219E1DA1D8884290042F0C8 /* ChatHistoryEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHistoryEntry.swift; sourceTree = "<group>"; };
 		C219E1E31D8AC8370042F0C8 /* ChatUnreadRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUnreadRowItem.swift; sourceTree = "<group>"; };
 		C219E1E71D8AC90B0042F0C8 /* ChatUnreadRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUnreadRowView.swift; sourceTree = "<group>"; };
@@ -994,7 +994,6 @@
 		C2777B651DCFC649008B69DD /* Localizable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Localizable.swift; sourceTree = "<group>"; };
 		C2777B671DD20DD2008B69DD /* ChatTitleBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatTitleBarView.swift; sourceTree = "<group>"; };
 		C2777B691DD211E5008B69DD /* PeerPresenceStatusManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerPresenceStatusManager.swift; sourceTree = "<group>"; };
-		C2786FF71FEC137C001FB044 /* night-blue.palette */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "night-blue.palette"; sourceTree = "<group>"; };
 		C27A6F6F1ECF604A00C65577 /* TGCurrencyFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGCurrencyFormatter.h; sourceTree = "<group>"; };
 		C27A6F701ECF604A00C65577 /* TGCurrencyFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGCurrencyFormatter.m; sourceTree = "<group>"; };
 		C27A6F721ECF610C00C65577 /* currencies.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = currencies.json; sourceTree = "<group>"; };
@@ -1251,6 +1250,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F670A9D201126FC0029AB32 /* Sparkle.framework in Frameworks */,
+				9F670A9E201126FC0029AB32 /* HockeySDK.framework in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
@@ -1281,6 +1282,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9F62AE7F202D85CC007FB557 /* fetch */ = {
+			isa = PBXGroup;
+			children = (
+				9F62AE7D202D85B7007FB557 /* FetchManager.swift */,
+				9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */,
+				9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */,
+			);
+			name = fetch;
+			sourceTree = "<group>";
+		};
 		C2016F661EAE0A49003AF981 /* calls */ = {
 			isa = PBXGroup;
 			children = (
@@ -1405,7 +1416,6 @@
 				C250B01D1DB67934004E9FBE /* webpages */,
 				C296AF8D1D8EACD3001DBB59 /* content */,
 				C20232AB1D81D1AE007C9ADE /* ChatMessageView.swift */,
-				C219E1D81D886A160042F0C8 /* ChatHoleRowView.swift */,
 				C219E1E71D8AC90B0042F0C8 /* ChatUnreadRowView.swift */,
 				C296AF7E1D8D38E5001DBB59 /* ChatRowView.swift */,
 				C253A9731D94182500CDC850 /* ChatRightView.swift */,
@@ -1459,6 +1469,7 @@
 				C221ED531EA684BE00471C65 /* DataAndStorageViewController.swift */,
 				C221ED5B1EA69AA300471C65 /* StorageUsageController.swift */,
 				C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */,
+				9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */,
 			);
 			name = "data-and-storage";
 			sourceTree = "<group>";
@@ -2087,7 +2098,6 @@
 				C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */,
 				C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */,
 				C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */,
-				C2084F031F5D5C6F004713C4 /* ChatReplyPreviewController.swift */,
 				C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */,
 				C251FB4B1FEDCC750035E5D7 /* ChatPresentationUtils.swift */,
 			);
@@ -2314,7 +2324,6 @@
 		C2786FF21FEBF088001FB044 /* palettes */ = {
 			isa = PBXGroup;
 			children = (
-				C2786FF71FEC137C001FB044 /* night-blue.palette */,
 			);
 			name = palettes;
 			sourceTree = "<group>";
@@ -2658,6 +2667,8 @@
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				9F62AE7F202D85CC007FB557 /* fetch */,
+				9F5B6E78201145FA00C58B2A /* MergeLists.swift */,
 				C234A7F91ED7104500EBBECE /* localization */,
 				C271EB981EB9DEDA0034792D /* calls */,
 				C210742A1E780CA8006EE5EF /* cache */,
@@ -2705,6 +2716,7 @@
 				C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */,
 				C2F9C44B1F95FE58002B2CBF /* Markdown.swift */,
 				C241026E1FD58EA800DB8625 /* SImageView.swift */,
+				9F9483B0202AF816006E873D /* CrashHandler.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -3089,7 +3101,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				9F88A13B2010A389007B899E /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -3210,7 +3221,6 @@
 				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
-				C2786FF81FEC137D001FB044 /* night-blue.palette in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3251,6 +3261,7 @@
 				C23BC3711E9ACD1700D79F92 /* SearchEmptyRowItem.swift in Sources */,
 				C23BC36C1E9ACC0800D79F92 /* MimeTypes.swift in Sources */,
 				C23BC3701E9ACCF900D79F92 /* SEPasslockController.swift in Sources */,
+				9F5B6E7A2011460000C58B2A /* MergeLists.swift in Sources */,
 				C291E2751E8B051900D397BA /* PhotoCache.swift in Sources */,
 				C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */,
 				C232EABF1E1D13F500C4D38C /* ChatListNothingItem.swift in Sources */,
@@ -3474,6 +3485,7 @@
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
+				9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
 				C25C13331E8A433700AE26A1 /* TableUtils.swift in Sources */,
@@ -3549,6 +3561,7 @@
 				C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */,
 				C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */,
 				C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */,
+				9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* ChatGIFContentView.swift in Sources */,
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
@@ -3616,6 +3629,7 @@
 				C248BD241E706104004B9106 /* BlockedPeersViewController.swift in Sources */,
 				C230B9111DD3866A0057F596 /* ComposeActions.swift in Sources */,
 				C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */,
+				9F9483B1202AF816006E873D /* CrashHandler.swift in Sources */,
 				C2DE5D3C1F3CAE120081EC1E /* InstantPageTextItem.swift in Sources */,
 				C221ED5A1EA6896400471C65 /* VoiceCallSettings.swift in Sources */,
 				C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */,
@@ -3648,7 +3662,6 @@
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
-				C2084F041F5D5C6F004713C4 /* ChatReplyPreviewController.swift in Sources */,
 				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
 				C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
@@ -3659,6 +3672,7 @@
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
 				C2F9C44C1F95FE58002B2CBF /* Markdown.swift in Sources */,
 				C2F9C44A1F9500C3002B2CBF /* TwoStepVerificationUnlockStructures.swift in Sources */,
+				9F62AE7E202D85B7007FB557 /* FetchManager.swift in Sources */,
 				C2777B661DCFC649008B69DD /* Localizable.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,
@@ -3667,6 +3681,7 @@
 				C2DE5D361F3CACCF0081EC1E /* InstantPageLayoutSpacings.swift in Sources */,
 				C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */,
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,
+				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				C2AF3B821E5CD79200DFDD81 /* ConvertGroupViewController.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,
 				C205DB9D1EE88765003711DF /* Views.swift in Sources */,
@@ -3685,6 +3700,7 @@
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
 				C25253271DF03F5700ADBC98 /* TGOpusAudioRecorder.m in Sources */,
 				C236ADDE1F7D318700E8C71A /* TGVideoCameraMovieRecorder.m in Sources */,
+				9F5B6E792011460000C58B2A /* MergeLists.swift in Sources */,
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
@@ -3706,7 +3722,6 @@
 				C2DE5D2E1F3CA72E0081EC1E /* InstantPageView.swift in Sources */,
 				C2FB2FAB1EBF73D00093C8BA /* RecentCallsViewController.swift in Sources */,
 				C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */,
-				C219E1D91D886A160042F0C8 /* ChatHoleRowView.swift in Sources */,
 				C26505951E0301B4001954DC /* MGalleryItem.swift in Sources */,
 				C2777B641DCFB559008B69DD /* ChatServiceRowView.swift in Sources */,
 				C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */,
@@ -3719,14 +3734,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		9F88A13B2010A389007B899E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = 9F88A13A2010A389007B899E /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {

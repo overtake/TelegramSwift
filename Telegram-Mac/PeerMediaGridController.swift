@@ -242,7 +242,7 @@ class PeerMediaGridView : View {
 class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     
     private let account: Account
-    private let peerId: PeerId
+    private let chatLocation: ChatLocation
     private let messageId: MessageId?
     private let tagMask: MessageTags?
     private let previousView = Atomic<ChatHistoryView?>(value: nil)
@@ -328,9 +328,9 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     
   
     
-    public init(account: Account, peerId: PeerId, messageId: MessageId?, tagMask: MessageTags?, chatInteraction: ChatInteraction) {
+    public init(account: Account, chatLocation: ChatLocation, messageId: MessageId?, tagMask: MessageTags?, chatInteraction: ChatInteraction) {
         self.account = account
-        self.peerId = peerId
+        self.chatLocation = chatLocation
         self.messageId = messageId
         self.tagMask = tagMask
         
@@ -339,7 +339,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
         let historyViewUpdate = self.chatHistoryLocation
             |> distinctUntilChanged
             |> mapToSignal { (location) in
-                return chatHistoryViewForLocation(location, account: account, peerId: peerId, fixedCombinedReadState: nil, tagMask: tagMask)
+                return chatHistoryViewForLocation(location, account: account, chatLocation: chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask)
             }
         
         let previousView = self.previousView
@@ -377,13 +377,15 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                     }
                 }
                 
-                let processedView = ChatHistoryView(originalView: view, filteredEntries: messageEntries(view.entries).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)}))
+                let entries = messageEntries(view.entries).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: AutomaticMediaDownloadSettings.defaultSettings)})
+                
+                let processedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 let previous = previousView.swap(processedView)
                 
      
                 
                 
-                return preparedChatHistoryViewTransition(from: previous, to: processedView, reason: reason, account: account, peerId: peerId, controllerInteraction: chatInteraction, scrollPosition: nil, initialData: nil, keyboardButtonsMessage: nil, cachedData: nil) |> map({ mappedChatHistoryViewListTransition(account: account, peerId: peerId, controllerInteraction: chatInteraction, transition: $0, from: previous) }) |> runOn(prepareOnMainQueue ? Queue.mainQueue() : prepareQueue)
+                return preparedChatHistoryViewTransition(from: previous, to: processedView, reason: reason, account: account, peerId: chatInteraction.peerId, controllerInteraction: chatInteraction, scrollPosition: nil, initialData: nil, keyboardButtonsMessage: nil, cachedData: nil) |> map({ mappedChatHistoryViewListTransition(account: account, peerId: chatInteraction.peerId, controllerInteraction: chatInteraction, transition: $0, from: previous) }) |> runOn(prepareOnMainQueue ? Queue.mainQueue() : prepareQueue)
             }
         }
         

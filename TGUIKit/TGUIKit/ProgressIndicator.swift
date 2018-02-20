@@ -287,10 +287,10 @@ private class ProgressLayer : CALayer {
         let endAngle = -(CGFloat.pi / 2)
         
         let lineWidth: CGFloat = 2.0
-        let diameter = floorToScreenPixels(frame.height)
+        let diameter = floorToScreenPixels(scaleFactor: System.backingScale, frame.height)
         
         let pathDiameter = diameter - lineWidth - lineWidth * 2
-        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(scaleFactor: System.backingScale, diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
         
         ctx.setLineWidth(lineWidth);
         ctx.setLineCap(.round);
@@ -339,7 +339,7 @@ public class ProgressIndicator : View {
     }
 
     private func updateWantsAnimation() {
-        indicator.update(!isHidden && superview != nil && window != nil)
+        indicator.update(window != nil)
         indicator.setNeedsDisplay()
     }
     

@@ -188,9 +188,9 @@ class NotificationSettingsViewController: TableViewController {
                 
                 switch(location) {
                 case let .Initial(count, _):
-                    signal = account.viewTracker.tailChatListView(count: count) |> map {$0.0}
+                    signal = account.viewTracker.tailChatListView(groupId: nil, count: count) |> map {$0.0}
                 case let .Index(index):
-                    signal = account.viewTracker.aroundChatListView(index: index, count: 100) |> map {$0.0}
+                    signal = account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 100) |> map {$0.0}
                 }
                 
                 mappedEntries = signal |> map { value -> [NotificationSettingsEntry] in
@@ -204,6 +204,8 @@ class NotificationSettingsViewController: TableViewController {
                             let first = ids[renderedPeer.peerId] == nil && renderedPeer.peerId.namespace != Namespaces.Peer.SecretChat
                             ids[renderedPeer.peerId] = renderedPeer.peerId
                             return first
+                        case .GroupReferenceEntry(_, _, _, _, _):
+                           return false
                         }
                         
                     }).map { peer -> NotificationSettingsEntry in
@@ -216,7 +218,7 @@ class NotificationSettingsViewController: TableViewController {
                 
                 
                 var ids:[PeerId:Peer] = [:]
-                let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: search.request.lowercased()) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})},account.postbox.searchContacts(query: search.request.lowercased()))
+                let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})},account.postbox.searchContacts(query: search.request.lowercased()))
                     |> map { (peers, contacts) -> [Peer] in
                         return (peers + contacts).filter({ (peer) -> Bool in
                             let first = ids[peer.id] == nil
@@ -336,6 +338,8 @@ class NotificationSettingsViewController: TableViewController {
                             })
                         }
                         return GeneralRowItem(initialSize, stableId:entry.stableId)
+                    case .GroupReferenceEntry(_, _, _, _, _):
+                        fatalError("feed not supported in notification settings")
                     }
                 case let .searchPeer(peer, _, notifySettings):
                     return ShortPeerRowItem(initialSize, peer: peer, account: account, height: 40, photoSize: NSMakeSize(30,30), inset: NSEdgeInsets(left:30,right:30), generalType:.switchable(stateback: {

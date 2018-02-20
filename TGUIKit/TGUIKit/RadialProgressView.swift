@@ -21,7 +21,7 @@ private func progressInteractiveThumb(backgroundColor: NSColor, foregroundColor:
         let image = #imageLiteral(resourceName: "Icon_MessageFile").precomposed(foregroundColor)
         
         ctx.fill(NSMakeRect(0, 0, context.size.width, context.size.height))
-        ctx.draw(image, in: NSMakeRect(floorToScreenPixels((context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels((context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
+        ctx.draw(image, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels(scaleFactor: System.backingScale, (context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
         
     }
     
@@ -131,7 +131,7 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
 }
 
 
-private class RadialProgressOverlayLayer: Layer {
+private class RadialProgressOverlayLayer: CALayer {
     var theme: RadialProgressTheme
     let twist: Bool
     private var timer: SwiftSignalKitMac.Timer?
@@ -148,11 +148,13 @@ private class RadialProgressOverlayLayer: Layer {
             case .None, .Play, .Remote, .Icon, .Success:
                 self.progress = 0
                 self._progress = 0
+                 mayAnimate(false)
             case let .Fetching(progress, f), let  .ImpossibleFetching(progress, f):
-                self.progress = max(progress, 0.05)
+                self.progress = twist ? max(progress, 0.05) : progress
                 if f {
                     _progress = progress
                 }
+                mayAnimate(true)
             }
             let fps: Float = 60
             let difference = progress - _progress
@@ -166,7 +168,7 @@ private class RadialProgressOverlayLayer: Layer {
                             strongSelf.stopAnimation()
                         }
                     }
-                }, queue: Queue.mainQueue())
+                    }, queue: Queue.mainQueue())
                 timer?.start()
             } else {
                 stopAnimation()
@@ -188,40 +190,66 @@ private class RadialProgressOverlayLayer: Layer {
         self.twist = twist
         super.init()
         
-        self.isOpaque = false
+    }
+    
+    override func removeAnimation(forKey key: String) {
+        super.removeAnimation(forKey: key)
+    }
+    
+    override func removeAllAnimations() {
+        super.removeAllAnimations()
+    }
+    
+    override init(layer: Any) {
+        let layer = layer as! RadialProgressOverlayLayer
+        self.theme = layer.theme
+        self.twist = layer.twist
+        super.init(layer: layer)
     }
     
     fileprivate override func draw(in ctx: CGContext) {
         ctx.setStrokeColor(theme.foregroundColor.cgColor)
-        
         let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2
         let endAngle = -(CGFloat.pi / 2)
         
         let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
-        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(scaleFactor: System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
         
         ctx.setLineWidth(parameters.theme.lineWidth);
         ctx.setLineCap(.round);
         ctx.strokePath()
     }
     
-    override func layerMoved(to superlayer: CALayer?) {
+    
+    fileprivate func mayAnimate(_ animate: Bool) {
         
-        super.layerMoved(to: superlayer)
         
-        if let _ = superlayer, parameters.twist {
+        if animate, parameters.twist {
+            let fromValue: Float = 0
+            
+            if animation(forKey: "progressRotation") != nil {
+                return
+            }
+            removeAllAnimations()
+            CATransaction.begin()
+            
             let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
             basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
             basicAnimation.duration = 2.0
-            basicAnimation.fromValue = NSNumber(value: Float(0.0))
+            basicAnimation.fromValue = NSNumber(value: fromValue)
             basicAnimation.toValue = NSNumber(value: Float.pi * 2.0)
-            basicAnimation.repeatCount = Float.infinity
+            basicAnimation.repeatCount = .infinity
+            basicAnimation.isRemovedOnCompletion = false
+
             basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
             self.add(basicAnimation, forKey: "progressRotation")
+            CATransaction.commit()
         } else {
-            self.removeAllAnimations()
+            removeAllAnimations()
         }
     }
+    
+    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -328,10 +356,9 @@ public class RadialProgressView: Control {
     }
     
     public override func viewDidMoveToSuperview() {
-        if self.superview == nil {
-            self.state = .None
-        }
+        overlay.mayAnimate(superview != nil)
     }
+    
     
     
     
@@ -367,6 +394,13 @@ public class RadialProgressView: Control {
     
     }
     
+    public override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+    //    overlay.mayAnimate(superview != nil && window != nil)
+    }
+    
+    
+    
     
     public override func draw(_ layer: CALayer, in context: CGContext) {
         context.setFillColor(parameters.theme.backgroundColor.cgColor)
@@ -378,7 +412,7 @@ public class RadialProgressView: Control {
         case .Success:
             let checkValue: CGFloat = 1.0
             context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
-            let centerPoint = NSMakePoint(floorToScreenPixels(frame.width / 2.0), floorToScreenPixels(frame.height / 2.0));
+            let centerPoint = NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2.0), floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2.0));
             let lineWidth: CGFloat = 2.0
             let inset: CGFloat = 12
             

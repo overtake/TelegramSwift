@@ -34,7 +34,6 @@ class NavigationModalView: Control {
         
         super.init()
         self.autoresizingMask = [.width, .height]
-        self.backgroundColor = presentation.colors.background.withAlphaComponent(0.75) //NSColor(0xffffff,0.8)
         
         set(handler: { control in
             let control = control as! NavigationModalView
@@ -53,7 +52,7 @@ class NavigationModalView: Control {
         _ = attr.append(string: action.desc, color: presentation.colors.grayText, font: .normal(.text))
         
         self.attributeString = attr.copy() as! NSAttributedString
-        self.backgroundColor = presentation.colors.background.withAlphaComponent(0.75) 
+        self.backgroundColor = .clear
         needsDisplay = true
     }
     
@@ -62,13 +61,16 @@ class NavigationModalView: Control {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
+        
+        ctx.setFillColor(presentation.colors.background.withAlphaComponent(0.9).cgColor)
+        ctx.fill(layer.frame)
         super.draw(layer, in: ctx)
         
         let node = TextNode.layoutText(maybeNode: textNode, attributeString, nil, 3, .end, NSMakeSize(frame.width - 40, frame.height), nil, false, .center)
         
         let f = focus(node.0.size)
         
-        node.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor)
+        node.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
     }
     
     func close() {

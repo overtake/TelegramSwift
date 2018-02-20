@@ -194,7 +194,11 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func visibilitySetup() {
-        pushViewController(ChannelVisibilityController(account: account, peerId: peerId))
+        let setup = ChannelVisibilityController(account: account, peerId: peerId)
+        _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] _ in
+            self?.pullNavigation()?.back()
+        })
+        pushViewController(setup)
     }
     
     func toggleSignatures( _ enabled: Bool) -> Void {
@@ -677,7 +681,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .aboutInput(_, text):
             return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(L10n.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
                 arguments.updateEditingDescriptionText(updatedText)
-            })
+            }, font: .normal(.title))
         case .aboutDesc:
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSetAboutDescription))
         case let .signMessages(_, sign):
@@ -780,7 +784,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 entries.append(ChannelInfoEntry.admins(sectionId: sectionId, count: adminsCount))
                 entries.append(ChannelInfoEntry.members(sectionId: sectionId, count: membersCount))
                 
-                if let blockedCount = blockedCount {
+                if let blockedCount = blockedCount, blockedCount > 0 {
                     entries.append(ChannelInfoEntry.blocked(sectionId: sectionId, count: blockedCount))
                 }
                 

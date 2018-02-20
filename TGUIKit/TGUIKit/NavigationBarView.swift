@@ -132,6 +132,10 @@ public class NavigationBarView: View {
             let pCenter = self.centerView
             let pRight = self.rightView
             
+            pLeft.updateLocalizationAndTheme()
+            pCenter.updateLocalizationAndTheme()
+            pRight.updateLocalizationAndTheme()
+            
             self.leftView = left
             self.centerView = center
             self.rightView = right

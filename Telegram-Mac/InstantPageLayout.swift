@@ -186,7 +186,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                 if filledSize.width > boundingWidth - .ulpOfOne {
                     captionItem.frame = captionItem.frame.offsetBy(dx: horizontalInset, dy: contentSize.height)
                 } else {
-                    captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels((boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
+                    captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
                 }
                 contentSize.height += captionItem.frame.size.height;
                 items.append(captionItem)
@@ -246,7 +246,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                     if filledSize.width > boundingWidth - .ulpOfOne {
                         captionItem.frame = captionItem.frame.offsetBy(dx: horizontalInset, dy: contentSize.height)
                     } else {
-                        captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels((boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
+                        captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
                     }
                     contentSize.height += captionItem.frame.size.height;
                     items.append(captionItem)
@@ -377,7 +377,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         
         let spacing: CGFloat = 2
         let itemsPerRow: CGFloat = min(round(boundingWidth / 150), CGFloat(blocks.count))
-        let itemSize: CGFloat = floorToScreenPixels((boundingWidth - spacing * max(0, itemsPerRow - 1)) / itemsPerRow)
+        let itemSize: CGFloat = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - spacing * max(0, itemsPerRow - 1)) / itemsPerRow)
         
         var items:[InstantPageItem] = []
         var nextItemOrigin: CGPoint = CGPoint()
@@ -398,7 +398,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
     case .channelBanner(let channel):
         if let channel = channel {
             let width = boundingWidth - horizontalInsetBetweenMaxWidth * 2
-            let item = InstantPageChannelItem(frame: CGRect(x: floorToScreenPixels((boundingWidth - width)/2), y: 0, width: width , height: InstantPageChannelView.height), channel: channel, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
+            let item = InstantPageChannelItem(frame: CGRect(x: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - width)/2), y: 0, width: width , height: InstantPageChannelView.height), channel: channel, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
             return InstantPageLayout(origin: CGPoint(), contentSize: CGSize(width: boundingWidth, height: item.frame.height), items: [item])
         }
     case .footer(let text):
@@ -412,8 +412,8 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         item.frame = item.frame.offsetBy(dx: horizontalInset, dy: 0.0)
         return InstantPageLayout(origin: CGPoint(), contentSize: item.frame.size, items: [item])
     case .divider:
-        let lineWidth = floorToScreenPixels(boundingWidth / 2)
-        let shapeItem = InstantPageShapeItem(frame: CGRect(x: floorToScreenPixels((boundingWidth - lineWidth) / 2.0), y: 0.0, width: lineWidth, height: 1.0), shapeFrame: CGRect(x: 0, y: 0, width: lineWidth, height: 1.0), shape: .rect, color: theme.colors.grayText)
+        let lineWidth = floorToScreenPixels(scaleFactor: System.backingScale, boundingWidth / 2)
+        let shapeItem = InstantPageShapeItem(frame: CGRect(x: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - lineWidth) / 2.0), y: 0.0, width: lineWidth, height: 1.0), shapeFrame: CGRect(x: 0, y: 0, width: lineWidth, height: 1.0), shape: .rect, color: theme.colors.grayText)
         return InstantPageLayout(origin: CGPoint(), contentSize: shapeItem.frame.size, items: [shapeItem])
     case let .list(items, ordered):
         
@@ -521,7 +521,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         styleStack.push(.textColor(theme.colors.text))
         
         let textItem = layoutTextItemWithString(attributedStringForRichText(text, styleStack: styleStack), boundingWidth: boundingWidth - horizontalInset * 2)
-        textItem.frame = textItem.frame.offsetBy(dx: floorToScreenPixels((boundingWidth - textItem.frame.size.width) / 2.0), dy: contentSize.height)
+        textItem.frame = textItem.frame.offsetBy(dx: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - textItem.frame.size.width) / 2.0), dy: contentSize.height)
         textItem.alignment = .center
         
         contentSize.height += textItem.frame.size.height
@@ -537,7 +537,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                 styleStack.push(.fontSerif(true))
             }
             let captionItem = layoutTextItemWithString(attributedStringForRichText(caption, styleStack: styleStack), boundingWidth: boundingWidth - horizontalInset * 2.0)
-            captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels((boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
+            captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
             captionItem.alignment = .center
             contentSize.height += captionItem.frame.size.height
             items.append(captionItem)
@@ -593,7 +593,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                 styleStack.push(.fontSerif(true))
             }
             let captionItem = layoutTextItemWithString(attributedStringForRichText(caption, styleStack: styleStack), boundingWidth: boundingWidth - horizontalInset * 2.0)
-            captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels((boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
+            captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
             captionItem.alignment = .center
             contentSize.height += captionItem.frame.size.height
             items.append(captionItem)

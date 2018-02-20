@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 
-class RestrictionWrappedView : View {
+class RestrictionWrappedView : Control {
     let textView: TextView = TextView()
     let text:String
     required init(frame frameRect: NSRect) {
@@ -73,7 +73,7 @@ class VideoDurationView : View {
         ctx.fill(bounds)
         
         let f = focus(textNode.0.size)
-        textNode.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor)
+        textNode.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
     }
     
     required init?(coder: NSCoder) {
@@ -93,10 +93,17 @@ class CornerView : View {
         }
     }
     
+    override var backgroundColor: NSColor {
+        didSet {
+            layer?.backgroundColor = .clear
+        }
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         ctx.round(frame.size, .cornerRadius, positionFlags: positionFlags)
-        super.draw(layer, in: ctx)
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(bounds)
 //        if let positionFlags = positionFlags {
 //
 //            let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width

@@ -86,7 +86,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     switch song.state {
                     case let .playing(data):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
-                        let width = floorToScreenPixels(parameters.waveformWidth * CGFloat(data.progress))
+                        let width = floorToScreenPixels(scaleFactor: backingScaleFactor, parameters.waveformWidth * CGFloat(data.progress))
                         waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated)
                         let layout = parameters.duration(for: data.current)
                         layout.measure(width: frame.width - 50)
@@ -94,7 +94,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                         break
                     case let .fetching(progress, animated):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
-                        let width = floorToScreenPixels(parameters.waveformWidth * CGFloat(progress))
+                        let width = floorToScreenPixels(scaleFactor: backingScaleFactor, parameters.waveformWidth * CGFloat(progress))
                         waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: animated)
                         durationView.update(parameters.durationLayout)
                     case .stoped, .waiting:
@@ -103,7 +103,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                         durationView.update(parameters.durationLayout)
                     case let .paused(data):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
-                        let width = floorToScreenPixels(parameters.waveformWidth * CGFloat(data.progress))
+                        let width = floorToScreenPixels(scaleFactor: backingScaleFactor, parameters.waveformWidth * CGFloat(data.progress))
                         waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated)
                         let layout = parameters.duration(for: data.current)
                         layout.measure(width: frame.width - 50)
@@ -173,9 +173,6 @@ class ChatVoiceContentView: ChatAudioContentView {
         }
         
         needsLayout = true
-        if let media = media as? TelegramMediaFile {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
-        }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -185,7 +182,7 @@ class ChatVoiceContentView: ChatAudioContentView {
             for attr in parent.attributes {
                 if let attr = attr as? ConsumableContentMessageAttribute {
                     if !attr.consumed {
-                        let center = floorToScreenPixels(frame.height / 2.0)
+                        let center = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2.0)
                         ctx.setFillColor(parameters.presentation.activityBackground.cgColor)
                         ctx.fillEllipse(in: NSMakeRect(leftInset + parameters.durationLayout.layoutSize.width + 3, center + 8, 5, 5))
                     }
@@ -198,7 +195,7 @@ class ChatVoiceContentView: ChatAudioContentView {
 
     override func layout() {
         super.layout()
-        let center = floorToScreenPixels(frame.height / 2.0)
+        let center = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2.0)
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.setFrameSize(parameters.waveformWidth, waveformView.frame.height)
         }

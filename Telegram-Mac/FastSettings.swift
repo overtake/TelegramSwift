@@ -52,6 +52,7 @@ class FastSettings {
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
     private static let kAutomaticallyPlayGifs = "kAutomaticallyPlayGifs"
+    private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
 
 	
     static var sendingType:SendingType {
@@ -120,6 +121,14 @@ class FastSettings {
     
     static func toggleRecordingState() {
         UserDefaults.standard.set((recordingState == .voice ? RecordingStateSettings.video : RecordingStateSettings.voice).rawValue, forKey: kRecordingStateType)
+    }
+    
+    static var needShowChannelIntro: Bool {
+        return !UserDefaults.standard.bool(forKey: kNeedShowChannelIntro)
+    }
+    
+    static func markChannelIntroHasSeen() {
+        UserDefaults.standard.set(true, forKey: kNeedShowChannelIntro)
     }
     
     static var forceTouchAction: ForceTouchAction {

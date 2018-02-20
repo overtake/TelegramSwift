@@ -68,6 +68,12 @@ class GIFContainerView: View {
         statusDisposable.set(nil)
     }
     
+    func cancelFetching() {
+        if let resource = resource {
+            account?.postbox.mediaBox.cancelInteractiveResourceFetch(resource)
+        }
+    }
+    
     
     func fetch() {
         if let account = account, let resource = resource {
@@ -172,10 +178,8 @@ class GIFContainerView: View {
         self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
             if let strongSelf = self {
                 if case .Local = status {
-                    if let progressView = strongSelf.progressView {
-                        progressView.removeFromSuperview()
-                        strongSelf.progressView = nil
-                    }
+                    strongSelf.progressView?.removeFromSuperview()
+                    strongSelf.progressView = nil
                     strongSelf.path = resource.path
                     
                 } else {
@@ -187,6 +191,17 @@ class GIFContainerView: View {
                         strongSelf.progressView?.center()
                     }
                 }
+                
+                strongSelf.progressView?.fetchControls = FetchControls(fetch: { [weak strongSelf] in
+                    switch status {
+                    case .Fetching:
+                        strongSelf?.cancelFetching()
+                    case .Remote:
+                        strongSelf?.fetch()
+                    default:
+                        break
+                    }
+                })
                 
                 switch status {
                 case let .Fetching(_, progress):
@@ -202,6 +217,11 @@ class GIFContainerView: View {
         
         fetch()
         needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        progressView?.center()
     }
     
     override func copy() -> Any {

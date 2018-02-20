@@ -28,18 +28,15 @@ private enum AutomaticDownloadPeers {
 private final class DataAndStorageControllerArguments {
     let openStorageUsage: () -> Void
     let openNetworkUsage: () -> Void
-    let toggleAutomaticDownload: (AutomaticDownloadCategory, AutomaticDownloadPeers, Bool) -> Void
-    let openVoiceUseLessData: () -> Void
-    let toggleSaveIncomingPhotos: (Bool) -> Void
-    let toggleSaveEditedPhotos: (Bool) -> Void
-    
-    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, toggleAutomaticDownload: @escaping (AutomaticDownloadCategory, AutomaticDownloadPeers, Bool) -> Void, openVoiceUseLessData: @escaping () -> Void, toggleSaveIncomingPhotos: @escaping (Bool) -> Void, toggleSaveEditedPhotos: @escaping (Bool) -> Void) {
+    let openCategorySettings: (AutomaticMediaDownloadCategoryPeers, String) -> Void
+    let toggleAutomaticDownload:(Bool) -> Void
+    let resetDownloadSettings:()->Void
+    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void) {
         self.openStorageUsage = openStorageUsage
         self.openNetworkUsage = openNetworkUsage
+        self.openCategorySettings = openCategorySettings
         self.toggleAutomaticDownload = toggleAutomaticDownload
-        self.openVoiceUseLessData = openVoiceUseLessData
-        self.toggleSaveIncomingPhotos = toggleSaveIncomingPhotos
-        self.toggleSaveEditedPhotos = toggleSaveEditedPhotos
+        self.resetDownloadSettings = resetDownloadSettings
     }
 }
 
@@ -56,20 +53,16 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
 
     case storageUsage(Int32, String)
     case networkUsage(Int32, String)
-    case automaticPhotoDownloadHeader(Int32, String)
-    case automaticPhotoDownloadPrivateChats(Int32, String, Bool)
-    case automaticPhotoDownloadGroupsAndChannels(Int32, String, Bool)
-    case automaticVoiceDownloadHeader(Int32, String)
-    case automaticVoiceDownloadPrivateChats(Int32, String, Bool)
-    case automaticVoiceDownloadGroupsAndChannels(Int32, String, Bool)
-    case automaticInstantVideoDownloadHeader(Int32, String)
-    case automaticInstantVideoDownloadPrivateChats(Int32, String, Bool)
-    case automaticInstantVideoDownloadGroupsAndChannels(Int32, String, Bool)
-    case voiceCallsHeader(Int32, String)
-    case useLessVoiceData(Int32, String, String)
-    case otherHeader(Int32, String)
-    case saveIncomingPhotos(Int32, String, Bool)
-    case saveEditedPhotos(Int32, String, Bool)
+    case automaticMediaDownloadHeader(Int32, String)
+    case automaticDownloadMedia(Int32, Bool)
+    case photos(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
+    case videos(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
+    case files(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
+    case voice(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
+    case instantVideo(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
+    case gifs(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
+    case resetDownloadSettings(Int32, Bool)
+    
     case sectionId(Int32)
     
     var stableId: Int32 {
@@ -78,34 +71,24 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return 0
         case .networkUsage:
             return 1
-        case .automaticPhotoDownloadHeader:
+        case .automaticMediaDownloadHeader:
             return 2
-        case .automaticPhotoDownloadPrivateChats:
+        case .automaticDownloadMedia:
             return 3
-        case .automaticPhotoDownloadGroupsAndChannels:
+        case .photos:
             return 4
-        case .automaticVoiceDownloadHeader:
+        case .videos:
             return 5
-        case .automaticVoiceDownloadPrivateChats:
+        case .files:
             return 6
-        case .automaticVoiceDownloadGroupsAndChannels:
+        case .voice:
             return 7
-        case .automaticInstantVideoDownloadHeader:
+        case .instantVideo:
             return 8
-        case .automaticInstantVideoDownloadPrivateChats:
+        case .gifs:
             return 9
-        case .automaticInstantVideoDownloadGroupsAndChannels:
+        case .resetDownloadSettings:
             return 10
-        case .voiceCallsHeader:
-            return 11
-        case .useLessVoiceData:
-            return 12
-        case .otherHeader:
-            return 13
-        case .saveIncomingPhotos:
-            return 14
-        case .saveEditedPhotos:
-            return 15
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -117,35 +100,25 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + stableId
         case .networkUsage(let sectionId, _):
             return (sectionId * 1000) + stableId
-        case .automaticPhotoDownloadHeader(let sectionId, _):
+        case .automaticMediaDownloadHeader(let sectionId, _):
             return (sectionId * 1000) + stableId
-        case .automaticPhotoDownloadPrivateChats(let sectionId, _, _):
+        case .automaticDownloadMedia(let sectionId, _):
             return (sectionId * 1000) + stableId
-        case .automaticPhotoDownloadGroupsAndChannels(let sectionId, _, _):
+        case let .photos(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case .automaticVoiceDownloadHeader(let sectionId, _):
+        case let .videos(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case .automaticVoiceDownloadPrivateChats(let sectionId, _, _):
+        case let .files(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case .automaticVoiceDownloadGroupsAndChannels(let sectionId, _, _):
+        case let .voice(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case .automaticInstantVideoDownloadHeader(let sectionId, _):
+        case let .instantVideo(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case .automaticInstantVideoDownloadPrivateChats(let sectionId, _, _):
+        case let .gifs(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case .automaticInstantVideoDownloadGroupsAndChannels(let sectionId, _, _):
+        case let .resetDownloadSettings(sectionId, _):
             return (sectionId * 1000) + stableId
-        case .voiceCallsHeader(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .useLessVoiceData(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .otherHeader(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .saveIncomingPhotos(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .saveEditedPhotos(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .sectionId(let sectionId):
+        case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -164,86 +137,56 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .automaticPhotoDownloadHeader(sectionId, text):
-            if case .automaticPhotoDownloadHeader(sectionId, text) = rhs {
+        case let .automaticMediaDownloadHeader(sectionId, text):
+            if case .automaticMediaDownloadHeader(sectionId, text) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticPhotoDownloadPrivateChats(sectionId, text, value):
-            if case .automaticPhotoDownloadPrivateChats(sectionId, text, value) = rhs {
+        case let .automaticDownloadMedia(sectionId, value):
+            if case .automaticDownloadMedia(sectionId, value) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticPhotoDownloadGroupsAndChannels(sectionId, text, value):
-            if case .automaticPhotoDownloadGroupsAndChannels(sectionId, text, value) = rhs {
+        case let .photos(sectionId, category, enabled):
+            if case .photos(sectionId, category, enabled) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticVoiceDownloadHeader(sectionId, text):
-            if case .automaticVoiceDownloadHeader(sectionId, text) = rhs {
+        case let .videos(sectionId, category, enabled):
+            if case .videos(sectionId, category, enabled) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticVoiceDownloadPrivateChats(sectionId, text, value):
-            if case .automaticVoiceDownloadPrivateChats(sectionId, text, value) = rhs {
+        case let .files(sectionId, category, enabled):
+            if case .files(sectionId, category, enabled) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticVoiceDownloadGroupsAndChannels(sectionId, text, value):
-            if case .automaticVoiceDownloadGroupsAndChannels(sectionId, text, value) = rhs {
+        case let .voice(sectionId, category, enabled):
+            if case .voice(sectionId, category, enabled) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticInstantVideoDownloadHeader(sectionId, text):
-            if case .automaticInstantVideoDownloadHeader(sectionId, text) = rhs {
+        case let .instantVideo(sectionId, category, enabled):
+            if case .instantVideo(sectionId, category, enabled) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticInstantVideoDownloadPrivateChats(sectionId, text, value):
-            if case .automaticInstantVideoDownloadPrivateChats(sectionId, text, value) = rhs {
+        case let .gifs(sectionId, category, enabled):
+            if case .gifs(sectionId, category, enabled) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .automaticInstantVideoDownloadGroupsAndChannels(sectionId, text, value):
-            if case .automaticInstantVideoDownloadGroupsAndChannels(sectionId, text, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .voiceCallsHeader(sectionId, text):
-            if case .voiceCallsHeader(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .useLessVoiceData(sectionId, text, value):
-            if case .useLessVoiceData(sectionId, text, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .otherHeader(sectionId, text):
-            if case .otherHeader(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .saveIncomingPhotos(sectionId, text, value):
-            if case .saveIncomingPhotos(sectionId, text, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .saveEditedPhotos(sectionId, text, value):
-            if case .saveEditedPhotos(sectionId, text, value) = rhs {
+        case let .resetDownloadSettings(sectionId, value):
+            if case .resetDownloadSettings(sectionId, value) = rhs {
                 return true
             } else {
                 return false
@@ -271,58 +214,42 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .next, action: {
                 arguments.openNetworkUsage()
             })
-        case let .automaticPhotoDownloadHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .automaticPhotoDownloadPrivateChats(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .switchable(stateback: {
+        case let .automaticMediaDownloadHeader(_, text):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+        case let .automaticDownloadMedia(_ , value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownload, type: .switchable(stateback: {
                 return value
             }), action: {
-                arguments.toggleAutomaticDownload(.photo, .privateChats, value)
+                arguments.toggleAutomaticDownload(!value)
             })
-        case let .automaticPhotoDownloadGroupsAndChannels(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .switchable(stateback: {
-                return value
-            }), action: {
-                arguments.toggleAutomaticDownload(.photo, .groupsAndChannels, value)
-            })
-        case let .automaticVoiceDownloadHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .automaticVoiceDownloadPrivateChats(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .switchable(stateback: {
-                return value
-            }), action: {
-                arguments.toggleAutomaticDownload(.voice, .privateChats, value)
-            })
-        case let .automaticVoiceDownloadGroupsAndChannels(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .switchable(stateback: {
-                return value
-            }), action: {
-                arguments.toggleAutomaticDownload(.voice, .groupsAndChannels, value)
-            })
-        case let .automaticInstantVideoDownloadHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .automaticInstantVideoDownloadPrivateChats(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .switchable(stateback: {
-                return value
-            }), action: {
-                arguments.toggleAutomaticDownload(.instantVideo, .privateChats, value)
-            })
-        case let .automaticInstantVideoDownloadGroupsAndChannels(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .switchable(stateback: {
-                return value
-            }), action: {
-                arguments.toggleAutomaticDownload(.instantVideo, .groupsAndChannels, value)
-            })
-        case let .voiceCallsHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .useLessVoiceData(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .context(stateback: {
-                return value
-            }), action: {
-                arguments.openVoiceUseLessData()
-            })
-        case let .otherHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
+        case let .photos(_, category, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadPhoto, type: .next, action: {
+               arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadPhoto)
+            }, enabled: enabled)
+        case let .videos(_, category, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadVideo, type: .next, action: {
+                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadVideo)
+            }, enabled: enabled)
+        case let .files(_, category, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadFiles, type: .next, action: {
+                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadFiles)
+            }, enabled: enabled)
+        case let .voice(_, category, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadVoice, type: .next, action: {
+                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadVoice)
+            }, enabled: enabled)
+        case let .instantVideo(_, category, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadInstantVideo, type: .next, action: {
+                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadInstantVideo)
+            }, enabled: enabled)
+        case let .gifs(_, category, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadGIFs, type: .next, action: {
+                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadGIFs)
+            }, enabled: enabled)
+        case let .resetDownloadSettings(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadReset, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI), type: .none, action: {
+                arguments.resetDownloadSettings()
+            }, enabled: enabled)
         default:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -366,45 +293,20 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     sectionId += 1
 
 
-    entries.append(.automaticPhotoDownloadHeader(sectionId, tr(L10n.dataAndStorageAutomaticPhotoDownloadHeader)))
-  //  entries.append(.automaticPhotoDownloadPrivateChats(sectionId, tr(L10n.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.photo.privateChats))
-    entries.append(.automaticPhotoDownloadGroupsAndChannels(sectionId, tr(L10n.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.photo.groupsAndChannels))
+    entries.append(.automaticMediaDownloadHeader(sectionId, L10n.dataAndStorageAutomaticDownloadHeader))
+    entries.append(.automaticDownloadMedia(sectionId, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.photos(sectionId, data.automaticMediaDownloadSettings.categories.photo, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.videos(sectionId, data.automaticMediaDownloadSettings.categories.video, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.files(sectionId, data.automaticMediaDownloadSettings.categories.files, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.voice(sectionId, data.automaticMediaDownloadSettings.categories.voice, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.instantVideo(sectionId, data.automaticMediaDownloadSettings.categories.instantVideo, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.gifs(sectionId, data.automaticMediaDownloadSettings.categories.gif, data.automaticMediaDownloadSettings.automaticDownload))
+    entries.append(.resetDownloadSettings(sectionId, data.automaticMediaDownloadSettings != AutomaticMediaDownloadSettings.defaultSettings))
     
-    entries.append(.sectionId(sectionId))
-    sectionId += 1
-    
-    entries.append(.automaticVoiceDownloadHeader(sectionId, tr(L10n.dataAndStorageAutomaticAudioDownloadHeader)))
-   // entries.append(.automaticVoiceDownloadPrivateChats(sectionId, tr(L10n.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.voice.privateChats))
-    entries.append(.automaticVoiceDownloadGroupsAndChannels(sectionId, tr(L10n.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.voice.groupsAndChannels))
-    
-    entries.append(.sectionId(sectionId))
-    sectionId += 1
-    
-    entries.append(.automaticInstantVideoDownloadHeader(sectionId, tr(L10n.dataAndStorageAutomaticVideoDownloadHeader)))
-   // entries.append(.automaticInstantVideoDownloadPrivateChats(sectionId, tr(L10n.dataAndStorageAutomaticDownloadPrivateChats), data.automaticMediaDownloadSettings.categories.instantVideo.privateChats))
-    entries.append(.automaticInstantVideoDownloadGroupsAndChannels(sectionId, tr(L10n.dataAndStorageAutomaticDownloadGroupsChannels), data.automaticMediaDownloadSettings.categories.instantVideo.groupsAndChannels))
-    
-   // entries.append(.sectionId(sectionId))
-   // sectionId += 1
-    
-   // entries.append(.voiceCallsHeader(sectionId, tr(L10n.dataAndStorageVoiceCallsHeader)))
-   // entries.append(.useLessVoiceData(sectionId, tr(L10n.dataAndStorageVoiceCallsLessData), stringForUseLessDataSetting(data.voiceCallSettings)))
-    
-  
     
     return entries
 }
 
-private func stringForUseLessDataSetting(_ settings: VoiceCallSettings) -> String {
-    switch settings.dataSaving {
-    case .never:
-        return "Never"
-    case .cellular:
-        return "On Mobile Network"
-    case .always:
-        return "Always"
-    }
-}
 
 private func prepareTransition(left:[AppearanceWrapperEntry<DataAndStorageEntry>], right: [AppearanceWrapperEntry<DataAndStorageEntry>], initialSize: NSSize, arguments: DataAndStorageControllerArguments) -> TableUpdateTransition {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
@@ -439,76 +341,50 @@ class DataAndStorageViewController: TableViewController {
         let dataAndStorageDataPromise = Promise<DataAndStorageData>()
         dataAndStorageDataPromise.set(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings, ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings, ApplicationSpecificPreferencesKeys.voiceCallSettings])
             |> map { view -> DataAndStorageData in
-                let automaticMediaDownloadSettings: AutomaticMediaDownloadSettings
-                if let value = view.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings] as? AutomaticMediaDownloadSettings {
-                    automaticMediaDownloadSettings = value
-                } else {
-                    automaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings
-                }
+                let automaticMediaDownloadSettings: AutomaticMediaDownloadSettings = view.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings] as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
+
                 
-                let generatedMediaStoreSettings: GeneratedMediaStoreSettings
-                if let value = view.values[ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings] as? GeneratedMediaStoreSettings {
-                    generatedMediaStoreSettings = value
-                } else {
-                    generatedMediaStoreSettings = GeneratedMediaStoreSettings.defaultSettings
-                }
+                let generatedMediaStoreSettings: GeneratedMediaStoreSettings = view.values[ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings] as? GeneratedMediaStoreSettings ?? GeneratedMediaStoreSettings.defaultSettings
                 
-                let voiceCallSettings: VoiceCallSettings
-                if let value = view.values[ApplicationSpecificPreferencesKeys.voiceCallSettings] as? VoiceCallSettings {
-                    voiceCallSettings = value
-                } else {
-                    voiceCallSettings = VoiceCallSettings.defaultSettings
-                }
+                let voiceCallSettings: VoiceCallSettings = view.values[ApplicationSpecificPreferencesKeys.voiceCallSettings] as? VoiceCallSettings ?? VoiceCallSettings.defaultSettings
                 
                 return DataAndStorageData(automaticMediaDownloadSettings: automaticMediaDownloadSettings, generatedMediaStoreSettings: generatedMediaStoreSettings, voiceCallSettings: voiceCallSettings)
             })
         
-        let arguments = DataAndStorageControllerArguments(openStorageUsage: { [weak self] in
+        let arguments = DataAndStorageControllerArguments(openStorageUsage: {
             pushControllerImpl(StorageUsageController(account))
         }, openNetworkUsage: {
            // pushControllerImpl?(networkUsageStatsController(account: account))
-        }, toggleAutomaticDownload: { category, peers, value in
-            let _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current in
-                switch category {
-                case .photo:
-                    switch peers {
-                    case .privateChats:
-                        return current.withUpdatedCategories(current.categories.withUpdatedPhoto(current.categories.photo.withUpdatedPrivateChats(value)))
-                    case .groupsAndChannels:
-                        return current.withUpdatedCategories(current.categories.withUpdatedPhoto(current.categories.photo.withUpdatedGroupsAndChannels(value)))
+        }, openCategorySettings: { category, title in
+            pushControllerImpl(DownloadSettingsViewController(account, category, title, updateCategory: { category in
+                _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current -> AutomaticMediaDownloadSettings in
+                    switch title {
+                    case L10n.dataAndStorageAutomaticDownloadPhoto:
+                        return current.withUpdatedCategories(current.categories.withUpdatedPhoto(category))
+                    case L10n.dataAndStorageAutomaticDownloadVideo:
+                        return current.withUpdatedCategories(current.categories.withUpdatedVideo(category))
+                    case L10n.dataAndStorageAutomaticDownloadFiles:
+                        return current.withUpdatedCategories(current.categories.withUpdatedFiles(category))
+                    case L10n.dataAndStorageAutomaticDownloadVoice:
+                        return current.withUpdatedCategories(current.categories.withUpdatedVoice(category))
+                    case L10n.dataAndStorageAutomaticDownloadInstantVideo:
+                        return current.withUpdatedCategories(current.categories.withUpdatedInstantVideo(category))
+                    case L10n.dataAndStorageAutomaticDownloadGIFs:
+                        return current.withUpdatedCategories(current.categories.withUpdatedGif(category))
+                    default:
+                        return current
                     }
-                case .voice:
-                    switch peers {
-                    case .privateChats:
-                        return current.withUpdatedCategories(current.categories.withUpdatedVoice(current.categories.voice.withUpdatedPrivateChats(value)))
-                    case .groupsAndChannels:
-                        return current.withUpdatedCategories(current.categories.withUpdatedVoice(current.categories.voice.withUpdatedGroupsAndChannels(value)))
-                    }
-                case .instantVideo:
-                    switch peers {
-                    case .privateChats:
-                        return current.withUpdatedCategories(current.categories.withUpdatedInstantVideo(current.categories.instantVideo.withUpdatedPrivateChats(value)))
-                    case .groupsAndChannels:
-                        return current.withUpdatedCategories(current.categories.withUpdatedInstantVideo(current.categories.instantVideo.withUpdatedGroupsAndChannels(value)))
-                    }
-                case .gif:
-                    switch peers {
-                    case .privateChats:
-                        return current.withUpdatedCategories(current.categories.withUpdatedGif(current.categories.gif.withUpdatedPrivateChats(value)))
-                    case .groupsAndChannels:
-                        return current.withUpdatedCategories(current.categories.withUpdatedGif(current.categories.gif.withUpdatedGroupsAndChannels(value)))
-                    }
-                }
+                }).start()
+            }))
+        }, toggleAutomaticDownload: { enabled in
+            _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current -> AutomaticMediaDownloadSettings in
+                return current.withUpdatedAutomaticDownload(enabled)
             }).start()
-        }, openVoiceUseLessData: {
-           // pushControllerImpl?(voiceCallDataSavingController(account: account))
-        }, toggleSaveIncomingPhotos: { value in
-            let _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current in
-                return current.withUpdatedSaveIncomingPhotos(value)
-            }).start()
-        }, toggleSaveEditedPhotos: { value in
-            let _ = updateGeneratedMediaStoreSettingsInteractively(postbox: account.postbox, { current in
-                return current.withUpdatedStoreEditedPhotos(value)
+        }, resetDownloadSettings: {
+            _ = (confirmSignal(for: mainWindow, header: appName, information: L10n.dataAndStorageConfirmResetSettings, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel, swapColors: true) |> filter {$0} |> mapToSignal { _ -> Signal<Void, Void> in
+                return updateMediaDownloadSettingsInteractively(postbox: account.postbox, { _ -> AutomaticMediaDownloadSettings in
+                    return AutomaticMediaDownloadSettings.defaultSettings
+                })
             }).start()
         })
         

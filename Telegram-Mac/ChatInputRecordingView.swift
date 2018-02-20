@@ -143,12 +143,12 @@ class ChatInputRecordingView: View {
     
     override func layout() {
         super.layout()
-        peakLayer.frame = NSMakeRect(20, floorToScreenPixels((frame.height - peakLayer.frame.height) / 2), 14, 14)
+        peakLayer.frame = NSMakeRect(20, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - peakLayer.frame.height) / 2), 14, 14)
         timerView.centerY(x:peakLayer.frame.maxX + 10)
         statusImage.centerY(x: frame.width - statusImage.frame.width - 20)
         
         let max = (frame.width - (statusImage.frame.width + 20 + 50))
-        descView.centerY(x:60 + floorToScreenPixels((max - descView.frame.width)/2))
+        descView.centerY(x:60 + floorToScreenPixels(scaleFactor: backingScaleFactor, (max - descView.frame.width)/2))
 
     }
     

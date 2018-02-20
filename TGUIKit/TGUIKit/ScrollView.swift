@@ -108,6 +108,7 @@ open class ScrollView: NSScrollView{
         drawsBackground = false
         layerContentsRedrawPolicy = .never
         
+        self.hasHorizontalScroller = false 
         self.horizontalScrollElasticity = .none
         self.verticalScroller?.scrollerStyle = .overlay
         autoresizingMask = []
@@ -175,7 +176,7 @@ open class ScrollView: NSScrollView{
         if deltaCorner > 0 {
             var origin = clipView.bounds.origin
             
-            deltaCorner = max(Int64(floorToScreenPixels(frame.height / 6.0)),40)
+            deltaCorner = max(Int64(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 6.0)),40)
             
             
             

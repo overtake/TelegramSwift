@@ -169,7 +169,7 @@ public extension NSColor {
     
     var rgb: UInt32 {
         
-        let color = self.usingColorSpaceName(NSColorSpaceName.calibratedRGB)
+        let color = self.usingColorSpaceName(NSColorSpaceName.deviceRGB)
         if let color = color {
             let red: CGFloat = color.redComponent
             let green: CGFloat = color.greenComponent

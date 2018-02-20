@@ -58,7 +58,7 @@ class ConvertGroupViewController: TableViewController {
                 
                 self?.convertDisposable.set(showModalProgress(signal: signal |> deliverOnMainQueue, for: mainWindow).start(next: { [weak strongSelf] peerId in
                     if let peerId = peerId, let account = strongSelf?.account {
-                        strongSelf?.navigationController?.push(ChatController(account: account, peerId: peerId))
+                        strongSelf?.navigationController?.push(ChatController(account: account, chatLocation: .peer(peerId)))
                     } else {
                         alert(for: mainWindow, info: tr(L10n.convertToSupergroupAlertError))
                     }

@@ -84,7 +84,7 @@ private class AddContactControllerView : View, NSTextFieldDelegate {
     
     override func layout() {
         super.layout()
-        headerView.centerX(y: floorToScreenPixels((50 - headerView.frame.height)/2))
+        headerView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - headerView.frame.height)/2))
         firstName.centerX(y: 50 + 35)
         lastName.centerX(y: firstName.frame.maxY + 30)
         phoneNumber.centerX(y: lastName.frame.maxY + 30)
@@ -144,7 +144,7 @@ class AddContactModalController: ModalViewController {
             close()
             _ = (showModalProgress(signal: importContact(account: account, firstName: genericView.firstName.stringValue , lastName: genericView.lastName.stringValue, phoneNumber: genericView.phoneNumber.stringValue), for: mainWindow) |> deliverOnMainQueue).start(next: { [weak self]  peerId in
                 if let peerId = peerId, let account = self?.account {
-                    account.context.mainNavigation?.push(ChatController(account: account, peerId: peerId))
+                    account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(peerId)))
                 } else {
                     alert(for: mainWindow, header: tr(L10n.contactsNotRegistredTitle), info: tr(L10n.contactsNotRegistredDescription))
                 }

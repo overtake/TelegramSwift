@@ -12,7 +12,7 @@ import SwiftSignalKitMac
 class ChatMessageView: ChatRowView {
     private let text:TextView = TextView()
 
-    private var webpageContent:WPContentView?
+    private(set) var webpageContent:WPContentView?
     
     override func draw(_ dirtyRect: NSRect) {
         
@@ -95,9 +95,9 @@ class ChatMessageView: ChatRowView {
         return point.x < layout.lines[index].frame.maxX
     }
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         if let webpageContent = webpageContent {
-            return webpageContent.interactionContentView(for: innerId)
+            return webpageContent.interactionContentView(for: innerId, animateIn: animateIn)
         }
         return self
     }

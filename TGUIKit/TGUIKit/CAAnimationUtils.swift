@@ -160,9 +160,9 @@ public extension CALayer {
         let animation = makeSpringBounceAnimation("transform", initialVelocity)
         
         var fr = CATransform3DIdentity
-        fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DTranslate(fr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         fr = CATransform3DScale(fr, from, from, 1)
-        fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DTranslate(fr, -floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), -floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
         animation.toValue = to
@@ -179,9 +179,9 @@ public extension CALayer {
         animation.isAdditive = additive
         
         var tr = CATransform3DIdentity
-        tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         tr = CATransform3DScale(tr, to, to, 1)
-        tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, -floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), -floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         animation.toValue = NSValue(caTransform3D: tr)
 
         
@@ -193,9 +193,9 @@ public extension CALayer {
         animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
 
         var fr = CATransform3DIdentity
-        fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DTranslate(fr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         fr = CATransform3DScale(fr, from, from, 1)
-        fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DTranslate(fr, -floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), -floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
         animation.toValue = to
@@ -211,9 +211,9 @@ public extension CALayer {
         animation.isAdditive = additive
         
         var tr = CATransform3DIdentity
-        tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         tr = CATransform3DScale(tr, to, to, 1)
-        tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, -floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), -floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         animation.toValue = NSValue(caTransform3D: tr)
         
         
@@ -226,9 +226,9 @@ public extension CALayer {
         let animation = makeSpringAnimation("transform")
         
         var fr = CATransform3DIdentity
-        fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DTranslate(fr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         fr = CATransform3DRotate(fr, from * CGFloat.pi / 180, 0, 0, 1.0)
-        fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        fr = CATransform3DTranslate(fr, -floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), -floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
 
@@ -245,9 +245,9 @@ public extension CALayer {
         animation.isAdditive = additive
         
         var tr = CATransform3DIdentity
-        tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         tr = CATransform3DRotate(fr, to * CGFloat.pi / 180, 0, 0, 1.0)
-        tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+        tr = CATransform3DTranslate(tr, -floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), -floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)
         animation.toValue = NSValue(caTransform3D: tr)
         
         
@@ -256,9 +256,9 @@ public extension CALayer {
 //        let animation = CABasicAnimation(keyPath: "transform")
 //        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
 //        var fr = CATransform3DIdentity
-//        fr = CATransform3DTranslate(fr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+//        fr = CATransform3DTranslate(fr, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2), floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2), 0)
 //        fr = CATransform3DRotate(fr, from * CGFloat.pi / 180, 0, 0, 1.0)
-//        fr = CATransform3DTranslate(fr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+//        fr = CATransform3DTranslate(fr, -floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2), -floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2), 0)
 //        
 //        animation.fromValue = NSValue(caTransform3D: fr)
 //        animation.isRemovedOnCompletion = removeOnCompletion
@@ -274,9 +274,9 @@ public extension CALayer {
 //        animation.isAdditive = additive
 //        
 //        var tr = CATransform3DIdentity
-//       // tr = CATransform3DTranslate(tr, floorToScreenPixels(frame.width / 2), floorToScreenPixels(frame.height / 2), 0)
+//       // tr = CATransform3DTranslate(tr, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2), floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2), 0)
 //        tr = CATransform3DRotate(fr, to * CGFloat.pi / 180, 0, 0, 1.0)
-//        //tr = CATransform3DTranslate(tr, -floorToScreenPixels(frame.width / 2), -floorToScreenPixels(frame.height / 2), 0)
+//        //tr = CATransform3DTranslate(tr, -floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2), -floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2), 0)
 //        animation.toValue = NSValue(caTransform3D: tr)
 //        
 //        
@@ -317,6 +317,14 @@ public extension CALayer {
     
     public func animateScale(from: CGFloat, to: CGFloat, duration: Double, timingFunction: String = kCAMediaTimingFunctionEaseInEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
         self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "transform.scale", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)
+    }
+    
+    public func animateScaleX(from: CGFloat, to: CGFloat, duration: Double, timingFunction: String = kCAMediaTimingFunctionEaseInEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "transform.scale.x", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)
+    }
+    
+    public func animateScaleY(from: CGFloat, to: CGFloat, duration: Double, timingFunction: String = kCAMediaTimingFunctionEaseInEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "transform.scale.y", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)
     }
     
     func animatePosition(from: NSPoint, to: NSPoint, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {

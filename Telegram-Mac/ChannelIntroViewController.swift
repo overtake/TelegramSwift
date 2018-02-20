@@ -23,7 +23,9 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         wantsLayer = true
         documentView?.addSubview(imageView)
         documentView?.addSubview(textView)
-        
+        documentView?.addSubview(button)
+
+        button.set(font: .medium(.title), for: .Normal)
         updateLocalizationAndTheme()
         
     }
@@ -31,6 +33,12 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         
         imageView.image = theme.icons.channelIntro
         imageView.sizeToFit()
+        
+        
+        button.set(text: L10n.channelIntroCreateChannel, for: .Normal)
+
+        button.set(color: theme.colors.blueUI, for: .Normal)
+        _ = button.sizeToFit()
         
         backgroundColor = theme.colors.background
         textView.background = theme.colors.background
@@ -52,7 +60,11 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         textView.update(textView.layout)
         imageView.centerX(y:30)
         textView.centerX(y:imageView.frame.maxY + 30)
-        containerView.setFrameSize(frame.width, textView.frame.maxY + 30)
+        
+        button.centerX(y: textView.frame.maxY + 30)
+        
+        containerView.setFrameSize(frame.width, button.frame.maxY + 30)
+
     }
     
     required init?(coder: NSCoder) {
@@ -80,6 +92,7 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
         onComplete.set(.single(Void()))
     }
     
+    
     override func returnKeyAction() -> KeyHandlerResult {
         executeNext()
         return .rejected
@@ -88,7 +101,11 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        (self.rightBarView as? TextButtonBarView)?.set(handler:{ [weak self] control in
+        (self.rightBarView as? TextButtonBarView)?.set(handler:{ [weak self] _ in
+            self?.executeNext()
+        }, for: .Click)
+        
+        self.genericView.button.set(handler: { [weak self] _ in
             self?.executeNext()
         }, for: .Click)
         

@@ -101,7 +101,7 @@ private class PhoneCallWindowView : View {
         textNameView.font = .medium(18.0)
         textNameView.drawsBackground = false
         textNameView.backgroundColor = .clear
-        textNameView.textColor = darkPalette.text
+        textNameView.textColor = nightBluePalette.text
         textNameView.isSelectable = false
         textNameView.isEditable = false
         textNameView.isBordered = false
@@ -113,7 +113,7 @@ private class PhoneCallWindowView : View {
         statusTextView.font = .normal(.header)
         statusTextView.drawsBackground = false
         statusTextView.backgroundColor = .clear
-        statusTextView.textColor = darkPalette.text
+        statusTextView.textColor = nightBluePalette.text
         statusTextView.isSelectable = false
         statusTextView.isEditable = false
         statusTextView.isBordered = false
@@ -153,7 +153,7 @@ private class PhoneCallWindowView : View {
         secureTextView.center()
         secureTextView.setFrameOrigin(secureTextView.frame.minX + 2, secureTextView.frame.minY)
         secureContainerView.centerX(y: frame.height - 170 - secureContainerView.frame.height)
-        muteControl.setFrameOrigin(frame.width - 60 - muteControl.frame.width, 30 + floorToScreenPixels((declineControl.frame.height - muteControl.frame.height)/2))
+        muteControl.setFrameOrigin(frame.width - 60 - muteControl.frame.width, 30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (declineControl.frame.height - muteControl.frame.height)/2))
         
         closeMissedControl.setFrameOrigin(80, 30)
 
@@ -173,7 +173,7 @@ private class PhoneCallWindowView : View {
         switch state {
         case .accepting:
             statusTextView.stringValue = tr(L10n.callStatusConnecting)
-        case .active(_, let visual, _):
+        case .active(_, let visual, _, _):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
             secureTextView.update(layout)
@@ -195,8 +195,6 @@ private class PhoneCallWindowView : View {
                     statusTextView.stringValue = tr(L10n.callStatusEnded) 
                 default:
                     statusTextView.stringValue = tr(L10n.callStatusEnded)
-                    acceptControl.isEnabled = false
-                    acceptControl.change(opacity: 0.8)
                 }
                 
             case .error:
@@ -215,23 +213,27 @@ private class PhoneCallWindowView : View {
         switch state {
         case .active, .accepting, .requesting:
             
-            declineControl.change(opacity: 0, animated: animated, completion: { [weak self] complete in
-                self?.declineControl.isHidden = true
+            declineControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
+                if completed {
+                    self?.declineControl.isHidden = true
+                }
             })
-            acceptControl.change(pos: NSMakePoint(floorToScreenPixels((frame.width - acceptControl.frame.width) / 2), 30), animated: animated)
+            acceptControl.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.width - acceptControl.frame.width) / 2), 30), animated: animated)
             acceptControl.set(image: theme.icons.callWindowDecline, for: .Normal)
             
             muteControl.isHidden = false
             muteControl.change(opacity: 1, animated: animated)
             
             closeMissedControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
-                self?.closeMissedControl.isHidden = true
+                if completed {
+                    self?.closeMissedControl.isHidden = true
+                }
             })
             
         case .ringing:
             declineControl.isHidden = false
-            muteControl.change(opacity: 0, animated: animated, completion: { [weak self] complete in
-                if complete {
+            muteControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
+                if completed {
                     self?.muteControl.isHidden = true
                 }
             })
@@ -240,7 +242,9 @@ private class PhoneCallWindowView : View {
             declineControl.change(opacity: 1, animated: animated)
             
             closeMissedControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
-                self?.closeMissedControl.isHidden = true
+                if completed {
+                    self?.closeMissedControl.isHidden = true
+                }
             })
             
         case .terminated(let reason, _):
@@ -268,8 +272,8 @@ private class PhoneCallWindowView : View {
                 closeMissedControl.isHidden = false
                 closeMissedControl.change(opacity: 1, animated: animated)
                 
-                muteControl.change(opacity: 0, animated: animated, completion: { [weak self] complete in
-                    if complete {
+                muteControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
+                    if completed {
                         self?.muteControl.isHidden = true
                     }
                 })
@@ -335,7 +339,7 @@ class PhoneCallWindowController {
         
         let size = NSMakeSize(300, 460)
         if let screen = NSScreen.main {
-            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
+            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
             self.window.level = .screenSaver
             self.window.backgroundColor = .clear
         } else {

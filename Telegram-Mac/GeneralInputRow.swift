@@ -46,9 +46,9 @@ class GeneralInputRowItem: TableRowItem {
         return _stableId
     }
     
+    fileprivate let font: NSFont
     
-    
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), placeholder:String, text:String = "", limit:Int32 = 140, insets: NSEdgeInsets = NSEdgeInsets(left:25,right:25,top:2,bottom:3), textChangeHandler:@escaping(String)->Void = {_ in}, textFilter:@escaping(String)->String = {value in return value}, holdText:Bool = false, inputType: GeneralInputRowType = .plain, pasteFilter:((String)->(Bool, String))? = nil, canFastClean: Bool = false, automaticallyBecomeResponder: Bool = true) {
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), placeholder:String, text:String = "", limit:Int32 = 140, insets: NSEdgeInsets = NSEdgeInsets(left:25,right:25,top:2,bottom:3), textChangeHandler:@escaping(String)->Void = {_ in}, textFilter:@escaping(String)->String = {value in return value}, holdText:Bool = false, font: NSFont = .normal(.text), inputType: GeneralInputRowType = .plain, pasteFilter:((String)->(Bool, String))? = nil, canFastClean: Bool = false, automaticallyBecomeResponder: Bool = true) {
         _stableId = stableId
         self.insets = insets
         self.automaticallyBecomeResponder = automaticallyBecomeResponder
@@ -57,16 +57,19 @@ class GeneralInputRowItem: TableRowItem {
         self.canFastClean = canFastClean
         self.textChangeHandler = textChangeHandler
         self.limit = limit
+        self.font = font
         self.text = text
         self.inputType = inputType
         self.textFilter = textFilter
         self.placeholder = .initialize(string: placeholder, color: theme.colors.grayText, font: .normal(.text), coreText: false)
         
-        let textStorage = NSTextStorage(attributedString: .initialize(string: text))
-        let textContainer = NSTextContainer(containerSize: NSMakeSize(initialSize.width - insets.left - insets.right, .greatestFiniteMagnitude))
+        let textStorage = NSTextStorage(attributedString: .initialize(string: text, font: font, coreText: false))
+        let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - insets.left - insets.right, .greatestFiniteMagnitude))
         
         let layoutManager = NSLayoutManager();
+        
         layoutManager.addTextContainer(textContainer)
+        
         textStorage.addLayoutManager(layoutManager)
         
         layoutManager.ensureLayout(for: textContainer)
@@ -82,6 +85,8 @@ class GeneralInputRowItem: TableRowItem {
     override var height: CGFloat {
         return _height + insets.top + insets.bottom
     }
+    
+
     
     override func viewClass() -> AnyClass {
         return GeneralInputRowView.self
@@ -99,13 +104,13 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
     
     private let cleanImage: ImageButton = ImageButton()
     required init(frame frameRect: NSRect) {
-        textView = TGModernGrowingTextView(frame: frameRect)
+        textView = TGModernGrowingTextView(frame: NSMakeRect(25, 0, frameRect.width - 50, frameRect.height))
         super.init(frame: frameRect)
         textView.delegate = self
         textView.textFont = .normal(.text)
         
         textView.min_height = 16
-        
+        textView.max_height = 1500
         secureField.isBordered = false
         secureField.isBezeled = false
         secureField.focusRingType = .none
@@ -113,7 +118,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         secureField.drawsBackground = true
         secureField.isEditable = true
         secureField.isSelectable = true
-       // secureField.wantsLayer = true
+       
         
         secureField.font = .normal(.text)
         secureField.textView?.insertionPointColor = theme.colors.text
@@ -126,6 +131,15 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
             self?.secureField.stringValue = ""
         }, for: .Click)
         
+    }
+    
+    override func shakeView() {
+        if !secureField.isHidden {
+            secureField.shake()
+        }
+        if !textView.isHidden {
+            textView.shake()
+        }
     }
     
     override func controlTextDidChange(_ obj: Notification) {
@@ -171,17 +185,15 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
-        textView.textColor = theme.colors.text
-        textView.linkColor = theme.colors.link
+        textView.animates = false
         
-        secureField.textColor = theme.colors.text
-        secureField.backgroundColor = backdorColor
         
         if let item = item as? GeneralInputRowItem {
             
+           
             
             cleanImage.set(image: theme.icons.recentDismiss, for: .Normal)
-            cleanImage.sizeToFit()
+            _ = cleanImage.sizeToFit()
             cleanImage.isHidden = (!item.canFastClean || (item.holdText && item.text.isEmpty))
             
             
@@ -223,9 +235,14 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
                 
             }
             
+            textView.textFont = item.font
+            textView.textColor = theme.colors.text
+            textView.linkColor = theme.colors.link
+            secureField.textColor = theme.colors.text
+            secureField.backgroundColor = backdorColor
             
-          
         }
+        textView.animates = true
         needsLayout = true
     }
     

@@ -13,7 +13,7 @@ import TelegramCoreMac
 private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case inAppNotificationSettings
     case baseAppSettings
-    case automaticMediaDownloadSettings
+    case automaticMediaDownloadSettings = 16
     case generatedMediaStoreSettings
     case voiceCallSettings
     case themeSettings = 22

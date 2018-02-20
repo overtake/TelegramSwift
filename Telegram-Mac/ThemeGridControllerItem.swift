@@ -19,12 +19,24 @@ final class SettingsThemeWallpaperView: View {
     let imageView = TransformImageView()
     
     var pressed: (() -> Void)?
-    
+    private let label: TextView = TextView()
     override init() {
         super.init()
-        backgroundColor = .black
+        backgroundColor = theme.colors.background
+        layer?.borderColor = theme.colors.border.cgColor
+        layer?.borderWidth = .borderSize
+        addSubview(label)
         self.addSubview(self.imageView)
         
+        let layout = TextViewLayout(.initialize(string: L10n.chatWallpaperEmpty, color: theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+        layout.measure(width: .greatestFiniteMagnitude)
+        label.update(layout)
+        label.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        label.center()
     }
     
     required init?(coder: NSCoder) {
@@ -42,16 +54,33 @@ final class SettingsThemeWallpaperView: View {
             self.wallpaper = wallpaper
             switch wallpaper {
             case .builtin:
+                self.label.isHidden = true
                 self.imageView.isHidden = false
-                self.imageView.setSignal(settingsBuiltinWallpaperImage(account: account))
+
+                let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], reference: nil)
+                self.imageView.setSignal(signal: cachedMedia(media: media, size: size, scale: backingScaleFactor))
+                
+                let scale = backingScaleFactor
+                
+                self.imageView.setSignal(settingsBuiltinWallpaperImage(account: account, scale: backingScaleFactor), cacheImage: { signal in
+                    return cacheMedia(signal: signal, media: media, size: size, scale: scale)
+                })
+                
                 self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+
                 
             case let .color(color):
                 self.imageView.isHidden = true
+                self.label.isHidden = true
+                backgroundColor = NSColor(UInt32(color))
             case let .image(representations):
+                self.label.isHidden = true
                 self.imageView.isHidden = false
-                self.imageView.setSignal(chatAvatarGalleryPhoto(account: account, representations: representations, autoFetchFullSize: true))
+                self.imageView.setSignal(chatAvatarGalleryPhoto(account: account, representations: representations, autoFetchFullSize: true, scale: backingScaleFactor))
                 self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            case .none:
+                self.label.isHidden = false
+                self.imageView.isHidden = true
             default:
                 break
             }

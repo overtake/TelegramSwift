@@ -186,6 +186,7 @@ class InstantWindowContentView : View {
         super.init(frame: frameRect)
         addSubview(headerView)
         addSubview(contentView)
+        flip = false
         contentView.autoresizesSubviews = false
         layout()
     }
@@ -219,8 +220,8 @@ class InstantWindowContentView : View {
     
     override func layout() {
         super.layout()
-        headerView.frame = NSMakeRect(0, 0, frame.width, barHeight)
-        contentView.frame = NSMakeRect(0, headerView.frame.maxY, frame.width, frame.height - headerView.frame.height)
+        headerView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, barHeight)
+        contentView.frame = NSMakeRect(0, 0, frame.width, frame.height - headerView.frame.height)
         contentView.subviews.first?.frame = contentView.bounds
     }
 }
@@ -245,7 +246,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         self.page = page
         
         let height = (screen.frame.height * 0.7)
-        let center = NSMakeRect(floorToScreenPixels((screen.frame.width - 720)/2), floorToScreenPixels((screen.frame.height - height)/2), 720, height)
+        let center = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - 720)/2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - height)/2), 720, height)
         
         _window = Window(contentRect: center, styleMask: [.closable, .resizable, .miniaturizable, .fullSizeContentView, .titled, .unifiedTitleAndToolbar, .texturedBackground], backing: .buffered, defer: true)
        
@@ -418,7 +419,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                     var xs:[CGFloat] = [18, 58, 38]
                     for i in 0 ..< 3 {
                         let view = controls[i]
-                        view.setFrameOrigin(xs[i], floorToScreenPixels((barHeight - view.frame.height)/2))
+                        view.setFrameOrigin(xs[i], floorToScreenPixels(scaleFactor: System.backingScale, (barHeight - view.frame.height)/2))
                     }
                 }
             }

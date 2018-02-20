@@ -25,12 +25,39 @@ public enum TableBackgroundMode {
     case tiled(image: NSImage)
 }
 
+
+
 public class UpdateTransition<T> {
     public let inserted:[(Int,T)]
     public let updated:[(Int,T)]
     public let deleted:[Int]
     public let animateVisibleOnly: Bool
     public init(deleted:[Int], inserted:[(Int,T)], updated:[(Int,T)], animateVisibleOnly: Bool = true) {
+        
+
+  
+//        for d_idx in stride(from: deleted.count - 1, to: -1, by: -1) {
+//            in_loop: for i_idx in stride(from: inserted.count - 1, to: -1, by: -1) {
+//                if deleted[d_idx] == inserted[i_idx].0 {
+//                    if !updated.isEmpty {
+//                        u_loop: for u_udx in 0 ..< updated.count {
+//                            assert(updated[u_udx].0 != inserted[i_idx].0)
+//                            if updated[u_udx].0 > inserted[i_idx].0 {
+//                                updated.insert(inserted[i_idx], at: u_udx)
+//                                break u_loop
+//                            }
+//                        }
+//                    } else {
+//                        updated.append(inserted[i_idx])
+//                    }
+//
+//                    deleted.remove(at: d_idx)
+//                    inserted.remove(at: i_idx)
+//                    break in_loop
+//                }
+//            }
+//        }
+        
         self.inserted = inserted
         self.updated = updated
         self.deleted = deleted
@@ -248,11 +275,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
     
     func draw(_ layer: CALayer, in ctx: CGContext) {
-        //presentation.colors.background.cgColor
-        ctx.clear(frame)
-      //  ctx.setFillColor(NSColor.red.withAlphaComponent(0.5).cgColor)
-      //  ctx.fill(frame)
-        
+
         
        
         if let border = border {
@@ -319,7 +342,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 }
 
 public protocol InteractionContentViewProtocol : class {
-    func contentInteractionView(for stableId: AnyHashable) -> NSView?
+    func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView?
+    func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable)
+    func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView)
+
 }
 
 public class TableScrollListener : NSObject {
@@ -389,6 +415,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if super.layer?.backgroundColor != .clear {
             super.layer?.backgroundColor = presentation.colors.background.cgColor
         }
+        //tableView.background = .clear
+      //  super.layer?.backgroundColor = .clear
         self.needsDisplay = true
       //  tableView.needsDisplay = true
       //  clipView.needsDisplay = true
@@ -641,6 +669,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             return true
         }
+        tableView.reloadData()
         endTableUpdates()
         
         saveScrollState(visibleItems)
@@ -683,7 +712,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     private let stickTimeoutDisposable = MetaDisposable()
-    private var previousStickMinY: CGFloat = -1
+    private var previousStickMinY: CGFloat? = nil
     public func updateStickAfterScroll(_ animated: Bool) -> Void {
         let range = self.visibleRows()
         
@@ -711,10 +740,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                 }
                 
-                if let item = item as? TableStickItem {
+                if let someItem = item as? TableStickItem {
                     var currentStick:TableStickItem?
                     
-                    for index in stride(from: item.index - 1, to: -1, by: -1) {
+                    for index in stride(from: someItem.index - 1, to: -1, by: -1) {
                         let item = self.optionalItem(at: index)
                         if let item = item, item.isKind(of: stickClass) {
                             currentStick = item as? TableStickItem
@@ -723,16 +752,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                     
                     if stickView?.item != item {
-                        stickView?.set(item: item, animated: tableView.subviews.last == stickView)
+                        stickView?.set(item: someItem, animated: false)
+                        stickView?.updateIsVisible(!firstTime, animated: false)
                     }
                     
                     if let item = stickItem {
-                        (viewNecessary(at: item.index) as? TableStickView)?.updateIsVisible(!firstTime, animated: false)
+                        if let view = (viewNecessary(at: item.index) as? TableStickView) {
+                            view.updateIsVisible(!firstTime || !view.header, animated: false)
+                        }
                     }
-
-                    stickItem = currentStick ?? item
                     
-                    (viewNecessary(at: item.index) as? TableStickView)?.updateIsVisible(false, animated: false)
+                    stickItem = currentStick ?? someItem
+                    
+
+                    
                     
                     if let stickView = stickView {
                         if subviews.last != stickView {
@@ -741,8 +774,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                     }
                     
-                    stickView?.setFrameSize(tableView.frame.width, item.height)
-                    let itemRect:NSRect = tableView.rect(ofRow: item.index)
+                    stickView?.setFrameSize(tableView.frame.width, someItem.height)
+                    let itemRect:NSRect = someItem.view?.visibleRect ?? NSZeroRect
 
                     if let item = stickItem, item.isKind(of: stickClass), let stickView = stickView {
                         let rect:NSRect = tableView.rect(ofRow: item.index)
@@ -752,29 +785,43 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         } else {
                             dif = item.height
                         }
-                        var yTopOffset:CGFloat = min((scrollInset - rect.maxY) - rect.height, 0) 
+                        var yTopOffset:CGFloat = min((scrollInset - rect.maxY) - rect.height, 0)
                         if yTopOffset <= -rect.height {
                             yTopOffset = 0
                         }
+                        
+                        stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
+                        stickView.header = fabs(dif) <= item.height
+
+                        if !firstTime {
+                            let rows:[Int] = [tableView.row(at: NSMakePoint(0, scrollInset - 50)), tableView.row(at: NSMakePoint(0, scrollInset))]
+                            for row in rows {
+                                let row = min(max(0, row), list.count - 1)
+                                if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
+                                    view.updateIsVisible(yTopOffset < 0, animated: false)
+                                }
+                            }
+                        }
+                        
+                        
+                        if previousStickMinY == nil {
+                            previousStickMinY = documentOffset.y
+                        }
+                        
                         if previousStickMinY != documentOffset.y {
-                            stickView.isHidden = firstTime
+                            stickView.isHidden = false
                             previousStickMinY = documentOffset.y
                             if !animated || stickView.layer?.opacity != 0 {
-                                stickView.change(opacity: 1, animated: !firstTime)
+                                stickView.updateIsVisible(true, animated: true)
                                 firstTime = false
                             }
                         }
-                        stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
-                        stickView.header = fabs(dif) <= item.height
-                        stickTimeoutDisposable.set((Signal<Void, Void>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView, weak item] in
-                            if let item = item, abs(itemRect.minY - yTopOffset) > item.height, let stickView = stickView {
-                                stickView.change(opacity: 0.0, completion: { [weak stickView] completed in
-                                    if completed {
-                                        stickView?.isHidden = true
-                                    }
-                                })
-                            }
 
+                        stickTimeoutDisposable.set((Signal<Void, Void>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
+                            
+                            if itemRect.height == 0, let stickView = stickView {
+                                stickView.updateIsVisible(false, animated: true)
+                            }
                         }))
                         
                     }
@@ -1230,7 +1277,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     func rowView(item:TableRowItem) -> TableRowView {
         let identifier:String = item.identifier
         
-        var view = self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
+        var view: NSView? = item.isUniqueView ? nil : self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
             
@@ -1349,6 +1396,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        if transition.isEmpty {
+            return
+        }
+        
         let oldEmpty = self.isEmpty
         
         self.beginUpdates()
@@ -1361,7 +1412,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var inserted:[TableRowItem] = []
         var removed:[TableRowItem] = []
-
+        
+        
+        
         for rdx in transition.deleted.reversed() {
             let effect:NSTableView.AnimationOptions
             if case let .none(interface) = transition.state, interface != nil {
@@ -1498,8 +1551,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             y = nrect.minY - visible.1
                         }
                     }
+                    
+                    
                     self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
                     reflectScrolledClipView(clipView)
+                    
+                    
                     break
                 }
             }
@@ -1554,7 +1611,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         reloadData(row: index, animated: animated)
     }
 
-    public func contentInteractionView(for stableId: AnyHashable) -> NSView? {
+    public func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
         var item = self.item(stableId: stableId)
         
         if item == nil {
@@ -1566,7 +1623,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let item = item {
             let view = viewNecessary(at:item.index)
             if let view = view, !NSIsEmptyRect(view.visibleRect) {
-                return view.interactionContentView(for: stableId)
+                return view.interactionContentView(for: stableId, animateIn: animateIn)
             }
            
         }
@@ -1574,6 +1631,39 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
+    public func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable) {
+        var item = self.item(stableId: stableId)
+        
+        if item == nil {
+            if let groupStableId = delegate?.findGroupStableId(for: stableId) {
+                item = self.item(stableId: groupStableId)
+            }
+        }
+        
+        if let item = item {
+            let view = viewNecessary(at:item.index)
+            if let view = view, !NSIsEmptyRect(view.visibleRect) {
+                view.interactionControllerDidFinishAnimation(interactive: interactive, innerId: stableId)
+            }
+        }
+    }
+    
+    public func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        var item = self.item(stableId: stableId)
+
+        if item == nil {
+            if let groupStableId = delegate?.findGroupStableId(for: stableId) {
+                item = self.item(stableId: groupStableId)
+            }
+        }
+        
+        if let item = item {
+            let rowView = viewNecessary(at:item.index)
+            if let rowView = rowView, !NSIsEmptyRect(view.visibleRect) {
+                rowView.addAccesoryOnCopiedView(innerId: stableId, view: view)
+            }
+        }
+    }
 
     func selectRow(index: Int) {
         if self.count > index {
@@ -1688,11 +1778,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             case .center:
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0) - bottomInset
+                    rowRect.origin.y -= floorToScreenPixels(scaleFactor: backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
                 } else {
                     
                     if rowRect.maxY > height/2.0 {
-                        rowRect.origin.y -= floorToScreenPixels((height - rowRect.height) / 2.0) - bottomInset
+                        rowRect.origin.y -= floorToScreenPixels(scaleFactor: backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
                     } else {
                         rowRect.origin.y = 0
                     }

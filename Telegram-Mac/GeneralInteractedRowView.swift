@@ -121,6 +121,7 @@ class GeneralInteractedRowView: GeneralRowView {
         }
         super.set(item: item, animated: animated)
         self.needsLayout = true
+        self.needsDisplay = true
     }
     
     override var backdorColor: NSColor {
@@ -175,15 +176,15 @@ class GeneralInteractedRowView: GeneralRowView {
                 textRect.origin.x = item.inset.left + textXAdditional
                 textRect.origin.y -= 1
                 if item.descLayout != nil {
-                    textRect.origin.y = floorToScreenPixels(frame.height/2) - nameLayout.0.size.height - 2
+                    textRect.origin.y = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height/2) - nameLayout.0.size.height - 2
                 }
                 
-                nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor)
+                nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
             if case let .colorSelector(stateback) = item.type {
                 ctx.setFillColor(stateback().cgColor)
-                ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels((frame.height - 14) / 2), 14, 14))
+                ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - 14) / 2), 14, 14))
             }
         }
         
@@ -212,7 +213,7 @@ class GeneralInteractedRowView: GeneralRowView {
             self.overlay.frame = NSMakeRect(inset.left, 0, frame.width - inset.left - inset.right, frame.height)
             
             if let descriptionView = descriptionView {
-                descriptionView.setFrameOrigin(inset.left, floorToScreenPixels(frame.height / 2) + 2)
+                descriptionView.setFrameOrigin(inset.left, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) + 2)
             }
             
             let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (inset.right == 0 ? 10 : 0)

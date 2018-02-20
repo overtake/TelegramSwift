@@ -66,14 +66,8 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            fetchDisposable.set((chatMessageFileInteractiveFetched(account: account, file: media) |> mapToSignal { source -> Signal<Void, NoError> in
-                if source == .remote {
-                    return copyToDownloads(media, account: account)
-                } else {
-                    return .single(Void())
-                }
-            }).start())
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
         }
     }
     
@@ -89,8 +83,8 @@ class ChatFileContentView: ChatMediaContentView {
 
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            chatMessageFileCancelInteractiveFetch(account: account, file: media)
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
+            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
         }
     }
     
@@ -114,15 +108,20 @@ class ChatFileContentView: ChatMediaContentView {
 
             let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
             
-            if !(file.resource is LocalFileReferenceMediaResource) {
+            if !(file.resource is LocalFileReferenceMediaResource), let account = account {
                 let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-                let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
+                let isIncoming = parent?.isIncoming(account, theme.bubbled) == true
+                let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
                 attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
             }
         case .Remote:
-            let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: presentation.grayText, font: .normal(.text))
-            let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled ? presentation.grayText : presentation.link, font: .medium(.text))
-            attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
+            if let account = account {
+                let isIncoming = parent?.isIncoming(account, theme.bubbled) == true
+                let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: presentation.grayText, font: .normal(.text))
+                let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
+                attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
+            }
+            
         }
 
         return TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
@@ -155,22 +154,30 @@ class ChatFileContentView: ChatMediaContentView {
                 updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue
             }
             
+            let stableId:Int64
+            if let sId = parent?.stableId {
+                stableId = Int64(sId)
+            } else {
+                stableId = file.id?.id ?? 0
+            }
+            
             if !file.previewRepresentations.isEmpty {
                 
                 let arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: file.previewRepresentations[0].dimensions, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
                 
-                if !animated {
-                    thumbView.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor))
+                thumbView.setSignal(signal: cachedMedia(messageId: stableId, size: arguments.imageSize, scale: backingScaleFactor))
+                
+                if !thumbView.hasImage {
+                    thumbView.setSignal( chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
+                        if let strongSelf = self {
+                            return cacheMedia(signal: image, messageId: stableId, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                        } else {
+                            return .complete()
+                        }
+                    })
                 }
                 
-                
-                thumbView.setSignal( chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
-                    if let strongSelf = self {
-                        return cacheMedia(signal: image, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
-                    } else {
-                        return .complete()
-                    }
-                })
+               
                 thumbView.set(arguments: arguments)
             } else {
                 thumbView.setSignal(signal: .single(nil))
@@ -217,13 +224,12 @@ class ChatFileContentView: ChatMediaContentView {
         }
         
         
-        
     }
     
     override func layout() {
         super.layout()
         if let parameters = parameters as? ChatFileLayoutParameters {
-            let center = floorToScreenPixels((parameters.hasThumb ? 70 : 40) / 2)
+            let center = floorToScreenPixels(scaleFactor: backingScaleFactor, (parameters.hasThumb ? 70 : 40) / 2)
             actionText.setFrameOrigin(leftInset, parameters.hasThumb ? center + 2 : 20)
             
             if parameters.hasThumb {
@@ -259,8 +265,8 @@ class ChatFileContentView: ChatMediaContentView {
         let parameters = self.parameters as? ChatFileLayoutParameters
 
         if let name = parameters?.name {
-            let center = floorToScreenPixels(frame.height/2)
-            name.1.draw(NSMakeRect(leftInset, isHasThumb ? center - name.0.size.height - 2 : 1, name.0.size.width, name.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            let center = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height/2)
+            name.1.draw(NSMakeRect(leftInset, isHasThumb ? center - name.0.size.height - 2 : 1, name.0.size.width, name.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     
@@ -271,7 +277,7 @@ class ChatFileContentView: ChatMediaContentView {
         return progressView.copy()
     }
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         if let media = media as? TelegramMediaFile, !media.previewRepresentations.isEmpty {
             return thumbView
         }
@@ -289,6 +295,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func clean() {
         statusDisposable.dispose()
+        fetchDisposable.dispose()
     }
     
 }

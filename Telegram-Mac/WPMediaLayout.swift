@@ -18,12 +18,12 @@ class WPMediaLayout: WPLayout {
 
     var mediaSize:NSSize = NSZeroSize
     private(set) var media:TelegramMediaFile
-    var parameters:ChatMediaLayoutParameters?
-    override init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
-        self.media = content.file! 
+    let parameters:ChatMediaLayoutParameters?
+    init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, downloadSettings: AutomaticMediaDownloadSettings) {
+        self.media = content.file!
+        self.parameters = ChatMediaLayoutParameters.layout(for: content.file!, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: account, renderType: presentation.renderType), automaticDownload: downloadSettings.isDownloable(parent))
         super.init(with: content, account: account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: self.media, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: account, renderType: presentation.renderType))
     }
     
     override func measure(width: CGFloat) {

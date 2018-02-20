@@ -126,8 +126,17 @@ func delay(_ delay:Double, closure:@escaping ()->()) {
 
 func fileSize(_ path:String) -> Int32? {
     
-    if let attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
+    if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
+    
+        if attrs["NSFileType"] as? String == "NSFileTypeSymbolicLink" {
+            if let path = try? FileManager.default.destinationOfSymbolicLink(atPath: path) {
+                attrs = (try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary) ?? attrs
+            }
+        }
+        
+        
         let size = attrs.fileSize()
+    
         if size > UInt64(INT32_MAX) {
             return INT32_MAX
         }

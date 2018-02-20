@@ -286,6 +286,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
     
     public func updateLocalizationAndTheme() {
         guard let documentView = documentView else {return}
+        layer?.backgroundColor = presentation.colors.background.cgColor
         for view in documentView.subviews {
             if let view = view as? AppearanceViewProtocol {
                 view.updateLocalizationAndTheme()
@@ -461,7 +462,8 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                             
                         }
                     }
-                    
+                    strongSelf.reflectScrolledClipView(strongSelf.contentView)
+
                 }
                 
             })
@@ -505,14 +507,14 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             switch gridLayout.type {
             case let .fixed(itemSize, lineSpacing):
                 
-               // let s = floorToScreenPixels(gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
+               // let s = floorToScreenPixels(scaleFactor: backingScaleFactor, gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
                // let itemSize = NSMakeSize(s, s)
                 
                 let itemsInRow = Int(gridLayout.size.width / itemSize.width)
                 let itemsInRowWidth = CGFloat(itemsInRow) * itemSize.width
                 let remainingWidth = max(0.0, gridLayout.size.width - itemsInRowWidth)
                 
-                let itemSpacing = floorToScreenPixels(remainingWidth / CGFloat(itemsInRow + 1))
+                let itemSpacing = floorToScreenPixels(scaleFactor: backingScaleFactor, remainingWidth / CGFloat(itemsInRow + 1))
                 
                 var incrementedCurrentRow = false
                 var nextItemOrigin = CGPoint(x: itemSpacing, y: 0.0)
@@ -853,8 +855,8 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         if !documentOffset.equalTo(presentationLayoutTransition.layout.contentOffset) || self.bounds.size != presentationLayoutTransition.layout.layout.size {
             //self.scrollView.contentOffset = presentationLayoutTransition.layout.contentOffset
             self.contentView.bounds = CGRect(origin: presentationLayoutTransition.layout.contentOffset, size: self.contentView.bounds.size)
-            reflectScrolledClipView(contentView)
         }
+        reflectScrolledClipView(contentView)
         applyingContentOffset = false
         
         let lowestSectionNode: View? = self.lowestSectionNode()
@@ -1202,13 +1204,21 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
     }
     
     
-    public func contentInteractionView(for stableId: AnyHashable) -> NSView? {
+    public func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
         for (_, node) in itemNodes {
             if node.stableId == stableId {
                 return node
             }
         }
         return nil;
+    }
+    
+    public func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable) {
+        
+    }
+    
+    public func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        
     }
     
     public func forEachRow(_ f: ([View]) -> Void) {

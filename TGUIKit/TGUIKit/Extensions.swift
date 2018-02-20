@@ -57,15 +57,15 @@ public extension String {
         
         let tokens:[String] = ["Bytes", "KB", "MB", "GB", "TB"]
         
-        while converted > 1024.0 {
+        while converted >= 1024.0 {
             converted /= 1024.0
             factor += 1
         }
         
         if factor == 0 {
-            converted = 1.0
+            //converted = 0
         }
-        factor = Swift.max(1,factor)
+        //factor = Swift.max(1,factor)
         
         if ceil(converted) - converted != 0.0 {
             return String(format: "%.2f %@", converted, tokens[factor])
@@ -73,6 +73,59 @@ public extension String {
             return String(format: "%.0f %@", converted, tokens[factor])
         }
         
+    }
+    
+    public var trimmed:String {
+        
+        var string:String = self
+        while !string.isEmpty, let index = string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines), index.lowerBound == string.startIndex {
+            string = String(string[index.upperBound..<string.endIndex])
+        }
+        while !string.isEmpty, let index = string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines, options: .literal, range: string.index(string.endIndex, offsetBy: -1) ..< string.endIndex) {
+            string = String(string[..<index.lowerBound])
+        }
+        
+        return string
+    }
+    
+    public var fullTrimmed: String {
+        var copy: String = self
+        var index: String.Index = copy.index(after: copy.startIndex)
+        
+        var newLineIndexEnd: String.Index? = nil
+        
+        
+        
+        while index != copy.endIndex {
+            
+            if let idx = newLineIndexEnd {
+                let substring = copy[index..<copy.index(after: idx)]
+                let symbols = substring.filter({$0 != "\n"})
+                let newLines = substring.filter({$0 == "\n"})
+                if symbols.isEmpty {
+                    newLineIndexEnd = copy.index(after: idx)
+                } else {
+                    if newLines.utf8.count > 2 {
+                        copy = String(copy[..<index] + "\n\n" + copy[idx..<copy.endIndex])
+                        newLineIndexEnd = nil
+                        index = copy.index(after: copy.startIndex)
+                    } else {
+                        index = copy.index(after: idx)
+                        newLineIndexEnd = nil
+                    }
+                }
+            } else {
+                let first = String(copy[index..<copy.index(after: index)])
+                
+                if first == "\n" {
+                    newLineIndexEnd = copy.index(after: index)
+                } else {
+                    index = copy.index(after: index)
+                }
+            }
+            
+        }
+        return copy
     }
 
 }
@@ -198,9 +251,11 @@ public extension CALayer {
     
     public func disableActions() -> Void {
         
-        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]
-
+        self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(), "background":NSNull(), "position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]
+        removeAllAnimations()
     }
+    
+    
     
     public func animateBackground() ->Void {
         let animation = CABasicAnimation(keyPath: "backgroundColor")
@@ -717,6 +772,8 @@ public extension CGContext {
     }
 }
 
+
+
 public extension NSRange {
     public var min:Int {
         return self.location
@@ -910,6 +967,18 @@ public extension String {
     public func prefix(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
             return String(self[..<index])
+        }
+        return String(stringLiteral: self)
+    }
+    
+    public func prefixWithDots(_ by:Int) -> String {
+        if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
+            var new = String(self[..<index])
+            if new.length != self.length {
+                new += "..."
+                return new
+            }
+            return new
         }
         return String(stringLiteral: self)
     }

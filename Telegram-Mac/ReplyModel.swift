@@ -60,20 +60,23 @@ class ReplyModel: ChatAccessoryModel {
     override var leftInset: CGFloat {
         var imageDimensions: CGSize?
         if let message = replyMessage {
-            for media in message.media {
-                if let image = media as? TelegramMediaImage {
-                    if let representation = largestRepresentationForPhoto(image) {
-                        imageDimensions = representation.dimensions
+            if !message.containsSecretMedia {
+                for media in message.media {
+                    if let image = media as? TelegramMediaImage {
+                        if let representation = largestRepresentationForPhoto(image) {
+                            imageDimensions = representation.dimensions
+                        }
+                        break
                     }
-                    break
+                    //                else if let file = media as? TelegramMediaFile {
+                    //                    if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
+                    //                        imageDimensions = representation.dimensions
+                    //                    }
+                    //                    break
+                    //                }
                 }
-//                else if let file = media as? TelegramMediaFile {
-//                    if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
-//                        imageDimensions = representation.dimensions
-//                    }
-//                    break
-//                }
             }
+
             
             if let _ = imageDimensions {
                 return 30 + super.leftInset * 2
@@ -97,15 +100,18 @@ class ReplyModel: ChatAccessoryModel {
             if let message = self.replyMessage, let view = self.view, view.frame != NSZeroRect {
                 var updatedMedia: Media?
                 var imageDimensions: CGSize?
-                for media in message.media {
-                    if let image = media as? TelegramMediaImage {
-                        updatedMedia = image
-                        if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions
+                if !message.containsSecretMedia {
+                    for media in message.media {
+                        if let image = media as? TelegramMediaImage {
+                            updatedMedia = image
+                            if let representation = largestRepresentationForPhoto(image) {
+                                imageDimensions = representation.dimensions
+                            }
+                            break
                         }
-                        break
                     }
                 }
+               
                 
                 if let imageDimensions = imageDimensions {
                     let boundingSize = CGSize(width: 30.0, height: 30.0)
@@ -116,7 +122,8 @@ class ReplyModel: ChatAccessoryModel {
                     }
                     view.imageView?.setFrameSize(boundingSize)
                     view.addSubview(view.imageView!)
-                    view.imageView?.centerY(x: super.leftInset + (self.isSideAccessory ? 10 : 0))
+                    
+                    view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(scaleFactor: System.backingScale, self.topOffset + (self.size.height - self.topOffset - boundingSize.height)/2))
                     
                     
                     let mediaUpdated = true
@@ -132,16 +139,12 @@ class ReplyModel: ChatAccessoryModel {
                     }
                     
                     if let updateImageSignal = updateImageSignal, let media = updatedMedia {
-                        
                         view.imageView?.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
-                        
-                        if view.imageView?.layer?.contents == nil {
-                            view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
-                                return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
-                            })
-                            if let media = media as? TelegramMediaImage {
-                                self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, photo: media).start())
-                            }
+                        view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
+                            return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
+                        })
+                        if let media = media as? TelegramMediaImage {
+                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, photo: media).start())
                         }
                         
                         view.imageView?.set(arguments: arguments)

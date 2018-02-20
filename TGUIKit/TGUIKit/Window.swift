@@ -120,6 +120,7 @@ public class Window: NSWindow {
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
     public var closeInterceptor:(()->Void)? = nil
+    public var orderOutHandler:(()->Void)? = nil
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -319,6 +320,11 @@ public class Window: NSWindow {
     public override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
     }
+    public override func orderOut(_ sender: Any?) {
+        super.orderOut(sender)
+        orderOutHandler?()
+    }
+    
     
     public override func close() {
         if let closeInterceptor = closeInterceptor {
@@ -366,7 +372,7 @@ public class Window: NSWindow {
                 
                 if let globalHandler = keyHandlers[.All]?.sorted(by: >).first, let keyCode = KeyboardKey(rawValue:event.keyCode) {
                     if let handle = keyHandlers[keyCode]?.sorted(by: >).first {
-                        if globalHandler.object.value != handle.object.value {
+                        if globalHandler.priority > handle.priority {
                             if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
                                 switch globalHandler.handler() {
                                 case .invoked:

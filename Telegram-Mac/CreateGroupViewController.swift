@@ -166,7 +166,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         
         disposable.set(signal.start(next: { (transition) in
             table.merge(with: transition)
-            table.reloadData()
+            //table.reloadData()
         }))
     }
     

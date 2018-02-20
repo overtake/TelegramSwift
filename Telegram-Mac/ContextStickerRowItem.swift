@@ -122,7 +122,7 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
         if let item = item as? ContextStickerRowItem  {
             let defSize = NSMakeSize( item.result.sizes[0].width - 4,  item.result.sizes[0].height - 4)
             
-            let defInset = floorToScreenPixels((frame.width - defSize.width * CGFloat(item.result.maxCount)) / CGFloat(item.result.maxCount + 1))
+            let defInset = floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.width - defSize.width * CGFloat(item.result.maxCount)) / CGFloat(item.result.maxCount + 1))
             var inset = defInset
             
             for i in 0 ..< item.result.entries.count {

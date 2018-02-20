@@ -182,7 +182,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .peersHeader(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .peer(_, _, peer, value):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(stateback: { () -> String in
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, isLookSavedMessage: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(stateback: { () -> String in
                 return value
             }), action: { 
                 arguments.openPeerMedia(peer.id)
@@ -354,8 +354,7 @@ class StorageUsageController: TableViewController {
                                         }
                                     }
                                 }
-                                
-                                statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers))))
+                                statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize))))
                                 
                                 clearDisposable.set(clearCachedMediaResources(account: account, mediaResourceIds: clearResourceIds).start())
                             }
@@ -366,9 +365,8 @@ class StorageUsageController: TableViewController {
             })
         }, clearAll: {
             let path = account.postbox.mediaBox.basePath
-            
-            _ = showModalProgress(signal: clearCache(path), for: mainWindow).start()
-            statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:]))))
+            _ = showModalProgress(signal: combineLatest(clearCache(path), clearImageCache(), account.postbox.mediaBox.clearFileContexts()), for: mainWindow).start()
+            statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0))))
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<StorageUsageEntry>]> = Atomic(value: [])

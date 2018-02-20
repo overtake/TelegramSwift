@@ -70,7 +70,7 @@ public class LinearProgressControl: Control {
     public func set(progress:CGFloat, animated:Bool = false) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
-        let size = NSMakeSize(floorToScreenPixels(frame.width * progress), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width * progress), progressHeight)
         progressView.change(size: size, animated: animated)
         progressView.setFrameOrigin(NSMakePoint(0, frame.height - progressHeight))
     }
@@ -87,16 +87,19 @@ public class LinearProgressControl: Control {
     
     public override func layout() {
         super.layout()
-        progressView.setFrameSize(progressView.frame.width, progressHeight)
+        
+        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width * progress), progressHeight)
+
+        progressView.setFrameSize(size)
         containerView.setFrameOrigin(0, frame.height - containerView.frame.height)
+        
     }
     
 
     private func initialize() {
         
         containerView = Control(frame:NSMakeRect(0, 0, 0, progressHeight))
-        containerView.wantsLayer = true
-        containerView.layer?.backgroundColor = style.foregroundColor.cgColor
+        containerView.backgroundColor = style.foregroundColor
         addSubview(containerView)
 
         
@@ -104,15 +107,15 @@ public class LinearProgressControl: Control {
         progressView.backgroundColor = style.foregroundColor
         addSubview(progressView)
         
+        
     }
+    
     
     private func updateCursor() {
         if mouseInside() && onUserChanged != nil {
             set(background: style.highlightColor.withAlphaComponent(0.2), for: .Hover)
-            NSCursor.pointingHand.set()
         } else {
             set(background: style.backgroundColor, for: .Hover)
-            NSCursor.arrow.set()
         }
     }
     

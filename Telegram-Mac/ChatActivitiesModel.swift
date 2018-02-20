@@ -25,7 +25,7 @@ class ChatActivitiesView : View {
     
     
     private let textView:TextView = TextView()
-    private let animationView:ImageView = ImageView(frame: NSMakeRect(0,-4,30,20))
+    private let animationView:NSView = NSView(frame: NSMakeRect(0,-4,30,20))
     private var isAnimating:Bool = false
     
     private var type:ChatActivityAnimation?
@@ -33,8 +33,10 @@ class ChatActivitiesView : View {
     
     override init() {
         super.init()
+        animationView.wantsLayer = true
         addSubview(textView)
         addSubview(animationView)
+        layer?.disableActions()
     }
     
     override func layout() {
@@ -56,7 +58,6 @@ class ChatActivitiesView : View {
         } else {
             startAnimation(params.0, theme:theme)
         }
-        
         if let layout = params.1 {
             setFrameSize(layout.layoutSize.width + animationView.frame.width, layout.layoutSize.height)
         }
@@ -70,16 +71,22 @@ class ChatActivitiesView : View {
         let animation = CAKeyframeAnimation(keyPath: "contents")
         switch type {
         case .recording:
+            animationView.layer?.contents = theme.recording.first
             animation.values = theme.recording
             animation.duration = 0.7
         case .uploading:
+            animationView.layer?.contents = theme.uploading.first
             animation.values = theme.uploading
             animation.duration = 1.75
         default:
+            animationView.layer?.contents = theme.text.first
             animation.values = theme.text
             animation.duration = 0.7
         }
-        animation.repeatCount = .greatestFiniteMagnitude
+        
+        animationView.layer?.removeAllAnimations()
+        animation.repeatCount = .infinity
+        animation.isRemovedOnCompletion = false
         animationView.layer?.add(animation, forKey: "contents")
         
     }
@@ -98,8 +105,6 @@ class ChatActivitiesView : View {
         if realyStop {
             isAnimating = false
         }
-        animationView.layer?.removeAllAnimations()
-        animationView.sizeToFit()
     }
     
     required init(frame frameRect: NSRect) {
@@ -133,7 +138,6 @@ class ChatActivitiesModel: Node {
         return Signal { subscriber in
             
 
-            
             if !activities.1.isEmpty {
                 let layout:TextViewLayout
                 var animation:ChatActivityAnimation = .text
@@ -159,30 +163,27 @@ class ChatActivitiesModel: Node {
                             case .recordingVoice:
                                 animation = .recording
                             _ = text.append(string:
-                                tr(L10n.peerActivityChatMultiRecordingAudio1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
+                                tr(L10n.peerActivityChatMultiRecordingAudio1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .uploadingFile:
                              animation = .uploading
-                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingFile1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingFile1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .uploadingPhoto:
                             animation = .uploading
-                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingPhoto1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingPhoto1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .uploadingVideo:
                             animation = .uploading
-                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingVideo1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
-                        //case .playingGame:
-                            
-                            //_ = text.append(string: tr(L10n.peerActivityChatMultiPlayingGame(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingVideo1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .recordingInstantVideo:
                             animation = .recording
-                            _ = text.append(string: tr(L10n.peerActivityChatMultiRecordingVideo1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiRecordingVideo1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         default:
                             animation = .text
-                            _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         }
                     } else {
                         animation = .text
                         if activities.1.count > 2 {
-                            _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         } else {
                             let names = activities.1.map({$0.0.compactDisplayTitle}).joined(separator: ", ")
                             _ = text.append(string: names, color: theme.textColor, font: .normal(.text))
@@ -197,7 +198,7 @@ class ChatActivitiesModel: Node {
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
                             _ = text.append(string: tr(L10n.peerActivityUserRecordingAudio), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatRecordingAudio(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .uploadingFile:
                         animation = .uploading
@@ -205,7 +206,7 @@ class ChatActivitiesModel: Node {
                             
                             _ = text.append(string:tr(L10n.peerActivityUserSendingFile), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatSendingFile(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .uploadingVideo:
                         animation = .uploading
@@ -213,7 +214,7 @@ class ChatActivitiesModel: Node {
                             
                             _ = text.append(string:tr(L10n.peerActivityUserSendingVideo), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatSendingVideo(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .uploadingPhoto:
                         animation = .uploading
@@ -221,21 +222,21 @@ class ChatActivitiesModel: Node {
                             
                             _ = text.append(string:tr(L10n.peerActivityUserSendingPhoto), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatSendingPhoto(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .recordingInstantVideo:
                         animation = .recording
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
                             _ = text.append(string: tr(L10n.peerActivityUserRecordingVideo), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatRecordingVideo(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     default:
                         animation = .text
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
                             _ = text.append(string: tr(L10n.peerActivityUserTypingText), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatTypingText(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     }
                 }

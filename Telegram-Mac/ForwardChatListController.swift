@@ -20,6 +20,10 @@ class ForwardChatListController: ChatListController {
         return button
     }
     
+    override func getRightBarViewOnce() -> BarView {
+        return BarView(controller: self)
+    }
+    
     init(_ account: Account) {
         super.init(account, modal:true)
     }

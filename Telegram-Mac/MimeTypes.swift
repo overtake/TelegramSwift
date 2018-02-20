@@ -59,8 +59,6 @@ func resourceType(mimeType:String? = nil, orExt:String? = nil) -> Signal<String?
 }
 
 func MIMEType(_ fileExtension: String) -> String {
-    
-
     if let ext = extensionstore[fileExtension] {
         return ext
     } else {
@@ -79,8 +77,13 @@ func MIMEType(_ fileExtension: String) -> String {
         }
         return "application/octet-stream"
     }
-    
-    
+}
+
+func fileExt(_ mimeType: String) -> String? {
+    if let ext = mimestore[mimeType] {
+        return ext
+    }
+    return nil
 }
 
 let voiceMime = "audio/ogg"

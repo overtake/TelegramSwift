@@ -57,7 +57,6 @@ private class VideoPlayerView : AVPlayerView {
             if let pip = controls.subviews.last as? ImageButton {
                 pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, controls.frame.height - pip.frame.height - 20)
             }
-            controls.centerX(y: 95)
             
             controls._change(opacity: _mouseInside() ? 1 : 0, animated: true)
             
@@ -142,7 +141,7 @@ class MGalleryVideoItem: MGalleryItem {
             }
         }, for: .Down)
         
-        pip.sizeToFit()
+        _ = pip.sizeToFit()
 
         pipButton = pip
         
@@ -235,7 +234,6 @@ class MGalleryVideoItem: MGalleryItem {
             return .single(transform(arguments)?.generateImage())
         }
         
-
         path.set(account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, Void> in
             if resource.complete {
                 return .single(link(path:resource.path, ext:kMediaVideoExt)!)
@@ -252,8 +250,8 @@ class MGalleryVideoItem: MGalleryItem {
     
     
     override func fetch() -> Void {
-
-        fetching.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
+       
+        _ = freeMediaFileInteractiveFetched(account: account, file: media).start()
     }
 
 }

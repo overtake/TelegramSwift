@@ -255,15 +255,15 @@ struct PeerMediaUpdate {
 class PeerMediaListController: GenericViewController<TableView> {
     
     private var account:Account
-    private var peerId:PeerId
+    private var chatLocation:ChatLocation
     private var chatInteraction:ChatInteraction
     private let disposable: MetaDisposable = MetaDisposable()
     private let entires = Atomic<[PeerMediaSharedEntry]?>(value: nil)
     private let updateView = Atomic<PeerMediaUpdate?>(value: nil)
     private let searchState:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
-    public init(account: Account, peerId: PeerId, chatInteraction: ChatInteraction) {
+    public init(account: Account, chatLocation: ChatLocation, chatInteraction: ChatInteraction) {
         self.account = account
-        self.peerId = peerId
+        self.chatLocation = chatLocation
         self.chatInteraction = chatInteraction
         super.init()
     }
@@ -298,7 +298,7 @@ class PeerMediaListController: GenericViewController<TableView> {
          |> mapToSignal { [weak self] location, searchState -> Signal<PeerMediaUpdate, NoError> in
             if let strongSelf = self {
                 if searchState.request.isEmpty {
-                    return chatHistoryViewForLocation(location, account: strongSelf.account, peerId: strongSelf.peerId, fixedCombinedReadState: nil, tagMask: tagMask, additionalData: []) |> mapToQueue { view -> Signal<PeerMediaUpdate, Void> in
+                    return chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> mapToQueue { view -> Signal<PeerMediaUpdate, Void> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())
@@ -316,8 +316,15 @@ class PeerMediaListController: GenericViewController<TableView> {
                         }
                     }
                 } else {
+                    let searchMessagesLocation: SearchMessagesLocation
+                    switch strongSelf.chatLocation {
+                    case let .group(groupId):
+                        searchMessagesLocation = .group(groupId)
+                    case let .peer(peerId):
+                        searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask)
+                    }
                     
-                    return .single(PeerMediaUpdate()) |> then(searchMessages(account: strongSelf.account, location: .peer(peerId: strongSelf.peerId, fromId: nil, tags: tagMask), query: searchState.request) |> deliverOnMainQueue |> map { messages -> PeerMediaUpdate in
+                    return .single(PeerMediaUpdate()) |> then(searchMessages(account: strongSelf.account, location: searchMessagesLocation, query: searchState.request) |> deliverOnMainQueue |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
                     })
                 }

@@ -1,5 +1,5 @@
 //
-//  TextSizeSettingsRowItem.swift
+//  SelectSizeRowItem.swift
 //  Telegram
 //
 //  Created by keepcoder on 15/12/2017.
@@ -11,27 +11,29 @@ import TGUIKit
 
 
 
-class TextSizeSettingsRowItem: GeneralRowItem {
+class SelectSizeRowItem: GeneralRowItem {
 
 
     fileprivate let sizes: [Int32]
     fileprivate let current: Int32
     fileprivate let selectAction:(Int)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], selectAction: @escaping(Int)->Void) {
+    fileprivate let hasMarkers: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, selectAction: @escaping(Int)->Void) {
         self.sizes = sizes
+        self.hasMarkers = hasMarkers
         self.current = current
         self.selectAction = selectAction
         super.init(initialSize, height: 50, stableId: stableId)
     }
     
     override func viewClass() -> AnyClass {
-        return TextSizeSettingsRowView.self
+        return SelectSizeRowView.self
     }
     
     
 }
 
-private class TextSizeSettingsRowView : TableRowView {
+private class SelectSizeRowView : TableRowView {
     
     private var availableRects:[NSRect] = []
     
@@ -42,7 +44,7 @@ private class TextSizeSettingsRowView : TableRowView {
     
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
-        guard let item = item as? TextSizeSettingsRowItem, !item.sizes.isEmpty else {return}
+        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {return}
         
         if item.sizes.count == availableRects.count {
             let point = convert(event.locationInWindow, from: nil)
@@ -56,7 +58,7 @@ private class TextSizeSettingsRowView : TableRowView {
     
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
-        guard let item = item as? TextSizeSettingsRowItem, !item.sizes.isEmpty else {return}
+        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {return}
         
         if item.sizes.count == availableRects.count {
             let point = convert(event.locationInWindow, from: nil)
@@ -73,29 +75,30 @@ private class TextSizeSettingsRowView : TableRowView {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        guard let item = item as? TextSizeSettingsRowItem, !item.sizes.isEmpty else {return}
+        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {return}
         
         let minFontSize = CGFloat(item.sizes.first!)
         let maxFontSize = CGFloat(item.sizes.last!)
         
-        let minNode = TextNode.layoutText(NSAttributedString.initialize(string: "A", color: theme.colors.text, font: .normal(minFontSize)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+        let minNode = TextNode.layoutText(.initialize(string: "A", color: theme.colors.text, font: .normal(min(minFontSize, 11))), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
         
-        let maxNode = TextNode.layoutText(NSAttributedString.initialize(string: "A", color: theme.colors.text, font: .normal(maxFontSize)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+        let maxNode = TextNode.layoutText(.initialize(string: "A", color: theme.colors.text, font: .normal(min(maxFontSize, 15))), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
 
-        let minF = focus(minNode.0.size)
-        let maxF = focus(maxNode.0.size)
+        let minF = focus(item.hasMarkers ? minNode.0.size : NSZeroSize)
+        let maxF = focus(item.hasMarkers ? maxNode.0.size : NSZeroSize)
         
-        minNode.1.draw(NSMakeRect(item.inset.left, minF.minY, minF.width, minF.height), in: ctx, backingScaleFactor: backingScaleFactor)
-        
-        maxNode.1.draw(NSMakeRect(frame.width - item.inset.right - maxF.width, maxF.minY, maxF.width, maxF.height), in: ctx, backingScaleFactor: backingScaleFactor)
+        if item.hasMarkers {
+            minNode.1.draw(NSMakeRect(item.inset.left, minF.minY, minF.width, minF.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+            maxNode.1.draw(NSMakeRect(frame.width - item.inset.right - maxF.width, maxF.minY, maxF.width, maxF.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+        }
         
         let count = CGFloat(item.sizes.count)
         
-        let insetBetweenFont: CGFloat = 20
+        let insetBetweenFont: CGFloat = item.hasMarkers ? 20 : 0
         
         let width: CGFloat = frame.width - (item.inset.left + minF.width) - (item.inset.right + maxF.width) - insetBetweenFont * 2
         
-        let per = floorToScreenPixels(width / (count - 1))
+        let per = floorToScreenPixels(scaleFactor: backingScaleFactor, width / (count - 1))
         
         ctx.setFillColor(theme.colors.blueFill.cgColor)
         let lineSize = NSMakeSize(width, 2)
@@ -106,10 +109,11 @@ private class TextSizeSettingsRowView : TableRowView {
         
         ctx.fill(interactionRect)
         
-        let current = CGFloat(item.current)
+        let current: CGFloat = CGFloat(item.sizes.index(of: item.current) ?? 0)
+       
         let selectSize = NSMakeSize(20, 20)
         
-        let selectPoint = NSMakePoint(minX + floorToScreenPixels(interactionRect.width / CGFloat(item.sizes.count - 1)) * current - selectSize.width / 2, floorToScreenPixels((frame.height - selectSize.height) / 2))
+        let selectPoint = NSMakePoint(minX + floorToScreenPixels(scaleFactor: backingScaleFactor, interactionRect.width / CGFloat(item.sizes.count - 1)) * current - selectSize.width / 2, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - selectSize.height) / 2))
 
         ctx.setFillColor(theme.colors.grayText.cgColor)
         let unMinX = selectPoint.x + selectSize.width / 2
@@ -123,7 +127,7 @@ private class TextSizeSettingsRowView : TableRowView {
             ctx.setFillColor(theme.colors.background.cgColor)
             ctx.fill(NSMakeRect(point.x, point.y, perSize.width, perSize.height))
             
-            ctx.setFillColor(i <= item.current ? theme.colors.blueFill.cgColor : theme.colors.grayText.cgColor)
+            ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.blueFill.cgColor : theme.colors.grayText.cgColor)
             ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
         }
         
@@ -139,7 +143,7 @@ private class TextSizeSettingsRowView : TableRowView {
         
         for i in 0 ..< item.sizes.count {
             let perF = focus(selectSize)
-            let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(interactionRect.width / (count - 1)) * CGFloat(i) - selectSize.width / 2, perF.minY)
+            let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(scaleFactor: backingScaleFactor, interactionRect.width / (count - 1)) * CGFloat(i) - selectSize.width / 2, perF.minY)
             let rect = NSMakeRect(point.x, point.y, selectSize.width, selectSize.height)
             addCursorRect(rect, cursor: NSCursor.pointingHand)
             availableRects.append(rect)

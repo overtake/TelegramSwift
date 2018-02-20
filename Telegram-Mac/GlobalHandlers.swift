@@ -11,4 +11,4 @@ import SwiftSignalKitMac
 import PostboxMac
 import TelegramCoreMac
 
-public let globalPeerHandler:Promise<PeerId?> = Promise()
+public let globalPeerHandler:Promise<ChatLocation?> = Promise()

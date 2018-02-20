@@ -17,12 +17,12 @@ class ChatServiceItem: ChatRowItem {
     private(set) var imageArguments:TransformImageArguments?
     private(set) var image:TelegramMediaImage?
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ entry: ChatHistoryEntry) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         let message:Message = entry.message!
         
         
-        let linkColor: NSColor = entry.renderType == .bubble ? theme.chat.linkColor(true) : theme.colors.link
-        let grayTextColor: NSColor = entry.renderType == .bubble ? theme.chat.grayText(true) : theme.colors.grayText
+        let linkColor: NSColor = entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
+        let grayTextColor: NSColor = entry.renderType == .bubble ? theme.chat.grayText(true, entry.renderType == .bubble) : theme.colors.grayText
 
         let authorId:PeerId? = message.author?.id
         var authorName:String = ""
@@ -114,7 +114,7 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .titleUpdated(title):
                     let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle(authorName, title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case .customText(let text):
+                case .customText(let text, _):
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .pinnedMessageUpdated:
                     var replyMessageText = ""
@@ -123,10 +123,7 @@ class ChatServiceItem: ChatRowItem {
                             replyMessageText = pullText(from: message) as String
                         }
                     }
-                    var cutted = replyMessageText.prefix(30)
-                    if cutted.length != replyMessageText.length {
-                        cutted += "..."
-                    }
+                    let cutted = replyMessageText.prefixWithDots(30)
                     let _ =  attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
@@ -233,8 +230,9 @@ class ChatServiceItem: ChatRowItem {
                     } else {
                         _ = attributedString.append(string: tr(L10n.chatServicePaymentSent("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     }
+                case let .botDomainAccessGranted(domain):
+                    _ = attributedString.append(string: L10n.chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
-                    
                     break
                 }
             }
@@ -264,7 +262,7 @@ class ChatServiceItem: ChatRowItem {
         text = TextViewLayout(attributedString, truncationType: .end, cutout: nil, alignment: .center)
         
         text.interactions = globalLinkExecutor
-        super.init(initialSize, chatInteraction, entry)
+        super.init(initialSize, chatInteraction, entry, downloadSettings)
         self.account = account
     }
     

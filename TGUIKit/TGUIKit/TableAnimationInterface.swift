@@ -39,7 +39,6 @@ open class TableAnimationInterface: NSObject {
         
         let scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
         
-
         
         if bounds.minY > height, scrollBelow {
 //            height = bounds.minY
@@ -56,6 +55,7 @@ open class TableAnimationInterface: NSObject {
             
         } else if height - bounds.height < table.frame.height, scrollBelow {
             
+            
             if scrollBelow {
                 contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
             }
@@ -69,7 +69,7 @@ open class TableAnimationInterface: NSObject {
             }
             
             CATransaction.begin()
-            for idx in range.location ..< range.length {
+            for idx in added[0].index ..< range.length {
                 
                 if let view = table.viewNecessary(at: idx), let layer = view.layer {
                     

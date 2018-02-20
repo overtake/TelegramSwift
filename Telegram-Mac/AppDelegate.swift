@@ -72,6 +72,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             return
         }
         
+        self.containerUrl = containerUrl.path
+
+        
+        
+        
+        let crashed = isCrashedLastTime(containerUrl.path)
+        
+        
+        if crashed {
+            let alert: NSAlert = NSAlert()
+            alert.addButton(withTitle: L10n.crashOnLaunchOK)
+            alert.addButton(withTitle: L10n.crashOnLaunchCancel)
+            alert.messageText = L10n.crashOnLaunchMessage
+            alert.informativeText = L10n.crashOnLaunchInformation
+            alert.alertStyle = .critical
+            if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
+                try? FileManager.default.removeItem(atPath: self.containerUrl)
+            }
+        }
+        
+        
         uiLocalizationFunc = { key in
             return _NSLocalizedString(key)
         }
@@ -88,7 +109,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
        // applyMainMenuLocalization(window)
         
         mw = window
-        self.containerUrl = containerUrl.path
         
         #if !APP_STORE
             self.updater.automaticallyChecksForUpdates = true
@@ -97,9 +117,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         #endif
         
         
-        Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
+        Timer.scheduledTimer(timeInterval: 60 * 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
         
-        
+
         
         for argument in CommandLine.arguments {
             switch argument {
@@ -163,24 +183,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if let bundleId = bundleId {
             LSSetDefaultHandlerForURLScheme("tg" as CFString, bundleId as CFString)
         }
-   
         
-        
-        self.accountManagerPromise.set(accountManager(basePath: containerUrl.path + "/accounts-metadata"))
 
-        let _ = (accountManagerPromise.get()
-            |> mapToSignal { manager in
-                return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), accountManager: manager, appGroupPath: containerUrl.path, auxiliaryMethods: telegramAccountAuxiliaryMethods)
-            }).start()
+        launchInterface()
+        
+    }
+    
+    private func launchInterface() {
+        
+        self.accountManagerPromise.set(accountManager(basePath: containerUrl + "/accounts-metadata"))
+        
+        let _ = (accountManagerPromise.get() |> mapToSignal { manager in
+                return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), accountManager: manager, appGroupPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+        }).start()
         
         
         
         
         self.context.set(self.accountManagerPromise.get() |> deliverOnMainQueue |> mapToSignal { accountManager -> Signal<ApplicationContext?, NoError> in
-            return applicationContext(window: self.window, shouldOnlineKeeper: self.presentAccountStatus.get(), accountManager: accountManager, appGroupPath: containerUrl.path, testingEnvironment: TEST_SERVER)
+            return applicationContext(window: self.window, shouldOnlineKeeper: self.presentAccountStatus.get(), accountManager: accountManager, appGroupPath: self.containerUrl, testingEnvironment: TEST_SERVER)
         })
         
-
+        
+        _ = System.scaleFactor.swap(window.backingScaleFactor)
+        
         self.contextDisposable.set(self.context.get().start(next: { context in
             assert(Queue.mainQueue().isCurrent())
             self.window.makeKeyAndOrderFront(self)
@@ -191,14 +217,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             
         }))
         
+        saveIntermediateDate()
         self.window.contentView?.wantsLayer = true
-
+        
     }
     
     @objc func checkUpdates() {
         #if !APP_STORE
             updater.checkForUpdatesInBackground()
         #endif
+    }
+    
+    @objc func saveIntermediateDate() {
+        crashIntermediateDate(containerUrl)
     }
     
     private static var eventProcessed: Bool = false
@@ -216,7 +247,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                     case let .authorized(context):
                         AppDelegate.eventProcessed = true
                         let link = inApp(for: url as NSString, account: context.account, openInfo: { (peerId, isChat, postId, action) in
-                            context.rightController.push(ChatController(account: context.account, peerId: peerId, messageId:postId, initialAction:action), true)
+                            context.rightController.push(ChatController(account: context.account, chatLocation: .peer(peerId), messageId:postId, initialAction:action), true)
                         }, applyProxy: { proxy in
                             applyExternalProxy(proxy, postbox: context.account.postbox, network: context.account.network)
                         })
@@ -251,9 +282,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         presentAccountStatus.set(.single(true) |> then(.single(true) |> delay(50, queue: Queue.concurrentBackgroundQueue())) |> restart)
     }
     
-    func applicationDidResignActive(_ notification: Notification) {
-        presentAccountStatus.set(.single(false))
-    }
+
     
     func applicationDidHide(_ notification: Notification) {
         presentAccountStatus.set(.single(false))
@@ -306,8 +335,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     
     func applicationWillBecomeActive(_ notification: Notification) {
         if contextValue != nil {
-            window.makeKeyAndOrderFront(nil)
+            if viewer != nil {
+                viewer?.windowDidResignKey()
+            } else {
+                window.makeKeyAndOrderFront(nil)
+            }
         }
+    }
+    
+    func applicationDidResignActive(_ notification: Notification) {
+        presentAccountStatus.set(.single(false))
+        if viewer != nil {
+            viewer?.window.orderOut(nil)
+        }
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        deinitCrashHandler(containerUrl)
     }
 
     override func awakeFromNib() {

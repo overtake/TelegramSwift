@@ -66,7 +66,7 @@ class InstantPageChannelView : View, InstantPageView {
         ctx.fill(bounds)
         
         let f = focus(nameLayout.0.size)
-        nameLayout.1.draw(NSMakeRect(40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor)
+        nameLayout.1.draw(NSMakeRect(40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
         switch channel.participationStatus {
         case .member:
@@ -74,7 +74,7 @@ class InstantPageChannelView : View, InstantPageView {
         default:
             checkView.isHidden = true
             let f = focus(joinLayout.0.size)
-            joinLayout.1.draw(NSMakeRect(frame.width - f.width - 40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            joinLayout.1.draw(NSMakeRect(frame.width - f.width - 40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     

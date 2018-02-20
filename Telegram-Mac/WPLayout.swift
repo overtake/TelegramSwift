@@ -143,9 +143,13 @@ class WPLayout: Equatable {
     func viewClass() -> AnyClass {
         return WPArticleContentView.self
     }
+    private(set) var oldWidth:CGFloat = 0
     
     func measure(width: CGFloat)  {
-        siteName = TextNode.layoutText(maybeNode: _nameNode, _siteNameAttr, nil, 1, .end, NSMakeSize(width, 20), nil, false, .left)
+        if oldWidth != width {
+            self.oldWidth = width
+            siteName = TextNode.layoutText(maybeNode: _nameNode, _siteNameAttr, nil, 1, .end, NSMakeSize(width, 20), nil, false, .left)
+        }
         
         if let siteName = siteName {
             insets.top = siteName.0.size.height + 2.0
@@ -161,7 +165,7 @@ class WPLayout: Equatable {
     
     var hasInstantPage: Bool {
         if let _ = content.instantPage {
-            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram" {
+            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
                 return false
             }
             return true

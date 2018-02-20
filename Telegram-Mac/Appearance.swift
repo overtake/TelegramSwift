@@ -23,11 +23,36 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
         ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
 
         let icon = #imageLiteral(resourceName: "Icon_ChatMention").precomposed(foregroundColor)
-        let imageRect = NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         
         ctx.draw(icon, in: imageRect)
     })!
 }
+
+private func generateAlertCheckBoxSelected(backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(14, 14), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.round(size, 2)
+        ctx.fill(rect)
+
+        let icon = #imageLiteral(resourceName: "Icon_AlertCheckBoxMark").precomposed()
+        ctx.draw(icon, in: NSMakeRect((rect.width - icon.backingSize.width) / 2, (rect.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height))
+        
+    })!
+}
+private func generateAlertCheckBoxUnselected(border: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(14, 14), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.setStrokeColor(border.cgColor)
+        ctx.setLineWidth(3.0)
+        ctx.round(size, 2)
+        ctx.stroke(rect)
+    })!
+}
+
 
 private func generateTransparentBackground() -> CGImage {
     return generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
@@ -52,7 +77,7 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         let icon = #imageLiteral(resourceName: "Icon_ChatListMention").precomposed(foregroundColor, flipVertical: true)
-        let imageRect = NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
     })!
 }
@@ -64,7 +89,7 @@ private func generateChatGroupToggleSelected(foregroundColor: NSColor) -> CGImag
         ctx.round(size, size.width/2)
         ctx.setFillColor(NSColor.white.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-        let imageRect = NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
     })!
 }
@@ -149,6 +174,51 @@ private func generateChatScrolldownImage(backgroundColor: NSColor, borderColor: 
         context.strokePath()
     })!
 }
+
+private func generateConfirmDeleteMessagesAccessory(backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(50, 50), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(size, size.height / 2)
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(rect)
+        let icon = #imageLiteral(resourceName: "Icon_ConfirmDeleteMessagesAccessory").precomposed()
+        let point = NSMakePoint((rect.width - icon.backingSize.width) / 2, (rect.height - icon.backingSize.height) / 2)
+        ctx.draw(icon, in: NSMakeRect(point.x, point.y, icon.backingSize.width, icon.backingSize.height))
+    })!
+}
+
+private func generateConfirmPinAccessory(backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(50, 50), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(size, size.height / 2)
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(rect)
+        let icon = #imageLiteral(resourceName: "Icon_ConfirmPinAccessory").precomposed()
+        let point = NSMakePoint((rect.width - icon.backingSize.width) / 2, (rect.height - icon.backingSize.height) / 2)
+        ctx.draw(icon, in: NSMakeRect(point.x, point.y, icon.backingSize.width, icon.backingSize.height))
+    })!
+}
+
+private func generateConfirmDeleteChatAccessory(backgroundColor: NSColor, foregroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(34, 34), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(size, size.height / 2)
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(rect)
+        
+        ctx.setFillColor(foregroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
+        let icon = #imageLiteral(resourceName: "Icon_ConfirmDeleteChatAccessory").precomposed()
+        let point = NSMakePoint((rect.width - icon.backingSize.width) / 2, (rect.height - icon.backingSize.height) / 2)
+        ctx.draw(icon, in: NSMakeRect(point.x, point.y, icon.backingSize.width, icon.backingSize.height))
+    })!
+}
+
+
 
 /*
 
@@ -540,6 +610,13 @@ struct TelegramIconsTheme {
     let chatGotoMessageWallpaper: CGImage
     let transparentBackground: CGImage
     
+    let passcodeTouchId: CGImage
+    let passcodeLogin: CGImage
+    let confirmDeleteMessagesAccessory: CGImage
+    let alertCheckBoxSelected: CGImage
+    let alertCheckBoxUnselected: CGImage
+    let confirmPinAccessory: CGImage
+    let confirmDeleteChatAccessory: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -673,8 +750,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                pinnedImageSelected: #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(.white, flipVertical:true),
                                                verifiedImage: #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true),
                                                verifiedImageSelected: #imageLiteral(resourceName: "Icon_VerifyPeerActive").precomposed(flipVertical: true),
-                                               errorImage: #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true),
-                                               errorImageSelected: #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true),
+                                               errorImage: #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true),
+                                               errorImageSelected: #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true),
                                                chatSearch: #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.blueIcon),
                                                chatCall: #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.blueIcon),
                                                chatActions: #imageLiteral(resourceName: "Icon_ChatActions").precomposed(palette.blueIcon),
@@ -713,7 +790,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatReadMarkOutBubble2: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIcon),
                                                chatReadMarkOverlayBubble1: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white),
                                                chatReadMarkOverlayBubble2:#imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white),
-                                               sentFailed: #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(),
+                                               sentFailed: generateImage(NSMakeSize(13, 13), contextGenerator: { size, ctx in
+                                                    ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                                                    ctx.draw(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(), in: NSMakeRect(0, 0, size.width, size.height))
+                                               })!,
                                                chatChannelViewsInBubble_incoming: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_incoming, flipVertical: true),
                                                chatChannelViewsInBubble_outgoing: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing, flipVertical: true),
                                                chatChannelViewsOutBubble: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon, flipVertical: true),
@@ -904,7 +984,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                accentColorSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white),
                                                chatShareWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon),
                                                chatGotoMessageWallpaper: #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.blueIcon),
-                                               transparentBackground: generateTransparentBackground()
+                                               transparentBackground: generateTransparentBackground(),
+                                               passcodeTouchId: #imageLiteral(resourceName: "Icon_TouchId").precomposed(),
+                                               passcodeLogin: #imageLiteral(resourceName: "Icon_PasscodeLogin").precomposed(),
+                                               confirmDeleteMessagesAccessory: generateConfirmDeleteMessagesAccessory(backgroundColor: palette.redUI),
+                                               alertCheckBoxSelected: generateAlertCheckBoxSelected(backgroundColor: palette.blueIcon),
+                                               alertCheckBoxUnselected: generateAlertCheckBoxUnselected(border: palette.grayIcon),
+                                               confirmPinAccessory: generateConfirmPinAccessory(backgroundColor: palette.blueIcon),
+                                               confirmDeleteChatAccessory: generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI)
     )
 }
 
@@ -949,6 +1036,8 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
         palette = darkPalette
     case dayClassic.name:
         palette = dayClassic
+    case nightBluePalette.name:
+        palette = nightBluePalette
     default:
         palette = settings.palette
     }
@@ -963,18 +1052,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
     if let window = window {
         
         if animated, let contentView = window.contentView {
-            
-            var indexes:[Int] = []
-            for i in 0 ..< contentView.subviews.count {
-                if contentView.subviews[i] is ImageView {
-                    indexes.insert(i, at: 0)
-                }
-            }
-            
-            for index in indexes {
-                contentView.subviews[index].removeFromSuperview()
-            }
-            
+
             let image = window.windowImageShot()
             let imageView = ImageView()
             imageView.image = image
@@ -1002,7 +1080,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 }
 
 func setDefaultTheme(for window: Window? = nil) {
-    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: true, fontSize: 13.0, wallpaper: .builtin), window: window, animated: false)
+    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: false, fontSize: 13.0, wallpaper: .none), window: window, animated: false)
 }
 
 

@@ -419,6 +419,12 @@ class APController : NSObject, AudioPlayerDelegate {
         return self.player?.timebase
     }
     
+    func notifyGlobalStateChanged() {
+        if let song = song {
+            notifyStateChanged(item: song)
+        }
+    }
+    
     private func notifyStateChanged(item:APSongItem) {
         for listener in listeners {
             if let value = listener.value as? APDelegate {
@@ -627,17 +633,6 @@ class APController : NSObject, AudioPlayerDelegate {
     
     fileprivate func play(with item:APSongItem) {
         
-        let items = self.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
-        if let index = items.index(of: item) {
-            let previous = index - 1
-            let next = index + 1
-            if previous >= 0 {
-                prevNextDisposable.add(account.postbox.mediaBox.fetchedResource(items[previous].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
-            }
-            if next < items.count {
-                prevNextDisposable.add(account.postbox.mediaBox.fetchedResource(items[next].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
-            }
-        }
         
         itemDisposable.set(item.pullResource().start(next: { [weak self] resource in
             if let strongSelf = self {
@@ -645,6 +640,19 @@ class APController : NSObject, AudioPlayerDelegate {
                     strongSelf.player = .player(for: resource.path)
                     strongSelf.player?.delegate = strongSelf
                     strongSelf.player?.play()
+                    
+                    let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+                    if let index = items.index(of: item) {
+                        let previous = index - 1
+                        let next = index + 1
+                        if previous >= 0 {
+                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[previous].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+                        }
+                        if next < items.count {
+                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[next].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+                        }
+                    }
+                    
                 } else {
                     item.state = .fetching(resource.progress,true)
                 }
@@ -808,9 +816,10 @@ class APChatController : APController {
         let apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), Void> in
             switch location {
             case .initial:
-                return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadState: nil, tagMask: tagMask)
+                
+                return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, clipHoles: true, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
             case let .index(index):
-                return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadState: nil, tagMask: tagMask)
+                return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, clipHoles: true, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
             }
             
         } |> map { view -> (APHistory?,APHistory) in

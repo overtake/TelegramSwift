@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
 		C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21178011F17E78E00AC706D /* TimableProgressView.swift */; };
@@ -100,6 +101,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
 		C21178011F17E78E00AC706D /* TimableProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimableProgressView.swift; sourceTree = "<group>"; };
@@ -472,6 +474,7 @@
 				C21178011F17E78E00AC706D /* TimableProgressView.swift */,
 				C24A37151F324A36004ADE5C /* ShadowView.swift */,
 				C28CFC7C1F387A7F00C55596 /* TokenizedView.swift */,
+				9F6281282037389200B2D3C9 /* CheckBox.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -601,6 +604,7 @@
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
 				C2303E7A1D9987FE00098E12 /* Popover.swift in Sources */,
 				C29B5F3C1DC66DAC00D13E65 /* DraggingView.swift in Sources */,
+				9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */,
 				C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */,
 				C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */,
 				C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */,

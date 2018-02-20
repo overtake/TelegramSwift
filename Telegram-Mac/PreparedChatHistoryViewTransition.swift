@@ -99,6 +99,8 @@ func preparedChatHistoryViewTransition(from fromView: ChatHistoryView?, to toVie
                     break
                 case .AroundId:
                     break
+                case .AroundIndex(_, let lowerComplete, let upperComplete, let clippingMinIndex, let clippingMaxIndex):
+                    break
                 }
             }
         }

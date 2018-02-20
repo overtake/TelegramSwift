@@ -289,12 +289,13 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
             
             var text:String = ""
             var color:NSColor = .text
+            
             switch status {
             case let .invalidFormat(format):
                 text = format.description
                 color = theme.colors.redUI
             case let .availability(availability):
-                text = availability.description
+                text = availability.description(for: addressName)
                 switch availability {
                 case .available:
                     color = theme.colors.blueUI
@@ -644,7 +645,15 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
                 return state.withUpdatedRevokingPeerId(peerId)
             }
             
-            self?.revokeAddressNameDisposable.set((updateAddressName(account: account, domain: .peer(peerId), name: nil) |> deliverOnMainQueue).start(error: { _ in
+            self?.revokeAddressNameDisposable.set((confirmSignal(for: mainWindow, information: L10n.channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+                if !result {
+                    return .fail(.generic)
+                } else {
+                    return .single(true)
+                }
+            } |> mapToSignal { _ -> Signal<Void, UpdateAddressNameError> in
+                return updateAddressName(account: account, domain: .peer(peerId), name: nil)
+            } |> deliverOnMainQueue).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedRevokingPeerId(nil)
                 }

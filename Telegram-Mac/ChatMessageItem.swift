@@ -25,7 +25,7 @@ class ChatMessageItem: ChatRowItem {
     
     var webpageLayout:WPLayout?
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ account:Account, _ entry: ChatHistoryEntry) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ account:Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
          if let message = entry.message {
             
@@ -35,10 +35,10 @@ class ChatMessageItem: ChatRowItem {
             let messageAttr:NSMutableAttributedString
             if message.text.isEmpty && message.media.isEmpty {
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: tr(L10n.chatMessageUnsupported), color: theme.chat.textColor(isIncoming), font: .code(theme.fontSize))
+                _ = attr.append(string: tr(L10n.chatMessageUnsupported), color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming), linkColor: theme.chat.linkColor(isIncoming), monospacedPre: theme.chat.monospacedPreColor(isIncoming), monospacedCode: theme.chat.monospacedCodeColor(isIncoming)).mutableCopy() as! NSMutableAttributedString
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
 
                 messageAttr.fixUndefinedEmojies()
                 
@@ -91,7 +91,7 @@ class ChatMessageItem: ChatRowItem {
             
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
-                    copy.detectLinks(type: .Links, account: account, color: theme.chat.linkColor(isIncoming))
+                    copy.detectLinks(type: .Links, account: account, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble))
                 }
             }
             
@@ -99,7 +99,7 @@ class ChatMessageItem: ChatRowItem {
             self.messageText = copy
            
             
-            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
+            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
             textLayout.mayBlocked = entry.renderType != .bubble
             if let range = selectManager.find(entry.stableId) {
                 textLayout.selectedRange.range = range
@@ -112,20 +112,25 @@ class ChatMessageItem: ChatRowItem {
             }
             
             if let webpage = media as? TelegramMediaWebpage {
-                let presentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming), activity: theme.chat.webPreviewActivity(isIncoming), link: theme.chat.linkColor(isIncoming), selectText: theme.chat.selectText(isIncoming), ivIcon: theme.chat.instantPageIcon(isIncoming), renderType: entry.renderType)
+                let presentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble), renderType: entry.renderType)
                 switch webpage.content {
                 case let .Loaded(content):
                     if content.file == nil {
-                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation)
+                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation, downloadSettings: downloadSettings)
                     } else {
-                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation)
+                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation, downloadSettings: downloadSettings)
                     }
                 default:
                     break
                 }
             }
             
-            super.init(initialSize,chatInteraction,account,entry)
+            super.init(initialSize, chatInteraction, account, entry, downloadSettings)
+            
+            
+            (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
+                showChatGallery(account: account, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
+            }
 
             textLayout.interactions = TextViewInteractions(processURL:{ link in
                 if let link = link as? inAppLink {
@@ -134,10 +139,19 @@ class ChatMessageItem: ChatRowItem {
             }, copy: {
                 selectManager.copy(selectManager)
                 return !selectManager.isEmpty
-            }, menuItems: { [weak self] onLink in
+            }, menuItems: { [weak self] type in
                 var items:[ContextMenuItem] = []
                 if let strongSelf = self, let layout = self?.textLayout {
-                    items.append(ContextMenuItem(onLink ? tr(L10n.messageContextCopyMessageLink) : layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: { [weak strongSelf] in
+                    
+                    let text: String
+                    if let type = type {
+                        text = copyContextText(from: type)
+                    } else {
+                        text = layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy)
+                    }
+                    
+                    
+                    items.append(ContextMenuItem(text, handler: { [weak strongSelf] in
                         let result = strongSelf?.textLayout.interactions.copy?()
                         if let result = result, let strongSelf = strongSelf, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
@@ -184,6 +198,8 @@ class ChatMessageItem: ChatRowItem {
                     return true
                 }
                 return false
+            }, makeLinkType: { link in
+                return globalLinkExecutor.makeLinkType(link)
             })
             
             return
@@ -202,7 +218,6 @@ class ChatMessageItem: ChatRowItem {
     
     
     override var isFixedRightPosition: Bool {
-        
         if let webpageLayout = webpageLayout {
             if let webpageLayout = webpageLayout as? WPArticleLayout, let textLayout = webpageLayout.textLayout {
                 if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
@@ -215,7 +230,7 @@ class ChatMessageItem: ChatRowItem {
         if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
             return true
         }
-        return super.isFixedRightPosition
+        return super.isForceRightLine
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
@@ -257,9 +272,13 @@ class ChatMessageItem: ChatRowItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         let size:NSSize = super.makeContentSize(width)
-        textLayout.measure(width: width)
      
         webpageLayout?.measure(width: min(width, 380))
+        
+        let textBlockWidth: CGFloat = isBubbled ? (webpageLayout?.contentRect.width ?? width) : width
+        
+        textLayout.measure(width: textBlockWidth)
+
         
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         
@@ -268,10 +287,19 @@ class ChatMessageItem: ChatRowItem {
             contentSize.width = max(webpageLayout.size.width, contentSize.width)
         }
         
-        
         return contentSize
     }
+
     
+    override var bubbleFrame: NSRect {
+        var frame = super.bubbleFrame
+        
+        
+        if replyMarkupModel != nil, webpageLayout == nil, textLayout.layoutSize.width < 200 {
+            frame.size.width = max(blockWidth, frame.width)
+        }
+        return frame
+    }
     
    
     
@@ -305,6 +333,10 @@ class ChatMessageItem: ChatRowItem {
                             
                             return items
                         }
+                    } else if file.isVideo && file.isAnimated {
+                        items.append(ContextMenuItem(tr(L10n.messageContextSaveGif), handler: {
+                            let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                        }))
                     }
                     
                     return .single(items)
@@ -336,7 +368,7 @@ class ChatMessageItem: ChatRowItem {
         }
 
         
-        return items |> map { [weak self] items in
+        return items |> deliverOnMainQueue |> map { [weak self] items in
             var items = items
             
             var needCopy: Bool = true
@@ -353,7 +385,7 @@ class ChatMessageItem: ChatRowItem {
             if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, needCopy {
                 let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 if let layout = textView.layout {
-                    if let (link, range, _) = layout.link(at: point) {
+                    if let (link, _, range, _) = layout.link(at: point) {
                         var text:String = layout.attributedString.string.nsstring.substring(with: range)
                         if let link = link as? inAppLink {
                             if case let .external(link, _) = link {

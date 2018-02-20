@@ -15,13 +15,17 @@ import SwiftSignalKitMac
 final class SelectPeerPresentation : Equatable {
     let selected:Set<PeerId>
     let peers:[PeerId: Peer]
+    let limit:Int32
+    private let someFlagsAsNotice: Bool
     static func ==(lhs:SelectPeerPresentation, rhs:SelectPeerPresentation) -> Bool {
-        return lhs.selected == rhs.selected
+        return lhs.selected == rhs.selected && lhs.limit == rhs.limit && lhs.someFlagsAsNotice == rhs.someFlagsAsNotice
     }
     
-    init(_ selected:Set<PeerId> = Set(), peers:[PeerId: Peer] = [:]) {
+    init(_ selected:Set<PeerId> = Set(), peers:[PeerId: Peer] = [:], limit: Int32 = 0, someFlagsAsNotice:Bool = false) {
         self.selected = selected
         self.peers = peers
+        self.limit = limit
+        self.someFlagsAsNotice = someFlagsAsNotice
     }
     
     func deselect(peerId:PeerId) -> SelectPeerPresentation {
@@ -30,10 +34,19 @@ final class SelectPeerPresentation : Equatable {
         selectedIds.formUnion(selected)
         let _ = selectedIds.remove(peerId)
         peers.removeValue(forKey: peerId)
-        return SelectPeerPresentation(selectedIds, peers: peers)
+        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice)
+    }
+    
+    var isLimitReached: Bool {
+        return limit > 0 && limit == selected.count
+    }
+    
+    func withUpdateLimit(_ limit: Int32) -> SelectPeerPresentation {
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice)
     }
     
     func withToggledSelected(_ peerId: PeerId, peer:Peer) -> SelectPeerPresentation {
+        var someFlagsAsNotice: Bool = self.someFlagsAsNotice
         var selectedIds:Set<PeerId> = Set<PeerId>()
         var peers:[PeerId: Peer] = self.peers
         selectedIds.formUnion(selected)
@@ -41,10 +54,14 @@ final class SelectPeerPresentation : Equatable {
             let _ = selectedIds.remove(peerId)
             peers.removeValue(forKey: peerId)
         } else {
-            selectedIds.insert(peerId)
-            peers[peerId] = peer
+            if limit == 0 || selected.count < limit {
+                selectedIds.insert(peerId)
+                peers[peerId] = peer
+            } else {
+                someFlagsAsNotice = !someFlagsAsNotice
+            }
         }
-        return SelectPeerPresentation(selectedIds, peers: peers)
+        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice)
     }
     
 }
@@ -55,6 +72,7 @@ final class SelectPeerInteraction : InterfaceObserver {
     func update(animated:Bool = true, _ f:(SelectPeerPresentation)->SelectPeerPresentation)->Void {
         let oldValue = self.presentation
         presentation = f(presentation)
+        
         if oldValue != presentation {
             notifyObservers(value: presentation, oldValue:oldValue, animated:animated)
         }
@@ -110,7 +128,7 @@ class ShortPeerRowItem: GeneralRowItem {
     
     private(set) var photo:Signal<(CGImage?, Bool), NoError>?
 
-    fileprivate let isLookSavedMessage: Bool
+    let isLookSavedMessage: Bool
     let titleStyle:ControlStyle
     let statusStyle:ControlStyle
     

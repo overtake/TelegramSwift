@@ -179,7 +179,7 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
             
             contentView.change(pos: to, animated: animated)
             let selectingFrom = NSMakePoint(-selectingControl.frame.width,selectingControl.frame.minY)
-            let selectingTo = NSMakePoint(20.0 - floorToScreenPixels(selectingControl.frame.width/2.0),selectingControl.frame.minY)
+            let selectingTo = NSMakePoint(20.0 - floorToScreenPixels(scaleFactor: backingScaleFactor, selectingControl.frame.width/2.0),selectingControl.frame.minY)
             selectingControl.change(pos: selectingMode ? selectingTo : selectingFrom, animated: animated)
             selectingControl.set(selected: item.interface.presentation.isSelectedMessageId(item.message.id), animated: animated)
         }

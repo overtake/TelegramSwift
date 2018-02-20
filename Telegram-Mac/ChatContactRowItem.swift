@@ -15,7 +15,7 @@ class ChatContactRowItem: ChatRowItem {
 
     let contactPeer:Peer?
     let text:TextViewLayout
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
@@ -25,14 +25,14 @@ class ChatContactRowItem: ChatRowItem {
             if let peerId = contact.peerId {
                 self.contactPeer = message.peers[peerId]
                 let range = attr.append(string: contact.firstName + " " + contact.lastName, font: .medium(.text))
-                attr.add(link: inAppLink.peerInfo(peerId:peerId,action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: theme.chat.linkColor(isIncoming))
+                attr.add(link: inAppLink.peerInfo(peerId:peerId,action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming), font: .normal(.text))
+                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
             } else {
-                self.contactPeer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: 0), accessHash: nil, firstName: contact.firstName, lastName: contact.lastName, username: nil, phone: contact.phoneNumber, photo: [], botInfo: nil, flags: [])
-                _ = attr.append(string: contact.firstName + " " + contact.lastName, color: theme.chat.textColor(isIncoming), font: .medium(.text))
+                self.contactPeer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: 0), accessHash: nil, firstName: contact.firstName, lastName: contact.lastName, username: nil, phone: contact.phoneNumber, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                _ = attr.append(string: contact.firstName + " " + contact.lastName, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming), font: .normal(.text))
+                _ = attr.append(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
             }
             text = TextViewLayout(attr, maximumNumberOfLines: 3, truncationType: .end, alignment: .left)
             text.interactions = globalLinkExecutor
@@ -41,7 +41,7 @@ class ChatContactRowItem: ChatRowItem {
             fatalError("contact not found for item")
         }
         
-        super.init(initialSize, chatInteraction, account, object)
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {

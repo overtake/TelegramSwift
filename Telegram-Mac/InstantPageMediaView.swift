@@ -18,7 +18,7 @@ final class InstantPageMediaView: View, InstantPageView {
     private let arguments: InstantPageMediaArguments
     
     private let imageView: TransformImageView
-    private let progressView = RadialProgressView()
+    private let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
     private var currentSize: CGSize?
     
     private let fetchedDisposable = MetaDisposable()
@@ -85,15 +85,38 @@ final class InstantPageMediaView: View, InstantPageView {
         addSubview(progressView)
         
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
+            guard let `self` = self else {return}
+            
+            self.progressView.fetchControls = FetchControls(fetch: { [weak self] in
+                guard let `self` = self else {return}
+
+                switch status {
+                case .Remote:
+                    if let image = media.media as? TelegramMediaImage {
+                        self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: image).start())
+                    } else if let file = media.media as? TelegramMediaFile {
+                        self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, file: file).start())
+                    }
+                case .Fetching:
+                    if let image = media.media as? TelegramMediaImage {
+                        chatMessagePhotoCancelInteractiveFetch(account: account, photo: image)
+                    } else if let file = media.media as? TelegramMediaFile {
+                        cancelFreeMediaFileInteractiveFetch(account: account, file: file)
+                    }
+                default:
+                    break
+                }
+            })
+            
             switch status {
             case let .Fetching(_, progress):
-                self?.progressView.isHidden = false
-                self?.progressView.state = .Fetching(progress: progress, force: false)
+                self.progressView.isHidden = false
+                self.progressView.state = .Fetching(progress: progress, force: false)
             case .Local:
-                self?.progressView.isHidden = true
-                self?.progressView.state = .None
+                self.progressView.isHidden = media.media is TelegramMediaImage
+                self.progressView.state = media.media is TelegramMediaImage ? .None : .Play
             case .Remote:
-                self?.progressView.state = .Remote
+                self.progressView.state = .Remote
             }
         }
         
@@ -104,14 +127,14 @@ final class InstantPageMediaView: View, InstantPageView {
            
             self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: image).start())
             if let largest = largestImageRepresentation(image.representations) {
-                statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start())
+                statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start(next: updateProgressState))
             }
             
         } else if let file = media.media as? TelegramMediaFile {
             statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
-            self.fetchedDisposable.set(account.postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .video)).start())
+            self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, file: file).start())
             
-            self.imageView.setSignal( chatMessageVideo(account: account, video: file, scale: backingScaleFactor))
+            self.imageView.setSignal( chatMessageVideoThumbnail(account: account, file: file, scale: backingScaleFactor))
 
             switch arguments {
             case let .video(_, autoplay):

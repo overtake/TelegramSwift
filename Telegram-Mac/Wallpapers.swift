@@ -16,7 +16,7 @@ public enum TelegramWallpaper: OrderedItemListEntryContents, Equatable {
     case builtin
     case color(Int32)
     case image([TelegramMediaImageRepresentation])
-    
+    case custom(String)
     public init(decoder: PostboxDecoder) {
         switch decoder.decodeInt32ForKey("v", orElse: 0) {
         case 0:
@@ -27,6 +27,8 @@ public enum TelegramWallpaper: OrderedItemListEntryContents, Equatable {
             self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"))
         case 3:
             self = .none
+        case 4:
+            self = .custom(decoder.decodeStringForKey("p", orElse: ""))
         default:
             assertionFailure()
             self = .none
@@ -45,6 +47,9 @@ public enum TelegramWallpaper: OrderedItemListEntryContents, Equatable {
             encoder.encodeObjectArray(representations, forKey: "i")
         case .none:
             encoder.encodeInt32(3, forKey: "v")
+        case let .custom(path):
+            encoder.encodeInt32(4, forKey: "v")
+            encoder.encodeString(path, forKey: "p")
         }
     }
     
@@ -64,6 +69,12 @@ public enum TelegramWallpaper: OrderedItemListEntryContents, Equatable {
             }
         case let .color(color):
             if case .color(color) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .custom(path):
+            if case .custom(path) = rhs {
                 return true
             } else {
                 return false

@@ -26,7 +26,7 @@ class ChatMusicContentView: ChatAudioContentView {
     
     override func layout() {
         super.layout()
-        let center = floorToScreenPixels(frame.height / 2.0)
+        let center = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2.0)
         textView.setFrameOrigin(leftInset, center - textView.frame.height - 2)
         durationView.setFrameOrigin(leftInset, center + 2)
     }

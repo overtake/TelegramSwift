@@ -45,7 +45,7 @@ open class TextViewLabel: View {
         
         if let text = text {
             let focus = self.focus(text.0.size)
-            text.1.draw(focus, in: ctx, backingScaleFactor: backingScaleFactor)
+            text.1.draw(focus, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     

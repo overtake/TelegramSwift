@@ -15,6 +15,7 @@ import SwiftSignalKitMac
 class SidebarCapView : View {
     private let text:NSTextField = NSTextField()
     fileprivate let close:TitleButton = TitleButton()
+    fileprivate var restrictedByPeer: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -40,12 +41,12 @@ class SidebarCapView : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         text.textColor = theme.colors.grayText
-        text.stringValue = tr(L10n.sidebarAvalability);
+        text.stringValue = restrictedByPeer ? L10n.sidebarPeerRestricted : L10n.sidebarAvalability
         text.setFrameSize(text.sizeThatFits(NSMakeSize(300, 100)))
         self.background = theme.colors.background.withAlphaComponent(0.97)
         close.set(color: theme.colors.blueUI, for: .Normal)
         close.set(text: tr(L10n.navigationClose), for: .Normal)
-        close.sizeToFit()
+        _ = close.sizeToFit()
         needsLayout = true
     }
     
@@ -71,6 +72,12 @@ class SidebarCapView : View {
 
 class SidebarCapViewController: GenericViewController<SidebarCapView> {
     private let account:Account
+    private let globalPeerDisposable = MetaDisposable()
+    private var inChatAbility: Bool = true {
+        didSet {
+            navigationWillChangeController()
+        }
+    }
     init(account:Account) {
         self.account = account
         super.init()
@@ -85,6 +92,26 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
             FastSettings.toggleSidebarShown(false)
             self?.account.context.entertainment.closedBySide()
         }, for: .Click)
+        
+        let postbox = self.account.postbox
+        
+        globalPeerDisposable.set((globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, Void> in
+            if let value = value {
+                switch value {
+                case .group:
+                    return .single(false)
+                case let .peer(peerId):
+                    return postbox.modify { modifier -> Bool in
+                        return modifier.getPeer(peerId)?.canSendMessage ?? false
+                    }
+                }
+            } else {
+                return .single(false)
+            }
+        } |> deliverOnMainQueue).start(next: { [weak self] accept in
+            self?.readyOnce()
+            self?.inChatAbility = accept
+        }))
     }
     
     deinit {
@@ -96,9 +123,13 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
     }
     
     override func navigationWillChangeController() {
+        
+        self.genericView.restrictedByPeer = !inChatAbility
+        self.genericView.updateLocalizationAndTheme()
+        
         self.view.setFrameSize(account.context.entertainment.frame.size)
         
-        if navigation?.controller is ChatController {
+        if navigation?.controller is ChatController, inChatAbility {
             view.removeFromSuperview()
         } else {
             self.account.context.entertainment.addSubview(view)

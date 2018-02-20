@@ -26,18 +26,19 @@ public class ModalInteractions {
     let drawBorder:Bool
     let height:CGFloat
     var enables:((Bool)->Void)? = nil
-    
+    let alignCancelLeft: Bool
     
     var doneUpdatable:(((TitleButton)->Void)->Void)? = nil
     var cancelUpdatable:(((TitleButton)->Void)->Void)? = nil
     
-    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50)  {
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50, alignCancelLeft: Bool = false)  {
         self.drawBorder = drawBorder
         self.accept = accept
         self.cancel = cancel
         self.acceptTitle = acceptTitle
         self.cancelTitle = cancelTitle
         self.height = height
+        self.alignCancelLeft = alignCancelLeft
     }
     
     public func updateEnables(_ enable:Bool) -> Void {
@@ -74,12 +75,12 @@ private class ModalInteractionsContainer : View {
         acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
         acceptView.set(text: interactions.acceptTitle, for: .Normal)
         acceptView.disableActions()
-        acceptView.sizeToFit()
+        _ = acceptView.sizeToFit()
         if let cancelTitle = interactions.cancelTitle {
             cancelView = TitleButton()
             cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
             cancelView?.set(text: cancelTitle, for: .Normal)
-            cancelView?.sizeToFit()
+            _ = cancelView?.sizeToFit()
             
         } else {
             cancelView = nil
@@ -147,17 +148,17 @@ private class ModalInteractionsContainer : View {
     }
     
     public func updateDone() {
-        acceptView.sizeToFit()
+        _ = acceptView.sizeToFit()
         needsLayout = true
     }
     
     public func updateCancel() {
-        cancelView?.sizeToFit()
+        _ = cancelView?.sizeToFit()
         needsLayout = true
     }
     public func updateThrid(_ text:String) {
         acceptView.set(text: text, for: .Normal)
-        acceptView.sizeToFit()
+        _ = acceptView.sizeToFit()
         
         needsLayout = true
     }
@@ -175,7 +176,11 @@ private class ModalInteractionsContainer : View {
         
         acceptView.centerY(x:frame.width - acceptView.frame.width - 30)
         if let cancelView = cancelView {
-            cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
+            if interactions.alignCancelLeft {
+                cancelView.centerY(x: 30)
+            } else {
+                cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
+            }
         }
         borderView?.frame = NSMakeRect(0, 0, frame.width, .borderSize)
     }
@@ -253,12 +258,12 @@ public class Modal: NSObject {
         if controller.handleEvents {
             window.set(responder: { [weak controller] () -> NSResponder? in
                 return controller?.firstResponder()
-                }, with: self, priority: .modal)
+            }, with: self, priority: .high)
             
             if controller.handleAllEvents {
                 window.set(handler: { () -> KeyHandlerResult in
                     return .invokeNext
-                }, with: self, for: .All, priority: .modal)
+                }, with: self, for: .All, priority: .high)
             }
            
             
@@ -267,14 +272,14 @@ public class Modal: NSObject {
                     self?.close()
                 }
                 return .invoked
-                }, with: self, priority: .modal)
+            }, with: self, priority: .high)
             
             window.set(handler: { [weak self] () -> KeyHandlerResult in
                 if let controller = self?.controller {
                     return controller.returnKeyAction()
                 }
                 return .invokeNext
-            }, with: self, for: .Return, priority: .modal)
+            }, with: self, for: .Return, priority: .high)
         }
         
        
@@ -295,7 +300,6 @@ public class Modal: NSObject {
     
     
     public func resize(with size:NSSize, animated:Bool = true) {
-        
         let focus:NSRect
         if let interactions = controller?.modalInteractions {
             focus = background.focus(NSMakeSize(size.width, size.height + interactions.height))

@@ -38,7 +38,6 @@ class DragView : OverlayControl {
     init(item:DragItem) {
         self.item = item
         super.init(frame: NSZeroRect)
-        
         addSubview(textView)
         textView.backgroundColor = presentation.colors.background
         self.layer?.cornerRadius = .cornerRadius

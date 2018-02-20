@@ -116,16 +116,16 @@ final class GridMessageItemNode: GridItemNode {
                     strongSelf.updateSelectionState(animated: true)
                 } else {
                     if strongSelf._status == nil || strongSelf._status == .Local {
-                        showChatGallery(account: currentState.0, message: message, strongSelf.grid, ChatMediaGalleryParameters(showMedia: {}, showMessage: { [weak interactions] message in
+                        showChatGallery(account: currentState.0, message: message, strongSelf.grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
                             interactions?.focusMessageId(nil, message.id, .center(id: 0, animated: false, focus: true, inset: 0))
-                            }, isWebpage: false, media: message.media.first!), reversed: true)
+                        }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                     } else if let file = message.media.first as? TelegramMediaFile {
                         if let status = strongSelf._status {
                             switch status {
                             case .Remote:
-                                strongSelf.fetchingDisposable.set(chatMessageFileInteractiveFetched(account: currentState.0, file: file).start())
+                                strongSelf.fetchingDisposable.set(messageMediaFileInteractiveFetched(account: currentState.0, messageId: message.id, file: file).start())
                             case .Fetching:
-                                fileCancelInteractiveFetch(account: currentState.0, file: file)
+                                messageMediaFileCancelInteractiveFetch(account: currentState.0, messageId: message.id, file: file)
                             default:
                                 break
                             }
@@ -167,7 +167,7 @@ final class GridMessageItemNode: GridItemNode {
                 
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
 
-                if self.imageView.layer?.contents == nil {
+                if !self.imageView.hasImage {
                     self.imageView.setSignal( mediaGridMessagePhoto(account: account, photo: media, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                         if let strongSelf = self {
                             return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
@@ -189,7 +189,7 @@ final class GridMessageItemNode: GridItemNode {
 
                 
                 if self.imageView.layer?.contents == nil {
-                    self.imageView.setSignal( mediaGridMessageVideo(account: account, file: file, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                    self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, file: file, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                         if let strongSelf = self {
                             return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
                         } else {

@@ -22,7 +22,17 @@ class PeerListContainerView : View {
     let tableView = TableView(frame:NSZeroRect, drawBorder: true)
     var searchView:SearchView = SearchView(frame:NSZeroRect)
     var compose:ImageButton = ImageButton()
-    
+    var mode: PeerListMode = .plain {
+        didSet {
+            switch mode {
+            case .feedChannels:
+                compose.isHidden = true
+            case .plain:
+                compose.isHidden = false
+            }
+            needsLayout = true
+        }
+    }
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.border = [.Right]
@@ -51,30 +61,53 @@ class PeerListContainerView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        searchView.setFrameSize(newSize.width - 36 - compose.frame.width, 30)
-        tableView.setFrameSize(newSize.width, newSize.height - 49)
-    }
+
     
     
     
     override func layout() {
         super.layout()
+        
+        searchView.setFrameSize(frame.width - (!mode.isFeedChannels ? 36 + compose.frame.width : 20), 30)
+        tableView.setFrameSize(frame.width, frame.height - 49)
+        
         searchView.isHidden = frame.width < 200
         if searchView.isHidden {
-            compose.centerX(y: floorToScreenPixels((49 - compose.frame.height)/2.0))
+            compose.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - compose.frame.height)/2.0))
         } else {
-            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels((50 - compose.frame.height)/2.0))
+            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - compose.frame.height)/2.0))
         }
-        searchView.setFrameOrigin(10, floorToScreenPixels((49 - searchView.frame.height)/2.0))
+        searchView.setFrameOrigin(10, floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - searchView.frame.height)/2.0))
         tableView.setFrameOrigin(0, 49)
         self.needsDisplay = true
     }
 }
 
 
-class PeersListController: TelegramGenericViewController<PeerListContainerView>, TableViewDelegate {
+enum PeerListMode {
+    case plain
+    case feedChannels(PeerGroupId)
+    
+    var isFeedChannels:Bool {
+        switch self {
+        case .feedChannels:
+            return true
+        default:
+            return false
+        }
+    }
+    var groupId: PeerGroupId? {
+        switch self {
+        case let .feedChannels(groupId):
+            return groupId
+        default:
+            return nil
+        }
+    }
+}
+
+
+class PeersListController: EditableViewController<PeerListContainerView>, TableViewDelegate {
     
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
@@ -86,6 +119,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private let createSecretChatDisposable = MetaDisposable()
     private let layoutDisposable = MetaDisposable()
     private let followGlobal:Bool
+    private let searchOptions: AppSearchOptions
+    let mode:PeerListMode
     private var searchController:SearchController? {
         didSet {
             if let controller = searchController {
@@ -99,9 +134,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    init(_ account:Account, followGlobal:Bool = true) {
+    init(_ account:Account, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
-        
+        self.mode = mode
+        self.searchOptions = searchOptions
         super.init(account)
 
     }
@@ -120,9 +156,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if followGlobal {
-            globalPeerDisposable.set((globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] peerId in
-                self?.genericView.tableView.changeSelection(stableId: peerId)
+        
+        genericView.mode = mode
+        
+        if followGlobal, mode.groupId == nil {
+            globalPeerDisposable.set((globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
+                self?.genericView.tableView.changeSelection(stableId: location)
             }))
         }
         
@@ -135,7 +174,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         genericView.tableView.delegate = self
-        let table = genericView.tableView
         
         
         
@@ -167,7 +205,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         }
                         
                         strongSelf.createSecretChatDisposable.set(create.start(next: { [weak self] peerId in
-                            self?.navigationController?.push(ChatController(account: account, peerId: peerId))
+                            self?.navigationController?.push(ChatController(account: account, chatLocation: .peer(peerId)))
                         }))
                         
                     }
@@ -182,52 +220,86 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }, for: .Click)
         
         
-        genericView.searchView.searchInteractions = SearchInteractions({[weak self] (state) in
-            if let strongSelf = self {
-                switch state.state {
-                case .Focus:
-                    
-                    assert(strongSelf.searchController == nil)
-                    
-                    let searchController = SearchController(account: strongSelf.account, open:{ [weak strongSelf] (peerId, message, close) in
-                        strongSelf?.open(with: peerId, message:message, close:close)
-                    }, frame:table.frame)
-                    strongSelf.searchController = searchController
+        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state in
+            guard let `self` = self else {return}
+            
+            switch state.state {
+            case .Focus:
+               assert(self.searchController == nil)
+                switch self.mode {
+                case .plain:
+                    self.showSearchController(animated: true)
+                case .feedChannels:
+                    if state.request.isEmpty {
+                        self.hideSearchController(animated: true)
+                    }
+                }
                 
-                    searchController.navigationController = strongSelf.navigationController
-                    searchController.viewWillAppear(true)
-                    searchController.view.layer?.opacity = 1.0
-                    searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{[weak strongSelf](complete) in
-                        strongSelf?.searchController?.viewDidAppear(true)
-                    })
-                    
-                    strongSelf.addSubview(searchController.view)
-                case .None:
-                    
-                    assert(strongSelf.searchController != nil)
-                    
-                    let searchController = strongSelf.searchController!
-                    searchController.viewWillDisappear(true)
-                    searchController.view.layer?.opacity = 0.0
-                    searchController.view.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, completion:{[weak strongSelf](complete) in
-                        
-                        strongSelf?.searchController?.viewDidDisappear(true)
-                        strongSelf?.searchController?.removeFromSuperview()
-                        strongSelf?.searchController = nil
-                        
-                    })
-                    
+            case .None:
+                self.hideSearchController(animated: true)
+            }
+            
+        }, { [weak self] state in
+            guard let `self` = self else {return}
+            switch self.mode {
+            case .plain:
+                self.searchController?.request(with: state.request)
+            case .feedChannels:
+                if state.request.isEmpty {
+                    self.hideSearchController(animated: true)
+                } else {
+                    self.showSearchController(animated: true)
+                    self.searchController?.request(with: state.request)
                 }
             }
             
-            }, { [weak self] state in
-                self?.searchController?.request(with: state.request)
         })
         
         readyOnce()
         
     }
     
+    private func showSearchController(animated: Bool) {
+        
+        if searchController == nil {
+            let searchController = SearchController(account: self.account, open:{ [weak self] (peerId, message, close) in
+                self?.open(with: .peer(peerId), message:message, close:close)
+            }, options: searchOptions, frame:genericView.tableView.frame, groupId: self.mode.groupId)
+           
+            self.searchController = searchController
+            
+            searchController.navigationController = self.navigationController
+            searchController.viewWillAppear(true)
+            if animated {
+                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
+                    if complete {
+                        self?.searchController?.viewDidAppear(animated)
+                    }
+                })
+            } else {
+                searchController.viewDidAppear(animated)
+            }
+            
+            
+            self.addSubview(searchController.view)
+        }
+        
+       
+    }
+    
+    private func hideSearchController(animated: Bool) {
+        if let searchController = self.searchController {
+            searchController.viewWillDisappear(animated)
+            searchController.view.layer?.opacity = animated ? 1.0 : 0.0
+            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+                if completed {
+                    self?.searchController?.viewDidDisappear(true)
+                    self?.searchController?.removeFromSuperview()
+                    self?.searchController = nil
+                }
+            })
+        }
+    }
    
     
     override func viewWillAppear(_ animated: Bool) {
@@ -299,20 +371,16 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return .rejected
     }
     
-    func open(with peerId:PeerId, peer: Peer? = nil, message:Message? = nil, close:Bool = true) ->Void {
+    func open(with chatLocation: ChatLocation, message:Message? = nil, close:Bool = true, addition: Bool = false) ->Void {
         if let navigation = navigationController {
             
-            if peer?.canSendMessage == false {
-                
-            }
-            
-            if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == account.peerId {
+            if let modalAction = navigation.modalAction as? FWDNavigationAction, chatLocation.peerId == account.peerId {
                 _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, account: account, peerId: account.peerId).start()
                 _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
                 modalAction.afterInvoke()
                 navigation.removeModalAction()
             } else {
-                let chat:ChatController = ChatController(account: self.account, peerId:peerId, messageId:message?.id)
+                let chat:ChatController = addition ? ChatAdditionController(account: self.account, chatLocation: chatLocation, messageId: message?.id) : ChatController(account: self.account, chatLocation: chatLocation, messageId: message?.id)
                 navigation.push(chat)
             }
         }
@@ -340,42 +408,50 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.window?.set(handler: { [weak self] in
-            if let strongSelf = self {
-                return strongSelf.escapeKeyAction()
-            }
-            return .invokeNext
-        }, with: self, for: .Escape, priority:.low)
         
-        
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-            if let item = self?.genericView.tableView.selectedItem(), item.index > 0 {
+        switch mode {
+        case .plain:
+            self.window?.set(handler: { [weak self] in
+                if let strongSelf = self {
+                    return strongSelf.escapeKeyAction()
+                }
+                return .invokeNext
+                }, with: self, for: .Escape, priority:.low)
+            
+            
+            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+                if let item = self?.genericView.tableView.selectedItem(), item.index > 0 {
+                    self?.genericView.tableView.selectPrev()
+                }
+                return .invoked
+                }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
+            
+            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+                self?.genericView.tableView.selectNext()
+                return .invoked
+                }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
+            
+            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
+                self?.genericView.tableView.selectNext()
+                return .invoked
+                }, with: self, for: .Tab, priority: .low, modifierFlags: [.control])
+            
+            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
                 self?.genericView.tableView.selectPrev()
-            }
-            return .invoked
-        }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
+                return .invoked
+                }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
+            
+            #if DEBUG
+                self.window?.set(handler: { () -> KeyHandlerResult in
+                    _ = updateBubbledSettings(postbox: self.account.postbox, bubbled: !theme.bubbled).start()
+                    return .invoked
+                }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
+            #endif
+        default:
+            break
+        }
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-            self?.genericView.tableView.selectNext()
-            return .invoked
-        }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
         
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-            self?.genericView.tableView.selectNext()
-            return .invoked
-        }, with: self, for: .Tab, priority: .low, modifierFlags: [.control])
-        
-        self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-            self?.genericView.tableView.selectPrev()
-            return .invoked
-        }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
-        
-        #if DEBUG
-        self.window?.set(handler: { () -> KeyHandlerResult in
-                _ = updateBubbledSettings(postbox: self.account.postbox, bubbled: !theme.bubbled).start()
-            return .invoked
-        }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
-        #endif
         
     }
     

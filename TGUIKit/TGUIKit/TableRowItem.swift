@@ -21,6 +21,10 @@ open class TableRowItem: NSObject {
         
     }
     
+    open var isUniqueView: Bool {
+        return false
+    }
+    
     open var animatable:Bool {
         return true
     }

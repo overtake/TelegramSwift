@@ -87,8 +87,8 @@ class ContextCommandRowView : TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? ContextCommandRowItem {
-            textView.update(item.ctxTitle, origin:NSMakePoint(50, floorToScreenPixels(frame.height / 2 - item.ctxTitle.layoutSize.height)))
-            descView.update(item.ctxDesc, origin:NSMakePoint(50, floorToScreenPixels(frame.height / 2)))
+            textView.update(item.ctxTitle, origin:NSMakePoint(50, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2 - item.ctxTitle.layoutSize.height)))
+            descView.update(item.ctxDesc, origin:NSMakePoint(50, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2)))
         }
     }
     

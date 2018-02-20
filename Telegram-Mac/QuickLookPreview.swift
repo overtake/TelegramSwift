@@ -155,7 +155,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
     func previewPanel(_ panel: QLPreviewPanel!, sourceFrameOnScreenFor item: QLPreviewItem!) -> NSRect {
         
         if let stableId = stableId {
-            let view:NSView? = delegate?.contentInteractionView(for: stableId)
+            let view:NSView? = delegate?.contentInteractionView(for: stableId, animateIn: false)
             
             if let view = view, let window = view.window {
               //  let tframe = view.frame
@@ -169,7 +169,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
     func previewPanel(_ panel: QLPreviewPanel!, transitionImageFor item: QLPreviewItem!, contentRect: UnsafeMutablePointer<NSRect>!) -> Any! {
         
         if let stableId = stableId {
-            let view:NSView? = delegate?.contentInteractionView(for: stableId)
+            let view:NSView? = delegate?.contentInteractionView(for: stableId, animateIn: true)
             
             if let view = view?.copy() as? View, let contents = view.layer?.contents {
                 return NSImage(cgImage: contents as! CGImage, size: view.frame.size)

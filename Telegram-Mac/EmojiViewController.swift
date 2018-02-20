@@ -257,7 +257,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             return key
         }.sorted(by: <)
         
-        let w = floorToScreenPixels(frame.width / CGFloat(seg.count))
+        let w = floorToScreenPixels(scaleFactor: System.backingScale, frame.width / CGFloat(seg.count))
         
         genericView.tabs.setFrameSize(NSMakeSize(w * CGFloat(seg.count), genericView.tabs.frame.height))
         genericView.tabs.centerX()

@@ -141,6 +141,11 @@ class GeneralTextRowView : GeneralRowView {
         }
     }
     
+    
+    override func shakeView() {
+        textView.shake()
+    }
+    
 
     
     override func layout() {

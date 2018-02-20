@@ -94,8 +94,11 @@ public class DrawingContext {
     let provider: CGDataProvider?
     
     private var _context: CGContext?
+    public private(set) var isHighQuality: Bool = true
     
-    public func withContext(_ f: (CGContext) -> ()) {
+    public func withContext(isHighQuality: Bool = true, _ f: (CGContext) -> ()) {
+        
+        self.isHighQuality = isHighQuality
         if self._context == nil {
             if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
                 c.scaleBy(x: scale, y: scale)
@@ -108,7 +111,9 @@ public class DrawingContext {
         }
     }
     
-    public func withFlippedContext(horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {
+    public func withFlippedContext(isHighQuality: Bool = true, horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {
+        self.isHighQuality = isHighQuality
+        
         if self._context == nil {
             if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
                 c.scaleBy(x: scale, y: scale)

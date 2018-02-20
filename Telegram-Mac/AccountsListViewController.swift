@@ -115,6 +115,10 @@ class AccountsListViewController : GenericViewController<TableView> {
         
     }
     
+    override var defaultBarTitle: String {
+        return "Accounts"
+    }
+    
     private func entries(from: AccountRecordsView) -> [AccountRecordEntry] {
         var entries:[AccountRecordEntry] = []
         entries.append(.newAccount)

@@ -233,7 +233,7 @@ class UsernameSettingsViewController: TableViewController {
                     if let error = fail.formatError {
                         stateEntry = .stateEntry(text: error.description, color: theme.colors.redUI)
                     } else {
-                        stateEntry = .stateEntry(text: fail.availability.description, color: theme.colors.redUI)
+                        stateEntry = .stateEntry(text: fail.availability.description(for: address), color: theme.colors.redUI)
                     }
                     if fail.username?.length != 0 {
                         mutableItems.insert(stateEntry, at: 2)

@@ -51,27 +51,30 @@ open class TransformImageView: NSView {
         disposable.set(nil)
     }
     
-    public func setSignal(signal: Signal<CGImage?, Void>) {
+    public func setSignal(signal: Signal<CGImage?, Void>, clearInstantly: Bool = true) {
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image in
-            self?.layer?.contents = image
+            if clearInstantly {
+                self?.layer?.contents = image
+            } else if let image = image {
+                self?.layer?.contents = image
+            }
+            
         }))
     }
     
     
-    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = true, animate:Bool = false, cacheImage:(Signal<CGImage?, Void>) -> Signal<Void, Void> = {_ in return .single(Void())}) {
+    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, cacheImage:(Signal<(CGImage?, Bool), Void>) -> Signal<Void, Void> = { signal in return signal |> map {_ in return}}) {
         if clearInstantly {
             self.layer?.contents = nil
         }
-        let result = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged) |> deliverOn(imagesThreadPool) |> mapToThrottled { transform, arguments -> Signal<CGImage?, NoError> in
+        let result = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged) |> deliverOn(imagesThreadPool) |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
             return deferred {
-                return Signal<CGImage?, NoError>.single(transform(arguments)?.generateImage())
+                let context = transform(arguments)
+                return Signal<(CGImage?, Bool), NoError>.single((context?.generateImage(), context?.isHighQuality ?? true))
             }
         }
         
-        cachedDisposable.set(cacheImage(result).start())
-        
-        self.disposable.set((result |> deliverOnMainQueue).start(next: {[weak self] next in
-            
+        self.disposable.set((cacheImage(result |> deliverOnMainQueue |> beforeNext { [weak self] (next, _) in
             if let strongSelf = self  {
                 if strongSelf.layer?.contents == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -84,8 +87,12 @@ open class TransformImageView: NSView {
                 }
                 strongSelf.first = false
             }
-            
-        }))
+        })).start())
+
+    }
+    
+    public var hasImage: Bool {
+        return layer?.contents != nil
     }
     
     public func set(arguments:TransformImageArguments) ->Void {

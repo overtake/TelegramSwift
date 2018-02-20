@@ -62,8 +62,11 @@ class ChatDateStickItem : TableStickItem {
             text = tr(L10n.dateToday)
         } else {
             let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: appCurrentLanguage.languageCode)
+            dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";
+            if timeinfoNow.tm_year > timeinfo.tm_year && (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2) {
+                dateFormatter.dateFormat = "dd MMMM yyyy";
+            }
             text = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
 
         }
@@ -140,7 +143,7 @@ class ChatDateStickView : TableStickView {
     }
     
     override func updateIsVisible(_ visible: Bool, animated: Bool) {
-        textView.change(opacity: visible ? 1 : 0, animated: false)
+        textView.change(opacity: visible ? 1 : 0, animated: animated)
     }
     
     

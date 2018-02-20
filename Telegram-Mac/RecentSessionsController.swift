@@ -335,7 +335,7 @@ class RecentSessionsController : TableViewController {
                 return $0.withUpdatedRemovingSessionId(sessionId)
             }
             
-            let applySessions: Signal<Void, NoError> = sessionsPromise.get()
+            let applySessions: Signal<Void, TerminateSessionError> = sessionsPromise.get()
                 |> filter { $0 != nil }
                 |> take(1)
                 |> deliverOnMainQueue
@@ -352,9 +352,16 @@ class RecentSessionsController : TableViewController {
                     }
                     
                     return .complete()
-            }
+                } |> mapError {_ in return .generic}
+
             
-            removeSessionDisposable.set((terminateAccountSession(account: account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { _ in
+            removeSessionDisposable.set((terminateAccountSession(account: account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { error in
+                switch error {
+                case .freshReset:
+                    alert(for: mainWindow, info: L10n.recentSessionsErrorFreshReset)
+                default:
+                    break
+                }
                 updateState {
                     return $0.withUpdatedRemovingSessionId(nil)
                 }

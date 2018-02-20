@@ -14,15 +14,36 @@ import SwiftSignalKitMac
 
 class ChatMediaLayoutParameters : Equatable {
     
+    var showMedia:(Message)->Void = {_ in }
+    var showMessage:(Message)->Void = {_ in }
+    
     let presentation: ChatMediaPresentation
     let media: Media
-    init(presentation: ChatMediaPresentation, media: Media) {
+    
+    private var _automaticDownload: Bool
+    
+    var automaticDownload: Bool {
+        get {
+            let value = _automaticDownload
+//            _automaticDownload = false
+            return value
+        }
+    }
+    
+    var automaticDownloadFunc:(Message)->Bool
+    
+    
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
+        self.automaticDownloadFunc = { _ in
+            return automaticDownload
+        }
         self.presentation = presentation
         self.media = media
+        self._automaticDownload = automaticDownload
     }
     
     
-    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation) -> ChatMediaLayoutParameters {
+    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool) -> ChatMediaLayoutParameters {
         if media.isInstantVideo {
             var duration:Int = 0
             for attr in media.attributes {
@@ -34,7 +55,7 @@ class ChatMediaLayoutParameters : Equatable {
                 }
             }
             
-            return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media)
+            return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
         } else if media.isVoice {
             var waveform:AudioWaveform? = nil
             var duration:Int = 0
@@ -50,7 +71,7 @@ class ChatMediaLayoutParameters : Equatable {
                 }
             }
             
-            return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration:duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media)
+            return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration:duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
         } else if media.isMusic {
             var audioTitle:String?
             var audioPerformer:String?
@@ -80,13 +101,13 @@ class ChatMediaLayoutParameters : Equatable {
                 audioTitle = media.fileName
             }
             
-            return ChatMediaMusicLayoutParameters(nameLayout: TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end), durationLayout: TextViewLayout(.initialize(string: String.durationTransformed(elapsed: duration), color: presentation.grayText, font: .normal(.title)), maximumNumberOfLines: 1, truncationType: .end), sizeLayout: TextViewLayout(.initialize(string: (media.size ?? 0).prettyNumber, color: presentation.grayText, font: .normal(.title)), maximumNumberOfLines: 1, truncationType: .middle), resource: media.resource, isWebpage: isWebpage, title: audioTitle, performer: audioPerformer, showPlayer:chatInteraction.inlineAudioPlayer, presentation: presentation, media: media)
+            return ChatMediaMusicLayoutParameters(nameLayout: TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end), durationLayout: TextViewLayout(.initialize(string: String.durationTransformed(elapsed: duration), color: presentation.grayText, font: .normal(.title)), maximumNumberOfLines: 1, truncationType: .end), sizeLayout: TextViewLayout(.initialize(string: (media.size ?? 0).prettyNumber, color: presentation.grayText, font: .normal(.title)), maximumNumberOfLines: 1, truncationType: .middle), resource: media.resource, isWebpage: isWebpage, title: audioTitle, performer: audioPerformer, showPlayer:chatInteraction.inlineAudioPlayer, presentation: presentation, media: media, automaticDownload: automaticDownload)
         } else {
             var fileName:String = "Unknown.file"
             if let name = media.fileName {
                 fileName = name
             }
-            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media)
+            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload)
         }
     }
     
@@ -98,13 +119,12 @@ class ChatMediaLayoutParameters : Equatable {
 
 class ChatMediaGalleryParameters : ChatMediaLayoutParameters {
     let isWebpage: Bool
-    let showMedia:()->Void
-    let showMessage:(Message)->Void
-    init(showMedia:@escaping()->Void, showMessage:@escaping(Message)->Void, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media) {
+
+    init(showMedia:@escaping(Message)->Void, showMessage:@escaping(Message)->Void, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool) {
+       self.isWebpage = isWebpage
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload)
         self.showMedia = showMedia
         self.showMessage = showMessage
-        self.isWebpage = isWebpage
-        super.init(presentation: presentation, media: media)
     }
 }
 
@@ -134,7 +154,6 @@ class ChatMediaItem: ChatRowItem {
         var frame = super.bubbleFrame
         
         if isBubbleFullFilled {
-            frame.size.height -= 2
             frame.size.width = contentSize.width + additionBubbleInset
             if hasBubble {
                 frame.size.width += self.mediaBubbleCornerInset * 2
@@ -146,9 +165,9 @@ class ChatMediaItem: ChatRowItem {
     
     override var defaultContentTopOffset: CGFloat {
         if isBubbled && !hasBubble {
-            return defaultContentInnerInset
+            return 2
         }
-        return isBubbled && !isBubbleFullFilled ? 14 : super.defaultContentTopOffset
+        return isBubbled && !isBubbleFullFilled ? 14 :  super.defaultContentTopOffset
     }
     
 
@@ -159,13 +178,13 @@ class ChatMediaItem: ChatRowItem {
         if hasBubble {
             if  forwardNameLayout != nil {
                 offset.y += defaultContentInnerInset
-            } else if authorText == nil, !isBubbleFullFilled  {
+            } else if !isBubbleFullFilled  {
                 offset.y += (defaultContentInnerInset + 2)
             }
         }
 
         if hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil {
-            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2)
+            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2 - (isBubbleFullFilled ? 1 : 0))
         }
         return offset
     }
@@ -182,7 +201,7 @@ class ChatMediaItem: ChatRowItem {
     
     override var _defaultHeight: CGFloat {
         if hasBubble && isBubbleFullFilled && captionLayout == nil {
-            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2
+            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2 - 1
         }
         
         return super._defaultHeight
@@ -207,7 +226,7 @@ class ChatMediaItem: ChatRowItem {
             }
         }
         if postAuthor != nil {
-           // return isStateOverlayLayout ? nil : rightSize.height
+            return isStateOverlayLayout ? nil : rightSize.height
         }
         return super.additionalLineForDateInBubbleState
     }
@@ -233,7 +252,7 @@ class ChatMediaItem: ChatRowItem {
     
     var positionFlags: GroupLayoutPositionFlags? = nil
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         let message = object.message!
         
@@ -242,15 +261,14 @@ class ChatMediaItem: ChatRowItem {
         media = message.media[0]
         
         
-        super.init(initialSize, chatInteraction, account, object)
+        super.init(initialSize, chatInteraction, account, object, downloadSettings)
         
         
         if !message.text.isEmpty {
             
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()
-            NSAttributedString.initialize()
-            _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming), font: NSFont.normal(theme.fontSize))
+            _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
             var types:ParsingType = [.Links, .Mentions, .Hashtags]
             
             if let peer = messageMainPeer(message) as? TelegramUser {
@@ -276,21 +294,30 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             if hasEntities {
-                caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.forceSendMessage, hashtag:chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy).mutableCopy() as! NSMutableAttributedString
+                caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
             }
-            caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.modalSearch, command: chatInteraction.forceSendMessage)
-            captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true)
+            caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText)
+            captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true)
             
             captionLayout?.interactions = globalLinkExecutor
 
         }
         
         
-        self.parameters = ChatMediaGalleryParameters(showMedia: {
+        self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
+            guard let `self` = self else {return}
+            
+            var type:GalleryAppearType = .history
+            if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
+                type = .alone
+            } else if message.containsSecretMedia {
+                type = .secret
+            }
+            showChatGallery(account: account, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
             
         }, showMessage: { [weak self] message in
             self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: true, inset: 0))
-            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: account, renderType: object.renderType), media: media)
+        }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message))
         
         
         if isBubbleFullFilled  {
@@ -320,8 +347,8 @@ class ChatMediaItem: ChatRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         var items:Signal<[ContextMenuItem], Void> = .complete()
-        if let message = message, let peer = peer {
-            items = chatMenuItems(for: message, account: account, chatInteraction: chatInteraction, peer: peer)
+        if let message = message {
+            items = chatMenuItems(for: message, account: account, chatInteraction: chatInteraction)
         }
         return items |> map { [weak self] items in
             var items = items
@@ -334,7 +361,7 @@ class ChatMediaItem: ChatRowItem {
                 if let view = self?.view as? ChatRowView, let textView = view.captionView, let window = textView.window {
                     let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                     if let layout = textView.layout {
-                        if let (link, range, _) = layout.link(at: point) {
+                        if let (link, _, range, _) = layout.link(at: point) {
                             var text:String = layout.attributedString.string.nsstring.substring(with: range)
                             if let link = link as? inAppLink {
                                 if case let .external(link, _) = link {
@@ -446,11 +473,38 @@ class ChatMediaView: ChatRowView {
         super.set(item: item, animated: animated)
     }
     
-    open override func interactionContentView(for innerId: AnyHashable ) -> NSView {
-        if let content = self.contentNode?.interactionContentView(for: innerId) {
+    open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
+         if let content = self.contentNode?.interactionContentView(for: innerId, animateIn: animateIn) {
             return content
         }
         return self
+    }
+    
+    override func interactionControllerDidFinishAnimation(interactive: Bool, innerId: AnyHashable) {
+       
+        if interactive {
+            self.contentNode?.interactionControllerDidFinishAnimation(interactive: interactive)
+        }
+    }
+    
+    override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        guard let item = item as? ChatRowItem, let contentNode = contentNode else {return}
+
+        
+        
+        
+        let rightView = ChatRightView(frame: NSZeroRect)
+        rightView.set(item: item, animated: false)
+        var rect = self.rightView.convert(self.rightView.bounds, to: contentNode)
+        
+        if contentNode.visibleRect.minY < rect.midY && contentNode.visibleRect.minY + contentNode.visibleRect.height > rect.midY {
+            rect.origin.y = contentNode.frame.height - rect.maxY
+            rightView.frame = rect
+            view.addSubview(rightView)
+        }
+        
+        
+        contentNode.addAccesoryOnCopiedView(view: view)
     }
 
 }

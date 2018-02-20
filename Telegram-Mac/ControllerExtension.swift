@@ -212,10 +212,14 @@ final class Appearance : Equatable {
         self.language = language
         self.presentation = presentation
     }
+    
+    var newAllocation: Appearance {
+        return Appearance(language: language, presentation: presentation)
+    }
 }
 
 func ==(lhs:Appearance, rhs:Appearance) -> Bool {
-    return lhs.language === rhs.language && lhs.presentation === rhs.presentation
+    return lhs === rhs //lhs.language === rhs.language && lhs.presentation === rhs.presentation
 }
 
 var theme: TelegramPresentationTheme {

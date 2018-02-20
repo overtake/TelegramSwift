@@ -32,7 +32,7 @@ public class BadgeNode: Node {
             ctx.fill(layer.bounds)
             
             let focus = view.focus(textLayout.0.size)
-            textLayout.1.draw(focus, in: ctx, backingScaleFactor: view.backingScaleFactor)
+            textLayout.1.draw(focus, in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: view.backgroundColor)
         }
         
     }

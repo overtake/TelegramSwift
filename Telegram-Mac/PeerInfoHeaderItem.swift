@@ -56,7 +56,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
         isVerified = peer?.isVerified ?? false
         
         if let peer = peer {
-            photo = peerAvatarImage(account: account, peer: peer, displayDimensions:NSMakeSize(photoDimension, photoDimension))
+            photo = peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters), displayDimensions:NSMakeSize(photoDimension, photoDimension))
         }
         self.result = stringStatus(for: peerView, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false))
         

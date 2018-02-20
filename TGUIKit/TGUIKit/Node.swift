@@ -15,7 +15,7 @@ open class Node: NSObject, ViewDisplayDelegate {
     
     
     open var backgroundColor:NSColor? {
-        return self.view?.background
+        return self.view?.backgroundColor
     }
     
     private let _strongView:View?
@@ -69,9 +69,7 @@ open class Node: NSObject, ViewDisplayDelegate {
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
-        guard let backgroundColor = backgroundColor else {return}
-        ctx.setFillColor(backgroundColor.cgColor)
-        ctx.fill(layer.bounds)
+
     }
     
 

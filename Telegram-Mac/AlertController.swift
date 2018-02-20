@@ -8,6 +8,9 @@
 
 import Cocoa
 import TGUIKit
+import TelegramCoreMac
+import PostboxMac
+import SwiftSignalKitMac
 
 private var global:AlertController? = nil
 
@@ -17,21 +20,30 @@ private class AlertBackgroundModalViewController : ModalViewController {
         readyOnce()
     }
 }
+
+private let readyDisposable = MetaDisposable()
+
+
 class AlertController: ViewController {
 
     fileprivate let alert: Window
     private let _window: NSWindow
     private let header: String
-    private let text: String
+    private let text: String?
     private let okTitle:String
     private let cancelTitle:String?
     private let thridTitle:String?
-    private let swapColors: Bool
-    init(_ window: NSWindow, header: String, text:String, okTitle: String? = nil, cancelTitle: String? = nil, thridTitle: String? = nil, swapColors: Bool = false) {
+    private let account: Account
+    private let peerId: PeerId?
+    private let accessory: CGImage?
+    private let disposable = MetaDisposable()
+    init(_ window: NSWindow, account: Account, peerId: PeerId?, header: String, text:String? = nil, okTitle: String? = nil, cancelTitle: String? = nil, thridTitle: String? = nil, accessory: CGImage? = nil) {
+        self.account = account
+        self.accessory = accessory
+        self.peerId = peerId
         self._window = window
         self.header = header
         self.text = text
-        self.swapColors = swapColors
         self.okTitle = okTitle ?? tr(L10n.alertOK)
         self.cancelTitle = cancelTitle
         self.thridTitle = thridTitle
@@ -51,28 +63,56 @@ class AlertController: ViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let maxWidth = genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors, okHandler: { [weak self] in
-            self?.close(.OK)
-            }, cancelHandler: { [weak self] in
-                self?.close(.cancel)
-            }, thridHandler: { [weak self] in
-                self?.close(.alertThirdButtonReturn)
+        if let peerId = peerId {
+            disposable.set((account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
+                self?.layoutAndReady(peer)
+            }))
+        } else {
+            layoutAndReady(nil)
+        }
+       
+        
+       
+    }
+    
+    private func layoutAndReady(_ peer: Peer?) {
+        let maxWidth = genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, okHandler: { [weak self] in
+            guard let `self` = self else {return}
+            self.close(self.checkBoxSelectd ? .alertThirdButtonReturn : .OK)
+        }, cancelHandler: { [weak self] in
+            self?.close(.cancel)
         })
-        genericView.layoutTexts(with: self.header, information: text, maxWidth: maxWidth)
+        genericView.layoutTexts(with: self.header, information: text, account: account, peer: peer, thridTitle: thridTitle, accessory: accessory, maxWidth: maxWidth)
         alert.setFrame(NSMakeRect(0, 0, maxWidth, view.frame.height), display: true)
         view.frame = NSMakeRect(0, 0, maxWidth, view.frame.height)
         view.needsLayout = true
+        readyOnce()
+    }
+    
+    deinit {
+        disposable.dispose()
+        alert.removeAllHandlers(for: self)
     }
     
     func show(completionHandler: @escaping(NSApplication.ModalResponse)->Void) {
         
         global = self
+
         loadViewIfNeeded()
         viewDidLoad()
+        
+        readyDisposable.set(ready.get().start(next: { [weak self] _ in
+            self?.showInited(completionHandler: completionHandler)
+        }))
+    }
+    
+    private func showInited(completionHandler: @escaping(NSApplication.ModalResponse)->Void) {
+        
         let modal = AlertBackgroundModalViewController(frame: NSZeroRect)
         if let _window = _window as? Window {
             showModal(with: modal, for: _window)
         }
+        
         alert.setFrame(view.bounds, display: false)
         alert.contentView = self.view
         _window.beginSheet(alert) { [weak modal] response in
@@ -92,13 +132,13 @@ class AlertController: ViewController {
         }, with: self, for: .Space)
         
         alert.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.close(.OK)
+            guard let `self` = self else {return .rejected}
+            self.close(self.checkBoxSelectd ? .alertThirdButtonReturn : .OK)
             return .invoked
         }, with: self, for: .Return)
     }
-    
-    deinit {
-        alert.removeAllHandlers(for: self)
+    private var checkBoxSelectd: Bool {
+        return genericView.checkbox.isSelected
     }
     
     private var genericView: AlertControllerView {

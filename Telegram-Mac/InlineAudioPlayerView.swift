@@ -23,7 +23,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     let repeatControl:ImageButton = ImageButton()
     let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
     let textView:TextView = TextView()
-    let containerView:View = View()
+    let containerView:View
     let separator:View = View()
     private var controller:APController?
     private var message:Message?
@@ -33,10 +33,12 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         separator.backgroundColor = .border
         
+        dismiss.disableActions()
+        repeatControl.disableActions()
         
         textView.isSelectable = false
         
-
+        containerView = View(frame: NSMakeRect(0, 0, 0, header.height))
         
         super.init(header)
 
@@ -87,8 +89,11 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         addSubview(progressView)
         
         textView.userInteractionEnabled = false
+     
         
         updateLocalizationAndTheme()
+        
+        
     }
     
     private var playProgressStyle:ControlStyle {
@@ -115,11 +120,17 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             repeatControl.set(image: theme.icons.audioPlayerRepeat, for: .Normal)
         }
         
-        previous.sizeToFit()
-        next.sizeToFit()
-        playOrPause.sizeToFit()
-        dismiss.sizeToFit()
-        repeatControl.sizeToFit()
+        _ = previous.sizeToFit()
+        _ = next.sizeToFit()
+        _ = playOrPause.sizeToFit()
+        _ = dismiss.sizeToFit()
+        _ = repeatControl.sizeToFit()
+        
+        
+        previous.centerY(x: 20)
+        playOrPause.centerY(x: previous.frame.maxX + 5)
+        next.centerY(x: playOrPause.frame.maxX + 5)
+
         
         backgroundColor = theme.colors.background
         containerView.backgroundColor = theme.colors.background
@@ -133,7 +144,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: false, inset: 0))
             } else {
-                navigation.push(ChatController(account: controller.account, peerId: message.id.peerId, messageId: message.id))
+                navigation.push(ChatController(account: controller.account, chatLocation: .peer(message.id.peerId), messageId: message.id))
             }
         }
     }
@@ -215,18 +226,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         stopAndHide(true)
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        separator.setFrameSize(newSize.width, .borderSize)
-    }
-    
     override func layout() {
         super.layout()
-        containerView.frame = NSMakeRect(0, 0, frame.width, frame.height)
-        
-        previous.centerY(x: 20)
-        playOrPause.centerY(x: previous.frame.maxX + 5)
-        next.centerY(x: playOrPause.frame.maxX + 5)
+        containerView.frame = bounds
+
         
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
@@ -236,8 +239,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
         
-        textView.centerY(x: next.frame.maxX + floorToScreenPixels((w - textView.frame.width)/2), addition: -2)
-        separator.setFrameOrigin(0, frame.height - .borderSize)
+        textView.centerY(x: next.frame.maxX + floorToScreenPixels(scaleFactor: backingScaleFactor, (w - textView.frame.width)/2), addition: -2)
+        
+        separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
     func stopAndHide(_ animated:Bool) -> Void {

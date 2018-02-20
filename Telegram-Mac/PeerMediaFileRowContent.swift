@@ -152,7 +152,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            chatMessageFileCancelInteractiveFetch(account: item.account, file: file)
+            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, file: file)
         }
     }
     
@@ -168,14 +168,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func fetch() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            let account = item.account
-            fetchDisposable.set((chatMessageFileInteractiveFetched(account: item.account, file: file) |> mapToSignal { source -> Signal<Void, NoError> in
-                if source == .remote {
-                    return copyToDownloads(file, account: account)
-                } else {
-                    return .single(Void())
-                }
-            }).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, file: file).start())
         }
     }
     
@@ -238,7 +231,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         
     }
     
-    override func interactionContentView(for innerId: AnyHashable ) -> NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return imageView
     }
     

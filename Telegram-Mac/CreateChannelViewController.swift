@@ -59,9 +59,25 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         return true
     }
     
+    override func returnKeyAction() -> KeyHandlerResult {
+        if let event = NSApp.currentEvent, let descView = genericView.viewNecessary(at: descItem.index) as? GeneralInputRowView {
+            if !descView.textViewEnterPressed(event), window?.firstResponder == descView.textView.inputView {
+                return .invokeNext
+            }
+        }
+        
+        return super.returnKeyAction()
+    }
+    
     override func executeNext() {
         let picture = self.picture
         let account = self.account
+        
+        if nameItem.text.isEmpty {
+            nameItem.view?.shakeView()
+            return
+        }
+        
         
         onComplete.set(showModalProgress(signal: createChannel(account: account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
             if let peerId = peerId, let picture = picture {

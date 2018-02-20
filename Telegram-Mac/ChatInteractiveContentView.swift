@@ -44,25 +44,39 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     
     override func open() {
-        if let parent = parent, let account = account {
-            let parameters = self.parameters as? ChatMediaGalleryParameters
-            var type:GalleryAppearType = .history
-            if let parameters = parameters, parameters.isWebpage {
-                type = .alone
-            } else if parent.containsSecretMedia {
-                type = .secret
-            }
-            showChatGallery(account: account,message: parent, table, parameters, type: type)
+        if let parent = parent {
+            parameters?.showMedia(parent)
         }
     }
     
+    override func interactionControllerDidFinishAnimation(interactive: Bool) {
+
+    }
     
+    override func addAccesoryOnCopiedView(view: NSView) {
+        if let videoAccessory = videoAccessory?.copy() as? NSView {
+            if visibleRect.minY < videoAccessory.frame.midY && visibleRect.minY + visibleRect.height > videoAccessory.frame.midY {
+                videoAccessory.frame.origin.y = frame.height - videoAccessory.frame.maxY
+                view.addSubview(videoAccessory)
+            }
+           
+        }
+        if let progressView = progressView {
+            let pView = RadialProgressView(theme: progressView.theme, twist: true)
+            pView.state = progressView.state
+            pView.frame = progressView.frame
+            if visibleRect.minY < progressView.frame.midY && visibleRect.minY + visibleRect.height > progressView.frame.midY {
+                pView.frame.origin.y = frame.height - progressView.frame.maxY
+                view.addSubview(pView)
+            }
+        }
+    }
 
     override func layout() {
         super.layout()
         progressView?.center()
         timableProgressView?.center()
-        videoAccessory?.setFrameOrigin(5, 5)
+        videoAccessory?.setFrameOrigin(8, 8)
 
         self.image.setFrameSize(frame.size)
     }
@@ -154,7 +168,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         videoAccessory = ChatMessageAccessoryView(frame: NSMakeRect(5, 5, 0, 0))
                         addSubview(videoAccessory!)
                     }
-                    videoAccessory?.updateText(String.durationTransformed(elapsed: file.videoDuration) + ", \(String.prettySized(with: file.elapsedSize))", maxWidth: size.width - 20)
                 } else {
                     videoAccessory?.removeFromSuperview()
                     videoAccessory = nil
@@ -163,7 +176,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.containsSecretMedia {
                     updateImageSignal = chatSecretMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 } else {
-                    updateImageSignal = chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
+                    updateImageSignal = chatMessageVideo(postbox: account.postbox, file: file, scale: backingScaleFactor)  //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
                 dimensions = file.dimensions ?? size
@@ -182,24 +195,24 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions, boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: parent != nil ? .none : .fill(theme.colors.grayBackground))
             
-             self.image.set(arguments: arguments)
             
-            if !animated {
-                self.image.setSignal(signal: cachedMedia(media: media, size: arguments.boundingSize, scale: backingScaleFactor))
-                mediaUpdated = mediaUpdated && self.image.layer?.contents == nil
-            }
+            self.image.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
+            mediaUpdated = mediaUpdated && !self.image.hasImage
+
             
             if let updateImageSignal = updateImageSignal {
-                self.image.setSignal( updateImageSignal, clearInstantly: mediaUpdated, animate: true, cacheImage: { [weak self] image in
+                self.image.setSignal( updateImageSignal, animate: mediaUpdated, cacheImage: { [weak self] image in
                     if let strongSelf = self {
-                        return cacheMedia(signal: image, media: media, size: arguments.boundingSize, scale: strongSelf.backingScaleFactor)
+                        return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
                     } else {
                         return .complete()
                     }
                 })
             }
+            
+            self.image.set(arguments: arguments)
         }
         
         if let updateStatusSignal = updatedStatusSignal {
@@ -227,16 +240,20 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         strongSelf.timableProgressView?.removeFromSuperview()
                         strongSelf.timableProgressView = nil
                         
-                        if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
+                        switch status {
+                        case .Local:
                             self?.image.animatesAlphaOnFirstTransition = false
-                            
-                            if let progressView = strongSelf.progressView {
+                        default:
+                            self?.image.animatesAlphaOnFirstTransition = false
+                        }
+                        
+                        if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
+                             if let progressView = strongSelf.progressView {
                                 progressView.state = .Fetching(progress:1.0, force: false)
                                 progressView.removeFromSuperview()
                                 strongSelf.progressView = nil
                             }
                         } else {
-                            self?.image.animatesAlphaOnFirstTransition = true
                             strongSelf.progressView?.layer?.removeAllAnimations()
                             if strongSelf.progressView == nil {
                                 let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
@@ -285,9 +302,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 
             }))
            
-            if media is TelegramMediaImage {
-                fetch()
-            }
         }
         
     }
@@ -312,9 +326,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     override func cancelFetching() {
-        if let account = account {
+        if let account = account, let parent = parent {
             if let media = media as? TelegramMediaFile {
-                chatMessageFileCancelInteractiveFetch(account: account, file: media)
+                messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
             } else if let media = media as? TelegramMediaImage {
                 chatMessagePhotoCancelInteractiveFetch(account: account, photo: media)
             }
@@ -322,9 +336,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
     }
     override func fetch() {
-        if let account = account {
+        if let account = account, let parent = parent {
             if let media = media as? TelegramMediaFile {
-                fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
             } else if let media = media as? TelegramMediaImage {
                 fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: media).start())
             }
