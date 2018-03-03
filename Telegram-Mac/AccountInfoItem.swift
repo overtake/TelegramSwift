@@ -143,10 +143,7 @@ class AccountInfoView : TableRowView, TGModernGrowingDelegate {
     }
     
     override var firstResponder: NSResponder? {
-        if window?.firstResponder == lastNameTextView.inputView || window?.firstResponder == firstNameTextView.inputView {
-            return window?.firstResponder
-        }
-        return self.firstNameTextView
+        return window?.firstResponder
     }
 
     required init?(coder: NSCoder) {
