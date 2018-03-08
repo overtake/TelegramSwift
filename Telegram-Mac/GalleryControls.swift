@@ -169,12 +169,12 @@ class GallerySecretControls : GalleryControls {
             duration.set(color: .white, for: .Normal)
             duration.set(text: "20 sec", for: .Normal)
             dismiss.set(image: dismissImage, for: .Normal)
-            dismiss.sizeToFit()
+            _ = dismiss.sizeToFit()
             dismiss.set(handler: {_ in _ = interactions.dismiss()}, for: .Click)
             view.addSubview(progress)
             view.addSubview(duration)
             view.addSubview(dismiss)
-           
+            
         }
     }
     

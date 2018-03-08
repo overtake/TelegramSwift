@@ -7,13 +7,15 @@
 //
 
 import Cocoa
-
-
+import SwiftSignalKitMac
 
 
 class SearchTextField: NSTextView {
-
     
+    @available(OSX 10.12.2, *)
+    override func makeTouchBar() -> NSTouchBar? {
+        return viewEnableTouchBar ? super.makeTouchBar() : nil
+    }
     
     override func resignFirstResponder() -> Bool {
         self.delegate?.textDidEndEditing?(Notification(name: NSControl.textDidChangeNotification))
@@ -58,6 +60,8 @@ public final class SearchInteractions {
 open class SearchView: OverlayControl, NSTextViewDelegate {
     
     public private(set) var state:SearchFieldState = .None
+    
+    
 
     private(set) public var input:NSTextView = SearchTextField()
     
@@ -99,7 +103,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.sizeToFit()
         search.frame = NSMakeRect(0, 0, presentation.search.searchImage.backingSize.width, presentation.search.searchImage.backingSize.height)
         search.image = presentation.search.searchImage
-        animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(placeholder.frame.height, search.frame.height)))
+        animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(21, search.frame.height)))
         
         clear.set(image: presentation.search.clearImage, for: .Normal)
        _ =  clear.sizeToFit()
@@ -161,7 +165,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         animateContainer.addSubview(search)
         
-        self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset, max(placeholder.frame.height, search.frame.height)))
+        self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset, max(21, search.frame.height)))
         
         placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
         search.centerY()
@@ -198,7 +202,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-        if let trimmed = replacementString?.trimmed, trimmed.isEmpty, affectedCharRange.min == 0 && affectedCharRange.max == 0 {
+        if let trimmed = replacementString?.trimmed, trimmed.isEmpty, affectedCharRange.min == 0 && affectedCharRange.max == 0, textView.string.isEmpty {
+            return false
+        }
+        if replacementString == "\n" {
             return false
         }
         return true
@@ -221,6 +228,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
+        
+        needsLayout = true
+        
         let iHidden = !(state == .Focus && !input.string.isEmpty)
         if input.isHidden != iHidden {
           //  input.isHidden = iHidden
@@ -241,6 +251,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
+    
     public func textViewDidChangeSelection(_ notification: Notification) {
         if let storage = input.textStorage {
             let size = storage.size()
@@ -248,8 +259,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             let inputInset = placeholderTextInset + 8
             
             let defWidth = frame.width - inputInset - inset - clear.frame.width - 10
-            
+          //  input.sizeToFit()
             input.setFrameSize(max(size.width + 10, defWidth), input.frame.height)
+           // inputContainer.setFrameSize(inputContainer.frame.width, input.frame.height)
             if let layout = input.layoutManager, !input.string.isEmpty {
                 let index = max(0, input.selectedRange().max - 1)
                 let point = layout.location(forGlyphAt: layout.glyphIndexForCharacter(at: index))
@@ -273,6 +285,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             } else {
                 input.setFrameOrigin(0, input.frame.minY)
             }
+            needsLayout = true
         }
     }
     
@@ -354,10 +367,15 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
 
-                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY, frame.width - inputInset - inset - clear.frame.width - 6, placeholder.frame.height)
+                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY + 2, frame.width - inputInset - inset - clear.frame.width - 6, animateContainer.frame.height)
                 input.frame = inputContainer.bounds
                 
+                input.isHidden = false
+                
                 if  animated {
+                    
+                    inputContainer.layer?.animate(from: fromX as NSNumber, to: inputContainer.frame.minX as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
+                    
                     animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
                         self?.input.isHidden = false
                         self?.window?.makeFirstResponder(self?.input)
@@ -408,13 +426,17 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
   
     }
     
-    open override func viewDidMoveToSuperview() {
-        guard let _ = superview else {
+    open override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if newWindow == nil {
+            if isEmpty {
+                change(state: .None, false)
+            }
             return
         }
         self.kitWindow?.removeAllHandlers(for: self)
         self.kitWindow?.removeObserver(for: self)
     }
+    
     
     func updateLoading() {
         if isLoading && state == .Focus {

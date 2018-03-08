@@ -12,156 +12,89 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-
-struct RecentGifRow :Equatable {
-    let entries:[RecentGifEntry]
-    let results:[TelegramMediaFile]
-    let sizes:[NSSize]
-    
-    func isFilled(for width:CGFloat) -> Bool {
-        let sum:CGFloat = sizes.reduce(0, { (acc, size) -> CGFloat in
-            return acc + size.width
-        })
-        if sum >= width {
-            return true
-        } else {
-            return false
-        }
-    }
-}
-func ==(lhs:RecentGifRow, rhs:RecentGifRow) -> Bool {
-    return lhs.entries == rhs.entries && lhs.results == rhs.results && lhs.sizes == rhs.sizes
-}
-
-func makeRecentGifEnties(_ results:[TelegramMediaFile], initialSize:NSSize) -> [RecentGifRowEntry] {
-    var entries:[RecentGifEntry] = []
-    var rows:[RecentGifRow] = []
-    
-    var dimensions:[NSSize] = []
-    var results = results
-    var index:Int = 0
-    for result in results {
-        entries.append(.gif(index: index, file: result))
-        dimensions.append(result.dimensions ?? NSZeroSize)
-        index += 1
-    }
-    
-    var fitted:[[NSSize]] = []
-    let f:Int = Int(round(initialSize.width / initialSize.height))
-    while !dimensions.isEmpty {
-        let row = fitPrettyDimensions(dimensions, isLastRow: f > dimensions.count, fitToHeight: false, perSize:initialSize)
-        fitted.append(row)
-        dimensions.removeSubrange(0 ..< row.count)
-    }
-    
-    for row in fitted {
-        let subentries = Array(entries.prefix(row.count))
-        let subresult = Array(results.prefix(row.count))
-        rows.append(RecentGifRow(entries: subentries, results: subresult, sizes: row))
-        
-        entries.removeSubrange(0 ..< row.count)
-        results.removeSubrange(0 ..< row.count)
-        
-    }
-    var idx:Int = 0
-    return rows.map { row in
-        let entry = RecentGifRowEntry.gif(index: idx, row: row)
-        idx += 1
-        return entry
-    }
-}
-
-
-enum RecentGifEntry : Equatable {
-    case gif(index:Int, file:TelegramMediaFile)
-    var index:Int {
-        switch self {
-        case let .gif(index, _):
-            return index
-        }
-    }
-    
-    var mediaId:MediaId {
-        switch self {
-        case let .gif(_, file):
-            return file.id ?? MediaId(namespace: 0, id: 0)
-        }
-    }
-}
-func ==(lhs:RecentGifEntry, rhs: RecentGifEntry) -> Bool {
-    switch lhs {
-    case let .gif(lhsIndex, lhsFile):
-        if case let .gif(rhsIndex, rhsFile) = rhs {
-            return lhsIndex == rhsIndex && lhsFile.isEqual(rhsFile)
-        } else {
-            return false
-        }
-    }
-}
-
-enum RecentGifRowEntry : Comparable, Identifiable {
-    case gif(index:Int, row: RecentGifRow)
-    
-    var index:Int {
-        switch self {
-        case let .gif(index, _):
-            return index
-        }
-    }
-    
-    var stableId: AnyHashable {
-        switch self {
-        case let .gif(index: _, row: row):
-            return row.entries.reduce("", { (current, row) -> String in
-                return current + "index:\(row.index), id:\(row.mediaId)"
-            }).hashValue
-        }
-    }
-}
-func ==(lhs:RecentGifRowEntry, rhs: RecentGifRowEntry) -> Bool {
-    switch lhs {
-    case let .gif(index, row):
-        if case .gif(index, row) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
-
-func <(lhs:RecentGifRowEntry, rhs: RecentGifRowEntry) -> Bool {
-    return lhs.index < rhs.index
-}
-
-private func prepareEntries(left:[RecentGifRowEntry], right:[RecentGifRowEntry], account:Account,  initialSize:NSSize, arguments: RecentGifsArguments) -> TableUpdateTransition {
-   
-    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
+private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry], account:Account,  initialSize:NSSize, chatInteraction: RecentGifsArguments?) -> TableUpdateTransition {
+   let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
         switch entry {
-        case .gif:
-            return RecentGIFRowItem(initialSize, account: account, entry: entry, arguments: arguments)
+        case let .contextMediaResult(collection, row, index):
+            return ContextMediaRowItem(initialSize, row, index, account, ContextMediaArguments(sendResult: { result in
+                if let collection = collection {
+                    chatInteraction?.sendInlineResult(collection, result)
+                } else {
+                    switch result {
+                    case let .internalReference(_, _, _, _, _, file, _):
+                        if let file = file {
+                            chatInteraction?.sendAppFile(file)
+                        }
+                    default:
+                        break
+                    }
+                }
+            }, menuItems: { file in
+                return account.postbox.modify{ modifier -> [ContextMenuItem] in
+                    if let mediaId = file.id {
+                        let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
+                        if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
+                            return [ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                                let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
+                            })]
+                        } else {
+                            return [ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                                let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                            })]
+                        }
+                    }
+                    return []
+                }
+            }))
+        default:
+            fatalError()
         }
     })
     
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated)
 }
 
-private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [RecentGifRowEntry] {
+private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
+        let result = view.items.prefix(70).flatMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(id: "", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
         
-        return makeRecentGifEnties(view.items.prefix(70).flatMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}), initialSize: NSMakeSize(initialSize.width, 100))
+        let values = makeMediaEnties(result, initialSize: NSMakeSize(initialSize.width, 100))
+        var wrapped:[InputContextEntry] = []
+        for value in values {
+            wrapped.append(InputContextEntry.contextMediaResult(nil, value, Int64(arc4random()) | ((Int64(wrapped.count) << 40))))
+        }
+        return wrapped
     }
     return []
 }
 
-struct RecentGifsArguments {
-    let sendGif:(TelegramMediaFile)->Void
+private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize) -> [InputContextEntry] {
+    if let collection = collection {
+        return makeMediaEnties(collection.results, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
+    }
+    return []
+}
+
+final class RecentGifsArguments {
+    var sendInlineResult:(ChatContextResultCollection,ChatContextResult) -> Void = {_,_  in}
+    var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
 }
 
 final class TableContainer : View {
     fileprivate var tableView: TableView?
     fileprivate var restrictedView:RestrictionWrappedView?
+    fileprivate let searchView: SearchView
+    fileprivate let searchContainer: View = View()
+    fileprivate let progressView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
+    fileprivate let emptyResults: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
+        searchView = SearchView(frame: NSMakeRect(0, 0, frameRect.width - 20, 30))
         super.init(frame: frameRect)
+        searchContainer.addSubview(searchView)
+        addSubview(searchContainer)
+        addSubview(emptyResults)
+        
+        updateLocalizationAndTheme()
     }
     
     func updateRestricion(_ peer: Peer?) {
@@ -192,6 +125,23 @@ final class TableContainer : View {
         }
     }
     
+    fileprivate func updateLoading(_ isLoading: Bool) {
+        if isLoading {
+            if progressView.superview == nil {
+                addSubview(progressView)
+            }
+            progressView.center()
+        } else {
+            progressView.removeFromSuperview()
+        }
+        tableView?.isHidden = isLoading
+        if let tableView = tableView {
+            emptyResults.isHidden = !tableView.isEmpty || isLoading
+            tableView.isHidden = tableView.isHidden || tableView.isEmpty
+        } else {
+            emptyResults.isHidden = true
+        }
+    }
 
     func deinstall() {
         tableView?.removeFromSuperview()
@@ -201,12 +151,20 @@ final class TableContainer : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         self.restrictedView?.updateLocalizationAndTheme()
+        emptyResults.image = theme.icons.stickersEmptySearch
+        emptyResults.sizeToFit()
+        searchView.updateLocalizationAndTheme()
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        tableView?.setFrameSize(newSize)
-        restrictedView?.setFrameSize(newSize)
+    override func layout() {
+        super.layout()
+        searchContainer.frame = NSMakeRect(0, 0, frame.width, 50)
+        searchView.setFrameSize(searchContainer.frame.width - 20, 30)
+        searchView.center()
+        tableView?.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - searchContainer.frame.height)
+        restrictedView?.setFrameSize(frame.size)
+        progressView.center()
+        emptyResults.center()
     }
     
     required init?(coder: NSCoder) {
@@ -248,12 +206,33 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         disposable.set(nil)
+        genericView.searchView.change(state: .None, true)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         genericView.deinstall()
         ready.set(.single(false))
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return self.genericView.searchView.input
+    }
+    
+    
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    override var canBecomeResponder: Bool {
+        if let view = account.context.mainNavigation?.view as? SplitView {
+            return view.state == .single
+        }
+        return false
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return false
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -265,25 +244,71 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         genericView.updateRestricion(chatInteraction?.presentation.peer)
         
         _ = atomicSize.swap(_frameRect.size)
-        let arguments = RecentGifsArguments(sendGif: { [weak self] file in
-            self?.interactions?.sendGIF(file)
-        })
+        let arguments = RecentGifsArguments()
         
-        let previous:Atomic<[RecentGifRowEntry]> = Atomic(value: [])
+        arguments.sendAppFile = { [weak self] file in
+            self?.chatInteraction?.sendAppFile(file)
+            self?.genericView.searchView.change(state: .None, true)
+            self?.account.context.entertainment.closePopover()
+        }
+        
+        arguments.sendInlineResult = { [weak self] results, result in
+            self?.chatInteraction?.sendInlineResult(results, result)
+            self?.genericView.searchView.change(state: .None, true)
+            self?.account.context.entertainment.closePopover()
+        }
+        
+        let previous:Atomic<[InputContextEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let account = self.account
         
-        let signal = account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOn(prepareQueue) |> map { view -> TableUpdateTransition in
-            let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
-            let entries = recentEntries(for: postboxView, initialSize: initialSize.modify({$0}))
-            return prepareEntries(left: previous.swap(entries), right: entries, account: account, initialSize: initialSize.modify({$0}), arguments: arguments)
+        let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: genericView.searchView.state, request: genericView.searchView.query), ignoreRepeated: true)
+        
+        let searchInteractions = SearchInteractions({ [weak self] state in
+            search.set(state)
+            switch state.state {
+            case .None:
+                self?.scrollup()
+            default:
+                break
+            }
+        }, { [weak self] state in
+            search.set(state)
+            switch state.state {
+            case .None:
+                self?.scrollup()
+            default:
+                break
+            }
+        })
+        
+        
+        genericView.searchView.searchInteractions = searchInteractions
+        
+        let signal = combineLatest( account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> mapToSignal { view, search -> Signal<TableUpdateTransition?, Void> in
+            
+            if search.request.isEmpty {
+                let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
+                let entries = recentEntries(for: postboxView, initialSize: initialSize.modify({$0})).sorted(by: <)
+                return .single(prepareEntries(left: previous.swap(entries), right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction: arguments))
+            } else {
+                return .single(nil) |> then(searchGifs(account: account, query: search.request.lowercased()) |> map { result in
+                    let entries = gifEntries(for: result, initialSize: initialSize.modify({$0}))
+                    return prepareEntries(left: previous.swap(entries), right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction: arguments)
+                } |> delay(0.2, queue: Queue.concurrentDefaultQueue()))
+            }
+            
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition in
-            self?.genericView.tableView?.merge(with: transition)
+            if let transition = transition {
+                self?.genericView.tableView?.merge(with: transition)
+            }
+            self?.genericView.updateLoading(transition == nil)
             self?.ready.set(.single(true))
         }))
     }
+    
     
     
     

@@ -64,7 +64,7 @@ class ChatGIFContentView: ChatMediaContentView {
                 canPlayForce = true
                 updatePlayerIfNeeded()
             } else if !(parent.media.first is TelegramMediaGame) {
-                showChatGallery(account:account, message:parent, table)
+                parameters?.showMedia(parent)
             }
         }
     }

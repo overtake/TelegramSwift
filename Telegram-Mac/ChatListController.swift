@@ -69,7 +69,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, t
             
         })
         let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState)
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState, animateVisibleOnly: false)
         
         
         subscriber.putNext(transition)

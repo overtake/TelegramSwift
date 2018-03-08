@@ -336,7 +336,7 @@ class ArchivedStickerPacksController: TableViewController {
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<ArchivedStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        genericView.merge(with: combineLatest(statePromise.get(), stickerPacks.get(), installedStickerPacks.get(), appearanceSignal) |> deliverOnMainQueue
+        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnPrepareQueue, stickerPacks.get() |> deliverOnPrepareQueue, installedStickerPacks.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue)
             |> map { state, packs, installedView, appearance -> TableUpdateTransition in
                 
                 let entries = archivedStickerPacksControllerEntries(state: state, packs: packs, installedView: installedView).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}

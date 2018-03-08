@@ -167,6 +167,12 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
         close()
     }
     
+    override func returnKeyAction() -> KeyHandlerResult {
+        perform()
+        close()
+        return .invoked
+    }
+    
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             self?.perform()

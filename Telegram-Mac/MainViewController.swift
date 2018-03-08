@@ -120,7 +120,7 @@ class MainViewController: TelegramViewController {
                 } else {
                     palette = palettes[settings.defaultDayName] ?? dayClassic
                 }
-                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName)
+                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName)
             }).start()
                // _ = updateThemeSettings(postbox: strongSelf.account.postbox, palette: !theme.colors.isDark ? darkPalette : dayClassic).start()
             }

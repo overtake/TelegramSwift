@@ -47,6 +47,26 @@ func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, for window:
     }
 }
 
+func selectFolder(for window:Window, completion:@escaping (String)->Void) {
+    var result:[String] = []
+    let panel:NSOpenPanel = NSOpenPanel()
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.beginSheetModal(for: window) { (response) in
+        if response.rawValue == NSFileHandlingPanelOKButton {
+            for url in panel.urls {
+                let path:String = url.path
+                result.append(path)
+            }
+            if let first = result.first {
+                completion(first)
+            }
+        }
+    }
+}
+
 func savePanel(file:String, ext:String, for window:Window) {
     
     let savePanel:NSSavePanel = NSSavePanel()

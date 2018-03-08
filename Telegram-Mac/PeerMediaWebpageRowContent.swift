@@ -150,6 +150,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 if let _ = content.instantPage {
+                    if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
+                        return false
+                    }
                     return true
                 }
             }

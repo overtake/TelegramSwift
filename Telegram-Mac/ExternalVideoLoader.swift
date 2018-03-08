@@ -22,15 +22,17 @@ final class ExternalVideo : Equatable {
     let dimensions:NSSize
     let quality:NSSize
     let stream:String
-    fileprivate init(dimensions:NSSize, stream:String, quality:NSSize) {
+    let date: TimeInterval
+    fileprivate init(dimensions:NSSize, stream:String, quality:NSSize, date: TimeInterval) {
         self.dimensions = dimensions
         self.stream = stream
         self.quality = quality
+        self.date = date
     }
 }
 
 func ==(lhs:ExternalVideo, rhs:ExternalVideo) -> Bool {
-    return lhs.stream == rhs.stream
+    return lhs.stream == rhs.stream && lhs.date == rhs.date
 }
 
 enum ExternalVideoStatus {
@@ -142,7 +144,7 @@ class ExternalVideoLoader {
             let disposable:MetaDisposable = MetaDisposable()
             
             self.statusQueue.async {
-                if let video = self.dataContexts[WrappedExternalVideoId(embed)] {
+                if let video = self.dataContexts[WrappedExternalVideoId(embed)], Date().timeIntervalSince1970 - 30 * 60 < video.date  {
                     subscriber.putNext(video)
                     subscriber.putCompletion()
                 } else if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)], statusContext.status != nil {
@@ -180,7 +182,7 @@ class ExternalVideoLoader {
                                     stream = url.absoluteString
                                 }
                                 if let quality = quality, let stream = stream {
-                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality)
+                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality, date: Date().timeIntervalSince1970)
                                     self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
                                     status = .loaded(externalVideo!)
                                 } else {
@@ -240,7 +242,7 @@ class ExternalVideoLoader {
                 
                 var canceled:Bool = false
                 
-                if let video = self.dataContexts[WrappedExternalVideoId(embed)] {
+                if let video = self.dataContexts[WrappedExternalVideoId(embed)], Date().timeIntervalSince1970 - 30 * 60 < video.date {
                     subscriber.putNext(video)
                     subscriber.putCompletion()
                 } else if self.cancelTokensVimeo[WrappedExternalVideoId(embed)] == nil  {
@@ -265,7 +267,7 @@ class ExternalVideoLoader {
                                     let quality:NSSize = NSMakeSize(1280, 720)
                                     let stream:String = video.highestQualityStreamURL().absoluteString
                                    
-                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality)
+                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality, date: Date().timeIntervalSince1970)
                                     self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
                                     status = .loaded(externalVideo!)
                                 } else {

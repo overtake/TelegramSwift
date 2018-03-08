@@ -69,17 +69,21 @@ class ResponderObserver : Comparable {
     let handler:()->NSResponder?
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
-    
+    let date: TimeInterval
     init(_ handler:@escaping()->NSResponder?, _ object:NSObject?, _ priority:HandlerPriority) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
+        self.date = Date().timeIntervalSince1970
     }
 }
 func ==(lhs: ResponderObserver, rhs: ResponderObserver) -> Bool {
     return lhs.priority == rhs.priority
 }
 func <(lhs: ResponderObserver, rhs: ResponderObserver) -> Bool {
+    if lhs.priority == rhs.priority {
+        return lhs.date < rhs.date
+    }
     return lhs.priority < rhs.priority
 }
 
@@ -88,18 +92,22 @@ class MouseObserver : Comparable {
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let type:NSEvent.EventType?
-    
+    let date: TimeInterval
     init(_ handler:@escaping(NSEvent)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ type:NSEvent.EventType) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
         self.type = type
+        self.date = Date().timeIntervalSince1970
     }
 }
 func ==(lhs: MouseObserver, rhs: MouseObserver) -> Bool {
     return lhs.priority == rhs.priority
 }
 func <(lhs: MouseObserver, rhs: MouseObserver) -> Bool {
+    if lhs.priority == rhs.priority {
+        return lhs.date < rhs.date
+    }
     return lhs.priority < rhs.priority
 }
 
@@ -109,7 +117,7 @@ public enum KeyHandlerResult {
     case invokeNext // invoke and send global event
 }
 
-public class Window: NSWindow {
+public class Window: NSWindow, NSTouchBarDelegate {
     public var name: String = "TGUIKit.Window"
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeHandler] = []
@@ -121,6 +129,7 @@ public class Window: NSWindow {
     public  var copyhandler:(()->Void)? = nil
     public var closeInterceptor:(()->Void)? = nil
     public var orderOutHandler:(()->Void)? = nil
+    public weak var navigationController: NavigationViewController?
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -317,6 +326,11 @@ public class Window: NSWindow {
         }
     }
     
+    @available(OSX 10.12.2, *)
+    public override func makeTouchBar() -> NSTouchBar? {
+        return self.navigationController?.makeTouchBar() ?? super.makeTouchBar()
+    }
+    
     public override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
     }
@@ -325,7 +339,20 @@ public class Window: NSWindow {
         orderOutHandler?()
     }
     
-    
+    public func enumerateAllSubviews(callback: (NSView) -> Void) {
+        if let contentView = contentView {
+            enumerateAllSubviews(callback: callback, superview: contentView)
+        }
+    }
+    private func enumerateAllSubviews(callback: (NSView) -> Void, superview: NSView) {
+        for view in superview.subviews {
+            callback(view)
+            if !view.subviews.isEmpty {
+                enumerateAllSubviews(callback: callback, superview: view)
+            }
+        }
+    }
+
     public override func close() {
         if let closeInterceptor = closeInterceptor {
             closeInterceptor()
@@ -364,7 +391,7 @@ public class Window: NSWindow {
             if event.type == .keyDown {
                 
                 
-                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.LeftArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.RightArrow {
+                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.LeftArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.RightArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Tab {
                     applyResponderIfNeeded()
                 }
                 

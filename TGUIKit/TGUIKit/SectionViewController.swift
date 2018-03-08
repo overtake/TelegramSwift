@@ -97,10 +97,11 @@ public class SectionControllerView : View {
                 nfrom = NSMakePoint(-container.frame.width, 0)
             }
             
-            previous?.view._change(pos: pto, animated: animated, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak previous] complete in
+            previous?.view._change(pos: pto, animated: animated, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak previous, weak controller] complete in
                 if complete {
                     previous?.view.removeFromSuperview()
                     previous?.viewDidDisappear(animated)
+                    controller?.viewDidAppear(animated)
                 }
             })
             controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, timingFunction: kCAMediaTimingFunctionSpring)
@@ -224,11 +225,28 @@ public class SectionViewController: GenericViewController<SectionControllerView>
     override public func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         selectedSection.controller.viewWillDisappear(animated)
+        window?.remove(object: self, for: .Tab)
     }
     
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         selectedSection.controller.viewDidAppear(animated)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            
+            if !self.sections.isEmpty {
+                var index:Int = self.selectedIndex
+                if index == self.sections.count - 1 {
+                    index = 0
+                } else {
+                    index += 1
+                }
+                self.select(index, true)
+            }
+            
+            return .invoked
+        }, with: self, for: .Tab)
     }
     override public func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)

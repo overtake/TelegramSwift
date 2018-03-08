@@ -183,13 +183,15 @@ public final class TextViewInteractions {
     public var copy:(()->Bool)?
     public var menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)?
     public var isDomainLink:(String)->Bool
-    public var makeLinkType:(Any)->LinkType
-    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping(Any) -> LinkType = {_ in return .plain}) {
+    public var makeLinkType:((Any, String))->LinkType
+    public var localizeLinkCopy:(LinkType)-> String
+    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
         self.isDomainLink = isDomainLink
         self.makeLinkType = makeLinkType
+        self.localizeLinkCopy = localizeLinkCopy
     }
 }
 
@@ -227,7 +229,7 @@ public func ==(lhs: TextViewCutout, rhs: TextViewCutout) -> Bool {
 private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
-    
+    public var mayItems: Bool = true
     public var selectWholeText: Bool = false
     public fileprivate(set) var attributedString:NSAttributedString
     public fileprivate(set) var constrainedWidth:CGFloat = 0
@@ -744,7 +746,7 @@ public final class TextViewLayout : Equatable {
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
                 
-                return (link, interactions.makeLinkType(link), range, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
+                return (link, interactions.makeLinkType((link, attributedString.attributedSubstring(from: range).string)), range, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
             }
         }
         return nil
@@ -1052,7 +1054,7 @@ public class TextView: Control {
     
     
     public override func rightMouseDown(with event: NSEvent) {
-        if let layout = layout, userInteractionEnabled {
+        if let layout = layout, userInteractionEnabled, layout.mayItems {
             let location = convert(event.locationInWindow, from: nil)
             if (!layout.selectedRange.hasSelectText || !layout.inSelectedRange(location)) && (!layout.alwaysStaticItems || layout.link(at: location) != nil) {
                 layout.selectWord(at : location)
@@ -1073,8 +1075,9 @@ public class TextView: Control {
                         }
                     }))
                 } else {
+                    let link = layout.link(at: location)
                     let menu = NSMenu()
-                    let copy = NSMenuItem(title: localizedString("Text.Copy"), action: #selector(copy(_:)), keyEquivalent: "")
+                    let copy = NSMenuItem(title: link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), action: #selector(copy(_:)), keyEquivalent: "")
                     menu.addItem(copy)
                     NSMenu.popUpContextMenu(menu, with: event, for: self)
                 }
@@ -1124,6 +1127,7 @@ public class TextView: Control {
             self.frame = NSMakeRect(point.x, point.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
         } else {
             self.set(selectedRange: NSMakeRange(NSNotFound, 0), display: false)
+            self.frame = NSZeroRect
         }
         self.setNeedsDisplayLayer()
     }

@@ -21,6 +21,7 @@ class TelegramApplicationContext : NSObject {
     let entertainment:EntertainmentViewController
     private var _recentlyPeerUsed:[PeerId] = []
     let cachedAdminIds: CachedAdminIds = CachedAdminIds()
+    let badgeFilter: ValuePromise<UnreadMessageCountsTotalItem> = ValuePromise(ignoreRepeated: true)
     private(set) var timeDifference:TimeInterval  = 0
     private(set) var recentlyPeerUsed:[PeerId] {
         set {
@@ -50,6 +51,9 @@ class TelegramApplicationContext : NSObject {
         self.mainNavigation = mainNavigation
         self.entertainment = entertainment
         self.fetchManager = FetchManager(postbox: postbox)
+        
+        badgeFilter.set(FastSettings.isFiltredBadge ? .filtered : .raw)
+        
         if network.globalTime > 0 {
             timeDifference = network.globalTime - Date().timeIntervalSince1970
         }

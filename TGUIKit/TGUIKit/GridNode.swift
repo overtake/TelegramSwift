@@ -1183,6 +1183,13 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         }
     }
     
+    public var itemsCount: Int {
+        return self.items.count
+    }
+    public var isEmpty: Bool {
+        return self.items.isEmpty
+    }
+    
     private func updateItemNodeVisibilititesAndScrolling() {
         let visibleRect = self.contentView.bounds
         let isScrolling = self.clipView.isScrolling
@@ -1263,9 +1270,6 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         applyPresentaionLayoutTransition(generatePresentationLayoutTransition(layoutTransactionOffset: 0.0), removedNodes: [], updateLayoutTransition: nil, itemTransition: .immediate, completion: { _ in })
     }
     
-    public var isEmpty: Bool {
-        return items.isEmpty
-    }
     
 }
 

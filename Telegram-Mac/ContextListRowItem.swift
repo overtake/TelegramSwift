@@ -42,26 +42,23 @@ class ContextListRowItem: TableRowItem {
         var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil
         switch result {
-        case let .externalReference(_, _, title, description, url, thumbnailUrl, contentUrl, contentType, dimensions, _, _):
-            if let thumbnailUrl = thumbnailUrl {
-                representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(50, 50), resource: HttpReferenceMediaResource(url: thumbnailUrl, size: nil))
+            //    case externalReference(id: String, type: String, title: String?, description: String?, url: String?, content: TelegramMediaWebFile?, thumbnail: TelegramMediaWebFile?, message: ChatContextResultMessage)
+
+        case let .externalReference(_, type, title, description, url, content, thumbnail, _):
+            if let thumbnail = thumbnail {
+                representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(50, 50), resource: thumbnail.resource)
             }
-            if let contentUrl = contentUrl {
-                fileResource = HttpReferenceMediaResource(url: contentUrl, size: nil)
-                if let contentType = contentType {
-                    if contentType.hasPrefix("audio") {
-                        vClass = ContextListAudioView.self
-                        audioWrapper = APSingleWrapper(resource: fileResource!, name: title, performer: description, id:result.maybeId)
-                    } else if contentType == "video/mp4" {
-                        vClass = ContextListGIFView.self
-                    }
+            if let content = content {
+                if content.mimeType.hasPrefix("audio") {
+                    vClass = ContextListAudioView.self
+                    audioWrapper = APSingleWrapper(resource: content.resource, name: title, performer: description, id: result.maybeId)
+                } else if content.mimeType == "video/mp4" {
+                    vClass = ContextListGIFView.self
                 }
             }
             var selectedUrl: String?
             if let url = url {
                 selectedUrl = url
-            } else if let contentUrl = contentUrl {
-                selectedUrl = contentUrl
             }
             if let selectedUrl = selectedUrl, let parsedUrl = URL(string: selectedUrl) {
                 if let host = parsedUrl.host, !host.isEmpty {

@@ -56,11 +56,11 @@ var globalLinkExecutor:TextViewInteractions {
                 execute(inapp:link)
             }
         }, isDomainLink: { value in
-            if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") {
+            if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") && !value.hasPrefix("$") {
                 return true
             }
             return false
-        }, makeLinkType: { link in
+        }, makeLinkType: { link, url in
             if let link = link as? inAppLink {
                 switch link {
                 case .botCommand:
@@ -68,7 +68,11 @@ var globalLinkExecutor:TextViewInteractions {
                 case .hashtag:
                     return .hashtag
                 case .followResolvedName:
-                    return .username
+                    if url.hasPrefix("@") {
+                        return .username
+                    } else {
+                        return .plain
+                    }
                 case let .external(link, _):
                     if isValidEmail(link) {
                         return .email
@@ -84,6 +88,8 @@ var globalLinkExecutor:TextViewInteractions {
                 }
             }
             return .plain
+        }, localizeLinkCopy: { type in
+            return copyContextText(from: type)
         })
     }
 }

@@ -29,6 +29,18 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
     })!
 }
 
+private func generateStickersEmptySearch(color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(100, 100), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        let icon = #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(color)
+        let imageSize = icon.backingSize.fitted(size)
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - imageSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - imageSize.height) / 2), imageSize.width, imageSize.height)
+        
+        ctx.draw(icon, in: imageRect)
+    })!
+}
+
 private func generateAlertCheckBoxSelected(backgroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(14, 14), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -84,12 +96,12 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
 
 private func generateChatGroupToggleSelected(foregroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
-    return generateImage(NSMakeSize(icon.backingSize.width + 1, icon.backingSize.height + 1), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(icon.backingSize.width + 2, icon.backingSize.height + 2), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.round(size, size.width/2)
         ctx.setFillColor(NSColor.white.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
     })!
 }
@@ -617,6 +629,8 @@ struct TelegramIconsTheme {
     let alertCheckBoxUnselected: CGImage
     let confirmPinAccessory: CGImage
     let confirmDeleteChatAccessory: CGImage
+    
+    let stickersEmptySearch: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -991,7 +1005,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                alertCheckBoxSelected: generateAlertCheckBoxSelected(backgroundColor: palette.blueIcon),
                                                alertCheckBoxUnselected: generateAlertCheckBoxUnselected(border: palette.grayIcon),
                                                confirmPinAccessory: generateConfirmPinAccessory(backgroundColor: palette.blueIcon),
-                                               confirmDeleteChatAccessory: generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI)
+                                               confirmDeleteChatAccessory: generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI),
+                                               stickersEmptySearch: generateStickersEmptySearch(color: palette.grayIcon)
     )
 }
 

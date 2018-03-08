@@ -16,11 +16,11 @@ import TelegramCoreMac
 
 fileprivate class ReportReasonModalController: ModalViewController {
 
-    fileprivate var onComplete:Signal<ReportPeerReason, Void> {
+    fileprivate var onComplete:Signal<ReportReason, Void> {
         return _complete.get() |> take(1)
     }
-    private let _complete:Promise<ReportPeerReason> = Promise()
-    private var current:ReportPeerReason = .spam
+    private let _complete:Promise<ReportReason> = Promise()
+    private var current:ReportReason = .spam
     override func viewClass() -> AnyClass {
         return TableView.self
     }
@@ -32,7 +32,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let updateState:(ReportPeerReason) -> Void = { [weak self] reason in
+        let updateState:(ReportReason) -> Void = { [weak self] reason in
             self?.current = reason
             self?.genericView.reloadData()
         }
@@ -84,7 +84,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
     
 }
 
-func reportReasonSelector() -> Signal<ReportPeerReason, Void> {
+func reportReasonSelector() -> Signal<ReportReason, Void> {
     let reportModalView = ReportReasonModalController()
     showModal(with: reportModalView, for: mainWindow)
     

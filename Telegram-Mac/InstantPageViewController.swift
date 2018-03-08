@@ -246,6 +246,23 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         mediaDisposable.set(getMedia.start(next: { [weak self] media in
             if let media = media as? TelegramMediaWebpage, let strongSelf = self {
                 strongSelf.navigationController?.push(InstantPageViewController(strongSelf.account, webPage: media, message: nil))
+            } else if let window = self?.window, let account = self?.account {
+                _ = showModalProgress(signal: webpagePreview(account: account, url: url) |> timeout(0.5, queue: Queue.mainQueue(), alternate: .single(nil)) |> deliverOnMainQueue, for: window).start(next: { page in
+                    if let page = page {
+                        switch page.content {
+                        case let .Loaded(content):
+                            if content.instantPage != nil {
+                                showInstantPage(InstantPageViewController(account, webPage: page, message: nil))
+                            } else {
+                                execute(inapp: .external(link: url, false))
+                            }
+                        default:
+                            execute(inapp: .external(link: url, false))
+                        }
+                    } else {
+                        execute(inapp: .external(link: url, false))
+                    }
+                })
             } else {
                 execute(inapp: .external(link: url, false))
             }

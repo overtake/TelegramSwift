@@ -530,7 +530,12 @@ class ChatRowItem: TableRowItem {
             }
             if let peer = peer as? TelegramUser {
                 if peer.botInfo != nil {
-                    return self is ChatMediaItem && !chatInteraction.isLogInteraction
+                    if self is ChatMediaItem && !chatInteraction.isLogInteraction {
+                        return true
+                    } else if let item = self as? ChatMessageItem {
+                        return item.webpageLayout != nil
+                    }
+                    return false
                 }
             }
         }
@@ -930,20 +935,15 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     
-                    for attribute in message.attributes {
-                        if let attribute = attribute as? InlineBotMessageAttribute, let bot = message.peers[attribute.peerId] as? TelegramUser, let address = bot.username {
-                            if attr.length > 0 {
-                                _ = attr.append(string: " ")
-                            }
-                            _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
-                            let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font:.medium(.text))
-                            attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.callback("@" + address, { (parameter) in
-                                chatInteraction.updateInput(with: parameter + " ")
-                            }), range: range)
-                            
-                            
-                            break
+                    if let bot = message.inlinePeer, let address = bot.username {
+                        if attr.length > 0 {
+                            _ = attr.append(string: " ")
                         }
+                        _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                        let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                        attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.callback("@" + address, { (parameter) in
+                            chatInteraction.updateInput(with: parameter + " ")
+                        }), range: range)
                     }
                     
                     if isAdmin, canFillAuthorName {
@@ -951,6 +951,7 @@ class ChatRowItem: TableRowItem {
                     }
                     if attr.length > 0 {
                         authorText = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
+                        authorText?.mayItems = false
                         authorText?.interactions = globalLinkExecutor
                     }
                 }
@@ -1164,7 +1165,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, isStateOverlayLayout {
+        if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, replyModel.isSideAccessory {
             authorText.measure(width: replyModel.size.width - 10)
             replyModel.topOffset = authorText.layoutSize.height + 6
             replyModel.measureSize(replyModel.width, sizeToFit: replyModel.sizeToFit)
@@ -1383,7 +1384,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
     var items:[ContextMenuItem] = []
     
-    if let peer = chatInteraction.peer, peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
+    if canReplyMessage(message, peerId: chatInteraction.peerId) {
         items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
         }))
@@ -1391,7 +1392,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if let address = peer.addressName {
-            items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
+            items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                 copyToClipboard("t.me/\(address)/\(message.id.id)")
             }))
         }
@@ -1401,15 +1402,17 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     items.append(ContextSeparatorItem())
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
-        items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
-            if peer.isSupergroup {
-                modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmPinAccessory, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                    chatInteraction.updatePinned(message.id, false, result == .thrid)
-                })
-            } else {
-                chatInteraction.updatePinned(message.id, false, true)
-            }
-        }))
+        if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
+            items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
+                if peer.isSupergroup {
+                    modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmPinAccessory, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                        chatInteraction.updatePinned(message.id, false, result == .thrid)
+                    })
+                } else {
+                    chatInteraction.updatePinned(message.id, false, true)
+                }
+            }))
+        }
     }
     
     if canEditMessage(message, account:account) {
@@ -1435,60 +1438,92 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
         chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
     }))
     
+//    if canReportMessage(message, account) {
+//        items.append(ContextMenuItem(L10n.messageContextReport, handler: {
+//            _ = reportReasonSelector().start()
+//        }))
+//    }
+    
     
     if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId {
-        items.append(ContextSeparatorItem())
         items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: {
             _ = Sender.forwardMessages(messageIds: [message.id], account: account, peerId: account.peerId).start()
         }))
+        items.append(ContextSeparatorItem())
     }
     
     
-    for media in message.media {
-        if let file = media as? TelegramMediaFile {
-            if file.isVideo && file.isAnimated {
-                
-                if !canForwardMessage(message, account: account) {
-                    items.append(ContextSeparatorItem())
-                }
-                
-                items.append(ContextMenuItem(tr(L10n.messageContextSaveGif), handler: {
-                    let _ = addSavedGif(postbox: account.postbox, file: file).start()
-                }))
-            }
-        }
-    }
+    
+    
+
     
     let signal:Signal<[ContextMenuItem], Void> = .single(items)
     
-    if let file = message.media.first as? TelegramMediaFile {
+    if let file = message.media.first as? TelegramMediaFile, let mediaId = file.id {
         return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
             var items = items
-            return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
-                if data.complete {
-                    items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
-                        saveAs(file, account: account)
+            
+            return account.postbox.modify { modifier -> [ContextMenuItem] in
+                let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
+                if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
+                    items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                        let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
+                    }))
+                } else {
+                    items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                        let _ = addSavedGif(postbox: account.postbox, file: file).start()
                     }))
                 }
-                
-                if file.isSticker, let fileId = file.id {
-                    return account.postbox.modify { modifier -> [ContextMenuItem] in
-                        let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
-                        items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
-                            
-                            if !saved {
-                                _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
-                            } else {
-                                _ = removeSavedSticker(postbox: account.postbox, mediaId: fileId).start()
-                            }
+                return items
+            } |> mapToSignal { items in
+                var items = items
+                return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
+                    if data.complete {
+                        items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
+                            saveAs(file, account: account)
                         }))
                         
-                        return items
+                        if !file.isInteractiveMedia && !file.isVoice {
+                            let path = data.path + "." + fileExtenstion(file)
+                            try? FileManager.default.removeItem(atPath: path)
+                            try? FileManager.default.linkItem(atPath: data.path, toPath: path)
+                            let result = ObjcUtils.apps(forFileUrl: path)
+                            if let result = result, !result.isEmpty {
+                                let item = ContextMenuItem(L10n.messageContextOpenWith, handler: {})
+                                let menu = NSMenu()
+                                item.submenu = menu
+                                for item in result {
+                                    menu.addItem(ContextMenuItem(item.fullname, handler: {
+                                        NSWorkspace.shared.openFile(path, withApplication: item.app.path)
+                                    }, image: item.icon))
+                                }
+                                items.append(item)
+                            }
+                            
+                        }
                     }
+                    
+                    if file.isSticker, let fileId = file.id {
+                        return account.postbox.modify { modifier -> [ContextMenuItem] in
+                            let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
+                            items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
+                                
+                                if !saved {
+                                    _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
+                                } else {
+                                    _ = removeSavedSticker(postbox: account.postbox, mediaId: fileId).start()
+                                }
+                            }))
+                            
+                            return items
+                        }
+                    }
+                    
+                    return .single(items)
                 }
-                
-                return .single(items)
             }
+            
+            
         }
     } else if let image = message.media.first as? TelegramMediaImage {
         return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in

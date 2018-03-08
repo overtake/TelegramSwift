@@ -41,7 +41,7 @@ private class StickersModalView : View {
     private let headerSeparatorView:View = View()
     private let dismiss:ImageButton = ImageButton()
     private let indicatorView:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
-    private let shadowView: View = ShadowView()
+    private let shadowView: ShadowView = ShadowView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = theme.colors.background
@@ -53,13 +53,13 @@ private class StickersModalView : View {
         addSubview(headerSeparatorView)
         addSubview(dismiss)
         
-        shadowView.backgroundColor = theme.colors.background.withAlphaComponent(1.0)
+        shadowView.shadowBackground = theme.colors.background
         shadowView.setFrameSize(frame.width, 70)
         
         addSubview(shadowView)
         
         dismiss.set(image: theme.icons.stickerPackDelete, for: .Normal)
-        dismiss.sizeToFit()
+        _ = dismiss.sizeToFit()
         add.disableActions()
         add.setFrameSize(170, 40)
         add.layer?.cornerRadius = 20
@@ -77,8 +77,8 @@ private class StickersModalView : View {
         
         shareView.set(image: theme.icons.stickersShare, for: .Normal)
         close.set(image: theme.icons.stickerPackClose, for: .Normal)
-        shareView.sizeToFit()
-        close.sizeToFit()
+        _ = shareView.sizeToFit()
+        _ = close.sizeToFit()
         
         
     }
@@ -114,7 +114,11 @@ private class StickersModalView : View {
             attr.detectLinks(type: [.Mentions], account: arguments.account, color: .blueUI, openInfo: { (peerId, _, _, _) in
                 _ = (arguments.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()
-                    arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peer: peer))
+                    if peer.isUser || peer.isBot {
+                        arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peer: peer))
+                    } else {
+                        arguments.account.context.mainNavigation?.push(ChatAdditionController(account: arguments.account, chatLocation: .peer(peer.id)))
+                    }
                 })
             })
             let layout = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)

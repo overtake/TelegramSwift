@@ -9,6 +9,17 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 #import <AVFoundation/AVFoundation.h>
+
+@interface OpenWithObject : NSObject
+@property (nonatomic, strong,readonly) NSString *fullname;
+@property (nonatomic, strong,readonly) NSURL *app;
+@property (nonatomic, strong,readonly) NSImage *icon;
+
+
+-(id)initWithFullname:(NSString *)fullname app:(NSURL *)app icon:(NSImage *)icon;
+
+@end
+
 @interface ObjcUtils : NSObject
 + (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
 +(NSString *) md5:(NSString *)string;
@@ -25,6 +36,7 @@
 +(NSArray<NSString *> *)notificationTones:(NSString *)def;
 +(NSString *)youtubeIdentifier:(NSString *)url;
 + (NSString *)_youtubeVideoIdFromText:(NSString *)text originalUrl:(NSString *)originalUrl startTime:(NSTimeInterval *)startTime;
++(NSArray<OpenWithObject *> *)appsForFileUrl:(NSString *)fileUrl;
 @end
 
 @interface NSFileManager (Extension)

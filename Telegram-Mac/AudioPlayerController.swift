@@ -11,6 +11,10 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
+import AVKit
+
+
+
 
 class APSingleWrapper {
     let resource:TelegramMediaResource
@@ -27,7 +31,13 @@ class APSingleWrapper {
     }
 }
 
-fileprivate(set) var globalAudio:APController?
+let globalAudioPromise: Promise<APController?> = Promise(nil)
+
+fileprivate(set) var globalAudio:APController? {
+    didSet {
+        globalAudioPromise.set(.single(globalAudio))
+    }
+}
 
 enum APState : Equatable {
     case waiting
@@ -373,7 +383,26 @@ protocol APDelegate : class {
     func audioDidCompleteQueue(for controller:APController)
 }
 
-class APController : NSObject, AudioPlayerDelegate {
+
+
+class APController : NSResponder, AudioPlayerDelegate {
+    
+    
+    private let readyDisposable = MetaDisposable()
+    
+    @available(OSX 10.12.2, *)
+    var touchBarViews: AudioTouchBarItemViews {
+        if let touchBarViews = _touchBarViews as? AudioTouchBarItemViews {
+            return touchBarViews
+        }
+        let value = AudioTouchBarItemViews()
+        _touchBarViews = value
+        return value
+    }
+    
+    private var _touchBarViews: Any? = nil
+    
+    
     public let ready:Promise<Bool> = Promise()
     let account:Account
     
@@ -425,33 +454,66 @@ class APController : NSObject, AudioPlayerDelegate {
         }
     }
     
+    var isPlaying: Bool {
+        if let currentSong = currentSong {
+            switch currentSong.state {
+            case .playing:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
+    var isDownloading: Bool {
+        if let currentSong = currentSong {
+            switch currentSong.state {
+            case .fetching:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
     private func notifyStateChanged(item:APSongItem) {
         for listener in listeners {
             if let value = listener.value as? APDelegate {
                 value.songDidChangedState(song: item, for: self)
             }
         }
+        if #available(OSX 10.12.2, *) {
+            updateTouchbarControls(item.state)
+        }
     }
     
     private func notifySongChanged(item:APSongItem) {
-        for listener in listeners {
-            if let value = listener.value as? APDelegate {
-                value.songDidChanged(song: item, for: self)
+        Queue.mainQueue().async {
+            for listener in self.listeners {
+                if let value = listener.value as? APDelegate {
+                    value.songDidChanged(song: item, for: self)
+                }
             }
         }
     }
     
     private func notifySongDidStartPlaying(item:APSongItem) {
-        for listener in listeners {
-            if let value = listener.value as? APDelegate {
-                value.songDidStartPlaying(song: item, for: self)
+        Queue.mainQueue().async {
+            for listener in self.listeners {
+                if let value = listener.value as? APDelegate {
+                    value.songDidStartPlaying(song: item, for: self)
+                }
             }
         }
     }
     private func notifySongDidChangedTimebase(item:APSongItem) {
-        for listener in listeners {
-            if let value = listener.value as? APDelegate {
-                value.playerDidChangedTimebase(song: item, for: self)
+        Queue.mainQueue().async {
+            for listener in self.listeners {
+                if let value = listener.value as? APDelegate {
+                    value.playerDidChangedTimebase(song: item, for: self)
+                }
             }
         }
     }
@@ -459,17 +521,21 @@ class APController : NSObject, AudioPlayerDelegate {
     
     
     private func notifySongDidStopPlaying(item:APSongItem) {
-        for listener in listeners {
-            if let value = listener.value as? APDelegate {
-                value.songDidStopPlaying(song: item, for: self)
+        Queue.mainQueue().async {
+            for listener in self.listeners {
+                if let value = listener.value as? APDelegate {
+                    value.songDidStopPlaying(song: item, for: self)
+                }
             }
         }
     }
     
     func notifyCompleteQueue() {
-        for listener in listeners {
-            if let value = listener.value as? APDelegate {
-                value.audioDidCompleteQueue(for: self)
+        Queue.mainQueue().async {
+            for listener in self.listeners {
+                if let value = listener.value as? APDelegate {
+                    value.audioDidCompleteQueue(for: self)
+                }
             }
         }
     }
@@ -477,12 +543,42 @@ class APController : NSObject, AudioPlayerDelegate {
     
     init(account:Account) {
         self.account = account
+
         super.init()
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: mainWindow)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: mainWindow)
+
+//        readyDisposable.set((ready.get() |> filter {$0} |> take(1) |> deliverOnMainQueue).start(next: { [weak self] _ in
+//
+//        }))
+    }
+    
+    @objc open func windowDidBecomeKey() {
+        if #available(OSX 10.12.2, *) {
+            toggleControlStripButton(visible: false)
+            reloadTouchBarIfNeeded()
+        }
+    }
+    
+    
+    @objc open func windowDidResignKey() {
+        if #available(OSX 10.12.2, *) {
+            toggleControlStripButton(visible: true)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     func start() {
         globalAudio?.stop()
         globalAudio?.cleanup()
+        
+        if #available(OSX 10.12.2, *) {
+            self.injectControlStripButton()
+        }
+        
         globalAudio = self
         account.context.mediaKeyTap?.startWatchingMediaKeys()
     }
@@ -506,7 +602,7 @@ class APController : NSObject, AudioPlayerDelegate {
             return new
         }
         
-        if current != -1, current > 0 {
+        if current != -1, current >= 0 {
             if current < previous.count {
                 let previousCurrent = previous[current]
                 var foundIndex:Int? = nil
@@ -675,6 +771,30 @@ class APController : NSObject, AudioPlayerDelegate {
         }
     }
     
+    var currentTime: TimeInterval {
+        if let current = currentSong {
+            switch current.state {
+            case let .paused(current, _, _, _), let .playing(current, _, _, _):
+                return current
+            default:
+                break
+            }
+        }
+        return self.player?.currentTime ?? 0
+    }
+    
+    var duration: TimeInterval {
+        if let current = currentSong {
+            switch current.state {
+            case let .paused(_, duration, _, _), let .playing(_, duration, _, _):
+                return duration
+            default:
+                break
+            }
+        }
+        return self.player?.currentTime ?? 0
+    }
+    
     var isLatest:Bool {
         return current == 0
     }
@@ -727,7 +847,7 @@ class APController : NSObject, AudioPlayerDelegate {
     
     func set(trackProgress:Float) {
         if let player = player, let song = song {
-            let current = player.duration * Double(trackProgress)
+            let current: Double = player.duration * Double(trackProgress)
             player.set(position:current)
             if case .paused = song.state {
                 var progress:TimeInterval = (current / player.duration)
@@ -742,7 +862,11 @@ class APController : NSObject, AudioPlayerDelegate {
     
     func cleanup() {
         listeners.removeAll()
+        if #available(OSX 10.12.2, *) {
+            toggleControlStripButton(force: true, visible: false)
+        } 
         globalAudio = nil
+        mainWindow.applyResponderIfNeeded()
         account.context.mediaKeyTap?.stopWatchingMediaKeys()
         stop()
     }
@@ -758,6 +882,9 @@ class APController : NSObject, AudioPlayerDelegate {
                         progress = 1
                     }
                     strongSelf.song?.state = .playing(current: player.currentTime, duration: player.duration, progress: progress, animated: true)
+                    if #available(OSX 10.12.2, *) {
+                        strongSelf.touchBarViews.updateSongProgressSlider(with: player.currentTime, duration: player.duration)
+                    }
                 }
             }, queue: Queue.mainQueue())
             timer?.start()
@@ -773,7 +900,8 @@ class APController : NSObject, AudioPlayerDelegate {
         itemDisposable.dispose()
         songStateDisposable.dispose()
         prevNextDisposable.dispose()
-        cleanup()
+        readyDisposable.dispose()
+
     }
     
     fileprivate var tags:MessageTags {
@@ -803,6 +931,10 @@ class APChatController : APController {
         self.peerId = peerId
         self.index = index
         super.init(account: account)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func start() {
@@ -866,9 +998,9 @@ class APChatController : APController {
         }))
         
         if let index = index {
-            history.set(.single(.index(index)))
+            history.set(.single(.index(index)) |> delay(0.1, queue: Queue.mainQueue()))
         } else {
-            history.set(.single(.initial))
+            history.set(.single(.initial) |> delay(0.1, queue: Queue.mainQueue()))
         }
     }
 }
@@ -877,6 +1009,10 @@ class APChatMusicController : APChatController {
     
     override init(account: Account, peerId: PeerId, index: MessageIndex?) {
         super.init(account: account, peerId: peerId, index: index)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     fileprivate override var tags: MessageTags {
@@ -889,6 +1025,19 @@ class APChatVoiceController : APChatController {
     override init(account: Account, peerId: PeerId, index: MessageIndex?) {
         super.init(account: account, peerId: peerId, index:index)
     }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var nextEnabled: Bool {
+        return current > 0
+    }
+    
+    override var prevEnabled: Bool {
+        return current < pullItems.count - 1
+    }
+    
     override func play(with item: APSongItem) {
         super.play(with: item)
         markAsConsumedDisposable.set(markMessageContentAsConsumedInteractively(postbox: account.postbox, messageId: item.entry.index.id).start())
@@ -914,6 +1063,10 @@ class APSingleResourceController : APController {
         self.wrapper = wrapper
         super.init(account: account)
         merge(with: APTransition(inserted: [(0,APSongItem(.single(wrapper), account))], removed: [], updated: []))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func start() {

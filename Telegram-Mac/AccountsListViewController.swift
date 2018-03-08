@@ -145,7 +145,7 @@ class AccountsListViewController : GenericViewController<TableView> {
                         }).start()
                     })
                 case let .record(record, isCurrent, _):
-                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: "\(record.id.hashValue)", nameStyle: ControlStyle(font: .normal(.title), foregroundColor: isCurrent ? .grayText : .text), type: .none, action: { [weak self] in
+                    return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: "\(record.id.hashValue)", nameStyle: ControlStyle(font: .normal(.title), foregroundColor: isCurrent ? theme.colors.grayText : theme.colors.text), type: .none, action: { [weak self] in
                         let _ = self?.accountManager.modify({ modifier -> Void in
                             modifier.setCurrentId(record.id)
                         }).start()

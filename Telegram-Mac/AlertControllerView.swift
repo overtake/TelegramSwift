@@ -67,12 +67,15 @@ class AlertControllerView: View {
         okButton.set(background: theme.colors.blueUI, for: .Normal)
         okButton.set(background: theme.colors.blueIcon, for: .Highlight)
         
+        self.cancelButton.set(background: theme.colors.blueUI, for: .Highlight)
+        self.cancelButton.set(color: .white, for: .Highlight)
+        
         cancelButton.layer?.borderWidth = .borderSize
         cancelButton.layer?.borderColor = theme.colors.blueUI.cgColor
-        
+        cancelButton.disableActions()
         containerView.addSubview(okButton)
         
-        
+        checkbox.isSelected = true
         checkbox.set(handler: { _ in
             
         }, for: .Click)
@@ -170,7 +173,7 @@ class AlertControllerView: View {
         
         okButton.setFrameOrigin(frame.width - okButton.frame.width - 40, frame.height - okButton.frame.height - 30)
         
-        cancelButton.setFrameOrigin(okButton.frame.minX - cancelButton.frame.width - 20, frame.height - cancelButton.frame.height - 30)
+        cancelButton.setFrameOrigin(okButton.frame.minX - cancelButton.frame.width - 10, frame.height - cancelButton.frame.height - 30)
         if photoView.isHidden {
             accessoryImage.frame = photoView.frame
         } else {

@@ -102,16 +102,8 @@ func link(path:String?, ext:String) -> String? {
     if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
         let path = path.nsstring.appendingPathExtension(ext)!
         if !FileManager.default.fileExists(atPath: path) {
-            do {
-                try FileManager.default.removeItem(atPath: path)
-            }
-            catch  {
-            }
-            do {
-                try FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
-            }
-            catch {
-            }
+            try? FileManager.default.removeItem(atPath: path)
+            try? FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
         }
         realPath = path
     }
@@ -124,7 +116,7 @@ func delay(_ delay:Double, closure:@escaping ()->()) {
 }
 
 
-func fileSize(_ path:String) -> Int32? {
+func fs(_ path:String) -> Int32? {
     
     if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
     

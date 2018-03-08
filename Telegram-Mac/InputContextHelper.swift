@@ -19,7 +19,7 @@ enum InputContextEntry : Comparable, Identifiable {
     case switchPeer(PeerId, ChatContextResultSwitchPeer)
     case peer(Peer, Int, Int64)
     case contextResult(ChatContextResultCollection,ChatContextResult,Int64)
-    case contextMediaResult(ChatContextResultCollection, InputMediaContextRow, Int64)
+    case contextMediaResult(ChatContextResultCollection?, InputMediaContextRow, Int64)
     case command(PeerCommand, Int64, Int64)
     case sticker(InputMediaStickersRow, Int64)
     case emoji(EmojiClue, Int32)
@@ -150,7 +150,11 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, account, chatInteraction)
         case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, results, result, index, account, chatInteraction)
+            return ContextMediaRowItem(initialSize, result, index, account, ContextMediaArguments(sendResult: { result in
+                if let results = results {
+                    chatInteraction.sendInlineResult(results, result)
+                }
+            }))
         case let .command(command,_, stableId):
             return ContextCommandRowItem(initialSize, account, command, stableId)
         case let .emoji(clue, _):

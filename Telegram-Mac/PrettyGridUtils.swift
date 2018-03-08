@@ -121,7 +121,7 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
         var row:[NSSize] = []
         var idx:Int = 0
         for dimension in dimensions {
-            var fitted = dimension.fitted(NSMakeSize(perSize.width, maxHeight))
+            var fitted = dimension.aspectFitted(NSMakeSize(80, maxHeight))
             
             if fitted.width < maxHeight || fitted.height < maxHeight {
                 let more: CGFloat = max(maxHeight - fitted.width, maxHeight - fitted.height)
@@ -129,7 +129,7 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
                 fitted.height += more
             }
             
-            if !isLastRow && idx == dimensions.count - 1 && !fitToHeight {
+            if !isLastRow && idx == dimensions.count - 1 {
                 let width:CGFloat = row.reduce(0, { (acc, size) -> CGFloat in
                     return acc + size.width
                 })
@@ -214,21 +214,25 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
         case let .externalReference(data):
             switch data.type {
             case kBotInlineTypeGif:
-                if let dimension = data.dimensions, let contentUrl = data.contentUrl {
+                if let content = data.content {
                     var image:TelegramMediaImage? = nil
-                    if let thumbUrl = data.thumbnailUrl {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimension, resource: HttpReferenceMediaResource(url: thumbUrl, size: nil))], reference: nil)
+                    if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil)
                     }
-                    entries.append(.gif(thumb: image, file: HttpReferenceMediaResource(url: contentUrl, size: nil)))
+                    entries.append(.gif(thumb: image, file: content.resource))
                 } else {
                     removeResultIndexes.append(i)
                 }
                 
             case kBotInlineTypePhoto:
-                let dimension = data.dimensions ?? NSMakeSize(100, 100)
                 var image:TelegramMediaImage? = nil
-                if let thumbUrl = data.thumbnailUrl {
-                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimension, resource: HttpReferenceMediaResource(url: thumbUrl, size: nil))], reference: nil)
+                if let content = data.content, let dimensions = content.dimensions {
+                    var representations: [TelegramMediaImageRepresentation] = []
+                    if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
+                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource))
+                    }
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: content.resource))
+                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil)
                 }
                 if let image = image {
                     entries.append(.photo(image: image))
@@ -236,12 +240,12 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
                     removeResultIndexes.append(i)
                 }
             case kBotInlineTypeSticker:
-                if let dimension = data.dimensions, let contentUrl = data.contentUrl {
+                if let content = data.content {
                     var image:TelegramMediaImage? = nil
-                    if let thumbUrl = data.thumbnailUrl {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimension, resource: HttpReferenceMediaResource(url: thumbUrl, size: nil))], reference: nil)
+                    if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil)
                     }
-                    entries.append(.sticker(thumb: image, file: TelegramMediaFile.init(fileId: MediaId(namespace: 0, id: 0), resource: HttpReferenceMediaResource(url: contentUrl, size: nil), previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: [])))
+                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), resource: content.resource, previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: content.attributes)))
                 } else {
                     removeResultIndexes.append(i)
                 }
@@ -253,7 +257,13 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
             case kBotInlineTypeGif:
                 if let file = data.file {
                     dimension = file.videoSize
-                    entries.append(.gif(thumb: data.image, file: file.resource))
+                    var thumb: TelegramMediaImage? = nil
+                    if let image = data.image {
+                        thumb = image
+                    } else if !file.previewRepresentations.isEmpty {
+                        thumb = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, reference: nil)
+                    }
+                    entries.append(.gif(thumb: thumb, file: file.resource))
                 } else {
                     removeResultIndexes.append(i)
                 }

@@ -35,8 +35,8 @@ final class StickerPackGridItem: GridItem {
         let node = StickerGridItemView(gridNode)
         node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
             self?.send(file)
-        }, previewStickerSet: {_ in})
-        node.setup(account: self.account, file: self.file)
+            }, previewStickerSet: {_ in}, addStickerSet: {_ in})
+        node.setup(account: self.account, file: self.file, packInfo: nil)
         node.selected = self.selected
         return node
     }
@@ -48,9 +48,9 @@ final class StickerPackGridItem: GridItem {
         }
         node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
             self?.send(file)
-        }, previewStickerSet: {_ in})
+        }, previewStickerSet: {_ in}, addStickerSet: {_ in})
         
-        node.setup(account: self.account, file: self.file)
+        node.setup(account: self.account, file: self.file, packInfo: nil)
         node.selected = self.selected
     }
 }

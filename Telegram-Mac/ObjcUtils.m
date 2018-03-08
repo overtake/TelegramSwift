@@ -11,6 +11,21 @@
 #import <AVFoundation/AVFoundation.h>
 
 
+@implementation OpenWithObject
+
+-(id)initWithFullname:(NSString *)fullname app:(NSURL *)app icon:(NSImage *)icon {
+    if(self = [super init]) {
+        _fullname = fullname;
+        _app = app;
+        _icon = icon;
+    }
+    
+    return self;
+}
+
+
+@end
+
 @implementation ObjcUtils
 + (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention
 {
@@ -375,6 +390,79 @@
     }
     
     return nil;
+}
+
++ (void) fillAppByUrl:(NSURL*)url bundle:(NSString**)bundle name:(NSString**)name version:(NSString**)version icon:(NSImage**)icon {
+    NSBundle *b = [NSBundle bundleWithURL:url];
+    if (b) {
+        NSString *path = [url path];
+        *name = [[NSFileManager defaultManager] displayNameAtPath: path];
+        if (!*name) *name = (NSString*)[b objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        if (!*name) *name = (NSString*)[b objectForInfoDictionaryKey:@"CFBundleName"];
+        if (*name) {
+            *bundle = [b bundleIdentifier];
+            if (bundle) {
+                *version = (NSString*)[b objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+                *icon = [[NSWorkspace sharedWorkspace] iconForFile: path];
+                if (*icon && [*icon isValid]) [*icon setSize: CGSizeMake(16., 16.)];
+                return;
+            }
+        }
+    }
+    *bundle = *name = *version = nil;
+    *icon = nil;
+}
+
++(NSArray<OpenWithObject *> *)appsForFileUrl:(NSString *)fileUrl {
+
+    NSArray *appsList = (__bridge NSArray*)LSCopyApplicationURLsForURL((__bridge CFURLRef)[NSURL fileURLWithPath:fileUrl], kLSRolesAll);
+    NSMutableDictionary *data = [NSMutableDictionary dictionaryWithCapacity:16];
+    int fullcount = 0;
+    for (id app in appsList) {
+        if (fullcount > 15) break;
+        
+        NSString *bundle = nil, *name = nil, *version = nil;
+        NSImage *icon = nil;
+        [ObjcUtils fillAppByUrl:(NSURL*)app bundle:&bundle name:&name version:&version icon:&icon];
+        if (bundle && name) {
+            NSString *key = [[NSArray arrayWithObjects:bundle, name, nil] componentsJoinedByString:@"|"];
+            if (!version) version = @"";
+            
+            NSMutableDictionary *versions = (NSMutableDictionary*)[data objectForKey:key];
+            if (!versions) {
+                versions = [NSMutableDictionary dictionaryWithCapacity:2];
+                [data setValue:versions forKey:key];
+            }
+            if (![versions objectForKey:version]) {
+                [versions setValue:[NSArray arrayWithObjects:name, icon, app, nil] forKey:version];
+                ++fullcount;
+            }
+        }
+    }
+    
+    
+    NSMutableArray *apps = [NSMutableArray arrayWithCapacity:fullcount];
+    for (id key in data) {
+        NSMutableDictionary *val = (NSMutableDictionary*)[data objectForKey:key];
+        for (id ver in val) {
+            NSArray *app = (NSArray*)[val objectForKey:ver];
+            
+            NSString *fullname = (NSString*)[app objectAtIndex:0], *version = (NSString*)ver;
+            BOOL showVersion = ([val count] > 1);
+            if (!showVersion) {
+                NSError *error = NULL;
+                NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\d+\\.\\d+\\.\\d+(\\.\\d+)?$" options:NSRegularExpressionCaseInsensitive error:&error];
+                showVersion = ![regex numberOfMatchesInString:version options:NSMatchingWithoutAnchoringBounds range:NSMakeRange(0,[version length])];
+            }
+            if (showVersion) fullname = [[NSArray arrayWithObjects:fullname, @" (", version, @")", nil] componentsJoinedByString:@""];
+            OpenWithObject *a = [[OpenWithObject alloc] initWithFullname:fullname app:app[2] icon:app[1]];
+            
+            [apps addObject:a];
+        }
+    }
+    
+    
+    return apps;
 }
     
 + (NSArray<NSString *> *)getEmojiFromString:(NSString *)string {

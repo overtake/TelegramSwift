@@ -299,7 +299,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 
                 
                 if pre.location != NSNotFound {
-                    let text = raw.nsstring.substring(with: pre)
+                    let text = raw.nsstring.substring(with: pre).trimmed
                     
                     rawOffset -= match.range(at: 2).length + match.range(at: 4).length
                     newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))

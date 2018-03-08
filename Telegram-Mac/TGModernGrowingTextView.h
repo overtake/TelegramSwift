@@ -32,6 +32,7 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 
 
 void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
+void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @interface TGGrowingTextView : NSTextView
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
@@ -91,5 +92,4 @@ void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSSt
 -(void)boldWord;
 -(void)addLink:(NSString *_Nonnull)link;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
-
 @end

@@ -115,7 +115,7 @@ internal final class L10n {
   internal static var adminsWhoCanInviteEveryone: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Everyone") }
   /// Who can add members
   internal static var adminsWhoCanInviteText: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Text") }
-  /// CANCEL
+  /// Cancel
   internal static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
   /// OK
   internal static var alertOK: String  { return L10n.tr("Localizable", "Alert.OK") }
@@ -617,9 +617,9 @@ internal final class L10n {
   internal static var chatConfirmReportSpamUser: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpamUser") }
   /// Would you like to unpin this message?
   internal static var chatConfirmUnpin: String  { return L10n.tr("Localizable", "Chat.Confirm.Unpin") }
-  /// Report Spam And Leave Channel?
+  /// Report Spam and leave channel?
   internal static var chatConfirmReportSpamChannel: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Channel") }
-  /// Report Spam And Leave Group?
+  /// Report Spam and leave group?
   internal static var chatConfirmReportSpamGroup: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Group") }
   /// Connecting
   internal static var chatConnectingStatusConnecting: String  { return L10n.tr("Localizable", "Chat.ConnectingStatus.connecting") }
@@ -655,6 +655,8 @@ internal final class L10n {
   internal static var chatHeaderPinnedMessage: String  { return L10n.tr("Localizable", "Chat.Header.PinnedMessage") }
   /// Report Spam
   internal static var chatHeaderReportSpam: String  { return L10n.tr("Localizable", "Chat.Header.ReportSpam") }
+  /// Loading...
+  internal static var chatInlineRequestLoading: String  { return L10n.tr("Localizable", "Chat.InlineRequest.Loading") }
   /// Delete and exit
   internal static var chatInputDelete: String  { return L10n.tr("Localizable", "Chat.Input.Delete") }
   /// Join
@@ -999,6 +1001,10 @@ internal final class L10n {
   internal static var d9MCDAMdTitle: String  { return L10n.tr("Localizable", "d9M-CD-aMd.title") }
   /// Auto-Download Media
   internal static var dataAndStorageAutomaticDownload: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownload") }
+  /// Automatic Copy Files to Download Folder
+  internal static var dataAndStorageAutomaticDownloadToDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownloadToDownloadFolder") }
+  /// Download Folder
+  internal static var dataAndStorageDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.DownloadFolder") }
   /// Network Usage
   internal static var dataAndStorageNetworkUsage: String  { return L10n.tr("Localizable", "DataAndStorage.NetworkUsage") }
   /// Storage Usage
@@ -1567,12 +1573,18 @@ internal final class L10n {
   internal static var messageContextForwardToCloud: String  { return L10n.tr("Localizable", "Message.Context.ForwardToCloud") }
   /// Show Message
   internal static var messageContextGoto: String  { return L10n.tr("Localizable", "Message.Context.Goto") }
+  /// Open With...
+  internal static var messageContextOpenWith: String  { return L10n.tr("Localizable", "Message.Context.OpenWith") }
   /// Pin
   internal static var messageContextPin: String  { return L10n.tr("Localizable", "Message.Context.Pin") }
+  /// Remove GIF
+  internal static var messageContextRemoveGif: String  { return L10n.tr("Localizable", "Message.Context.RemoveGif") }
   /// Reply
   internal static var messageContextReply1: String  { return L10n.tr("Localizable", "Message.Context.Reply1") }
   /// double click
   internal static var messageContextReplyHelp: String  { return L10n.tr("Localizable", "Message.Context.ReplyHelp") }
+  /// Report
+  internal static var messageContextReport: String  { return L10n.tr("Localizable", "Message.Context.Report") }
   /// Add GIF
   internal static var messageContextSaveGif: String  { return L10n.tr("Localizable", "Message.Context.SaveGif") }
   /// Select
@@ -1582,7 +1594,7 @@ internal final class L10n {
   /// Would you like to pin this message?
   internal static var messageContextConfirmPin1: String  { return L10n.tr("Localizable", "Message.Context.Confirm.Pin1") }
   /// Copy Message Link
-  internal static var messageContextCopyMessageLink: String  { return L10n.tr("Localizable", "MessageContext.CopyMessageLink") }
+  internal static var messageContextCopyMessageLink1: String  { return L10n.tr("Localizable", "MessageContext.CopyMessageLink1") }
   /// Deleted message
   internal static var messagesDeletedMessage: String  { return L10n.tr("Localizable", "Messages.DeletedMessage") }
   /// Forwarded messages
@@ -1637,6 +1649,8 @@ internal final class L10n {
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mute
   internal static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
+  /// Include muted chats in badge
+  internal static var notificationSettingsIncludeMutedChats: String  { return L10n.tr("Localizable", "NotificationSettings.IncludeMutedChats") }
   /// Message Preview
   internal static var notificationSettingsMessagesPreview: String  { return L10n.tr("Localizable", "NotificationSettings.MessagesPreview") }
   /// Notification Tone
@@ -2615,10 +2629,14 @@ internal final class L10n {
   internal static func stickerPackAdd1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StickerPack.Add1_zero", p1)
   }
+  /// Favorite
+  internal static var stickersFavorite: String  { return L10n.tr("Localizable", "Stickers.Favorite") }
   /// GROUP STICKERS
   internal static var stickersGroupStickers: String  { return L10n.tr("Localizable", "Stickers.GroupStickers") }
   /// Recent
   internal static var stickersRecent: String  { return L10n.tr("Localizable", "Stickers.Recent") }
+  /// Add
+  internal static var stickersSearchAdd: String  { return L10n.tr("Localizable", "Stickers.SearchAdd") }
   /// %d
   internal static func stickersSetCount1Countable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stickers.Set.Count1_countable", p1)

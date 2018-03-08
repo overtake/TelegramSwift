@@ -161,25 +161,34 @@ public struct AutomaticMediaDownloadCategories: PostboxCoding, Equatable {
 public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
     public let categories: AutomaticMediaDownloadCategories
     public let automaticDownload: Bool
+    public let downloadFolder: String
+    public let automaticSaveDownloadedFiles: Bool
     public static var defaultSettings: AutomaticMediaDownloadSettings {
         let categories = AutomaticMediaDownloadCategories(photo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), video: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024), files: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024), voice: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), instantVideo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), gif: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: 10 * 1024 * 1024))
-        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: true)
+        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: true, downloadFolder: FastSettings.downloadsFolder ?? "~/Downloads/".nsstring.expandingTildeInPath, automaticSaveDownloadedFiles: false)
     }
     
-    init(categories: AutomaticMediaDownloadCategories, automaticDownload: Bool) {
+    init(categories: AutomaticMediaDownloadCategories, automaticDownload: Bool, downloadFolder: String, automaticSaveDownloadedFiles: Bool) {
         self.categories = categories
         self.automaticDownload = automaticDownload
+        self.downloadFolder = downloadFolder
+        self.automaticSaveDownloadedFiles = automaticSaveDownloadedFiles
     }
     
     public init(decoder: PostboxDecoder) {
         self.categories = decoder.decodeObjectForKey("c", decoder: { AutomaticMediaDownloadCategories(decoder: $0) }) as! AutomaticMediaDownloadCategories
         self.automaticDownload = decoder.decodeBoolForKey("a", orElse: true)
+        self.downloadFolder = decoder.decodeStringForKey("d", orElse: FastSettings.downloadsFolder ?? "~/Downloads/".nsstring.expandingTildeInPath)
+        self.automaticSaveDownloadedFiles = decoder.decodeBoolForKey("ad", orElse: false)
     
     }
     
     public func encode(_ encoder: PostboxEncoder) {
         encoder.encodeObject(self.categories, forKey: "c")
         encoder.encodeBool(self.automaticDownload, forKey: "a")
+        encoder.encodeString(self.downloadFolder, forKey: "d")
+        encoder.encodeBool(self.automaticSaveDownloadedFiles, forKey: "ad")
+        
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -191,15 +200,23 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
     }
     
     public static func ==(lhs: AutomaticMediaDownloadSettings, rhs: AutomaticMediaDownloadSettings) -> Bool {
-        return lhs.categories == rhs.categories && lhs.automaticDownload == rhs.automaticDownload
+        return lhs.categories == rhs.categories && lhs.automaticDownload == rhs.automaticDownload && lhs.downloadFolder == rhs.downloadFolder && lhs.automaticSaveDownloadedFiles == rhs.automaticSaveDownloadedFiles
     }
     
     func withUpdatedCategories(_ categories: AutomaticMediaDownloadCategories) -> AutomaticMediaDownloadSettings {
-        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: automaticDownload)
+        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: automaticDownload, downloadFolder: self.downloadFolder, automaticSaveDownloadedFiles: self.automaticSaveDownloadedFiles)
     }
     
     func withUpdatedAutomaticDownload(_ automaticDownload: Bool) -> AutomaticMediaDownloadSettings {
-        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: automaticDownload)
+        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: automaticDownload, downloadFolder: self.downloadFolder, automaticSaveDownloadedFiles: self.automaticSaveDownloadedFiles)
+    }
+    
+    func withUpdatedDownloadFolder(_ folder: String) -> AutomaticMediaDownloadSettings {
+        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: automaticDownload, downloadFolder: folder, automaticSaveDownloadedFiles: self.automaticSaveDownloadedFiles)
+    }
+    
+    func withUpdatedAutomaticSaveDownloadedFiles(_ automaticSaveDownloadedFiles: Bool) -> AutomaticMediaDownloadSettings {
+        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: automaticDownload, downloadFolder: self.downloadFolder, automaticSaveDownloadedFiles: automaticSaveDownloadedFiles)
     }
 }
 
@@ -219,8 +236,6 @@ func updateMediaDownloadSettingsInteractively(postbox: Postbox, _ f: @escaping (
 
 func automaticDownloadSettings(postbox: Postbox) -> Signal<AutomaticMediaDownloadSettings, Void> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]) |> map { value in
-        var bp:Int = 0
-        bp += 1
         return value.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings] as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
     }
 }
