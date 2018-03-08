@@ -46,11 +46,27 @@ final class StickerGridSection: GridSection {
 final class StickerGridSectionNode: View {
     var textView:TextView = TextView()
     private let collectionInfo:StickerGridSection
+    private let addButton: TitleButton = TitleButton()
     init(collectionInfo: StickerGridSection) {
         self.collectionInfo = collectionInfo
         self.textView.userInteractionEnabled = false
+        addButton.disableActions()
+        
         super.init()
         addSubview(textView)
+        switch collectionInfo.packInfo {
+        case let .pack(_, installed):
+            if !installed {
+                addSubview(addButton)
+            }
+        default:
+            break
+        }
+        addButton.set(handler: { _ in
+            if let reference = collectionInfo.reference {
+                collectionInfo.inputInteraction.addStickerSet(reference)
+            }
+        }, for: .Click)
         updateLocalizationAndTheme()
     }
     override func updateLocalizationAndTheme() {
@@ -59,12 +75,29 @@ final class StickerGridSectionNode: View {
         let textLayout = TextViewLayout(.initialize(string: collectionInfo.packInfo.title.uppercased(), color: theme.colors.grayText, font: .medium(.title)), constrainedWidth: 300, maximumNumberOfLines: 1, truncationType: .end)
         textLayout.measure()
         textView.update(textLayout)
+        
+        if addButton.superview != nil {
+            addButton.set(font: .normal(.text), for: .Normal)
+            addButton.set(color: theme.colors.blueUI, for: .Normal)
+            addButton.set(color: .white, for: .Highlight)
+            addButton.set(background: theme.colors.background, for: .Normal)
+            addButton.set(background: theme.colors.blueUI, for: .Highlight)
+            
+            addButton.set(text: L10n.stickersSearchAdd, for: .Normal)
+            _ = addButton.sizeToFit(NSZeroSize, NSMakeSize(50, 20), thatFit: true)
+            addButton.layer?.borderWidth = .borderSize
+            addButton.layer?.borderColor = theme.colors.blueUI.cgColor
+            addButton.layer?.cornerRadius = .cornerRadius
+        }
+    
+        
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
         textView.centerY(x:10)
+        addButton.centerY(x: frame.width - addButton.frame.width - 10)
     }
     
     override func mouseUp(with event: NSEvent) {
@@ -92,7 +125,7 @@ final class StickerGridItem: GridItem {
     let inputNodeInteraction: EStickersInteraction
     let collectionId:ChatMediaGridCollectionStableId
     let section: GridSection?
-    
+    let packInfo: ChatMediaGridPackHeaderInfo
     init(account: Account, collectionId: ChatMediaGridCollectionStableId, packInfo: ChatMediaGridPackHeaderInfo, index: ChatMediaInputGridIndex, file: TelegramMediaFile, inputNodeInteraction: EStickersInteraction, selected: @escaping () -> Void) {
         self.account = account
         self.index = index
@@ -100,7 +133,7 @@ final class StickerGridItem: GridItem {
         self.collectionId = collectionId
         self.inputNodeInteraction = inputNodeInteraction
         self.selected = selected
-        
+        self.packInfo = packInfo
         
         let reference: StickerPackReference?
         switch packInfo {
@@ -113,7 +146,7 @@ final class StickerGridItem: GridItem {
         case .speficicPack:
             reference = file.stickerReference
         }
-        if collectionId != .saved {
+        if index.packIndex.collectionIndex != -1 {
             self.section = StickerGridSection(collectionId: collectionId, packInfo: packInfo, inputInteraction: inputNodeInteraction, reference:  reference)
         } else {
             self.section = nil
@@ -123,7 +156,7 @@ final class StickerGridItem: GridItem {
     func node(layout: GridNodeLayout, gridNode:GridNode) -> GridItemNode {
         let node = StickerGridItemView(gridNode)
         node.inputNodeInteraction = self.inputNodeInteraction
-        node.setup(account: self.account, file: self.file, collectionId: self.collectionId)
+        node.setup(account: self.account, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
         node.selected = self.selected
         return node
     }
@@ -133,17 +166,17 @@ final class StickerGridItem: GridItem {
             assertionFailure()
             return
         }
-        node.setup(account: self.account, file: self.file, collectionId: self.collectionId)
+        node.setup(account: self.account, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
         node.selected = self.selected
     }
 }
 
-let eStickerSize:NSSize = NSMakeSize(80, 80)
+let eStickerSize:NSSize = NSMakeSize(60, 60)
 
 
 
 final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
-    private var currentState: (Account, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?)?
+    private var currentState: (Account, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?, ChatMediaGridPackHeaderInfo?)?
     
     
     private let imageView: TransformImageView
@@ -159,7 +192,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             if state == .recent {
                 if let reference = file.stickerReference, case let .id(id, _) = reference {
                     menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
-                        self?.inputNodeInteraction?.navigateToCollectionId(.pack(ItemCollectionId.init(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
+                        self?.inputNodeInteraction?.navigateToCollectionId(.pack(ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
                     }))
                 }
             } else if state == .saved, let mediaId = file.id {
@@ -186,8 +219,21 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
         disableActions()
         
         set(handler: { [weak self] _ in
-            if let (_, file, _, _) = self?.currentState {
-                self?.inputNodeInteraction?.sendSticker(file)
+            if let (_, file, _, _, packInfo) = self?.currentState {
+                if let packInfo = packInfo {
+                    switch packInfo {
+                    case let .pack(_, installed):
+                        if installed {
+                            self?.inputNodeInteraction?.sendSticker(file)
+                        } else if let reference = file.stickerReference {
+                            self?.inputNodeInteraction?.previewStickerSet(reference)
+                        }
+                    default:
+                        self?.inputNodeInteraction?.sendSticker(file)
+                    }
+                } else {
+                    self?.inputNodeInteraction?.sendSticker(file)
+                }
             }
         }, for: .Click)
         
@@ -219,7 +265,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
         stickerFetchedDisposable.dispose()
     }
     
-    func setup(account: Account, file: TelegramMediaFile, collectionId: ChatMediaGridCollectionStableId? = nil) {
+    func setup(account: Account, file: TelegramMediaFile, collectionId: ChatMediaGridCollectionStableId? = nil, packInfo: ChatMediaGridPackHeaderInfo?) {
         if let dimensions = file.dimensions {
             addSubview(imageView)
             
@@ -240,7 +286,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets()))
             
             imageView.setFrameSize(imageSize)
-            currentState = (account, file, dimensions, collectionId)
+            currentState = (account, file, dimensions, collectionId, packInfo)
             return
         }
         imageView.removeFromSuperview()

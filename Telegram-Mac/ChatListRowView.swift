@@ -231,7 +231,7 @@ class ChatListRowView: TableRowView {
             let list = sender.draggingPasteboard().propertyList(forType: .kFilenames) as? [String]
             if let item = item as? ChatListRowItem, let context = item.account.applicationContext as? TelegramApplicationContext, let list = list {
                 let list = list.filter { path -> Bool in
-                    if let size = fileSize(path) {
+                    if let size = fs(path) {
                         return size <= 1500000000
                     }
                     

@@ -17,10 +17,6 @@ import AVKit
 
 private class VideoPlayerView : AVPlayerView {
     
-    deinit {
-        var bp:Int = 0
-        bp += 1
-    }
     
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)

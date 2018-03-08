@@ -16,7 +16,7 @@
 #import <Security/Security.h>
 #import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
-
+#import "DFRPrivateHeader.h"
 //#import <ChromiumTabs/ChromiumTabs.h>
 //#include <Cocoa/Cocoa.h>
 //#import <IOKit/hidsystem/ev_keymap.h>
@@ -32,6 +32,8 @@
 #define nullable
 #endif
 
+
+
 void telegramFastBlur(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 NSArray<NSString *> * __nonnull cut_long_message(NSString * __nonnull message, int max_length);
 int64_t SystemIdleTime(void);
@@ -39,6 +41,16 @@ NSDictionary<NSString * , NSString *> * __nonnull audioTags(AVURLAsset * __nonnu
 NSImage * __nonnull TGIdenticonImage(NSData * __nonnull data, NSData * __nonnull additionalData, CGSize size);
 
 CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
+
+@interface OpenWithObject : NSObject
+@property (nonatomic, strong,readonly) NSString *fullname;
+@property (nonatomic, strong,readonly) NSURL *app;
+@property (nonatomic, strong,readonly) NSImage *icon;
+
+
+-(id)initWithFullname:(NSString *)fullname app:(NSURL *)app icon:(NSImage *)icon;
+
+@end
 
 @interface ObjcUtils : NSObject
 + (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
@@ -56,6 +68,8 @@ CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 +(NSArray<NSString *> * __nonnull)notificationTones:(NSString * __nonnull)def;
 +(NSString * __nullable)youtubeIdentifier:(NSString * __nonnull)url;;
 + (NSString * __nullable)_youtubeVideoIdFromText:(NSString * __nullable)text originalUrl:(NSString * __nullable)originalUrl startTime:(NSTimeInterval *)startTime;
++(NSArray<OpenWithObject *> *)appsForFileUrl:(NSString *)fileUrl;
+
 @end
 
 int colorIndexForGroupId(int64_t groupId);
@@ -138,6 +152,7 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 
 
 void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
+void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @interface TGGrowingTextView : NSTextView
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
@@ -193,7 +208,7 @@ void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSSt
 -(void)italicWord;
 -(void)boldWord;
 -(void)addLink:(NSString *)link;
-- (void)textDidChange:( NSNotification * _Nullable )notification;
+-(void)textDidChange:( NSNotification * _Nullable )notification;
 @end
 
 

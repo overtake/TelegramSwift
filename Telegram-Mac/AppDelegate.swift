@@ -18,7 +18,7 @@ import LocalAuthentication
 
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
+class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
    
     #if !APP_STORE
     @IBOutlet weak var updater: SUUpdater!
@@ -33,6 +33,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     override init() {
         super.init()
         NSAppleEventManager.shared().setEventHandler(self, andSelector: #selector(handleURLEvent(_: with:)), forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     /*
@@ -64,8 +68,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
        
     }
     
+    
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
+        
+        
+        
+        if #available(OSX 10.12.2, *) {
+            NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
+        }
         
         let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
         guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
@@ -74,8 +86,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
         self.containerUrl = containerUrl.path
 
-        
-        
         
         let crashed = isCrashedLastTime(containerUrl.path)
         
@@ -106,6 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
         
         
+        
        // applyMainMenuLocalization(window)
         
         mw = window
@@ -129,6 +140,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                 break
             }
         }
+
         
         //#if !DEBUG
             #if BETA
@@ -222,11 +234,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
     }
     
+    @available(OSX 10.12.2, *)
+    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
+        return nil
+    }
+    
+    @available(OSX 10.12.2, *)
+    override func makeTouchBar() -> NSTouchBar? {
+        return NSTouchBar()
+    }
+    
+    
     @objc func checkUpdates() {
         #if !APP_STORE
             updater.checkForUpdatesInBackground()
         #endif
     }
+    
+    
     
     @objc func saveIntermediateDate() {
         crashIntermediateDate(containerUrl)

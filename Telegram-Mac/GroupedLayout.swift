@@ -50,53 +50,7 @@ private final class GroupedLayoutAttempt {
     }
 }
 
-struct GroupLayoutPositionFlags : OptionSet {
-    
-    public var rawValue: UInt32
-    
-    public init(rawValue: UInt32) {
-        self.rawValue = rawValue
-    }
-    
-    public init() {
-        self.rawValue = 0
-    }
-    
-    public init(_ flags: GroupLayoutPositionFlags) {
-        var rawValue: UInt32 = 0
-        
-        if flags.contains(GroupLayoutPositionFlags.none) {
-            rawValue |= GroupLayoutPositionFlags.none.rawValue
-        }
-        
-        if flags.contains(GroupLayoutPositionFlags.top) {
-            rawValue |= GroupLayoutPositionFlags.top.rawValue
-        }
-        
-        if flags.contains(GroupLayoutPositionFlags.bottom) {
-            rawValue |= GroupLayoutPositionFlags.bottom.rawValue
-        }
-        
-        if flags.contains(GroupLayoutPositionFlags.left) {
-            rawValue |= GroupLayoutPositionFlags.left.rawValue
-        }
-        if flags.contains(GroupLayoutPositionFlags.right) {
-            rawValue |= GroupLayoutPositionFlags.right.rawValue
-        }
-        if flags.contains(GroupLayoutPositionFlags.inside) {
-            rawValue |= GroupLayoutPositionFlags.inside.rawValue
-        }
-        
-        self.rawValue = rawValue
-    }
-    
-    static let none = GroupLayoutPositionFlags(rawValue: 0)
-    static let top = GroupLayoutPositionFlags(rawValue: 1 << 0)
-    static let bottom = GroupLayoutPositionFlags(rawValue: 1 << 1)
-    static let left = GroupLayoutPositionFlags(rawValue: 1 << 2)
-    static let right = GroupLayoutPositionFlags(rawValue: 1 << 3)
-    static let inside = GroupLayoutPositionFlags(rawValue: 1 << 4)
-}
+
 
 class GroupedLayout {
 

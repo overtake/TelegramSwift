@@ -27,7 +27,7 @@ private class TouchIdContainerView : View {
         addSubview(button)
         
         button.autohighlight = false
-        button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.blueIcon, highlightColor: theme.colors.blueIcon)
+        button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.blueUI, highlightColor: theme.colors.blueUI)
         button.set(font: .medium(.title), for: .Normal)
         button.set(color: .white, for: .Normal)
 
@@ -49,7 +49,7 @@ private class TouchIdContainerView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        let (text, layout) = TextNode.layoutText(NSAttributedString.initialize(string: L10n.passcodeOr, color: theme.colors.grayText, font: .normal(.text)), theme.colors.background, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+        let (text, layout) = TextNode.layoutText(NSAttributedString.initialize(string: L10n.passcodeOr, color: theme.colors.grayText, font: .normal(.title)), theme.colors.background, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
         
         let f = focus(text.size)
         layout.draw(NSMakeRect(f.minX, 0, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)

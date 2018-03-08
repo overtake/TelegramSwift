@@ -129,7 +129,8 @@ class ChatTitleBarView: TitledBarView {
         didSet {
             if connectionStatus != oldValue {
                 if connectionStatus == .online {
-                    containerView.change(pos: NSMakePoint(0, 0), animated: true)
+                    
+                    //containerView.change(pos: NSMakePoint(0, 0), animated: true)
                     if let connectionStatusView = connectionStatusView {
                         
                         connectionStatusView.change(pos: NSMakePoint(0, -frame.height), animated: true)
@@ -139,13 +140,14 @@ class ChatTitleBarView: TitledBarView {
                         })
                         
                     }
+                    
                 } else {
                     if connectionStatusView == nil {
                         connectionStatusView = ConnectionStatusView(frame: NSMakeRect(0, -frame.height, frame.width, frame.height))
                         connectionStatusView?.disableProxy = chatInteraction.disableProxy
                         addSubview(connectionStatusView!)
                         connectionStatusView?.change(pos: NSMakePoint(0,0), animated: true)
-                        containerView.change(pos: NSMakePoint(0, frame.height), animated: true)
+                      //  containerView.change(pos: NSMakePoint(0, frame.height), animated: true)
                     }
                     
                     connectionStatusView?.status = connectionStatus

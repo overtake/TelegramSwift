@@ -52,8 +52,9 @@ open class TextViewLabel: View {
     public func sizeToFit() -> Void {
         self.update(attr: self.attributedString, size: NSMakeSize(CGFloat.greatestFiniteMagnitude,  CGFloat.greatestFiniteMagnitude))
         if let text = text {
-            self.frame = NSMakeRect(frame.minX, frame.minY, text.0.size.width, text.0.size.height)
+            self.frame = NSMakeRect(frame.minX, frame.minY, text.0.size.width + 4, text.0.size.height)
         }
+        
     }
     
     public func sizeTo() -> Void {
@@ -64,7 +65,7 @@ open class TextViewLabel: View {
     
     func update(attr:NSAttributedString?, size:NSSize) -> Void {
         if let attr = attr {
-            text = TextNode.layoutText(maybeNode: node, attr, nil, linesCount, .end, size, nil,false, .left)
+            text = TextNode.layoutText(maybeNode: nil, attr, nil, linesCount, .end, size, nil,false, .left)
         } else {
             text = nil
         }

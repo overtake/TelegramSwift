@@ -24,6 +24,12 @@ NSString * NSLocalized(NSString * key, NSString *comment) {
     }
 }
 
+static BOOL textViewEnableTouchBar = true;
+
+void setTextViewEnableTouchBar(BOOL enableTouchBar) {
+    textViewEnableTouchBar = enableTouchBar;
+}
+
 @interface GrowingScrollView : NSScrollView
 
 @end
@@ -153,6 +159,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     return @[code, italic, bold, url];
 }
 
+
+-(NSTouchBar *)makeTouchBar {
+    return textViewEnableTouchBar ?  [super makeTouchBar] : nil;
+}
 
 
 -(void)boldWord:(id)sender {
@@ -1229,6 +1239,8 @@ static int64_t nextId = 0;
     [__undo removeAllActionsWithTarget:_textView];
     [__undo removeAllActions];
 }
+
+
 
 
 -(int)_startXPlaceholder {

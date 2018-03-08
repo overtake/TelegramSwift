@@ -43,7 +43,7 @@ class ChatMediaLayoutParameters : Equatable {
     }
     
     
-    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool) -> ChatMediaLayoutParameters {
+    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool) -> ChatMediaLayoutParameters {
         if media.isInstantVideo {
             var duration:Int = 0
             for attr in media.attributes {
@@ -107,7 +107,7 @@ class ChatMediaLayoutParameters : Equatable {
             if let name = media.fileName {
                 fileName = name
             }
-            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload)
+            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming)
         }
     }
     
@@ -370,13 +370,13 @@ class ChatMediaItem: ChatRowItem {
                             }
                             
                             for i in 0 ..< items.count {
-                                if items[i].title == tr(L10n.messageContextCopyMessageLink) {
+                                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
                                     items.remove(at: i)
                                     break
                                 }
                             }
                             
-                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
+                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                                 copyToClipboard(text)
                             }), at: 1)
                         }

@@ -655,7 +655,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 copyView.removeFromSuperview()
                 Queue.mainQueue().after(0.3, { [weak strongSelf] in
                     if let view = strongSelf?.controller.selectedViewController?.view as? MagnifyView {
-                        strongSelf?.window.makeFirstResponder(view)
+                        strongSelf?.window.makeFirstResponder(view.contentView)
                     }
                 })
             }

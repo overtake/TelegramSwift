@@ -281,7 +281,7 @@ class ChatGroupedItem: ChatRowItem {
         if let message = layout.messages.last {
             if let peer = message.peers[message.id.peerId] as? TelegramChannel, let address = peer.addressName {
                 
-                items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
+                items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                     copyToClipboard("t.me/\(address)/\(message.id.id)")
                 }))
             }
@@ -339,13 +339,13 @@ class ChatGroupedItem: ChatRowItem {
                             }
                             
                             for i in 0 ..< items.count {
-                                if items[i].title == tr(L10n.messageContextCopyMessageLink) {
+                                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
                                     items.remove(at: i)
                                     break
                                 }
                             }
                             
-                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
+                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                                 copyToClipboard(text)
                             }), at: 1)
                         }

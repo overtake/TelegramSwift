@@ -1970,3 +1970,159 @@ func drawStretchedImageInRect(_ image: CGImage, context: CGContext, rect: NSRect
 
 
 
+extension NSView {
+    
+    func widthConstraint(relation: NSLayoutConstraint.Relation,
+                         size: CGFloat) -> NSLayoutConstraint {
+        return NSLayoutConstraint(item: self,
+                                  attribute: .width,
+                                  relatedBy: relation,
+                                  toItem: nil,
+                                  attribute: .width,
+                                  multiplier: 1.0,
+                                  constant: size)
+    }
+    
+    func addWidthConstraint(relation: NSLayoutConstraint.Relation = .equal,
+                            size: CGFloat) {
+        addConstraint(widthConstraint(relation: relation,
+                                      size: size))
+    }
+    
+}
+
+extension NSControl.ImagePosition {
+    
+    var touchBarDefaultSize: CGFloat {
+        switch self {
+        case .imageOnly:
+            return 56.0
+        case .imageLeading:
+            return 175.0
+        default:
+            return 150.0
+        }
+    }
+    
+}
+
+extension NSButton {
+    
+    func addTouchBarButtonWidthConstraint() {
+        switch self.imagePosition {
+        case .imageLeading:
+            addWidthConstraint(relation: .lessThanOrEqual,
+                               size: self.imagePosition.touchBarDefaultSize)
+        default:
+            addWidthConstraint(relation: .equal,
+                               size: self.imagePosition.touchBarDefaultSize)
+        }
+    }
+    
+}
+
+
+@available(OSX 10.12.2, *)
+extension NSImage {
+    
+    // MARK: Project drawables
+    
+    
+    static let defaultBg    = NSImage(named: NSImage.Name(rawValue: "DefaultBackground"))!
+    
+    static let shuffling    = #imageLiteral(resourceName: "Icon_DFRShuffle").forUI()
+    static let repeating    = #imageLiteral(resourceName: "Icon_DFRRepeat").forUI()
+    
+    static let previous     = NSImage(named: NSImage.Name.touchBarRewindTemplate)!
+    static let next         = NSImage(named: NSImage.Name.touchBarFastForwardTemplate)!
+    static let play         = NSImage(named: NSImage.Name.touchBarPlayTemplate)!
+    static let pause        = NSImage(named: NSImage.Name.touchBarPauseTemplate)!
+    
+    static let volumeLow    = NSImage(named: NSImage.Name.touchBarAudioOutputVolumeLowTemplate)
+    static let volumeMedium = NSImage(named: NSImage.Name.touchBarAudioOutputVolumeMediumTemplate)
+    static let volumeHigh   = NSImage(named: NSImage.Name.touchBarAudioOutputVolumeHighTemplate)
+    
+    static let playhead     = NSImage(named: NSImage.Name.touchBarPlayheadTemplate)
+    static let playbar      = #imageLiteral(resourceName: "Icon_Playbar")
+    
+}
+
+extension NSImage {
+    
+    // MARK: Extended functions
+    
+    /**
+     Returns the NSImage with 'isTemplate' enabled
+     This lets the UI draw the appropriate color
+     according to background (e.g. dark in TouchBar)
+     */
+    func forUI() -> NSImage {
+        self.isTemplate = true
+        
+        return self
+    }
+    
+    func edit(size: NSSize? = nil,
+              editCommand: @escaping (NSImage, NSSize) -> ()) -> NSImage {
+        let temp = NSImage(size: size ?? self.size)
+        
+        guard temp.size.width > 0, temp.size.height > 0 else { return self }
+        
+        temp.lockFocus()
+        editCommand(self, temp.size)
+        temp.unlockFocus()
+        
+        return temp
+    }
+    
+    /**
+     Resizes NSImage
+     - parameter newSize: the requested image size
+     - parameter squareCrop: if true
+     - returns: self scaled to requested size
+     */
+    func resized(to newSize: CGSize, squareCrop: Bool = true) -> NSImage {
+        return self.edit(size: newSize) {
+            image, size in
+            
+            var fromRect = NSZeroRect
+            let inRect   = NSMakeRect(0, 0, size.width, size.height)
+            
+            if squareCrop, image.size.width != image.size.height {
+                let minSize = min(image.size.width, image.size.height)
+                let maxSize = max(image.size.width, image.size.height)
+                let start   = ( maxSize - minSize ) / 2
+                
+                fromRect = NSMakeRect(
+                    image.size.width   != minSize ? start : 0,
+                    image.size.height  != minSize ? start : 0,
+                    minSize,
+                    minSize
+                )
+            }
+            
+            image.draw(in:        inRect,
+                       from:      fromRect,
+                       operation: .sourceOver,
+                       fraction:  1.0)
+        }
+    }
+    
+    /**
+     Changes NSImage alpha
+     - parameter alpha: the requested alpha value
+     - returns: self with requested alpha value
+     */
+    func withAlpha(_ alpha: CGFloat) -> NSImage {
+        return self.edit {
+            image, size in
+            image.draw(in: NSMakeRect(0, 0, size.width, size.height),
+                       from: NSZeroRect,
+                       operation: .sourceOver,
+                       fraction: alpha)
+        }
+    }
+    
+}
+
+

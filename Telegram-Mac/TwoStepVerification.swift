@@ -47,3 +47,15 @@ func apiInputUser(_ peer: Peer) -> Api.InputUser? {
         return nil
     }
 }
+
+
+
+public func reportMessages(postbox: Postbox, network: Network, peerId: PeerId, messageIds: [MessageId], reason:ReportReason) -> Signal<Void, Void> {
+    return postbox.modify{ modifier -> Void in
+        if let peer = modifier.getPeer(peerId), let inputPeer = apiInputPeer(peer) {
+           // return Api.functions.messages.report
+        }
+    }
+}
+
+

@@ -39,7 +39,7 @@ class ChatInputAttachView: ImageButton {
                         let previous = result.count
                         
                         let result = result.filter { path -> Bool in
-                            if let size = fileSize(path) {
+                            if let size = fs(path) {
                                 return size <= 1500000000
                             }
                             return false
@@ -65,7 +65,7 @@ class ChatInputAttachView: ImageButton {
                         let previous = result.count
                         
                         let result = result.filter { path -> Bool in
-                            if let size = fileSize(path) {
+                            if let size = fs(path) {
                                 return size <= 1500000000
                             }
                             return false

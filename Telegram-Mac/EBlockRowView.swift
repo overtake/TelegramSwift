@@ -16,7 +16,7 @@ extension CATiledLayer {
     }
 }
 
-class ETiledLayer : CATiledLayer {
+class ETiledLayer : CALayer {
     
     
     fileprivate var layoutNextRequest: Bool = true
@@ -64,7 +64,8 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
         wantsLayer = true
         self.layer?.addSublayer(tiled)
         tiled.frame = self.bounds
-        tiled.levelsOfDetailBias = Int(backingScaleFactor)
+        tiled.contentsScale = backingScaleFactor
+      //  tiled.levelsOfDetailBias = Int(backingScaleFactor)
         self.tiled.delegate = self
         
         //tiled.shouldRasterize
@@ -76,7 +77,8 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
     
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
-        tiled.levelsOfDetailBias = Int(backingScaleFactor)
+        tiled.contentsScale = backingScaleFactor
+      //  tiled.levelsOfDetailBias = Int(backingScaleFactor)
     }
     
     override var needsDisplay: Bool {
@@ -95,7 +97,7 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         tiled.frame = bounds
-        tiled.tileSize = bounds.size
+      //  tiled.tileSize = bounds.size
     }
     
     func update(with item:EBlockItem?) -> Void {
@@ -103,6 +105,7 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
         tiled.layoutNextRequest = true
         background = theme.colors.background
         self.needsDisplay = true
+        tiled.setNeedsDisplay()
     }
     
 }

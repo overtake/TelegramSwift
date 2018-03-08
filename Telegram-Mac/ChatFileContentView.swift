@@ -92,7 +92,7 @@ class ChatFileContentView: ChatMediaContentView {
         return NSPointInRect(convert(event.locationInWindow, from: nil), progressView.frame)
     }
     
-    func actionLayout(status:MediaResourceStatus, file:TelegramMediaFile, presentation: ChatMediaPresentation) -> TextViewLayout {
+    func actionLayout(status:MediaResourceStatus, file:TelegramMediaFile, presentation: ChatMediaPresentation, paremeters: ChatFileLayoutParameters?) -> TextViewLayout? {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         
         switch status {
@@ -104,27 +104,17 @@ class ChatFileContentView: ChatMediaContentView {
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
             }
+            let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+            layout.measure()
+            return layout
+            
         case .Local:
-
-            let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
-            
-            if !(file.resource is LocalFileReferenceMediaResource), let account = account {
-                let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-                let isIncoming = parent?.isIncoming(account, theme.bubbled) == true
-                let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
-                attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
-            }
+            return paremeters?.finderLayout
         case .Remote:
-            if let account = account {
-                let isIncoming = parent?.isIncoming(account, theme.bubbled) == true
-                let _ = attr.append(string: .prettySized(with: file.elapsedSize) + " - ", color: presentation.grayText, font: .normal(.text))
-                let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
-                attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
-            }
-            
+            return paremeters?.downloadLayout
         }
-
-        return TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+        
+        return nil
     }
     
     override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {
@@ -193,16 +183,12 @@ class ChatFileContentView: ChatMediaContentView {
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
                     
-                    let layout = strongSelf.actionLayout(status: status, file: file, presentation: presentation)
+                    let layout = strongSelf.actionLayout(status: status, file: file, presentation: presentation, paremeters: parameters)
                     if !strongSelf.actionText.isEqual(to :layout) {
-                        layout.interactions = strongSelf.actionInteractions
-                        layout.measure()
+                        layout?.interactions = strongSelf.actionInteractions
                         
                         strongSelf.actionText.update(layout)
-                        var width = strongSelf.leftInset + layout.layoutSize.width
-                        if let name = parameters?.name {
-                            width = max(width, strongSelf.leftInset + name.0.size.width)
-                        }
+
                     }
                     strongSelf.progressView.isHidden = false
                     switch status {

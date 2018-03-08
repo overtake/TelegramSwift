@@ -82,7 +82,7 @@ class AlertController: ViewController {
         }, cancelHandler: { [weak self] in
             self?.close(.cancel)
         })
-        genericView.layoutTexts(with: self.header, information: text, account: account, peer: peer, thridTitle: thridTitle, accessory: accessory, maxWidth: maxWidth)
+        genericView.layoutTexts(with: peer?.displayTitle ?? self.header, information: text, account: account, peer: peer, thridTitle: thridTitle, accessory: accessory, maxWidth: maxWidth)
         alert.setFrame(NSMakeRect(0, 0, maxWidth, view.frame.height), display: true)
         view.frame = NSMakeRect(0, 0, maxWidth, view.frame.height)
         view.needsLayout = true

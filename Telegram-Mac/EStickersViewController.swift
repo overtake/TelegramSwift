@@ -92,69 +92,104 @@ fileprivate func preparePackEntries(from:[AppearanceWrapperEntry<ChatMediaInputP
     
 }
 
-private func chatMediaInputPanelEntries(view: ItemCollectionsView, orderedItemListViews:[OrderedItemListView], specificPack:(StickerPackCollectionInfo?, Peer?)) -> [ChatMediaInputPanelEntry] {
+private func chatMediaInputPanelEntries(view: (ItemCollectionsView?, (FoundStickerSets?, Bool)?), orderedItemListViews:[OrderedItemListView]?, specificPack:(StickerPackCollectionInfo?, Peer?)?) -> [ChatMediaInputPanelEntry] {
     var entries: [ChatMediaInputPanelEntry] = []
     var index = 0
-//    
-    if !orderedItemListViews[1].items.isEmpty {
-        entries.append(.saved)
+
+    if let orderedItemListViews = orderedItemListViews {
+        if !orderedItemListViews[1].items.isEmpty {
+            entries.append(.saved)
+        }
+        
+        if !orderedItemListViews[0].items.isEmpty {
+            entries.append(.recent)
+        }
     }
+   
     
-    if !orderedItemListViews[0].items.isEmpty {
-        entries.append(.recent)
-    }
-    
-    if let info = specificPack.0, let peer = specificPack.1 {
+    if let info = specificPack?.0, let peer = specificPack?.1 {
         entries.append(.specificPack(info: info, peer: peer))
     }
 
-    for (_, info, item) in view.collectionInfos {
-        if let info = info as? StickerPackCollectionInfo {
-            entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem))
-            index += 1
+    if let collectionInfos = view.0?.collectionInfos {
+        for (_, info, item) in collectionInfos {
+            if let info = info as? StickerPackCollectionInfo {
+                entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem))
+                index += 1
+            }
         }
     }
+//    else if let result = view.1?.0?.infos {
+//        for (_, info, item) in result {
+//            if let info = info as? StickerPackCollectionInfo {
+//                entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem))
+//                index += 1
+//            }
+//        }
+//    }
+    
     entries.sort(by: <)
     return entries
 }
 
-private func chatMediaInputGridEntries(view: ItemCollectionsView, orderedItemListViews:[OrderedItemListView], specificPack:(StickerPackCollectionInfo, [ItemCollectionItem])?) -> [ChatMediaInputGridEntry] {
+private func chatMediaInputGridEntries(view: (ItemCollectionsView?, (FoundStickerSets?, Bool)?), orderedItemListViews:[OrderedItemListView]?, specificPack:(StickerPackCollectionInfo, [ItemCollectionItem])?) -> [ChatMediaInputGridEntry] {
     var entries: [ChatMediaInputGridEntry] = []
     
     var stickerPackInfos: [ItemCollectionId: StickerPackCollectionInfo] = [:]
-    for (id, info, _) in view.collectionInfos {
-        if let info = info as? StickerPackCollectionInfo {
-            stickerPackInfos[id] = info
-        }
-    }
     
-    var fileIds:[MediaId: MediaId] = [:]
+    var itemEntries:[ItemCollectionViewEntry] = []
+    var installedPacks: [ItemCollectionId: Bool] = [:]
     
-    var j:Int = 0
-    for item in orderedItemListViews[1].items {
-        if let entry = item.contents as? SavedStickerItem {
-            if let id = entry.file.id, fileIds[id] == nil {
-                fileIds[id] = id
-                entries.append(ChatMediaInputGridEntry(index: .saved(j), file: entry.file, packInfo: .saved, _stableId: .saved(entry.file), collectionId: .saved))
-                j += 1
+    if let itemsView = view.0 {
+        for (id, info, _) in itemsView.collectionInfos {
+            if let info = info as? StickerPackCollectionInfo {
+                stickerPackInfos[id] = info
+                installedPacks[id] = true
             }
-           
         }
-    }
-    
-    var i:Int = 0
-    for item in orderedItemListViews[0].items {
-        if let entry = item.contents as? RecentMediaItem {
-            if let file = entry.media as? TelegramMediaFile, let id = file.id, fileIds[id] == nil {
-                fileIds[id] = id
-                entries.append(ChatMediaInputGridEntry(index: .recent(i), file: file, packInfo: .recent, _stableId: .recent(file), collectionId: .recent))
-                i += 1
+        itemEntries.append(contentsOf: itemsView.entries)
+    } else if let result = view.1?.0 {
+        for found in result.infos {
+            if let info = found.1 as? StickerPackCollectionInfo {
+                stickerPackInfos[found.0] = info
+                installedPacks[found.0] = found.3
+
             }
-            
+        }
+        itemEntries.append(contentsOf: result.entries)
+    }
+    
+    
+    if let orderedItemListViews = orderedItemListViews {
+        var fileIds:[MediaId: MediaId] = [:]
+        
+        var j:Int = 0
+        for item in orderedItemListViews[1].items {
+            if let entry = item.contents as? SavedStickerItem {
+                if let id = entry.file.id, fileIds[id] == nil {
+                    fileIds[id] = id
+                    entries.append(ChatMediaInputGridEntry(index: .saved(j), file: entry.file, packInfo: .saved, _stableId: .saved(entry.file), collectionId: .saved))
+                    j += 1
+                }
+                
+            }
+        }
+        
+        var i:Int = 0
+        for item in Array(orderedItemListViews[0].items.prefix(20)) {
+            if let entry = item.contents as? RecentMediaItem {
+                if let file = entry.media as? TelegramMediaFile, let id = file.id, fileIds[id] == nil {
+                    fileIds[id] = id
+                    entries.append(ChatMediaInputGridEntry(index: .recent(i), file: file, packInfo: .recent, _stableId: .recent(file), collectionId: .recent))
+                    i += 1
+                }
+                
+            }
         }
     }
     
-    if let specificPack = specificPack {
+    
+    if let specificPack = specificPack, view.1 == nil {
         for entry in specificPack.1 {
             if let item = entry as? StickerPackItem {
                 entries.append(ChatMediaInputGridEntry(index: .speficicSticker(entry.index), file: item.file, packInfo: .speficicPack(specificPack.0), _stableId: .speficicSticker(specificPack.0.id, entry.index.id), collectionId: .specificPack(specificPack.0.id)))
@@ -162,11 +197,12 @@ private func chatMediaInputGridEntries(view: ItemCollectionsView, orderedItemLis
         }
     }
 
-    for entry in view.entries {
+    for entry in itemEntries {
         if let item = entry.item as? StickerPackItem {
-            entries.append(ChatMediaInputGridEntry(index: .sticker(entry.index), file: item.file, packInfo: .pack(stickerPackInfos[entry.index.collectionId]), _stableId: .sticker(entry.index.collectionId, entry.index.itemIndex.id), collectionId: .pack(entry.index.collectionId)))
+            entries.append(ChatMediaInputGridEntry(index: .sticker(entry.index), file: item.file, packInfo: .pack(stickerPackInfos[entry.index.collectionId], installedPacks[entry.index.collectionId] ?? true), _stableId: .sticker(entry.index.collectionId, entry.index.itemIndex.id), collectionId: .pack(entry.index.collectionId)))
         }
     }
+    
     return entries
 }
 
@@ -206,13 +242,14 @@ final class EStickersInteraction {
     
     let sendSticker:(TelegramMediaFile) -> Void
     let previewStickerSet:(StickerPackReference) -> Void
-    
+    let addStickerSet: (StickerPackReference) -> Void
     var highlightedItemCollectionId: ChatMediaGridCollectionStableId?
     
-    init(navigateToCollectionId: @escaping (ChatMediaGridCollectionStableId) -> Void, sendSticker: @escaping(TelegramMediaFile)-> Void, previewStickerSet: @escaping(StickerPackReference)-> Void) {
+    init(navigateToCollectionId: @escaping (ChatMediaGridCollectionStableId) -> Void, sendSticker: @escaping(TelegramMediaFile)-> Void, previewStickerSet: @escaping(StickerPackReference)-> Void, addStickerSet:@escaping(StickerPackReference) -> Void) {
         self.navigateToCollectionId = navigateToCollectionId
         self.sendSticker = sendSticker
         self.previewStickerSet = previewStickerSet
+        self.addStickerSet = addStickerSet
     }
 }
 
@@ -221,8 +258,15 @@ class StickersControllerView : View {
     fileprivate var gridView:GridNode
     fileprivate var packsTable:HorizontalTableView
     private var separator:View!
+    fileprivate let searchView: SearchView
+    fileprivate let tabsContainer: View = View()
+    private let searchContainer: View = View()
     fileprivate var restrictedView:RestrictionWrappedView?
+    private let emptySearchView = ImageView()
+    private let emptySearchContainer: View = View()
+    private let progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
     required init(frame frameRect: NSRect) {
+        searchView = SearchView(frame: NSMakeRect(0,0, frameRect.width - 20, 30))
         self.gridView = GridNode(frame:NSZeroRect)
         self.packsTable = HorizontalTableView(frame: NSZeroRect)
         separator = View(frame: NSMakeRect(0,0,frameRect.width,.borderSize))
@@ -230,9 +274,20 @@ class StickersControllerView : View {
        
         super.init(frame: frameRect)
         
+        searchContainer.addSubview(searchView)
         addSubview(gridView)
-        addSubview(packsTable)
-        addSubview(separator)
+        addSubview(searchContainer)
+        
+        emptySearchContainer.addSubview(emptySearchView)
+        addSubview(progressView)
+        tabsContainer.addSubview(packsTable)
+        tabsContainer.addSubview(separator)
+        addSubview(tabsContainer)
+        addSubview(emptySearchContainer)
+        
+        emptySearchContainer.isHidden = true
+        progressView.isHidden = true
+        
         updateLocalizationAndTheme()
     }
     
@@ -254,26 +309,71 @@ class StickersControllerView : View {
         needsLayout = true
     }
     
+    func updateEmpties(isEmpty: Bool, isLoading: Bool, animated: Bool) {
+        
+        let emptySearchHidden: Bool = !isEmpty || isLoading
+        
+        if !emptySearchHidden {
+            emptySearchContainer.isHidden = false
+        }
+        if isLoading {
+            progressView.isHidden = false
+        }
+        
+        emptySearchContainer.change(opacity: emptySearchHidden ? 0 : 1, animated: animated, completion: { [weak self] completed in
+            if completed {
+                self?.emptySearchContainer.isHidden = emptySearchHidden
+            }
+        })
+
+        progressView.change(opacity: !isLoading ? 0 : 1, animated: animated, completion: { [weak self] completed in
+            if completed {
+                self?.progressView.isHidden = !isLoading
+            }
+        })
+        needsLayout = true
+    }
+    
+    func hidePacks(_ hide: Bool, _ animated: Bool) {
+        tabsContainer.change(pos: NSMakePoint(0, frame.height - (hide ? 0 : 50)), animated: animated)
+        //tabsContainer.change(opacity: hide ? 0 : 1, animated: true)
+        gridView.change(size: NSMakeSize(frame.width, frame.height - searchContainer.frame.maxY - (hide ? 0 : tabsContainer.frame.height)), animated: animated)
+        needsLayout = true
+    }
+    
     override func updateLocalizationAndTheme() {
         self.restrictedView?.updateLocalizationAndTheme()
         self.separator.backgroundColor = theme.colors.border
         gridView.updateLocalizationAndTheme()
         gridView.backgroundColor = theme.colors.background
         gridView.documentView?.background = theme.colors.background
+        searchContainer.backgroundColor = theme.colors.background
+        emptySearchView.image = theme.icons.stickersEmptySearch
+        emptySearchView.sizeToFit()
+        emptySearchContainer.backgroundColor = theme.colors.background
+        searchView.updateLocalizationAndTheme()
+        progressView.updateLocalizationAndTheme()
     }
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        gridView.setFrameSize(frame.width, frame.height - 50)
-        packsTable.setFrameSize(frame.width - 6.0, 49)
-        separator.setFrameSize(frame.width, .borderSize)
-        restrictedView?.setFrameSize(newSize)
     }
     
     override func layout() {
         super.layout()
-        packsTable.setFrameOrigin(3, frame.height - 50)
-        separator.setFrameOrigin(0, gridView.frame.maxY)
+        searchContainer.setFrameSize(NSMakeSize(frame.width, 50))
+        
+        tabsContainer.frame = NSMakeRect(0, frame.height - (searchView.query.isEmpty ? 50 : 0), frame.width, 50)
+        separator.frame = NSMakeRect(0, 0, tabsContainer.frame.width, .borderSize)
+        packsTable.frame = tabsContainer.focus(NSMakeSize(frame.width - 6.0, 50))
+        
+        gridView.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - (searchView.query.isEmpty ? 50 : 0) - searchContainer.frame.height)
+        restrictedView?.setFrameSize(frame.size)
+        searchView.center()
+        progressView.center()
+        
+        emptySearchContainer.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - searchContainer.frame.maxY)
+        emptySearchView.center()
     }
     
     
@@ -299,7 +399,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     private let itemCollectionsViewPosition = Promise<StickerPacksCollectionPosition>()
     private var currentStickerPacksCollectionPosition: StickerPacksCollectionPosition?
     private var currentView: ItemCollectionsView?
-    
+    private var collectionInfos: [(ItemCollectionId, ItemCollectionInfo, ItemCollectionItem?, Bool)]?
     private(set) var inputNodeInteraction: EStickersInteraction!
     private let disposable = MetaDisposable()
     
@@ -350,18 +450,24 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         self.bar = NavigationBarStyle(height: 0)
         
         self.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: { [weak self] collectionId in
-            if let strongSelf = self, let currentView = strongSelf.currentView, collectionId != strongSelf.inputNodeInteraction.highlightedItemCollectionId {
+            if let strongSelf = self, collectionId != strongSelf.inputNodeInteraction.highlightedItemCollectionId {
+                
                 switch collectionId {
                 case .pack(let itemCollectionId):
-                    var index: Int32 = 0
-                    for (id, _, _) in currentView.collectionInfos {
-                        if id == itemCollectionId {
-                            let itemIndex = ItemCollectionViewEntryIndex.lowerBound(collectionIndex: index, collectionId: id)
-                            strongSelf.itemCollectionsViewPosition.set(.single(.navigate(index: .sticker(itemIndex))))
-                            return
+                    
+                    if let infos = strongSelf.collectionInfos {
+                        var index: Int32 = 0
+                        for (id, _, _, _) in infos {
+                            if id == itemCollectionId {
+                                let itemIndex = ItemCollectionViewEntryIndex.lowerBound(collectionIndex: index, collectionId: id)
+                                strongSelf.itemCollectionsViewPosition.set(.single(.navigate(index: .sticker(itemIndex))))
+                                return
+                            }
+                            index += 1
                         }
-                        index += 1
                     }
+                   
+                    
                 case .saved:
                     strongSelf.itemCollectionsViewPosition.set(.single(.navigate(index: .saved(0))))
                 case .recent:
@@ -379,6 +485,35 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                 self?.account.context.entertainment.popover?.hide()
                 showModal(with: StickersPackPreviewModalController(account, peerId: eInteraction.peerId, reference: reference), for: mainWindow)
             }
+        }, addStickerSet: { [weak self] reference in
+            guard let `self` = self else {return}
+            
+            self.genericView.searchView.change(state: .None, true)
+            
+            _ = showModalProgress(signal: loadedStickerPack(postbox: account.postbox, network: account.network, reference: reference)
+                |> filter { result in
+                    switch result {
+                    case .result:
+                        return true
+                    default:
+                        return false
+                    }
+                }
+                |> take(1)
+                |> mapToSignal { result -> Signal<ItemCollectionId, Void> in
+                    switch result {
+                    case let .result(info, items, _):
+                        return addStickerPackInteractively(postbox: account.postbox, info: info, items: items) |> map { info.id }
+                    default:
+                        return .complete()
+                    }
+                }
+                |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] result in
+                    delay(0.2, closure: {
+                        self?.inputNodeInteraction.navigateToCollectionId(.pack(result))
+                    })
+                })
+            
         })
         
         
@@ -391,7 +526,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        let layout = GridNodeLayout(size: CGSize(width: frame.width - 20, height: frame.height - 50), insets: NSEdgeInsets(left: 0, right: 0, top: 10), preloadSize: size.height, type: .fixed(itemSize: CGSize(width: 80, height: 80), lineSpacing: 0))
+        let layout = GridNodeLayout(size: CGSize(width: frame.width - 20, height: frame.height - 50), insets: NSEdgeInsets(left: 0, right: 0, top: 0), preloadSize: size.height, type: .fixed(itemSize: CGSize(width: 60, height: 60), lineSpacing: 0))
         let updateLayout = GridNodeUpdateLayout(layout: layout, transition: .immediate)
         
         self.genericView.gridView.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: updateLayout, itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
@@ -405,44 +540,119 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         let account = self.account
         genericView.packsTable.delegate = self
         
+        
+        let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
 
-        let itemCollectionsView = itemCollectionsViewPosition.get() |> distinctUntilChanged
-            |> mapToSignal { position -> Signal<(ItemCollectionsView, StickerPacksCollectionUpdate), NoError> in
+        let searchInteractions = SearchInteractions({ [weak self] state in
+            search.set(state)
+            if state.request.isEmpty {
+                self?.itemCollectionsViewPosition.set(.single(.initial))
+            }
+            self?.genericView.hidePacks(!state.request.isEmpty, true)
+            self?.scrollup()
+        }, { [weak self] state in
+           search.set(state)
+            if state.request.isEmpty {
+                self?.itemCollectionsViewPosition.set(.single(.initial))
+            }
+            self?.genericView.hidePacks(!state.request.isEmpty, true)
+            self?.scrollup()
+        })
+        
+        
+        genericView.searchView.searchInteractions = searchInteractions
+
+        let itemCollectionsView = combineLatest(itemCollectionsViewPosition.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue)
+            |> mapToSignal { position, search -> Signal<((ItemCollectionsView?, (FoundStickerSets?, Bool)?), StickerPacksCollectionUpdate), NoError> in
                 
-                switch position {
-                case .initial:
-                    return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 50)
-                        |> map { view  in
-                            return (view, .generic)
+                if search.request.isEmpty {
+                    switch position {
+                    case .initial:
+                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 150)
+                            |> map { view  in
+                                return ((view, nil), .generic)
+                        }
+                    case let .scroll(aroundIndex):
+                        var firstTime = true
+                        
+                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: 250)
+                            |> map { view  in
+                                let update: StickerPacksCollectionUpdate
+                                if firstTime {
+                                    firstTime = false
+                                    update = .scroll
+                                } else {
+                                    update = .generic
+                                }
+                                return ((view, nil), update)
+                        }
+                    case let .navigate(index):
+                        var firstTime = true
+                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: 250)
+                            |> map { view in
+                                let update: StickerPacksCollectionUpdate
+                                if firstTime {
+                                    firstTime = false
+                                    update = .navigate(index)
+                                } else {
+                                    update = .generic
+                                }
+                                return ((view, nil), update)
+                        }
                     }
-                case let .scroll(aroundIndex):
+                } else {
                     var firstTime = true
-                    
-                     return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: 200)
-                        |> map { view  in
+                    if search.request.isSingleEmoji {
+                        return searchStickers(account: account, query: search.request) |> map { stickers in
+                            //((ItemCollectionsView?, (FoundStickerSets?, Bool)?), StickerPacksCollectionUpdate)
+                            var index:Int32 = 0
+                            var items: [ItemCollectionItem] = []
+
+                            for sticker in stickers {
+                                let file = sticker.file
+                                if let id = file.id {
+                                    items.append(StickerPackItem(index: ItemCollectionItemIndex(index: Int32(items.count), id: id.id), file: file, indexKeys: []))
+                                }
+                            }
+                            var entries: [ItemCollectionViewEntry] = []
+                            for item in items {
+                                entries.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex.lowerBound(collectionIndex: -1, collectionId: ItemCollectionId(namespace: 0, id: 0)), item: item))
+                                
+                                index += 1
+                            }
+                            return ((nil, (FoundStickerSets(entries: entries), false)), .generic)
+                        }
+                    } else {
+                        return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotly(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
                             let update: StickerPacksCollectionUpdate
                             if firstTime {
-                                firstTime = false
-                                update = .scroll
+                                firstTime = remote == nil
+                                switch position {
+                                case .initial:
+                                    update = .generic
+                                case .scroll:
+                                    update = .scroll
+                                case let .navigate(index):
+                                    update = .navigate(index)
+                                }
                             } else {
                                 update = .generic
                             }
-                            return (view, update)
-                    }
-                case let .navigate(index):
-                    var firstTime = true
-                    return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: 140)
-                        |> map { view in
-                            let update: StickerPacksCollectionUpdate
-                            if firstTime {
-                                firstTime = false
-                                update = .navigate(index)
-                            } else {
-                                update = .generic
+                            
+                            var value = FoundStickerSets()
+                            if let local = local {
+                                value = value.merge(with: local)
                             }
-                            return (view, update)
+                            if let remote = remote {
+                                value = value.merge(with: remote)
+                            }
+                            return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
+                        }
                     }
+                    //searchStickerSetsRemotly(network: account.network, query: search.request)))
+                   
                 }
+                
         }
         
         let previousEntries = Atomic<([AppearanceWrapperEntry<ChatMediaInputPanelEntry>],[AppearanceWrapperEntry<ChatMediaInputGridEntry>])>(value: ([],[]))
@@ -455,12 +665,12 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             combineLatest(account.viewTracker.peerView($0) |> take(1) |> map {peerViewMainPeer($0)}, peerSpecificStickerPack(postbox: account.postbox, network: account.network, peerId: $0))
             
         } |> deliverOnPrepareQueue)
-        |> map { itemsView, appearance, specificData -> (ItemCollectionsView, TableUpdateTransition, Bool, ChatMediaInputGridTransition, Bool) in
+        |> map { itemsView, appearance, specificData -> ((ItemCollectionsView?, (FoundStickerSets?, Bool)?), TableUpdateTransition, Bool, ChatMediaInputGridTransition, Bool) in
             
             let update: StickerPacksCollectionUpdate = itemsView.1
             
-            let gridEntries = chatMediaInputGridEntries(view: itemsView.0, orderedItemListViews: itemsView.0.orderedItemListsViews, specificPack: specificData.1)
-            let panelEntries = chatMediaInputPanelEntries(view: itemsView.0, orderedItemListViews: itemsView.0.orderedItemListsViews, specificPack: (specificData.1?.0, specificData.0))
+            let gridEntries = chatMediaInputGridEntries(view: itemsView.0, orderedItemListViews: itemsView.0.0?.orderedItemListsViews, specificPack: specificData.1)
+            let panelEntries = chatMediaInputPanelEntries(view: itemsView.0, orderedItemListViews: itemsView.0.0?.orderedItemListsViews, specificPack: (specificData.1?.0, specificData.0))
             
             let panelEntriesMapped = panelEntries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let gridEntriesMapped = gridEntries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
@@ -468,14 +678,20 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             let (previousPanelEntries, previousGridEntries) = previousEntries.swap((panelEntriesMapped, gridEntriesMapped))
             
             return (itemsView.0, preparePackEntries(from: previousPanelEntries, to: panelEntriesMapped, account: account, initialSize: initialSize.modify({$0}), stickersInteraction:inputNodeInteraction),previousPanelEntries.isEmpty, preparedChatMediaInputGridEntryTransition(account: account, from: previousGridEntries, to: gridEntriesMapped, update: update, inputNodeInteraction: inputNodeInteraction), previousGridEntries.isEmpty)
+           
         }
         
         self.disposable.set((transitions |> deliverOnMainQueue).start(next: { [weak self] (view, packsTransition, packsFirstTime, gridTransition, gridFirstTime) in
             if let strongSelf = self {
                 
-                strongSelf.currentView = view
+                strongSelf.currentView = view.0
+                strongSelf.collectionInfos = view.0?.collectionInfos.map({($0.0, $0.1, $0.2, true)}) ?? view.1?.0?.infos
+                
+                
                 strongSelf.genericView.packsTable.merge(with: packsTransition)
                 strongSelf.enqueueGridTransition(gridTransition, firstTime: gridFirstTime)
+                
+                strongSelf.genericView.updateEmpties(isEmpty: strongSelf.genericView.gridView.isEmpty, isLoading: (view.1?.1 ?? false), animated: true)
                 
                 if packsFirstTime {
                     strongSelf.readyOnce()
@@ -523,6 +739,26 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         
     }
     
+    
+    override func firstResponder() -> NSResponder? {
+        return self.genericView.searchView.input
+    }
+    
+    
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    override var canBecomeResponder: Bool {
+        if let view = account.context.mainNavigation?.view as? SplitView {
+            return view.state == .single
+        }
+        return false
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return false
+    }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -539,6 +775,11 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+    }
+    
+    override func scrollup() {
+        let clipView = genericView.gridView.clipView
+        clipView._changeBounds(from: clipView.bounds, to: NSMakeRect(0, 0, clipView.bounds.width, clipView.bounds.height), animated: true, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring)
     }
     
     private func enqueueGridTransition(_ transition: ChatMediaInputGridTransition, firstTime: Bool) {

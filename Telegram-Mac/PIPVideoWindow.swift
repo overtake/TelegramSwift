@@ -24,7 +24,6 @@ fileprivate class PIPVideoWindow: NSPanel {
     fileprivate let _contentInteractions:ChatMediaLayoutParameters?
     fileprivate let _type: GalleryAppearType
     fileprivate let viewer: GalleryViewer
-    fileprivate var canSaveInEvent: Bool = true
     init(_ player:AVPlayerView, item: MGalleryVideoItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
         self.viewer = viewer
         self._delegate = delegate
@@ -93,9 +92,6 @@ fileprivate class PIPVideoWindow: NSPanel {
         
     }
 
-    private func updateCursor() {
-        let point = mouseLocationOutsideOfEventStream
-    }
     
     func hide() {
         orderOut(nil)
@@ -111,7 +107,6 @@ fileprivate class PIPVideoWindow: NSPanel {
     }
     
     func _openGallery() {
-        canSaveInEvent = false
         close.change(opacity: 0, removeOnCompletion: false) { [weak close] completed in
             close?.removeFromSuperview()
         }
@@ -138,15 +133,7 @@ fileprivate class PIPVideoWindow: NSPanel {
         super.setFrame(frameRect, display: displayFlag, animate: animateFlag)
     }
 
-    override func sendEvent(_ event: NSEvent) {
-        super.sendEvent(event)
-        
-        if canSaveInEvent {
-            UserDefaults.standard.setValue(NSStringFromRect(frame), forKey: pipFrameKey)
-        }
-        
-        updateCursor()
-    }
+
     
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
@@ -178,10 +165,8 @@ fileprivate class PIPVideoWindow: NSPanel {
         
         Queue.mainQueue().justDispatch {
             if let screen = NSScreen.main {
-                var savedRect: NSRect = NSMakeRect(0, 0, 300, 300)
-                if let value = UserDefaults.standard.value(forKey: pipFrameKey) as? String {
-                    savedRect = NSRectFromString(value)
-                }
+                let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
+                
                 let convert_s = self.playerView.frame.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
                 self.aspectRatio = convert_s
                 self.minSize = convert_s.aspectFilled(NSMakeSize(100, 100))

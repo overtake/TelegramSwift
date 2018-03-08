@@ -81,11 +81,12 @@ open class NavigationHeader {
                         inset += callHeader.height
                     }
                     CATransaction.begin()
-                    navigation.controller.navigationHeaderDidNoticeAnimation(height, 0, animated)
+                    let completion = navigation.controller.navigationHeaderDidNoticeAnimation(height, 0, animated)
                     view.change(pos: NSMakePoint(0, inset), animated: animated, completion: { [weak navigation] completed in
                         if let navigation = navigation, completed {
                             navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
                             navigation.controller.view.needsLayout = true
+                            completion()
                         }
                     })
                     CATransaction.commit()
@@ -105,11 +106,12 @@ open class NavigationHeader {
         
         if let navigation = navigation {
             CATransaction.begin()
-            navigation.controller.navigationHeaderDidNoticeAnimation(0, height, animated)
+            let completion = navigation.controller.navigationHeaderDidNoticeAnimation(0, height, animated)
             if animated {
                 view.change(pos: NSMakePoint(0, 0), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
                     self?._view?.removeFromSuperview()
                     self?._view = nil
+                    completion()
                 })
             } else {
                 view.removeFromSuperview()

@@ -392,7 +392,7 @@ class ChatListRowItem: TableRowItem {
             
             let deleteChat = {[weak self] in
                 if let strongSelf = self {
-                    let signal = removeChatInteractively(account: strongSelf.account, peerId: strongSelf.peerId) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, Void> in
+                    let signal = removeChatInteractively(account: strongSelf.account, peerId: strongSelf.peerId, userId: strongSelf.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, Void> in
                         return globalPeerHandler.get() |> take(1)
                     } |> deliverOnMainQueue
                     
@@ -406,7 +406,7 @@ class ChatListRowItem: TableRowItem {
             
             let clearHistory = { [weak self] in
                 if let strongSelf = self {
-                    modernConfirm(for: mainWindow, account: strongSelf.account, peerId: strongSelf.peerId, accessory: theme.icons.confirmDeleteChatAccessory, information: tr(L10n.confirmDeleteChatUser), successHandler: { _ in
+                    modernConfirm(for: mainWindow, account: strongSelf.account, peerId: strongSelf.peer?.id, accessory: theme.icons.confirmDeleteChatAccessory, information: tr(L10n.confirmDeleteChatUser), successHandler: { _ in
                         strongSelf.clearHistoryDisposable.set(clearHistoryInteractively(postbox: strongSelf.account.postbox, peerId: strongSelf.peerId).start())
                    })
                 }
@@ -485,15 +485,12 @@ class ChatListRowItem: TableRowItem {
                 if case .broadcast = peer.info {
                     //L10n.chatListGroupChannel
                     
-                    let acceptIds:[Int32] = [949693, 763171, 903523, 552564, 511214, 438078, 690143, 1271974, 62814, 107597178, 914597, 143813, 414655, 10392715, 572439, 215491, 223819, 293091, 33583555, 835030, 36265675, 7736885, 1689506, 167497]
-                    
-                    if acceptIds.index(of: account.peerId.id) != nil {
-                        items.append(ContextMenuItem(L10n.chatListGroupChannel, handler: { [weak self] in
-                            guard let `self` = self else {return}
-                            _ = updatePeerGroupIdInteractively(postbox: self.account.postbox, peerId: peer.id, groupId: Namespaces.PeerGroup.feed).start()
-                        }))
-                    }
-                    
+//
+//                    items.append(ContextMenuItem(L10n.chatListGroupChannel, handler: { [weak self] in
+//                        guard let `self` = self else {return}
+//                        _ = updatePeerGroupIdInteractively(postbox: self.account.postbox, peerId: peer.id, groupId: Namespaces.PeerGroup.feed).start()
+//                    }))
+//
                    
                     
                     items.append(ContextMenuItem(tr(L10n.chatListContextLeaveChannel), handler: deleteChat))

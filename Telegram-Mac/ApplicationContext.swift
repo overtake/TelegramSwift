@@ -45,15 +45,12 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool,Void>, ac
                 } else {
                     return .single(nil)
                 }
-            case let .migrationIntro(promise, data):
-                return .single(.legacyIntro(LegacyIntroContext(window, promise: promise, defaultLegacyData: data)))
             }
     } |> switchToLatest
 }
 
 
 enum MigrationData {
-    case migrationIntro(Promise<AuthorizationLegacyData>, AuthorizationLegacyData)
     case auth(AccountResult?, ignorepasslock: Bool)
 }
 
@@ -67,7 +64,6 @@ func migrationData(accountManager: AccountManager, appGroupPath:String, testingE
 enum ApplicationContext {
     case unauthorized(UnauthorizedApplicationContext)
     case authorized(AuthorizedApplicationContext)
-    case legacyIntro(LegacyIntroContext)
     case postboxAccess(PasscodeAccessContext)
     
     func showRoot(for window:Window) {
@@ -89,8 +85,6 @@ enum ApplicationContext {
             return context.rootController.view
         case let .authorized(context):
             return context.splitView
-        case let .legacyIntro(context):
-            return context.rootController.view
         case let .postboxAccess(context):
             return context.rootController.view
         }
@@ -140,18 +134,6 @@ final class PasscodeAccessContext {
     }
 }
 
-final class LegacyIntroContext {
-    let rootController:LegacyIntroController
-    init(_ window:Window, promise:Promise<AuthorizationLegacyData>, defaultLegacyData: AuthorizationLegacyData) {
-        rootController = LegacyIntroController(promise: promise, defaultLegacyData: defaultLegacyData)
-        let authSize = NSMakeSize(650, 600)
-        window.maxSize = authSize
-        window.minSize = authSize
-        window.setFrame(NSMakeRect(0, 0, authSize.width, authSize.height), display: true)
-        window.center()
-        rootController._frameRect = NSMakeRect(0, 0, authSize.width, authSize.height)
-    }
-}
 
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
@@ -263,6 +245,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     private let suggestedLocalizationDisposable = MetaDisposable()
     private let appearanceDisposable = MetaDisposable()
     private let requestAccessDisposable = MetaDisposable()
+    private let audioDisposable = MetaDisposable()
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
         lockedScreenPromise.set(.single(_lockedValue))
@@ -312,6 +295,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         splitView.setProportion(proportion: SplitProportion(min:300+350, max:300+350+600), state: .dual)
         
         
+        
         rightController = ExMajorNavigationController(account, ChatController.self, emptyController);
         rightController.set(header: NavigationHeader(44, initializer: { (header) -> NavigationHeaderView in
             let view = InlineAudioPlayerView(header)
@@ -323,7 +307,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             return view
         }))
 
-        
+        window.navigationController = rightController
         
         applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), network: account.network, postbox: account.postbox)
         
@@ -532,7 +516,28 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             }
         }))
         
+        
+        audioDisposable.set(globalAudioPromise.get().start(next: { [weak self] controller in
+            self?.prepareTouchBarAccessability(controller)
+        }))
     }
+    
+    private func prepareTouchBarAccessability(_ controller: APController?) {
+        setTextViewEnableTouchBar(controller == nil)
+        viewEnableTouchBar = controller == nil
+        if #available(OSX 10.12.2, *) {
+            NSApp.touchBar = nil
+            window.touchBar = nil
+            window.firstResponder?.touchBar = nil
+            if !viewEnableTouchBar {
+                //window.applyResponderIfNeeded()
+            } 
+        } else {
+            // Fallback on earlier versions
+        }
+    }
+    
+   
     
     var isLocked: Bool {
         return _lockedValue.isLocked
@@ -659,7 +664,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         suggestedLocalizationDisposable.dispose()
         appearanceDisposable.dispose()
         requestAccessDisposable.dispose()
-        
+        audioDisposable.dispose()
         viewer?.close()
         
         for window in NSApp.windows {
@@ -1014,105 +1019,5 @@ class LegacyIntroView : View, NSTextFieldDelegate {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-}
-
-
-class LegacyIntroController: GenericViewController<LegacyIntroView> {
-    private let disposable:MetaDisposable = MetaDisposable()
-    private let promise:Promise<AuthorizationLegacyData>
-    private let defaultData:AuthorizationLegacyData
-    init(promise:Promise<AuthorizationLegacyData>, defaultLegacyData:AuthorizationLegacyData) {
-        self.promise = promise
-        self.defaultData = defaultLegacyData
-        super.init()
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        readyOnce()
-        
-        genericView.doneButton.set(handler: { [weak self] _ in
-            self?.checkCodeAndAuth()
-        }, for: .Click)
-        
-        genericView.input.target = self
-        genericView.input.action = #selector(checkCodeAndAuth)
-        
-        switch defaultData {
-        case .data, .none:
-            genericView.layoutWithPasscode = false
-        case .passcodeRequired:
-            genericView.layoutWithPasscode = true
-        }
-        
-        mainWindow.set(responder: { [weak self] () -> NSResponder? in
-            return self?.firstResponder()
-        }, with: self, priority: .low)
-    }
-    
-    private func logout() {
-        promise.set(.single(.none))
-    }
-    
-    @objc private func checkCodeAndAuth() {
-        
-        switch defaultData {
-        case .data:
-            promise.set(.single(defaultData))
-            break
-        case .passcodeRequired:
-            if let md5Hash = ObjcUtils.md5(genericView.input.stringValue).data(using: .utf8) {
-                var part1: Data = md5Hash.subdata(in : 0 ..< 16)
-                var part2: Data = md5Hash.subdata(in : 16 ..< 32)
-                
-                var zero:UInt8 = 0
-                for _ in 0 ..< 16 {
-                    part1.append(&zero, count: 1)
-                    part2.append(&zero, count: 1)
-                }
-                
-                part1.append(part2)
-                
-                let legacy = legacyAuthData(passcode: part1, textPasscode: genericView.input.stringValue)
-                
-                switch legacy {
-                case .data:
-                    promise.set(.single(legacy))
-                case .passcodeRequired:
-                    genericView.input.shake()
-                case .none:
-                    promise.set(.single(.none))
-                }
-                
-            }
-            
-            
-            
-        default:
-            break
-        }
-    }
-    
-    override func firstResponder() -> NSResponder? {
-        if !(window?.firstResponder is NSText) {
-            return genericView.input
-        }
-        let editor = self.window?.fieldEditor(true, for: genericView.input)
-        if window?.firstResponder != editor {
-            return genericView.input
-        }
-        return editor
-        
-    }
-    
-    deinit {
-        disposable.dispose()
-        mainWindow.removeObserver(for: self)
-    }
-    
-    override func viewClass() -> AnyClass {
-        return LegacyIntroView.self
-    }
-    
 }
 

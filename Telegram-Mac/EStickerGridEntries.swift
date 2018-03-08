@@ -65,7 +65,7 @@ enum ChatMediaInputGridEntryStableId : Hashable {
 }
 
 enum ChatMediaGridPackHeaderInfo {
-    case pack(StickerPackCollectionInfo?)
+    case pack(StickerPackCollectionInfo?, Bool)
     case speficicPack(StickerPackCollectionInfo?)
     case recent
     case saved
@@ -74,18 +74,18 @@ enum ChatMediaGridPackHeaderInfo {
 extension ChatMediaGridPackHeaderInfo {
     var title:String {
         switch self {
-        case let .pack(info):
+        case let .pack(info, _):
             if let info = info {
                 return info.title.uppercased()
             } else {
                 return ""
             }
         case .recent:
-            return tr(L10n.stickersRecent)
+            return L10n.stickersRecent
         case .saved:
-            return "tr(L10n.stickersFavorite)"
+            return L10n.stickersFavorite
         case .speficicPack:
-            return tr(L10n.stickersGroupStickers)
+            return L10n.stickersGroupStickers
         }
     }
 }

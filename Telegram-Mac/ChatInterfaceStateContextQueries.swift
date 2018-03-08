@@ -57,7 +57,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
         
     case let .stickers(query):
         
-        return (inputQuery, searchStickers(postbox: account.postbox, query: query) |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+        return (inputQuery, searchStickers(account: account, query: query) |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in return .stickers(stickers) }
         })
     case let .emoji(query):

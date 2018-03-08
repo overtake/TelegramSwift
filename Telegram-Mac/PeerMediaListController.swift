@@ -181,11 +181,11 @@ func convertEntries(from update: PeerMediaUpdate, timeDifference: TimeInterval) 
     if update.updateType == .search {
         converted.append(.searchEntry(false))
         if update.messages.isEmpty {
-            //converted.append(.emptySearchEntry)
+            converted.append(.emptySearchEntry)
         }
     } else if update.updateType == .loading {
          converted.append(.searchEntry(true))
-        // converted.append(.emptySearchEntry)
+         converted.append(.emptySearchEntry)
     } else if update.laterId == nil {
         if !update.messages.isEmpty {
             converted.append(.searchEntry(false))

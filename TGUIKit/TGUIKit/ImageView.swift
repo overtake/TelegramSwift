@@ -8,6 +8,38 @@
 
 import Cocoa
 
+public enum ImageContentGravity {
+    case center
+    case top
+    case bottom
+    case left
+    case right
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
+    case resize
+    case resizeAspect
+    case resizeAspectFill
+    
+    public var rawValue: String {
+        switch self {
+        case .center: return "center"
+        case .top: return "top"
+        case .bottom: return "bottom"
+        case .left: return "left"
+        case .right: return "right"
+        case .topLeft: return "topLeft"
+        case .topRight: return "topRight"
+        case .bottomLeft: return "bottomLeft"
+        case .bottomRight: return "bottomRight"
+        case .resize: return "resize"
+        case .resizeAspect: return "resizeAspect"
+        case .resizeAspectFill: return "resizeAspectFill"
+        }
+    }
+}
+
 public class ImageView: NSView {
 
     public var animates:Bool = false
@@ -18,6 +50,12 @@ public class ImageView: NSView {
             if animates {
                 animate()
             }
+        }
+    }
+
+    public var contentGravity: ImageContentGravity = .resize {
+        didSet {
+            layer?.contentsGravity = contentGravity.rawValue
         }
     }
     

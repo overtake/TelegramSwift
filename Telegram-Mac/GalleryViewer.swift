@@ -303,7 +303,7 @@ class GalleryViewer: NSResponder {
     
     @objc open func windowDidResignKey() {
         self.window.makeKeyAndOrderFront(self)
-        window.makeFirstResponder(self)
+      //  window.makeFirstResponder(self)
     }
     
     var pagerSize: NSSize {
@@ -540,7 +540,7 @@ class GalleryViewer: NSResponder {
                         if let newIndex = current {                           
                             strongSelf.pager.selectedIndex.set(newIndex)
                             strongSelf.pager.set(index: newIndex, animated: false)
-                            if let attribute = new[newIndex].message?.autoremoveAttribute {
+                            if !new.isEmpty && newIndex < new.count && newIndex >= 0, let attribute = new[newIndex].message?.autoremoveAttribute {
                                 (self?.controls as? GallerySecretControls)?.update(with: attribute, outgoing: !new[newIndex].message!.flags.contains(.Incoming))
                             }
                         }

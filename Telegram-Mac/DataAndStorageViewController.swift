@@ -31,12 +31,16 @@ private final class DataAndStorageControllerArguments {
     let openCategorySettings: (AutomaticMediaDownloadCategoryPeers, String) -> Void
     let toggleAutomaticDownload:(Bool) -> Void
     let resetDownloadSettings:()->Void
-    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void) {
+    let selectDownloadFolder: ()->Void
+    let toggleAutomaticCopyToDownload:(Bool)->Void
+    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void, selectDownloadFolder: @escaping() -> Void, toggleAutomaticCopyToDownload:@escaping(Bool)->Void) {
         self.openStorageUsage = openStorageUsage
         self.openNetworkUsage = openNetworkUsage
         self.openCategorySettings = openCategorySettings
         self.toggleAutomaticDownload = toggleAutomaticDownload
         self.resetDownloadSettings = resetDownloadSettings
+        self.selectDownloadFolder = selectDownloadFolder
+        self.toggleAutomaticCopyToDownload = toggleAutomaticCopyToDownload
     }
 }
 
@@ -62,7 +66,8 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     case instantVideo(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
     case gifs(Int32, AutomaticMediaDownloadCategoryPeers, Bool)
     case resetDownloadSettings(Int32, Bool)
-    
+    case downloadFolder(Int32, String)
+    case automaticCopyToDownload(Int32, Bool)
     case sectionId(Int32)
     
     var stableId: Int32 {
@@ -89,6 +94,10 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return 9
         case .resetDownloadSettings:
             return 10
+        case .downloadFolder:
+            return 11
+        case .automaticCopyToDownload:
+            return 12
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -117,6 +126,10 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
         case let .gifs(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .resetDownloadSettings(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .downloadFolder(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .automaticCopyToDownload(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -191,6 +204,18 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
+        case let .downloadFolder(sectionId, value):
+            if case .downloadFolder(sectionId, value) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .automaticCopyToDownload(sectionId, value):
+            if case .automaticCopyToDownload(sectionId, value) = rhs {
+                return true
+            } else {
+                return false
+            }
         case let .sectionId(sectionId):
             if case .sectionId(sectionId) = rhs {
                 return true
@@ -250,6 +275,18 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadReset, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI), type: .none, action: {
                 arguments.resetDownloadSettings()
             }, enabled: enabled)
+        case let .downloadFolder(_, path):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageDownloadFolder, type: .context(stateback: { () -> String in
+                return path
+            }), action: {
+                arguments.selectDownloadFolder()
+            })
+        case let .automaticCopyToDownload(_, value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadToDownloadFolder, type: .switchable( stateback: { () -> Bool in
+                return value
+            }), action: {
+                arguments.toggleAutomaticDownload(!value)
+            })
         default:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -303,7 +340,12 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     entries.append(.gifs(sectionId, data.automaticMediaDownloadSettings.categories.gif, data.automaticMediaDownloadSettings.automaticDownload))
     entries.append(.resetDownloadSettings(sectionId, data.automaticMediaDownloadSettings != AutomaticMediaDownloadSettings.defaultSettings))
     
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
     
+    entries.append(.downloadFolder(sectionId, data.automaticMediaDownloadSettings.downloadFolder))
+    //entries.append(.automaticCopyToDownload(sectionId, data.automaticMediaDownloadSettings.automaticSaveDownloadedFiles))
+
     return entries
 }
 
@@ -385,6 +427,17 @@ class DataAndStorageViewController: TableViewController {
                 return updateMediaDownloadSettingsInteractively(postbox: account.postbox, { _ -> AutomaticMediaDownloadSettings in
                     return AutomaticMediaDownloadSettings.defaultSettings
                 })
+            }).start()
+        }, selectDownloadFolder: {
+            selectFolder(for: mainWindow, completion: { newPath in
+                _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current -> AutomaticMediaDownloadSettings in
+                    return current.withUpdatedDownloadFolder(newPath)
+                }).start()
+            })
+            
+        }, toggleAutomaticCopyToDownload: { value in
+            _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current -> AutomaticMediaDownloadSettings in
+                return current.withUpdatedAutomaticSaveDownloadedFiles(value)
             }).start()
         })
         

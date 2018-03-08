@@ -72,14 +72,18 @@ class ChatActivitiesView : View {
         switch type {
         case .recording:
             animationView.layer?.contents = theme.recording.first
+            animationView.setFrameSize(theme.recording.first!.backingSize)
+
             animation.values = theme.recording
             animation.duration = 0.7
         case .uploading:
             animationView.layer?.contents = theme.uploading.first
+            animationView.setFrameSize(theme.recording.first!.backingSize)
             animation.values = theme.uploading
             animation.duration = 1.75
         default:
             animationView.layer?.contents = theme.text.first
+            animationView.setFrameSize(theme.recording.first!.backingSize)
             animation.values = theme.text
             animation.duration = 0.7
         }

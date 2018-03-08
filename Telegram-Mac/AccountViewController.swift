@@ -569,8 +569,8 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         if state == .Edit {
             index += 1
             entries.append(.whiteSpace(index: index, height: 20))
-            index += 1
-            entries.append(.logout(index: index))
+          //  index += 1
+            //entries.append(.logout(index: index))
         }
         
         return entries

@@ -85,6 +85,8 @@ public class CustomViewHandlers {
     }
 }
 
+public var viewEnableTouchBar: Bool = true
+
 
 
 open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
@@ -108,6 +110,11 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         }
     }
 
+    
+    @available(OSX 10.12.2, *)
+    open override func makeTouchBar() -> NSTouchBar? {
+        return viewEnableTouchBar ? super.makeTouchBar() : nil
+    }
     
     public var flip:Bool = true
     

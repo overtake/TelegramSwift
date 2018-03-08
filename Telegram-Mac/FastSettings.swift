@@ -54,7 +54,8 @@ class FastSettings {
     private static let kAutomaticallyPlayGifs = "kAutomaticallyPlayGifs"
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
 
-	
+    private static let kBadgeFilter = "kBadgeFilter"
+
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -170,7 +171,14 @@ class FastSettings {
         UserDefaults.standard.synchronize()
 	}
     
+    static func toggleBadgeFilter(_ enable: Bool)  {
+        UserDefaults.standard.set(!enable, forKey: kBadgeFilter)
+        UserDefaults.standard.synchronize()
+    }
     
+    static var isFiltredBadge: Bool {
+        return !UserDefaults.standard.bool(forKey: kBadgeFilter)
+    }
     
     static func toggleAutomaticReplaceEmojies(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kAutomaticConvertEmojiesType)
@@ -253,16 +261,13 @@ func copyToDownloads(_ file: TelegramMediaFile, account:Account) -> Signal<Void,
 }
 
 private func downloadFilePath(_ file: TelegramMediaFile, _ account:Account) -> Signal<(String, String), Void> {
-    return account.postbox.mediaBox.resourceData(file.resource) |> mapToSignal { data -> Signal< (String, String), Void> in
+    return combineLatest(account.postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: account.postbox)) |> mapToSignal { data, settings -> Signal< (String, String), Void> in
         if data.complete {
             var ext:String = ""
             let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
             ext = fileName.nsstring.pathExtension
             if !ext.isEmpty {
-                if let folder = FastSettings.downloadsFolder {
-                    return .single((data.path, "\(folder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
-                }
-                return .complete()
+                return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
             } else {
                 return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String), Void> in
                     if let folder = FastSettings.downloadsFolder {

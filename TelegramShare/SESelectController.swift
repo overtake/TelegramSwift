@@ -381,7 +381,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> in
             
             if search.state == .None {
-                let signal:Signal<(ChatListView,ViewUpdateType),Void> = account.viewTracker.tailChatListView(count: 100)
+                let signal:Signal<(ChatListView,ViewUpdateType),Void> = account.viewTracker.tailChatListView(groupId: nil, count: 100)
                 
                 
                 return signal |> deliverOn(prepareQueue) |> mapToQueue { [weak self] (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
@@ -427,7 +427,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                     return .never()
                 }
             } else {
-                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased()) |> map {
+                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
                     return $0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
                     var entries:[SelectablePeersEntry] = []
                     var i:Int32 = Int32.max

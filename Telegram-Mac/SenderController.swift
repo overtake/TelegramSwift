@@ -158,7 +158,7 @@ class Sender: NSObject {
             func makeFileMedia(_ isMedia: Bool) {
                 let mimeType = MIMEType(path.nsstring.pathExtension)
                 let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: isMedia)
-                let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, size: fileSize(path))
+                let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, size: fs(path))
                 media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
             }
             
@@ -172,12 +172,12 @@ class Sender: NSObject {
                         memoryWaveform = MemoryBuffer(data: waveformData)
                     }
                     attrs.append(.Audio(isVoice: true, duration: Int(container.data.duration), title: nil, performer: nil, waveform: memoryWaveform))
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: LocalFileReferenceMediaResource(localFilePath:path,randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fileSize(path)), previewRepresentations: [], mimeType: mimeType, size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: LocalFileReferenceMediaResource(localFilePath:path,randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path)), previewRepresentations: [], mimeType: mimeType, size: nil, attributes: attrs)
                 } else if let container = container as? VideoMessageSenderContainer {
                     var attrs:[TelegramMediaFileAttribute] = []
 
                     attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: container.size, flags: [.instantRoundVideo]))
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: LocalFileReferenceMediaResource(localFilePath:path,randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fileSize(path)), previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: LocalFileReferenceMediaResource(localFilePath:path,randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path)), previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
 
                 } else if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif"), let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                    

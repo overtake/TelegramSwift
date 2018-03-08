@@ -748,6 +748,12 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
+        if !genericView.searchView.query.isEmpty {
+            if genericView.tableView.count == 1, let item = genericView.tableView.item(at: 0) as? ShortPeerRowItem {
+                selectInteractions.update({$0.withToggledSelected(item.peer.id, peer: item.peer)})
+            }
+            return .invoked
+        }
         if !selectInteractions.presentation.peers.isEmpty {
             share.perform(to: selectInteractions.presentation.peers.map {$0.key}, comment: genericView.textView.string())
             emoji.popover?.hide()

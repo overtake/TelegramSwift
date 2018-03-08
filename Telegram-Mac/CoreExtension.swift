@@ -584,11 +584,11 @@ public extension Message {
     
     var inlinePeer:Peer? {
         for attribute in attributes {
-            if let attribute = attribute as? InlineBotMessageAttribute {
-                return peers[attribute.peerId]
+            if let attribute = attribute as? InlineBotMessageAttribute, let peerId = attribute.peerId {
+                return peers[peerId]
             }
         }
-        return author
+        return nil
     }
     
     func withUpdatedStableId(_ stableId:UInt32) -> Message {
@@ -778,6 +778,15 @@ func canDeleteForEveryoneMessage(_ message:Message, account:Account) -> Bool {
     return false
 }
 
+func canReplyMessage(_ message: Message, peerId: PeerId) -> Bool {
+    if let peer = messageMainPeer(message) {
+        if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
+            return true
+        }
+    }
+    return false
+}
+
 func canEditMessage(_ message:Message, account:Account) -> Bool {
     if message.forwardInfo != nil {
         return false
@@ -841,13 +850,21 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
     
  
     
-    return true
+    return !message.flags.contains(.Unsent) && !message.flags.contains(.Failed)
 }
 
 
 
 func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
     return false
+}
+
+func canReportMessage(_ message: Message, _ account: Account) -> Bool {
+    if let peer = messageMainPeer(message), message.author?.id != account.peerId {
+        return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer?.isBot == true)
+    } else {
+        return false
+    }
 }
 
 
@@ -1107,7 +1124,7 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 }
 
 
-func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Void> {
+func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = nil) -> Signal<Bool, Void> {
     return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
         let text:String
         var okTitle: String? = nil
@@ -1137,11 +1154,8 @@ func removeChatInteractively(account:Account, peerId:PeerId) -> Signal<Bool, Voi
         
         
         
-        return modernConfirmSignal(for: mainWindow, account: account, peerId: peerId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
-            if result {
-                return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
-            }
-            return .single(false)
+        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
+            return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
         }
     }
 
@@ -1323,4 +1337,8 @@ extension AutomaticMediaDownloadSettings {
 
 func wallpaperPath(_ resource: TelegramMediaResource) -> String {
     return "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath + "/" + resource.id.uniqueId + ".jpg"
+}
+
+func fileExtenstion(_ file: TelegramMediaFile) -> String {
+    return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
 }

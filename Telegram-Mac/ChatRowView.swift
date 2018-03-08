@@ -685,7 +685,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             
 
-            if item.isBubbled && item.presentation.wallpaper != .none {
+            if item.isBubbled && item.presentation.wallpaper.hasWallpaper {
                 shareControl.set(image: item.isStorage ? item.presentation.icons.chatGotoMessageWallpaper : item.presentation.icons.chatShareWallpaper, for: .Normal)
                 _ = shareControl.sizeToFit()
                 shareControl.setFrameSize(NSMakeSize(shareControl.frame.width + 10, shareControl.frame.height + 10))
@@ -770,6 +770,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if nameView == nil {
                     nameView = TextView()
                     nameView?.isSelectable = false
+                    
                     rowView.addSubview(nameView!)
                 }
                 nameView?.update(author, origin: namePoint)
@@ -900,7 +901,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         return
                     }
                 }
-                item.chatInteraction.setupReplyMessage(item.message?.id)
+                if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId) {
+                    item.chatInteraction.setupReplyMessage(item.message?.id)
+                }
             }
         }
     }
@@ -922,7 +925,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else { return }
         
         let hitTestView = self.hitTest(location)
-        if hitTestView == nil || hitTestView == self || hitTestView == replyView || hitTestView?.isDescendant(of: contentView) == true {
+        if hitTestView == nil || hitTestView == self || hitTestView == replyView || hitTestView?.isDescendant(of: contentView) == true || hitTestView == rowView {
             if let avatar = avatar {
                 if NSPointInRect(location, avatar.frame) {
                     return

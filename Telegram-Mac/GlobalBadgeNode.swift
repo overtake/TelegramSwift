@@ -35,7 +35,7 @@ class GlobalBadgeNode: Node {
                         if strongSelf.layoutChanged == nil {
                             var origin:NSPoint = NSZeroPoint
                             let center = view.focus(strongSelf.size)
-                            origin = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, center.midX) + 4 + strongSelf.xInset, 4)
+                            origin = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, center.midX) + strongSelf.xInset, 4)
                             strongSelf.frame = NSMakeRect(origin.x,origin.y,strongSelf.size.width,strongSelf.size.height)
                         } else {
                             strongSelf.view?.setFrameSize(strongSelf.size)
@@ -57,33 +57,41 @@ class GlobalBadgeNode: Node {
         self.layoutChanged = layoutChanged
         super.init(View())
         
-        var items:[UnreadMessageCountsItem] = [.total]
+        var items:[UnreadMessageCountsItem] = [.total(.raw)]
         if let peerId = excludePeerId {
             items.append(.peer(peerId))
         }
-        self.disposable.set((account.postbox.unreadMessageCountsView(items: items) |> deliverOnMainQueue).start(next: { [weak self] view in
-            if let strongSelf = self {
-                var count: Int32 = 0
+        
+        
+        self.disposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), Void> in
+            
+            return account.postbox.unreadMessageCountsView(items: items) |> map { view in
                 var totalCount:Int32 = 0
-                if let total = view.count(for: .total) {
-                    count = total
+                if let total = view.count(for: .total(value)) {
                     totalCount = total
                 }
+                
+                return (view, totalCount)
+            }
+            
+        } |> deliverOnMainQueue).start(next: { [weak self] view, totalValue in
+            if let strongSelf = self {
+                
+                var totalValue = totalValue
                 if let excludePeerId = excludePeerId, let peerCount = view.count(for: .peer(excludePeerId)) {
-                    count -= peerCount
+                    totalValue -= peerCount
                 }
                 
-                count = max(0, count)
-                totalCount = max(0, totalCount)
+                totalValue = max(0, totalValue)
                 
                 var dockTile:String? = nil
-                if totalCount > 0 {
-                     dockTile = "\(totalCount)"
+                if totalValue > 0 {
+                     dockTile = "\(totalValue)"
                 }
-                if count == 0 {
+                if totalValue == 0 {
                     strongSelf.attributedString = nil
                 } else {
-                    strongSelf.attributedString = .initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small))
+                    strongSelf.attributedString = .initialize(string: Int(totalValue).prettyNumber, color: .white, font: .bold(.small))
                 }
                 strongSelf.layoutChanged?()
                 

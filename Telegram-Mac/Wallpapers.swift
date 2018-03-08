@@ -35,6 +35,17 @@ public enum TelegramWallpaper: OrderedItemListEntryContents, Equatable {
         }
     }
     
+    var hasWallpaper: Bool {
+        switch self {
+        case .none:
+            return false
+        case .color:
+            return false
+        default:
+            return true
+        }
+    }
+    
     public func encode(_ encoder: PostboxEncoder) {
         switch self {
         case .builtin:

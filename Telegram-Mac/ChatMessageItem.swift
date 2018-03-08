@@ -129,6 +129,17 @@ class ChatMessageItem: ChatRowItem {
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
+                if let webpage = message.media.first as? TelegramMediaWebpage {
+                    switch webpage.content {
+                    case let .Loaded(content):
+                        if content.embedType == "iframe" && content.type != kBotInlineTypeGif {
+                            showModal(with: WebpageModalController(content: content,account: account), for: mainWindow)
+                            return
+                        }
+                    default:
+                        break
+                    }
+                }
                 showChatGallery(account: account, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
             }
 
@@ -160,12 +171,24 @@ class ChatMessageItem: ChatRowItem {
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
                                 
                                 let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedStringKey.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                let text = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange).string
+    
                                 
-                                if let attribute = attribute as? inAppLink, case let .external(link, confirm) = attribute {
-                                    if confirm {
-                                        pb.setString(link, forType: .string)
-                                        return
+                                if let attribute = attribute as? inAppLink {
+                                    if case let .external(link, confirm) = attribute {
+                                        if confirm {
+                                            pb.setString(link, forType: .string)
+                                            return
+                                        }
+                                    } else if case let .followResolvedName(username, _, _, _, _) = attribute {
+                                        if text.range(of: "t.me") != nil {
+                                            pb.setString(text, forType: .string)
+                                        } else {
+                                            pb.setString("@\(username)", forType: .string)
+                                            return
+                                        }
                                     }
+                                    
                                 }
                                 pb.setString(strongSelf.textLayout.attributedString.string.nsstring.substring(with: strongSelf.textLayout.selectedRange.range), forType: .string)
                             }
@@ -373,7 +396,7 @@ class ChatMessageItem: ChatRowItem {
             
             var needCopy: Bool = true
             for i in 0 ..< items.count {
-                if items[i].title == tr(L10n.messageContextCopyMessageLink) || items[i].title == tr(L10n.textCopy) {
+                if items[i].title == tr(L10n.messageContextCopyMessageLink1) || items[i].title == tr(L10n.textCopy) {
                     needCopy = false
                 }
             }
@@ -394,13 +417,13 @@ class ChatMessageItem: ChatRowItem {
                         }
                         
                         for i in 0 ..< items.count {
-                            if items[i].title == tr(L10n.messageContextCopyMessageLink) {
+                            if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
                                 items.remove(at: i)
                                 break
                             }
                         }
                         
-                        items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink), handler: {
+                        items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                             copyToClipboard(text)
                         }), at: 1)
                     } else {

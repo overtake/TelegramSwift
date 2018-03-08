@@ -182,10 +182,14 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
     }
     
     
-    func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) {
+    func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void {
         if let view = header.currentView {
-            view.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current))
+            view.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
+            return { [weak view] in
+                view?.layer?.removeAllAnimations()
+            }
         }
+        return {}
     }
     
     
@@ -401,25 +405,18 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 }
                 
                 if scrollToItem == nil {
-                    var index = toView.filteredEntries.count - 1
-                    for entry in toView.filteredEntries {
-                        if entry.appearance.entry.index >= unreadIndex {
-                            scrollToItem = .top(id: entry.stableId, animated: false, focus: false, inset: 0)
-                            break
-                        }
-                        index -= 1
-                    }
+                    scrollToItem = .none(animationInterface)
                 }
                 
                 if scrollToItem == nil {
-                    var index = 0
-                    for entry in toView.filteredEntries.reversed() {
-                        if entry.appearance.entry.index < unreadIndex {
-                            scrollToItem = .top(id: entry.stableId, animated: false, focus: false, inset: 0)
-                            break
-                        }
-                        index += 1
-                    }
+//                    var index = 0
+//                    for entry in toView.filteredEntries.reversed() {
+//                        if entry.appearance.entry.index < unreadIndex {
+//                            scrollToItem = .top(id: entry.stableId, animated: false, focus: false, inset: 0)
+//                            break
+//                        }
+//                        index += 1
+//                    }
                 }
             case let .positionRestoration(scrollIndex, relativeOffset):
                 var index = toView.filteredEntries.count - 1
@@ -879,6 +876,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
        
         genericView.tableView.delegate = self
         updateSidebar()
@@ -887,6 +885,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         switch chatLocation {
         case let .peer(peerId):
             self.peerView.set(account.viewTracker.peerView(peerId) |> map {Optional($0)})
+            let _ = checkPeerChatServiceActions(postbox: self.account.postbox, peerId: peerId).start()
         case .group:
             self.peerView.set(account.postbox.combinedView(keys: [chatLocation.postboxViewKey]) |> map { combined in
                 return combined.views.first?.value
@@ -931,7 +930,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         //let autoremovingUnreadRemoved:Atomic<Bool> = Atomic(value: false)
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
-        let scrollPositionUpdate = Atomic<ChatHistoryViewScrollPosition?>(value: nil)
         
         let historyViewTransition = combineLatest(historyViewUpdate |> deliverOnMainQueue, autoremovingUnreadMark.get() |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: chatInteraction.peerId) |> deliverOnMainQueue, automaticDownloadSettings(postbox: account.postbox) |> deliverOnMainQueue) |> mapToQueue { [weak self] update, autoremoving, appearance, adminIds, downloadSettings -> Signal<(TableUpdateTransition, ChatHistoryCombinedInitialData, TelegramWallpaper), NoError> in
             if let strongSelf = self {
@@ -943,8 +941,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.applyWallpaper(appearance.presentation.wallpaper)
                     return .complete()
                 case let .HistoryView(view, updateType, scrollPosition, initialData):
-                    
-                    var scrollPosition = scrollPosition
                     
                     if view.isLoading {
                         strongSelf.initialDataHandler.set(.single(initialData) |> deliverOnMainQueue)
@@ -980,9 +976,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                     }
                     
-                    if let scroll = scrollPositionUpdate.swap(scrollPosition), scrollPosition == scroll {
-                        scrollPosition = nil
-                    }
                     
                     return prepareEntries(from: strongSelf.previousView.swap(proccesedView), to: proccesedView, account: strongSelf.account, initialSize: strongSelf.atomicSize.modify({$0}), interaction:strongSelf.chatInteraction, animated: animated, scrollPosition:scrollPosition, reason:updateType, animationInterface:animationInterface) |> map { transition in
                         return (transition,initialData, appearance.presentation.wallpaper)
@@ -1132,6 +1125,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         strongSelf.nextTransaction.set(handler: afterSentTransition)
                     }
                 } else {
+                    if let editState = presentation.editState, editState.inputState.inputText.isEmpty {
+                        if editState.message.media.isEmpty || editState.message.media.first is TelegramMediaWebpage {
+                            strongSelf.chatInteraction.deleteMessages([editState.message.id])
+                            return
+                        }
+                    }
                     NSSound.beep()
                 }
             }
@@ -1217,15 +1216,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else {
                                 let thrid:String? = canDeleteForEveryone ? peer.isUser ? tr(L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle)) : tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
                            
-                                var okTitle: String? = tr(L10n.confirmDelete)
                                
-                                if peer.isUser || peer.isGroup {
-                                    okTitle = peer.id == strongSelf.account.peerId ? tr(L10n.confirmDelete) : tr(L10n.chatMessageDeleteForMe)
-                                } else {
-                                    okTitle = tr(L10n.chatMessageDeleteForEveryone)
-                                }
+                              
                                 if let window = self?.window {
-                                    modernConfirm(for: window, account: strongSelf.account, peerId: nil, accessory: theme.icons.confirmDeleteMessagesAccessory, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages, information: thrid == nil ? L10n.chatConfirmDeleteMessages : nil, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                    modernConfirm(for: window, account: strongSelf.account, peerId: nil, accessory: theme.icons.confirmDeleteMessagesAccessory, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages, information: thrid == nil ? L10n.chatConfirmDeleteMessages : nil, okTitle: tr(L10n.confirmDelete), thridTitle: thrid, successHandler: { [weak strongSelf] result in
                                         
                                         guard let strongSelf = strongSelf else {return}
                                         
@@ -1235,6 +1229,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             type = .forLocalPeer
                                         case .thrid:
                                             type = .forEveryone
+                                        }
+                                        if let editingState = strongSelf.chatInteraction.presentation.editState {
+                                            if messageIds.contains(editingState.message.id) {
+                                                strongSelf.chatInteraction.update({$0.withoutEditMessage()})
+                                            }
                                         }
                                         _ = deleteMessagesInteractively(postbox: strongSelf.account.postbox, messageIds: messageIds, type: type).start()
                                         strongSelf.chatInteraction.update({$0.withoutSelectionState()})
@@ -1375,6 +1374,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.requestMessageActionCallback = {[weak self] messageId, isGame, data in
             if let strongSelf = self {
+                strongSelf.botCallbackAlertMessage.set(.single((L10n.chatInlineRequestLoading, false)))
                 self?.messageActionCallbackDisposable.set((requestMessageActionCallback(account: strongSelf.account, messageId: messageId, isGame:isGame, data: data) |> deliverOnMainQueue).start(next: { [weak strongSelf] (result) in
                     
                     if let strongSelf = strongSelf {
@@ -1961,8 +1961,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     }
     
-    override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) {
-        genericView.navigationHeaderDidNoticeAnimation(current, previous, animated)
+    override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
+        return genericView.navigationHeaderDidNoticeAnimation(current, previous, animated)
     }
     
     
@@ -2055,7 +2055,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, wallpaper: TelegramWallpaper) {
         
-
+      //  NSLog("\(transition.state)")
         applyWallpaper(wallpaper)
         let wasEmpty = genericView.tableView.isEmpty
         
@@ -2220,7 +2220,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let peer = peerViewMainPeer(peerView) {
                             if peer.isGroup || peer.isUser || (peer.isSupergroup && peer.addressName == nil) {
                                 items.append(SPopoverItem(tr(L10n.chatContextClearHistory), {
-                                    modernConfirm(for: mainWindow, account: self.account, peerId: peerId, accessory: theme.icons.confirmDeleteChatAccessory, information: L10n.confirmDeleteChatUser, successHandler: { _ in
+                                    modernConfirm(for: mainWindow, account: self.account, peerId: peer.id, accessory: theme.icons.confirmDeleteChatAccessory, information: L10n.confirmDeleteChatUser, successHandler: { _ in
                                         _ = clearHistoryInteractively(postbox: account.postbox, peerId: peerId).start()
                                     })
                                 }, theme.icons.chatActionClearHistory))
@@ -2677,7 +2677,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var items:[DragItem] = []
                 
                 let list = list.filter { path -> Bool in
-                    if let size = fileSize(path) {
+                    if let size = fs(path) {
                         return size <= 1500000000
                     }
 

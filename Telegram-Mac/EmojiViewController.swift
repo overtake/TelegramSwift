@@ -108,7 +108,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [String
                 }
             }
             
-            line.append(.initialize(string: e, font: NSFont.normal(26.0)))
+            line.append(.initialize(string: e, font: .normal(26.0)))
             
             i += 1
             if i == 8 {
@@ -136,26 +136,47 @@ fileprivate var isReady:Bool = false
 class EmojiControllerView : View {
     fileprivate let tableView:TableView = TableView(frame:NSZeroRect)
     fileprivate let tabs:HorizontalTableView = HorizontalTableView(frame:NSZeroRect)
+    fileprivate let searchView = SearchView(frame: NSZeroRect)
+    fileprivate let searchContainer: View = View()
     private let borderView:View = View()
+    private let emptyResults: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(tabs)
         addSubview(borderView)
-
+        addSubview(searchContainer)
+        searchContainer.addSubview(searchView)
+        addSubview(emptyResults)
+        updateLocalizationAndTheme()
     }
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         self.backgroundColor = theme.colors.background
         self.borderView.backgroundColor = theme.colors.border
+        searchView.updateLocalizationAndTheme()
+        emptyResults.image = theme.icons.stickersEmptySearch
+        emptyResults.sizeToFit()
     }
+    
+    
+    func updateVisibility(_ isEmpty: Bool, isSearch: Bool) {
+        emptyResults.isHidden = !isEmpty
+        tableView.isHidden = isEmpty
+        tabs.isHidden = isSearch
+        borderView.isHidden = isSearch
+    }
+    
     
     override func layout() {
         super.layout()
-        tableView.frame = NSMakeRect(0, 3.0, bounds.width , frame.height - 3.0 - 50)
+        searchContainer.frame = NSMakeRect(0, 0, frame.width, 50)
+        tableView.frame = NSMakeRect(0, searchContainer.frame.maxY + 3.0, bounds.width , frame.height - 3.0 - 50 - searchContainer.frame.height)
         tabs.frame = NSMakeRect(0, tableView.frame.maxY + 1, frame.width,49)
         borderView.frame = NSMakeRect(0, frame.height - 50, frame.width, .borderSize)
+        searchView.frame = searchContainer.focus(NSMakeSize(searchContainer.frame.width - 20, 30))
+        emptyResults.center()
     }
     
     required init?(coder: NSCoder) {
@@ -226,77 +247,58 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // DO NOT WRITE CODE OUTSIZE READY BLOCK
-      
-        let ready:(RecentUsedEmoji)->Void = { [weak self] recent in
-            if let strongSelf = self {
-                strongSelf.readyForDisplay(recent)
-                strongSelf.readyOnce()
-
+        
+        let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+        
+        let searchInteractions = SearchInteractions({ [weak self] state in
+            if state.state == .None && state.request.isEmpty {
+                search.set(state)
+                switch state.state {
+                case .None:
+                    self?.scrollup()
+                default:
+                    break
+                }
             }
             
-        }
-        
-        let s:Signal = combineLatest(loadResource(), recentUsedEmoji(postbox: account.postbox), appearanceSignal) |> deliverOnMainQueue
-        
-        disposable.set(s.start(next: { (_, recent, _) in
-            isReady = true
-            ready(recent)
-        }))
-    }
-    
-    func readyForDisplay(_ recent: RecentUsedEmoji) -> Void {
-        
-       
-        genericView.tableView.removeAll()
-        genericView.tabs.removeAll()
-        var e = emoji
-        e[EmojiSegment.Recent] = recent.emojies
-        let seg = segments(e, skinModifiers: recent.skinModifiers)
-        let seglist = seg.map { (key,_) -> EmojiSegment in
-            return key
-        }.sorted(by: <)
-        
-        let w = floorToScreenPixels(scaleFactor: System.backingScale, frame.width / CGFloat(seg.count))
-        
-        genericView.tabs.setFrameSize(NSMakeSize(w * CGFloat(seg.count), genericView.tabs.frame.height))
-        genericView.tabs.centerX()
-        let initialSize = atomicSize
-        var tabIcons:[CGImage] = []
-        tabIcons.append(theme.icons.emojiRecentTab)
-        tabIcons.append(theme.icons.emojiSmileTab)
-        tabIcons.append(theme.icons.emojiNatureTab)
-        tabIcons.append(theme.icons.emojiFoodTab)
-        tabIcons.append(theme.icons.emojiSportTab)
-        tabIcons.append(theme.icons.emojiCarTab)
-        tabIcons.append(theme.icons.emojiObjectsTab)
-        tabIcons.append(theme.icons.emojiSymbolsTab)
-        tabIcons.append(theme.icons.emojiFlagsTab)
-        
-        var tabIconsSelected:[CGImage] = []
-        tabIconsSelected.append(theme.icons.emojiRecentTabActive)
-        tabIconsSelected.append(theme.icons.emojiSmileTabActive)
-        tabIconsSelected.append(theme.icons.emojiNatureTabActive)
-        tabIconsSelected.append(theme.icons.emojiFoodTabActive)
-        tabIconsSelected.append(theme.icons.emojiSportTabActive)
-        tabIconsSelected.append(theme.icons.emojiCarTabActive)
-        tabIconsSelected.append(theme.icons.emojiObjectsTabActive)
-        tabIconsSelected.append(theme.icons.emojiSymbolsTabActive)
-        tabIconsSelected.append(theme.icons.emojiFlagsTabActive)
-        for key in seglist {
-            if key != .Recent {
-                let _ = genericView.tableView.addItem(item: EStickItem(initialSize.modify({$0}), segment:key, segmentName:segmentNames(key.hashValue)))
+        }, { [weak self] state in
+            search.set(state)
+            switch state.state {
+            case .None:
+                self?.scrollup()
+            default:
+                break
             }
-            let _ = genericView.tableView.addItem(item: EBlockItem(initialSize.modify({$0}), attrLines: seg[key]!, segment: key, account: account, selectHandler: { [weak self] emoji in
-                if let interactions = self?.interactions {
-                    interactions.sendEmoji(emoji)
-                }
-            } ))
-            let _ = genericView.tabs.addItem(item: ETabRowItem(initialSize.modify({$0}), icon: tabIcons[key.hashValue], iconSelected:tabIconsSelected[key.hashValue], stableId:key.rawValue, width:w, clickHandler:{[weak self] (stableId) in
-                self?.scrollTo(stableId: stableId)
-            }))
+        })
+        
+        genericView.searchView.searchInteractions = searchInteractions
+        
+        
+        // DO NOT WRITE CODE OUTSIZE READY BLOCK
+      
+        let ready:(RecentUsedEmoji, [EmojiClue]?)->Void = { [weak self] recent, search in
+            if let strongSelf = self {
+                strongSelf.readyForDisplay(recent, search)
+                strongSelf.readyOnce()
+            }
         }
-        //set(stickClass: TableStickItem.self, handler:(Table))
+        
+        let postbox = account.postbox
+        
+        let s:Signal = combineLatest(loadResource() |> deliverOnMainQueue, recentUsedEmoji(postbox: account.postbox) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, search.get() |> mapToSignal { state -> Signal<[EmojiClue]?, Void> in
+            if state.request.isEmpty {
+                return .single(nil)
+            } else {
+                return searchEmojiClue(query: state.request.lowercased(), postbox: postbox) |> map {Optional($0)}
+            }
+        } |> deliverOnMainQueue)
+        
+        disposable.set(s.start(next: { (_, recent, _, search) in
+            isReady = true
+            ready(recent, search)
+        }))
+        
+        
         genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
             if let view = self?.genericView {
                 view.tableView.enumerateVisibleItems(with: { item -> Bool in
@@ -311,10 +313,96 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         }))
     }
     
+    func readyForDisplay(_ recent: RecentUsedEmoji, _ search: [EmojiClue]?) -> Void {
+        
+       
+        let initialSize = atomicSize.modify({$0})
+
+        genericView.tableView.removeAll()
+        genericView.tabs.removeAll()
+        
+        if let search = search {
+            
+            let lines = search.chunks(8).map({ clues -> [NSAttributedString] in
+                return clues.map({NSAttributedString.initialize(string: $0.emoji, font: .normal(26.0))})
+            })
+            if lines.count > 0 {
+                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: lines, segment: .Recent, account: account, selectHandler: { [weak self] emoji in
+                    self?.interactions?.sendEmoji(emoji)
+                }))
+            }
+
+        } else {
+            var e = emoji
+            e[EmojiSegment.Recent] = recent.emojies
+            let seg = segments(e, skinModifiers: recent.skinModifiers)
+            let seglist = seg.map { (key,_) -> EmojiSegment in
+                return key
+                }.sorted(by: <)
+            
+            let w = floorToScreenPixels(scaleFactor: System.backingScale, frame.width / CGFloat(seg.count))
+            
+            genericView.tabs.setFrameSize(NSMakeSize(w * CGFloat(seg.count), genericView.tabs.frame.height))
+            genericView.tabs.centerX()
+            var tabIcons:[CGImage] = []
+            tabIcons.append(theme.icons.emojiRecentTab)
+            tabIcons.append(theme.icons.emojiSmileTab)
+            tabIcons.append(theme.icons.emojiNatureTab)
+            tabIcons.append(theme.icons.emojiFoodTab)
+            tabIcons.append(theme.icons.emojiSportTab)
+            tabIcons.append(theme.icons.emojiCarTab)
+            tabIcons.append(theme.icons.emojiObjectsTab)
+            tabIcons.append(theme.icons.emojiSymbolsTab)
+            tabIcons.append(theme.icons.emojiFlagsTab)
+            
+            var tabIconsSelected:[CGImage] = []
+            tabIconsSelected.append(theme.icons.emojiRecentTabActive)
+            tabIconsSelected.append(theme.icons.emojiSmileTabActive)
+            tabIconsSelected.append(theme.icons.emojiNatureTabActive)
+            tabIconsSelected.append(theme.icons.emojiFoodTabActive)
+            tabIconsSelected.append(theme.icons.emojiSportTabActive)
+            tabIconsSelected.append(theme.icons.emojiCarTabActive)
+            tabIconsSelected.append(theme.icons.emojiObjectsTabActive)
+            tabIconsSelected.append(theme.icons.emojiSymbolsTabActive)
+            tabIconsSelected.append(theme.icons.emojiFlagsTabActive)
+            for key in seglist {
+                if key != .Recent {
+                    let _ = genericView.tableView.addItem(item: EStickItem(initialSize, segment:key, segmentName:segmentNames(key.hashValue)))
+                }
+                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: seg[key]!, segment: key, account: account, selectHandler: { [weak self] emoji in
+                    self?.interactions?.sendEmoji(emoji)
+                }))
+                let _ = genericView.tabs.addItem(item: ETabRowItem(initialSize, icon: tabIcons[key.hashValue], iconSelected:tabIconsSelected[key.hashValue], stableId:key.rawValue, width:w, clickHandler:{[weak self] (stableId) in
+                    self?.scrollTo(stableId: stableId)
+                }))
+            }
+        }
+        
+        genericView.updateVisibility(genericView.tableView.isEmpty, isSearch: search != nil)
+    }
+    
     func update(with interactions: EntertainmentInteractions) {
         self.interactions = interactions
     }
     
+    override func firstResponder() -> NSResponder? {
+        return self.genericView.searchView.input
+    }
+    
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    override var canBecomeResponder: Bool {
+        if let view = account.context.mainNavigation?.view as? SplitView {
+            return view.state == .single
+        }
+        return false
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return false
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

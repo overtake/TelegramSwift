@@ -900,7 +900,11 @@ public extension Int {
             if d == 1 {
                 return "\(Int(d))\(keys[iteration])"
             } else {
-                return "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)\(keys[iteration])"
+                var result = "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)"
+                if result.hasSuffix(".0") {
+                    result = result.prefix(result.count - 2)
+                }
+                return result + "\(keys[iteration])"
             }
         }
         else {
@@ -1163,3 +1167,10 @@ extension UnicodeScalar {
     }
 }
 
+
+extension NSResponder {
+    @available(OSX 10.12.2, *)
+    var touchBar: NSTouchBar? {
+        return nil
+    }
+}

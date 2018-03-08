@@ -224,8 +224,13 @@ open class ViewController : NSObject {
         }
     }
     
-    open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) {
-        
+    open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
+        return {}
+    }
+    
+    @available(OSX 10.12.2, *)
+    open func makeTouchBar() -> NSTouchBar? {
+        return window?.firstResponder?.makeTouchBar()
     }
     
     open func requestUpdateBackBar() {
@@ -342,6 +347,8 @@ open class ViewController : NSObject {
             }, with: self, priority: responderPriority)
             if let become = becomeFirstResponder(), become == true {
                 self.window?.applyResponderIfNeeded()
+            } else {
+                self.window?.makeFirstResponder(nil)
             }
         }
         

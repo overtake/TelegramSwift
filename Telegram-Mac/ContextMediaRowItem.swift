@@ -11,22 +11,31 @@ import TGUIKit
 import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
+
+final class ContextMediaArguments {
+    let sendResult: (ChatContextResult) -> Void
+    let menuItems: (TelegramMediaFile) -> Signal<[ContextMenuItem], Void>
+    
+    init(sendResult: @escaping(ChatContextResult) -> Void, menuItems: @escaping(TelegramMediaFile) -> Signal<[ContextMenuItem], Void> = { _ in return .single([]) }) {
+        self.sendResult = sendResult
+        self.menuItems = menuItems
+    }
+}
+
 class ContextMediaRowItem: TableRowItem {
 
     
     let result:InputMediaContextRow
-    let results:ChatContextResultCollection
     private let _index:Int64
     let account:Account
-    let chatInteraction:ChatInteraction
+    let arguments: ContextMediaArguments
     override var stableId: AnyHashable {
         return Int64(_index)
     }
     
-    init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:InputMediaContextRow, _ index:Int64, _ account:Account, _ chatInteraction:ChatInteraction) {
+    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ account:Account, _ arguments: ContextMediaArguments) {
         self.result = result
-        self.results = results
-        self.chatInteraction = chatInteraction
+        self.arguments = arguments
         self._index = index
         self.account = account
         dif = 0
@@ -43,6 +52,28 @@ class ContextMediaRowItem: TableRowItem {
     
     override func viewClass() -> AnyClass {
         return ContextMediaRowView.self
+    }
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+        var inset:CGFloat = 0
+        var i:Int = 0
+        for size in result.sizes {
+            if location.x > inset && location.x < inset + size.width {
+                switch result.results[i] {
+                case let .internalReference(_, _, _, _, _, file, _):
+                    if let file = file {
+                        let items = arguments.menuItems(file)
+                        return items
+                    }
+                default:
+                    break
+                }
+                break
+            }
+            inset += size.width
+            i += 1
+        }
+        return .single([])
     }
     
 }
@@ -125,7 +156,7 @@ class ContextMediaRowView: TableRowView {
             for size in item.result.sizes {
                 
                 if point.x > inset && point.x < inset + size.width {
-                    item.chatInteraction.sendInlineResult(item.results, item.result.results[i])
+                    item.arguments.sendResult(item.result.results[i])
                     break
                 }
                 inset += size.width
@@ -159,5 +190,8 @@ class ContextMediaRowView: TableRowView {
             }
         }
     }
+    
+   
+    
     
 }

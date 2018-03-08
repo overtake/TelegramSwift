@@ -38,7 +38,7 @@ class InputPasteboardParser: NSObject {
             
             
             files = files.filter { path -> Bool in
-                if let size = fileSize(path.path) {
+                if let size = fs(path.path) {
                     return size <= 1500000000
                 }
                 

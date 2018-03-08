@@ -87,7 +87,7 @@ private class TokenView : Control {
         super.updateLocalizationAndTheme()
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white.withAlphaComponent(0.7)), for: .Normal)
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white), for: .Highlight)
-        dismiss.sizeToFit()
+        _ = dismiss.sizeToFit()
         nameView.backgroundColor = isSelected ? presentation.colors.blueSelect : presentation.colors.blueFill
         self.background = isSelected ? presentation.colors.blueSelect : presentation.colors.blueFill
     }
@@ -365,6 +365,10 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     open func didBecomeResponder() {
         state = .Focus
         
+    }
+    
+    public var query: String {
+        return input.string
     }
     
     override public func becomeFirstResponder() -> Bool {

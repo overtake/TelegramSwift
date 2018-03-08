@@ -253,7 +253,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     
     var acceptVisibility:Bool {
-        return window != nil && !NSIsEmptyRect(visibleRect)
+        return window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
     }
     
     @objc func updatePlayerIfNeeded() {

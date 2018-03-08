@@ -1385,7 +1385,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func merge(with transition:Signal<TableUpdateTransition, Void>) {
-        mergePromise.set(transition)
+        mergePromise.set(transition |> deliverOnMainQueue)
     }
     
     
@@ -1432,7 +1432,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
 
         for (idx,item) in transition.inserted {
-            let effect:NSTableView.AnimationOptions = transition.animated ? .effectFade : .none
+            let effect:NSTableView.AnimationOptions = (visibleRange.indexIn(idx) || !transition.animateVisibleOnly) && transition.animated ? .effectFade : .none
             _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
             if item.animatable {
                 inserted.append(item)
@@ -1443,16 +1443,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for (index,item) in transition.updated {
             let animated:Bool
             if case .none = transition.state {
-                animated = true
+                animated = visibleRange.indexIn(index) || !transition.animateVisibleOnly
             } else {
                 animated = false
             }
             replace(item:item, at:index, animated: animated)
         }
 
+        
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
+        
+        
         let state: TableScrollState
         
         if case .none = transition.state, !transition.deleted.isEmpty || !transition.inserted.isEmpty {
@@ -1466,22 +1469,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             state = transition.state
         }
         
-        //reflectScrolledClipView(clipView)
-        switch state {
-        case let .none(animation):
-            // print("scroll do nothing")
-            animation?.animate(table:self, added: inserted, removed:removed)
-            
-        case .bottom, .top, .center:
-            self.scroll(to: transition.state)
-        case .up(_), .down(_):
-            self.scroll(to: transition.state)
-        case let .saveVisible(side):
-            
-//            if transition.isEmpty {
-//                break
-//            }
+       // NSLog("listHeight: \(listHeight), scroll: \(state)")
 
+        
+        func saveVisible(_ side: TableSavingSide) {
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int>
@@ -1509,7 +1500,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     strideTo = stride(from: 0, to: visibleItems.count, by: 1)
                 }
             }
-
+            
             
             for i in strideTo {
                 let visible = visibleItems[i]
@@ -1560,6 +1551,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     break
                 }
             }
+        }
+        //reflectScrolledClipView(clipView)
+        switch state {
+        case let .none(animation):
+            // print("scroll do nothing")
+            animation?.animate(table:self, added: inserted, removed:removed)
+            if let animation = animation, !animation.scrollBelow {
+                saveVisible(.upper)
+            }
+        case .bottom, .top, .center:
+            self.scroll(to: transition.state)
+        case .up(_), .down(_):
+            self.scroll(to: transition.state)
+        case let .saveVisible(side):
+            saveVisible(side)
             
             break
         }

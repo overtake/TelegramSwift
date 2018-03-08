@@ -117,8 +117,8 @@ class ChatWallpaperModalController: ModalViewController {
             if let strongSelf = self {
                 filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { [weak strongSelf] paths in
                     if let path = paths?.first {
-                        let fs = fileSize(path)
-                        if let fs = fs, fs < 10 * 1024 * 1024, let image = NSImage(contentsOf: URL(fileURLWithPath: path)), image.size.width > 500 && image.size.height > 500 {
+                        let size = fs(path)
+                        if let size = size, size < 10 * 1024 * 1024, let image = NSImage(contentsOf: URL(fileURLWithPath: path)), image.size.width > 500 && image.size.height > 500 {
                             _ = (moveWallpaperToCache(postbox: postbox, path, randomName: true) |> mapToSignal { path in
                                 return updateApplicationWallpaper(postbox: postbox, wallpaper: .custom(path))
                                 }).start()
