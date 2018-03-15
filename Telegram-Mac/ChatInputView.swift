@@ -501,6 +501,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage()
                 chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
+                markNextTextChangeToFalseActivity = true
             }
             
             return true
@@ -555,7 +556,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return true
     }
     
-    
+    private var markNextTextChangeToFalseActivity: Bool = false
     
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
@@ -566,7 +567,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
         
-        if chatInteraction.account.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel {
+        if chatInteraction.account.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel && !markNextTextChangeToFalseActivity {
             
             sendActivityDisposable.set((Signal<Bool, NoError>.single(true) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
                 if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel {
@@ -575,6 +576,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }))
         }
         
+        markNextTextChangeToFalseActivity = false
     }
 
     

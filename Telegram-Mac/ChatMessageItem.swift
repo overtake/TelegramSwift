@@ -298,7 +298,7 @@ class ChatMessageItem: ChatRowItem {
      
         webpageLayout?.measure(width: min(width, 380))
         
-        let textBlockWidth: CGFloat = isBubbled ? (webpageLayout?.contentRect.width ?? width) : width
+        let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.contentRect.width ?? width), min(280, width)) : width
         
         textLayout.measure(width: textBlockWidth)
 

@@ -25,7 +25,7 @@ private class EmojiTolerance : View {
             button.set(text: emoji, for: .Normal)
             button.setFrameSize(NSMakeSize(30, 30))
             button.centerY(x: x)
-            button.set(background: theme.colors.background, for: .Normal)
+            button.set(background: .clear, for: .Normal)
             button.set(background: theme.colors.grayForeground, for: .Highlight)
             button.layer?.cornerRadius = .cornerRadius
             self?.addSubview(button)
@@ -69,7 +69,7 @@ class EmojiToleranceController: NSViewController {
         super.init(nibName: nil, bundle: nil)
         
        
-        self.view = EmojiTolerance(frame: NSMakeRect(0, 0, 30 * 6 + 4, 34), emoji: emoji, handle: handle)
+        self.view = EmojiTolerance(frame: NSMakeRect(0, 2, 30 * 6 + 4, 34), emoji: emoji, handle: handle)
     }
     
     required init?(coder: NSCoder) {

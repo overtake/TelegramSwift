@@ -204,7 +204,7 @@ func modernConfirmSignal(for window:Window, account: Account, peerId: PeerId?, a
     Queue.mainQueue().async {
         let alert = AlertController(window, account: account, peerId: peerId, header: header, text: information, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, accessory: accessory)
         alert.show(completionHandler: { response in
-            value.set(response == .OK)
+            value.set(response == .alertThirdButtonReturn)
         })
     }
     return value.get() |> take(1)

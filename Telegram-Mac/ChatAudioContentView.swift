@@ -44,12 +44,17 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         textView.centerY(x:leftInset)
     }
     
+    private var testPlayer: MediaPlayer?
+    
     override func open() {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters, let account = account, let parent = parent  {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
                 controller.playOrPause()
             } else {
+                
+               
                 let controller:APController
+
                 if parameters.isWebpage {
                     controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId))
                 } else {
@@ -67,7 +72,10 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
+            
+            open()
+            
+           // fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
         }
     }
     

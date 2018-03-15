@@ -147,6 +147,14 @@ class FastSettings {
         return value < 12
     }
     
+    static func openInQuickLook(_ ext: String) -> Bool {
+        return UserDefaults.standard.bool(forKey: "open_in_quick_look_\(ext)")
+    }
+    static func toggleOpenInQuickLook(_ ext: String) -> Void {
+        UserDefaults.standard.set(!openInQuickLook(ext), forKey: "open_in_quick_look_\(ext)")
+        UserDefaults.standard.synchronize()
+    }
+    
     static func toggleSidebarShown(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kSidebarShownType)
         UserDefaults.standard.synchronize()

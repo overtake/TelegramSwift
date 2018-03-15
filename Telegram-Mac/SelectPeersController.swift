@@ -571,7 +571,7 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
             
             if search.request.isEmpty {
                 let inSearch:[PeerId] = self?.inSearchSelected.modify({$0}) ?? []
-                return combineLatest(account.postbox.contactPeersView(accountPeerId: account.peerId), account.postbox.multiplePeersView(inSearch))
+                return combineLatest(account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true), account.postbox.multiplePeersView(inSearch))
                     |> deliverOn(prepareQueue)
                     |> mapToQueue { view, searchView -> Signal<[SelectPeerEntry], Void> in
                         return .single(entriesForView(view, searchPeers: inSearch, searchView: searchView, excludeIds: excludePeerIds))

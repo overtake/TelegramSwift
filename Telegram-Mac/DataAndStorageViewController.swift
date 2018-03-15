@@ -282,7 +282,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
                 arguments.selectDownloadFolder()
             })
         case let .automaticCopyToDownload(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadToDownloadFolder, type: .switchable( stateback: { () -> Bool in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "L10n.dataAndStorageAutomaticDownloadToDownloadFolder", type: .switchable( stateback: { () -> Bool in
                 return value
             }), action: {
                 arguments.toggleAutomaticDownload(!value)

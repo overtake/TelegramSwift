@@ -184,7 +184,7 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
     let inputState = chatPresentationInterfaceState.effectiveInput
     if let (possibleQueryRange, possibleTypes, additionalStringRange) = textInputStateContextQueryRangeAndType(inputState, includeContext: includeContext) {
         
-        if chatPresentationInterfaceState.state == .editing && (possibleTypes != [.contextRequest] && possibleTypes != [.mention]) {
+        if chatPresentationInterfaceState.state == .editing && (possibleTypes != [.contextRequest] && possibleTypes != [.mention] && possibleTypes != [.emoji]) {
             return .none
         }
         

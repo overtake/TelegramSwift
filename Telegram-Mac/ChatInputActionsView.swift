@@ -25,7 +25,7 @@ class ChatInputActionsView: View, Notifable {
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
     private var secretTimer:ImageButton?
-    
+    private var inlineProgress: ProgressIndicator? = nil
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
        
@@ -96,6 +96,8 @@ class ChatInputActionsView: View, Notifable {
         addHoverObserver()
         addClickObserver()
         entertaiments.canHighlight = false
+        
+        
         
         updateLocalizationAndTheme()
     }
@@ -187,6 +189,7 @@ class ChatInputActionsView: View, Notifable {
     override func layout() {
         super.layout()
         inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset)
+        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 4)
         voice.centerY(x:frame.width - voice.frame.width - iconsInset)
         send.centerY(x: frame.width - send.frame.width - iconsInset)
         entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - iconsInset)
@@ -226,10 +229,10 @@ class ChatInputActionsView: View, Notifable {
         
         switch FastSettings.recordingState {
         case .voice:
-            state = ChatRecordingAudioState()
+            state = ChatRecordingAudioState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat)
             state.start()
         case .video:
-            state = ChatRecordingVideoState()
+            state = ChatRecordingVideoState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat)
             showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: mainWindow)
         }
      
@@ -257,10 +260,24 @@ class ChatInputActionsView: View, Notifable {
                 
                 var newInlineRequest = value.inputQueryResult != oldValue.inputQueryResult
                 var oldInlineRequest = newInlineRequest
+                var newInlineLoading: Bool = false
+                var oldInlineLoading: Bool = false
+                
+                if let query = value.inputQueryResult, case .contextRequestResult(_, let data) = query {
+                    newInlineLoading = data == nil
+                }
+                
                 if let query = value.inputQueryResult, case .contextRequestResult = query, newInlineRequest || first {
                     newInlineRequest = true
                 } else {
                     newInlineRequest = false
+                }
+                
+                
+                
+                
+                if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
+                    oldInlineLoading = data == nil
                 }
                 
                 
@@ -274,7 +291,7 @@ class ChatInputActionsView: View, Notifable {
                 let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing
                 
                 let anim = animated && (sNew != sOld || newInlineRequest != oldInlineRequest)
-                if sNew != sOld || first || newInlineRequest != oldInlineRequest {
+                if sNew != sOld || first || newInlineRequest != oldInlineRequest || oldInlineLoading != newInlineLoading {
                     first = false
                     
                     let prevView:View
@@ -308,6 +325,28 @@ class ChatInputActionsView: View, Notifable {
                     }
                 }
                 
+                inlineCancel.isHidden = inlineCancel.isHidden || newInlineLoading
+               
+                if newInlineLoading {
+                    if inlineProgress == nil {
+                        inlineProgress = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
+                        inlineProgress?.progressColor = theme.colors.grayIcon
+                        addSubview(inlineProgress!, positioned: .below, relativeTo: inlineCancel)
+                        inlineProgress?.set(handler: { [weak self] _ in
+                            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(request) = inputContext {
+                                if request.query.isEmpty {
+                                    self?.chatInteraction.clearInput()
+                                } else {
+                                    self?.chatInteraction.clearContextQuery()
+                                }
+                            }
+                        }, for: .Click)
+                    }
+                } else {
+                    inlineProgress?.removeFromSuperview()
+                    inlineProgress = nil
+                }
+       
                 entertaiments.apply(state: .Normal)
                 entertaiments.isSelected = value.isShowSidebar || (chatInteraction.account.context.entertainment.popover?.isShown ?? false)
                 

@@ -24,8 +24,10 @@ class MediaSenderContainer {
 
 class VoiceSenderContainer : MediaSenderContainer {
     fileprivate let data:RecordedAudioData
-    public init(data:RecordedAudioData) {
+    fileprivate let id:Int64?
+    public init(data:RecordedAudioData, id: Int64?) {
         self.data = data
+        self.id = id
         super.init(path: data.path)
         
     }
@@ -34,9 +36,11 @@ class VoiceSenderContainer : MediaSenderContainer {
 class VideoMessageSenderContainer : MediaSenderContainer {
     fileprivate let duration:Int
     fileprivate let size: CGSize
-    public init(path:String, duration: Int, size: CGSize) {
+    fileprivate let id:Int64?
+    public init(path:String, duration: Int, size: CGSize, id: Int64?) {
         self.duration = duration
         self.size = size
+        self.id = id
         super.init(path: path, caption: "", isFile: false)
     }
 }
@@ -171,13 +175,31 @@ class Sender: NSObject {
                     if let waveformData = container.data.waveform {
                         memoryWaveform = MemoryBuffer(data: waveformData)
                     }
+                    
+                    let resource: TelegramMediaResource
+                    if let id = container.id, let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
+                        resource = LocalFileMediaResource(fileId: id, size: fileSize(path))
+                        account.postbox.mediaBox.storeResourceData(resource.id, data: data)
+                    } else {
+                        resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path))
+                    }
+                    
                     attrs.append(.Audio(isVoice: true, duration: Int(container.data.duration), title: nil, performer: nil, waveform: memoryWaveform))
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: LocalFileReferenceMediaResource(localFilePath:path,randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path)), previewRepresentations: [], mimeType: mimeType, size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: [], mimeType: mimeType, size: nil, attributes: attrs)
                 } else if let container = container as? VideoMessageSenderContainer {
                     var attrs:[TelegramMediaFileAttribute] = []
-
+                    
+                    let resource: TelegramMediaResource
+                    if let id = container.id, let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
+                        resource = LocalFileMediaResource(fileId: id, size: fileSize(path))
+                        account.postbox.mediaBox.storeResourceData(resource.id, data: data)
+                    } else {
+                        resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path))
+                    }
+                    
+                    
                     attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: container.size, flags: [.instantRoundVideo]))
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: LocalFileReferenceMediaResource(localFilePath:path,randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path)), previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), resource: resource, previewRepresentations: previewForFile(path, account: account), mimeType: mimeType, size: nil, attributes: attrs)
 
                 } else if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif"), let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                    

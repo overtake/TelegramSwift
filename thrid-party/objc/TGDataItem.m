@@ -15,6 +15,8 @@
 
 @end
 
+
+
 @implementation TGDataItem
 
 - (void)_commonInit
@@ -23,40 +25,20 @@
     _data = [[NSMutableData alloc] init];
 }
 
-- (instancetype)initWithTempFile
-{
-    self = [super init];
-    if (self != nil)
-    {
-        [self _commonInit];
-        
-        [_queue dispatch:^
-        {
-            int64_t randomId = 0;
-            arc4random_buf(&randomId, 8);
-            _fileName = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSString alloc] initWithFormat:@"%" PRIx64 ".ogg", randomId]];
-            _fileExists = false;
-        }];
-    }
-    return self;
-}
-
 - (instancetype)initWithFilePath:(NSString *)filePath
 {
     self = [super init];
     if (self != nil)
     {
         [self _commonInit];
-        
-        [_queue dispatch:^
-        {
-            _fileName = filePath;
-            _length = [[[NSFileManager defaultManager] attributesOfItemAtPath:_fileName error:nil][NSFileSize] unsignedIntegerValue];
-            _fileExists = [[NSFileManager defaultManager] fileExistsAtPath:_fileName];
-        }];
+        int64_t randomId = 0;
+        arc4random_buf(&randomId, 8);
+        _fileName = filePath;
+        _fileExists = false;
     }
     return self;
 }
+
 
 - (void)moveToPath:(NSString *)path
 {
@@ -90,7 +72,6 @@
         [file synchronizeFile];
         [file closeFile];
         _length += data.length;
-        
         [_data appendData:data];
     }];
 }

@@ -17,6 +17,19 @@
 #import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
 #import "DFRPrivateHeader.h"
+#import "MP4Atom.h"
+#import "HackUtils.h"
+#import "ffmpeg/include/libavcodec/avcodec.h"
+#import "ffmpeg/include/libavformat/avformat.h"
+#import "FFMpegSwResample.h"
+#import "RingBuffer.h"
+
+
+
+
+
+
+
 //#import <ChromiumTabs/ChromiumTabs.h>
 //#include <Cocoa/Cocoa.h>
 //#import <IOKit/hidsystem/ev_keymap.h>
@@ -251,9 +264,10 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 
 //BEGIN AUDIO HEADER
+
+
 @interface TGDataItem : NSObject
 
-- (instancetype __nonnull)initWithTempFile;
 - (instancetype __nonnull)initWithFilePath:(NSString * __nonnull)filePath;
 
 - (void)moveToPath:(NSString * __nonnull)path;
@@ -279,20 +293,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 - (uint16_t * __nonnull)sampleList;
 @end
 
-@interface TGOpusAudioRecorder : NSObject
 
-@property (nonatomic, copy) void (^__nullable pauseRecording)();
-@property (nonatomic, copy) void (^__nullable micLevel)(CGFloat);
-
-- (instancetype __nonnull)initWithFileEncryption:(bool)fileEncryption;
-
-- (void)_beginAudioSession:(bool)speaker;
-- (void)prepareRecord:(bool)playTone completion:(void (^__nonnull)())completion;
-- (void)record;
-- (TGDataItem * __nonnull)stopRecording:(NSTimeInterval * __nonnull)recordedDuration waveform:(__autoreleasing TGAudioWaveform * __nullable* __nullable)waveform;
-- (NSTimeInterval)currentDuration;
-
-@end
 
 double mappingRange(double x, double in_min, double in_max, double out_min, double out_max);
 

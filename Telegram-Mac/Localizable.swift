@@ -843,7 +843,7 @@ internal final class L10n {
   internal static var chatListContextPin: String  { return L10n.tr("Localizable", "ChatList.Context.Pin") }
   /// Sorry, you can pin no more than 5 chats to the top.
   internal static var chatListContextPinError: String  { return L10n.tr("Localizable", "ChatList.Context.PinError") }
-  /// Return Group
+  /// Return to Group
   internal static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
   /// Unmute
   internal static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
@@ -973,6 +973,8 @@ internal final class L10n {
   internal static var contactsPhoneNumberPlaceholder: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.Placeholder") }
   /// Save as...
   internal static var contextCopyMedia: String  { return L10n.tr("Localizable", "Context.CopyMedia") }
+  /// Open in Quick Look
+  internal static var contextOpenInQuickLook: String  { return L10n.tr("Localizable", "Context.OpenInQuickLook") }
   /// Remove
   internal static var contextRecentGifRemove: String  { return L10n.tr("Localizable", "Context.RecentGifRemove") }
   /// Remove
@@ -1001,8 +1003,6 @@ internal final class L10n {
   internal static var d9MCDAMdTitle: String  { return L10n.tr("Localizable", "d9M-CD-aMd.title") }
   /// Auto-Download Media
   internal static var dataAndStorageAutomaticDownload: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownload") }
-  /// Automatic Copy Files to Download Folder
-  internal static var dataAndStorageAutomaticDownloadToDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownloadToDownloadFolder") }
   /// Download Folder
   internal static var dataAndStorageDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.DownloadFolder") }
   /// Network Usage
@@ -1577,7 +1577,7 @@ internal final class L10n {
   internal static var messageContextOpenWith: String  { return L10n.tr("Localizable", "Message.Context.OpenWith") }
   /// Pin
   internal static var messageContextPin: String  { return L10n.tr("Localizable", "Message.Context.Pin") }
-  /// Remove GIF
+  /// Delete GIF
   internal static var messageContextRemoveGif: String  { return L10n.tr("Localizable", "Message.Context.RemoveGif") }
   /// Reply
   internal static var messageContextReply1: String  { return L10n.tr("Localizable", "Message.Context.Reply1") }
@@ -2275,6 +2275,8 @@ internal final class L10n {
   }
   /// Send Video
   internal static var previewSenderSendVideoZero: String  { return L10n.tr("Localizable", "PreviewSender.SendVideo_zero") }
+  /// CONNECTED WEBSITES
+  internal static var privacyAndSecurityWebAuthorizationHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.WebAuthorizationHeader") }
   /// Active Sessions
   internal static var privacySettingsActiveSessions: String  { return L10n.tr("Localizable", "PrivacySettings.ActiveSessions") }
   /// Blocked Users
@@ -2787,6 +2789,8 @@ internal final class L10n {
   internal static var telegramTwoStepVerificationUnlockController: String  { return L10n.tr("Localizable", "Telegram.TwoStepVerificationUnlockController") }
   /// Username
   internal static var telegramUsernameSettingsViewController: String  { return L10n.tr("Localizable", "Telegram.UsernameSettingsViewController") }
+  /// Logged in with Telegram
+  internal static var telegramWebSessionsController: String  { return L10n.tr("Localizable", "Telegram.WebSessionsController") }
   /// Copy
   internal static var textCopy: String  { return L10n.tr("Localizable", "Text.Copy") }
   /// Copy Command
@@ -3143,6 +3147,18 @@ internal final class L10n {
   internal static var vmV6d7jITitle: String  { return L10n.tr("Localizable", "vmV-6d-7jI.title") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
+  /// Disconnect
+  internal static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
+  /// Disconnect All Websites
+  internal static var webAuthorizationsLogoutAll: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll") }
+  /// Do you want to disconnect this website?
+  internal static var webAuthorizationsConfirmRevoke: String  { return L10n.tr("Localizable", "WebAuthorizations.Confirm.Revoke") }
+  /// Are you sure you want to disconnect all websites?
+  internal static var webAuthorizationsConfirmRevokeAll: String  { return L10n.tr("Localizable", "WebAuthorizations.Confirm.RevokeAll") }
+  /// CONNECTED WEBSITES
+  internal static var webAuthorizationsLoggedInDescrpiption: String  { return L10n.tr("Localizable", "WebAuthorizations.LoggedIn.Descrpiption") }
+  /// You can log in on websites that support signing in with Telegram.
+  internal static var webAuthorizationsLogoutAllDescription: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll.Description") }
   /// Fri
   internal static var weekdayShortFriday: String  { return L10n.tr("Localizable", "Weekday.ShortFriday") }
   /// Mon

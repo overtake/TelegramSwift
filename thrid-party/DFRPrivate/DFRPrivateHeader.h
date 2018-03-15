@@ -1,9 +1,10 @@
 
 
 #import <AppKit/AppKit.h>
-
+#ifndef APP_STORE
 extern void DFRElementSetControlStripPresenceForIdentifier(NSString *, BOOL);
 extern void DFRSystemModalShowsCloseBoxWhenFrontMost(BOOL);
+#endif
 
 @interface NSTouchBarItem ()
 
