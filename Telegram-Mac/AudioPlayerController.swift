@@ -387,7 +387,9 @@ protocol APDelegate : class {
 
 class APController : NSResponder, AudioPlayerDelegate {
     
-    
+    private var mediaPlayer: MediaPlayer?
+    private let status: Atomic<MediaPlayerStatus> = Atomic(value: MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, seekId: 0, status: .paused))
+    private let statusDisposable = MetaDisposable()
     private let readyDisposable = MetaDisposable()
     
     @available(OSX 10.12.2, *)
@@ -416,7 +418,7 @@ class APController : NSResponder, AudioPlayerDelegate {
 
     private var listeners:[WeakReference<NSObject>] = []
     
-    fileprivate var player:AudioPlayer?
+   // fileprivate var player:AudioPlayer?
     fileprivate var current:Int = -1
     fileprivate(set) var needRepeat:Bool = false
     
@@ -445,7 +447,8 @@ class APController : NSResponder, AudioPlayerDelegate {
     }
     
     var timebase:CMTimebase? {
-        return self.player?.timebase
+        
+        return nil//self.player?.timebase
     }
     
     func notifyGlobalStateChanged() {
@@ -654,9 +657,11 @@ class APController : NSResponder, AudioPlayerDelegate {
     func playOrPause() {
         if let song = song {
             if case  .playing = song.state {
-                player?.pause()
+               // player?.pause()
+                mediaPlayer?.pause()
             } else if case .paused = song.state {
-                player?.play()
+                //player?.play()
+                mediaPlayer?.play()
             } else if song.state == .stoped {
                 dequeueCurrent()
             }
@@ -666,7 +671,8 @@ class APController : NSResponder, AudioPlayerDelegate {
     func pause() -> Bool {
         if let song = song {
             if case  .playing = song.state {
-                player?.pause()
+               // player?.pause()
+                mediaPlayer?.pause()
                 return true
             }
         }
@@ -676,7 +682,8 @@ class APController : NSResponder, AudioPlayerDelegate {
     func play() -> Bool {
         if let song = song {
             if case .paused = song.state {
-                player?.play()
+              //  player?.play()
+                mediaPlayer?.play()
                 return true
             }
         }
@@ -727,33 +734,48 @@ class APController : NSResponder, AudioPlayerDelegate {
         }
     }
     
+    fileprivate var mediaStatus: MediaPlayerStatus {
+        return self.status.modify({$0})
+    }
+    
     fileprivate func play(with item:APSongItem) {
         
         
-        itemDisposable.set(item.pullResource().start(next: { [weak self] resource in
-            if let strongSelf = self {
-                if resource.complete {
-                    strongSelf.player = .player(for: resource.path)
-                    strongSelf.player?.delegate = strongSelf
-                    strongSelf.player?.play()
-                    
-                    let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
-                    if let index = items.index(of: item) {
-                        let previous = index - 1
-                        let next = index + 1
-                        if previous >= 0 {
-                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[previous].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
-                        }
-                        if next < items.count {
-                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[next].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
-                        }
-                    }
-                    
-                } else {
-                    item.state = .fetching(resource.progress,true)
-                }
-            }
+        let player = MediaPlayer(postbox: account.postbox, resource: item.resource, streamable: true, video: false, preferSoftwareDecoding: true, enableSound: true)
+        self.mediaPlayer = player
+        mediaPlayer?.play()
+        
+        self.statusDisposable.set((player.status |> deliverOnMainQueue).start(next: { [weak self] status in
+             _ = self?.status.swap(status)
+            self?.updateUIAfterTick(status)
         }))
+        
+//
+//        itemDisposable.set(item.pullResource().start(next: { [weak self] resource in
+//            if let strongSelf = self {
+//                if resource.complete {
+////                    strongSelf.player = .player(for: resource.path)
+////                    strongSelf.player?.delegate = strongSelf
+////                    strongSelf.player?.play()
+//
+//
+//                    let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+//                    if let index = items.index(of: item) {
+//                        let previous = index - 1
+//                        let next = index + 1
+//                        if previous >= 0 {
+//                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[previous].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+//                        }
+//                        if next < items.count {
+//                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[next].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+//                        }
+//                    }
+//
+//                } else {
+//                    item.state = .fetching(resource.progress,true)
+//                }
+//            }
+//        }))
     }
     
     func audioPlayerDidStartPlaying(_ audioPlayer: AudioPlayer) {
@@ -780,7 +802,7 @@ class APController : NSResponder, AudioPlayerDelegate {
                 break
             }
         }
-        return self.player?.currentTime ?? 0
+        return 0//self.player?.currentTime ?? 0
     }
     
     var duration: TimeInterval {
@@ -792,7 +814,7 @@ class APController : NSResponder, AudioPlayerDelegate {
                 break
             }
         }
-        return self.player?.currentTime ?? 0
+        return 0//self.player?.currentTime ?? 0
     }
     
     var isLatest:Bool {
@@ -837,7 +859,8 @@ class APController : NSResponder, AudioPlayerDelegate {
     }
     
     func stop() {
-        player?.stop()
+      //  player?.stop()
+        mediaPlayer = nil
         if let item = song {
             notifySongDidStopPlaying(item: item)
         }
@@ -846,17 +869,17 @@ class APController : NSResponder, AudioPlayerDelegate {
     }
     
     func set(trackProgress:Float) {
-        if let player = player, let song = song {
-            let current: Double = player.duration * Double(trackProgress)
-            player.set(position:current)
+        if let player = mediaPlayer, let song = song {
+            let current: Double = mediaStatus.duration * Double(trackProgress)
+            player.seek(timestamp: current)
             if case .paused = song.state {
-                var progress:TimeInterval = (current / player.duration)
+                var progress:TimeInterval = (current / mediaStatus.duration)
                 if progress.isNaN {
                     progress = 1
                 }
-                song.state = .playing(current: current, duration: player.duration, progress: progress, animated: true)
-                song.state = .paused(current: current, duration: player.duration, progress: progress, animated: true)
-            } 
+                song.state = .playing(current: current, duration: mediaStatus.duration, progress: progress, animated: true)
+                song.state = .paused(current: current, duration: mediaStatus.duration, progress: progress, animated: true)
+            }
         }
     }
     
@@ -871,24 +894,34 @@ class APController : NSResponder, AudioPlayerDelegate {
         stop()
     }
     
+    private func updateUIAfterTick(_ status: MediaPlayerStatus) {
+        var progress:TimeInterval = (status.timestamp / max(status.duration, 1))
+        if progress.isNaN {
+            progress = 1
+        }
+        song?.state = .playing(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
+        if #available(OSX 10.12.2, *) {
+            touchBarViews.updateSongProgressSlider(with: status.timestamp, duration: status.duration)
+        }
+    }
     
     
     private func startTimer() {
-        if timer == nil {
-            timer = SwiftSignalKitMac.Timer(timeout: 0.2, repeat: true, completion: { [weak self] in
-                if let strongSelf = self, let player = strongSelf.player {
-                    var progress:TimeInterval = (player.currentTime / player.duration)
-                    if progress.isNaN {
-                        progress = 1
-                    }
-                    strongSelf.song?.state = .playing(current: player.currentTime, duration: player.duration, progress: progress, animated: true)
-                    if #available(OSX 10.12.2, *) {
-                        strongSelf.touchBarViews.updateSongProgressSlider(with: player.currentTime, duration: player.duration)
-                    }
-                }
-            }, queue: Queue.mainQueue())
-            timer?.start()
-        }
+//        if timer == nil {
+//            timer = SwiftSignalKitMac.Timer(timeout: 0.2, repeat: true, completion: { [weak self] in
+////                if let strongSelf = self, let player = strongSelf.player {
+////                    var progress:TimeInterval = (player.currentTime / player.duration)
+////                    if progress.isNaN {
+////                        progress = 1
+////                    }
+////                    strongSelf.song?.state = .playing(current: player.currentTime, duration: player.duration, progress: progress, animated: true)
+////                    if #available(OSX 10.12.2, *) {
+////                        strongSelf.touchBarViews.updateSongProgressSlider(with: player.currentTime, duration: player.duration)
+////                    }
+////                }
+//            }, queue: Queue.mainQueue())
+//            timer?.start()
+      //  }
     }
     private func stopTimer() {
         timer?.invalidate()
@@ -901,7 +934,7 @@ class APController : NSResponder, AudioPlayerDelegate {
         songStateDisposable.dispose()
         prevNextDisposable.dispose()
         readyDisposable.dispose()
-
+        statusDisposable.dispose()
     }
     
     fileprivate var tags:MessageTags {

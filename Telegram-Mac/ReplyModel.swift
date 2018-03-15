@@ -67,13 +67,14 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions
                         }
                         break
+                    } else if let file = media as? TelegramMediaFile, file.isVideo {
+                        if let dimensions = file.dimensions {
+                            imageDimensions = dimensions
+                        } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
+                            imageDimensions = representation.dimensions
+                        }
+                        break
                     }
-                    //                else if let file = media as? TelegramMediaFile {
-                    //                    if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
-                    //                        imageDimensions = representation.dimensions
-                    //                    }
-                    //                    break
-                    //                }
                 }
             }
 
@@ -100,12 +101,25 @@ class ReplyModel: ChatAccessoryModel {
             if let message = self.replyMessage, let view = self.view, view.frame != NSZeroRect {
                 var updatedMedia: Media?
                 var imageDimensions: CGSize?
+                var hasRoundImage = false
                 if !message.containsSecretMedia {
                     for media in message.media {
                         if let image = media as? TelegramMediaImage {
                             updatedMedia = image
                             if let representation = largestRepresentationForPhoto(image) {
                                 imageDimensions = representation.dimensions
+                            }
+                            break
+                        } else if let file = media as? TelegramMediaFile, file.isVideo {
+                            updatedMedia = file
+                            
+                            if let dimensions = file.dimensions {
+                                imageDimensions = dimensions
+                            } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
+                                imageDimensions = representation.dimensions
+                            }
+                            if file.isInstantVideo {
+                                hasRoundImage = true
                             }
                             break
                         }
@@ -134,7 +148,12 @@ class ReplyModel: ChatAccessoryModel {
                         if let image = updatedMedia as? TelegramMediaImage {
                             updateImageSignal = chatMessagePhotoThumbnail(account: self.account, photo: image, scale: view.backingScaleFactor)
                         } else if let file = updatedMedia as? TelegramMediaFile {
-                            
+                            if file.isVideo {
+                                updateImageSignal = chatMessageVideoThumbnail(account: self.account, file: file, scale: view.backingScaleFactor)
+                            } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
+                                let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil)
+                                updateImageSignal = chatWebpageSnippetPhoto(account: self.account, photo: tmpImage, scale: view.backingScaleFactor, small: true)
+                            }
                         }
                     }
                     
@@ -148,6 +167,11 @@ class ReplyModel: ChatAccessoryModel {
                         }
                         
                         view.imageView?.set(arguments: arguments)
+                        if hasRoundImage {
+                            view.imageView!.layer?.cornerRadius = 15
+                        } else {
+                            view.imageView?.layer?.cornerRadius = 0
+                        }
                     }
                 } else {
                     view.imageView?.removeFromSuperview()

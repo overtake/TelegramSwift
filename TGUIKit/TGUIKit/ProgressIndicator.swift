@@ -257,7 +257,7 @@ public class ProgressIndicator: View {
 
 
 private class ProgressLayer : CALayer {
-    
+    fileprivate var progressColor: NSColor? = nil
     fileprivate func update(_ hasAnimation: Bool) {
         if hasAnimation {
             var fromValue: Float = 0
@@ -281,7 +281,7 @@ private class ProgressLayer : CALayer {
     
     override func draw(in ctx: CGContext) {
 
-        ctx.setStrokeColor(PresentationTheme.current.colors.indicatorColor.cgColor)
+        ctx.setStrokeColor((progressColor ?? PresentationTheme.current.colors.indicatorColor).cgColor)
         
         let startAngle = 2.0 * (CGFloat.pi) * 0.8 - CGFloat.pi / 2
         let endAngle = -(CGFloat.pi / 2)
@@ -298,7 +298,13 @@ private class ProgressLayer : CALayer {
     }
 }
 
-public class ProgressIndicator : View {
+public class ProgressIndicator : Control {
+    public var progressColor: NSColor? = nil {
+        didSet {
+            indicator.progressColor = progressColor
+            indicator.setNeedsDisplay()
+        }
+    }
     private let indicator: ProgressLayer = ProgressLayer()
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

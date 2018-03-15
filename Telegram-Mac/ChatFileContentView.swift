@@ -72,7 +72,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func open() {
-        if let account = account, let media = media, let parent = parent  {
+        if let account = account, let media = media as? TelegramMediaFile, let parent = parent  {
             if media.isGraphicFile {
                 showChatGallery(account: account, message: parent, table, parameters as? ChatMediaGalleryParameters)
             } else {
@@ -113,8 +113,6 @@ class ChatFileContentView: ChatMediaContentView {
         case .Remote:
             return paremeters?.downloadLayout
         }
-        
-        return nil
     }
     
     override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {

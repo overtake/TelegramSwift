@@ -30,7 +30,7 @@ class VideoRecorderModalController: ModalViewController {
     init(chatInteraction: ChatInteraction, pipeline: VideoRecorderPipeline) {
         self.chatInteraction = chatInteraction
         self.pipeline = pipeline
-        super.init(frame: NSMakeRect(0, 0, 210, 210))
+        super.init(frame: NSMakeRect(0, 0, 220, 220))
         bar = .init(height: 0)
     }
     
@@ -60,7 +60,7 @@ class VideoRecorderModalController: ModalViewController {
         disposable.set((pipeline.statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] status in
             if let strongSelf = self {
                 switch status {
-                case let .finishRecording(path, _, thumb):
+                case let .finishRecording(path, _, _, thumb):
                     strongSelf.countdownDisposable.set(nil)
                     strongSelf.genericView.updateForPreview(path, preview: thumb)
                     strongSelf.pipeline.stopCapture()

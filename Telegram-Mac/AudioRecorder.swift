@@ -144,13 +144,14 @@ struct RecordedAudioData {
     let path: String
     let duration: Double
     let waveform: Data?
+    let id:Int64?
 }
 
 final class ManagedAudioRecorderContext {
     private let id: Int32
     private let micLevel: ValuePromise<Float>
     private let recordingState: ValuePromise<AudioRecordingState>
-    
+    private let liveUploading:PreUploadManager?
     private var paused = true
     
     private let queue: Queue
@@ -173,15 +174,15 @@ final class ManagedAudioRecorderContext {
     private var recordingStateUpdateTimestamp: Double?
     
     
-    init(queue: Queue, micLevel: ValuePromise<Float>, recordingState: ValuePromise<AudioRecordingState>) {
+    init(queue: Queue, micLevel: ValuePromise<Float>, recordingState: ValuePromise<AudioRecordingState>, dataItem: TGDataItem, liveUploading: PreUploadManager?) {
         assert(queue.isCurrent())
-        
+        self.liveUploading = liveUploading
         self.id = getNextRecorderContextId()
         self.micLevel = micLevel
         self.recordingState = recordingState
         
         self.queue = queue
-        self.dataItem = TGDataItem(tempFile: ())
+        self.dataItem = dataItem
         self.oggWriter = TGOggOpusWriter()
         
         addAudioRecorderContext(self.id, self)
@@ -419,7 +420,7 @@ final class ManagedAudioRecorderContext {
                 self.processWaveformPreview(samples: currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / 2)
                 
                 self.oggWriter.writeFrame(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), frameByteCount: UInt(currentEncoderPacketSize))
-                
+                liveUploading?.fileDidChangedSize(false)
                 let timestamp = CACurrentMediaTime()
                 if self.recordingStateUpdateTimestamp == nil || self.recordingStateUpdateTimestamp! < timestamp + 0.1 {
                     self.recordingStateUpdateTimestamp = timestamp
@@ -519,8 +520,8 @@ final class ManagedAudioRecorderContext {
                 }
                 
             }
-            
-            return RecordedAudioData(path: self.dataItem.path(), duration: self.oggWriter.encodedDuration(), waveform: waveform)
+            liveUploading?.fileDidChangedSize(true)
+            return RecordedAudioData(path: self.dataItem.path(), duration: self.oggWriter.encodedDuration(), waveform: waveform, id: liveUploading?.id)
         } else {
             return nil
         }
@@ -554,7 +555,6 @@ final class ManagedAudioRecorder {
     private var contextRef: Unmanaged<ManagedAudioRecorderContext>?
     private let micLevelValue = ValuePromise<Float>(0.0)
     private let recordingStateValue = ValuePromise<AudioRecordingState>(.paused(duration: 0.0))
-    
     var micLevel: Signal<Float, NoError> {
         return self.micLevelValue.get()
     }
@@ -563,9 +563,10 @@ final class ManagedAudioRecorder {
         return self.recordingStateValue.get()
     }
     
-    init() {
+    init(liveUploading: PreUploadManager?, dataItem: TGDataItem) {
+        
         self.queue.async {
-            let context = ManagedAudioRecorderContext(queue: self.queue, micLevel: self.micLevelValue, recordingState: self.recordingStateValue)
+            let context = ManagedAudioRecorderContext(queue: self.queue, micLevel: self.micLevelValue, recordingState: self.recordingStateValue, dataItem: dataItem, liveUploading: liveUploading)
             self.contextRef = Unmanaged.passRetained(context)
         }
     }

@@ -69,6 +69,8 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         self.stableId = stableId
         panel = QLPreviewPanel.shared()
         
+      
+        
         var mimeType:String = "image/jpeg"
         var fileResource:TelegramMediaResource?
         var fileName:String? = nil
@@ -102,7 +104,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
                 if let ext = ext {
                     
                     let item = QuickLookPreviewItem(with: strongSelf.media, path:path, ext:ext)
-                    if ext == "pkpass" {
+                    if ext == "pkpass" || !FastSettings.openInQuickLook(ext) {
                         NSWorkspace.shared.openFile(item.path)
                         return
                     }
@@ -123,7 +125,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         } else {
             panel.currentPreviewItemIndex = 0
         }
-        
+
     }
     
     

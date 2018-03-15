@@ -290,7 +290,7 @@ class ContactsController: PeersListController {
             showModal(with: AddContactModalController(account: account), for: mainWindow)
         })
         
-        let transition = combineLatest(account.postbox.contactPeersView(accountPeerId: account.peerId), appearanceSignal) |> deliverOn(prepareQueue)
+        let transition = combineLatest(account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true) |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue))
             |> mapToQueue { view, appearance -> Signal<TableUpdateTransition,Void> in
                 let first:Bool = !first.swap(true)
                 let entries = entriesForView(view).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})

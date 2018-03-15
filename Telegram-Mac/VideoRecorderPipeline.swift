@@ -30,7 +30,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     }
     
     func movieRecorderDidFinishRecording(_ recorder: TGVideoCameraMovieRecorder!) {
-        status = .finishRecording(path: url.path, duration: resultDuration, thumb: thumbnail)
+        liveUploading?.fileDidChangedSize(true)
+        status = .finishRecording(path: url.path, duration: resultDuration, id: liveUploading?.id, thumb: thumbnail)
     }
     
     
@@ -82,9 +83,10 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
 
     static let videoMessageMaxDuration: Double = 60
 
-    
-    init(url:URL) {
+    private let liveUploading: PreUploadManager?
+    init(url:URL, liveUploading: PreUploadManager?) {
         self.url = url
+        self.liveUploading = liveUploading
         super.init()
         
         recorder = TGVideoCameraMovieRecorder(url: url, delegate: self, callbackQueue: VideoRecorderPipeline.queue.queue)
@@ -235,7 +237,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
                 }
             }
         }
-       
+        liveUploading?.fileDidChangedSize(false)
     }
     
 
@@ -258,6 +260,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
             }
             recorder?.appendVideoPixelBuffer(renderedPixelBuffer, withPresentationTime: timestamp)
         }
+        
     }
     
 

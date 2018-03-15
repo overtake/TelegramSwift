@@ -92,7 +92,7 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
     func item(_ arguments: QuickSwitcherArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .peer(_, let peer, let drawSeparator):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: drawSeparator, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: drawSeparator, isLookSavedMessage: true, action: {
                 
             })
         case .separator(_, let id):
@@ -198,7 +198,7 @@ private func searchEntriesForPeers(_ peers:[Peer], account:Account, recentlyUsed
     
     var isset:[PeerId:PeerId] = [:]
     for peer in recentlyUsed {
-        if account.peerId != peer.id, isset[peer.id] == nil {
+        if isset[peer.id] == nil {
             entries.append(.peer(index, peer, peer.id != recentlyUsed.last?.id))
             index += 1
             isset[peer.id] = peer.id
@@ -211,7 +211,7 @@ private func searchEntriesForPeers(_ peers:[Peer], account:Account, recentlyUsed
     }
     
     for peer in peers {
-        if account.peerId != peer.id, isset[peer.id] == nil {
+        if isset[peer.id] == nil {
             entries.append(.peer(index, peer, true))
             index += 1
             isset[peer.id] = peer.id
@@ -258,6 +258,8 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                                 recentl.append(peer)
                             }
                         }
+                        
+                        
                         return .single((searchEntriesForPeers(peers, account: account, recentlyUsed: recentl, isLoading: false), false))
                 }
                 
@@ -266,8 +268,12 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 
                 let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
                 
-                return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
-                    return (uniquePeers(from: (values.1 + values.0)), false)
+                return combineLatest(foundLocalPeers, foundRemotePeers, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
+                    var peers = (values.1 + values.0)
+                    if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) {
+                        peers.insert(values.2, at: 0)
+                    }
+                    return (uniquePeers(from: peers), false)
                 }
                 |> runOn(prepareQueue)
                 |> map { values -> ([QuickSwitcherEntry], Bool) in

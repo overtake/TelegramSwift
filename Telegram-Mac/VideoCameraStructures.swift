@@ -15,7 +15,7 @@ enum VideoCameraRecordingStatus : Equatable {
     case madeThumbnail(CGImage)
     case stoppingRecording
     case stopped(thumb: CGImage?)
-    case finishRecording(path:String, duration:Int, thumb: CGImage?)
+    case finishRecording(path:String, duration:Int, id: Int64?, thumb: CGImage?)
 }
 
 func ==(lhs: VideoCameraRecordingStatus, rhs: VideoCameraRecordingStatus) -> Bool {

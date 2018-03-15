@@ -935,7 +935,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     
-                    if let bot = message.inlinePeer, let address = bot.username {
+                    if let bot = message.inlinePeer, message.hasInlineAttribute, let address = bot.username {
                         if attr.length > 0 {
                             _ = attr.append(string: " ")
                         }
@@ -1459,25 +1459,36 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
     let signal:Signal<[ContextMenuItem], Void> = .single(items)
     
+    
     if let file = message.media.first as? TelegramMediaFile, let mediaId = file.id {
         return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
             var items = items
             
             return account.postbox.modify { modifier -> [ContextMenuItem] in
-                let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
-                if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
-                    items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
-                        let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
-                    }))
-                } else {
-                    items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
-                        let _ = addSavedGif(postbox: account.postbox, file: file).start()
-                    }))
+                if file.isAnimated && file.isVideo {
+                    let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
+                    if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
+                        items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                            let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
+                        }))
+                    } else {
+                        items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                            let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                        }))
+                    }
                 }
                 return items
             } |> mapToSignal { items in
                 var items = items
                 return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
+                    if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isSticker && !file.isGraphicFile {
+                        let quickLook = ContextMenuItem(L10n.contextOpenInQuickLook, handler: {
+                            FastSettings.toggleOpenInQuickLook(fileExtenstion(file))
+                        })
+                        quickLook.state = FastSettings.openInQuickLook(fileExtenstion(file)) ? .on : .off
+                        items.append(quickLook)
+                    }
+                   
                     if data.complete {
                         items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                             saveAs(file, account: account)

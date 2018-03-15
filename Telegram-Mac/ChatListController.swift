@@ -116,15 +116,14 @@ class ChatListController : PeersListController {
                 signal = account.viewTracker.aroundChatListView(groupId: groupId, index: index, count: 100)
             }
             
-             return combineLatest(signal, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
+             return combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
                 |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, Void> in
                 
-                var animated: Bool = true
+                let animated: Bool = true
                 let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
                     
                 if previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex {
                     scroll = nil
-                    animated = false
                 }
                 _ = previousChatList.swap(value.0)
                     

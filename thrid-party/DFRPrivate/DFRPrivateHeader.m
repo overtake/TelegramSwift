@@ -11,8 +11,10 @@
 }
 
 - (void)toggleControlStripPresence:(BOOL)present {
+#ifndef APP_STORE
     DFRElementSetControlStripPresenceForIdentifier(self.identifier,
                                                    present);
+#endif
 }
 
 @end

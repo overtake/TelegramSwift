@@ -385,24 +385,6 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         self.interactions = interactions
     }
     
-    override func firstResponder() -> NSResponder? {
-        return self.genericView.searchView.input
-    }
-    
-    override var responderPriority: HandlerPriority {
-        return .modal
-    }
-    
-    override var canBecomeResponder: Bool {
-        if let view = account.context.mainNavigation?.view as? SplitView {
-            return view.state == .single
-        }
-        return false
-    }
-    
-    override func becomeFirstResponder() -> Bool? {
-        return false
-    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

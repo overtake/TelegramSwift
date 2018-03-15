@@ -446,7 +446,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsUnlocked), name: NSNotification.Name(rawValue: "com.apple.screenIsUnlocked"), object: nil)
         
-
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             

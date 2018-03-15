@@ -582,11 +582,23 @@ public extension Message {
         return nil
     }
     
+    var hasInlineAttribute: Bool {
+        for attribute in attributes {
+            if let _ = attribute as? InlineBotMessageAttribute {
+                return true
+            }
+        }
+        return false
+    }
+    
     var inlinePeer:Peer? {
         for attribute in attributes {
             if let attribute = attribute as? InlineBotMessageAttribute, let peerId = attribute.peerId {
                 return peers[peerId]
             }
+        }
+        if let peer = messageMainPeer(self), peer.isBot {
+            return peer
         }
         return nil
     }
@@ -1155,7 +1167,11 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
         
         
         return modernConfirmSignal(for: mainWindow, account: account, peerId: userId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
-            return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
+            if result {
+                return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
+            } else {
+                return .complete()
+            }
         }
     }
 

@@ -51,6 +51,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 @end
 
 @interface TGModernGrowingTextView ()
+@property (nonatomic, assign) NSRange _selectedRange;
 - (void)refreshAttributes;
 @end
 
@@ -514,7 +515,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         _notify_next = YES;
         return;
     }
-    [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+    if ((self._selectedRange.location != self.textView.selectedRange.location) || (self._selectedRange.length != self.textView.selectedRange.length)) {
+        [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        self._selectedRange = self.textView.selectedRange;
+    }
     
     NSRect newRect = [_textView.layoutManager usedRectForTextContainer:_textView.textContainer];
     

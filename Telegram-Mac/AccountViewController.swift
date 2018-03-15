@@ -63,7 +63,7 @@ enum AccountInfoEntry : Comparable, Identifiable {
     case language(index: Int, current: String)
     case appearance(index: Int)
     case phone(index: Int, phone: String)
-    case privacy(index: Int, AccountPrivacySettings?)
+    case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)
     case dataAndStorage(index: Int)
     case accounts(index: Int)
     case about(index: Int)
@@ -135,7 +135,7 @@ enum AccountInfoEntry : Comparable, Identifiable {
             return index
         case let .phone(index, _):
             return index
-        case let .privacy(index, _):
+        case let .privacy(index, _, _):
             return index
         case let .dataAndStorage(index):
             return index
@@ -216,8 +216,15 @@ enum AccountInfoEntry : Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .privacy(lhsIndex, lhsPrivacy):
-            if case let .privacy(rhsIndex, rhsPrivacy) = rhs {
+        case let .privacy(lhsIndex, lhsPrivacy, lhsWebSessions):
+            if case let .privacy(rhsIndex, rhsPrivacy, rhsWebSessions) = rhs {
+                if let lhsWebSessions = lhsWebSessions, let rhsWebSessions = rhsWebSessions {
+                    if lhsWebSessions.0 != rhsWebSessions.0 {
+                        return false
+                    }
+                } else if (lhsWebSessions != nil) != (rhsWebSessions != nil) {
+                    return false
+                }
                 return lhsIndex == rhsIndex && lhsPrivacy == rhsPrivacy
             } else {
                 return false
@@ -342,7 +349,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
         doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
-        doneButton.sizeToFit()
+        _ = doneButton.sizeToFit()
         back.addSubview(doneButton)
         doneButton.center()
         
@@ -397,7 +404,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.privacy(index: 0, nil).stableId)) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.privacy(index: 0, nil, nil).stableId)) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is LanguageViewController {
@@ -440,12 +447,14 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        let privacySettings: Signal<AccountPrivacySettings?, NoError> = .single(nil) |> then(requestAccountPrivacySettings(account: account) |> map { Optional($0) })
+        let settings: Signal<(AccountPrivacySettings, ([WebAuthorization], [PeerId : Peer]))?, NoError> = .single(nil) |> then(combineLatest(requestAccountPrivacySettings(account: account), webSessions(network: account.network)) |> map {Optional($0)})
         
-        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue, connectionPromise.get() |> deliverOnMainQueue, statePromise.get() |> deliverOnMainQueue, appearanceSignal, privacySettings |> deliverOnMainQueue) |> map { [weak self] peerView, connection, state, appearance, privacySettings -> TableUpdateTransition in
+        
+        
+        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue, connectionPromise.get() |> deliverOnMainQueue, statePromise.get() |> deliverOnMainQueue, appearanceSignal, settings |> deliverOnMainQueue) |> map { [weak self] peerView, connection, state, appearance, settings -> TableUpdateTransition in
             
             if let strongSelf = self {
-                let entries = strongSelf.entries(for: state, account: strongSelf.account, connection: connection, peerView: peerView, language: appearance.language, privacySettings: privacySettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = strongSelf.entries(for: state, account: strongSelf.account, connection: connection, peerView: peerView, language: appearance.language, privacySettings: settings?.0, webSessions: settings?.1).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 let previous = strongSelf.entries.swap(entries)
                 return strongSelf.prepareEntries(left: previous, right: entries, account: strongSelf.account, accountManager: strongSelf.accountManager, animated: true, atomicSize: strongSelf.atomicSize.modify({$0}))
             }
@@ -508,7 +517,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         super.init(account)
     }
     
-    func entries(for state:ViewControllerState, account:Account, connection:ConnectionStatus, peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?) -> [AccountInfoEntry] {
+    func entries(for state:ViewControllerState, account:Account, connection:ConnectionStatus, peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?) -> [AccountInfoEntry] {
         var entries:[AccountInfoEntry] = []
         
         var index:Int = 0
@@ -545,7 +554,7 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
         index += 1
         entries.append(.dataAndStorage(index: index))
         index += 1
-        entries.append(.privacy(index: index, privacySettings))
+        entries.append(.privacy(index: index, privacySettings, webSessions))
         index += 1
         entries.append(.language(index: index, current: tr(L10n.accountSettingsCurrentLanguage)))
         index += 1
@@ -659,10 +668,10 @@ class LayoutAccountController : EditableViewController<TableView>, TableViewDele
                         self?.navigation?.push(AppearanceViewController(account))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-            case .privacy(_, let settings):
+            case .privacy(_, let privacySettings, let webSessions):
                 return GeneralInteractedRowItem(atomicSize, stableId: entry.stableId, name: tr(L10n.accountSettingsPrivacyAndSecurity), icon: theme.icons.settingsSecurity, type: .none, action: { [weak self] in
                     if !(self?.navigation?.controller is PrivacyAndSecurityViewController) {
-                        self?.navigation?.push(PrivacyAndSecurityViewController(account, initialSettings: .single(settings)))
+                        self?.navigation?.push(PrivacyAndSecurityViewController(account, initialSettings: .single((privacySettings, webSessions))))
                     }
                     }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
             case .dataAndStorage:

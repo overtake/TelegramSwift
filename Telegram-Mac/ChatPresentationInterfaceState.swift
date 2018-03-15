@@ -236,9 +236,11 @@ func ==(lhs:ChatRecordingState, rhs:ChatRecordingState) -> Bool {
 
 final class ChatRecordingVideoState : ChatRecordingState {
     let pipeline: VideoRecorderPipeline
-    private let path: String = NSTemporaryDirectory() + "video_message\(arc4random()).mp4"
-    override init() {
-        pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path))
+    private let path: String
+    init(account: Account, liveUpload:Bool) {
+        let id:Int64 = arc4random64()
+        self.path = NSTemporaryDirectory() + "video_message\(id).mp4"
+        self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), liveUploading: liveUpload ? PreUploadManager(path, account: account, id: id) : nil)
     }
     
     override var micLevel: Signal<Float, NoError> {
@@ -259,8 +261,8 @@ final class ChatRecordingVideoState : ChatRecordingState {
             }
         } |> take(1) |> map { state in
             switch state {
-            case let .finishRecording(path, duration, _):
-                return [VideoMessageSenderContainer(path: path, duration: duration, size: CGSize(width: 200, height: 200))]
+            case let .finishRecording(path, duration, id, _):
+                return [VideoMessageSenderContainer(path: path, duration: duration, size: CGSize(width: 200, height: 200), id: id)]
             default:
                 return []
             }
@@ -300,7 +302,7 @@ final class ChatRecordingAudioState : ChatRecordingState {
     override var data: Signal<[MediaSenderContainer], NoError> {
         return recorder.takenRecordedData() |> map { value in
             if let value = value, value.duration > 0.5 {
-                return [VoiceSenderContainer(data: value)]
+                return [VoiceSenderContainer(data: value, id: value.id)]
             }
             return []
         }
@@ -312,9 +314,16 @@ final class ChatRecordingAudioState : ChatRecordingState {
     
     
     
-    override init() {
-        recorder = ManagedAudioRecorder()
+    init(account: Account, liveUpload: Bool) {
+        let id = arc4random64()
+        let path = NSTemporaryDirectory() + "voice_message\(id).ogg"
+        let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, account: account, id: id) : nil
+        let dataItem = TGDataItem(filePath: path)
+        
+        recorder = ManagedAudioRecorder(liveUploading: uploadManager, dataItem: dataItem)
     }
+    
+    
     
     override func start() {
         recorder.start()
@@ -328,7 +337,7 @@ final class ChatRecordingAudioState : ChatRecordingState {
         recorder.stop()
         _ = data.start(next: { data in
             for container in data {
-                try? FileManager.default.removeItem(atPath: container.path)
+               // try? FileManager.default.removeItem(atPath: container.path)
             }
         })
     }

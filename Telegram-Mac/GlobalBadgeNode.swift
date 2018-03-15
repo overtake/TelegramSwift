@@ -77,13 +77,13 @@ class GlobalBadgeNode: Node {
         } |> deliverOnMainQueue).start(next: { [weak self] view, totalValue in
             if let strongSelf = self {
                 
-                var totalValue = totalValue
+                var excludeTotal = totalValue
                 if let excludePeerId = excludePeerId, let peerCount = view.count(for: .peer(excludePeerId)) {
-                    totalValue -= peerCount
+                    excludeTotal -= peerCount
                 }
                 
-                totalValue = max(0, totalValue)
-                
+                var totalValue = max(0, totalValue)
+                excludeTotal = max(0, excludeTotal)
                 var dockTile:String? = nil
                 if totalValue > 0 {
                      dockTile = "\(totalValue)"
@@ -91,7 +91,7 @@ class GlobalBadgeNode: Node {
                 if totalValue == 0 {
                     strongSelf.attributedString = nil
                 } else {
-                    strongSelf.attributedString = .initialize(string: Int(totalValue).prettyNumber, color: .white, font: .bold(.small))
+                    strongSelf.attributedString = .initialize(string: Int(excludeTotal).prettyNumber, color: .white, font: .bold(.small))
                 }
                 strongSelf.layoutChanged?()
                 

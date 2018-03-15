@@ -306,6 +306,7 @@ final class ChatInteraction : InterfaceObserver  {
                                     strongSelf.account.context.mainNavigation?.push(ForwardChatListController(strongSelf.account))
                                 }
                             }
+                            
                         }
                     case .payment:
                         alert(for: mainWindow, info: tr(L10n.paymentsUnsupported))
