@@ -73,9 +73,9 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
             
-            open()
+           // open()
             
-           // fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
         }
     }
     

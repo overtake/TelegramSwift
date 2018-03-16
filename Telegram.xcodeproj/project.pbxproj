@@ -62,7 +62,6 @@
 		9FFAE50C205AA1FB000C028E /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F8FDF39205A7AE7001A7A77 /* libavformat.a */; };
 		9FFAE50D205AA1FB000C028E /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F8FDF3A205A7AE7001A7A77 /* libswresample.a */; };
 		9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
-		9FFAE512205AB4DA000C028E /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C209C37C1F2628D7009231FE /* libc++.tbd */; };
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
@@ -1422,7 +1421,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
-				9FFAE512205AB4DA000C028E /* libc++.tbd in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
 				9FFAE50B205AA1FB000C028E /* libavcodec.a in Frameworks */,
@@ -3632,7 +3630,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "sh ${PROJECT_DIR}/tools/bump_build_number.sh \"${PROJECT_DIR}/TelegramMac/${INFOPLIST_FILE}\"\nsh ${PROJECT_DIR}/tools/sync_share_version.sh \"${PROJECT_DIR}/${INFOPLIST_FILE}\" \"${PROJECT_DIR}/TelegramShare/Info.plist\"\n";
+			shellScript = "sh ${PROJECT_DIR}/tools/bump_build_number.sh \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nsh ${PROJECT_DIR}/tools/sync_share_version.sh \"${PROJECT_DIR}/${INFOPLIST_FILE}\" \"${PROJECT_DIR}/TelegramShare/Info.plist\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -4274,6 +4272,7 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -4306,6 +4305,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Release AppStore";
@@ -4444,11 +4444,13 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 				);
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
@@ -4475,6 +4477,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Release Hockeyapp";
@@ -4614,6 +4617,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4648,7 +4652,7 @@
 				PROVISIONING_PROFILE = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Debug Hockeyapp";
@@ -4670,6 +4674,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",

@@ -547,6 +547,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
            
             previousString = string
         }
+        
+        let attributed = self.textView.attributedString()
+        let range = self.textView.selectedRange()
+        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
+        chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
+
     }
     
     func canTransformInputText() -> Bool {
