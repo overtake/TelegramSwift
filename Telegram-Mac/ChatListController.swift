@@ -101,7 +101,8 @@ class ChatListController : PeersListController {
         let onMainQueue:Atomic<Bool> = Atomic(value: true)
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChatListEntry>]?> = Atomic(value: nil)
         let stateValue = self.stateValue
-        
+        var animated: Bool = true
+
         let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
         
         let list:Signal<TableUpdateTransition,Void> = (request.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<TableUpdateTransition,Void> in
@@ -119,7 +120,6 @@ class ChatListController : PeersListController {
              return combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
                 |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, Void> in
                 
-                let animated: Bool = true
                 let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
                     
                 if previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex {
@@ -169,6 +169,7 @@ class ChatListController : PeersListController {
                     break
                 }
                 if let messageIndex = messageIndex {
+                    animated = false
                     strongSelf.request.set(.single(.Index(messageIndex)))
                 }
             }
