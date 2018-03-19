@@ -101,7 +101,7 @@ class ChatListController : PeersListController {
         let onMainQueue:Atomic<Bool> = Atomic(value: true)
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChatListEntry>]?> = Atomic(value: nil)
         let stateValue = self.stateValue
-        var animated: Bool = true
+        var animated: Atomic<Bool> = Atomic(value: true)
 
         let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
         
@@ -125,13 +125,14 @@ class ChatListController : PeersListController {
                 if previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex {
                     scroll = nil
                 }
+                
                 _ = previousChatList.swap(value.0)
                     
                 let stateWasUpdated = previousState.swap(state) != state
                 
                     let entries = value.0.entries.map({AppearanceWrapperEntry(entry: $0, appearance: stateWasUpdated ? appearance.newAllocation : appearance)})
                 
-                return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: animated, scrollState: scroll, onMainQueue: onMainQueue.swap(false), state: state)
+                return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, onMainQueue: onMainQueue.swap(false), state: state)
             }
             
         })
@@ -169,7 +170,7 @@ class ChatListController : PeersListController {
                     break
                 }
                 if let messageIndex = messageIndex {
-                    animated = false
+                    _ = animated.swap(false)
                     strongSelf.request.set(.single(.Index(messageIndex)))
                 }
             }

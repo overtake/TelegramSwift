@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import TelegramCoreMac
 import PostboxMac
-
+import SwiftSignalKitMac
 
 
 
@@ -25,9 +25,30 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     let textView:TextView = TextView()
     let containerView:View
     let separator:View = View()
-    private var controller:APController?
+    private var controller:APController? {
+        didSet {
+            if let controller = controller {
+                self.bufferingStatusDisposable.set((controller.bufferingStatus
+                    |> deliverOnMainQueue).start(next: { [weak self] status in
+                        if let status = status {
+                            self?.updateStatus(status.0, status.1)
+                        }
+                    }))
+            } else {
+                self.bufferingStatusDisposable.set(nil)
+            }
+            
+        }
+        
+        
+    }
     private var message:Message?
     private(set) var instantVideoPip:InstantVideoPIP?
+    private var ranges: (IndexSet, Int)?
+    
+    private var bufferingStatusDisposable: MetaDisposable = MetaDisposable()
+    
+   
     
     override init(_ header: NavigationHeader) {
         
@@ -69,12 +90,14 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         progressView.onUserChanged = { [weak self] progress in
             self?.controller?.set(trackProgress: progress)
+            self?.progressView.set(progress: CGFloat(progress), animated: false)
         }
         
         progressView.set(handler: { [weak self] control in
             let control = control as! LinearProgressControl
             if let strongSelf = self {
                 strongSelf.controller?.set(trackProgress: control.interactiveValue)
+                strongSelf.progressView.set(progress: CGFloat(control.interactiveValue), animated: false)
             }
         }, for: .Click)
         
@@ -94,7 +117,24 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         updateLocalizationAndTheme()
         
         
+        
     }
+    
+    func updateStatus(_ ranges: IndexSet, _ size: Int) {
+        self.ranges = (ranges, size)
+        
+        if let ranges = self.ranges, !ranges.0.isEmpty, ranges.1 != 0 {
+            for range in ranges.0.rangeView {
+                var progress = (CGFloat(range.count) / CGFloat(ranges.1))
+                progress = progress == 1.0 ? 0 : progress
+                progressView.set(fetchingProgress: progress, animated: progress > 0)
+                
+                break
+            }
+        }
+    }
+    
+
     
     private var playProgressStyle:ControlStyle {
         return ControlStyle(foregroundColor: theme.colors.blueUI, backgroundColor: .clear)
@@ -110,6 +150,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         next.set(image: theme.icons.audioPlayerNext, for: .Normal)
         playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
         dismiss.set(image: theme.icons.auduiPlayerDismiss, for: .Normal)
+        
+        progressView.fetchingColor = theme.colors.blueUI.withAlphaComponent(0.5)
+        
         if let controller = controller {
             repeatControl.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
             if let song = controller.currentSong {
@@ -163,6 +206,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     deinit {
         controller?.remove(listener: self)
         controller?.stop()
+        bufferingStatusDisposable.dispose()
     }
     
     func attributedTitle(for song:APSongItem) -> NSAttributedString {
@@ -201,7 +245,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             progressView.set(progress: 0, animated:true)
         case let .playing(data):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(data.progress), animated:data.animated)
+            progressView.set(progress: CGFloat(data.progress), animated: data.animated)
             playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
             break
         case let .fetching(progress, animated):

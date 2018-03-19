@@ -84,6 +84,8 @@ final class InstantPageMediaView: View, InstantPageView {
         self.addSubview(self.imageView)
         addSubview(progressView)
         
+
+        
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
             guard let `self` = self else {return}
             
@@ -113,8 +115,8 @@ final class InstantPageMediaView: View, InstantPageView {
                 self.progressView.isHidden = false
                 self.progressView.state = .Fetching(progress: progress, force: false)
             case .Local:
-                self.progressView.isHidden = media.media is TelegramMediaImage
-                self.progressView.state = media.media is TelegramMediaImage ? .None : .Play
+                self.progressView.isHidden = media.media is TelegramMediaImage || self.imageView is GIFPlayerView
+                self.progressView.state = media.media is TelegramMediaImage || self.imageView is GIFPlayerView ? .None : .Play
             case .Remote:
                 self.progressView.state = .Remote
             }

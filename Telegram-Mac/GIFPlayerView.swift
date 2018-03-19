@@ -129,7 +129,6 @@ class GIFPlayerView: TransformImageView {
     func set(path:String?, timebase:CMTimebase? = nil) -> Void {
         assertOnMainThread()
         
- 
         let realPath:String? = link(path:path, ext:"mp4")
         
         
@@ -153,8 +152,6 @@ class GIFPlayerView: TransformImageView {
                 let _ = asset.swap(avAsset)
                 let t = avAsset.tracks(withMediaType: .video).first
                 if let track = t {
-                    let transform = track.preferredTransform.inverted()
-                    let naturalSize = track.naturalSize
                     layer.setAffineTransform(track.preferredTransform.inverted())
                 }
 
@@ -224,11 +221,11 @@ class GIFPlayerView: TransformImageView {
     }
     
     func reset(with timebase:CMTimebase? = nil, _ resetImage: Bool = true) {
-        if resetImage {
+     //   if resetImage {
             sampleLayer.flushAndRemoveImage()
-        } else {
-            sampleLayer.flush()
-        }
+      //  } else {
+       //     sampleLayer.flush()
+      //  }
         
         clear(false)
         _ = _swapNext.swap(true)
@@ -249,6 +246,7 @@ class GIFPlayerView: TransformImageView {
         
         if let timebase = sampleLayer.controlTimebase, let timer = _timer.modify({$0}) {
             _ = _timer.swap(nil)
+            _ = _reader.swap(nil)
             CMTimebaseRemoveTimer(timebase, timer)
         }
         
@@ -292,7 +290,6 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                     
          
                     if let timebase = timebase {
-                        
                         reader.timeRange = CMTimeRangeMake(CMTimebaseGetTime(timebase), asset.duration)
 
                         let runLoop = CFRunLoopGetMain()

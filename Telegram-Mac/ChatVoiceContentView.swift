@@ -50,7 +50,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                 
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(L10n.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId))
+                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(L10n.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId), streamable: false)
                 } else {
                     controller = APChatVoiceController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
@@ -165,12 +165,47 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
+        
+        var updatedStatusSignal: Signal<MediaResourceStatus, NoError>
+        
+        let file:TelegramMediaFile = media as! TelegramMediaFile
+ 
+        if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id))
+                |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
+                    if let pendingStatus = pendingStatus {
+                        return .Fetching(isActive: true, progress: pendingStatus.progress)
+                    } else {
+                        return resourceStatus
+                    }
+                } |> deliverOnMainQueue
+        } else {
+            updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue
+        }
+        
+        self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
+            if let strongSelf = self {
+                strongSelf.fetchStatus = status
+                
+                switch status {
+                case let .Fetching(_, progress):
+                    strongSelf.progressView.state = .Fetching(progress: progress, force: false)
+                case .Remote:
+                    strongSelf.progressView.state = .Remote
+                case .Local:
+                    strongSelf.progressView.state = .Play
+                }
+            }
+        }))
+        
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.waveform = parameters.waveform
             
             waveformView.set(foregroundColor: isIncomingConsumed ? wBackgroundColor : wForegroundColor, backgroundColor: wBackgroundColor)
             checkState()
         }
+        
+        
         
         needsLayout = true
     }
