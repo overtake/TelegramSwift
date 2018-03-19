@@ -11,8 +11,11 @@ import Cocoa
 public class LinearProgressControl: Control {
     
     private var progressView:View!
+    private var fetchingView:View!
+
     private var containerView:Control!
     private var progress:CGFloat = 0
+    private var fetchingProgress: CGFloat = 0
     public var progressHeight:CGFloat
     public var onUserChanged:((Float)->Void)?
     
@@ -67,14 +70,27 @@ public class LinearProgressControl: Control {
         }
     }
     
-    public func set(progress:CGFloat, animated:Bool = false) {
+    public var fetchingColor: NSColor = presentation.colors.grayTransparent {
+        didSet {
+            self.fetchingView.layer?.backgroundColor = fetchingColor.cgColor
+        }
+    }
+    
+    public func set(progress:CGFloat, animated:Bool = false, duration: Double = 0.2) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
         let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width * progress), progressHeight)
-        progressView.change(size: size, animated: animated)
+        progressView.change(size: size, animated: animated, duration: duration)
         progressView.setFrameOrigin(NSMakePoint(0, frame.height - progressHeight))
     }
     
+    public func set(fetchingProgress: CGFloat, animated:Bool = false, duration: Double = 0.2) {
+        let fetchingProgress:CGFloat = fetchingProgress.isNaN ? 1 : fetchingProgress
+        self.fetchingProgress = fetchingProgress
+        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width * fetchingProgress), progressHeight)
+        fetchingView.change(size: size, animated: animated, duration: duration)
+        fetchingView.setFrameOrigin(NSMakePoint(0, frame.height - progressHeight))
+    }
 
     
 
@@ -103,10 +119,13 @@ public class LinearProgressControl: Control {
         addSubview(containerView)
 
         
+        fetchingView = View(frame:NSMakeRect(0, 0, 0, progressHeight))
+        fetchingView.backgroundColor = style.foregroundColor
+        addSubview(fetchingView)
+        
         progressView = View(frame:NSMakeRect(0, 0, 0, progressHeight))
         progressView.backgroundColor = style.foregroundColor
         addSubview(progressView)
-        
         
     }
     

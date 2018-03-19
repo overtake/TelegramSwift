@@ -79,6 +79,8 @@ private final class MediaPlayerContext {
     
     fileprivate var actionAtEnd: MediaPlayerActionAtEnd = .stop
     
+    fileprivate var timebasePromise: Promise<CMTimebase?> = Promise()
+    
     private var stoppedAtEnd = false
     
     init(queue: Queue, playerStatus: ValuePromise<MediaPlayerStatus>, postbox: Postbox, resource: MediaResource, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, playAutomatically: Bool, enableSound: Bool, playAndRecord: Bool, keepAudioSessionWhilePaused: Bool) {
@@ -326,6 +328,9 @@ private final class MediaPlayerContext {
         
         let loadedState = MediaPlayerLoadedState(frameSource: frameSource, mediaBuffers: buffers, controlTimebase: controlTimebase)
         
+        self.timebasePromise.set(.single(loadedState.controlTimebase.timebase))
+        
+        
         if let audioRenderer = self.audioRenderer?.renderer {
             let queue = self.queue
             audioRenderer.flushBuffers(at: seekResult.timestamp, completion: { [weak self] in
@@ -504,6 +509,7 @@ private final class MediaPlayerContext {
                 self.tick()
         }
     }
+    
     
     fileprivate func togglePlayPause() {
         assert(self.queue.isCurrent())
@@ -718,7 +724,7 @@ private final class MediaPlayerContext {
                     self.pause(lostAudioSession: false)
                 case let .action(f):
                     self.stoppedAtEnd = true
-                    self.pause(lostAudioSession: false)
+                  //  self.pause(lostAudioSession: false)
                     f()
                 case let .loopDisablingSound(f):
                     self.stoppedAtEnd = false
@@ -796,6 +802,12 @@ final class MediaPlayer {
     private let queue = Queue()
     private var contextRef: Unmanaged<MediaPlayerContext>?
     
+    private let timebasePromise:Promise<CMTimebase?> = Promise()
+    
+    var timebase: Signal<CMTimebase?, Void> {
+        return timebasePromise.get()
+    }
+    
     private let statusValue = ValuePromise<MediaPlayerStatus>(MediaPlayerStatus(generationTimestamp: 0.0, duration: 0.0, dimensions: CGSize(), timestamp: 0.0, seekId: 0, status: .paused), ignoreRepeated: true)
     
     var status: Signal<MediaPlayerStatus, NoError> {
@@ -817,8 +829,11 @@ final class MediaPlayer {
         self.queue.async {
             let context = MediaPlayerContext(queue: self.queue, playerStatus: self.statusValue, postbox: postbox, resource: resource, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding, playAutomatically: playAutomatically, enableSound: enableSound, playAndRecord: playAndRecord, keepAudioSessionWhilePaused: keepAudioSessionWhilePaused)
             self.contextRef = Unmanaged.passRetained(context)
+            self.timebasePromise.set(context.timebasePromise.get())
         }
     }
+    
+
     
     deinit {
         let contextRef = self.contextRef

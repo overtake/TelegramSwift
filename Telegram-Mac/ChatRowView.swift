@@ -777,6 +777,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             
         } else {
+            
+            viaAccessory?.removeFromSuperview()
+            viaAccessory = nil
+            
             nameView?.removeFromSuperview()
             nameView = nil
         }

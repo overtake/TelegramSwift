@@ -75,7 +75,7 @@ class NavigationModalView: Control {
     
     func close() {
         
-        kitWindow?.remove(object: self, for: .Escape)
+        kitWindow?.removeAllHandlers(for: self)
         
         self.lock = true
         self.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{[weak self] (completed) in
@@ -84,7 +84,7 @@ class NavigationModalView: Control {
     }
     
     override func removeFromSuperview() {
-        kitWindow?.remove(object: self, for: .Escape)
+        kitWindow?.removeAllHandlers(for: self)
         super.removeFromSuperview()
     }
     
@@ -95,6 +95,9 @@ class NavigationModalView: Control {
                 self?.close()
                 return .invoked
             }, with: self, priority: .high)
+            self.kitWindow?.set(responder: { () -> NSResponder? in
+                return nil
+            }, with: self, priority: .modal)
         } else {
             // self.viewController?.navigationController?.lock = false
         }
