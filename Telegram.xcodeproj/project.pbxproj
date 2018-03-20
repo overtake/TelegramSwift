@@ -13,6 +13,11 @@
 		9F0E6F76203EC7090086699C /* DFRPrivateHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F74203EC7090086699C /* DFRPrivateHeader.m */; };
 		9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F77203ED1380086699C /* AppKit.framework */; };
 		9F0E6F7A203EFE870086699C /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F79203EFE870086699C /* Preferences.swift */; };
+		9F10CE7F2060FEC5002DD61A /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F10CE802060FEC5002DD61A /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F10CE812060FEC9002DD61A /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		9F10CE822060FEC9002DD61A /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
+		9F10CE832060FEC9002DD61A /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		9F14CBF32007DEB300F22DA9 /* ChatWallpaperModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF22007DEB300F22DA9 /* ChatWallpaperModalController.swift */; };
 		9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
 		9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */; };
@@ -24,11 +29,6 @@
 		9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */; };
 		9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */; };
 		9F88A134200FD425007B899E /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
-		9F8FDF3F205A7B27001A7A77 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F8FDF40205A7B27001A7A77 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F8FDF41205A7B2D001A7A77 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
-		9F8FDF42205A7B2D001A7A77 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
-		9F8FDF43205A7B30001A7A77 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		9F9483B1202AF816006E873D /* CrashHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9483B0202AF816006E873D /* CrashHandler.swift */; };
 		9FA0E52A20519E33001E5649 /* MP4Atom.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E52920519E33001E5649 /* MP4Atom.m */; };
 		9FA0E52D20519FCC001E5649 /* LiveUploadingHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E52C20519FCC001E5649 /* LiveUploadingHelper.m */; };
@@ -597,8 +597,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9F8FDF3F205A7B27001A7A77 /* Sparkle.framework in Copy Files */,
-				9F8FDF40205A7B27001A7A77 /* HockeySDK.framework in Copy Files */,
+				9F10CE7F2060FEC5002DD61A /* Sparkle.framework in Copy Files */,
+				9F10CE802060FEC5002DD61A /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -660,6 +660,7 @@
 		9F0E6F77203ED1380086699C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		9F0E6F79203EFE870086699C /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DFRFoundation.framework; path = ../../../../System/Library/PrivateFrameworks/DFRFoundation.framework; sourceTree = "<group>"; };
+		9F10CE7B2060315C002DD61A /* TelegramShare-Objc-Bridge-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TelegramShare-Objc-Bridge-Header.h"; sourceTree = "<group>"; };
 		9F13CCE22006719400ECF301 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9F13CCE3200671AF00ECF301 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9F14CBF22007DEB300F22DA9 /* ChatWallpaperModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatWallpaperModalController.swift; sourceTree = "<group>"; };
@@ -1420,15 +1421,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F10CE812060FEC9002DD61A /* DFRFoundation.framework in Frameworks */,
+				9F10CE822060FEC9002DD61A /* Sparkle.framework in Frameworks */,
+				9F10CE832060FEC9002DD61A /* HockeySDK.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
 				9FFAE50B205AA1FB000C028E /* libavcodec.a in Frameworks */,
 				9FFAE50C205AA1FB000C028E /* libavformat.a in Frameworks */,
 				9FFAE50D205AA1FB000C028E /* libswresample.a in Frameworks */,
-				9F8FDF43205A7B30001A7A77 /* DFRFoundation.framework in Frameworks */,
-				9F8FDF41205A7B2D001A7A77 /* Sparkle.framework in Frameworks */,
-				9F8FDF42205A7B2D001A7A77 /* HockeySDK.framework in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
@@ -3104,6 +3105,7 @@
 				C241026E1FD58EA800DB8625 /* SImageView.swift */,
 				9F9483B0202AF816006E873D /* CrashHandler.swift */,
 				9FA0E5332051A41A001E5649 /* PreUploadManager.swift */,
+				9F10CE7B2060315C002DD61A /* TelegramShare-Objc-Bridge-Header.h */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -4287,6 +4289,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4330,7 +4333,7 @@
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Debug Hockeyapp";
@@ -4354,7 +4357,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Debug AppStore";
@@ -4380,7 +4383,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Release AppStore";
@@ -4460,6 +4463,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4501,7 +4505,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Release Hockeyapp";
@@ -4634,6 +4638,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4690,6 +4695,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";

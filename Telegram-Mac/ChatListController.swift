@@ -75,14 +75,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, t
         subscriber.putNext(transition)
         subscriber.putCompletion()
         return EmptyDisposable
-    } |> runOn(onMainQueue ? Queue.mainQueue() : prepareQueue)
-
+        } |> runOn(onMainQueue ? Queue.mainQueue() : prepareQueue)
+    
 }
 
 
 
 class ChatListController : PeersListController {
-
+    
     private let request = Promise<ChatListIndexRequest>()
     private let previousChatList:Atomic<ChatListView?> = Atomic(value: nil)
     private let first = Atomic(value:true)
@@ -101,8 +101,8 @@ class ChatListController : PeersListController {
         let onMainQueue:Atomic<Bool> = Atomic(value: true)
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChatListEntry>]?> = Atomic(value: nil)
         let stateValue = self.stateValue
-        var animated: Bool = true
-
+        var animated: Atomic<Bool> = Atomic(value: true)
+        
         let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
         
         let list:Signal<TableUpdateTransition,Void> = (request.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<TableUpdateTransition,Void> in
@@ -117,25 +117,26 @@ class ChatListController : PeersListController {
                 signal = account.viewTracker.aroundChatListView(groupId: groupId, index: index, count: 100)
             }
             
-             return combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
+            return combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
                 |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, Void> in
-                
-                let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
                     
-                if previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex {
-                    scroll = nil
-                }
-                _ = previousChatList.swap(value.0)
+                    let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
                     
-                let stateWasUpdated = previousState.swap(state) != state
-                
+                    if previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex {
+                        scroll = nil
+                    }
+                    
+                    _ = previousChatList.swap(value.0)
+                    
+                    let stateWasUpdated = previousState.swap(state) != state
+                    
                     let entries = value.0.entries.map({AppearanceWrapperEntry(entry: $0, appearance: stateWasUpdated ? appearance.newAllocation : appearance)})
-                
-                return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: animated, scrollState: scroll, onMainQueue: onMainQueue.swap(false), state: state)
+                    
+                    return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, onMainQueue: onMainQueue.swap(false), state: state)
             }
             
-        })
-        |> deliverOnMainQueue
+            })
+            |> deliverOnMainQueue
         
         disposable.set(list.start(next: { [weak self] transition in
             guard let `self` = self else {return}
@@ -169,7 +170,7 @@ class ChatListController : PeersListController {
                     break
                 }
                 if let messageIndex = messageIndex {
-                    animated = false
+                    _ = animated.swap(false)
                     strongSelf.request.set(.single(.Index(messageIndex)))
                 }
             }
@@ -197,7 +198,7 @@ class ChatListController : PeersListController {
                 if let peerId = chatLocation.peerId {
                     self?.removePeerIdGroup(peerId)
                 }
-            }, deletable: true))
+                }, deletable: true))
         default:
             stateValue.set(.plain)
         }
@@ -223,7 +224,7 @@ class ChatListController : PeersListController {
         }
         return super.defaultBarTitle
     }
-
+    
     override func escapeKeyAction() -> KeyHandlerResult {
         if let _ = mode.groupId {
             return .rejected
@@ -234,7 +235,7 @@ class ChatListController : PeersListController {
     init(_ account:Account, modal:Bool = false, groupId: PeerGroupId? = nil) {
         super.init(account, followGlobal:!modal, mode: groupId != nil ? .feedChannels(groupId!) : .plain)
     }
-
+    
     override func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
         if  let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = navigationController?.modalAction {
             if !modalAction.isInvokable(for: peer) {
@@ -268,6 +269,6 @@ class ChatListController : PeersListController {
             }
         }
     }
-  
+    
 }
 

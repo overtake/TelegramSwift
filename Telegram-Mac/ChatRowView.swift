@@ -17,7 +17,7 @@ private class ChatRowAnimateView: View {
 }
 
 class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate {
-   
+    
     
     var header: String? {
         if let item = item as? ChatRowItem, let message = item.message, let peer = messageMainPeer(message) {
@@ -27,8 +27,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         return nil
     }
-
-
+    
+    
     private var avatar:AvatarControl?
     var contentView:View = View()
     private var replyView:ChatAccessoryView?
@@ -46,7 +46,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var viaAccessory: ChatBubbleViaAccessory? = nil
     private var bubbleView: SImageView = SImageView()
     let rowView: View
-
+    
     required init(frame frameRect: NSRect) {
         rowView = View(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -104,7 +104,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
-
+        
     }
     
     
@@ -140,8 +140,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if animated {
                     selectingView?.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
                         //if completed {
-                            self?.selectingView?.removeFromSuperview()
-                            self?.selectingView = nil
+                        self?.selectingView?.removeFromSuperview()
+                        self?.selectingView = nil
                         //}
                     })
                 } else {
@@ -159,9 +159,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if item.chatInteraction.presentation.state == .selecting {
                 disableHierarchyInteraction()
             } else {
-               restoreHierarchyInteraction()
+                restoreHierarchyInteraction()
             }
-
+            
         }
     }
     
@@ -206,13 +206,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return backdorColor
         }
     }
-
+    
     
     override func updateColors() -> Void {
         super.updateColors()
         
         guard let item = item as? ChatRowItem else {return}
-
+        
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         contentView.backgroundColor = .clear
@@ -229,7 +229,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-
+    
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
         mouseDragged = true
@@ -294,9 +294,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-
+        
         super.draw(layer, in: ctx)
-
+        
         if let item = self.item as? ChatRowItem {
             
             if let fwdHeader = item.forwardHeader, !item.isBubbled {
@@ -309,9 +309,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             
             let radius:CGFloat = 1.0
-          //  ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
-      //     ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
-          //  ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
+            //  ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
+            //     ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
+            //  ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
             
             //draw separator
             if let fwdType = item.forwardType, !item.isBubbled {
@@ -329,7 +329,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     ctx.fillEllipse(in: CGRect(origin: CGPoint(x: item.defLeftInset, y: item.forwardNameInset.y), size: CGSize(width: radius + radius, height: radius + radius)))
                     break
                 case .Inside:
-                     ctx.fill(NSMakeRect(item.defLeftInset, 0, 2, frame.height))
+                    ctx.fill(NSMakeRect(item.defLeftInset, 0, 2, frame.height))
                     break
                 case .Bottom:
                     ctx.fill(NSMakeRect(item.defLeftInset, 0, 2, frame.height - item.defaultContentTopOffset - radius))
@@ -338,7 +338,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
                 
             }
-
+            
         }
         
     }
@@ -378,7 +378,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .center(id: 0, animated: true, focus: true, inset: 0))
                 }
                 
-            }, for: .Click)
+                }, for: .Click)
             
             reply.view = replyView
             //reply.view?.needsDisplay = true
@@ -420,9 +420,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     var avatarFrame: NSRect {
         guard let item = item as? ChatRowItem else {return NSZeroRect}
-
+        
         var rect = NSMakeRect(item.leftInset, 6, 36, 36)
-
+        
         if item.isBubbled {
             rect.origin.y = frame.height - 36
         }
@@ -438,7 +438,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     var replyMarkupFrame: NSRect {
         guard let item = item as? ChatRowItem, let replyMarkup = item.replyMarkupModel else {return NSZeroRect}
-
+        
         var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset, replyMarkup.size.width, replyMarkup.size.height)
         
         if let captionLayout = item.captionLayout {
@@ -544,7 +544,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     var forwardNamePoint: NSPoint {
         guard let item = item as? ChatRowItem else {return NSZeroPoint}
-
+        
         var point = item.forwardNameInset
         
         if item.isBubbled && item.hasBubble {
@@ -566,25 +566,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             forwardName?.setFrameOrigin(forwardNamePoint)
             forwardAccessory?.setFrameOrigin(forwardNamePoint)
-
+            
             rightView.frame = rightFrame
-
+            
             nameView?.setFrameOrigin(namePoint)
             
             viaAccessory?.setFrameOrigin(viaAccesoryPoint)
-
+            
             
             
             
             item.replyModel?.frame = replyFrame
-
+            
             
             avatar?.frame = avatarFrame
             captionView?.frame = captionFrame
             
             replyMarkupView?.frame = replyMarkupFrame
             item.replyMarkupModel?.layout()
-
+            
             
             selectingView?.setFrameOrigin(selectingPoint)
             
@@ -640,12 +640,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if avatar == nil {
                 avatar = AvatarControl(font: .avatar(.text))
                 avatar?.setFrameSize(36,36)
-               rowView.addSubview(avatar!)
+                rowView.addSubview(avatar!)
             }
             avatar?.removeAllHandlers()
             avatar?.set(handler: { [weak item] control in
                 item?.openInfo()
-            }, for: .Click)
+                }, for: .Click)
             
             self.avatar?.setPeer(account: item.account, peer: peer)
             
@@ -679,12 +679,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rowView.addSubview(shareControl!)
             }
             
-          
+            
             
             guard let shareControl = shareControl else {return}
             
             
-
+            
             if item.isBubbled && item.presentation.wallpaper.hasWallpaper {
                 shareControl.set(image: item.isStorage ? item.presentation.icons.chatGotoMessageWallpaper : item.presentation.icons.chatShareWallpaper, for: .Normal)
                 _ = shareControl.sizeToFit()
@@ -697,16 +697,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 shareControl.background = .clear
             }
             
-//
-//            if item.isBubbled {
-//                shareControl.setFrameSize(shareControl.frame.width + 5, shareControl.frame.height + 5)
-//                shareControl.set(background: item.presentation.colors.grayForeground, for: .Normal)
-//                shareControl.layer?.cornerRadius = shareControl.frame.height / 2
-//            } else {
-//                shareControl.sizeToFit()
-//                shareControl.set(background: item.presentation.colors.background, for: .Normal)
-//                shareControl.layer?.cornerRadius = 0
-//            }
+            //
+            //            if item.isBubbled {
+            //                shareControl.setFrameSize(shareControl.frame.width + 5, shareControl.frame.height + 5)
+            //                shareControl.set(background: item.presentation.colors.grayForeground, for: .Normal)
+            //                shareControl.layer?.cornerRadius = shareControl.frame.height / 2
+            //            } else {
+            //                shareControl.sizeToFit()
+            //                shareControl.set(background: item.presentation.colors.background, for: .Normal)
+            //                shareControl.layer?.cornerRadius = 0
+            //            }
             
             shareControl.removeAllHandlers()
             shareControl.set(handler: { [ weak item] _ in
@@ -717,7 +717,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         item.share()
                     }
                 }
-            }, for: .Click)
+                }, for: .Click)
         } else {
             shareControl?.removeFromSuperview()
             shareControl = nil
@@ -760,7 +760,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
                 
                 viaAccessory.updateText(layout: author)
-
+                
                 
             } else {
                 
@@ -777,6 +777,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             
         } else {
+            
+            viaAccessory?.removeFromSuperview()
+            viaAccessory = nil
+            
             nameView?.removeFromSuperview()
             nameView = nil
         }
@@ -815,24 +819,24 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         
         
-//        animatedView?.change(opacity: 0.5, animated: true, false, removeOnCompletion: false, duration: 0.5, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
-//            if completed {
-//                self?.animatedView?.change(opacity: 0, animated: true, false, removeOnCompletion: true, duration: 1.5, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
-//                    if completed {
-//                        self?.animatedView?.removeFromSuperview()
-//                        self?.animatedView = nil
-//                    }
-//                })
-//            }
-//        })
-     
+        //        animatedView?.change(opacity: 0.5, animated: true, false, removeOnCompletion: false, duration: 0.5, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+        //            if completed {
+        //                self?.animatedView?.change(opacity: 0, animated: true, false, removeOnCompletion: true, duration: 1.5, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+        //                    if completed {
+        //                        self?.animatedView?.removeFromSuperview()
+        //                        self?.animatedView = nil
+        //                    }
+        //                })
+        //            }
+        //        })
+        
         
     }
     
     func canDropSelection(in location: NSPoint) -> Bool {
         return true
     }
-
+    
     override func rightMouseDown(with event: NSEvent) {
         if let item = self.item as? ChatRowItem {
             if item.chatInteraction.presentation.state == .selecting {
@@ -888,7 +892,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         super.set(item: item, animated: animated)
         layout()
     }
-
+    
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return self.contentView
     }
@@ -960,7 +964,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-         if let item = self.item as? ChatRowItem {
+        if let item = self.item as? ChatRowItem {
             if window == nil {
                 item.chatInteraction.remove(observer: self)
             } else {
@@ -970,3 +974,4 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
 }
+
