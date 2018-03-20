@@ -12,7 +12,7 @@ class NavigationModalView: Control {
     
     private var textNode:TextNode = TextNode()
     private var attributeString:NSAttributedString
-
+    
     let action:NavigationModalAction
     weak var viewController:NavigationViewController?
     
@@ -30,7 +30,7 @@ class NavigationModalView: Control {
         
         
         self.viewController = viewController
-      //  viewController.navigationController?.lock = true
+        //  viewController.navigationController?.lock = true
         
         super.init()
         self.autoresizingMask = [.width, .height]
@@ -75,7 +75,7 @@ class NavigationModalView: Control {
     
     func close() {
         
-        kitWindow?.remove(object: self, for: .Escape)
+        kitWindow?.removeAllHandlers(for: self)
         
         self.lock = true
         self.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{[weak self] (completed) in
@@ -84,7 +84,7 @@ class NavigationModalView: Control {
     }
     
     override func removeFromSuperview() {
-        kitWindow?.remove(object: self, for: .Escape)
+        kitWindow?.removeAllHandlers(for: self)
         super.removeFromSuperview()
     }
     
@@ -116,3 +116,4 @@ class NavigationModalView: Control {
     
     
 }
+

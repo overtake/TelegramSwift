@@ -184,7 +184,7 @@ class ChatMessageItem: ChatRowItem {
                                         if text.range(of: "t.me") != nil {
                                             pb.setString(text, forType: .string)
                                         } else {
-                                            pb.setString("@\(username)", forType: .string)
+                                            pb.setString(username.hasPrefix("@") ? username : "@\(username)", forType: .string)
                                             return
                                         }
                                     }
