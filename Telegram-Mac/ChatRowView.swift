@@ -181,7 +181,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override var isSelect: Bool {
-        if let item = item as? ChatRowItem, let message = item.message, let selectionState = item.chatInteraction.presentation.selectionState {
+        if let item = item as? ChatRowItem {
+            return isSelectedItem(item)
+        }
+        return false
+    }
+    
+    private func isSelectedItem(_ item: ChatRowItem) -> Bool {
+        if let message = item.message, let selectionState = item.chatInteraction.presentation.selectionState {
             return selectionState.selectedIds.contains(message.id)
         }
         return false
@@ -849,8 +856,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
-            bubbleView.data = isSelect || contextMenu != nil ? item.selectedBubbleImage : item.modernBubbleImage
-            
+            bubbleView.data = isSelectedItem(item) || contextMenu != nil ? item.selectedBubbleImage : item.modernBubbleImage
         } else {
             bubbleView.data = nil
         }

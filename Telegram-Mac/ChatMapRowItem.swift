@@ -58,7 +58,8 @@ class ChatMapRowItem: ChatMediaItem {
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         
         if isLiveLocationView {
-            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            updatedText = TextViewLayout(.initialize(string: "Updated 2 minutes ago", color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }
     
@@ -90,13 +91,15 @@ class ChatMapRowItem: ChatMediaItem {
     }
     
     var isLiveLocationView: Bool {
-//        if let media = media as? TelegramMediaMap, let message = message {
-//            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-//                if message.timestamp < message.timestamp + liveBroadcastingTimeout {
-//                    return true
-//                }
-//            }
-//        }
+        if let media = media as? TelegramMediaMap, let message = message {
+            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                var time:TimeInterval = Date().timeIntervalSince1970
+                time -= account.context.timeDifference
+                if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                    return true
+                }
+            }
+        }
         return false
     }
     
@@ -144,7 +147,8 @@ private class LiveLocationRowView : ChatMediaView {
     private let updatedText: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(updatedText)
+        rowView.addSubview(updatedText)
+        rowView.addSubview(liveText)
     }
     
     
@@ -153,8 +157,8 @@ private class LiveLocationRowView : ChatMediaView {
         guard let item = item as? ChatMapRowItem else {return}
         
         liveText.update(item.liveText)
+        updatedText.update(item.updatedText)
         super.set(item: item, animated: animated)
-        addSubview(liveText)
 
     }
     
@@ -163,12 +167,22 @@ private class LiveLocationRowView : ChatMediaView {
         liveText.backgroundColor = contentColor
     }
     
+    private var textFrame: NSRect {
+        guard let item = item as? ChatMapRowItem, let liveText = item.liveText else {return NSZeroRect}
+        
+        return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset, liveText.layoutSize.width, liveText.layoutSize.height)
+    }
+    private var updateFrame: NSRect {
+        guard let item = item as? ChatMapRowItem, let updatedText = item.updatedText else {return NSZeroRect}
+        
+        return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset + liveText.frame.height, updatedText.layoutSize.width, updatedText.layoutSize.height)
+    }
     
     override func layout() {
         super.layout()
-        guard let item = item as? ChatMapRowItem else {return}
-
-        liveText.setFrameOrigin(item.elementsContentInset, 50)
+        
+        liveText.frame = textFrame
+        updatedText.frame = updateFrame
     }
     
     required init?(coder: NSCoder) {

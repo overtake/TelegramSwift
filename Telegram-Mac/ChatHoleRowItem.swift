@@ -13,7 +13,9 @@ import TelegramCoreMac
 
 class ChatHoleRowItem: ChatRowItem {
 
-    
+    override var canBeAnchor: Bool {
+        return false
+    }
 
     override var height: CGFloat {
         return 0

@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Foundation
 import TGUIKit
 import TelegramCoreMac
 import PostboxMac
@@ -236,12 +237,21 @@ func execute(inapp:inAppLink) {
         applyProxy(settings)
     case .nothing:
         break
+    case let .requestSecureId(account, value):
+        _ = showModalProgress(signal: requestSecureIdForm(postbox: account.postbox, network: account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
+            return account.postbox.loadedPeerWithId(account.peerId) |> mapError {_ in return .generic} |> map { peer in
+                return (form, peer)
+        }
+        } |> deliverOnMainQueue, for: mainWindow).start(next: { form, peer in
+            let passport = PassportWindowController(account: account, peer: peer, request: value, passport: form)
+            passport.show()
+        })
     }
     
 }
 
-private func escape(with link:String) -> String {
-    var escaped = link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link
+private func escape(with link:String, addPercent: Bool = true) -> String {
+    var escaped = addPercent ? link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link : link
     escaped = escaped.replacingOccurrences(of: "%21", with: "!")
     escaped = escaped.replacingOccurrences(of: "%24", with: "$")
     escaped = escaped.replacingOccurrences(of: "%26", with: "&")
@@ -262,8 +272,14 @@ private func escape(with link:String) -> String {
     escaped = escaped.replacingOccurrences(of: "%0A", with: "\n")
     escaped = escaped.replacingOccurrences(of: "%25", with: "%")
     escaped = escaped.replacingOccurrences(of: "%2E", with: ".")
+    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
+    escaped = escaped.replacingOccurrences(of: "%7D", with: "}")
+    escaped = escaped.replacingOccurrences(of: "%7B", with: "{")
+    escaped = escaped.replacingOccurrences(of: "%5B", with: "[")
+    escaped = escaped.replacingOccurrences(of: "%5D", with: "]")
     return escaped
 }
+
 
 private func urlVars(with url:String) -> [String:String] {
     var vars:[String:String] = [:]
@@ -282,7 +298,21 @@ private func urlVars(with url:String) -> [String:String] {
 }
 
 
+enum SecureIdPermission : String {
+    case identity = "identity"
+    case address = "address"
+    case email = "email"
+    case phone = "phone"
+}
 
+struct inAppSecureIdRequest {
+    let peerId: PeerId
+    let scope: String
+    let callback: String
+    let publicKey: String
+    let payload: Data
+    let errors:Array<[String:String]>?
+}
 
 enum inAppLink {
     case external(link:String, Bool) // link, confirm
@@ -298,13 +328,14 @@ enum inAppLink {
     case stickerPack(StickerPackReference, account:Account, peerId:PeerId?)
     case nothing
     case socks(ProxySettings, applyProxy:(ProxySettings)->Void)
+    case requestSecureId(account: Account, value: inAppSecureIdRequest)
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","confirmphone?","socks?"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve?domain=","msg_url?url=","join?invite=","addstickers?set=","confirmphone", "socks?"]
+let known_scheme:[String] = ["resolve?domain=","msg_url?url=","join?invite=","addstickers?set=","confirmphone", "socks?", "secureid?"]
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -462,6 +493,20 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)
                         return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), applyProxy: applyProxy)
+                    }
+                case known_scheme[6]:
+                    if let scope = vars["scope"], let callbackUrl = vars["callback_url"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId) {
+                        let payload = vars["payload"]?.data(using: .utf8) ?? Data()
+                        var errors: Array<[String:String]>?
+                        if let maybeErrors = vars["errors"] {
+                            let raw = escape(with: maybeErrors, addPercent: false)
+                            if let data = raw.data(using: .utf8) {
+                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
+                                    errors = json as? Array<[String:String]>
+                                }
+                            }
+                        }
+                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope), callback: escape(with: callbackUrl, addPercent: false), publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
                     }
                 default:
                     break

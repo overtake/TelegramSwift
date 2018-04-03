@@ -41,6 +41,8 @@ class GeneralInteractedRowView: GeneralRowView {
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
                     descriptionView = TextView()
+                    descriptionView?.userInteractionEnabled = false
+                    descriptionView?.isSelectable = false
                     addSubview(descriptionView!)
                 }
                 descriptionView?.update(descLayout)

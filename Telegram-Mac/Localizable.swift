@@ -805,6 +805,10 @@ internal final class L10n {
   internal static func chatServiceSecretChatSetTimerSelf(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecretChat.SetTimer.Self", p1)
   }
+  /// %@ received the following documents: %@
+  internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
+  }
   /// Your Cloud storage
   internal static var chatTitleSelf: String  { return L10n.tr("Localizable", "Chat.Title.self") }
   /// %d of %d
@@ -1407,6 +1411,12 @@ internal final class L10n {
   internal static var inputAttachPopoverPhotoOrVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.PhotoOrVideo") }
   /// Camera
   internal static var inputAttachPopoverPicture: String  { return L10n.tr("Localizable", "InputAttach.Popover.Picture") }
+  /// Day:
+  internal static var inputDataDateDayPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Day.Placeholder") }
+  /// Month:
+  internal static var inputDataDateMonthPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Month.Placeholder") }
+  /// Year:
+  internal static var inputDataDateYearPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Year.Placeholder") }
   /// Archived Stickers
   internal static var installedStickersArchived: String  { return L10n.tr("Localizable", "InstalledStickers.Archived") }
   /// Artists are welcome to add their own sticker sets using our @stickers bot.\n\nTap on a sticker to view and add the whole set.
@@ -2545,6 +2555,208 @@ internal final class L10n {
   internal static var searchFieldSearch: String  { return L10n.tr("Localizable", "SearchField.Search") }
   /// Off
   internal static var secretTimerOff: String  { return L10n.tr("Localizable", "SecretTimer.Off") }
+  /// Delete Address
+  internal static var secureIdDeleteAddress: String  { return L10n.tr("Localizable", "SecureId.DeleteAddress") }
+  /// Delete Document
+  internal static var secureIdDeleteIdentity: String  { return L10n.tr("Localizable", "SecureId.DeleteIdentity") }
+  /// DOCUMENTS DETAILS
+  internal static var secureIdDocumentDetailsHeader: String  { return L10n.tr("Localizable", "SecureId.DocumentDetailsHeader") }
+  /// Identity Document
+  internal static var secureIdIdentityDocument: String  { return L10n.tr("Localizable", "SecureId.IdentityDocument") }
+  /// Delete Email Address?
+  internal static var secureIdRemoveEmail: String  { return L10n.tr("Localizable", "SecureId.RemoveEmail") }
+  /// Delete Phone Number?
+  internal static var secureIdRemovePhoneNumber: String  { return L10n.tr("Localizable", "SecureId.RemovePhoneNumber") }
+  /// Residential Address
+  internal static var secureIdResidentialAddress: String  { return L10n.tr("Localizable", "SecureId.ResidentialAddress") }
+  /// Scan %d
+  internal static func secureIdScanNumber(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.ScanNumber", p1)
+  }
+  /// Upload Additional Scan
+  internal static var secureIdUploadAdditionalScan: String  { return L10n.tr("Localizable", "SecureId.UploadAdditionalScan") }
+  /// Upload Scan
+  internal static var secureIdUploadScan: String  { return L10n.tr("Localizable", "SecureId.UploadScan") }
+  /// You accept the [Login Widged Example Privacy Policy](_applyPolicy_) and allow their %@ to send you messages.
+  internal static func secureIdAcceptPolicy(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.Accept.Policy", p1)
+  }
+  /// ADDRESS
+  internal static var secureIdAddressHeader: String  { return L10n.tr("Localizable", "SecureId.Address.Header") }
+  /// City
+  internal static var secureIdAddressCityInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.City.InputPlaceholder") }
+  /// City
+  internal static var secureIdAddressCityPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.City.Placeholder") }
+  /// Country
+  internal static var secureIdAddressCountryPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Country.Placeholder") }
+  /// Postcode
+  internal static var secureIdAddressPostcodeInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Postcode.InputPlaceholder") }
+  /// Postcode
+  internal static var secureIdAddressPostcodePlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Postcode.Placeholder") }
+  /// State/Republic/Region
+  internal static var secureIdAddressRegionInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Region.InputPlaceholder") }
+  /// Region
+  internal static var secureIdAddressRegionPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Region.Placeholder") }
+  /// Street and Number, PO Box
+  internal static var secureIdAddressStreetInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Street.InputPlaceholder") }
+  /// Street
+  internal static var secureIdAddressStreetPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Street.Placeholder") }
+  /// Apt, suite, unit, building, floor
+  internal static var secureIdAddressStreet1InputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.Street1.InputPlaceholder") }
+  /// Please create a password to protect your passport info. You'll be asked to enter it when you log in.
+  internal static var secureIdCreatePasswordDescription: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Description") }
+  /// PASSWORD
+  internal static var secureIdCreatePasswordHeader: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Header") }
+  /// Enter your password
+  internal static var secureIdCreatePasswordPasswordInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.PasswordInputPlaceholder") }
+  /// Password
+  internal static var secureIdCreatePasswordPasswordPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.PasswordPlaceholder") }
+  /// Re-Enter your password
+  internal static var secureIdCreatePasswordRePasswordInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.RePasswordInputPlaceholder") }
+  /// Password & E-Mail
+  internal static var secureIdCreatePasswordTitle: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Title") }
+  /// Please add your valid e-mail. It is the only way to recover a forgotten password.
+  internal static var secureIdCreatePasswordEmailDescription: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Email.Description") }
+  /// RECOVERY E-MAIL
+  internal static var secureIdCreatePasswordEmailHeader: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Email.Header") }
+  /// Your E-Mail
+  internal static var secureIdCreatePasswordEmailInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Email.InputPlaceholder") }
+  /// E-Mail
+  internal static var secureIdCreatePasswordEmailPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Email.Placeholder") }
+  /// HINT
+  internal static var secureIdCreatePasswordHintHeader: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.Header") }
+  /// Hint for your password
+  internal static var secureIdCreatePasswordHintInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.InputPlaceholder") }
+  /// Hint
+  internal static var secureIdCreatePasswordHintPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.Placeholder") }
+  /// Use %@
+  internal static func secureIdEmailUseSame(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.Email.UseSame", p1)
+  }
+  /// Enter your e-mail
+  internal static var secureIdEmailEmailInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Email.Email.InputPlaceholder") }
+  /// E-Mail
+  internal static var secureIdEmailEmailPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Email.Email.Placeholder") }
+  /// Note: You will receive a confirmation code on the e-mail you provide.
+  internal static var secureIdEmailUseSameDesc: String  { return L10n.tr("Localizable", "SecureId.Email.UseSame.Desc") }
+  /// Please enter the confirmation code we've just sent to %@.
+  internal static func secureIdEmailActivateDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.EmailActivate.Description", p1)
+  }
+  /// Enter a code
+  internal static var secureIdEmailActivateCodeInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.EmailActivate.Code.InputPlaceholder") }
+  /// Code
+  internal static var secureIdEmailActivateCodePlaceholder: String  { return L10n.tr("Localizable", "SecureId.EmailActivate.Code.Placeholder") }
+  /// %@% Uploaded
+  internal static func secureIdFileUploadProgress(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.FileUpload.Progress", p1)
+  }
+  /// Female
+  internal static var secureIdGenderFemale: String  { return L10n.tr("Localizable", "SecureId.Gender.Female") }
+  /// Male
+  internal static var secureIdGenderMale: String  { return L10n.tr("Localizable", "SecureId.Gender.Male") }
+  /// Bank Statement
+  internal static var secureIdIdentityBankStatement: String  { return L10n.tr("Localizable", "SecureId.Identity.BankStatement") }
+  /// Driver License
+  internal static var secureIdIdentityDriverLicense: String  { return L10n.tr("Localizable", "SecureId.Identity.DriverLicense") }
+  /// Identity Card
+  internal static var secureIdIdentityId: String  { return L10n.tr("Localizable", "SecureId.Identity.Id") }
+  /// Passport
+  internal static var secureIdIdentityPassport: String  { return L10n.tr("Localizable", "SecureId.Identity.Passport") }
+  /// Passport Registration
+  internal static var secureIdIdentityPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Identity.PassportRegistration") }
+  /// Rental Agreement
+  internal static var secureIdIdentityRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Identity.RentalAgreement") }
+  /// Utility Bill
+  internal static var secureIdIdentityUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Identity.UtilityBill") }
+  /// The document must contains your photograph, name and surname, date of birthday, citizenship, documment issue date and document number.
+  internal static var secureIdIdentityScanDescription: String  { return L10n.tr("Localizable", "SecureId.IdentityScan.Description") }
+  /// Name
+  internal static var secureIdInputPlaceholderFirstName: String  { return L10n.tr("Localizable", "SecureId.InputPlaceholder.FirstName") }
+  /// Surname
+  internal static var secureIdInputPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.InputPlaceholder.LastName") }
+  /// Please provide the password for accessing your personal data
+  internal static var secureIdInsertPasswordDescription: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Description") }
+  /// Next
+  internal static var secureIdInsertPasswordNext: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Next") }
+  /// Password
+  internal static var secureIdInsertPasswordPassword: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Password") }
+  /// E-Mail
+  internal static var secureIdInstallEmailTitle: String  { return L10n.tr("Localizable", "SecureId.InstallEmail.Title") }
+  /// Phone Number
+  internal static var secureIdInstallPhoneTitle: String  { return L10n.tr("Localizable", "SecureId.InstallPhone.Title") }
+  /// OR ENTER OTHER PHONE NUMBER
+  internal static var secureIdPhoneNumberHeader: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber.Header") }
+  /// Note: You will receive a confirmation code on the phone number you provide.
+  internal static var secureIdPhoneNumberNote: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber.Note") }
+  /// Use %@
+  internal static func secureIdPhoneNumberUseSame(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.PhoneNumber.UseSame", p1)
+  }
+  /// Please enter the confirmation code we've just sent to %@. via SMS
+  internal static func secureIdPhoneNumberConfirmCodeDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.PhoneNumber.ConfirmCode.Desc", p1)
+  }
+  /// Enter a code
+  internal static var secureIdPhoneNumberConfirmCodeInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber.ConfirmCode.InputPlaceholder") }
+  /// Code
+  internal static var secureIdPhoneNumberConfirmCodePlaceholder: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber.ConfirmCode.Placeholder") }
+  /// Use the same phone number as Telegram log in.
+  internal static var secureIdPhoneNumberUseSameDesc: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber.UseSame.Desc") }
+  /// Birthday
+  internal static var secureIdPlaceholderBirthday: String  { return L10n.tr("Localizable", "SecureId.Placeholder.Birthday") }
+  /// Country
+  internal static var secureIdPlaceholderCountry: String  { return L10n.tr("Localizable", "SecureId.Placeholder.Country") }
+  /// Expiry Date
+  internal static var secureIdPlaceholderExpiryDate: String  { return L10n.tr("Localizable", "SecureId.Placeholder.ExpiryDate") }
+  /// Name
+  internal static var secureIdPlaceholderFirstName: String  { return L10n.tr("Localizable", "SecureId.Placeholder.FirstName") }
+  /// Gender
+  internal static var secureIdPlaceholderGender: String  { return L10n.tr("Localizable", "SecureId.Placeholder.Gender") }
+  /// Issued Date
+  internal static var secureIdPlaceholderIssuedDate: String  { return L10n.tr("Localizable", "SecureId.Placeholder.IssuedDate") }
+  /// Surname
+  internal static var secureIdPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.Placeholder.LastName") }
+  /// Authorize
+  internal static var secureIdRequestAccept: String  { return L10n.tr("Localizable", "SecureId.Request.Accept") }
+  /// Create a Password
+  internal static var secureIdRequestCreatePassword: String  { return L10n.tr("Localizable", "SecureId.Request.CreatePassword") }
+  /// **%@** requests access to your personal data to sign you up for their services.
+  internal static func secureIdRequestHeader1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.Request.Header1", p1)
+  }
+  /// Address
+  internal static var secureIdRequestPermissionAddress: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Address") }
+  /// Bank Statement
+  internal static var secureIdRequestPermissionBankStatement: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.BankStatement") }
+  /// Drivers License
+  internal static var secureIdRequestPermissionDriversLicense: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.DriversLicense") }
+  /// E-Mail
+  internal static var secureIdRequestPermissionEmail: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Email") }
+  /// ID Card
+  internal static var secureIdRequestPermissionIDCard: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.IDCard") }
+  /// Passport
+  internal static var secureIdRequestPermissionPassport: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Passport") }
+  /// Personal Details
+  internal static var secureIdRequestPermissionPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.PersonalDetails") }
+  /// Phone Number
+  internal static var secureIdRequestPermissionPhone: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone") }
+  /// Rental Agreement
+  internal static var secureIdRequestPermissionRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.RentalAgreement") }
+  /// Utility Bill
+  internal static var secureIdRequestPermissionUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.UtilityBill") }
+  /// Upload proof of your address
+  internal static var secureIdRequestPermissionAddressEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Address.Empty") }
+  /// Provide your contact email address
+  internal static var secureIdRequestPermissionEmailEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Email.Empty") }
+  /// Upload scan of your passport or other ID
+  internal static var secureIdRequestPermissionIdentityEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Identity.Empty") }
+  /// Provide your contact phone number
+  internal static var secureIdRequestPermissionPhoneEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone.Empty") }
+  /// REQUESTED INFORMATION
+  internal static var secureIdRequestedInformationHeader: String  { return L10n.tr("Localizable", "SecureId.RequestedInformation.Header") }
+  /// SCANS
+  internal static var secureIdScansHeader: String  { return L10n.tr("Localizable", "SecureId.Scans.Header") }
   /// clear
   internal static var separatorClear: String  { return L10n.tr("Localizable", "Separator.Clear") }
   /// show less
@@ -2767,6 +2979,8 @@ internal final class L10n {
   internal static var telegramNotificationSettingsViewController: String  { return L10n.tr("Localizable", "Telegram.NotificationSettingsViewController") }
   /// Passcode
   internal static var telegramPasscodeSettingsViewController: String  { return L10n.tr("Localizable", "Telegram.PasscodeSettingsViewController") }
+  /// Passport
+  internal static var telegramPassportController: String  { return L10n.tr("Localizable", "Telegram.PassportController") }
   /// Info
   internal static var telegramPeerInfoController: String  { return L10n.tr("Localizable", "Telegram.PeerInfoController") }
   /// Change Number

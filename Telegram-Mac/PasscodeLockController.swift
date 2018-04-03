@@ -122,6 +122,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.focusRingType = .none
         input.delegate = self
         input.drawsBackground = false
+        input.textView?.insertionPointColor = theme.colors.text
         
         inputContainer.backgroundColor = theme.colors.grayBackground
         inputContainer.layer?.cornerRadius = .cornerRadius

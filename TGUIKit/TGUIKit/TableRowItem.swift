@@ -21,6 +21,10 @@ open class TableRowItem: NSObject {
         
     }
     
+    open var canBeAnchor: Bool {
+        return true
+    }
+    
     open var isUniqueView: Bool {
         return false
     }

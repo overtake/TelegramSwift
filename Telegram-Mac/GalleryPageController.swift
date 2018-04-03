@@ -415,7 +415,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         
         if startIndex != pageController.selectedIndex || force {
-            if startIndex > 0 && startIndex < pageController.arrangedObjects.count {
+            if startIndex != -1, startIndex <= pageController.arrangedObjects.count - 1 {
                 self.item(at: startIndex).disappear(for: previousView?.contentView)
             }
             startIndex = pageController.selectedIndex

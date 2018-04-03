@@ -315,6 +315,16 @@ class ChatRowItem: TableRowItem {
                     return isBubbled
                 }
             }
+            if let media = media as? TelegramMediaMap {
+                if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                    var time:TimeInterval = Date().timeIntervalSince1970
+                    time -= account.context.timeDifference
+                    if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                        return false
+                    }
+                }
+                return media.venue == nil
+            }
             return isBubbled && media.isInteractiveMedia && captionLayout == nil
         }
         return false
@@ -755,6 +765,13 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if let media = media as? TelegramMediaMap {
+                    if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                        var time:TimeInterval = Date().timeIntervalSince1970
+                        time -= account.context.timeDifference
+                        if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                            return false
+                        }
+                    }
                     return media.venue == nil
                 }
                 return media.isInteractiveMedia && !hasGroupCaption

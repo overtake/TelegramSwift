@@ -1777,16 +1777,30 @@ func chatMessageImageFile(account: Account, file: TelegramMediaFile, progressive
 }
 
 
-private func chatMessagePhotoThumbnailDatas(account: Account, photo: TelegramMediaImage) -> Signal<(Data?, Data?, Bool), NoError> {
+private func chatMessagePhotoThumbnailDatas(account: Account, photo: TelegramMediaImage, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<(Data?, Data?, Bool), NoError> {
     let fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0)
     if let smallestRepresentation = smallestImageRepresentation(photo.representations), let largestRepresentation = photo.representationForDisplayAtSize(fullRepresentationSize) {
         
-        let maybeFullSize = account.postbox.mediaBox.cachedResourceRepresentation(largestRepresentation.resource, representation: CachedScaledImageRepresentation(size: CGSize(width: 160.0, height: 160.0)), complete: false)
+        let size = CGSize(width: 160.0, height: 160.0)
+        let maybeFullSize: Signal<MediaResourceData, NoError>
+            
+        if largestRepresentation.resource is EncryptedMediaResource {
+            maybeFullSize = account.postbox.mediaBox.resourceData(largestRepresentation.resource)
+        } else {
+            maybeFullSize = account.postbox.mediaBox.cachedResourceRepresentation(largestRepresentation.resource, representation: CachedScaledImageRepresentation(size: size), complete: false)
+        }
+        
         
         let signal = maybeFullSize |> take(1) |> mapToSignal { maybeData -> Signal<(Data?, Data?, Bool), NoError> in
             if maybeData.complete {
-                let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
-                return .single((nil, loadedData, true))
+                if largestRepresentation.resource is EncryptedMediaResource, let secureIdAccessContext = secureIdAccessContext {
+                    let loadedData: Data? = decryptedResourceData(data: maybeData, resource: largestRepresentation.resource, params: secureIdAccessContext)
+                    return .single((nil, loadedData, true))
+                } else {
+                    let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
+                    return .single((nil, loadedData, true))
+                }
+                
             } else {
                 let fetchedThumbnail = account.postbox.mediaBox.fetchedResource(smallestRepresentation.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .image))
                 
@@ -1822,8 +1836,8 @@ private func chatMessagePhotoThumbnailDatas(account: Account, photo: TelegramMed
     }
 }
 
-func chatMessagePhotoThumbnail(account: Account, photo: TelegramMediaImage, scale: CGFloat = System.backingScale) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
-    let signal = chatMessagePhotoThumbnailDatas(account: account, photo: photo)
+func chatMessagePhotoThumbnail(account: Account, photo: TelegramMediaImage, scale: CGFloat = System.backingScale, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+    let signal = chatMessagePhotoThumbnailDatas(account: account, photo: photo, secureIdAccessContext: secureIdAccessContext)
     
     return signal |> map { (thumbnailData, fullSizeData, fullSizeComplete) in
         return { arguments in

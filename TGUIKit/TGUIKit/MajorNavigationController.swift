@@ -178,15 +178,22 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         }))
     }
     
+    public var doSomethingOnEmptyBack: (()->Void)? = nil
+    
     open override func back(animated:Bool = true) -> Void {
-        if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
-            let ncontroller = stack[stackCount - 2]
-            let removeAnimateFlag = (ncontroller == defaultEmpty || !animated) && !alwaysAnimate
-            last.didRemovedFromStack()
-            stack.removeLast()
-            
-            show(ncontroller, removeAnimateFlag ? .none : .pop)
+        if  !isLocked, let last = stack.last, last.invokeNavigationBack() {
+            if stackCount > 1 {
+                let ncontroller = stack[stackCount - 2]
+                let removeAnimateFlag = (ncontroller == defaultEmpty || !animated) && !alwaysAnimate
+                last.didRemovedFromStack()
+                stack.removeLast()
+                
+                show(ncontroller, removeAnimateFlag ? .none : .pop)
+            } else {
+                doSomethingOnEmptyBack?()
+            }
         }
+        
     }
     
     open override func viewDidAppear(_ animated: Bool) {

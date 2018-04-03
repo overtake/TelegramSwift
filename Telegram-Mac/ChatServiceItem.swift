@@ -204,10 +204,6 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     
-                   // if authorId == account.peerId {
-                     //   _ = attributedString.append(string: authorName, color: grayTextColor, font: NSFont.medium(theme.fontSize))
-                     //   _ = attributedString.append(string: " ")
-                    //} else
                     if let authorId = authorId {
                         let range = attributedString.append(string: authorName, color: linkColor, font: NSFont.medium(theme.fontSize))
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
@@ -232,6 +228,9 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case let .botDomainAccessGranted(domain):
                     _ = attributedString.append(string: L10n.chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case let .botSentSecureValues(types):
+                    let permissions = types.map({$0.rawValue}).joined(separator: ", ")
+                     _ = attributedString.append(string: L10n.chatServiceSecureIdAccessGranted(peer.displayTitle, permissions), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
                     break
                 }
@@ -362,8 +361,23 @@ class ChatServiceRowView: TableRowView {
         }
     }
     
+    override func mouseUp(with event: NSEvent) {
+        if let imageView = imageView, imageView._mouseInside() {
+            if let item = self.item as? ChatServiceItem {
+                showPhotosGallery(account: item.account, peerId: item.chatInteraction.peerId, firstStableId: item.stableId, item.table, nil)
+            }
+        } else {
+            super.mouseUp(with: event)
+        }
+    }
+    
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
+        return imageView ?? self
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
+        
         
         if let item = item as? ChatServiceItem {
             if let image = item.image {

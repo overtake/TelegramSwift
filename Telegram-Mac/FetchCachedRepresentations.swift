@@ -123,6 +123,7 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
 
 private func fetchCachedScaledImageRepresentation(account: Account, resource: MediaResource, resourceData: MediaResourceData, representation: CachedScaledImageRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return Signal({ subscriber in
+  
         if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
             if let image = NSImage(data: data) {
                 var randomId: Int64 = 0
