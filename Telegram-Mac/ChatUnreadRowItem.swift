@@ -16,6 +16,9 @@ class ChatUnreadRowItem: ChatRowItem {
         return 32
     }
     
+    override var canBeAnchor: Bool {
+        return false
+    }
     
     public var text:NSAttributedString;
     

@@ -144,7 +144,7 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = tr(L10n.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping(ConfirmResult)->Void) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = tr(L10n.alertCancel), thridTitle:String? = nil, swapColors: Bool = false, successHandler:@escaping (ConfirmResult)->Void) {
 //
 //    let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
 //    alert.show(completionHandler: { response in
@@ -170,14 +170,16 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
         alert.addButton(withTitle: thridTitle)
     }
     
-    alert.beginSheetModal(for: window, completionHandler: { (response) in
-        
-        if response.rawValue == 1000 {
-            successHandler(.basic)
-        } else if response.rawValue == 1002 {
-            successHandler(.thrid)
+    
+    
+    alert.beginSheetModal(for: window, completionHandler: { response in
+        Queue.mainQueue().justDispatch {
+            if response.rawValue == 1000 {
+                successHandler(.basic)
+            } else if response.rawValue == 1002 {
+                successHandler(.thrid)
+            }
         }
-        
     })
 }
 

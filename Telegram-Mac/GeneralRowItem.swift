@@ -11,7 +11,7 @@ import TGUIKit
 
 
 
-enum GeneralInteractedType {
+enum GeneralInteractedType : Equatable {
     case none
     case next
     case selectable(stateback:()->Bool)
@@ -21,6 +21,65 @@ enum GeneralInteractedType {
     case button(stateback:()->String)
     case search(stateback:(String)->Bool)
     case colorSelector(stateback:()->NSColor)
+}
+
+func ==(lhs: GeneralInteractedType, rhs: GeneralInteractedType) -> Bool {
+    switch lhs {
+    case .none:
+        if case .none = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .next:
+        if case .next = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .selectable(lhsStateback):
+        if case let .selectable(rhsStateback) = rhs {
+            return lhsStateback() == rhsStateback()
+        } else {
+            return false
+        }
+    case let .switchable(lhsStateback):
+        if case let .switchable(rhsStateback) = rhs {
+            return lhsStateback() == rhsStateback()
+        } else {
+            return false
+        }
+    case let .context(lhsStateback):
+        if case let .context(rhsStateback) = rhs {
+            return lhsStateback() == rhsStateback()
+        } else {
+            return false
+        }
+    case let .image(lhsStateback):
+        if case let .image(rhsStateback) = rhs {
+            return lhsStateback() === rhsStateback()
+        } else {
+            return false
+        }
+    case let .button(lhsStateback):
+        if case let .button(rhsStateback) = rhs {
+            return lhsStateback() == rhsStateback()
+        } else {
+            return false
+        }
+    case .search:
+        if case .search = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .colorSelector(lhsStateback):
+        if case let .colorSelector(rhsStateback) = rhs {
+            return lhsStateback() == rhsStateback()
+        } else {
+            return false
+        }
+    }
 }
 
 class GeneralRowItem: TableRowItem {

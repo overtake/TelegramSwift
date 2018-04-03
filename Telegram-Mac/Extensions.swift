@@ -2126,3 +2126,11 @@ extension NSImage {
 }
 
 
+extension Window {
+    var titleView: NSView? {
+        if let windowView = contentView?.superview {
+            return ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first
+        }
+        return nil
+    }
+}

@@ -330,6 +330,9 @@ open class ViewController : NSObject {
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
         }
+        if haveNextResponder {
+            self.window?.remove(object: self, for: .Tab)
+        }
         NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
         isKeyWindow.set(.single(false))
@@ -341,10 +344,22 @@ open class ViewController : NSObject {
     
     open func viewDidAppear(_ animated:Bool) -> Void {
         //assert(self.window != nil)
+        
+        if haveNextResponder {
+            self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+                guard let `self` = self else {return .rejected}
+                
+                self.window?.makeFirstResponder(self.nextResponder())
+                
+                return .invoked
+            }, with: self, for: .Tab, priority: responderPriority)
+        }
+        
         if canBecomeResponder {
             self.window?.set(responder: {[weak self] () -> NSResponder? in
                 return self?.firstResponder()
             }, with: self, priority: responderPriority)
+            
             if let become = becomeFirstResponder(), become == true {
                 self.window?.applyResponderIfNeeded()
             } else {
@@ -358,6 +373,8 @@ open class ViewController : NSObject {
             isKeyWindow.set(.single(window.isKeyWindow))
         }
     }
+    
+    
     
     @objc open func windowDidBecomeKey() {
         isKeyWindow.set(.single(true))
@@ -424,6 +441,14 @@ open class ViewController : NSObject {
     
     open func firstResponder() -> NSResponder? {
         return nil
+    }
+    
+    open func nextResponder() -> NSResponder? {
+        return nil
+    }
+    
+    open var haveNextResponder: Bool {
+        return false
     }
     
     open var responderPriority:HandlerPriority {

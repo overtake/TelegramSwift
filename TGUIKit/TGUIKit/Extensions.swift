@@ -317,6 +317,9 @@ public extension NSView {
                     return NSPointInRect(location, self.bounds)
                 } else {
                     var s = view.superview
+                    if view is NSTableView {
+                        return true
+                    }
                     while let sv = s {
                         if sv == self {
                             return NSPointInRect(location, self.bounds)
@@ -324,6 +327,9 @@ public extension NSView {
                         s = sv.superview
                     }
                 }
+            } else {
+                var bp:Int = 0
+                bp += 1
             }
             
         }
@@ -1030,7 +1036,16 @@ public extension NSTextField {
     }
     
     public var textView:NSTextView? {
-        return (self.window?.fieldEditor(true, for: self) as? NSTextView)
+        let textView = (self.window?.fieldEditor(true, for: self) as? NSTextView)
+        textView?.backgroundColor = .clear
+        textView?.drawsBackground = true
+        return textView
+    }
+}
+
+public extension NSTextView {
+    public func selectAllText() {
+        setSelectedRange(NSMakeRange(0, self.string.length))
     }
 }
 

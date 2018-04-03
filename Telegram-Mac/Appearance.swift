@@ -631,6 +631,9 @@ struct TelegramIconsTheme {
     let confirmDeleteChatAccessory: CGImage
     
     let stickersEmptySearch: CGImage
+    
+    let twoStepVerificationCreateIntro: CGImage
+    let secureIdAuth: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1006,7 +1009,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                alertCheckBoxUnselected: generateAlertCheckBoxUnselected(border: palette.grayIcon),
                                                confirmPinAccessory: generateConfirmPinAccessory(backgroundColor: palette.blueIcon),
                                                confirmDeleteChatAccessory: generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI),
-                                               stickersEmptySearch: generateStickersEmptySearch(color: palette.grayIcon)
+                                               stickersEmptySearch: generateStickersEmptySearch(color: palette.grayIcon),
+                                               twoStepVerificationCreateIntro: #imageLiteral(resourceName: "Icon_TwoStepVerification_Create").precomposed(),
+                                               secureIdAuth: #imageLiteral(resourceName: "Icon_SecureIdAuth").precomposed()
     )
 }
 

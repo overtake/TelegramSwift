@@ -1091,6 +1091,469 @@ extension Signal {
     }
 }
 
+extension SentSecureValueType {
+    var rawValue: String {
+        switch self {
+        case .email:
+            return L10n.secureIdRequestPermissionEmail
+        case .phone:
+            return L10n.secureIdRequestPermissionPhone
+        case .passport:
+            return L10n.secureIdRequestPermissionPassport
+        case .address:
+            return L10n.secureIdRequestPermissionAddress
+        case .personalDetails:
+            return L10n.secureIdRequestPermissionPersonalDetails
+        case .driversLicense:
+            return L10n.secureIdRequestPermissionDriversLicense
+        case .utilityBill:
+            return L10n.secureIdRequestPermissionUtilityBill
+        case .rentalAgreement:
+            return L10n.secureIdRequestPermissionRentalAgreement
+        case .idCard:
+            return L10n.secureIdRequestPermissionIDCard
+        case .bankStatement:
+            return L10n.secureIdRequestPermissionBankStatement
+        }
+    }
+}
+
+extension UpdateTwoStepVerificationPasswordResult : Equatable {
+    public static func ==(lhs: UpdateTwoStepVerificationPasswordResult, rhs: UpdateTwoStepVerificationPasswordResult) -> Bool {
+        switch lhs {
+        case .none:
+            if case .none = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .password(password, lhsPendingEmailPattern):
+            if case .password(password, let rhsPendingEmailPattern) = rhs {
+                return lhsPendingEmailPattern == rhsPendingEmailPattern
+            } else {
+                return false
+            }
+        }
+    }
+}
+
+extension SecureIdForm {
+    func searchContext(for field: SecureIdRequestedFormField) -> SecureIdValueWithContext? {
+         let index = values.index(where: { context -> Bool in
+            switch context.value {
+            case .address:
+                if case .address = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .bankStatement:
+                if case .bankStatement = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .driversLicense:
+                if case .driversLicense = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .idCard:
+                if case .idCard = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .passport:
+                if case .passport = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .personalDetails:
+                if case .personalDetails = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .rentalAgreement:
+                if case .rentalAgreement = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .utilityBill:
+                if case .utilityBill = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .phone:
+                if case .phone = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .email:
+                if case .email = field {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        })
+        if let index = index {
+            return values[index]
+        } else {
+            return nil
+        }
+    }
+    
+
+}
+
+extension SecureIdValue {
+    func isSame(of value: SecureIdValue) -> Bool {
+        switch self {
+        case .address:
+            if case .address = value {
+                return true
+            } else {
+                return false
+            }
+        case .bankStatement:
+            if case .bankStatement = value {
+                return true
+            } else {
+                return false
+            }
+        case .driversLicense:
+            if case .driversLicense = value {
+                return true
+            } else {
+                return false
+            }
+        case .idCard:
+            if case .idCard = value {
+                return true
+            } else {
+                return false
+            }
+        case .passport:
+            if case .passport = value {
+                return true
+            } else {
+                return false
+            }
+        case .personalDetails:
+            if case .personalDetails = value {
+                return true
+            } else {
+                return false
+            }
+        case .rentalAgreement:
+            if case .rentalAgreement = value {
+                return true
+            } else {
+                return false
+            }
+        case .utilityBill:
+            if case .utilityBill = value {
+                return true
+            } else {
+                return false
+            }
+        case .phone:
+            if case .phone = value {
+                return true
+            } else {
+                return false
+            }
+        case .email:
+            if case .email = value {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    func isSame(of value: SecureIdValueKey) -> Bool {
+        switch self {
+        case .address:
+            if case .address = value {
+                return true
+            } else {
+                return false
+            }
+        case .bankStatement:
+            if case .bankStatement = value {
+                return true
+            } else {
+                return false
+            }
+        case .driversLicense:
+            if case .driversLicense = value {
+                return true
+            } else {
+                return false
+            }
+        case .idCard:
+            if case .idCard = value {
+                return true
+            } else {
+                return false
+            }
+        case .passport:
+            if case .passport = value {
+                return true
+            } else {
+                return false
+            }
+        case .personalDetails:
+            if case .personalDetails = value {
+                return true
+            } else {
+                return false
+            }
+        case .rentalAgreement:
+            if case .rentalAgreement = value {
+                return true
+            } else {
+                return false
+            }
+        case .utilityBill:
+            if case .utilityBill = value {
+                return true
+            } else {
+                return false
+            }
+        case .phone:
+            if case .phone = value {
+                return true
+            } else {
+                return false
+            }
+        case .email:
+            if case .email = value {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    
+    var secureIdValueAccessContext: SecureIdValueAccessContext? {
+        switch self {
+        case .email:
+            return generateSecureIdValueEmptyAccessContext()
+        case .phone:
+            return generateSecureIdValueEmptyAccessContext()
+        default:
+            return generateSecureIdValueAccessContext()
+        }
+    }
+    
+    
+    var addressValue: SecureIdAddressValue? {
+        switch self {
+        case let .address(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var personalDetails: SecureIdPersonalDetailsValue? {
+        switch self {
+        case let .personalDetails(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var verificationDocuments: [SecureIdVerificationDocumentReference]? {
+        switch self {
+        case let .bankStatement(value):
+            return value.verificationDocuments
+        case let .rentalAgreement(value):
+            return value.verificationDocuments
+        case let .utilityBill(value):
+            return value.verificationDocuments
+        case let .idCard(value):
+            return value.verificationDocuments
+        case let .passport(value):
+            return value.verificationDocuments
+        case let .driversLicense(value):
+            return value.verificationDocuments
+        default:
+            return nil
+        }
+    }
+    
+    var passportValue: SecureIdPassportValue? {
+        switch self {
+        case let .passport(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var phoneValue: SecureIdPhoneValue? {
+        switch self {
+        case let .phone(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    var emailValue: SecureIdEmailValue? {
+        switch self {
+        case let .email(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var issueDate: SecureIdDate? {
+        switch self {
+        case let .idCard(value):
+            return value.issueDate
+        case let .passport(value):
+            return value.issueDate
+        case let .driversLicense(value):
+            return value.issueDate
+        default:
+            return nil
+        }
+    }
+    
+    var expiryDate: SecureIdDate? {
+        switch self {
+        case let .idCard(value):
+            return value.expiryDate
+        case let .passport(value):
+            return value.expiryDate
+        case let .driversLicense(value):
+            return value.expiryDate
+        default:
+            return nil
+        }
+    }
+}
+
+
+extension SecureIdRequestedFormField {
+    var rawValue: String {
+        switch self {
+        case .email:
+            return L10n.secureIdRequestPermissionEmail
+        case .phone:
+            return L10n.secureIdRequestPermissionPhone
+        case .address:
+            return L10n.secureIdRequestPermissionAddress
+        case .utilityBill:
+            return L10n.secureIdRequestPermissionUtilityBill
+        case .bankStatement:
+            return L10n.secureIdRequestPermissionBankStatement
+        case .rentalAgreement:
+            return L10n.secureIdRequestPermissionRentalAgreement
+        case .passport:
+            return L10n.secureIdRequestPermissionPassport
+        case .idCard:
+            return L10n.secureIdRequestPermissionIDCard
+        case .driversLicense:
+            return L10n.secureIdRequestPermissionDriversLicense
+        case .personalDetails:
+            return L10n.secureIdRequestPermissionPersonalDetails
+        }
+    }
+    var rawDescription: String {
+        switch self {
+        case .email:
+            return L10n.secureIdRequestPermissionEmailEmpty
+        case .phone:
+            return L10n.secureIdRequestPermissionPhoneEmpty
+        case .address:
+            return L10n.secureIdRequestPermissionAddressEmpty
+        default:
+            return L10n.secureIdRequestPermissionIdentityEmpty
+        }
+    }
+}
+
+var dateFormatter: DateFormatter {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "dd.MM.yyyy"
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter
+}
+
+extension SecureIdRequestedFormField  {
+    var valueKey: SecureIdValueKey {
+        switch self {
+        case .address:
+            return .address
+        case .bankStatement:
+            return .bankStatement
+        case .driversLicense:
+            return .driversLicense
+        case .email:
+            return .email
+        case .idCard:
+            return .idCard
+        case .passport:
+            return .passport
+        case .personalDetails:
+            return .personalDetails
+        case .phone:
+            return .phone
+        case .rentalAgreement:
+            return .rentalAgreement
+        case .utilityBill:
+            return .utilityBill
+        }
+    }
+    
+}
+
+
+
+extension InputDataValue {
+    var secureIdDate: SecureIdDate? {
+        switch self {
+        case let .date(day, month, year):
+            if let day = day, let month = month, let year = year {
+                let timestamp = dateFormatter.date(from: "\(day < 10 ? "0\(day)" : "\(day)").\(month < 10 ? "0\(month)" : "\(month)").\(year)")?.timeIntervalSince1970
+                if let timestamp = timestamp {
+                    return SecureIdDate(timestamp: Int32(timestamp))
+                }
+            }
+            
+            return nil
+        default:
+            return nil
+        }
+    }
+}
+
+extension SecureIdDate {
+    var inputDataValue: InputDataValue {
+        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+        let formatted = dateFormatter.string(from: date)
+        let separated = formatted.split(separator: ".")
+        let day = Int32(separated[0])!
+        let month = Int32(separated[1])!
+        let year = Int32(separated[2])!
+        return .date(day, month, year)
+    }
+}
+
+
 public func peerCompactDisplayTitles(_ peerIds: [PeerId], _ dict: SimpleDictionary<PeerId, Peer>) -> String {
     var names:String = ""
     for peerId in peerIds {

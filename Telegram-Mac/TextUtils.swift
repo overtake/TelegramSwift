@@ -304,6 +304,9 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             return text
         case let .botDomainAccessGranted(domain):
             return L10n.chatServiceBotPermissionAllowed(domain)
+        case let .botSentSecureValues(types):
+            let permissions = types.map({$0.rawValue}).joined(separator: ", ")
+            return L10n.chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
         }
     }
     

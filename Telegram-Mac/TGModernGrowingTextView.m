@@ -881,6 +881,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     [_placeholder sizeToFit];
     [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+    [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)) : NSMakePoint(NSMinX(_placeholder.frame) + 30, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))];
 }
 
 -(BOOL)_needShowPlaceholder {
@@ -898,7 +899,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_placeholder sizeToFit];
     
     [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
-    
     BOOL animates = _animates;
     _animates = NO;
     if (self.string.length == 0) {

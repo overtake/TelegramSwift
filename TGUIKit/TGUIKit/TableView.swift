@@ -85,7 +85,9 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
         self.grouping = grouping
         super.init(deleted: deleted, inserted: inserted, updated: updated, animateVisibleOnly: animateVisibleOnly)
     }
-    
+    public override var description: String {
+        return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count), state: \(state)"
+    }
 }
 
 public final class TableEntriesTransition<T> : TableUpdateTransition {
@@ -595,6 +597,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
                             listener.handler(scroll.current)
                             listener.first = false
+                        }
+                    }
+                    
+                    if strongSelf.needUpdateVisibleAfterScroll {
+                        let range = strongSelf.visibleRows()
+                        for i in range.location ..< range.location + range.length {
+                            if let view = strongSelf.viewNecessary(at: i) {
+                                view.updateMouse()
+                            }
                         }
                     }
                 }
@@ -1512,6 +1523,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
                 if let item = self.item(stableId: visible.0.stableId) {
                     
+                    if !item.canBeAnchor {
+                        continue
+                    }
+                    
                     nrect = rectOf(item: item)
                     
                     if let view = viewNecessary(at: i) {
@@ -1873,18 +1888,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    override open func scrollWheel(with event: NSEvent) {
-        super.scrollWheel(with: event)
-        if needUpdateVisibleAfterScroll {
-            let range = visibleRows()
-            for i in range.location ..< range.location + range.length {
-                if let view = viewNecessary(at: i) {
-                    view.updateMouse()
-                }
-            }
-        }
-        
-    }
     
     public func enumerateItems(with callback:(TableRowItem)->Bool) {
         for item in list {

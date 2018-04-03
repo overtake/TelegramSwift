@@ -326,9 +326,25 @@ class GalleryViewer: NSResponder {
                 if let representation = peer.largeProfileImage {
                     representations.append(representation)
                 }
-                let image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil)
                 
-                _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image, reference: nil), pagerSize))], updated: []))
+                var image:TelegramMediaImage? = nil
+                
+                if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
+                    let action = message.media.first as! TelegramMediaAction
+                    switch action.action {
+                    case let .photoUpdated(updated):
+                        image = updated
+                    default:
+                        break
+                    }
+                }
+                
+                if image == nil {
+                     image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil)
+                }
+                
+                _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil), pagerSize))], updated: []))
+                
                 
                 self?.controls.index.set(.single((1,1)))
                 self?.pager.set(index: 0, animated: false)
@@ -340,22 +356,48 @@ class GalleryViewer: NSResponder {
 
         var totalCount:Int = 1
         
-        self.disposable.set((requestPeerPhotos(account: account, peerId: peerId) |> map { photos -> (UpdateTransition<MGalleryItem>, Int) in
+        self.disposable.set((requestPeerPhotos(account: account, peerId: peerId) |> map { photos -> (UpdateTransition<MGalleryItem>, Int, Int) in
             
             var inserted:[(Int, MGalleryItem)] = []
             var updated:[(Int, MGalleryItem)] = []
             let deleted:[Int] = []
+            
+            var currentIndex: Int = 0
+
+            
             if !photos.isEmpty {
-                updated.append((0, MGalleryPeerPhotoItem(account, .photo(index: photos[0].index, stableId: firstStableId, photo: photos[0].image, reference: photos[0].reference), pagerSize)))
-                for i in 1 ..< photos.count {
-                    inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference), pagerSize)))
+                
+                for i in 0 ..< photos.count {
+                    let photo = photos[i]
+                    if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
+                        let action = message.media.first as! TelegramMediaAction
+                        switch action.action {
+                        case let .photoUpdated(updated):
+                            if photo.image.id == updated?.id {
+                                currentIndex = i
+                            }
+                        default:
+                            break
+                        }
+                    }
+                }
+                
+                for i in 0 ..< photos.count {
+                    if currentIndex == i {
+                        updated.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference), pagerSize)))
+                    } else {
+                        inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference), pagerSize)))
+                    }
                 }
             }
-            return (UpdateTransition(deleted: deleted, inserted: inserted, updated: updated), max(0, photos.count))
             
-        } |> deliverOnMainQueue).start(next: { [weak self] transition, total in
+            
+            return (UpdateTransition(deleted: deleted, inserted: inserted, updated: updated), max(0, photos.count), currentIndex)
+            
+        } |> deliverOnMainQueue).start(next: { [weak self] transition, total, selected in
             totalCount = total
-            self?.controls.index.set(.single((1,max(totalCount, 1))))
+            
+            self?.controls.index.set(.single((selected + 1, max(totalCount, 1))))
             _ = self?.pager.merge(with: transition)
             
         }))
@@ -774,6 +816,10 @@ class GalleryViewer: NSResponder {
     }
     
     deinit {
+        clean()
+    }
+    
+    func clean() {
         indexDisposable.dispose()
         disposable.dispose()
         operationDisposable.dispose()
@@ -838,30 +884,34 @@ func closeGalleryViewer(_ animated: Bool) {
 }
 
 func showChatGallery(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false) {
-    if viewer == nil {
-        let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type, reversed: reversed)
-        gallery.show()
-    }
+   // if viewer == nil {
+    viewer?.clean()
+    let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type, reversed: reversed)
+    gallery.show()
+    //}
 }
 
 func showGalleryFromPip(item: MGalleryItem, gallery: GalleryViewer, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history) {
-    if viewer == nil {
-        gallery.show(true, item.stableId)
-    }
+   // if viewer == nil {
+    viewer?.clean()
+    gallery.show(true, item.stableId)
+    //}
 }
 
 func showPhotosGallery(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
-    if viewer == nil {
-        let gallery = GalleryViewer(account: account, peerId: peerId, firstStableId: firstStableId, delegate, contentInteractions)
-        gallery.show()
-    }
+  //  if viewer == nil {
+    viewer?.clean()
+    let gallery = GalleryViewer(account: account, peerId: peerId, firstStableId: firstStableId, delegate, contentInteractions)
+    gallery.show()
+  //  }
 }
 
 func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
-    if viewer == nil {
-        let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, delegate, contentInteractions)
-        gallery.show()
-    }
+    //if viewer == nil {
+    viewer?.clean()
+    let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, delegate, contentInteractions)
+    gallery.show()
+   // }
 }
 
 

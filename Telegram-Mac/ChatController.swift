@@ -725,6 +725,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             } else {
                 grouping = true
             }
+            
+            
             subscriber.putNext(TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: state, grouping: grouping))
             subscriber.putCompletion()
         }
@@ -1019,7 +1021,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }.start()
                         case let .peer(peerId):
                             clearNotifies(peerId, maxId: messageIndex.id)
-                            _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, network: self.account.network, stateManager: self.account.stateManager, index: messageIndex).start()
+                            _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: messageIndex).start()
                         }
                     }
                 }
@@ -2003,7 +2005,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let scroll = genericView.tableView.scrollPosition().current
         
         if let window = window, window.isKeyWindow, self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height {
-            self.interactiveReadingDisposable.set(installInteractiveReadMessagesAction(postbox: self.account.postbox, peerId: chatInteraction.peerId))
+            self.interactiveReadingDisposable.set(installInteractiveReadMessagesAction(postbox: self.account.postbox, stateManager: account.stateManager, peerId: chatInteraction.peerId))
         } else {
             self.interactiveReadingDisposable.set(nil)
         }
@@ -2066,7 +2068,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         initialDataHandler.set(.single(initialData))
       
         
-        
+     //   NSLog("\(transition.description)")
         genericView.tableView.merge(with: transition)
        // NSLog("4")
         genericView.tableView.notifyScrollHandlers()

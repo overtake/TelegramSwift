@@ -287,6 +287,8 @@ class StickersControllerView : View {
         
         emptySearchContainer.isHidden = true
         progressView.isHidden = true
+        emptySearchContainer.isEventLess = true
+        progressView.isEventLess = true
         
         updateLocalizationAndTheme()
     }
@@ -623,7 +625,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                             return ((nil, (FoundStickerSets(entries: entries), false)), .generic)
                         }
                     } else {
-                        return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotly(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
+                        return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
                             let update: StickerPacksCollectionUpdate
                             if firstTime {
                                 firstTime = remote == nil

@@ -274,6 +274,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         menuDisposable.dispose()
     }
     
+    open var mouseInsideField: Bool {
+        return false
+    }
     
     open override func copy() -> Any {
         let view:View = View(frame:bounds)
