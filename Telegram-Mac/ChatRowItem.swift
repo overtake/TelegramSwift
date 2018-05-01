@@ -804,8 +804,8 @@ class ChatRowItem: TableRowItem {
                     isFull = false
                 }
                 
-                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull ? .none : .both)
-                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull ? .none : .both)
+                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
+                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
             }
             
             self.itemType = itemType

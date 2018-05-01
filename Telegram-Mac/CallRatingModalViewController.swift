@@ -105,6 +105,7 @@ private class CallRatingModalView: View {
 }
 
 class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegate {
+    
     private let account:Account
     private let report:ReportCallRating
     private var starsCount:Int32? = nil
@@ -164,7 +165,7 @@ class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegat
         return false
     }
     
-    func textViewSize() -> NSSize {
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
         return NSMakeSize(genericView.feedback.frame.width, genericView.feedback.frame.height)
     }
     
@@ -172,7 +173,7 @@ class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegat
         return true
     }
     
-    func maxCharactersLimit() -> Int32 {
+    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         return 200
     }
 

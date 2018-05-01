@@ -318,25 +318,25 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             }
             return .rejected
             
-        }, with: self, priority: .high)
+        }, with: self, priority: .modal)
         
         self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
-        }, with: self, for: .RightArrow, priority: .high)
+        }, with: self, for: .RightArrow, priority: .modal)
         
         self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
-            }, with: self, for: .LeftArrow, priority: .high)
+            }, with: self, for: .LeftArrow, priority: .modal)
         
         self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
             return self?.input
-        }, with: self, priority: .high)
+        }, with: self, priority: .modal)
     }
     
     
@@ -431,10 +431,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             if isEmpty {
                 change(state: .None, false)
             }
-            return
+            self.kitWindow?.removeAllHandlers(for: self)
+            self.kitWindow?.removeObserver(for: self)
         }
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
     }
     
     

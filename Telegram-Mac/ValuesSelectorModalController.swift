@@ -20,7 +20,6 @@ private final class ValuesSelectorArguments <T> where T : Equatable {
 private enum ValuesSelectorEntry<T> : TableItemListNodeEntry where T : Equatable {
     
     case value(index: Int32, value: ValuesSelectorValue<T>, selected: Bool)
-    
     var stableId: Int32 {
         switch self {
         case let .value(index, _, _):
@@ -31,9 +30,7 @@ private enum ValuesSelectorEntry<T> : TableItemListNodeEntry where T : Equatable
     func item(_ arguments: ValuesSelectorArguments<T>, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .value(_, value, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.localized, type: .selectable(stateback: {
-                return selected
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.localized, type: .selectable(false), action: {
                 arguments.selectItem(value)
             })
         }
@@ -58,13 +55,20 @@ private func <<T>(lhs: ValuesSelectorEntry<T>, rhs: ValuesSelectorEntry<T>) -> B
 private final class ValuesSelectorModalView : View {
     let tableView: TableView = TableView(frame: NSZeroRect)
     private let title: TextView = TextView()
+    fileprivate let searchView: SearchView = SearchView(frame: NSZeroRect)
     private let separator : View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(title)
         addSubview(tableView)
         addSubview(separator)
+        addSubview(searchView)
         separator.backgroundColor = theme.colors.border
+    }
+    
+    func hasSearch(_ hasSearch: Bool) {
+        searchView.isHidden = !hasSearch
+        title.isHidden = hasSearch
     }
     
     func updateTitle(_ title: String) {
@@ -82,6 +86,8 @@ private final class ValuesSelectorModalView : View {
         title.layout?.measure(width: frame.width - 60)
         title.update(title.layout)
         title.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - title.frame.height) / 2))
+        searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
+        searchView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - searchView.frame.height) / 2))
         separator.frame = NSMakeRect(0, 49, frame.width, .borderSize)
     }
 }
@@ -129,11 +135,9 @@ func ==<T>(lhs: ValuesSelectorValue<T>, rhs: ValuesSelectorValue<T>) -> Bool {
 class ValuesSelectorModalController<T>: ModalViewController where T : Equatable {
 
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
-            self?.complete()
-        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
+        return ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
             self?.close()
-        }, drawBorder: true, height: 50)
+        }, drawBorder: false, height: 50)
     }
     
     private func complete() {
@@ -153,7 +157,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
     private let title: String
     private let stateValue: Atomic<ValuesSelectorState<T>>
     init(values: [ValuesSelectorValue<T>], selected: ValuesSelectorValue<T>?, title: String, onComplete:@escaping(ValuesSelectorValue<T>)->Void) {
-        self.stateValue = Atomic(value: ValuesSelectorState(selected: selected ?? values.first, values: values))
+        self.stateValue = Atomic(value: ValuesSelectorState(selected: nil, values: values))
         self.onComplete = onComplete
         self.title = title
         super.init(frame: NSMakeRect(0, 0, 250, 100))
@@ -164,6 +168,18 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         super.viewDidLoad()
         
         genericView.updateTitle(self.title)
+        genericView.hasSearch(self.stateValue.modify({$0}).values.count > 10)
+        
+        let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+
+        let searchInteractions = SearchInteractions({ s in
+            search.set(s)
+        }, { s in
+            search.set(s)
+        })
+        
+        
+        genericView.searchView.searchInteractions = searchInteractions
         
         let statePromise: ValuePromise<ValuesSelectorState<T>> = ValuePromise(ignoreRepeated: true)
         let stateValue = self.stateValue
@@ -176,33 +192,42 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         }
         
         
-        let arguments = ValuesSelectorArguments<T>(selectItem: { selected in
+        let arguments = ValuesSelectorArguments<T>(selectItem: { [weak self] selected in
             updateState { current in
                 return current.withUpdatedSelected(selected)
             }
+            self?.complete()
         })
         
         let initialSize = self.atomicSize
         
         let previous: Atomic<[ValuesSelectorEntry<T>]> = Atomic(value: [])
         
-        let signal: Signal<TableUpdateTransition, Void> = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+        let signal: Signal<TableUpdateTransition, Void> = combineLatest(statePromise.get() |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> map { state, search in
             
             var entries:[ValuesSelectorEntry<T>] = []
             var index: Int32 = 0
             for value in state.values {
-                entries.append(ValuesSelectorEntry.value(index: index, value: value, selected: state.selected == value))
-                index += 1
+                let result = value.localized.split(separator: " ").filter({$0.lowercased().hasPrefix(search.request.lowercased())})
+                if search.request.isEmpty || !result.isEmpty {
+                    entries.append(ValuesSelectorEntry.value(index: index, value: value, selected: state.selected == value))
+                    index += 1
+                }
             }
             
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition in
-            self?.genericView.tableView.merge(with: transition)
-            self?.readyOnce()
+            guard let `self` = self else {return}
+            self.genericView.tableView.merge(with: transition)
+            self.readyOnce()
         }))
         
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return genericView.searchView.input
     }
     
     private func updateSize(_ width: CGFloat, animated: Bool) {

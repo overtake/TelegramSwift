@@ -90,7 +90,7 @@ class TwoStepVerificationResetController : TableViewController {
                 }
             }
             if let code = code {
-                resetPasswordDisposable.set((recoverTwoStepVerificationPassword(account: account, code: code) |> deliverOnMainQueue).start(error: { error in
+                resetPasswordDisposable.set((recoverTwoStepVerificationPassword(network: account.network, code: code) |> deliverOnMainQueue).start(error: { error in
                     updateState {
                         return $0.withUpdatedChecking(false)
                     }

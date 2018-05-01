@@ -414,6 +414,8 @@ public extension PeerView {
                 return true
             case .unmuted:
                 return false
+            case .default:
+                return false
             }
         } else {
             return false
@@ -427,6 +429,8 @@ public extension TelegramPeerNotificationSettings {
         case .muted:
             return true
         case .unmuted:
+            return false
+        case .default:
             return false
         }
     }
@@ -525,6 +529,10 @@ public extension Message {
             }
         }
         return nil
+    }
+    
+    var isHasInlineKeyboard: Bool {
+        return replyMarkup?.flags.contains(.inline) ?? false
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
@@ -1364,10 +1372,36 @@ extension SecureIdValue {
         }
     }
     
+    var identifier: String? {
+        switch self {
+        case let .passport(value):
+            return value.identifier
+        case let .driversLicense(value):
+            return value.identifier
+        case let .idCard(value):
+            return value.identifier
+        default:
+            return nil
+        }
+    }
+    
     var personalDetails: SecureIdPersonalDetailsValue? {
         switch self {
         case let .personalDetails(value):
             return value
+        default:
+            return nil
+        }
+    }
+    
+    var selfieVerificationDocument: SecureIdVerificationDocumentReference? {
+        switch self {
+        case let .idCard(value):
+            return value.selfieDocument
+        case let .passport(value):
+            return value.selfieDocument
+        case let .driversLicense(value):
+            return value.selfieDocument
         default:
             return nil
         }
@@ -1418,18 +1452,7 @@ extension SecureIdValue {
         }
     }
     
-    var issueDate: SecureIdDate? {
-        switch self {
-        case let .idCard(value):
-            return value.issueDate
-        case let .passport(value):
-            return value.issueDate
-        case let .driversLicense(value):
-            return value.issueDate
-        default:
-            return nil
-        }
-    }
+
     
     var expiryDate: SecureIdDate? {
         switch self {
@@ -1471,6 +1494,16 @@ extension SecureIdRequestedFormField {
             return L10n.secureIdRequestPermissionPersonalDetails
         }
     }
+    
+    var hasSelfie: Bool {
+        switch self {
+        case let .passport(selfie), let .idCard(selfie), let .driversLicense(selfie):
+            return selfie
+        default:
+            return false
+        }
+    }
+    
     var rawDescription: String {
         switch self {
         case .email:
@@ -1640,20 +1673,46 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
 
 }
 
-func applyExternalProxy(_ proxy:ProxySettings, postbox:Postbox, network: Network) {
-    var textInfo = tr(L10n.proxyForceEnableTextIP(proxy.host)) + "\n" + tr(L10n.proxyForceEnableTextPort(Int(proxy.port)))
-    if let user = proxy.username {
-        textInfo += "\n" + tr(L10n.proxyForceEnableTextUsername(user))
+func applyExternalProxy(_ server:ProxyServerSettings, postbox:Postbox, network: Network) {
+    var textInfo = tr(L10n.proxyForceEnableTextIP(server.host)) + "\n" + tr(L10n.proxyForceEnableTextPort(Int(server.port)))
+    switch server.connection {
+    case let .socks5(username, password):
+        if let user = username {
+            textInfo += "\n" + L10n.proxyForceEnableTextUsername(user)
+        }
+        if let pass = password {
+            textInfo += "\n" + L10n.proxyForceEnableTextPassword(pass)
+        }
+    case let .mtp(secret):
+        textInfo += "\n" + L10n.proxyForceEnableTextSecret(String(data: secret, encoding: .utf8)!)
     }
-    if let pass = proxy.password {
-        textInfo += "\n" + tr(L10n.proxyForceEnableTextPassword(pass))
-    }
+   
     textInfo += "\n\n" + tr(L10n.proxyForceEnableText)
     
-    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo)
+    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo, okTitle: L10n.proxyForceEnableConnect)
         |> filter {$0} |> map {_ in} |> mapToSignal {
-            return applyProxySettings(postbox: postbox, network: network, settings: proxy)
+            return updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
+                return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
+            })
     }).start()
+}
+
+
+extension SecureIdGender {
+    var stringValue: String {
+        switch self {
+        case .female:
+            return L10n.secureIdGenderFemale
+        case .male:
+            return L10n.secureIdGenderMale
+        }
+    }
+}
+
+extension SecureIdDate {
+    var stringValue: String {
+        return dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
+    }
 }
 
 extension PostboxAccessChallengeData {
@@ -1821,3 +1880,55 @@ func wallpaperPath(_ resource: TelegramMediaResource) -> String {
 func fileExtenstion(_ file: TelegramMediaFile) -> String {
     return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
 }
+
+func proxySettingsSignal(_ postbox: Postbox) -> Signal<ProxySettings, Void>  {
+    return postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in
+        return view.values[PreferencesKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
+    }
+}
+
+public extension ProxySettings {
+    public func withUpdatedActiveServer(_ activeServer: ProxyServerSettings?) -> ProxySettings {
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withUpdatedEnabled(_ enabled: Bool) -> ProxySettings {
+        return ProxySettings(enabled: enabled, servers: self.servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withAddedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
+        var servers = self.servers
+        if servers.first(where: {$0 == proxy}) == nil {
+            servers.append(proxy)
+        }
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withUpdatedServer(_ current: ProxyServerSettings, with updated: ProxyServerSettings) -> ProxySettings {
+        var servers = self.servers
+        if let index = servers.index(where: {$0 == current}) {
+            servers[index] = updated
+        }
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withUpdatedUseForCalls(_ enable: Bool) -> ProxySettings {
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: enable)
+    }
+    
+    public func withRemovedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
+        var servers = self.servers
+        var activeServer = self.activeServer
+        var enabled: Bool = self.enabled
+        if let index = servers.index(where: {$0 == proxy}) {
+            let current = servers.remove(at: index)
+            if current == activeServer {
+                activeServer = nil
+                enabled = false
+            }
+        }
+        return ProxySettings(enabled: enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
+    }
+}
+
+

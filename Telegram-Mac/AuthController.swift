@@ -16,6 +16,10 @@ enum LoginAuthViewState {
 
 class AuthHeaderView : View {
     
+    fileprivate let proxyButton:ImageButton = ImageButton()
+    private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
+
+    
     fileprivate var arguments:LoginAuthViewArguments?
     fileprivate let loginView:LoginAuthInfoView = LoginAuthInfoView(frame: NSZeroRect)
     fileprivate var state: UnauthorizedAccountStateContents = .empty
@@ -32,6 +36,7 @@ class AuthHeaderView : View {
         intro.setFrameSize(frameRect.size)
         addSubview(intro)
         
+
         
         let logoImage = #imageLiteral(resourceName: "Icon_LegacyIntro").precomposed()
         self.logo.image = logoImage
@@ -82,7 +87,39 @@ class AuthHeaderView : View {
         switchLanguage.set(color: .blueUI, for: .Normal)
         switchLanguage.set(text: "Continue on English", for: .Normal)
         _ = switchLanguage.sizeToFit()
+        
+        addSubview(proxyButton)
+        proxyButton.addSubview(proxyConnecting)
+        
     }
+    
+    fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus, _ isForceHidden: Bool = true) {
+        proxyButton.isHidden = isForceHidden && pref.servers.isEmpty
+        switch connection {
+        case .connecting:
+            proxyConnecting.isHidden = pref.effectiveActiveServer == nil
+            proxyButton.set(image: pref.effectiveActiveServer == nil ? theme.icons.proxyEnable : theme.icons.proxyState, for: .Normal)
+        case .online:
+            proxyConnecting.isHidden = true
+            if pref.enabled {
+                proxyButton.set(image: theme.icons.proxyEnabled, for: .Normal)
+            } else {
+                proxyButton.set(image: theme.icons.proxyEnable, for: .Normal)
+            }
+        case .waitingForNetwork:
+            proxyConnecting.isHidden = pref.effectiveActiveServer == nil
+            proxyButton.set(image: pref.effectiveActiveServer == nil ? theme.icons.proxyEnable : theme.icons.proxyState, for: .Normal)
+        default:
+            proxyConnecting.isHidden = true
+        }
+        proxyConnecting.isEventLess = true
+        proxyConnecting.userInteractionEnabled = false
+        _ = proxyButton.sizeToFit()
+        proxyConnecting.centerX()
+        proxyConnecting.centerY(addition: -1)
+        needsLayout = true
+    }
+    
     
     func hideSwitchButton() {
         needShowSuggestedButton = false
@@ -108,20 +145,18 @@ class AuthHeaderView : View {
         switchLanguage.centerX(y: frame.height - switchLanguage.frame.height - 35)
         header.centerX(y: logo.frame.maxY + 10)
         desc.centerX(y: header.frame.maxY + 10)
-        
         logo.centerX()
-
         intro.centerX(y: 60)
-        
         intro.setFrameSize(frame.width, desc.frame.maxY)
-        
         loginView.setFrameSize(400, frame.height)
-        
         loginView.centerX(y: intro.frame.maxY + 60)
-        
         nextButton.centerX(y: frame.height - nextButton.frame.height - 80)
-        
         updateState(state, animated: false)
+        
+        proxyConnecting.centerX()
+        proxyConnecting.centerY(addition: -1)
+        proxyButton.setFrameOrigin(10, 10)
+
     }
     
     
@@ -137,7 +172,8 @@ class AuthHeaderView : View {
         desc.update(descLayout)
         
         nextButton.set(text: tr(L10n.loginNext), for: .Normal)
-        
+        proxyConnecting.progressColor = theme.colors.blueIcon
+        proxyConnecting.lineWidth = 1.0
         needsLayout = true
     }
     
@@ -208,15 +244,14 @@ class AuthHeaderView : View {
 
 
 class AuthController : GenericViewController<AuthHeaderView> {
-    private let navigation:NavigationViewController
     private let disposable:MetaDisposable = MetaDisposable()
     private let actionDisposable = MetaDisposable()
+    private let proxyDisposable = DisposableSet()
     private let suggestedLanguageDisposable = MetaDisposable()
     private let localizationDisposable = MetaDisposable()
     private var account:UnauthorizedAccount
     init(_ account:UnauthorizedAccount) {
         self.account = account
-        self.navigation = NavigationViewController(ViewController())
         super.init()
         
         self.disposable.set((account.postbox.stateView() |> deliverOnMainQueue).start(next: { [weak self] view in
@@ -239,6 +274,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         disposable.dispose()
         actionDisposable.dispose()
         suggestedLanguageDisposable.dispose()
+        proxyDisposable.dispose()
     }
 
     
@@ -250,20 +286,107 @@ class AuthController : GenericViewController<AuthHeaderView> {
         return true
     }
     
+    private func openProxySettings() {
+
+        
+        var navigation:NavigationViewController?
+        
+        var first: Bool = true
+        
+        proxyListController(postbox: account.postbox, network: account.network, showUseCalls: false) ({ controller in
+            if first {
+                navigation = NavigationViewController(controller)
+                navigation!._frameRect = NSMakeRect(0, 0, 300, 440)
+                navigation!.readyOnce()
+                showModal(with: navigation!, for: mainWindow)
+                first = false
+            } else {
+                navigation?.push(controller)
+            }
+        })
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-       
+        var arguments: LoginAuthViewArguments?
         
-        let arguments = LoginAuthViewArguments(sendCode: { [weak self] phoneNumber in
+        let again:(String)-> Void = { number in
+            arguments?.sendCode(number)
+        }
+        
+        
+        var forceHide = true
+        
+      
+        
+        var settings:(ProxySettings, ConnectionStatus)? = nil
+        
+        
+        let updateProxyUI:()->Void = { [weak self] in
+            if let settings = settings {
+                self?.genericView.updateProxyPref(settings.0, settings.1, forceHide)
+            }
+        }
+        
+        let openProxySettings:()->Void = { [weak self] in
+            self?.openProxySettings()
+            forceHide = false
+            updateProxyUI()
+        }
+        
+        proxyDisposable.add(combineLatest(proxySettingsSignal(account.postbox) |> deliverOnMainQueue, account.network.connectionStatus |> deliverOnMainQueue).start(next: { pref, connection in
+            settings = (pref, connection)
+            updateProxyUI()
+        }))
+        
+        
+        
+        let disposable = MetaDisposable()
+        proxyDisposable.add(disposable)
+        
+        
+        let defaultProxyVisibles: [String] = ["RU"]
+        
+        if defaultProxyVisibles.index(where: {$0 == Locale.current.regionCode}) != nil {
+            forceHide = false
+            updateProxyUI()
+        }
+        
+        let countryDisposable = (getCountryCode(network: account.network) |> deliverOnMainQueue).start(next: { [weak self] country in
+            self?.genericView.loginView.updateCountryCode(country)
+        })
+        proxyDisposable.add(countryDisposable)
+        
+        
+        genericView.proxyButton.set(handler: {  _ in
+            if let _ = settings {
+                openProxySettings()
+            }
+        }, for: .Click)
+        
+        arguments = LoginAuthViewArguments(sendCode: { [weak self] phoneNumber in
             if let strongSelf = self {
                 self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(account: strongSelf.account, phoneNumber: phoneNumber, apiId: API_ID, apiHash: API_HASH)
                     |> map {Optional($0)}
+                    |> mapError {Optional($0)}
+                    |> timeout(10, queue: Queue.mainQueue(), alternate: .fail(nil))
                     |> deliverOnMainQueue, for: mainWindow)
                     |> filter({$0 != nil}) |> map {$0!} |> deliverOnMainQueue).start(next: { [weak strongSelf] account in
                         strongSelf?.account = account
                     }, error: { [weak self] error in
-                        self?.genericView.loginView.updatePhoneError(error)
+                        if let error = error {
+                            self?.genericView.loginView.updatePhoneError(error)
+                        } else {
+                            confirm(for: mainWindow, header: L10n.loginConnectionErrorHeader, information: L10n.loginConnectionErrorInfo, okTitle: L10n.loginConnectionErrorTryAgain, thridTitle: L10n.loginConnectionErrorUseProxy, successHandler: { result in
+                                switch result {
+                                case .basic:
+                                    again(phoneNumber)
+                                case .thrid:
+                                    openProxySettings()
+                                }
+                            })
+                        }
                     }))
                 _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.account.postbox, languageCode: Locale.current.languageCode ?? "en").start()
 

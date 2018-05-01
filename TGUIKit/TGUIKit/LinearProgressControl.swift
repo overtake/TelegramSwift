@@ -28,6 +28,15 @@ public class LinearProgressControl: Control {
         }
     }
     
+    public override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        if let onUserChanged = onUserChanged {
+            let location = convert(event.locationInWindow, from: nil)
+            let progress = Float(location.x / frame.width)
+            onUserChanged(progress)
+        }
+    }
+    
     public var interactiveValue:Float {
         if let window = window {
             let location = convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -64,6 +73,7 @@ public class LinearProgressControl: Control {
         set {
             self.progressView.layer?.backgroundColor = newValue.foregroundColor.cgColor
             containerView.style = newValue
+            super.style = newValue
         }
         get {
             return super.style

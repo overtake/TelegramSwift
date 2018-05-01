@@ -242,7 +242,7 @@ class ChatInputActionsView: View, Notifable {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || value.editState != oldValue.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout {
+            if value.interfaceState != oldValue.interfaceState || value.interfaceState.editState != oldValue.interfaceState.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout {
             
                 var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width + iconsInset * 2, frame.height)
                 

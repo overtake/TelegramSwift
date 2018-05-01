@@ -363,7 +363,7 @@ open class ViewController : NSObject {
             if let become = becomeFirstResponder(), become == true {
                 self.window?.applyResponderIfNeeded()
             } else {
-                self.window?.makeFirstResponder(nil)
+                self.window?.makeFirstResponder(self.window?.firstResponder)
             }
         }
         
@@ -565,6 +565,8 @@ open class ModalViewController : ViewController {
     
     
     
+    
+    
     open var background:NSColor {
         return NSColor(0x000000, 0.27)
     }
@@ -630,7 +632,47 @@ open class ModalViewController : ViewController {
         return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height));
     }
 
+}
+
+public class ModalController : ModalViewController {
+    private let controller: NavigationViewController
+    init(_ controller: NavigationViewController) {
+        self.controller = controller
+        super.init(frame: controller._frameRect)
+    }
     
+    public override var handleEvents: Bool {
+        return true
+    }
+    
+    public override func firstResponder() -> NSResponder? {
+        return controller.controller.firstResponder()
+    }
+    
+    public override func returnKeyAction() -> KeyHandlerResult {
+        return controller.controller.returnKeyAction()
+    }
+    
+    public override var haveNextResponder: Bool {
+        return true
+    }
+    
+    public override func nextResponder() -> NSResponder? {
+        return controller.controller.nextResponder()
+    }
+    
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        ready.set(controller.controller.ready.get())
+    }
+    
+    public override func loadView() {
+        self._view = controller.view
+        NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
+        
+        _ = atomicSize.swap(_view!.frame.size)
+        viewDidLoad()
+    }
 }
 
 open class TableModalViewController : ModalViewController {
@@ -656,3 +698,5 @@ open class TableModalViewController : ModalViewController {
         }
     }
 }
+
+

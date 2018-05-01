@@ -32,10 +32,13 @@ class PassportInsertPasswordItem: GeneralRowItem {
     private let _stableId: AnyHashable
     fileprivate let descLayout: TextViewLayout
     fileprivate let checkPasswordAction:((String, ()->Void))->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, checkPasswordAction: @escaping((String, ()->Void))->Void) {
+    fileprivate let forgotPassword: ()->Void
+    fileprivate let hasRecoveryEmail: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, checkPasswordAction: @escaping((String, ()->Void))->Void, forgotPassword: @escaping()->Void, hasRecoveryEmail: Bool) {
         self._stableId = stableId
         self.checkPasswordAction = checkPasswordAction
-        //TODOLANG
+        self.forgotPassword = forgotPassword
+        self.hasRecoveryEmail = hasRecoveryEmail
         descLayout = TextViewLayout(.initialize(string: L10n.secureIdInsertPasswordDescription, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -71,6 +74,7 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
     private let inputContainer: View = View()
     private let descTextView: TextView = TextView()
     private let nextButton: TitleButton = TitleButton()
+    private let forgotPassword: ImageButton = ImageButton()
     required init(frame frameRect: NSRect) {
         input = PassportInsertPasswordField(frame: NSZeroRect)
         super.init(frame: frameRect)
@@ -103,9 +107,20 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         
         addSubview(descTextView)
         addSubview(nextButton)
+        inputContainer.addSubview(forgotPassword)
         
         nextButton.set(handler: { [weak self] _ in
             self?.checkPasscode()
+        }, for: .Click)
+        
+        forgotPassword.set(handler: { [weak self] _ in
+            if let item = self?.item as? PassportInsertPasswordItem {
+                if item.hasRecoveryEmail {
+                    item.forgotPassword()
+                } else {
+                    alert(for: mainWindow, info: L10n.secureIdForgotPasswordNoEmail)
+                }
+            }
         }, for: .Click)
     }
     
@@ -134,11 +149,12 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
     }
     
     override func layout() {
-        input.setFrameSize(NSMakeSize(inputContainer.frame.width - 20, input.frame.height))
+        input.setFrameSize(NSMakeSize(inputContainer.frame.width - 20 - forgotPassword.frame.width - 10, input.frame.height))
         input.centerY(x: 10)
         descTextView.centerX()
         inputContainer.centerX(y: descTextView.frame.maxY + 20)
         nextButton.centerX(y: inputContainer.frame.maxY + 15)
+        forgotPassword.centerY(x: inputContainer.frame.width - forgotPassword.frame.width - 10)
     }
     
     @objc func checkPasscode() {
@@ -173,6 +189,9 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         nextButton.set(text: L10n.secureIdInsertPasswordNext, for: .Normal)
         _ = nextButton.sizeToFit(NSMakeSize(20, 0), NSMakeSize(.greatestFiniteMagnitude, 30))
         nextButton.layer?.cornerRadius = .cornerRadius
+        
+        forgotPassword.set(image: theme.icons.passportForgotPassword, for: .Normal)
+        _ = forgotPassword.sizeToFit()
     }
     
     override func viewDidMoveToWindow() {

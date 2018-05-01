@@ -39,8 +39,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
             
         }
-        
-        
     }
     private var message:Message?
     private(set) var instantVideoPip:InstantVideoPIP?
@@ -185,7 +183,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         super.mouseUp(with: event)
         if let message = message, let controller = controller, let navigation = controller.account.context.mainNavigation {
             if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
-                controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: false, inset: 0))
+                controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: false, inset: 0))
             } else {
                 navigation.push(ChatController(account: controller.account, chatLocation: .peer(message.id.peerId), messageId: message.id))
             }

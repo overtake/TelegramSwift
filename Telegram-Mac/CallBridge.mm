@@ -13,12 +13,23 @@
 #import "TGCallConnectionDescription.h"
 #define CVoIPController tgvoip::VoIPController
 
+@implementation CProxy
+-(id)initWithHost:(NSString*)host port:(int32_t)port user:(NSString *)user pass:(NSString *)pass {
+    self = [super init];
+    _host = host;
+    _port = port;
+    _user = user;
+    _pass = pass;
+    return self;
+}
+@end
+
 @interface VoIPControllerHolder : NSObject {
     tgvoip::VoIPController *_controller;
 }
-    
+
 @property (nonatomic, assign, readonly)  tgvoip::VoIPController *controller;
-    
+
 @end
 
 @implementation AudioDevice
@@ -37,7 +48,7 @@ const NSTimeInterval TGCallConnectTimeout = 30;
 const NSTimeInterval TGCallPacketTimeout = 10;
 
 @implementation VoIPControllerHolder
-    
+
 - (instancetype)initWithController:( tgvoip::VoIPController *)controller {
     self = [super init];
     if (self != nil) {
@@ -45,19 +56,20 @@ const NSTimeInterval TGCallPacketTimeout = 10;
     }
     return self;
 }
-    
+
 - ( tgvoip::VoIPController *)controller {
     return _controller;
 }
 
 -(void)dealloc {
+    _controller->Stop();
     delete _controller;
     
     int bp = 0;
     bp++;
 }
 
-    
+
 @end
 
 @interface CallBridge ()
@@ -76,12 +88,17 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
 
 @implementation CallBridge
 
--(id)init {
+-(id)initWithProxy:(CProxy *)proxy {
     self = [super init];
     if (self != nil) {
         CVoIPController *controller = new CVoIPController();
         controller->implData = (__bridge void *)self;
-        controller->SetStateCallback(&controllerStateCallback);
+        tgvoip::VoIPController::Callbacks callbacks={0};
+        callbacks.connectionStateChanged=&controllerStateCallback;
+        controller->SetCallbacks(callbacks);
+        if (proxy != nil) {
+            controller->SetProxy(tgvoip::PROXY_SOCKS5, std::string([proxy.host UTF8String]), proxy.port, std::string([proxy.user UTF8String]), std::string([proxy.pass UTF8String]));
+        }
         
         CVoIPController::crypto.sha1 = &TGCallSha1;
         CVoIPController::crypto.sha256 = &TGCallSha256;
@@ -161,7 +178,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
 -(void)setCurrentOutputDeviceId:(NSString *)deviceId {
     _controller.controller->SetCurrentAudioOutput(std::string([deviceId UTF8String]));
 }
-    
+
 //
 -(void)startTransmissionIfNeeded:(bool)outgoing connection:(TGCallConnection *)connection {
     
@@ -174,7 +191,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     config.enableAGC = true;
     
     strncpy(config.logFilePath, [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String], sizeof(config.logFilePath));    //memset(config.logFilePath, 0, sizeof(config.logFilePath));
-
+    
     _controller.controller->SetConfig(&config);
     
     
@@ -187,32 +204,32 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
         TGCallConnectionDescription *desc = connections[i];
         
         tgvoip::Endpoint endpoint {};
-
+        
         endpoint.id = desc.identifier;
         endpoint.port = (uint32_t)desc.port;
         endpoint.address = tgvoip::IPv4Address(desc.ipv4.UTF8String);
         endpoint.v6address = tgvoip::IPv6Address(desc.ipv6.UTF8String);
-        endpoint.type = EP_TYPE_UDP_RELAY;
+        endpoint.type = tgvoip::Endpoint::TYPE_UDP_RELAY;
         [desc.peerTag getBytes:&endpoint.peerTag length:16];
         
         it = endpoints.insert ( it , endpoint );
     }
     
     _controller.controller->SetEncryptionKey((char *)connection.key.bytes, outgoing);
-    _controller.controller->SetRemoteEndpoints(endpoints, true);
-
+    _controller.controller->SetRemoteEndpoints(endpoints, true, connection.maxLayer);
+    
     
     _controller.controller->Start();
     
     _controller.controller->Connect();
 }
-    
+
 -(void)dealloc {
     
     int bp = 0;
     bp += 1;
 }
 
-    
+
 @end
 

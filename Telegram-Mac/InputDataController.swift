@@ -29,32 +29,60 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>]
 
 
 
-class InputDataController: TableViewController {
+class InputDataController: GenericViewController<TableView> {
 
     private let values: Promise<[InputDataEntry]> = Promise()
     private let disposable = MetaDisposable()
     private let title: String
     private let validateData:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
     private let afterDisappear: ()->Void
-    private let updateDatas:([InputDataIdentifier : InputDataValue]) -> Void
-    init(_ account: Account, dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, afterDisappear: @escaping() -> Void = {}) {
+    private let updateDatas:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
+    private let didLoaded:([InputDataIdentifier : InputDataValue]) -> Void
+    private let _removeAfterDisappear: Bool
+    private let hasDone: Bool
+    private let updateDoneEnabled:([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void
+    let identifier: String
+    init(dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "") {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
         self.updateDatas = updateDatas
-        super.init(account)
+        self.didLoaded = didLoaded
+        self.identifier = identifier
+        self._removeAfterDisappear = removeAfterDisappear
+        self.hasDone = hasDone
+        self.updateDoneEnabled = updateDoneEnabled
+        super.init()
         values.set(dataSignal)
     }
+    
+    
+    private let languageDisposable:MetaDisposable = MetaDisposable()
+
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        
+        self.genericView.background = theme.colors.background
+        requestUpdateBackBar()
+        requestUpdateCenterBar()
+        requestUpdateRightBar()
+    }
+    
+    
     
     override var defaultBarTitle: String {
         return title
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right)
+        return hasDone ? TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce()
     }
     
-    private func fetchData() -> [InputDataIdentifier : InputDataValue] {
+    private var doneView: TextButtonBarView {
+        return rightBarView as! TextButtonBarView
+    }
+    
+    func fetchData() -> [InputDataIdentifier : InputDataValue] {
         var values:[InputDataIdentifier : InputDataValue] = [:]
         genericView.enumerateItems { item -> Bool in
             if let identifier = (item.stableId.base as? InputDataEntryId)?.identifier {
@@ -124,7 +152,7 @@ class InputDataController: TableViewController {
             self.validateInput(data: [identifier : value])
         }, dataUpdated: { [weak self] in
             guard let `self` = self else {return}
-            self.updateDatas(self.fetchData())
+            self.proccessValidation(self.updateDatas(self.fetchData()))
         })
         
         self.rightBarView.set(handler:{ [weak self] _ in
@@ -141,14 +169,30 @@ class InputDataController: TableViewController {
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition in
-            self?.genericView.merge(with: transition)
-            self?.readyOnce()
+            guard let `self` = self else {return}
+            self.genericView.merge(with: transition)
+            if !self.didSetReady {
+                self.didLoaded(self.fetchData())
+            }
+            
+            let result = self.updateDoneEnabled(self.fetchData())
+            result { [weak self] enabled in
+                guard let `self` = self else {return}
+                self.doneView.isEnabled = enabled
+            }
+            
+            self.readyOnce()
         }))
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
-         self.validateInput(data: self.fetchData())
-         return .invoked
+        if let event = NSApp.currentEvent {
+            if FastSettings.checkSendingAbility(for: event) {
+                self.validateInput(data: self.fetchData())
+                return .invoked
+            }
+        }
+        return .invokeNext
     }
     
     override func becomeFirstResponder() -> Bool? {
@@ -180,9 +224,19 @@ class InputDataController: TableViewController {
     }
 
     override func backSettings() -> (String, CGImage?) {
-        return ("", theme.icons.instantViewBack)
+        return super.backSettings()//("", theme.icons.instantViewBack)
     }
     
+    override var enableBack: Bool {
+        return true
+    }
+    
+    override func getLeftBarViewOnce() -> BarView {
+        if let navigation = navigationController {
+            return navigation.empty === self ? BarView(controller: self) : super.getLeftBarViewOnce()
+        }
+        return BarView(controller: self)
+    }
     
     override var haveNextResponder: Bool {
         return true
@@ -202,8 +256,10 @@ class InputDataController: TableViewController {
             
             if index > 0, let view = self.genericView.item(at: index).view {
                 if view.mouseInsideField {
-                    self.window?.makeFirstResponder(view.firstResponder)
-                    return .invoked
+                    if self.window?.firstResponder != view.firstResponder {
+                        self.window?.makeFirstResponder(view.firstResponder)
+                        return .invoked
+                    }
                 }
             }
             
@@ -213,43 +269,55 @@ class InputDataController: TableViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+        super.viewWillDisappear(animated)
         window?.remove(object: self, for: .leftMouseDown)
     }
+    
     
     override func nextResponder() -> NSResponder? {
         var next: NSResponder?
         let current = self.window?.firstResponder
+        
+
+        
         var selectNext: Bool = false
         
         var first: NSResponder? = nil
+
         
         genericView.enumerateViews { view -> Bool in
-            if let view = view as? InputDataRowView {
+            if view.hasFirstResponder() {
                 first = view.firstResponder
             }
             return first == nil
         }
         
         genericView.enumerateViews { view -> Bool in
-            if let view = view as? InputDataRowView {
+            if view.hasFirstResponder() {
                 if selectNext {
                     next = view.firstResponder
                 } else if view.firstResponder == current || view.firstResponder == (current as? NSView)?.superview?.superview {
+                    if let nextInner = view.nextResponder() {
+                        next = nextInner
+                        return false
+                    }
                     selectNext = true
                     return true
                 }
             }
             return next == nil
         }
+        
+        
         return next ?? first
     }
     
     override var removeAfterDisapper: Bool {
-        return true
+        return _removeAfterDisappear
     }
     
     deinit {
+        languageDisposable.dispose()
         disposable.dispose()
     }
     

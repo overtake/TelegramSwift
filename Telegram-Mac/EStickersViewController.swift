@@ -625,31 +625,94 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                             return ((nil, (FoundStickerSets(entries: entries), false)), .generic)
                         }
                     } else {
-                        return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
-                            let update: StickerPacksCollectionUpdate
-                            if firstTime {
-                                firstTime = remote == nil
-                                switch position {
-                                case .initial:
-                                    update = .generic
-                                case .scroll:
-                                    update = .scroll
-                                case let .navigate(index):
-                                    update = .navigate(index)
+                        return searchEmojiClue(query: search.request, postbox: account.postbox) |> mapToSignal { clues in
+                            if clues.isEmpty {
+                                return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
+                                    let update: StickerPacksCollectionUpdate
+                                    if firstTime {
+                                        firstTime = remote == nil
+                                        switch position {
+                                        case .initial:
+                                            update = .generic
+                                        case .scroll:
+                                            update = .scroll
+                                        case let .navigate(index):
+                                            update = .navigate(index)
+                                        }
+                                    } else {
+                                        update = .generic
+                                    }
+                                    
+                                    var value = FoundStickerSets()
+                                    if let local = local {
+                                        value = value.merge(with: local)
+                                    }
+                                    if let remote = remote {
+                                        value = value.merge(with: remote)
+                                    }
+                                    return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
                                 }
                             } else {
-                                update = .generic
+                                return combineLatest(combineLatest(clues.map({searchStickers(account: account, query: $0.emoji)})), searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
+                                    var index:Int32 = randomInt32()
+                                   //
+                                    var sortedStickers:[String : (Int32, [ItemCollectionViewEntry])] = [:]
+                                    
+                                    for stickers in clueSets {
+                                        for sticker in stickers {
+                                            let file = sticker.file
+                                            if let id = file.id {
+                                                if let emoji = file.stickerText?.fixed {
+                                                    var values = sortedStickers[emoji] ?? (index, [])
+                                                    let count = sortedStickers.reduce(0, { current, value  in
+                                                        return current + values.1.count
+                                                    })
+                                                    let item = StickerPackItem(index: ItemCollectionItemIndex(index: Int32(count), id: id.id), file: file, indexKeys: [])
+                                                    values.1.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex.lowerBound(collectionIndex: -(values.0), collectionId: ItemCollectionId(namespace: 0, id: ItemCollectionId.Id(values.0))), item: item))
+                                                    sortedStickers[emoji] = values
+                                                }
+                                            }
+                                        }
+                                        index = randomInt32()
+                                    }
+                                    var entries: [ItemCollectionViewEntry] = []
+                                    for clue in clues {
+                                        if let stickers = sortedStickers[clue.emoji] {
+                                            entries.append(contentsOf: stickers.1)
+                                        }
+                                    }
+                                    
+                                    let clueValues = FoundStickerSets(entries: entries)
+                                    
+                                    let update: StickerPacksCollectionUpdate
+                                    if firstTime {
+                                        firstTime = remote == nil
+                                        switch position {
+                                        case .initial:
+                                            update = .generic
+                                        case .scroll:
+                                            update = .scroll
+                                        case let .navigate(index):
+                                            update = .navigate(index)
+                                        }
+                                    } else {
+                                        update = .generic
+                                    }
+                                    
+                                    var value = FoundStickerSets()
+                                    if let local = local {
+                                        value = value.merge(with: local)
+                                    }
+                                    if let remote = remote {
+                                        value = value.merge(with: remote)
+                                    }
+                                    value = clueValues.merge(with: value)
+                                    return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
+                                }
                             }
                             
-                            var value = FoundStickerSets()
-                            if let local = local {
-                                value = value.merge(with: local)
-                            }
-                            if let remote = remote {
-                                value = value.merge(with: remote)
-                            }
-                            return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
                         }
+                        
                     }
                     //searchStickerSetsRemotly(network: account.network, query: search.request)))
                    
@@ -712,7 +775,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                         let collectionId = item.collectionId
                         if strongSelf.inputNodeInteraction.highlightedItemCollectionId != collectionId {
                             strongSelf.inputNodeInteraction.highlightedItemCollectionId = collectionId
-                            strongSelf.genericView.packsTable.scroll(to: .center(id: collectionId, animated: true, focus: false, inset: 0))
+                            strongSelf.genericView.packsTable.scroll(to: .center(id: collectionId, innerId: nil, animated: true, focus: false, inset: 0))
                             strongSelf.genericView.packsTable.changeSelection(stableId: collectionId)
                         }
                     }

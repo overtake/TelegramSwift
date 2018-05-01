@@ -178,9 +178,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
         case .turnOnDescription, .turnOffDescription:
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: tr(L10n.passcodeTurnOnDescription))
         case .turnTouchId(_, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeUseTouchId), type: .switchable(stateback: {
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeUseTouchId), type: .switchable(enabled), action: {
                 arguments.toggleTouchId(!enabled)
             })
         case let .autoLock(sectionId: _, time: time):
@@ -200,9 +198,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
             } else {
                 text = tr(L10n.passcodeAutoLockDisabled)
             }
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeAutolock), type: .context {
-                return text
-            }, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.passcodeAutolock, type: .context(text), action: {
                 arguments.ifAway()
             })
         }

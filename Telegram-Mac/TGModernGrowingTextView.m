@@ -610,7 +610,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 - (void)textDidChange:(NSNotification *)notification {
     
     
-    int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit];
+    int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit: self];
     
     if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
         NSString *sub = [self.string substringWithRange:NSMakeRange(_defaultText.length, limit)];
@@ -667,7 +667,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         
         [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
-        newSize.width = [_delegate textViewSize].width;
+        newSize.width = [_delegate textViewSize: self].width;
         
         NSSize layoutSize = NSMakeSize(roundf(newSize.width), roundf(newSize.height));
         
@@ -756,9 +756,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                 text = @"";
             }
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate textViewTextDidChange:text];
-        });
+        [self.delegate textViewTextDidChange:text];
         
     }
     
@@ -835,15 +833,12 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             pAnim.removedOnCompletion = YES;
             pAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             pAnim.duration = 0.2;
-            pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, NSMinY(_placeholder.frame))];
-            pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)) : NSMakePoint(self._endXPlaceholder, NSMinY(_placeholder.frame))];
+            pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
+            pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
             
             
             [_placeholder.layer removeAnimationForKey:@"position"];
-            [_placeholder.layer addAnimation:pAnim forKey:@"position"];
-            
-            
-            
+            [_placeholder.layer addAnimation:pAnim forKey:@"position"]; 
             
         } else {
             if (_placeholder.layer.animationKeys.count == 0) {
@@ -852,7 +847,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         }
         
         
-        [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)) : NSMakePoint(NSMinX(_placeholder.frame) + 30, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))];
+        [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
         
         _placeholder.layer.opacity = self._needShowPlaceholder ? 1.0 : 0.0;
         
@@ -881,7 +876,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     [_placeholder sizeToFit];
     [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
-    [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)) : NSMakePoint(NSMinX(_placeholder.frame) + 30, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))];
+    [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
 }
 
 -(BOOL)_needShowPlaceholder {
@@ -899,6 +894,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_placeholder sizeToFit];
     
     [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+    [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0)))];
     BOOL animates = _animates;
     _animates = NO;
     if (self.string.length == 0) {

@@ -72,7 +72,7 @@ final class StickerGridSectionNode: View {
     override func updateLocalizationAndTheme() {
         backgroundColor = theme.colors.background
         textView.backgroundColor = theme.colors.background
-        let textLayout = TextViewLayout(.initialize(string: collectionInfo.packInfo.title.uppercased(), color: theme.colors.grayText, font: .medium(.title)), constrainedWidth: 300, maximumNumberOfLines: 1, truncationType: .end)
+        let textLayout = TextViewLayout(.initialize(string: collectionInfo.packInfo.title.fixed.uppercased(), color: theme.colors.grayText, font: .medium(.title)), constrainedWidth: 300, maximumNumberOfLines: 1, truncationType: .end)
         textLayout.measure()
         textView.update(textLayout)
         
@@ -146,8 +146,10 @@ final class StickerGridItem: GridItem {
         case .speficicPack:
             reference = file.stickerReference
         }
-        if index.packIndex.collectionIndex != -1 {
+        if index.packIndex.collectionIndex >= 0 {
             self.section = StickerGridSection(collectionId: collectionId, packInfo: packInfo, inputInteraction: inputNodeInteraction, reference:  reference)
+        } else if index.packIndex.collectionIndex <= -2 {
+            self.section = StickerGridSection(collectionId: collectionId, packInfo: ChatMediaGridPackHeaderInfo.pack(StickerPackCollectionInfo(id: index.packIndex.collectionId, flags: [], accessHash: 0, title: file.stickerText ?? "", shortName: "", hash: 0, count: 0), true), inputInteraction: inputNodeInteraction, reference:  nil)
         } else {
             self.section = nil
         }

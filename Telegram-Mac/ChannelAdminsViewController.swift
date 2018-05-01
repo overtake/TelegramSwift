@@ -358,9 +358,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             case .everyoneCanAddMembers:
                 label = tr(L10n.adminsWhoCanInviteEveryone)
             }
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.adminsWhoCanInviteText), type: .context(stateback: { () -> String in
-                return label
-            }), action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.adminsWhoCanInviteText), type: .context(label), action: { 
                 arguments.updateCurrentAdministrationType()
             })
 

@@ -334,7 +334,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
 
 func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, account: Account, currentQuery: String?) -> (String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)? {
     
-    if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.editState?.message.media.first {
+    if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.media.first {
         if media is TelegramMediaFile || media is TelegramMediaImage {
             return (nil, .single({ _ in return nil }))
         }

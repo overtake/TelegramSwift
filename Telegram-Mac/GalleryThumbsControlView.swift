@@ -20,7 +20,7 @@ class GalleryThumbContainer : Control {
         var signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
         var size: NSSize?
         if let item = item as? MGalleryPhotoItem {
-            signal = chatMessagePhotoThumbnail(account: item.account, photo: item.media, scale: backingScaleFactor)
+            signal = chatWebpageSnippetPhoto(account: item.account, photo: item.media, scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)
             size = item.media.representations.first?.dimensions
         } else if let item = item as? MGalleryGIFItem {
             signal = chatMessageImageFile(account: item.account, file: item.media, scale: backingScaleFactor)
@@ -32,7 +32,6 @@ class GalleryThumbContainer : Control {
             signal = chatMessagePhotoThumbnail(account: item.account, photo: item.media, scale: backingScaleFactor)
             size = item.media.representations.first?.dimensions
         }
-        
         
         if let signal = signal, let size = size {
             imageView.setSignal(signal)

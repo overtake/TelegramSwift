@@ -52,21 +52,15 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
     func item(_ arguments: DownloadSettingsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .contacts(_, enabled, category):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsPrivateChats, type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsPrivateChats, type: .switchable(enabled), action: {
                 arguments.toggleCategory(category.withUpdatedPrivateChats(!enabled))
             })
         case let .groupChats(_, enabled, category):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsGroupChats, type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsGroupChats, type: .switchable(enabled), action: {
                 arguments.toggleCategory(category.withUpdatedGroupChats(!enabled))
             })
         case let .channels(_, enabled, category):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsChannels, type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsChannels, type: .switchable(enabled), action: {
                 arguments.toggleCategory(category.withUpdatedChannels(!enabled))
             })
         case .fileSizeLimitHeader:

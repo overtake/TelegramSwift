@@ -145,6 +145,8 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 
 @end
 
+@class TGModernGrowingTextView;
+
 @protocol TGModernGrowingDelegate <NSObject>
 
 -(void) textViewHeightChanged:(CGFloat)height animated:(BOOL)animated;
@@ -152,9 +154,9 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 -(void) textViewTextDidChange:(NSString * __nonnull)string;
 -(void) textViewTextDidChangeSelectedRange:(NSRange)range;
 -(BOOL)textViewDidPaste:(NSPasteboard * __nonnull)pasteboard;
--(NSSize)textViewSize;
+-(NSSize)textViewSize:(TGModernGrowingTextView *)textView;
 -(BOOL)textViewIsTypingEnabled;
--(int)maxCharactersLimit;
+-(int)maxCharactersLimit:(TGModernGrowingTextView *)textView;
 
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
@@ -529,14 +531,14 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 
 
 @interface TGCallConnection : NSObject
-    
-    @property (nonatomic, strong, readonly) NSData *key;
-    @property (nonatomic, strong, readonly) NSData *keyHash;
-    @property (nonatomic, strong, readonly) TGCallConnectionDescription *defaultConnection;
-    @property (nonatomic, strong, readonly) NSArray<TGCallConnectionDescription *> *alternativeConnections;
-    
-- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections;
-    
+
+@property (nonatomic, strong, readonly) NSData *key;
+@property (nonatomic, strong, readonly) NSData *keyHash;
+@property (nonatomic, strong, readonly) TGCallConnectionDescription *defaultConnection;
+@property (nonatomic, strong, readonly) NSArray<TGCallConnectionDescription *> *alternativeConnections;
+@property (nonatomic, readonly) int32_t maxLayer;
+- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections maxLayer:(int32_t)maxLayer;
+
 @end
 
 @interface AudioDevice : NSObject
@@ -545,7 +547,18 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 -(id)initWithDeviceId:(NSString*)deviceId deviceName:(NSString *)deviceName;
 @end
 
+@interface CProxy : NSObject
+@property(nonatomic, strong, readonly) NSString *host;
+@property(nonatomic, assign, readonly) int32_t port;
+@property(nonatomic, strong, readonly) NSString *_Nullable user;
+@property(nonatomic, strong, readonly) NSString *_Nullable pass;
+-(id)initWithHost:(NSString*)host port:(int32_t)port user:(NSString *_Nullable )user pass:(NSString * _Nullable)pass;
+@end
+
 @interface CallBridge : NSObject
+
+-(id)initWithProxy:(CProxy * _Nullable)proxy;
+
 -(void)startTransmissionIfNeeded:(bool)outgoing connection:(TGCallConnection *)connection;
 
 -(void)mute;

@@ -188,42 +188,32 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case let .settingHeader(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .everybody(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerEverbody), type: .selectable(stateback: { () -> Bool in
-                return value
-            }), action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerEverbody), type: .selectable(value), action: {
                 arguments.updateType(.everybody)
             })
 
         case let .contacts(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerMyContacts), type: .selectable(stateback: { () -> Bool in
-                return value
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerMyContacts), type: .selectable(value), action: {
                 arguments.updateType(.contacts)
             })
         case let .nobody(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerNobody), type: .selectable(stateback: { () -> Bool in
-                return value
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerNobody), type: .selectable(value), action: {
                 arguments.updateType(.nobody)
             })
         case let .settingInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .disableFor(_, title, count):
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stateback: { () -> String in
-                return stringForUserCount(count)
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), action: {
                 arguments.openDisableFor()
             })
 
         case let .enableFor(_, title, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stateback: { () -> String in
-                return stringForUserCount(count)
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), action: {
                 arguments.openEnableFor()
             })
         case .peersInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsControllerPeerInfo))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }

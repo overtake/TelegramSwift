@@ -47,7 +47,7 @@ class ChatInputAccessory: Node {
         }
 
         dismiss.set(image: theme.icons.dismissAccessory, for: .Normal)
-        dismiss.sizeToFit()
+        _ = dismiss.sizeToFit()
         
         view?.addSubview(dismiss)
         
@@ -73,7 +73,7 @@ class ChatInputAccessory: Node {
                 self?.dismissUrlPreview()
                 }, for: .Click)
             
-        } else if let editState = state.editState {
+        } else if let editState = state.interfaceState.editState {
             displayNode = EditMessageModel(message:editState.message, account:account)
             dismiss.set(handler: { [weak self] _ in
                 self?.dismissEdit()

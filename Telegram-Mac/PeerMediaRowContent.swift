@@ -67,7 +67,7 @@ class PeerMediaRowItem: TableRowItem {
         
         items.append(ContextMenuItem(tr(L10n.messageContextGoto), handler: { [weak self] in
             if let strongSelf = self {
-                strongSelf.interface.focusMessageId(nil, strongSelf.message.id, .center(id: 0, animated: false, focus: false, inset: 0))
+                strongSelf.interface.focusMessageId(nil, strongSelf.message.id, .center(id: 0, innerId: nil, animated: false, focus: false, inset: 0))
             }
         }))
         

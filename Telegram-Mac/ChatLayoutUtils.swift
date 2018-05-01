@@ -12,7 +12,7 @@ import PostboxMac
 
 class ChatLayoutUtils: NSObject {
 
-    static func contentSize(for media:Media, with width: CGFloat) -> NSSize {
+    static func contentSize(for media:Media, with width: CGFloat, hasText: Bool = false) -> NSSize {
         
         var size:NSSize = NSMakeSize(width, 40.0)
         
@@ -22,6 +22,9 @@ class ChatLayoutUtils: NSObject {
             size = image.representationForDisplayAtSize(maxSize)?.dimensions.fitted(maxSize) ?? maxSize
             if size.width < 100 && size.height < 100 {
                 size = size.aspectFitted(NSMakeSize(200, 200))
+            }
+            if hasText {
+                size.width = max(200, size.width)
             }
             size.width = max(size.width, 100)
             //size = NSMakeSize(max(40, size.width), max(40, size.height))

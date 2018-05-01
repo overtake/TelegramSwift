@@ -10,6 +10,7 @@
 #import "TGInputTextTag.h"
 
 extern NSString * _Nonnull const TGCustomLinkAttributeName;
+@class TGModernGrowingTextView;
 
 @protocol TGModernGrowingDelegate <NSObject>
 
@@ -18,9 +19,9 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 -(void) textViewTextDidChange:(NSString * __nonnull)string;
 -(void) textViewTextDidChangeSelectedRange:(NSRange)range;
 -(BOOL)textViewDidPaste:(NSPasteboard * __nonnull)pasteboard;
--(int)maxCharactersLimit;
+-(int)maxCharactersLimit:(TGModernGrowingTextView *)textView;
 
--(NSSize)textViewSize;
+-(NSSize)textViewSize:(TGModernGrowingTextView *)textView;
 -(BOOL)textViewIsTypingEnabled;
 
 @optional

@@ -265,7 +265,6 @@ public class Modal: NSObject {
                     return .invokeNext
                 }, with: self, for: .All, priority: .high)
             }
-           
             
             window.set(escape: {[weak self] () -> KeyHandlerResult in
                 if self?.controller?.escapeKeyAction() == .rejected {
@@ -428,6 +427,18 @@ public func showModal(with controller:ModalViewController, for window:Window, is
     }
     
     controller.modal = Modal(controller: controller, for: window, isOverlay: isOverlay)
+    controller.modal?.show()
+}
+
+public func showModal(with controller: NavigationViewController, for window:Window, isOverlay: Bool = false) -> Void {
+    assert(controller.modal == nil)
+    for weakModal in activeModals {
+        if weakModal.value?.controller?.className == controller.className {
+            weakModal.value?.close()
+        }
+    }
+    
+    controller.modal = Modal(controller: ModalController(controller), for: window, isOverlay: isOverlay)
     controller.modal?.show()
 }
 

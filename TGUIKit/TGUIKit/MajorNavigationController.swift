@@ -196,6 +196,21 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         
     }
     
+    public func removeExceptMajor() {
+        let index = stack.index(where: { current in
+            return current.className == NSStringFromClass(self.majorClass)
+        })
+        if let index = index {
+            while stack.count > index {
+                stack.removeLast()
+            }
+        } else {
+            while stack.count > 1 {
+                stack.removeLast()
+            }
+        }
+    }
+    
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.window?.set(handler: { [weak self] in

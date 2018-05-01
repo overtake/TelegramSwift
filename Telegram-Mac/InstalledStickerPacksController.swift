@@ -208,9 +208,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     func item(_ arguments: InstalledStickerPacksControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case let .trending(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersTranding), type: .context(stateback: { () -> String in
-                return count > 0 ? "\(count)" : ""
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersTranding), type: .context(count > 0 ? "\(count)" : ""), action: {
                 arguments.openFeatured()
             })
            

@@ -29,6 +29,25 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
     })!
 }
 
+private func generateSettingsIcon(_ icon: CGImage) -> CGImage {
+    return generateImage(icon.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setFillColor(.white)
+        ctx.fill(CGRect(origin: CGPoint(x: 2, y: 2), size: NSMakeSize(size.width - 4, size.height - 4)))
+        ctx.draw(icon, in: CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
+
+private func generateSettingsActiveIcon(_ icon: CGImage, background: NSColor) -> CGImage {
+    return generateImage(icon.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setFillColor(background.cgColor)
+        ctx.fill(CGRect(origin: CGPoint(x: 2, y: 2), size: NSMakeSize(size.width - 4, size.height - 4)))
+        ctx.draw(icon, in: CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
 private func generateStickersEmptySearch(color: NSColor) -> CGImage {
     return generateImage(NSMakeSize(100, 100), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -79,6 +98,30 @@ private func generateTransparentBackground() -> CGImage {
         ctx.setFillColor(NSColor(0xcbcbcb).cgColor)
         ctx.fill(NSMakeRect(10, 10, 10, 10))
 
+    })!
+}
+
+private func generateIVAudioPlay(color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(3)
+        ctx.strokeEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
+        let icon = #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(color)
+        
+        ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
+        
+    })!
+}
+
+private func generateIVAudioPause(color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(3)
+        ctx.strokeEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
+        let icon = #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(color)
+        ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
     })!
 }
 
@@ -422,6 +465,7 @@ struct TelegramIconsTheme {
     let chatDeleteMessagesInactive: CGImage
     
     let generalNext: CGImage
+    let generalNextActive: CGImage
     let generalSelect: CGImage
 
 
@@ -576,18 +620,27 @@ struct TelegramIconsTheme {
     let groupStickerNotFound: CGImage
     
     let settingsAskQuestion: CGImage
-    let settingsBio: CGImage
-    let settingsEditInfo: CGImage
     let settingsFaq: CGImage
     let settingsGeneral: CGImage
     let settingsLanguage: CGImage
     let settingsNotifications: CGImage
-    let settingsPhoneNumber: CGImage
     let settingsSecurity: CGImage
     let settingsStickers: CGImage
     let settingsStorage: CGImage
-    let settingsUsername: CGImage
+    let settingsProxy: CGImage
+    let settingsAppearance: CGImage
     
+    let settingsAskQuestionActive: CGImage
+    let settingsFaqActive: CGImage
+    let settingsGeneralActive: CGImage
+    let settingsLanguageActive: CGImage
+    let settingsNotificationsActive: CGImage
+    let settingsSecurityActive: CGImage
+    let settingsStickersActive: CGImage
+    let settingsStorageActive: CGImage
+    let settingsProxyActive: CGImage
+    let settingsAppearanceActive: CGImage
+
     let generalCheck: CGImage
     let settingsAbout: CGImage
     let settingsLogout: CGImage
@@ -615,7 +668,6 @@ struct TelegramIconsTheme {
     
     let successModalProgress: CGImage
     
-    let settingsAppearance: CGImage
     let accentColorSelect: CGImage
     
     let chatShareWallpaper: CGImage
@@ -634,6 +686,21 @@ struct TelegramIconsTheme {
     
     let twoStepVerificationCreateIntro: CGImage
     let secureIdAuth: CGImage
+    
+    let ivAudioPlay: CGImage
+    let ivAudioPause: CGImage
+    
+    let proxyEnable: CGImage
+    let proxyEnabled: CGImage
+    let proxyState: CGImage
+    let proxyDeleteListItem: CGImage
+    let proxyInfoListItem: CGImage
+    let proxyConnectedListItem: CGImage
+    let proxyAddProxy: CGImage
+    let proxyNextWaitingListItem: CGImage
+    let passportForgotPassword: CGImage
+    
+    let confirmAppAccessoryIcon: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -846,7 +913,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatForwardMessagesInactive: #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.grayIcon),
                                                chatDeleteMessagesActive: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.redUI),
                                                chatDeleteMessagesInactive: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.grayIcon),
-                                               generalNext: #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(palette.grayIcon),
+                                               generalNext: #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(palette.grayIcon.withAlphaComponent(0.5)),
+                                               generalNextActive: #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(.white),
                                                generalSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.blueIcon),
                                                chatVoiceRecording: #imageLiteral(resourceName: "Icon_RecordingVoice").precomposed(palette.blueIcon),
                                                chatVideoRecording: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(palette.blueIcon),
@@ -967,18 +1035,26 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                instantViewBack: #imageLiteral(resourceName: "Icon_InstantViewBack").precomposed(palette.blueIcon),
                                                instantViewCheck: #imageLiteral(resourceName: "Icon_InstantViewCheck").precomposed(palette.blueIcon),
                                                groupStickerNotFound: #imageLiteral(resourceName: "Icon_GroupStickerNotFound").precomposed(palette.grayIcon),
-                                               settingsAskQuestion: #imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsBio: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsEditInfo: #imageLiteral(resourceName: "Icon_SettingsEditInfo").precomposed(palette.blueIcon),
-                                               settingsFaq: #imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsGeneral: #imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsLanguage: #imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsNotifications: #imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsPhoneNumber: #imageLiteral(resourceName: "Icon_SettingsPhoneNumber").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsSecurity: #imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsStickers: #imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsStorage: #imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(palette.blueIcon, flipVertical: true),
-                                               settingsUsername: #imageLiteral(resourceName: "Icon_SettingsUsername").precomposed(palette.blueIcon, flipVertical: true),
+                                               settingsAskQuestion: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)),
+                                               settingsFaq: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)),
+                                               settingsGeneral: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(flipVertical: true)),
+                                               settingsLanguage: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)),
+                                               settingsNotifications: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)),
+                                               settingsSecurity: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)),
+                                               settingsStickers: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(flipVertical: true)),
+                                               settingsStorage: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(flipVertical: true)),
+                                               settingsProxy: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)),
+                                               settingsAppearance: generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)),
+                                               settingsAskQuestionActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsFaqActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsGeneralActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsLanguageActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsNotificationsActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsSecurityActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsStickersActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsStorageActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsProxyActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsAppearanceActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                generalCheck: #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon),
                                                settingsAbout: #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon),
                                                settingsLogout: #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI),
@@ -997,7 +1073,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatGroupToggleSelected: generateChatGroupToggleSelected(foregroundColor: palette.blueIcon),
                                                chatGroupToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
                                                successModalProgress: #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(),
-                                               settingsAppearance: #imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.blueIcon, flipVertical: true),
                                                accentColorSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white),
                                                chatShareWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon),
                                                chatGotoMessageWallpaper: #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.blueIcon),
@@ -1011,7 +1086,19 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                confirmDeleteChatAccessory: generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI),
                                                stickersEmptySearch: generateStickersEmptySearch(color: palette.grayIcon),
                                                twoStepVerificationCreateIntro: #imageLiteral(resourceName: "Icon_TwoStepVerification_Create").precomposed(),
-                                               secureIdAuth: #imageLiteral(resourceName: "Icon_SecureIdAuth").precomposed()
+                                               secureIdAuth: #imageLiteral(resourceName: "Icon_SecureIdAuth").precomposed(),
+                                               ivAudioPlay: generateIVAudioPlay(color: palette.text),
+                                               ivAudioPause: generateIVAudioPause(color: palette.text),
+                                               proxyEnable: #imageLiteral(resourceName: "Icon_ProxyEnable").precomposed(palette.blueUI),
+                                               proxyEnabled: #imageLiteral(resourceName: "Icon_ProxyEnabled").precomposed(palette.blueUI),
+                                               proxyState: #imageLiteral(resourceName: "Icon_ProxyState").precomposed(palette.blueUI),
+                                               proxyDeleteListItem: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
+                                               proxyInfoListItem: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon),
+                                               proxyConnectedListItem: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.blueIcon),
+                                               proxyAddProxy: #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon, flipVertical: true),
+                                               proxyNextWaitingListItem: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.grayIcon),
+                                               passportForgotPassword: #imageLiteral(resourceName: "Icon_SecureIdForgotPassword").precomposed(palette.grayIcon),
+                                               confirmAppAccessoryIcon: #imageLiteral(resourceName: "Icon_ConfirmAppAccessory").precomposed()
     )
 }
 

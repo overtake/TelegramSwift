@@ -91,13 +91,13 @@ class ChatMediaLayoutParameters : Equatable {
             
             if let _audioTitle = audioTitle, let audioPerformer = audioPerformer {
                 if _audioTitle.isEmpty && audioPerformer.isEmpty {
-                    _ = attr.append(string: media.fileName, color: presentation.text, font: NSFont.normal(.title))
+                    _ = attr.append(string: media.fileName, color: presentation.text, font: NSFont.medium(.title))
                     audioTitle = media.fileName
                 } else {
-                    _ = attr.append(string: _audioTitle + " - " + audioPerformer, color: presentation.text, font: NSFont.normal(.title))
+                    _ = attr.append(string: _audioTitle + " - " + audioPerformer, color: presentation.text, font: NSFont.medium(.title))
                 }
             } else {
-                _ = attr.append(string: media.fileName, color: presentation.text, font: NSFont.normal(.title))
+                _ = attr.append(string: media.fileName, color: presentation.text, font: NSFont.medium(.title))
                 audioTitle = media.fileName
             }
             
@@ -316,7 +316,7 @@ class ChatMediaItem: ChatRowItem {
             showChatGallery(account: account, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
             
         }, showMessage: { [weak self] message in
-            self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: true, inset: 0))
+            self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
         }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message))
         
         
@@ -342,7 +342,7 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        return ChatLayoutUtils.contentSize(for: media, with: width)
+        return ChatLayoutUtils.contentSize(for: media, with: width, hasText: message?.text.isEmpty == false)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {

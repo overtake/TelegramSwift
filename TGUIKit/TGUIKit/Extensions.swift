@@ -317,8 +317,16 @@ public extension NSView {
                     return NSPointInRect(location, self.bounds)
                 } else {
                     var s = view.superview
-                    if view is NSTableView {
-                        return true
+                    if let view = view as? NSTableView {
+                        let somePoint = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                        let row = view.row(at: somePoint)
+                        if row >= 0 {
+                            let someView = view.rowView(atRow: row, makeIfNecessary: false)
+                            if let someView = someView {
+                                let hit = someView.hitTest(someView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+                                return hit == self
+                            }
+                        }
                     }
                     while let sv = s {
                         if sv == self {
@@ -1187,5 +1195,22 @@ extension NSResponder {
     @available(OSX 10.12.2, *)
     var touchBar: NSTouchBar? {
         return nil
+    }
+}
+
+public extension Sequence where Iterator.Element: Hashable {
+    var uniqueElements: [Iterator.Element] {
+        return Array( Set(self) )
+    }
+}
+public extension Sequence where Iterator.Element: Equatable {
+    var uniqueElements: [Iterator.Element] {
+        return self.reduce([]){
+            uniqueElements, element in
+            
+            uniqueElements.contains(element)
+                ? uniqueElements
+                : uniqueElements + [element]
+        }
     }
 }

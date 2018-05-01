@@ -34,89 +34,176 @@ enum InputDataEntryId : Hashable {
     }
 }
 
-func ==(lhs: InputDataEntryId, rhs: InputDataEntryId) -> Bool {
-    switch lhs {
-    case let .desc(id):
-        if case .desc(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .input(id):
-        if case .input(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .general(id):
-        if case .general(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .selector(id):
-        if case .selector(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .dataSelector(id):
-        if case .dataSelector(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .dateSelector(id):
-        if case .dateSelector(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .custom(id):
-        if case .custom(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .sectionId(id):
-        if case .sectionId(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 enum InputDataInputMode {
     case plain
     case secure
 }
 
+
+
+public protocol _HasCustomInputDataEquatableRepresentation {
+    func _toCustomInputDataEquatable() -> InputDataEquatable?
+}
+
+internal protocol _InputDataEquatableBox {
+    var _typeID: ObjectIdentifier { get }
+    func _unbox<T : Equatable>() -> T?
+
+    func _isEqual(to: _InputDataEquatableBox) -> Bool?
+    
+    var _base: Any { get }
+    func _downCastConditional<T>(into result: UnsafeMutablePointer<T>) -> Bool
+}
+
+internal struct _ConcreteEquatableBox<Base : Equatable> : _InputDataEquatableBox {
+    internal var _baseEquatable: Base
+    
+    internal init(_ base: Base) {
+        self._baseEquatable = base
+    }
+    
+    
+    internal var _typeID: ObjectIdentifier {
+        return ObjectIdentifier(type(of: self))
+    }
+    
+    internal func _unbox<T : Equatable>() -> T? {
+        return (self as _InputDataEquatableBox as? _ConcreteEquatableBox<T>)?._baseEquatable
+    }
+    
+    internal func _isEqual(to rhs: _InputDataEquatableBox) -> Bool? {
+        if let rhs: Base = rhs._unbox() {
+            return _baseEquatable == rhs
+        }
+        return nil
+    }
+
+    internal var _base: Any {
+        return _baseEquatable
+    }
+    
+    internal
+    func _downCastConditional<T>(into result: UnsafeMutablePointer<T>) -> Bool {
+        guard let value = _baseEquatable as? T else { return false }
+        result.initialize(to: value)
+        return true
+    }
+}
+
+
+public struct InputDataEquatable {
+    internal var _box: _InputDataEquatableBox
+    internal var _usedCustomRepresentation: Bool
+    
+
+    public init<H : Equatable>(_ base: H) {
+        if let customRepresentation =
+            (base as? _HasCustomInputDataEquatableRepresentation)?._toCustomInputDataEquatable() {
+            self = customRepresentation
+            self._usedCustomRepresentation = true
+            return
+        }
+        
+        self._box = _ConcreteEquatableBox(base)
+        self._usedCustomRepresentation = false
+    }
+    
+    internal init<H : Equatable>(_usingDefaultRepresentationOf base: H) {
+        self._box = _ConcreteEquatableBox(base)
+        self._usedCustomRepresentation = false
+    }
+    
+    public var base: Any {
+        return _box._base
+    }
+    internal
+    func _downCastConditional<T>(into result: UnsafeMutablePointer<T>) -> Bool {
+        // Attempt the downcast.
+        if _box._downCastConditional(into: result) { return true }
+        
+    
+        
+        return false
+    }
+}
+
+extension InputDataEquatable : Equatable {
+    public static func == (lhs: InputDataEquatable, rhs: InputDataEquatable) -> Bool {
+        if let result = lhs._box._isEqual(to: rhs._box) { return result }
+        
+        return false
+    }
+}
+
+extension InputDataEquatable : CustomStringConvertible {
+    public var description: String {
+        return String(describing: base)
+    }
+}
+
+extension InputDataEquatable : CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return "InputDataEquatable(" + String(reflecting: base) + ")"
+    }
+}
+
+extension InputDataEquatable : CustomReflectable {
+    public var customMirror: Mirror {
+        return Mirror(
+            self,
+            children: ["value": base])
+    }
+}
+
+
+
+
+public // COMPILER_INTRINSIC
+func _convertToInputDataEquatable<H : Equatable>(_ value: H) -> InputDataEquatable {
+    return InputDataEquatable(value)
+}
+
+internal func _convertToInputDataEquatableIndirect<H : Equatable>(
+    _ value: H,
+    _ target: UnsafeMutablePointer<InputDataEquatable>
+    ) {
+    target.initialize(to: InputDataEquatable(value))
+}
+
+internal func _InputDataEquatableDownCastConditionalIndirect<T>(
+    _ value: UnsafePointer<InputDataEquatable>,
+    _ target: UnsafeMutablePointer<T>
+    ) -> Bool {
+    return value.pointee._downCastConditional(into: target)
+}
+
+
 enum InputDataEntry : Identifiable, Comparable {
-    case desc(sectionId: Int32, index: Int32, text: String)
-    case input(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: String, inputPlaceholder: String, filter:(String)->String, limit: Int32)
-    case general(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, name: String, color: NSColor, type: GeneralInteractedType)
-    case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, placeholder: String)
-    case selector(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
-    case dataSelector(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, placeholder: String, action:()->Void)
-    case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, item:(NSSize, InputDataEntryId)->TableRowItem)
+    case desc(sectionId: Int32, index: Int32, text: String, color: NSColor, detectBold: Bool)
+    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: String, inputPlaceholder: String, filter:(String)->String, limit: Int32)
+    case general(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, name: String, color: NSColor, type: GeneralInteractedType)
+    case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String)
+    case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
+    case dataSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, action:()->Void)
+    case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, item:(NSSize, InputDataEntryId)->TableRowItem)
     case sectionId(Int32)
     
     var stableId: InputDataEntryId {
         switch self {
-        case let .desc(_, index, _):
+        case let .desc(_, index, _, _, _):
             return .desc(index)
-        case let .input(_, _, _, identifier, _, _, _, _, _):
+        case let .input(_, _, _, _, identifier, _, _, _, _, _):
             return .input(identifier)
-        case let .general(_, _, _, identifier, _, _, _):
+        case let .general(_, _, _, _, identifier, _, _, _):
             return .general(identifier)
-        case let .selector(_, _, _, identifier, _, _):
+        case let .selector(_, _, _, _, identifier, _, _):
             return .selector(identifier)
-        case let .dataSelector(_, _, _, identifier, _, _):
+        case let .dataSelector(_, _, _, _, identifier, _, _):
             return .dataSelector(identifier)
-        case let .dateSelector(_, _, _, identifier, _):
+        case let .dateSelector(_, _, _, _, identifier, _):
             return .dateSelector(identifier)
-        case let .custom(_, index, _, identifier, _):
+        case let .custom(_, _, _, identifier, _, _):
             return .custom(identifier)
         case let .sectionId(index):
             return .sectionId(index)
@@ -125,19 +212,19 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var stableIndex: Int32 {
         switch self {
-        case let .desc(_, index, _):
+        case let .desc(_, index, _, _, _):
             return index
-        case let .input(_, index, _, _, _, _, _, _, _):
+        case let .input(_, index, _, _, _, _, _, _, _, _):
             return index
-        case let .general(_, index, _, _, _, _, _):
+        case let .general(_, index, _, _, _, _, _, _):
             return index
-        case let .selector(_, index, _, _, _, _):
+        case let .selector(_, index, _, _, _, _, _):
             return index
-        case let .dateSelector(_, index, _, _, _):
+        case let .dateSelector(_, index, _, _, _, _):
             return index
-        case let .dataSelector(_, index, _, _, _, _):
+        case let .dataSelector(_, index, _, _, _, _, _):
             return index
-        case let .custom(_, index, _, _, _):
+        case let .custom(_, index, _, _, _, _):
             return index
         case .sectionId:
             fatalError()
@@ -146,19 +233,19 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var sectionIndex: Int32 {
         switch self {
-        case let .desc(index, _, _):
+        case let .desc(index, _, _, _, _):
             return index
-        case let .input(index, _, _, _, _, _, _, _, _):
+        case let .input(index, _, _, _, _, _, _, _, _, _):
             return index
-        case let .selector(index, _, _, _, _, _):
+        case let .selector(index, _, _, _, _, _, _):
             return index
-        case let .general(index, _, _, _, _, _, _):
+        case let .general(index, _, _, _, _, _, _, _):
             return index
-        case let .dateSelector(index, _, _, _, _):
+        case let .dateSelector(index, _, _, _, _, _):
             return index
-        case let .dataSelector(index, _, _, _, _, _):
+        case let .dataSelector(index, _, _, _, _, _, _):
             return index
-        case let .custom(index, _, _, _, _):
+        case let .custom(index, _, _, _, _, _):
             return index
         case .sectionId:
             fatalError()
@@ -178,22 +265,22 @@ enum InputDataEntry : Identifiable, Comparable {
         switch self {
         case .sectionId:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .desc(_, _, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .custom(_, _, _, _, item):
+        case let .desc(_, _, text, color, detectBold):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: detectBold, textColor: color)
+        case let .custom(_, _, _, _, _, item):
             return item(initialSize, stableId)
-        case let .selector(_, _, value, _, placeholder, values):
-            return InputDataDataSelectorRowItem(initialSize, stableId: stableId, placeholder: placeholder, value: value, updated: arguments.dataUpdated, values: values)
-        case let .dataSelector(_, _, value, _, placeholder, action):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI), type: .none, action: action)
-        case let .general(_, _, value, identifier, name, color, type):
+        case let .selector(_, _, value, error, _, placeholder, values):
+            return InputDataDataSelectorRowItem(initialSize, stableId: stableId, value: value, error: error, placeholder: placeholder, updated: arguments.dataUpdated, values: values)
+        case let .dataSelector(_, _, _, error, _, placeholder, action):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI), type: .none, action: action, error: error)
+        case let .general(_, _, value, error, identifier, name, color, type):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: color), type: type, action: {
                 arguments.select((identifier, value))
-            })
-        case let .dateSelector(_, _, value, _, placeholder):
-            return InputDataDateRowItem(initialSize, stableId: stableId, value: value, updated: arguments.dataUpdated, placeholder: placeholder)
-        case let .input(_, _, value, _, mode, placeholder, inputPlaceholder, filter, limit: limit):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: arguments.dataUpdated, limit: limit)
+            }, error: error)
+        case let .dateSelector(_, _, value, error, _, placeholder):
+            return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
+        case let .input(_, _, value, error, _, mode, placeholder, inputPlaceholder, filter, limit: limit):
+            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: arguments.dataUpdated, limit: limit)
         }
     }
 }
@@ -204,45 +291,45 @@ func <(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
 
 func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
     switch lhs {
-    case let .desc(sectionId, index, text):
-        if case .desc(sectionId, index, text) = rhs {
-            return true
+    case let .desc(sectionId, index, text, lhsColor, detectBold):
+        if case .desc(sectionId, index, text, let rhsColor, detectBold) = rhs {
+            return lhsColor == rhsColor
         } else {
             return false
         }
-    case let .input(sectionId, index, lhsValue, identifier, mode, placeholder, inputPlaceholder, _, limit):
-        if case .input(sectionId, index, let rhsValue, identifier, mode, placeholder, inputPlaceholder, _, limit) = rhs {
-            return lhsValue == rhsValue
+    case let .input(sectionId, index, lhsValue, lhsError, identifier, mode, placeholder, inputPlaceholder, _, limit):
+        if case .input(sectionId, index, let rhsValue, let rhsError, identifier, mode, placeholder, inputPlaceholder, _, limit) = rhs {
+            return lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
         }
-    case let .general(sectionId, index, lhsValue, identifier, name, color, type):
-        if case .general(sectionId, index, let rhsValue, identifier, name, color, type) = rhs {
-            return lhsValue == rhsValue
+    case let .general(sectionId, index, lhsValue, lhsError, identifier, name, color, type):
+        if case .general(sectionId, index, let rhsValue, let rhsError, identifier, name, color, type) = rhs {
+            return lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
         }
-    case let .selector(sectionId, index, lhsValue, identifier, placeholder, lhsValues):
-        if case .selector(sectionId, index, let rhsValue, identifier, placeholder, let rhsValues) = rhs {
-            return lhsValues == rhsValues && lhsValue == rhsValue
+    case let .selector(sectionId, index, lhsValue, lhsError, identifier, placeholder, lhsValues):
+        if case .selector(sectionId, index, let rhsValue, let rhsError, identifier, placeholder, let rhsValues) = rhs {
+            return lhsValues == rhsValues && lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
         }
-    case let .dateSelector(sectionId, index, lhsValue, identifier, placeholder):
-        if case .dateSelector(sectionId, index, let rhsValue, identifier, placeholder) = rhs {
-            return lhsValue == rhsValue
+    case let .dateSelector(sectionId, index, lhsValue, lhsError, identifier, placeholder):
+        if case .dateSelector(sectionId, index, let rhsValue, let rhsError, identifier, placeholder) = rhs {
+            return lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
         }
-    case let .dataSelector(sectionId, index, lhsValue, identifier, placeholder, _):
-        if case .dataSelector(sectionId, index, let rhsValue, identifier, placeholder, _) = rhs {
-            return lhsValue == rhsValue
+    case let .dataSelector(sectionId, index, lhsValue, lhsError, identifier, placeholder, _):
+        if case .dataSelector(sectionId, index, let rhsValue, let rhsError, identifier, placeholder, _) = rhs {
+            return lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
         }
-    case let .custom(sectionId, index, value, identifier, _):
-        if case .custom(sectionId, index, value, identifier, _) = rhs {
-            return true
+    case let .custom(sectionId, index, value, identifier, lhsEquatable, _):
+        if case .custom(sectionId, index, value, identifier, let rhsEquatable, _) = rhs {
+            return lhsEquatable == rhsEquatable
         } else {
             return false
         }
@@ -276,6 +363,7 @@ enum InputDataValue : Equatable {
     case date(Int32?, Int32?, Int32?)
     case gender(SecureIdGender?)
     case secureIdDocument(SecureIdVerificationDocument)
+    case none
     var stringValue: String? {
         switch self {
         case let .string(value):
@@ -330,6 +418,12 @@ func ==(lhs: InputDataValue, rhs: InputDataValue) -> Bool {
         } else {
             return false
         }
+    case .none:
+        if case .none = rhs {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
@@ -364,3 +458,12 @@ enum InputDataValidation {
     }
 }
 
+enum InputDataValueErrorTarget : Equatable {
+    case data
+    case files
+}
+
+struct InputDataValueError : Equatable {
+    let description: String
+    let target: InputDataValueErrorTarget
+}

@@ -298,7 +298,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         choiceControl = nil
         
         switch item.type {
-        case let .switchable(stateback: stateback):
+        case let .switchable(stateback):
             contextLabel?.removeFromSuperview()
             contextLabel = nil
             if switchView == nil {
@@ -306,13 +306,13 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 container.addSubview(switchView!)
             }
             switchView?.stateChanged = item.action
-            switchView?.setIsOn(stateback(),animated:animated)
+            switchView?.setIsOn(stateback,animated:animated)
             switchView?.isEnabled = item.enabled
         case let .context(stateback:stateback):
             switchView?.removeFromSuperview()
             switchView = nil
             
-            let label = stateback()
+            let label = stateback
             if !label.isEmpty {
                 if contextLabel == nil {
                     contextLabel = TextViewLabel()
@@ -325,7 +325,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 contextLabel = nil
             }
         case let .selectable(stateback: stateback):
-            if stateback() {
+            if stateback {
                 choiceControl = ImageView()
                 choiceControl?.image = theme.icons.generalSelect
                 choiceControl?.sizeToFit()
@@ -356,7 +356,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 default:
                     if event.clickCount == 1 {
                         item.action()
-                        self.focusAnimation()
+                        self.focusAnimation(nil)
                     }
                 }
             } 

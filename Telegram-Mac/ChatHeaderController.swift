@@ -160,7 +160,7 @@ class ChatPinnedView : Control {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] _ in
-            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, animated: true, focus: true, inset: 0))
+            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
@@ -711,8 +711,7 @@ class ChatSearchHeader : View, Notifable {
             }, with: self, for: .DownArrow, priority: .medium)
         } else {
             if let window = window as? Window {
-                window.remove(object: self, for: .UpArrow)
-                window.remove(object: self, for: .DownArrow)
+                window.removeAllHandlers(for: self)
                 self.searchView.change(state: .None, false)
             }
             
@@ -723,6 +722,10 @@ class ChatSearchHeader : View, Notifable {
     deinit {
         disposable.dispose()
         inputInteraction.remove(observer: self)
+        if let window = window as? Window {
+            window.removeAllHandlers(for: self)
+
+        }
     }
     
     required init?(coder: NSCoder) {

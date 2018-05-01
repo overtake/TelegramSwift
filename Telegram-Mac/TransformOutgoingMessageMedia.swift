@@ -91,10 +91,10 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, me
    
                         }
                         
-                        if let thumbImage = thumbImage {
-                            let imageRep = NSBitmapImageRep(cgImage: thumbImage)
-                            let options: [NSBitmapImageRep.PropertyKey: Any] = [.compressionFactor: 0.6]
-                            let compressedData: Data? = imageRep.representation(using: .jpeg, properties: options)
+                        if let thumbImage = thumbImage, let data = NSImage(cgImage: thumbImage, size: thumbImage.backingSize).tiffRepresentation(using: .jpeg, factor: 0.6) {
+                            
+                            let imageRep = NSBitmapImageRep(data: data)
+                            let compressedData: Data? = imageRep?.representation(using: .jpeg, properties: [:])
                             
                             if let compressedData = compressedData {
                                 let thumbnailResource = LocalFileMediaResource(fileId: arc4random64())

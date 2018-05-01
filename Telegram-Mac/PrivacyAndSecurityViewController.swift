@@ -198,21 +198,15 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 arguments.openBlockedUsers()
             })
         case let .lastSeenPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsLastSeen), type: .context(stateback: {
-                return text
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsLastSeen), type: .context(text), action: {
                 arguments.openLastSeenPrivacy()
             })
         case let .groupPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsGroups), type: .context(stateback: {
-                return text
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsGroups), type: .context(text), action: {
                 arguments.openGroupsPrivacy()
             })
         case let .voiceCallPrivacy(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsVoiceCalls), type: .context(stateback: {
-                return text
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsVoiceCalls), type: .context(text), action: {
                 arguments.openVoiceCallPrivacy()
             })
         case .securityHeader:
@@ -238,9 +232,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case .accountHeader:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsDeleteAccountHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .accountTimeout(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsDeleteAccount), type: .context(stateback: {
-                return text
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsDeleteAccount), type: .context(text), action: {
                 arguments.setupAccountAutoremove()
             })
         case .accountInfo:
@@ -248,9 +240,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case .proxyHeader:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.privacySettingsProxyHeader), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .proxySettings(_, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsUseProxy), type: .context(stateback: { () -> String in
-                return text
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsUseProxy), type: .context(text), action: {
                 arguments.openProxySettings()
             })
         case .section :
@@ -395,6 +385,9 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 }
 
 
+
+
+
 class PrivacyAndSecurityViewController: TableViewController {
     private let initialSettings: Signal<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), NoError>
     
@@ -415,9 +408,17 @@ class PrivacyAndSecurityViewController: TableViewController {
         let actionsDisposable = DisposableSet()
         let account = self.account
         
-        let pushControllerImpl: ((ViewController) -> Void) = { [weak self] c in
+        let pushControllerImpl: (ViewController) -> Void = { [weak self] c in
             self?.navigationController?.push(c)
         }
+        
+        let showToaster:(String)->Void = { [weak self] text in
+            self?.show(toaster: ControllerToaster(text: text))
+        }
+        
+        let proxySettings:Signal<ProxySettings?, Void> = account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in
+            return view.values[PreferencesKeys.proxySettings] as? ProxySettings
+        } |> deliverOnMainQueue
 
         let currentInfoDisposable = MetaDisposable()
         actionsDisposable.add(currentInfoDisposable)
@@ -571,8 +572,8 @@ class PrivacyAndSecurityViewController: TableViewController {
                         let timeoutValues: [Int32] = [
                             1 * 30 * 24 * 60 * 60,
                             3 * 30 * 24 * 60 * 60,
-                            6 * 30 * 24 * 60 * 60,
-                            12 * 30 * 24 * 60 * 60
+                            180 * 24 * 60 * 60,
+                            365 * 24 * 60 * 60
                         ]
                         var items: [SPopoverItem] = []
                         
@@ -603,7 +604,13 @@ class PrivacyAndSecurityViewController: TableViewController {
             
         }, openProxySettings: { [weak self] in
             if let account = self?.account {
-                self?.navigationController?.push(ProxySettingsViewController(account))
+                
+                proxyListController(postbox: account.postbox, network: account.network) ({ controller in
+                    pushControllerImpl(controller)
+                })
+                //pushControllerImpl(proxyListController(postbox: account.postbox, network: account.network))
+                
+//                pushControllerImpl(controller)
             }
         })
         
@@ -615,9 +622,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         
         privacySettingsPromise.set(privacySettings)
         
-        let proxySettings:Signal<ProxySettings?, Void> = account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in
-            return view.values[PreferencesKeys.proxySettings] as? ProxySettings
-        } |> deliverOnMainQueue
+      
         
         genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, privacySettings |> deliverOnMainQueue, appearanceSignal, proxySettings, privacySettingsPromise.get() |> deliverOnMainQueue)
             |> map { state, settings, appearance, proxy, values -> TableUpdateTransition in
