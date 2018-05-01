@@ -65,6 +65,7 @@ class PCallSession {
     private var completed: Bool = false
     let durationPromise:Promise<TimeInterval> = Promise()
     private var callSessionValue:CallSession? = nil
+    private let proxyDisposable = MetaDisposable()
     init(account:Account, peerId:PeerId, id: CallSessionInternalId) {
         
         Queue.mainQueue().async {
@@ -83,9 +84,20 @@ class PCallSession {
         
         state.set(signal |> map {$0.state})
         
-        callQueue.async {
+        proxyDisposable.set((proxySettingsSignal(account.postbox) |> deliverOn(callQueue) |> take(1)).start(next: { [weak self] settings in
+            guard let `self` = self else {return}
             callSession = self
-            let bridge = CallBridge()
+            let bridge:CallBridge
+            if let server = settings.effectiveActiveServer {
+                switch server.connection {
+                case let .socks5(username, password):
+                    bridge = CallBridge(proxy: CProxy(host: server.host, port: server.port, user: username != nil ? username : "", pass: password != nil ? password : ""))
+                default:
+                    bridge = CallBridge(proxy: nil)
+                }
+            } else {
+                bridge = CallBridge(proxy: nil)
+            }
             
             if let inputDeviceId = UserDefaults.standard.object(forKey: "call_inputDevice") as? String {
                 bridge.setCurrentInputDeviceId(inputDeviceId)
@@ -93,7 +105,7 @@ class PCallSession {
             if let outputDeviceId = UserDefaults.standard.object(forKey: "call_outputDevice") as? String {
                 bridge.setCurrentOutputDeviceId(outputDeviceId)
             }
-
+            
             
             self.contextRef = Unmanaged.passRetained(bridge)
             bridge.stateChangeHandler = { value in
@@ -103,7 +115,13 @@ class PCallSession {
                     }
                 }
             }
+        }))
+        
+        callQueue.async {
+           
         }
+        
+       
         
     }
     
@@ -281,10 +299,10 @@ class PCallSession {
         self.callSessionValue = session
         
         switch session.state {
-        case .active(let key, _, let connection, _):
+        case .active(let key, _, let connection, let maxLayer):
             playTone(.callToneConnecting)
             
-            let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)})
+            let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)}, maxLayer: maxLayer)
             
             withContext { context in
                 context.startTransmissionIfNeeded(session.isOutgoing, connection: cdata)
@@ -326,6 +344,7 @@ class PCallSession {
     deinit {
         stateDisposable.dispose()
         drop(.disconnect)
+        proxyDisposable.dispose()
         let contextRef = self.contextRef
         callQueue.async {
             contextRef?.release()

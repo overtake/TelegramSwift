@@ -73,7 +73,7 @@ enum SecureIdVerificationDocumentId: Hashable {
     }
 }
 
-enum SecureIdVerificationDocument {
+enum SecureIdVerificationDocument : Equatable {
     case remote(SecureIdFileReference)
     case local(SecureIdVerificationLocalDocument)
     
@@ -110,5 +110,8 @@ enum SecureIdVerificationDocument {
                     return false
                 }
         }
+    }
+    static func ==(lhs: SecureIdVerificationDocument, rhs: SecureIdVerificationDocument) -> Bool {
+        return lhs.isEqual(to: rhs)
     }
 }

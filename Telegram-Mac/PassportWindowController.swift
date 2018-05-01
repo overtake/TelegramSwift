@@ -20,22 +20,14 @@ private final class PassportWindowArguments {
 }
 
 
-private var passports: [PassportWindowController] = []
-private func deinitPassport(_ controller: PassportWindowController) {
-    var index: Int = passports.count - 1
-    for passport in passports.reversed() {
-        if controller === passport {
-            passports.remove(at: index)
-            break
-        }
-        index -= 1
-    }
-}
+private(set) var passport: PassportWindowController? = nil
+
+
 class PassportWindowController  {
     let window: Window
     let controller: PassportController
     let navigationController: MajorNavigationController
-    init(account: Account, peer: Peer, request: inAppSecureIdRequest, passport: EncryptedSecureIdForm) {
+    init(account: Account, peer: Peer, request: inAppSecureIdRequest, form: EncryptedSecureIdForm) {
         
         
         let screen = NSScreen.main!
@@ -43,10 +35,14 @@ class PassportWindowController  {
         let center = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width)/2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height)/2), size.width, size.height)
 
         
+        
         window = Window(contentRect: center, styleMask: [.closable, .resizable, .miniaturizable, .fullSizeContentView, .titled, .unifiedTitleAndToolbar, .texturedBackground], backing: .buffered, defer: true)
         
-        controller = PassportController(account, peer, request: request, passport)
+
+        
+        controller = PassportController(account, peer, request: request, form)
         navigationController = MajorNavigationController(PassportController.self, controller)
+        
         
         window.isMovableByWindowBackground = true
         window.name = "Telegram.PassportWindow"
@@ -55,23 +51,19 @@ class PassportWindowController  {
         window.titlebarAppearsTransparent = true
         window.minSize = size
         window.maxSize = size
-
         window.contentView = navigationController.view
-
+        
         window.closeInterceptor = { [weak self] in
             guard let `self` = self else {return}
             self.window.orderOut(nil)
-            deinitPassport(self)
-            
+            passport = nil
         }
-        
         (navigationController.view as? View)?.customHandler.layout = { [weak self] _ in
             self?.windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))
         }
         
         windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))
 
-        
         if let titleView = window.titleView {
             NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSView.frameDidChangeNotification, object: titleView)
         }
@@ -82,7 +74,7 @@ class PassportWindowController  {
         navigationController.doSomethingOnEmptyBack = { [weak self] in
             guard let `self` = self else {return}
             self.window.orderOut(nil)
-            deinitPassport(self)
+            passport = nil
         }
         
         controller.viewDidAppear(false)
@@ -91,7 +83,6 @@ class PassportWindowController  {
     var barHeight: CGFloat {
         return 50
     }
-    
     
     
     @objc func windowDidNeedSaveState(_ notification: Notification) {
@@ -113,15 +104,14 @@ class PassportWindowController  {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-        
+        window.orderOut(nil)
         if let titleView = window.titleView {
             NotificationCenter.default.removeObserver(titleView)
         }
     }
     
     func show() {
-        passports.append(self)
+        passport = self
         window.makeKeyAndOrderFront(nil)
-        
     }
 }

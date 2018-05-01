@@ -34,28 +34,32 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     fileprivate var inputHeight: CGFloat = 21
     override var height: CGFloat {
-        return 8 + inputHeight
+        var height = inputHeight + 8
+        if let errorLayout = errorLayout  {
+            height += (height == 42 ? errorLayout.layoutSize.height : errorLayout.layoutSize.height / 2)
+        }
+        return height
     }
     fileprivate let mode: InputDataInputMode
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, currentText: String, placeholder: String, inputPlaceholder: String, filter:@escaping(String)->String, updated:@escaping()->Void, limit: Int32) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, currentText: String, placeholder: String, inputPlaceholder: String, filter:@escaping(String)->String, updated:@escaping()->Void, limit: Int32) {
         self.filter = filter
         self.limit = limit
         self.updated = updated
         self.inputPlaceholder = .initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text))
         placeholderLayout = TextViewLayout(.initialize(string: placeholder, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
+    
         self.currentText = currentText
         self.mode = mode
-        super.init(initialSize, stableId: stableId)
+        super.init(initialSize, stableId: stableId, error: error)
         
         let textStorage = NSTextStorage(attributedString: .initialize(string: currentText, font: .normal(.text), coreText: false))
-        let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.left - inset.right, .greatestFiniteMagnitude))
+        let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.left - inset.right - textFieldLeftInset, .greatestFiniteMagnitude))
         let layoutManager = NSLayoutManager()
         layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
         layoutManager.ensureLayout(for: textContainer)
         
-        inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 18)
+        inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
         
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
     }
@@ -76,11 +80,10 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
 }
 
 
-final class InputDataRowView : TableRowView, TGModernGrowingDelegate, NSTextFieldDelegate {
+final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDelegate {
     private let placeholderTextView = TextView()
     private let textView: TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     private let secureField: NSSecureTextField = NSSecureTextField(frame: NSMakeRect(0, 0, 100, 16))
-
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(placeholderTextView)
@@ -116,6 +119,10 @@ final class InputDataRowView : TableRowView, TGModernGrowingDelegate, NSTextFiel
         }
     }
     
+    override func hasFirstResponder() -> Bool {
+        return true
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -135,13 +142,15 @@ final class InputDataRowView : TableRowView, TGModernGrowingDelegate, NSTextFiel
         placeholderTextView.setFrameOrigin(item.inset.left, 14)
         
         secureField.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset, secureField.frame.height))
-        secureField.centerY(x: item.inset.left + item.textFieldLeftInset)
+        secureField.setFrameOrigin(item.inset.left + item.textFieldLeftInset, 14)
 
         textView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset, textView.frame.height))
-        textView.centerY(x: item.inset.left + item.textFieldLeftInset)
+        textView.setFrameOrigin(item.inset.left + item.textFieldLeftInset - 2, 5)
+        
+
     }
     
-    public func maxCharactersLimit() -> Int32 {
+    public func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         if let item = item as? InputDataRowItem {
             return item.limit
         }
@@ -153,12 +162,13 @@ final class InputDataRowView : TableRowView, TGModernGrowingDelegate, NSTextFiel
         if let item = item as? InputDataRowItem, let table = item.table {
             item.inputHeight = height
             
-            table.noteHeightOfRow(item.index,animated)
+            table.noteHeightOfRow(item.index, animated)
+
         }
         
     }
     
-    func textViewSize() -> NSSize {
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
         return textView.frame.size
     }
     
@@ -224,6 +234,17 @@ final class InputDataRowView : TableRowView, TGModernGrowingDelegate, NSTextFiel
         return secureField._mouseInside() || textView._mouseInside()
     }
     
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        switch true {
+        case NSPointInRect(point, secureField.frame):
+            return secureField
+        case NSPointInRect(point, textView.frame):
+            return textView
+        default:
+            return super.hitTest(point)
+        }
+    }
+    
     override var firstResponder: NSResponder? {
         if let item = item as? InputDataRowItem {
             switch item.mode {
@@ -242,6 +263,7 @@ final class InputDataRowView : TableRowView, TGModernGrowingDelegate, NSTextFiel
         guard let item = item as? InputDataRowItem else {return}
         placeholderTextView.update(item.placeholderLayout)
         
+
         
         switch item.mode {
         case .plain:

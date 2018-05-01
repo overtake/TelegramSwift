@@ -443,7 +443,7 @@ class ChatListRowItem: TableRowItem {
             
             let leaveGroup = { [weak self] in
                 if let strongSelf = self {
-                    confirm(for: mainWindow, information: tr(L10n.confirmLeaveGroup), swapColors: true, successHandler: { _ in
+                    confirm(for: mainWindow, information: tr(L10n.confirmLeaveGroup), successHandler: { _ in
                         strongSelf.deleteChatDisposable.set(leftGroup(account: strongSelf.account, peerId: strongSelf.peerId).start())
                     })
                 }

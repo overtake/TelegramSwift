@@ -11,7 +11,7 @@ import PostboxMac
 import SwiftSignalKitMac
 
 final class ChatMessageThrottledProcessingManager {
-    private let queue = Queue(target: Queue.concurrentBackgroundQueue())
+    private let queue = Queue(name: "ChatMessageThrottledProcessingManager")
     
     private let delay: TimeInterval
     init(delay: TimeInterval = 1.0) {

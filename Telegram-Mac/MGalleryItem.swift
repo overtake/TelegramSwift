@@ -21,6 +21,12 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
+    case let .secureIdDocument(_, lhsIndex):
+        if case let .secureIdDocument(_, rhsIndex) = rhs {
+            return lhsIndex < rhsIndex
+        } else {
+            return false
+        }
     case let .photo(lhsIndex, _, _, _):
         if  case let .photo(rhsIndex, _, _, _) = rhs {
             return lhsIndex < rhsIndex
@@ -44,6 +50,12 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
+    case let .secureIdDocument(lhsEntry, lhsIndex):
+        if case let .secureIdDocument(rhsEntry, rhsIndex) = rhs {
+            return lhsEntry.document.isEqual(to: rhsEntry.document) && lhsIndex == rhsIndex
+        } else {
+            return false
+        }
     case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference):
         if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference) = rhs {
             return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(rhsPhoto) && lhsReference == rhsReference
@@ -62,6 +74,7 @@ enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
     case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?)
     case instantMedia(InstantPageMedia)
+    case secureIdDocument(SecureIdDocumentValue, Int)
     var stableId: AnyHashable {
         switch self {
         case let .message(entry):
@@ -70,6 +83,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return stableId
         case let .instantMedia(media):
             return media.index
+        case let .secureIdDocument(document, _):
+            return document.stableId
         }
     }
     
@@ -83,6 +98,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return "\(stableId)"
         case .instantMedia:
             return "\(stableId)"
+        case let .secureIdDocument(document, _):
+            return "secureId: \(document.document.id.hashValue)"
         }
     }
     
@@ -203,9 +220,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             view.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
 
             if first, let slf = self, let magnify = view.superview?.superview as? MagnifyView {
-                self?.modifiedSize = image?.size
-                if magnify.contentSize != slf.sizeValue {
-                    magnify.contentSize = slf.sizeValue
+                if let size = image?.size, size.width > 150 && size.height > 150 {
+                    self?.modifiedSize = size
+                    if magnify.contentSize != slf.sizeValue {
+                        magnify.contentSize = slf.sizeValue
+                    }
                 }
             }
             

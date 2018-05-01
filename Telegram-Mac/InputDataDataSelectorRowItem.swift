@@ -26,12 +26,12 @@ class InputDataDataSelectorRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     fileprivate let values: [ValuesSelectorValue<InputDataValue>]
-    init(_ initialSize: NSSize, stableId: AnyHashable, placeholder: String, value: InputDataValue, updated: @escaping()->Void, values: [ValuesSelectorValue<InputDataValue>]) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, value: InputDataValue, error: InputDataValueError?, placeholder: String, updated: @escaping()->Void, values: [ValuesSelectorValue<InputDataValue>]) {
         self._value = value
         self.updated = updated
         self.placeholderLayout = TextViewLayout(.initialize(string: placeholder, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         self.values = values
-        super.init(initialSize, height: 42, stableId: stableId)
+        super.init(initialSize, height: 42, stableId: stableId, error: error)
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
     }
     
@@ -47,7 +47,7 @@ class InputDataDataSelectorRowItem: GeneralRowItem, InputDataRowDataValue {
 }
 
 
-final class InputDataDataSelectorRowView : TableRowView {
+final class InputDataDataSelectorRowView : GeneralRowView {
     private let placeholderTextView = TextView()
     private let dataTextView = TextView()
     required init(frame frameRect: NSRect) {
@@ -63,7 +63,7 @@ final class InputDataDataSelectorRowView : TableRowView {
     override func mouseDown(with event: NSEvent) {
         
         guard let item = item as? InputDataDataSelectorRowItem else {return}
-        showModal(with: ValuesSelectorModalController(values: item.values, selected: item.value.stringValue == nil ? nil : item.values.first(where: {$0.value == item.value}), title: item.placeholderLayout.attributedString.string, onComplete: { [weak item] newValue in
+        showModal(with: ValuesSelectorModalController(values: item.values, selected: item.values.first(where: {$0.value == item.value}), title: item.placeholderLayout.attributedString.string, onComplete: { [weak item] newValue in
             item?._value = newValue.value
             item?.redraw()
         }), for: mainWindow)
@@ -87,11 +87,11 @@ final class InputDataDataSelectorRowView : TableRowView {
     override func layout() {
         super.layout()
         guard let item = item as? InputDataDataSelectorRowItem else {return}
-        placeholderTextView.centerY(x: item.inset.left)
+        placeholderTextView.setFrameOrigin(item.inset.left, 14)
         
         dataTextView.layout?.measure(width: frame.width - item.inset.left - item.inset.right - 106)
         dataTextView.update(dataTextView.layout)
-        dataTextView.centerY(x: item.inset.left + 106)
+        dataTextView.setFrameOrigin(item.inset.left + 106, 14)
     }
     
     override func updateColors() {
@@ -111,7 +111,7 @@ final class InputDataDataSelectorRowView : TableRowView {
         if let index = index {
             selected = item.values[index]
         }
-        let layout = TextViewLayout(.initialize(string: selected?.localized ?? "-", color: selected == nil ? theme.colors.grayText : theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: selected?.localized ?? item.placeholderLayout.attributedString.string, color: selected == nil ? theme.colors.grayText : theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         dataTextView.update(layout)
         
         needsLayout = true

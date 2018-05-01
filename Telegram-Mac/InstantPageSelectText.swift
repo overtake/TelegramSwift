@@ -300,6 +300,20 @@ class InstantPageSelectText : NSObject {
                             index += view.indexOfDisplayedSlide
                         }
                         
+                        if let file = medias[index].media as? TelegramMediaFile, file.isMusic || file.isVoice {
+                            
+                            if view?.hitTest(point) is RadialProgressView, let view = view as? InstantPageAudioView {
+                                if view.controller != nil {
+                                    view.controller?.playOrPause()
+                                } else {
+                                    let audio = APSingleResourceController(account: account, wrapper: view.wrapper, streamable: true)
+                                    view.controller = audio
+                                    audio.start()
+                                }
+                            }
+                            return .invokeNext
+                        }
+                        
                         if let v = view?.hitTest(point) as? RadialProgressView {
                             switch v.state {
                             case .Fetching:
@@ -311,7 +325,10 @@ class InstantPageSelectText : NSObject {
                             }
                         }
                         
+                       
                         showInstantViewGallery(account: account, medias: medias, firstIndex: index, self?.interactive)
+               
+                        
                         result = .rejected
                         
                     } else {

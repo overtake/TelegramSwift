@@ -49,6 +49,7 @@ class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
         if let embedSize = content.embedSize {
             let size = embedSize.aspectFitted(NSMakeSize(min(size.width - 100, 800), min(size.height - 100, 800)))
             webView.setFrameSize(size)
+            
             self.modal?.resize(with:size, animated: false)
             indicator.center()
 
@@ -57,8 +58,16 @@ class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        webView.frameLoadDelegate = nil
         webView.mainFrame.load(URLRequest(url: URL(string:"file://blank")!))
-        webView.mainFrame.stopLoading()
+      //  webView.mainFrame.stopLoading()
+      //  webView.stopLoading(nil)
+      //  webView.removeFromSuperview()
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     func webView(_ sender: WebView!, didFinishLoadFor frame: WebFrame!) {

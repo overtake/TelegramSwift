@@ -74,9 +74,8 @@ class PeerInfoArguments {
         return value.modify {$0}
     }
     
-    
     func updateInfoState(_ f: (PeerInfoState) -> PeerInfoState) -> Void {
-        _statePromise.set(.single(value.modify({f($0)})))
+        _statePromise.set(.single(value.modify(f)))
     }
     
     func updateEditable(_ editable:Bool, peerView:PeerView) {
@@ -334,7 +333,7 @@ class PeerInfoController: EditableViewController<TableView> {
         }
         
         
-        let transition = combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> distinctUntilChanged |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
+        let transition = combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
             |> map { [weak peerAtomic] view, state, appearance, inputActivities -> (PeerView, TableUpdateTransition) in
                 
                 let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})

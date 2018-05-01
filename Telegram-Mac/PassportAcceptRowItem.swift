@@ -39,7 +39,7 @@ final class PassportAcceptRowView : TableRowView {
         super.layout()
         guard let item = item as? GeneralRowItem else {return}
         
-        button.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right, frame.height - 10))
+        button.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right, 40))
         button.center()
     }
     

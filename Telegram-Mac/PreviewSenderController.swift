@@ -795,15 +795,15 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return !result
     }
     
-    func textViewSize() -> NSSize {
-        return NSMakeSize(frame.width - 40, genericView.textView.frame.height)
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
+        return NSMakeSize(frame.width - 40, textView.frame.height)
     }
     
     func textViewIsTypingEnabled() -> Bool {
         return true
     }
     
-    func maxCharactersLimit() -> Int32 {
+    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         return 200
     }
     

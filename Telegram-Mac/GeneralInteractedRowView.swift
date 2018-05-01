@@ -24,18 +24,7 @@ class GeneralInteractedRowView: GeneralRowView {
         
         nextView.image = theme.icons.generalNext
         overlay.animates = false
-        //        overlay.set(handler: { [weak self] control in
-        //            if let strongSelf = self {
-        //                self?.textView?.backgroundColor = strongSelf.isSelect ? strongSelf.backdorColor : .clear
-        //            }
-        //        }, for: .Highlight)
-        
-        //        overlay.set(handler: { [weak self] control in
-        //            if let strongSelf = self {
-        //                self?.textView?.backgroundColor = strongSelf.backdorColor
-        //            }
-        //        }, for: .Normal)
-        //
+
         if let item = item as? GeneralInteractedRowItem {
             
             if let descLayout = item.descLayout {
@@ -58,7 +47,7 @@ class GeneralInteractedRowView: GeneralRowView {
                     addSubview(switchView!)
                 }
                 switchView?.presentation = item.switchAppearance
-                switchView?.setIsOn(stateback(),animated:animated)
+                switchView?.setIsOn(stateback,animated:animated)
                 
                 switchView?.stateChanged = item.action
                 switchView?.userInteractionEnabled = item.enabled
@@ -68,27 +57,29 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             
             if case let .image(stateback) = item.type {
-                nextView.image = stateback()
+                nextView.image = stateback
                 nextView.sizeToFit()
                 nextView.isHidden = false
             }
             
-            if case let .context(value) = item.type {
+            switch item.type {
+            case let .context(value), let .nextContext(value):
                 if textView == nil {
                     textView = TextView()
                     textView?.animates = false
                     textView?.userInteractionEnabled = false
                     addSubview(textView!)
                 }
-                let layout = TextViewLayout(.initialize(string: value(), color: isSelect ? .white : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+                let layout = TextViewLayout(.initialize(string: value, color: isSelect ? .white : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
                 textView?.set(layout: layout)
                 
                 nextView.isHidden = false
-            } else {
+            default:
                 textView?.removeFromSuperview()
                 textView = nil
             }
+            
             
             textView?.backgroundColor = theme.colors.background
             
@@ -100,7 +91,7 @@ class GeneralInteractedRowView: GeneralRowView {
             
             
             if case let .selectable(value) = item.type {
-                nextView.isHidden = !value()
+                nextView.isHidden = !value
                 nextView.image = theme.icons.generalCheck
                 nextView.sizeToFit()
             }
@@ -112,10 +103,12 @@ class GeneralInteractedRowView: GeneralRowView {
             if case .next = item.type {
                 needNextImage = true
             }
-            
+            if case .nextContext = item.type {
+                needNextImage = true
+            }
             if needNextImage {
                 nextView.isHidden = false
-                nextView.image = theme.icons.generalNext
+                nextView.image = item.isSelected ? nil : theme.icons.generalNext
                 nextView.sizeToFit()
             }
             
@@ -149,6 +142,10 @@ class GeneralInteractedRowView: GeneralRowView {
         
     }
     
+    override func shakeView() {
+        self.shake()
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         super.draw(layer, in: ctx)
@@ -157,9 +154,10 @@ class GeneralInteractedRowView: GeneralRowView {
             
             
             var textXAdditional:CGFloat = 0
-            if let thumb = item.thumb {
+            let t = item.isSelected ? item.activeThumb : item.thumb
+            if let thumb = t {
                 let f = focus(thumb.thumb.backingSize)
-                let icon = isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) : thumb.thumb
+                let icon = thumb.thumb //isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) : 
                 ctx.draw(icon, in: NSMakeRect(item.inset.left, f.minY, f.width, f.height))
                 if let textInset = thumb.textInset {
                     textXAdditional = textInset
@@ -178,14 +176,14 @@ class GeneralInteractedRowView: GeneralRowView {
                 textRect.origin.x = item.inset.left + textXAdditional
                 textRect.origin.y -= 1
                 if item.descLayout != nil {
-                    textRect.origin.y = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height/2) - nameLayout.0.size.height - 2
+                    textRect.origin.y = 10
                 }
                 
                 nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
             if case let .colorSelector(stateback) = item.type {
-                ctx.setFillColor(stateback().cgColor)
+                ctx.setFillColor(stateback.cgColor)
                 ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - 14) / 2), 14, 14))
             }
         }
@@ -215,7 +213,7 @@ class GeneralInteractedRowView: GeneralRowView {
             self.overlay.frame = NSMakeRect(inset.left, 0, frame.width - inset.left - inset.right, frame.height)
             
             if let descriptionView = descriptionView {
-                descriptionView.setFrameOrigin(inset.left, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) + 2)
+                descriptionView.setFrameOrigin(inset.left, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height - descriptionView.frame.height - 6))
             }
             
             let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (inset.right == 0 ? 10 : 0)

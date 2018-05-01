@@ -104,84 +104,58 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId)
         case let .fontSize(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsLargeFonts), description: tr(L10n.generalSettingsFontDescription), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsLargeFonts), description: tr(L10n.generalSettingsFontDescription), type: .switchable(enabled), action: {
                 arguments.toggleFonts(!enabled)
             })
         case let .darkMode(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(enabled), action: {
                 _ = updateThemeSettings(postbox: arguments.account.postbox, palette: !enabled ? darkPalette : whitePalette).start()
 
             })
         case let .handleInAppKeys(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsMediaKeysForInAppPlayer), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsMediaKeysForInAppPlayer), type: .switchable(enabled), action: {
                 arguments.toggleInAppKeys(!enabled)
             })
         case let .sidebar(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEnableSidebar), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEnableSidebar), type: .switchable(enabled), action: {
                 arguments.toggleSidebar(!enabled)
             })
         case let .autoplayGifs(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAutoplayGifs), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAutoplayGifs), type: .switchable(enabled), action: {
                 arguments.toggleAutoplayGifs(!enabled)
             })
         case let .inAppSounds(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInAppSounds), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInAppSounds), type: .switchable(enabled), action: {
                 arguments.toggleInAppSounds(!enabled)
             })
         case let .emojiReplacements(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEmojiReplacements), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEmojiReplacements), type: .switchable(enabled), action: {
                 arguments.toggleEmojiReplacements(!enabled)
             })
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .enterBehavior(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByEnter), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByEnter), type: .selectable(enabled), action: {
                 arguments.toggleInput(.enter)
             })
         case let .cmdEnterBehavior(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByCmdEnter), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByCmdEnter), type: .selectable(enabled), action: {
                 arguments.toggleInput(.cmdEnter)
             })
         case let .forceTouchEdit(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchEdit), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchEdit), type: .selectable(enabled), action: {
                 arguments.toggleForceTouchAction(.edit)
             })
         case let .forceTouchReply(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchReply), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchReply), type: .selectable(enabled), action: {
                arguments.toggleForceTouchAction(.reply)
             })
         case let .forceTouchForward(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchForward), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchForward), type: .selectable(enabled), action: {
                 arguments.toggleForceTouchAction(.forward)
             })
 		case let .instantViewScrollBySpace(sectionId: _, enabled: enabled):
-			return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInstantViewScrollBySpace), type: .switchable(stateback: { () -> Bool in
-				return enabled
-			}), action: {
+			return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInstantViewScrollBySpace), type: .switchable(enabled), action: {
 				arguments.toggleInstantViewScrollBySpace(!enabled)
 			})
         }

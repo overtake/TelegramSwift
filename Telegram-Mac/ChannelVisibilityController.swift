@@ -250,11 +250,11 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
         case let .typeHeader(_, title):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: title)
         case let .typePublic(_, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPublic), type: .selectable(stateback: { return selected}), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPublic), type: .selectable(selected), action: {
                 arguments.updateCurrentType(.publicChannel)
             })
         case let .typePrivate(_, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPrivate), type: .selectable(stateback: { return selected}), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPrivate), type: .selectable(selected), action: {
                 arguments.updateCurrentType(.privateChannel)
             })
         case let .typeInfo(_, text):

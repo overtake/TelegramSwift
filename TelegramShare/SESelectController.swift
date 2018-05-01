@@ -189,11 +189,9 @@ class ShareObject {
 
                     if let imageSource = CGImageSourceCreateWithData(data as CFData, nil) {
                         let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options)
-                        if let image = image {
-                            let imageRep = NSBitmapImageRep(cgImage: image)
-                            let options: [NSBitmapImageRep.PropertyKey: Any] = [.compressionFactor: 0.83]
-                            let data = imageRep.representation(using: .jpeg, properties: options)
-                            if let data = data {
+                        if let image = image, let data = NSImage(cgImage: image, size: image.backingSize).tiffRepresentation(using: .jpeg, factor: 0.83) {
+                            let imageRep = NSBitmapImageRep(data: data)
+                            if let data = let data = imageRep?.representation(using: .jpeg, properties: [:]) {
                                 subscriber.putNext(StandaloneMedia.image(data))
                             }
                         }

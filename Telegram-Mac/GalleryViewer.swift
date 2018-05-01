@@ -72,7 +72,7 @@ private func mediaForMessage(message: Message) -> Media? {
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {
-            if file.mimeType.hasPrefix("image/") || file.isVideo {
+            if file.mimeType.hasPrefix("image/") || file.isVideo || file.isAnimated {
                 return file
             }
         } else if let webpage = media as? TelegramMediaWebpage {
@@ -449,6 +449,39 @@ class GalleryViewer: NSResponder {
         
     }
     
+    
+    fileprivate convenience init(account:Account, secureIdMedias:[SecureIdDocumentValue], firstIndex:Int, _ delegate:InteractionContentViewProtocol? = nil, reversed:Bool = false) {
+        self.init(account: account, delegate, nil, type: .history, reversed: reversed)
+        
+        let pagerSize = self.pagerSize
+        
+        let totalCount:Int = secureIdMedias.count
+        
+        
+        ready.set(.single(true) |> map { [weak self] _ -> Bool in
+            
+            var inserted: [(Int, MGalleryItem)] = []
+            for i in 0 ..< secureIdMedias.count {
+                let media = secureIdMedias[i]
+                inserted.append((i, MGalleryPhotoItem(account, .secureIdDocument(media, i), pagerSize)))
+
+            }
+            
+            _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
+            
+            self?.controls.index.set(.single((firstIndex + 1, totalCount)))
+            self?.pager.set(index: firstIndex, animated: false)
+            
+            return true
+            
+            })
+        
+        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] (selectedIndex) in
+            self?.controls.index.set(.single((selectedIndex + 1,totalCount)))
+        }))
+        
+        
+    }
    
     
     fileprivate convenience init(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil, reversed: Bool = false) {
@@ -914,4 +947,10 @@ func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIn
    // }
 }
 
+
+func showSecureIdDocumentsGallery(account: Account, medias:[SecureIdDocumentValue], firstIndex: Int, _ delegate: InteractionContentViewProtocol? = nil) {
+    viewer?.clean()
+    let gallery = GalleryViewer(account: account, secureIdMedias: medias, firstIndex: firstIndex, delegate)
+    gallery.show()
+}
 

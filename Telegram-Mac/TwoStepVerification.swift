@@ -58,3 +58,44 @@ public func reportMessages(postbox: Postbox, network: Network, peerId: PeerId, m
     }
 }
 
+public func getCountryCode(network: Network)->Signal<String, Void> {
+    return network.request(Api.functions.help.getNearestDc()) |> retryRequest |> map { value in
+        switch value {
+        case let .nearestDc(country, _, _):
+            return country
+        }
+    }
+}
+
+
+
+//public func dropSecureId(network: Network, currentPassword: String) -> Signal<Void, AuthorizationPasswordVerificationError> {
+//    return twoStepAuthData(network)
+//        |> mapError { _ -> AuthorizationPasswordVerificationError in
+//            return .generic
+//        }
+//        |> mapToSignal { authData -> Signal<Void, AuthorizationPasswordVerificationError> in
+//            if let currentSalt = authData.currentSalt {
+//                var data = Data()
+//                data.append(currentSalt)
+//                data.append(currentPassword.data(using: .utf8, allowLossyConversion: true)!)
+//                data.append(currentSalt)
+//                currentPasswordHash = Buffer(data: sha256Digest(data))
+//            } else {
+//                currentPasswordHash = Buffer(data: Data())
+//            }
+//            
+//            let flags: Int32 = 1 << 1
+//            
+//            let settings = network.request(Api.functions.account.getPasswordSettings(currentPasswordHash: currentPasswordHash), automaticFloodWait: false) |> mapError {_ in return AuthorizationPasswordVerificationError.generic}
+//    
+//            
+//            return settings |> mapToSignal { value -> Signal<Void, AuthorizationPasswordVerificationError> in
+//                switch value {
+//                case let .passwordSettings(email, secureSalt, _, _):
+//                    return network.request(Api.functions.account.updatePasswordSettings(currentPasswordHash: currentPasswordHash, newSettings: Api.account.PasswordInputSettings.passwordInputSettings(flags: flags, newSalt: secureSalt, newPasswordHash: currentPasswordHash, hint: nil, email: email, newSecureSalt: secureSalt, newSecureSecret: nil, newSecureSecretId: nil)), automaticFloodWait: false) |> map {_ in} |> mapError {_ in return AuthorizationPasswordVerificationError.generic}
+//                }
+//            }
+//    }
+//}
+

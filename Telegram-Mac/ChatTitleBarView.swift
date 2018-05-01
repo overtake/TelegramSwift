@@ -18,29 +18,36 @@ private class ConnectionStatusView : View {
     
     var disableProxy:(()->Void)?
     
-    var status:ConnectionStatus = .online {
+    var status:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
             let attr:NSAttributedString
             
-            if case .connecting(true) = status { 
-                disableProxyButton = TitleButton()
-                disableProxyButton?.set(color: theme.colors.grayText, for: .Normal)
-                disableProxyButton?.set(font: .medium(.text), for: .Normal)
-                disableProxyButton?.set(text: tr(L10n.connectingStatusDisableProxy), for: .Normal)
-                _ = disableProxyButton?.sizeToFit()
-                addSubview(disableProxyButton!)
-                
-                disableProxyButton?.set(handler: { [weak self] _ in
-                    self?.disableProxy?()
-                }, for: .Click)
+            if case let .connecting(proxy) = status {
+                if let _ = proxy {
+                    if disableProxyButton == nil {
+                        disableProxyButton = TitleButton()
+                    }
+                    disableProxyButton?.set(color: theme.colors.grayText, for: .Normal)
+                    disableProxyButton?.set(font: .medium(.text), for: .Normal)
+                    disableProxyButton?.set(text: tr(L10n.connectingStatusDisableProxy), for: .Normal)
+                    _ = disableProxyButton?.sizeToFit()
+                    addSubview(disableProxyButton!)
+                    
+                    disableProxyButton?.set(handler: { [weak self] _ in
+                        self?.disableProxy?()
+                        }, for: .Click)
+                } else {
+                    disableProxyButton?.removeFromSuperview()
+                    disableProxyButton = nil
+                }
             } else {
                 disableProxyButton?.removeFromSuperview()
                 disableProxyButton = nil
             }
             
             switch status {
-            case .connecting(let toProxy):
-                attr = .initialize(string: toProxy ? tr(L10n.chatConnectingStatusConnectingToProxy) : tr(L10n.chatConnectingStatusConnecting), color: theme.colors.text, font: .medium(.header))
+            case .connecting(let proxy):
+                attr = .initialize(string: proxy != nil ? tr(L10n.chatConnectingStatusConnectingToProxy) : tr(L10n.chatConnectingStatusConnecting), color: theme.colors.text, font: .medium(.header))
             case .updating:
                 attr = .initialize(string: tr(L10n.chatConnectingStatusUpdating), color: theme.colors.text, font: .medium(.header))
             case .waitingForNetwork:
@@ -100,7 +107,7 @@ private class ConnectionStatusView : View {
             textView.update(textViewLayout)
             
             if let disableProxyButton = disableProxyButton {
-                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 4, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) + 2)
+                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 2, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) + 2)
                 textView.setFrameOrigin(indicator.frame.maxX + 8, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) - textView.frame.height + 2)
             } else {
                 textView.setFrameOrigin(NSMakePoint(indicator.frame.maxX + 4, f.origin.y))
@@ -125,16 +132,16 @@ class ChatTitleBarView: TitledBarView {
     private let badgeNode:GlobalBadgeNode
     private let disposable = MetaDisposable()
     private let closeButton = ImageButton()
-    var connectionStatus:ConnectionStatus = .online {
+    var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
             if connectionStatus != oldValue {
-                if connectionStatus == .online {
+                if case .online = connectionStatus {
                     
                     //containerView.change(pos: NSMakePoint(0, 0), animated: true)
                     if let connectionStatusView = connectionStatusView {
                         
                         connectionStatusView.change(pos: NSMakePoint(0, -frame.height), animated: true)
-                        connectionStatusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] _ in
+                        connectionStatusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] completed in
                             self?.connectionStatusView?.removeFromSuperview()
                             self?.connectionStatusView = nil
                         })

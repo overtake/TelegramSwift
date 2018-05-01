@@ -99,7 +99,6 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
 
     
     let textView:TGModernGrowingTextView
-    
     private let secureField: NSSecureTextField = NSSecureTextField(frame: NSMakeRect(0, 0, 100, 16))
     
     private let cleanImage: ImageButton = ImageButton()
@@ -251,7 +250,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         window?.makeFirstResponder(firstResponder)
     }
     
-    public func maxCharactersLimit() -> Int32 {
+    public func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         if let item = item as? GeneralInputRowItem {
             return item.limit
         }
@@ -268,7 +267,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         
     }
     
-    func textViewSize() -> NSSize {
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
         return textView.frame.size
     }
     

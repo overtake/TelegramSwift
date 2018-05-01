@@ -129,18 +129,17 @@ final class ChatInteraction : InterfaceObserver  {
     
     func disableProxy() {
         let account = self.account
-        disableProxyDisposable.set((account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> take(1) |> map { prefs -> ProxySettings? in
-            return prefs.values[PreferencesKeys.proxySettings] as? ProxySettings
-        } |> deliverOnMainQueue |> mapToSignal { setting in
-            return confirmSignal(for: mainWindow, information: tr(L10n.proxyForceDisable(setting?.host ?? "")))
-        } |> filter {$0} |> mapToSignal { _ in
-            return applyProxySettings(postbox: account.postbox, network: account.network, settings: nil)
+        disableProxyDisposable.set(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
+            return current.withUpdatedEnabled(false)
         }).start())
         
     }
     
-    func applyProxy(_ proxy:ProxySettings) -> Void {
-        applyExternalProxy(proxy, postbox: account.postbox, network: account.network)
+    func applyProxy(_ server:ProxyServerSettings) -> Void {
+        applyExternalProxy(server, postbox: account.postbox, network: account.network)
+//        disableProxyDisposable.set(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
+//            return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
+//        }).start())
     }
     
     
@@ -296,7 +295,7 @@ final class ChatInteraction : InterfaceObserver  {
                     case let .callback(data):
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, false, data)
                     case let .switchInline(samePeer: same, query: query):
-                        let text = "@\(keyboardMessage.inlinePeer?.username ?? "") \(query)"
+                        let text = "@\(keyboardMessage.inlinePeer?.username ?? keyboardMessage.author?.username ?? "") \(query)"
                         if same {
                             strongSelf.updateInput(with: text)
                         } else {

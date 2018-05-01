@@ -253,7 +253,7 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
-            if isEnabled {
+            if isEnabled && layer!.opacity > 0 {
                 send(event: .Up)
                 
                 if mouseInside() && !longInvoked {

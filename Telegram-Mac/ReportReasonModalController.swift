@@ -38,30 +38,15 @@ fileprivate class ReportReasonModalController: ModalViewController {
         }
         
         let initialSize = atomicSize.modify {$0}
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonSpam), type: .selectable(stateback: { [weak self] () -> Bool in
-            if let current = self?.current {
-                return current == .spam
-            }
-            return false
-        }), action: { 
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonSpam), type: .selectable(current == .spam), action: {
             updateState(.spam)
         }))
         
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonViolence), type: .selectable(stateback: { [weak self] () -> Bool in
-            if let current = self?.current {
-                return current == .violence
-            }
-            return false
-        }), action: {
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonViolence), type: .selectable(current == .violence), action: {
             updateState(.violence)
         }))
         
-        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonPorno), type: .selectable(stateback: { [weak self] () -> Bool in
-            if let current = self?.current {
-                return current == .porno
-            }
-            return false
-        }), action: {
+        _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonPorno), type: .selectable(current == .porno), action: {
             updateState(.porno)
         }, drawCustomSeparator: false))
 

@@ -175,7 +175,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                 copy.append(handle)
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
-                if copy[i].object.value == object  {
+                if copy[i].object.value === object  {
                     newKeyHandlers[key]?.remove(at: i)
                 }
             }
@@ -193,7 +193,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                 copy.append(handle)
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
-                if copy[i].object.value == object  {
+                if copy[i].object.value === object  {
                     newMouseHandlers[key]?.remove(at: i)
                 }
             }
@@ -206,7 +206,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
             copyGesture.append(gesture)
         }
         for i in stride(from: swipeHandlers.count - 1, to: -1 , by: -1) {
-            if copyGesture[i].object.value == object {
+            if copyGesture[i].object.value === object {
                 copyGesture.remove(at: i)
             }
         }

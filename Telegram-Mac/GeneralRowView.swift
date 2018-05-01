@@ -11,7 +11,7 @@ import TGUIKit
 class GeneralRowView: TableRowView,ViewDisplayDelegate {
     
 
-    
+     private var errorTextView: TextView? = nil
     
     var general:GeneralRowItem? {
         return self.item as? GeneralRowItem
@@ -25,9 +25,23 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         super.set(item: item, animated: animated)
         if let item = item as? GeneralRowItem {
             self.border = item.border
+            
+            if let errorLayout = item.errorLayout {
+                if errorTextView == nil {
+                    errorTextView = TextView()
+                    errorTextView?.isSelectable = false
+                    addSubview(errorTextView!)
+                }
+                errorTextView!.update(errorLayout)
+                errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorTextView!.frame.height), animated: animated)
+
+            } else {
+                errorTextView?.removeFromSuperview()
+                errorTextView = nil
+            }
         }
         self.needsDisplay = true
-        
+        self.needsLayout = true
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -49,6 +63,16 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         
      //   let inset = general?.inset ?? NSEdgeInsets()
       //  overlay.frame = NSMakeRect(inset.left, 0, newSize.width - (inset.left + inset.right), newSize.height)
+    }
+    
+    override func layout() {
+        
+        guard let item = item as? GeneralRowItem else {return}
+
+        
+        if let errorTextView = errorTextView {
+            errorTextView.setFrameOrigin(item.inset.left, frame.height - 6 - errorTextView.frame.height)
+        }
     }
     
     override var backdorColor: NSColor {

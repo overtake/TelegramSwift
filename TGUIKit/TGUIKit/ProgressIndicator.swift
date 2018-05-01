@@ -278,6 +278,11 @@ private class ProgressLayer : CALayer {
         }
     }
     
+    fileprivate var lineWidth: CGFloat = 2 {
+        didSet {
+            setNeedsDisplay()
+        }
+    }
     
     override func draw(in ctx: CGContext) {
 
@@ -286,7 +291,6 @@ private class ProgressLayer : CALayer {
         let startAngle = 2.0 * (CGFloat.pi) * 0.8 - CGFloat.pi / 2
         let endAngle = -(CGFloat.pi / 2)
         
-        let lineWidth: CGFloat = 2.0
         let diameter = floorToScreenPixels(scaleFactor: System.backingScale, frame.height)
         
         let pathDiameter = diameter - lineWidth - lineWidth * 2
@@ -303,6 +307,11 @@ public class ProgressIndicator : Control {
         didSet {
             indicator.progressColor = progressColor
             indicator.setNeedsDisplay()
+        }
+    }
+    public var lineWidth: CGFloat = 2 {
+        didSet {
+            indicator.lineWidth = lineWidth
         }
     }
     private let indicator: ProgressLayer = ProgressLayer()

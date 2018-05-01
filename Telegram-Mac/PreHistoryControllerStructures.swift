@@ -90,9 +90,7 @@ enum PreHistoryEntry : TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case let .type(_, _, text, enabled, selected):
-            return GeneralInteractedRowItem.init(initialSize, stableId: stableId, name: text, type: .selectable(stateback: { () -> Bool in
-                return selected
-            }), action: {
+            return GeneralInteractedRowItem.init(initialSize, stableId: stableId, name: text, type: .selectable(enabled), action: {
                 arguments.preHistory(enabled)
             })
         case let .text(_, _, text):

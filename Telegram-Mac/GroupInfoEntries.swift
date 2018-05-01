@@ -78,7 +78,8 @@ final class GroupInfoArguments : PeerInfoArguments {
     private let updatePhotoDisposable = MetaDisposable()
     func updateState(_ f: (GroupInfoState) -> GroupInfoState) -> Void {
         updateInfoState { state -> PeerInfoState in
-            return f(state as! GroupInfoState)
+            let result = f(state as! GroupInfoState)
+            return result
         }
     }
     
@@ -115,7 +116,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             let updateTitle: Signal<Void, Void>
             if let titleValue = updateValues.title {
                 updateTitle = updatePeerTitle(account: account, peerId: peerId, title: titleValue)
-                    |> mapError { _ in return Void() }
+                    |> mapError { _ in return Void() } |> `catch` {_ in return .complete()}
             } else {
                 updateTitle = .complete()
             }
@@ -123,7 +124,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             let updateDescription: Signal<Void, Void>
             if let descriptionValue = updateValues.description {
                 updateDescription = updatePeerDescription(account: account, peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
-                    |> mapError { _ in return Void() }
+                    |> mapError { _ in return Void() } |> `catch` {_ in return .complete()}
             } else {
                 updateDescription = .complete()
             }
@@ -546,7 +547,7 @@ private struct GroupPeerEntryStableId: PeerInfoEntryStableId {
 
 
 enum GroupInfoEntry: PeerInfoEntry {
-    case info(section:Int, view: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?)
+    case info(section:Int, view: PeerView, editingState: GroupInfoEditingState?, updatingPhotoState:PeerInfoUpdatingPhotoState?)
     case setGroupPhoto(section:Int)
     case about(section:Int, text: String)
     case addressName(section:Int, name:String)
@@ -576,14 +577,15 @@ enum GroupInfoEntry: PeerInfoEntry {
         }
         
         switch self {
-        case let .info(_, lhsPeerView, lhsEditable, lhsUpdatingPhotoState):
+        case let .info(_, lhsPeerView, lhsEditingState, lhsUpdatingPhotoState):
             switch entry {
-            case let .info(_, rhsPeerView, rhsEditable, rhsUpdatingPhotoState):
+            case let .info(_, rhsPeerView, rhsEditingState, rhsUpdatingPhotoState):
                 
-                if lhsEditable != rhsEditable {
+                if lhsUpdatingPhotoState != rhsUpdatingPhotoState {
                     return false
                 }
-                if lhsUpdatingPhotoState != rhsUpdatingPhotoState {
+                
+                if lhsEditingState != rhsEditingState {
                     return false
                 }
                 
@@ -904,8 +906,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         let state = arguments.state as! GroupInfoState
         
         switch self {
-        case let .info(_, peerView, editable, updatingPhotoState):
-            return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, account: arguments.account, peerView:peerView, editable: editable, updatingPhotoState: updatingPhotoState, firstNameEditableText: state.editingState?.editingName, textChangeHandler: { name, _ in
+        case let .info(_, peerView, editingState, updatingPhotoState):
+            return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, account: arguments.account, peerView:peerView, editable: editingState != nil, updatingPhotoState: updatingPhotoState, firstNameEditableText: editingState?.editingName, textChangeHandler: { name, _ in
                 arguments.updateEditingName(name)
             })
         case let .about(_, text):
@@ -934,15 +936,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 
             })
         case let .notifications(_, settings):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(stateback: { () -> Bool in
-                
-                if let settings = settings as? TelegramPeerNotificationSettings, case .muted = settings.muteState {
-                    return false
-                } else {
-                    return true
-                }
-                
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
                arguments.toggleNotifications()
             })
 
@@ -955,18 +949,14 @@ enum GroupInfoEntry: PeerInfoEntry {
                 arguments.updateEditingDescriptionText(updatedText)
             }, font: .normal(.title))
         case let .preHistory(_, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoPreHistory), type: .context(stateback: { () -> String in
-                return enabled ? tr(L10n.peerInfoPreHistoryVisible) : tr(L10n.peerInfoPreHistoryHidden)
-            }), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoPreHistory), type: .context(enabled ? tr(L10n.peerInfoPreHistoryVisible) : tr(L10n.peerInfoPreHistoryHidden)), action: {
                 arguments.preHistorySetup()
             })
         case .groupAboutDescription:
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSetAboutDescription))
 
         case let .groupTypeSetup(section: _, isPublic: isPublic):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoGroupType), type: .context(stateback: { () -> String in
-                return isPublic ? tr(L10n.peerInfoGroupTypePublic) : tr(L10n.peerInfoGroupTypePrivate)
-            }), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoGroupType), type: .context(isPublic ? tr(L10n.peerInfoGroupTypePublic) : tr(L10n.peerInfoGroupTypePrivate)), action: { () in
                 arguments.visibilitySetup()
             })
         case .setAdmins:
@@ -974,21 +964,15 @@ enum GroupInfoEntry: PeerInfoEntry {
                 arguments.setGroupAdmins()
             })
         case .groupStickerset(_, let name):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSetGroupStickersSet), type: .context(stateback: {
-                return name
-            }), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSetGroupStickersSet), type: .context(name), action: { () in
                 arguments.setGroupStickerset()
             })
         case let .membersBlacklist(section: _, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoBlackList), type: .context(stateback: { () -> String in
-                return "\(count)"
-            }), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoBlackList), type: .context("\(count)"), action: { () in
                 arguments.blacklist()
             })
         case let .membersAdmins(section: _, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAdmins), type: .context(stateback: { () -> String in
-                return "\(count)"
-            }), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAdmins), type: .context("\(count)"), action: { () in
                 arguments.admins()
             })
         case let .usersHeader(section: _, count: count):
@@ -1033,9 +1017,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.account, stableId: stableId.hashValue, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset:NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType:.context( stateback: {
-                return label
-            }), action:{
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.account, stableId: stableId.hashValue, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset:NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), action:{
                 arguments.peerInfo(peer!.id)
             }, inputActivity: inputActivity)
 
@@ -1072,7 +1054,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             canInviteByLink = group.hasAdminRights(.canChangeInviteLink)
         }
         
-        entries.append(GroupInfoEntry.info(section: sectionId, view: view, editable: canEditInfo, updatingPhotoState: state.updatingPhotoState))
+        entries.append(GroupInfoEntry.info(section: sectionId, view: view, editingState: state.editingState, updatingPhotoState: state.updatingPhotoState))
         
         
         if let editingState = state.editingState {

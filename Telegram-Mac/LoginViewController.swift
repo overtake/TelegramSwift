@@ -42,7 +42,7 @@ private class SignupView : View {
         button.set(color: .blueUI, for: .Normal)
         button.set(text: tr(L10n.alertOK), for: .Normal)
         
-        button.sizeToFit()
+        _ = button.sizeToFit()
         
         button.set(handler: { [weak self] _ in
             self?.arguments?.editPhone()
@@ -163,7 +163,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         editControl.set(font: .medium(.title), for: .Normal)
         editControl.set(color: .blueUI, for: .Normal)
         editControl.set(text: tr(L10n.navigationEdit), for: .Normal)
-        editControl.sizeToFit()
+        _ = editControl.sizeToFit()
         
         editControl.set(handler: { [weak self] _ in
             self?.arguments?.editPhone()
@@ -520,7 +520,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
         countrySelector.style = ControlStyle(font: NSFont.medium(.title), foregroundColor: NSColor(0x007ee5), backgroundColor:.white)
         countrySelector.set(text: "France", for: .Normal)
-        countrySelector.sizeToFit()
+        _ = countrySelector.sizeToFit()
         addSubview(countrySelector)
         
        
@@ -819,6 +819,10 @@ class LoginAuthInfoView : View {
         addSubview(codeInputContainer)
         addSubview(phoneNumberContainer)
         addSubview(signupView)
+    }
+    
+    func updateCountryCode(_ code: String) {
+        phoneNumberContainer.update(selectedItem: manager.item(bySmallCountryName: code), update: true)
     }
     
 

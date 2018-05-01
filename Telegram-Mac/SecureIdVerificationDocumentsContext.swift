@@ -49,7 +49,7 @@ final class SecureIdVerificationDocumentsContext {
                                         }
                                     case let .result(file):
                                         if strongSelf.contexts[info.id] != nil {
-                                            strongSelf.update(info.id, .uploaded(file))
+                                            strongSelf.update(info.id, .uploaded(file.0))
                                         }
                                 }
                             }

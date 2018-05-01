@@ -95,7 +95,7 @@ final class GridMessageItemNode: GridItemNode {
             }
             
             menu.addItem(ContextMenuItem(tr(L10n.messageContextGoto), handler: { [weak self] in
-                self?.chatInteraction?.focusMessageId(nil, message.id, .center(id: 0, animated: false, focus: true, inset: 0))
+                self?.chatInteraction?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
             }))
             return menu
         }
@@ -117,7 +117,7 @@ final class GridMessageItemNode: GridItemNode {
                 } else {
                     if strongSelf._status == nil || strongSelf._status == .Local {
                         showChatGallery(account: currentState.0, message: message, strongSelf.grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
-                            interactions?.focusMessageId(nil, message.id, .center(id: 0, animated: false, focus: true, inset: 0))
+                            interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
                         }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                     } else if let file = message.media.first as? TelegramMediaFile {
                         if let status = strongSelf._status {

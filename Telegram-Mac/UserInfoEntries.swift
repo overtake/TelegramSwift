@@ -656,23 +656,13 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.sharedMedia()
             })
         case let .groupInCommon(sectionId: _, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoGroupsInCommon), type: .context(stateback: { () -> String in
-                return "\(count)"
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoGroupsInCommon), type: .context("\(count)"), action: {
                 arguments.groupInCommon()
             })
             
         case let .notifications(_, settings):
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(stateback: { () -> Bool in
-                
-                if let settings = settings as? TelegramPeerNotificationSettings, case .muted = settings.muteState {
-                    return false
-                } else {
-                    return true
-                }
-                
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
                 arguments.toggleNotifications()
             })
         case .encryptionKey:

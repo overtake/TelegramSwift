@@ -346,7 +346,7 @@ public class RadialProgressView: Control {
             case .Icon:
                 switch self.state {
                 case .Icon:
-                    break
+                    self.setNeedsDisplay()
                 default:
                     self.setNeedsDisplay()
                 }

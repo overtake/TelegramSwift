@@ -99,6 +99,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    open func hasFirstResponder() -> Bool {
+        return false
+    }
+    
+    open func nextResponder() -> NSResponder? {
+        return nil
+    }
+    
     open var firstResponder:NSResponder? {
         return self
     }
@@ -289,7 +297,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         updateColors()
     }
     
-    open func focusAnimation() {
+    open func focusAnimation(_ innerId: AnyHashable?) {
         
     }
     

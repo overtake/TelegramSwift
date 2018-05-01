@@ -922,7 +922,8 @@ double mappingRange(double x, double in_min, double in_max, double out_min, doub
     
     [list addObject:@"NotificationSettingsToneNone"];
     
-    NSArray *dirContents = [fm contentsOfDirectoryAtPath:@"~/Library/Sounds" error:nil];
+    NSString *homeSoundsPath = [NSHomeDirectory() stringByAppendingString:@"/Library/Sounds"];
+    NSArray *dirContents = [fm contentsOfDirectoryAtPath:homeSoundsPath error:nil];
     [list addObjectsFromArray:[dirContents filteredArrayUsingPredicate:fltr]];
     
     dirContents = [fm contentsOfDirectoryAtPath:@"/Library/Sounds" error:nil];

@@ -138,12 +138,13 @@ final class PasscodeAccessContext {
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     let localizationDisposable:MetaDisposable = MetaDisposable()
-    let rootController: AuthController
+    let rootController: MajorNavigationController
     let window:Window
     init(window:Window, account: UnauthorizedAccount, localization: LocalizationSettings?) {
         self.account = account
         self.window = window
-        self.rootController = AuthController(account)
+        self.rootController = MajorNavigationController(AuthController.self, AuthController(account))
+        rootController.alwaysAnimate = true
         let authSize = NSMakeSize(650, 600)
         
         setDefaultTheme(for: window)

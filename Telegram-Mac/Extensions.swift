@@ -28,7 +28,7 @@ extension MessageHistoryHole {
 
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
         let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
@@ -1649,6 +1649,18 @@ func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], Voi
         
         return Array(clues.prefix(5))
     }
+}
+
+func randomInt32() -> Int32 {
+    let uRandom = arc4random()
+    let value: Int32
+    let dif = Int(uRandom) - Int(INT32_MAX)
+    if dif > 0 {
+        value = Int32(dif)
+    } else {
+        value = Int32(uRandom)
+    }
+    return value
 }
 
 
