@@ -191,13 +191,12 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
         if let currentState = currentState, let state = currentState.3 {
             let menu = NSMenu()
             let file = currentState.1
-            if state == .recent {
-                if let reference = file.stickerReference, case let .id(id, _) = reference {
-                    menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
-                        self?.inputNodeInteraction?.navigateToCollectionId(.pack(ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
-                    }))
-                }
-            } else if state == .saved, let mediaId = file.id {
+            if let reference = file.stickerReference{
+                menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
+                    self?.inputNodeInteraction?.showStickerPack(reference)
+                }))
+            }
+             if state == .saved, let mediaId = file.id {
                 menu.addItem(ContextMenuItem(tr(L10n.contextRemoveFaveSticker), handler: {
                     _ = removeSavedSticker(postbox: currentState.0.postbox, mediaId: mediaId).start()
                 }))

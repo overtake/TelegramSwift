@@ -143,6 +143,14 @@ final class PassportDocumentRowView : TableRowView {
         }
     }
     
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        guard let item = item as? PassportDocumentRowItem, let table = item.table else {return}
+
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(imageView.frame.maxX + 10, frame.height - .borderSize, frame.width - imageView.frame.maxX - item.inset.right - 10, .borderSize))
+    }
+    
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
         return imageView
     }

@@ -146,6 +146,20 @@ class GeneralInteractedRowView: GeneralRowView {
         self.shake()
     }
     
+    private var textXAdditional: CGFloat {
+        var textXAdditional:CGFloat = 0
+        guard let item = item as? GeneralInteractedRowItem else {return 0}
+        let t = item.isSelected ? item.activeThumb : item.thumb
+        if let thumb = t {
+            if let textInset = thumb.textInset {
+                textXAdditional = textInset
+            } else {
+                textXAdditional = thumb.thumb.backingSize.width + 10
+            }
+        }
+        return textXAdditional
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         super.draw(layer, in: ctx)
@@ -153,17 +167,11 @@ class GeneralInteractedRowView: GeneralRowView {
         if let item = item as? GeneralInteractedRowItem {
             
             
-            var textXAdditional:CGFloat = 0
             let t = item.isSelected ? item.activeThumb : item.thumb
             if let thumb = t {
                 let f = focus(thumb.thumb.backingSize)
                 let icon = thumb.thumb //isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) : 
                 ctx.draw(icon, in: NSMakeRect(item.inset.left, f.minY, f.width, f.height))
-                if let textInset = thumb.textInset {
-                    textXAdditional = textInset
-                } else {
-                    textXAdditional = thumb.thumb.backingSize.width + 10
-                }
             }
             
             if item.drawCustomSeparator, !isSelect {
@@ -213,7 +221,8 @@ class GeneralInteractedRowView: GeneralRowView {
             self.overlay.frame = NSMakeRect(inset.left, 0, frame.width - inset.left - inset.right, frame.height)
             
             if let descriptionView = descriptionView {
-                descriptionView.setFrameOrigin(inset.left, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height - descriptionView.frame.height - 6))
+                
+                descriptionView.setFrameOrigin(inset.left + textXAdditional, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height - descriptionView.frame.height - 6))
             }
             
             let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (inset.right == 0 ? 10 : 0)

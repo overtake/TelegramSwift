@@ -30,7 +30,7 @@ private enum ValuesSelectorEntry<T> : TableItemListNodeEntry where T : Equatable
     func item(_ arguments: ValuesSelectorArguments<T>, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .value(_, value, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.localized, type: .selectable(false), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.localized, type: .none, action: {
                 arguments.selectItem(value)
             })
         }

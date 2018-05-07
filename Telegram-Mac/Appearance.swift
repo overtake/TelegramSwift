@@ -701,6 +701,12 @@ struct TelegramIconsTheme {
     let passportForgotPassword: CGImage
     
     let confirmAppAccessoryIcon: CGImage
+    
+    let passportPassport: CGImage
+    let passportIdCardReverse: CGImage
+    let passportIdCard: CGImage
+    let passportSelfie: CGImage
+    let passportDriverLicense: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1072,7 +1078,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatGoMessage: #imageLiteral(resourceName: "Icon_ChatGoMessage").precomposed(palette.blueIcon),
                                                chatGroupToggleSelected: generateChatGroupToggleSelected(foregroundColor: palette.blueIcon),
                                                chatGroupToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
-                                               successModalProgress: #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(),
+                                               successModalProgress: #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(palette.grayIcon),
                                                accentColorSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white),
                                                chatShareWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon),
                                                chatGotoMessageWallpaper: #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.blueIcon),
@@ -1098,7 +1104,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                proxyAddProxy: #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon, flipVertical: true),
                                                proxyNextWaitingListItem: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.grayIcon),
                                                passportForgotPassword: #imageLiteral(resourceName: "Icon_SecureIdForgotPassword").precomposed(palette.grayIcon),
-                                               confirmAppAccessoryIcon: #imageLiteral(resourceName: "Icon_ConfirmAppAccessory").precomposed()
+                                               confirmAppAccessoryIcon: #imageLiteral(resourceName: "Icon_ConfirmAppAccessory").precomposed(),
+                                               passportPassport: #imageLiteral(resourceName: "Icon_PassportPassport").precomposed(palette.blueIcon, flipVertical: true),
+                                               passportIdCardReverse: #imageLiteral(resourceName: "Icon_PassportIdCardReverse").precomposed(palette.blueIcon, flipVertical: true),
+                                               passportIdCard: #imageLiteral(resourceName: "Icon_PassportIdCard").precomposed(palette.blueIcon, flipVertical: true),
+                                               passportSelfie: #imageLiteral(resourceName: "Icon_PassportSelfie").precomposed(palette.blueIcon, flipVertical: true),
+                                               passportDriverLicense: #imageLiteral(resourceName: "Icon_PassportDriverLicense").precomposed(palette.blueIcon, flipVertical: true)
     )
 }
 

@@ -2761,14 +2761,22 @@ internal final class L10n {
   internal static var secureIdIdentitySelfieUploadNew: String  { return L10n.tr("Localizable", "SecureId.Identity.SelfieUploadNew") }
   /// Utility Bill
   internal static var secureIdIdentityUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Identity.UtilityBill") }
-  /// Document #
-  internal static var secureIdIdentityIdentifierInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.Identifier.InputPlaceholder") }
-  /// Document #
-  internal static var secureIdIdentityIdentifierPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.Identifier.Placeholder") }
+  /// Card ID
+  internal static var secureIdIdentityCardIdInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.CardId.InputPlaceholder") }
+  /// Card ID
+  internal static var secureIdIdentityCardIdPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.CardId.Placeholder") }
   /// Name
   internal static var secureIdIdentityInputPlaceholderFirstName: String  { return L10n.tr("Localizable", "SecureId.Identity.InputPlaceholder.FirstName") }
   /// Surname
   internal static var secureIdIdentityInputPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.Identity.InputPlaceholder.LastName") }
+  /// License ID
+  internal static var secureIdIdentityLicenseInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.License.InputPlaceholder") }
+  /// License ID
+  internal static var secureIdIdentityLicensePlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.License.Placeholder") }
+  /// Passport ID
+  internal static var secureIdIdentityPassportInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.Passport.InputPlaceholder") }
+  /// Passport ID
+  internal static var secureIdIdentityPassportPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.Passport.Placeholder") }
   /// Birthday
   internal static var secureIdIdentityPlaceholderBirthday: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.Birthday") }
   /// Country
@@ -2783,7 +2791,7 @@ internal final class L10n {
   internal static var secureIdIdentityPlaceholderIssuedDate: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.IssuedDate") }
   /// Surname
   internal static var secureIdIdentityPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.LastName") }
-  /// The document must contains your photograph, name and surname, date of birthday, citizenship, documment issue date and document number.
+  /// The document must contain:\n• photograph, first name and last name\n• date of birthday\n• citizenship\ndocumment issue date and document number.
   internal static var secureIdIdentityScanDescription: String  { return L10n.tr("Localizable", "SecureId.IdentityScan.Description") }
   /// Please provide the password for accessing your personal data
   internal static var secureIdInsertPasswordDescription: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Description") }
@@ -2835,14 +2843,20 @@ internal final class L10n {
   internal static var secureIdRequestPermissionEmail: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Email") }
   /// ID Card
   internal static var secureIdRequestPermissionIDCard: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.IDCard") }
+  /// Internal Passport
+  internal static var secureIdRequestPermissionInternalPassport: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.InternalPassport") }
   /// Passport
   internal static var secureIdRequestPermissionPassport: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Passport") }
+  /// Passport Registration
+  internal static var secureIdRequestPermissionPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.PassportRegistration") }
   /// Personal Details
   internal static var secureIdRequestPermissionPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.PersonalDetails") }
   /// Phone Number
   internal static var secureIdRequestPermissionPhone: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone") }
   /// Rental Agreement
   internal static var secureIdRequestPermissionRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.RentalAgreement") }
+  /// Temporary Registration
+  internal static var secureIdRequestPermissionTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.TemporaryRegistration") }
   /// Utility Bill
   internal static var secureIdRequestPermissionUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.UtilityBill") }
   /// Upload proof of your address
@@ -2855,8 +2869,22 @@ internal final class L10n {
   internal static var secureIdRequestPermissionPhoneEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone.Empty") }
   /// REQUESTED INFORMATION
   internal static var secureIdRequestedInformationHeader: String  { return L10n.tr("Localizable", "SecureId.RequestedInformation.Header") }
-  /// SCANS
+  /// REQUESTED FIELDS
   internal static var secureIdScansHeader: String  { return L10n.tr("Localizable", "SecureId.Scans.Header") }
+  /// Upload a front side photo of document
+  internal static var secureIdUploadFront: String  { return L10n.tr("Localizable", "SecureId.Upload.Front") }
+  /// Upload main page of the document
+  internal static var secureIdUploadMain: String  { return L10n.tr("Localizable", "SecureId.Upload.Main") }
+  /// Upload a reverse side photo of document
+  internal static var secureIdUploadReverse: String  { return L10n.tr("Localizable", "SecureId.Upload.Reverse") }
+  /// Upload a selfie of yourself holding document
+  internal static var secureIdUploadSelfie: String  { return L10n.tr("Localizable", "SecureId.Upload.Selfie") }
+  /// Front Side
+  internal static var secureIdUploadTitleFrontSide: String  { return L10n.tr("Localizable", "SecureId.Upload.Title.FrontSide") }
+  /// Main Page
+  internal static var secureIdUploadTitleMainPage: String  { return L10n.tr("Localizable", "SecureId.Upload.Title.MainPage") }
+  /// Reverse Side
+  internal static var secureIdUploadTitleReverseSide: String  { return L10n.tr("Localizable", "SecureId.Upload.Title.ReverseSide") }
   /// Warning! All data saved in your Telegram passport will be lost!
   internal static var secureIdWarningDataLost: String  { return L10n.tr("Localizable", "SecureId.Warning.DataLost") }
   /// clear

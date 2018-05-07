@@ -31,7 +31,7 @@ class PassportWindowController  {
         
         
         let screen = NSScreen.main!
-        let size = NSMakeSize(380, 630)
+        let size = NSMakeSize(420, 630)
         let center = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width)/2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height)/2), size.width, size.height)
 
         

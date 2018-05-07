@@ -1122,6 +1122,12 @@ extension SentSecureValueType {
             return L10n.secureIdRequestPermissionIDCard
         case .bankStatement:
             return L10n.secureIdRequestPermissionBankStatement
+        case .internalPassport:
+            return L10n.secureIdRequestPermissionInternalPassport
+        case .passportRegistration:
+            return L10n.secureIdRequestPermissionPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdRequestPermissionTemporaryRegistration
         }
     }
 }
@@ -1209,6 +1215,24 @@ extension SecureIdForm {
                 } else {
                     return false
                 }
+            case .internalPassport:
+                if case .internalPassport = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .passportRegistration:
+                if case .passportRegistration = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .temporaryRegistration:
+                if case .temporaryRegistration = field {
+                    return true
+                } else {
+                    return false
+                }
             }
         })
         if let index = index {
@@ -1284,71 +1308,28 @@ extension SecureIdValue {
             } else {
                 return false
             }
+        case .internalPassport(_):
+            if case .internalPassport = value {
+                return true
+            } else {
+                return false
+            }
+        case .passportRegistration(_):
+            if case .passportRegistration = value {
+                return true
+            } else {
+                return false
+            }
+        case .temporaryRegistration(_):
+            if case .temporaryRegistration = value {
+                return true
+            } else {
+                return false
+            }
         }
     }
     func isSame(of value: SecureIdValueKey) -> Bool {
-        switch self {
-        case .address:
-            if case .address = value {
-                return true
-            } else {
-                return false
-            }
-        case .bankStatement:
-            if case .bankStatement = value {
-                return true
-            } else {
-                return false
-            }
-        case .driversLicense:
-            if case .driversLicense = value {
-                return true
-            } else {
-                return false
-            }
-        case .idCard:
-            if case .idCard = value {
-                return true
-            } else {
-                return false
-            }
-        case .passport:
-            if case .passport = value {
-                return true
-            } else {
-                return false
-            }
-        case .personalDetails:
-            if case .personalDetails = value {
-                return true
-            } else {
-                return false
-            }
-        case .rentalAgreement:
-            if case .rentalAgreement = value {
-                return true
-            } else {
-                return false
-            }
-        case .utilityBill:
-            if case .utilityBill = value {
-                return true
-            } else {
-                return false
-            }
-        case .phone:
-            if case .phone = value {
-                return true
-            } else {
-                return false
-            }
-        case .email:
-            if case .email = value {
-                return true
-            } else {
-                return false
-            }
-        }
+        return self.key == value
     }
     
     var secureIdValueAccessContext: SecureIdValueAccessContext? {
@@ -1380,6 +1361,8 @@ extension SecureIdValue {
             return value.identifier
         case let .idCard(value):
             return value.identifier
+        case let .internalPassport(value):
+            return value.identifier
         default:
             return nil
         }
@@ -1402,6 +1385,8 @@ extension SecureIdValue {
             return value.selfieDocument
         case let .driversLicense(value):
             return value.selfieDocument
+        case let .internalPassport(value):
+            return value.selfieDocument
         default:
             return nil
         }
@@ -1415,14 +1400,49 @@ extension SecureIdValue {
             return value.verificationDocuments
         case let .utilityBill(value):
             return value.verificationDocuments
-        case let .idCard(value):
+        case let .passportRegistration(value):
             return value.verificationDocuments
-        case let .passport(value):
-            return value.verificationDocuments
-        case let .driversLicense(value):
+        case let .temporaryRegistration(value):
             return value.verificationDocuments
         default:
             return nil
+        }
+    }
+    
+    var frontSideVerificationDocument: SecureIdVerificationDocumentReference? {
+        switch self {
+        case let .idCard(value):
+            return value.frontSideDocument
+        case let .passport(value):
+            return value.frontSideDocument
+        case let .driversLicense(value):
+            return value.frontSideDocument
+        case let .internalPassport(value):
+            return value.frontSideDocument
+        default:
+            return nil
+        }
+    }
+    
+    var backSideVerificationDocument: SecureIdVerificationDocumentReference? {
+        switch self {
+        case let .idCard(value):
+            return value.frontSideDocument
+        case let .driversLicense(value):
+            return value.frontSideDocument
+        default:
+            return nil
+        }
+    }
+    
+    var hasBacksideDocument: Bool {
+        switch self {
+        case .idCard:
+            return true
+        case .driversLicense:
+            return true
+        default:
+            return false
         }
     }
     
@@ -1492,12 +1512,51 @@ extension SecureIdRequestedFormField {
             return L10n.secureIdRequestPermissionDriversLicense
         case .personalDetails:
             return L10n.secureIdRequestPermissionPersonalDetails
+        case .internalPassport:
+            return L10n.secureIdRequestPermissionInternalPassport
+        case .passportRegistration:
+            return L10n.secureIdRequestPermissionPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdRequestPermissionTemporaryRegistration
+        }
+    }
+    
+    var uploadFrontTitleText: String {
+        switch self {
+        case .idCard:
+            return L10n.secureIdUploadFront
+        case .driversLicense:
+            return L10n.secureIdUploadFront
+        default:
+            return L10n.secureIdUploadMain
+        }
+    }
+    
+    var uploadBackTitleText: String {
+        switch self {
+        case .idCard:
+            return L10n.secureIdUploadReverse
+        case .driversLicense:
+            return L10n.secureIdUploadReverse
+        default:
+            return L10n.secureIdUploadMain
+        }
+    }
+    
+    var hasBacksideDocument: Bool {
+        switch self {
+        case .idCard:
+            return true
+        case .driversLicense:
+            return true
+        default:
+            return false
         }
     }
     
     var hasSelfie: Bool {
         switch self {
-        case let .passport(selfie), let .idCard(selfie), let .driversLicense(selfie):
+        case let .passport(selfie), let .idCard(selfie), let .driversLicense(selfie), let .internalPassport(selfie):
             return selfie
         default:
             return false
@@ -1549,6 +1608,12 @@ extension SecureIdRequestedFormField  {
             return .rentalAgreement
         case .utilityBill:
             return .utilityBill
+        case .internalPassport:
+            return .internalPassport
+        case .passportRegistration:
+            return .passportRegistration
+        case .temporaryRegistration:
+            return .temporaryRegistration
         }
     }
     
@@ -1561,10 +1626,7 @@ extension InputDataValue {
         switch self {
         case let .date(day, month, year):
             if let day = day, let month = month, let year = year {
-                let timestamp = dateFormatter.date(from: "\(day < 10 ? "0\(day)" : "\(day)").\(month < 10 ? "0\(month)" : "\(month)").\(year)")?.timeIntervalSince1970
-                if let timestamp = timestamp {
-                    return SecureIdDate(timestamp: Int32(timestamp))
-                }
+                return SecureIdDate(day: day, month: month, year: year)
             }
             
             return nil
@@ -1576,12 +1638,6 @@ extension InputDataValue {
 
 extension SecureIdDate {
     var inputDataValue: InputDataValue {
-        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
-        let formatted = dateFormatter.string(from: date)
-        let separated = formatted.split(separator: ".")
-        let day = Int32(separated[0])!
-        let month = Int32(separated[1])!
-        let year = Int32(separated[2])!
         return .date(day, month, year)
     }
 }
@@ -1711,7 +1767,7 @@ extension SecureIdGender {
 
 extension SecureIdDate {
     var stringValue: String {
-        return dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
+        return "\(day).\(month).\(year)"
     }
 }
 

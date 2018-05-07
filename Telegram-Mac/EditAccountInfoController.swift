@@ -145,16 +145,16 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(InputDataEntry.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, name: L10n.editAccountUsername, color: theme.colors.text, type: .nextContext(state.username != nil ? "@\(state.username!)" : "")))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : "")))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, name: L10n.editAccountChangeNumber, color: theme.colors.text, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : "")))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : "")))
     index += 1
 
     entries.append(InputDataEntry.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, name: L10n.editAccountLogout, color: theme.colors.redUI, type: .none))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none))
     index += 1
     
     return entries

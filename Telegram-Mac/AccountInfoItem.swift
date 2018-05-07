@@ -28,7 +28,7 @@ class AccountInfoItem: GeneralRowItem {
         
         let attr = NSMutableAttributedString()
         
-        _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .bold(.header))
+        _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
         if let phone = peer.phone {
             _ = attr.append(string: "\n")
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
@@ -131,7 +131,7 @@ class AccountInfoView : TableRowView {
     override func layout() {
         super.layout()
         avatarView.centerY(x:16)
-        textView.centerY(x: avatarView.frame.maxX + 10)
+        textView.centerY(x: avatarView.frame.maxX + 25)
         actionView.centerY(x: frame.width - actionView.frame.width - 10)
     }
     
