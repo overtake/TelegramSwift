@@ -244,12 +244,13 @@ final class EStickersInteraction {
     let previewStickerSet:(StickerPackReference) -> Void
     let addStickerSet: (StickerPackReference) -> Void
     var highlightedItemCollectionId: ChatMediaGridCollectionStableId?
-    
-    init(navigateToCollectionId: @escaping (ChatMediaGridCollectionStableId) -> Void, sendSticker: @escaping(TelegramMediaFile)-> Void, previewStickerSet: @escaping(StickerPackReference)-> Void, addStickerSet:@escaping(StickerPackReference) -> Void) {
+    var showStickerPack: (StickerPackReference)->Void
+    init(navigateToCollectionId: @escaping (ChatMediaGridCollectionStableId) -> Void, sendSticker: @escaping(TelegramMediaFile)-> Void, previewStickerSet: @escaping(StickerPackReference)-> Void, addStickerSet:@escaping(StickerPackReference) -> Void, showStickerPack: @escaping(StickerPackReference)->Void) {
         self.navigateToCollectionId = navigateToCollectionId
         self.sendSticker = sendSticker
         self.previewStickerSet = previewStickerSet
         self.addStickerSet = addStickerSet
+        self.showStickerPack = showStickerPack
     }
 }
 
@@ -515,6 +516,28 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                         self?.inputNodeInteraction.navigateToCollectionId(.pack(result))
                     })
                 })
+            
+        }, showStickerPack: { [weak self] reference in
+            guard let `self` = self else {return}
+            let peerId = self.chatInteraction?.peerId
+            switch reference {
+            case let .id(id, _):
+                let signal = account.postbox.modify { modifier -> Bool in
+                    return modifier.getItemCollectionInfo(collectionId: ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)) != nil
+                } |> deliverOnMainQueue
+
+                _ = signal.start(next: { [weak self] installed in
+                    if installed {
+                        self?.inputNodeInteraction.navigateToCollectionId(.pack(ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
+                    } else {
+                        showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
+                        self?.closePopover()
+                    }
+                })
+            default:
+                showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
+                self.closePopover()
+            }
             
         })
         

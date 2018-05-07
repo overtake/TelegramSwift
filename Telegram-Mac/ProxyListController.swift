@@ -397,7 +397,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     if !server.host.isEmpty && server.port > 0 {
         entries.append(.sectionId(sectionId))
         sectionId += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, type: .none))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, icon: nil, type: .none))
     }
     
     return entries

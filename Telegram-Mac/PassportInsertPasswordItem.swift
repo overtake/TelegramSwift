@@ -10,6 +10,7 @@ import Cocoa
 import TGUIKit
 import PostboxMac
 import TelegramCoreMac
+import SwiftSignalKitMac
 
 private final class PassportInsertPasswordField : NSSecureTextField {
     
@@ -162,11 +163,13 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
 
         item.checkPasswordAction((input.stringValue, { [weak self] in
             assertOnMainThread()
-            self?.input.shake()
             (self?.window as? Window)?.applyResponderIfNeeded()
+            self?.input.shake()
             self?.input.textView?.selectAllText()
         }))
     }
+    
+    
     
     override func updateColors() {
         super.updateColors()
@@ -201,11 +204,20 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
     }
     
     override var firstResponder: NSResponder? {
-        return input
+        return input.textView
     }
     
     override var mouseInsideField: Bool {
         return input._mouseInside()
+    }
+    
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        switch true {
+        case NSPointInRect(point, inputContainer.frame):
+            return input
+        default:
+            return super.hitTest(point)
+        }
     }
     
     override func set(item: TableRowItem, animated: Bool) {

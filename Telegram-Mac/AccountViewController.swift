@@ -74,7 +74,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case general(index: Int)
     case stickers(index: Int)
     case notifications(index: Int)
-    case language(index: Int, current: String)
+    case language(index: Int, current: String, languages:[LocalizationInfo]?)
     case appearance(index: Int)
     case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)
     case dataAndStorage(index: Int)
@@ -126,7 +126,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return index
         case let .notifications(index):
             return index
-        case let .language(index, _):
+        case let .language(index, _, _):
             return index
         case let .appearance(index):
             return index
@@ -177,8 +177,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .language(index, current):
-            if case .language(index, current) = rhs {
+        case let .language(index, current, languages):
+            if case .language(index, current, languages) = rhs {
                 return true
             } else {
                 return false
@@ -267,9 +267,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: .next, action: {
                 arguments.presentController(NotificationSettingsViewController(arguments.account), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .language(_, current):
+        case let .language(_, current, languages):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(""), action: {
-                arguments.presentController(LanguageViewController(arguments.account), true)
+                arguments.presentController(LanguageViewController(arguments.account, languages: languages), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .appearance:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, action: {
@@ -317,7 +317,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus)) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), languages: [LocalizationInfo]?) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -353,7 +353,7 @@ private func accountInfoEntries(peerView:PeerView, language: Language, privacySe
     index += 1
     entries.append(.dataAndStorage(index: index))
     index += 1
-    entries.append(.language(index: index, current: L10n.accountSettingsCurrentLanguage))
+    entries.append(.language(index: index, current: L10n.accountSettingsCurrentLanguage, languages: languages))
     index += 1
     entries.append(.stickers(index: index))
     index += 1
@@ -413,10 +413,11 @@ class LayoutAccountController : TableViewController {
         
         let arguments = AccountInfoArguments(account: account, accountManager: accountManager, presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
+            guard let singleLayout = self?.account.context.layout else {return}
             if main {
                 navigation.removeExceptMajor()
             }
-            navigation.push(controller, !main)
+            navigation.push(controller, !main || singleLayout == .single)
         }, openFaq: {
             let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
             
@@ -433,8 +434,11 @@ class LayoutAccountController : TableViewController {
         
         let atomicSize = self.atomicSize
         
-        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings |> deliverOnPrepareQueue) |> map { peerView, appearance, settings -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let languages = Signal<[LocalizationInfo]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue)
+
+        
+        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings |> deliverOnPrepareQueue, languages) |> map { peerView, appearance, settings, languages -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, languages: languages).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -469,7 +473,7 @@ class LayoutAccountController : TableViewController {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is LanguageViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.language(index: 0, current: "").stableId)) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.language(index: 0, current: "", languages: nil).stableId)) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is InstalledStickerPacksController {

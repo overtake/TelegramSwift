@@ -359,17 +359,62 @@ private final class PassportNewPhoneNumberRowView : TableRowView {
         addSubview(container)
     }
     
-    override var firstResponder: NSResponder? {
-        if container.numberText._mouseInside() {
-            return container.numberText
-        } else if container.codeText._mouseInside() {
-            return container.codeText
-        }
-        return container.numberText
-    }
-    
+//    override var firstResponder: NSResponder? {
+//        if container.numberText._mouseInside() {
+//            return container.numberText
+//        } else if container.codeText._mouseInside() {
+//            return container.codeText
+//        }
+//        return container.numberText
+//    }
+//
     override var mouseInsideField: Bool {
         return container.numberText._mouseInside() || container.codeText._mouseInside()
+    }
+    
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        switch true {
+        case NSPointInRect(point, container.numberText.frame):
+            return container.numberText
+        case NSPointInRect(point, container.codeText.frame):
+            return container.codeText
+        default:
+            return super.hitTest(point)
+        }
+    }
+    
+    override func hasFirstResponder() -> Bool {
+        return true
+    }
+    
+    override var firstResponder: NSResponder? {
+        let isKeyDown = NSApp.currentEvent?.type == NSEvent.EventType.keyDown && NSApp.currentEvent?.keyCode == KeyboardKey.Tab.rawValue
+        switch true {
+        case container.codeText._mouseInside() && !isKeyDown:
+            return container.codeText
+        case container.numberText._mouseInside() && !isKeyDown:
+            return container.numberText
+        default:
+            switch true {
+            case container.codeText.textView == window?.firstResponder:
+                return container.codeText.textView
+            case container.numberText.textView == window?.firstResponder:
+                return container.numberText.textView
+            default:
+                return container.numberText
+            }
+        }
+    }
+    
+    
+    override func nextResponder() -> NSResponder? {
+        if window?.firstResponder == container.codeText.textView {
+            return container.numberText
+        }
+        if window?.firstResponder == container.numberText.textView {
+            return container.codeText
+        }
+        return nil
     }
     
     override func layout() {

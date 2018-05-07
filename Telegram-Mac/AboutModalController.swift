@@ -19,7 +19,7 @@ fileprivate class AboutModalView : Control {
         formatter.dateFormat = "yyyy"
         
         
-        let copyrightLayout = TextViewLayout(NSAttributedString.initialize(string: "Copyright © 2016 - \(formatter.string(from: Date(timeIntervalSinceReferenceDate: Date.timeIntervalSinceReferenceDate))) TELEGRAM MESSENGER", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        let copyrightLayout = TextViewLayout(.initialize(string: "Copyright © 2016 - \(formatter.string(from: Date(timeIntervalSinceReferenceDate: Date.timeIntervalSinceReferenceDate))) TELEGRAM MESSENGER", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         copyrightLayout.measure(width:frameRect.width - 40)
         
         
@@ -41,13 +41,16 @@ fileprivate class AboutModalView : Control {
         
         _ = attr.append(string: "\n\n")
         
-        _ = attr.append(string: tr(L10n.aboutDescription), color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: L10n.aboutDescription, color: theme.colors.text, font: .normal(.text))
         
         let descLayout = TextViewLayout(attr, alignment: .center)
         descLayout.measure(width:frameRect.width - 40)
         
 
-       
+        descLayout.interactions.copy = {
+            copyToClipboard(vText)
+            return true
+        }
         
         copyright.update(copyrightLayout)
         descView.update(descLayout)
@@ -56,6 +59,8 @@ fileprivate class AboutModalView : Control {
         addSubview(copyright)
         addSubview(descView)
         
+        
+ 
         
         descView.isSelectable = false
         copyright.isSelectable = false
@@ -87,12 +92,12 @@ class AboutModalController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.descView.layout?.interactions = TextViewInteractions(processURL: {[weak self] (url) in
+        genericView.descView.layout?.interactions.processURL = { [weak self] url in
             if let url = url as? inAppLink {
                 execute(inapp: url)
             }
             self?.close()
-        })
+        }
         readyOnce()
     }
     

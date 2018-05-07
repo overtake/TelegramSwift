@@ -239,8 +239,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
                 
                 if let postbox = postbox {
-                    self.proxyDisposable.set((postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]) |> deliverOnMainQueue).start(next: { settings in
-                       // self.updater.basicDomain = "telegram.org"
+                    self.proxyDisposable.set((postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> deliverOnMainQueue).start(next: { settings in
+                        let settings = settings.values[PreferencesKeys.networkSettings] as? NetworkSettings
+                        if let applicationUpdateUrlPrefix = settings?.applicationUpdateUrlPrefix, let url = URL(string: applicationUpdateUrlPrefix) {
+                            self.updater.basicDomain = url.host
+                        } else {
+                            self.updater.basicDomain = nil
+                        }
                         self.updater.checkForUpdatesInBackground()
                     }))
                 } else {

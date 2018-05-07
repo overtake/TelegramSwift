@@ -179,13 +179,13 @@ private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat,
 
 
 public final class TextViewInteractions {
-    public var processURL:(Any!)->Void // link, isPresent
+    public var processURL:(Any)->Void // link, isPresent
     public var copy:(()->Bool)?
     public var menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)?
     public var isDomainLink:(String)->Bool
     public var makeLinkType:((Any, String))->LinkType
     public var localizeLinkCopy:(LinkType)-> String
-    public init(processURL:@escaping (Any!)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -1077,7 +1077,11 @@ public class TextView: Control {
                 } else {
                     let link = layout.link(at: location)
                     let menu = NSMenu()
-                    let copy = NSMenuItem(title: link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), action: #selector(copy(_:)), keyEquivalent: "")
+                    let copy = ContextMenuItem(link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), handler: { [weak self] in
+                        guard let `self` = self else {return}
+                        self.copy(self)
+                    })
+                   // let copy = NSMenuItem(title: , action: #selector(copy(_:)), keyEquivalent: "")
                     menu.addItem(copy)
                     NSMenu.popUpContextMenu(menu, with: event, for: self)
                 }
@@ -1312,14 +1316,14 @@ public class TextView: Control {
     }
     
     @objc public func copy(_ sender:Any) -> Void {
-        if let layout = layout, layout.selectedRange.range.location != NSNotFound {
-            if let copy = layout.interactions.copy  {
-                if !copy() {
+        if let layout = layout {
+            if let copy = layout.interactions.copy {
+                if !copy() && layout.selectedRange.range.location != NSNotFound {
                     let pb = NSPasteboard.general
                     pb.declareTypes([.string], owner: self)
                     pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                 }
-            } else {
+            } else if layout.selectedRange.range.location != NSNotFound {
                 let pb = NSPasteboard.general
                 pb.declareTypes([.string], owner: self)
                 pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)

@@ -58,6 +58,21 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
         return nil
     }
     
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = NSMenu()
+        if let item = item as? ContextStickerRowItem {
+            
+            let file = fileAtPoint(convert(event.locationInWindow, from: nil))
+            
+            if let reference = file?.stickerReference {
+                menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
+                    showModal(with: StickersPackPreviewModalController.init(item.account, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
+                }))
+            }
+        }
+        return menu
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         

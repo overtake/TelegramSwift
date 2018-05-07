@@ -624,15 +624,15 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.report()
             })
         case let .members(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoMembers), type: .context(count != nil ? "\(count)" : ""), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoMembers), type: .context(count != nil ? "\(count!)" : ""), action: { () in
                 arguments.members()
             })
         case let .admins(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAdmins), type: .context(count != nil ? "\(count)" : ""), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAdmins), type: .context(count != nil ? "\(count!)" : ""), action: { () in
                 arguments.admins()
             })
         case let .blocked(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoBlackList), type: .context(count != nil ? "\(count)" : ""), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoBlackList), type: .context(count != nil ? "\(count!)" : ""), action: { () in
                 arguments.blocked()
             })
         case let .link(_, addressName: addressName):

@@ -209,13 +209,11 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     override func firstResponder() -> NSResponder? {
-        if self.window?.firstResponder == self.window {
+        if self.window?.firstResponder == self.window || self.window?.firstResponder == genericView.documentView {
             var first: NSResponder? = nil
             
             genericView.enumerateViews { view -> Bool in
-                if let view = view as? InputDataRowView {
-                    first = view.firstResponder
-                }
+                first = view.firstResponder
                 return first == nil
             }
             return first

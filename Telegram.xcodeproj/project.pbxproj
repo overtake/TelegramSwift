@@ -51,6 +51,7 @@
 		9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E53E2056E159001E5649 /* WebAuthorizationRowItem.swift */; };
 		9FB14FBB2097327A00688EF9 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */; };
 		9FB14FBC2097327F00688EF9 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9FB14FBF209889A500688EF9 /* EDSunriseSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FB14FBE209889A500688EF9 /* EDSunriseSet.m */; };
 		9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */; };
 		9FC8AD9A2062A5610094F7B4 /* InputDataDataSelectorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */; };
 		9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */; };
@@ -821,6 +822,8 @@
 		9FA0E53A2052EDFF001E5649 /* HackUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HackUtils.h; sourceTree = "<group>"; };
 		9FA0E53C205693DA001E5649 /* WebSessionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSessionsController.swift; sourceTree = "<group>"; };
 		9FA0E53E2056E159001E5649 /* WebAuthorizationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAuthorizationRowItem.swift; sourceTree = "<group>"; };
+		9FB14FBD2098896200688EF9 /* EDSunriseSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EDSunriseSet.h; sourceTree = "<group>"; };
+		9FB14FBE209889A500688EF9 /* EDSunriseSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EDSunriseSet.m; sourceTree = "<group>"; };
 		9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadSettingsViewController.swift; sourceTree = "<group>"; };
 		9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataDataSelectorRowItem.swift; sourceTree = "<group>"; };
 		9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValuesSelectorModalController.swift; sourceTree = "<group>"; };
@@ -2097,6 +2100,8 @@
 		C22B63531D967F3800085C19 /* external-objc */ = {
 			isa = PBXGroup;
 			children = (
+				9FB14FBD2098896200688EF9 /* EDSunriseSet.h */,
+				9FB14FBE209889A500688EF9 /* EDSunriseSet.m */,
 				C2B6488A1EB2533800BA574B /* TGGifConverter.h */,
 				C2B6488B1EB2533800BA574B /* TGGifConverter.m */,
 				C22B63541D967F4500085C19 /* TGInputTextTag.h */,
@@ -4013,6 +4018,7 @@
 				9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,
+				9FB14FBF209889A500688EF9 /* EDSunriseSet.m in Sources */,
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
 				C2DF47E01DE846AB003AA6C0 /* ChatAudioContentView.swift in Sources */,
 				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
