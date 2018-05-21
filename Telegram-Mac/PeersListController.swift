@@ -52,10 +52,10 @@ class PeerListContainerView : View {
         switch connection {
         case .connecting, .waitingForNetwork:
             proxyConnecting.isHidden = !pref.enabled
-            proxyButton.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnabled, for: .Normal)
-        case let .online(value), let .updating(value):
+            proxyButton.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
+        case .online, .updating:
             proxyConnecting.isHidden = true
-            if pref.enabled && value != nil {
+            if pref.enabled  {
                 proxyButton.set(image: theme.icons.proxyEnabled, for: .Normal)
             } else {
                 proxyButton.set(image: theme.icons.proxyEnable, for: .Normal)

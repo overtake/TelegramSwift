@@ -458,12 +458,4 @@ enum InputDataValidation {
     }
 }
 
-enum InputDataValueErrorTarget : Equatable {
-    case data
-    case files
-}
 
-struct InputDataValueError : Equatable {
-    let description: String
-    let target: InputDataValueErrorTarget
-}

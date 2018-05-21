@@ -19,9 +19,12 @@
 #import "DFRPrivateHeader.h"
 #import "MP4Atom.h"
 #import "HackUtils.h"
+
+#ifndef SHARE
 #import "ffmpeg/include/libavcodec/avcodec.h"
 #import "ffmpeg/include/libavformat/avformat.h"
 #import "FFMpegSwResample.h"
+#endif
 #import "RingBuffer.h"
 #import "ocr.h"
 #import "TGPassportMRZ.h"
