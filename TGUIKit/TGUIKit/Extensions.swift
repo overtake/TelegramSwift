@@ -1055,6 +1055,17 @@ public extension NSTextView {
     public func selectAllText() {
         setSelectedRange(NSMakeRange(0, self.string.length))
     }
+    
+    public func appendText(_ text: String) -> Void {
+        let inputText = self.attributedString().mutableCopy() as! NSMutableAttributedString
+        
+        if selectedRange.upperBound - selectedRange.lowerBound > 0 {
+            inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: NSAttributedString(string: text))
+        } else {
+            inputText.insert(NSAttributedString(string: text), at: selectedRange.lowerBound)
+        }
+        self.string = inputText.string
+    }
 }
 
 

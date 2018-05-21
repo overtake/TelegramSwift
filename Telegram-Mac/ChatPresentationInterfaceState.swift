@@ -174,6 +174,14 @@ func ==(lhs: ChatRecordingStatus, rhs: ChatRecordingStatus) -> Bool {
 }
 
 class ChatRecordingState : Equatable {
+  
+    let autohold: Bool
+    let holdpromise: ValuePromise<Bool> = ValuePromise()
+    init(autohold: Bool) {
+        self.autohold = autohold
+        holdpromise.set(autohold)
+    }
+    
     var micLevel: Signal<Float, NoError> {
         return .complete()
     }
@@ -207,10 +215,11 @@ func ==(lhs:ChatRecordingState, rhs:ChatRecordingState) -> Bool {
 final class ChatRecordingVideoState : ChatRecordingState {
     let pipeline: VideoRecorderPipeline
     private let path: String
-    init(account: Account, liveUpload:Bool) {
+    init(account: Account, liveUpload:Bool, autohold: Bool) {
         let id:Int64 = arc4random64()
         self.path = NSTemporaryDirectory() + "video_message\(id).mp4"
         self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), liveUploading: liveUpload ? PreUploadManager(path, account: account, id: id) : nil)
+        super.init(autohold: autohold)
     }
     
     override var micLevel: Signal<Float, NoError> {
@@ -284,13 +293,14 @@ final class ChatRecordingAudioState : ChatRecordingState {
     
     
     
-    init(account: Account, liveUpload: Bool) {
+    init(account: Account, liveUpload: Bool, autohold: Bool) {
         let id = arc4random64()
         let path = NSTemporaryDirectory() + "voice_message\(id).ogg"
         let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, account: account, id: id) : nil
         let dataItem = TGDataItem(filePath: path)
         
         recorder = ManagedAudioRecorder(liveUploading: uploadManager, dataItem: dataItem)
+        super.init(autohold: autohold)
     }
     
     
@@ -852,6 +862,10 @@ struct ChatPresentationInterfaceState: Equatable {
     
     func withUpdatedLayout(_ layout: SplitViewState?) -> ChatPresentationInterfaceState {
         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation)
+    }
+    
+    func withoutInitialAction() -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: nil, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation)
     }
     
     func withUpdatedContactAdding(_ canAddContact:Bool?) -> ChatPresentationInterfaceState {

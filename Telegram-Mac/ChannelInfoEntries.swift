@@ -640,15 +640,14 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.visibilitySetup()
             })
         case .setPhoto:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSetChannelPhoto), nameStyle: blueActionButton, type: .none, action: { 
-                pickImage(for: mainWindow, completion: { image in
-                    if let image = image {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSetChannelPhoto), nameStyle: blueActionButton, type: .none, action: {
+                filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { path in
                             arguments.updatePhoto(path)
                         })
                     }
                 })
-                
             })
         case let .aboutInput(_, text):
             return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(L10n.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
@@ -765,7 +764,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
      
             
             entries.append(ChannelInfoEntry.sharedMedia(sectionId:sectionId))
-            entries.append(ChannelInfoEntry.notifications(sectionId:sectionId, settings: view.notificationSettings))
+            if !arguments.isAd {
+                entries.append(ChannelInfoEntry.notifications(sectionId:sectionId, settings: view.notificationSettings))
+            }
             
             entries.append(ChannelInfoEntry.section(sectionId))
             sectionId += 1

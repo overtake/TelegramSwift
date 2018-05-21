@@ -38,6 +38,7 @@ class VideoRecorderModalController: ModalViewController {
         return NSTemporaryDirectory() + "video_last_thumbnail.jpg"
     }
     
+    
     private func saveThumbnail(_ thumb: CGImage) {
         var blurred: CGImage = thumb
         for _ in 0 ..< 10 {
@@ -119,6 +120,9 @@ class VideoRecorderModalController: ModalViewController {
     
     
     override func escapeKeyAction() -> KeyHandlerResult {
+        close()
+        chatInteraction.presentation.recordingState?.stop()
+        chatInteraction.update({$0.withoutRecordingState()})
         return .invoked
     }
     

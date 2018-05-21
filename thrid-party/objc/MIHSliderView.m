@@ -247,7 +247,6 @@ const NSTimeInterval kDefaultTransitionAnimationDuration = 0.6;
         [self _prepareTransitionTimer]; // <- this will restart the timer
     }
     if (dotView.tag >= 0 && dotView.tag < self.slides.count) {
-        NSLog(@"dotView, %ld crrut View:%ld", dotView.tag, self.dotsControl.indexOfHighlightedDot);
 
         self.transitionStyle = dotView.tag > self.dotsControl.indexOfHighlightedDot ? MIHSliderTransitionPushHorizontalFromRight: MIHSliderTransitionPushHorizontalFromLeft;
 

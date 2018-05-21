@@ -23,7 +23,8 @@
 #import "ffmpeg/include/libavformat/avformat.h"
 #import "FFMpegSwResample.h"
 #import "RingBuffer.h"
-
+#import "ocr.h"
+#import "TGPassportMRZ.h"
 
 
 
@@ -66,6 +67,7 @@ CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 @end
 
 @interface ObjcUtils : NSObject
++ (NSData *)dataFromHexString:(NSString *)string;
 + (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
 +(NSString * __nonnull) md5:(NSString *__nonnull)string;
 +(NSArray<NSView *> *__nonnull)findElementsByClass:(NSString *__nonnull)className inView:(NSView *__nonnull)view;

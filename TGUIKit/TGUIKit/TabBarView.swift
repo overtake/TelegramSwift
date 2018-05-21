@@ -53,6 +53,9 @@ public class TabBarView: View {
     
     func insertTab(_ tab: TabItem, at index: Int) {
         self.tabs.insert(tab, at: index)
+        if selectedIndex >= index {
+            selectedIndex += 1
+        }
         self.redraw()
     }
     
@@ -71,6 +74,9 @@ public class TabBarView: View {
     
     func removeTab(at index: Int) {
         self.tabs.remove(at: index)
+        if selectedIndex >= index {
+            selectedIndex -= 1
+        }
         self.redraw()
     }
     public var isEmpty:Bool {

@@ -20,6 +20,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case addContact
     case pinned(MessageId)
     case report
+    case sponsored
     var stableId:Int {
         switch self {
         case .none:
@@ -32,6 +33,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 3
         case .pinned:
             return 4
+        case .sponsored:
+            return 5
         }
     }
     
@@ -46,6 +49,8 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .addContact:
             return 44
         case .pinned:
+            return 44
+        case .sponsored:
             return 44
         }
     }
@@ -121,6 +126,8 @@ class ChatHeaderController {
             view = ChatSearchHeader(interactions, chatInteraction: chatInteraction)
         case .report:
             view = ChatReportView(chatInteraction)
+        case .sponsored:
+            view = ChatSponsoredView(chatInteraction: chatInteraction)
         case .none:
             view = nil
         
@@ -141,6 +148,90 @@ struct ChatSearchInteractions {
     let calendarAction:(Date)->Void
     let cancel:()->Void
     let searchRequest:(String, PeerId?) -> Signal<[Message],Void>
+}
+
+private class ChatSponsoredModel: ChatAccessoryModel {
+    
+
+    init() {
+        super.init()
+        update()
+    }
+    
+    func update() {
+        self.headerAttr = .initialize(string: "Proxy Sponsored", color: theme.colors.link, font: .medium(.text))
+        self.messageAttr = .initialize(string: "This channel is shown by your proxy server.", color: theme.colors.text, font: .normal(.text))
+        nodeReady.set(.single(true))
+        self.setNeedDisplay()
+    }
+}
+
+private final class ChatSponsoredView : Control {
+    private let chatInteraction:ChatInteraction
+    private let container:ChatAccessoryView = ChatAccessoryView()
+    private let dismiss:ImageButton = ImageButton()
+    private let node: ChatSponsoredModel = ChatSponsoredModel()
+    init(chatInteraction:ChatInteraction) {
+        self.chatInteraction = chatInteraction
+        super.init()
+        
+        dismiss.disableActions()
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        _ = self.dismiss.sizeToFit()
+        
+        self.set(handler: { _ in
+            confirm(for: mainWindow, header: L10n.chatProxySponsoredAlertHeader, information: L10n.chatProxySponsoredAlertText, cancelTitle: "", thridTitle: L10n.chatProxySponsoredAlertSettings, successHandler: { result in
+                switch result {
+                case .thrid:
+                    chatInteraction.openProxySettings()
+                default:
+                    break
+                }
+            })
+        }, for: .Click)
+        
+        dismiss.set(handler: { _ in
+            FastSettings.adAlertViewed()
+            chatInteraction.update({$0.withoutInitialAction()})
+        }, for: .SingleClick)
+        
+        node.view = container
+        
+        addSubview(dismiss)
+        container.userInteractionEnabled = false
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+        addSubview(container)
+        updateLocalizationAndTheme()
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        self.backgroundColor = theme.colors.background
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        container.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        node.update()
+        node.measureSize(frame.width - 70)
+        container.setFrameSize(frame.width - 70, node.size.height)
+        container.centerY(x: 20)
+        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
+        node.setNeedDisplay()
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
 }
 
 class ChatPinnedView : Control {

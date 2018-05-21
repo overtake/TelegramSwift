@@ -27,7 +27,7 @@ extension ChatListEntry: Identifiable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, to:[AppearanceWrapperEntry<ChatListEntry>], account:Account, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, onMainQueue: Bool = false, state: ChatListRowState) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, to:[AppearanceWrapperEntry<ChatListEntry>], adIndex: UInt16?, account:Account, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, onMainQueue: Bool = false, state: ChatListRowState) -> Signal<TableUpdateTransition,Void> {
     
     return Signal { subscriber in
         
@@ -40,10 +40,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, t
                 
                 var pinnedType: ChatListPinnedType = .some
                 if let i = to.index(of: entry) {
-                    if index.pinningIndex != nil {
-                        if i > 0 {
-                            if case let .MessageEntry(index, _, _, _ ,_ , _, _) = to[i - 1].entry, index.pinningIndex == nil {
-                                pinnedType = .last
+                    if let pinningIndex = index.pinningIndex {
+                        if pinningIndex == adIndex {
+                            pinnedType = .ad
+                        } else {
+                            if i > 0 {
+                                if case let .MessageEntry(index, _, _, _ ,_ , _, _) = to[i - 1].entry, index.pinningIndex == nil {
+                                    pinnedType = .last
+                                }
                             }
                         }
                     } else {
@@ -101,7 +105,7 @@ class ChatListController : PeersListController {
         let onMainQueue:Atomic<Bool> = Atomic(value: true)
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChatListEntry>]?> = Atomic(value: nil)
         let stateValue = self.stateValue
-        var animated: Atomic<Bool> = Atomic(value: true)
+        let animated: Atomic<Bool> = Atomic(value: true)
 
         let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
         
@@ -129,10 +133,38 @@ class ChatListController : PeersListController {
                 _ = previousChatList.swap(value.0)
                     
                 let stateWasUpdated = previousState.swap(state) != state
+                    var prepare = value.0.entries
+                    var pinnedIndex:UInt16 = 11
+                    if value.0.laterIndex == nil {
+                        prepare.removeAll()
+                       
+                        for value in  value.0.entries {
+                            switch value {
+                            case let .MessageEntry(index, a, b, c, d, e, f):
+                                if let _ = index.pinningIndex {
+                                    prepare.append(.MessageEntry(ChatListIndex(pinningIndex: pinnedIndex, messageIndex: index.messageIndex), a, b, c, d, e, f))
+                                    pinnedIndex -= 1
+                                } else {
+                                    prepare.append(value)
+                                }
+                            default:
+                                prepare.append(value)
+                            }
+                        }
+                        
+                        if let value = value.0.additionalItemEntries.first {
+                            switch value {
+                            case let .MessageEntry(index, a, b, c, d, e, f):
+                                prepare.append(ChatListEntry.MessageEntry(ChatListIndex(pinningIndex: pinnedIndex, messageIndex: index.messageIndex), a, b, c, d, e, f))
+                            default:
+                                break
+                            }
+                        }
+                    }
+                    
+                    let entries = prepare.map({AppearanceWrapperEntry(entry: $0, appearance: stateWasUpdated ? appearance.newAllocation : appearance)})
                 
-                    let entries = value.0.entries.map({AppearanceWrapperEntry(entry: $0, appearance: stateWasUpdated ? appearance.newAllocation : appearance)})
-                
-                return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, onMainQueue: onMainQueue.swap(false), state: state)
+                    return prepareEntries(from: previousEntries.swap(entries), to: entries, adIndex: value.0.additionalItemEntries.first != nil ? pinnedIndex : nil, account: account, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, onMainQueue: onMainQueue.swap(false), state: state)
             }
             
         })
@@ -265,7 +297,7 @@ class ChatListController : PeersListController {
                 }
                 navigation.controller.scrollup()
             } else {
-                open(with: item.chatLocation, addition: mode.groupId != nil)
+                open(with: item.chatLocation, initialAction: item.pinnedType == .ad && FastSettings.showAdAlert ? .ad : nil, addition: mode.groupId != nil)
             }
         }
     }

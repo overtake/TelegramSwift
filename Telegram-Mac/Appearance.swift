@@ -12,6 +12,40 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 
+private func generateLockerBody(_ color: NSColor, backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(12.5, 12.5), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(1.0)
+        ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        ctx.fillEllipse(in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - 2)/2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - 2)/2), 2, 2))
+       
+    })!
+}
+private func generateLockerHead(_ color: NSColor, backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(10, 20), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.round(size, size.width / 2)
+
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2, height: size.width - 2)))
+        ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: size.height - size.width + 1), size: CGSize(width: size.width - 2, height: size.width - 2)))
+        ctx.fill(NSMakeRect(1.0, 0, size.width - 1, 14))
+
+        ctx.clear(NSMakeRect(0, 0, size.width, 3))
+
+        
+
+    })!
+}
 
 private func generateChatMention(backgroundColor: NSColor, border: NSColor, foregroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(38, 38), contextGenerator: { size, ctx in
@@ -707,6 +741,14 @@ struct TelegramIconsTheme {
     let passportIdCard: CGImage
     let passportSelfie: CGImage
     let passportDriverLicense: CGImage
+    
+    let chatOverlayVoiceRecording: CGImage
+    let chatOverlayVideoRecording: CGImage
+    let chatOverlaySendRecording: CGImage
+    
+    let chatOverlayLockArrowRecording: CGImage
+    let chatOverlayLockerBodyRecording: CGImage
+    let chatOverlayLockerHeadRecording: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1109,7 +1151,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                passportIdCardReverse: #imageLiteral(resourceName: "Icon_PassportIdCardReverse").precomposed(palette.blueIcon, flipVertical: true),
                                                passportIdCard: #imageLiteral(resourceName: "Icon_PassportIdCard").precomposed(palette.blueIcon, flipVertical: true),
                                                passportSelfie: #imageLiteral(resourceName: "Icon_PassportSelfie").precomposed(palette.blueIcon, flipVertical: true),
-                                               passportDriverLicense: #imageLiteral(resourceName: "Icon_PassportDriverLicense").precomposed(palette.blueIcon, flipVertical: true)
+                                               passportDriverLicense: #imageLiteral(resourceName: "Icon_PassportDriverLicense").precomposed(palette.blueIcon, flipVertical: true),
+                                               chatOverlayVoiceRecording: #imageLiteral(resourceName: "Icon_RecordingVoice").precomposed(.white),
+                                               chatOverlayVideoRecording: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(.white),
+                                               chatOverlaySendRecording: #imageLiteral(resourceName: "Icon_ChatOverlayRecordingSend").precomposed(.white),
+                                               chatOverlayLockArrowRecording: #imageLiteral(resourceName: "Icon_DropdownArrow").precomposed(palette.blueIcon, flipVertical: true),
+                                               chatOverlayLockerBodyRecording: generateLockerBody(palette.blueIcon, backgroundColor: palette.background),
+                                               chatOverlayLockerHeadRecording: generateLockerHead(palette.blueIcon, backgroundColor: palette.background)
     )
 }
 

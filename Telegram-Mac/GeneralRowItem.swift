@@ -53,7 +53,7 @@ class GeneralRowItem: TableRowItem {
     let inset:NSEdgeInsets
     
     private(set) var action:()->Void
-    private(set) var type:GeneralInteractedType
+    var type:GeneralInteractedType
     
     let backgroundColor: NSColor
     

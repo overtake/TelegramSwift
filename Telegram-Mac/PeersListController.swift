@@ -44,6 +44,7 @@ class PeerListContainerView : View {
         proxyButton.addSubview(proxyConnecting)
         setFrameSize(frameRect.size)
         updateLocalizationAndTheme()
+        proxyButton.disableActions()
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
@@ -51,16 +52,14 @@ class PeerListContainerView : View {
         switch connection {
         case .connecting, .waitingForNetwork:
             proxyConnecting.isHidden = !pref.enabled
-            proxyButton.set(image: theme.icons.proxyState, for: .Normal)
-        case .online:
+            proxyButton.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnabled, for: .Normal)
+        case let .online(value), let .updating(value):
             proxyConnecting.isHidden = true
-            if pref.enabled {
+            if pref.enabled && value != nil {
                 proxyButton.set(image: theme.icons.proxyEnabled, for: .Normal)
             } else {
                 proxyButton.set(image: theme.icons.proxyEnable, for: .Normal)
             }
-        default:
-            proxyConnecting.isHidden = true
         }
         proxyConnecting.isEventLess = true
         proxyConnecting.userInteractionEnabled = false
@@ -222,8 +221,17 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         var settings:(ProxySettings, ConnectionStatus)? = nil
         
         
-        proxyDisposable.set(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { settings in
-            return account.network.connectionStatus |> map {(settings, $0)}
+        let next:Atomic<Bool> = Atomic(value: false)
+        
+        proxyDisposable.set(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), Void> in
+            _ = next.swap(false)
+            return account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
+                if next.swap(true) || settings == nil {
+                    return (ps, status)
+                } else {
+                    return (ps, .waitingForNetwork)
+                }
+            }
         } |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue).start(next: { [weak self] pref, _ in
             settings = (pref.0, pref.1)
             self?.genericView.updateProxyPref(pref.0, pref.1)
@@ -454,7 +462,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         return .rejected
     }
     
-    func open(with chatLocation: ChatLocation, message:Message? = nil, close:Bool = true, addition: Bool = false) ->Void {
+    func open(with chatLocation: ChatLocation, message:Message? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
         if let navigation = navigationController {
             
             if let modalAction = navigation.modalAction as? FWDNavigationAction, chatLocation.peerId == account.peerId {
@@ -463,7 +471,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 modalAction.afterInvoke()
                 navigation.removeModalAction()
             } else {
-                let chat:ChatController = addition ? ChatAdditionController(account: self.account, chatLocation: chatLocation, messageId: message?.id) : ChatController(account: self.account, chatLocation: chatLocation, messageId: message?.id)
+                let chat:ChatController = addition ? ChatAdditionController(account: self.account, chatLocation: chatLocation, messageId: message?.id) : ChatController(account: self.account, chatLocation: chatLocation, messageId: message?.id, initialAction: initialAction)
                 navigation.push(chat)
             }
         }

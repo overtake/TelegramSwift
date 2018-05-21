@@ -88,9 +88,9 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     override func hitTest(_ point: NSPoint) -> NSView? {
         switch true {
         case NSPointInRect(point, firstNameTextView.frame):
-            return firstNameTextView
+            return firstNameTextView.inputView
         case NSPointInRect(point, lastNameTextView.frame):
-            return lastNameTextView
+            return lastNameTextView.inputView
         default:
             return super.hitTest(point)
         }

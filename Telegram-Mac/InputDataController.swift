@@ -252,7 +252,7 @@ class InputDataController: GenericViewController<TableView> {
             
             let index = self.genericView.row(at: self.genericView.documentView!.convert(event.locationInWindow, from: nil))
             
-            if index > 0, let view = self.genericView.item(at: index).view {
+            if index > -1, let view = self.genericView.item(at: index).view {
                 if view.mouseInsideField {
                     if self.window?.firstResponder != view.firstResponder {
                         self.window?.makeFirstResponder(view.firstResponder)
@@ -261,7 +261,7 @@ class InputDataController: GenericViewController<TableView> {
                 }
             }
             
-            return .rejected
+            return .invokeNext
         }, with: self, for: .leftMouseDown)
         
     }

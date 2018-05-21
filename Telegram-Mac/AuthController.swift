@@ -370,7 +370,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                 self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(account: strongSelf.account, phoneNumber: phoneNumber, apiId: API_ID, apiHash: API_HASH)
                     |> map {Optional($0)}
                     |> mapError {Optional($0)}
-                    |> timeout(10, queue: Queue.mainQueue(), alternate: .fail(nil))
+                    |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
                     |> deliverOnMainQueue, for: mainWindow)
                     |> filter({$0 != nil}) |> map {$0!} |> deliverOnMainQueue).start(next: { [weak strongSelf] account in
                         strongSelf?.account = account

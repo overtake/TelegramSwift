@@ -124,6 +124,37 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
+        var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
+
+        
+        if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
+            updatedStatusSignal = account.pendingMessageManager.pendingMessageStatus(parent.id) |> map { pendingStatus in
+                if let pendingStatus = pendingStatus {
+                    return .Fetching(isActive: true, progress: pendingStatus.progress)
+                } else {
+                    return .Local
+                }
+            } |> deliverOnMainQueue
+        }
+        
+        if let updatedStatusSignal = updatedStatusSignal {
+            self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
+                if let strongSelf = self {
+                    strongSelf.fetchStatus = status
+                    
+                    switch status {
+                    case let .Fetching(_, progress):
+                        strongSelf.progressView.state = .Fetching(progress: progress, force: false)
+                    case .Remote:
+                        strongSelf.progressView.state = .Remote
+                    case .Local:
+                        strongSelf.progressView.state = .Play
+                    }
+                }
+            }))
+        }
+       
+        
         
         globalAudio?.add(listener: self)
         self.setNeedsDisplay()

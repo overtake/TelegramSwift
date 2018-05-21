@@ -1333,13 +1333,17 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
     index += 1
     
     
-
+    let nameFilter:(String)->String = { text in
+        let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let lower = "abcdefghijklmnopqrstuvwxyz"
+        return text.trimmingCharacters(in: CharacterSet(charactersIn: upper + lower).inverted)
+    }
     
 //
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderFirstName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderFirstName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: nameFilter, limit: 255))
     index += 1
 
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderLastName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderLastName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: nameFilter, limit: 255))
     index += 1
 
     let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: L10n.secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: L10n.secureIdGenderFemale, value: .gender(.female))]
@@ -1424,11 +1428,26 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
                 entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_frontside, placeholder: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleFrontSide, description: relative.uploadFrontTitleText, icon: isMainNotFront ? theme.icons.passportPassport : (relative.valueKey == .driversLicense ? theme.icons.passportDriverLicense : theme.icons.passportIdCard), action: {
                     filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
                         if let file = files?.first {
-                            let localFile:SecureIdVerificationDocument = .local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: file, randomId: arc4random64()), state: .uploading(0)))
-                            
-                            updateState { current in
-                                return current.withUpdatedFrontSide(localFile, for: relative.valueKey)
+                            if let image = NSImage(contentsOfFile: file) {
+                                let string = recognizeMRZ(image.precomposed(), nil)
+                                let mrz = TGPassportMRZ.parseLines(string?.components(separatedBy: "\n"))
+                               let localFile:SecureIdVerificationDocument = .local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: file, randomId: arc4random64()), state: .uploading(0)))
+                                
+                                updateState { current in
+                                    var current = current
+                                    if let mrz = mrz {
+                                        if relative.isEqualToMRZ(mrz) {
+                                            NSLog("\(mrz)")
+                                            let expiryDate = dateFormatter.string(from: mrz.expiryDate).components(separatedBy: ".").map({Int32($0)})
+                                            let birthDate = dateFormatter.string(from: mrz.birthDate).components(separatedBy: ".").map({Int32($0)})
+                                            let details = DetailsIntermediateState(firstName: .string(mrz.firstName), lastName: .string(mrz.lastName), birthday: .date(birthDate[0], birthDate[1], birthDate[2]), countryCode: .string(mrz.issuingCountry), gender: .gender(SecureIdGender.gender(from: mrz)), expiryDate: .date(expiryDate[0], expiryDate[1], expiryDate[2]), identifier: .string(mrz.documentNumber))
+                                            current = current.withUpdatedDetailsState(details)
+                                        }
+                                    }
+                                    return current.withUpdatedFrontSide(localFile, for: relative.valueKey)
+                                }
                             }
+                            
                         }
                     })
                 }))

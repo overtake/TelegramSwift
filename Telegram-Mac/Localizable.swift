@@ -189,8 +189,10 @@ internal final class L10n {
   internal static var audioControllerVideoMessage: String  { return L10n.tr("Localizable", "AudioController.videoMessage") }
   /// voice message
   internal static var audioControllerVoiceMessage: String  { return L10n.tr("Localizable", "AudioController.voiceMessage") }
-  /// Release outside of this field to cancel
-  internal static var audioRecordReleaseOut: String  { return L10n.tr("Localizable", "AudioRecord.ReleaseOut") }
+  /// Click outside of circle to cancel
+  internal static var audioRecordHelpFixed: String  { return L10n.tr("Localizable", "AudioRecord.Help.Fixed") }
+  /// Release outside of circle to cancel
+  internal static var audioRecordHelpPlain: String  { return L10n.tr("Localizable", "AudioRecord.Help.Plain") }
   /// Window
   internal static var aufd15bRTitle: String  { return L10n.tr("Localizable", "aUF-d1-5bR.title") }
   /// Any details such as age, occupation of city. Example: 23 y.o. designer from San Francisco
@@ -709,6 +711,36 @@ internal final class L10n {
   internal static func chatListServicePaymentSent(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.List.Service.PaymentSent", p1)
   }
+  /// %d
+  internal static func chatLiveLocationUpdatedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_countable", p1)
+  }
+  /// Updated %d minutes ago
+  internal static func chatLiveLocationUpdatedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_few", p1)
+  }
+  /// Updated %d minutes ago
+  internal static func chatLiveLocationUpdatedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_many", p1)
+  }
+  /// Updated %d minute ago
+  internal static func chatLiveLocationUpdatedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_one", p1)
+  }
+  /// Updated %d minutes ago
+  internal static func chatLiveLocationUpdatedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_other", p1)
+  }
+  /// Updated %d minutes ago
+  internal static func chatLiveLocationUpdatedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_two", p1)
+  }
+  /// Updated %d minutes ago
+  internal static func chatLiveLocationUpdatedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.LiveLocation.Updated_zero", p1)
+  }
+  /// Updated just now
+  internal static var chatLiveLocationUpdatedNow: String  { return L10n.tr("Localizable", "Chat.LiveLocation.UpdatedNow") }
   /// Delete for everyone
   internal static var chatMessageDeleteForEveryone: String  { return L10n.tr("Localizable", "Chat.Message.DeleteForEveryone") }
   /// Delete for me
@@ -723,6 +755,14 @@ internal final class L10n {
   internal static var chatMessageUnsupported: String  { return L10n.tr("Localizable", "Chat.Message.Unsupported") }
   /// via
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
+  /// Proxy Sponsor
+  internal static var chatProxySponsoredAlertHeader: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertHeader") }
+  /// Settings
+  internal static var chatProxySponsoredAlertSettings: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertSettings") }
+  /// This channel is shown by your proxy server. To remove this channel from your chats list, disable the proxy in Telegram Settings.
+  internal static var chatProxySponsoredAlertText: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertText") }
+  /// Are you sure you want to cancel recording?
+  internal static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   ///  - Use end-to-end encryption
   internal static var chatSecretChat1Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.1Feature") }
   ///  - Leave no trace on our servers
@@ -835,6 +875,8 @@ internal final class L10n {
   internal static var chatListFeeds: String  { return L10n.tr("Localizable", "ChatList.Feeds") }
   /// Group Channel
   internal static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
+  /// Proxy Sponsor
+  internal static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Feed
   internal static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
   /// Message is not supported
@@ -1311,6 +1353,8 @@ internal final class L10n {
   internal static var generalSettingsSendByCmdEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByCmdEnter") }
   /// Use Enter to send
   internal static var generalSettingsSendByEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByEnter") }
+  /// Show Calls Tab
+  internal static var generalSettingsShowCallsTab: String  { return L10n.tr("Localizable", "GeneralSettings.ShowCallsTab") }
   /// A color scheme for nighttime and dark desktops
   internal static var generalSettingsDarkModeDescription: String  { return L10n.tr("Localizable", "GeneralSettings.DarkMode.Description") }
   /// Use large font for messages
@@ -1685,6 +1729,28 @@ internal final class L10n {
   internal static var navigationDone: String  { return L10n.tr("Localizable", "Navigation.Done") }
   /// Edit
   internal static var navigationEdit: String  { return L10n.tr("Localizable", "Navigation.Edit") }
+  /// Bytes Received
+  internal static var networkUsageBytesReceived: String  { return L10n.tr("Localizable", "NetworkUsage.BytesReceived") }
+  /// Bytes Sent
+  internal static var networkUsageBytesSent: String  { return L10n.tr("Localizable", "NetworkUsage.BytesSent") }
+  /// Network Usage
+  internal static var networkUsageNetworkUsage: String  { return L10n.tr("Localizable", "NetworkUsage.NetworkUsage") }
+  /// Network usage since %@
+  internal static func networkUsageNetworkUsageSince(_ p1: String) -> String {
+    return L10n.tr("Localizable", "NetworkUsage.NetworkUsageSince", p1)
+  }
+  /// Reset Statistics
+  internal static var networkUsageReset: String  { return L10n.tr("Localizable", "NetworkUsage.Reset") }
+  /// AUDIO
+  internal static var networkUsageHeaderAudio: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Audio") }
+  /// FILES
+  internal static var networkUsageHeaderFiles: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Files") }
+  /// MESSAGES
+  internal static var networkUsageHeaderGeneric: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Generic") }
+  /// PHOTOS
+  internal static var networkUsageHeaderImages: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Images") }
+  /// VIDEOS
+  internal static var networkUsageHeaderVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Videos") }
   /// You have new message
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mute
@@ -2437,8 +2503,14 @@ internal final class L10n {
   }
   /// Connect
   internal static var proxyForceEnableConnect: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.Connect") }
-  /// Are you sure you want to enable this proxy?
-  internal static var proxyForceEnableHeader: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.Header") }
+  /// Enable Proxy
+  internal static var proxyForceEnableEnable: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.Enable") }
+  /// Do you want to add this proxy?
+  internal static var proxyForceEnableHeader1: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.Header1") }
+  /// This proxy may display a sponsored channel in your chat list. This doesn't reveal any of your Telegram traffic.
+  internal static var proxyForceEnableMTPDesc: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.MTPDesc") }
+  /// Add Proxy
+  internal static var proxyForceEnableOK: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.OK") }
   /// You can change your proxy server later in the Settings (Privacy and Security).
   internal static var proxyForceEnableText: String  { return L10n.tr("Localizable", "Proxy.ForceEnable.Text") }
   /// Server: %@
@@ -2477,7 +2549,7 @@ internal final class L10n {
   internal static var proxySettingsExportDescription: String  { return L10n.tr("Localizable", "ProxySettings.ExportDescription") }
   /// Export link from clipboard
   internal static var proxySettingsExportLink: String  { return L10n.tr("Localizable", "ProxySettings.ExportLink") }
-  /// MT-PROTO
+  /// MTPROTO
   internal static var proxySettingsMTP: String  { return L10n.tr("Localizable", "ProxySettings.MTP") }
   /// Password
   internal static var proxySettingsPassword: String  { return L10n.tr("Localizable", "ProxySettings.Password") }
@@ -2511,12 +2583,18 @@ internal final class L10n {
   internal static var proxySettingsItemChecking: String  { return L10n.tr("Localizable", "ProxySettings.Item.Checking") }
   /// connected
   internal static var proxySettingsItemConnected: String  { return L10n.tr("Localizable", "ProxySettings.Item.Connected") }
+  /// connected (ping: %@)
+  internal static func proxySettingsItemConnectedPing(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ProxySettings.Item.ConnectedPing", p1)
+  }
   /// last connection %@
   internal static func proxySettingsItemLastConnection(_ p1: String) -> String {
     return L10n.tr("Localizable", "ProxySettings.Item.LastConnection", p1)
   }
   /// unavailable
   internal static var proxySettingsItemNeverConnected: String  { return L10n.tr("Localizable", "ProxySettings.Item.NeverConnected") }
+  /// The proxy may display a sponsored channel in your chat list. This doesn't reveal any of your Telegram traffic.
+  internal static var proxySettingsMtpSponsor: String  { return L10n.tr("Localizable", "ProxySettings.Mtp.Sponsor") }
   /// Preview
   internal static var quickLookPreview: String  { return L10n.tr("Localizable", "QuickLook.Preview") }
   /// **tab** or **↑ ↓** to navigate, **⮐** to select, **esc** to dismiss
@@ -2643,11 +2721,11 @@ internal final class L10n {
   internal static var secureIdUploadAdditionalScan: String  { return L10n.tr("Localizable", "SecureId.UploadAdditionalScan") }
   /// Upload Scan
   internal static var secureIdUploadScan: String  { return L10n.tr("Localizable", "SecureId.UploadScan") }
-  /// You are sending your documents directly to %@ and allowing their %@ to send you messages.
+  /// You are sending your documents directly to **%@** and allowing their **%@** to send you messages.
   internal static func secureIdAcceptHelp(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "SecureId.Accept.Help", p1, p2)
   }
-  /// You accept the [Login Widged Example Privacy Policy](_applyPolicy_) and allow their %@ to send you messages.
+  /// You accept the [Login Widged Example Privacy Policy](_applyPolicy_) and allow their **%@** to send you messages.
   internal static func secureIdAcceptPolicy(_ p1: String) -> String {
     return L10n.tr("Localizable", "SecureId.Accept.Policy", p1)
   }
@@ -2869,7 +2947,7 @@ internal final class L10n {
   internal static var secureIdRequestPermissionPhoneEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone.Empty") }
   /// REQUESTED INFORMATION
   internal static var secureIdRequestedInformationHeader: String  { return L10n.tr("Localizable", "SecureId.RequestedInformation.Header") }
-  /// REQUESTED FIELDS
+  /// REQUESTED FILES
   internal static var secureIdScansHeader: String  { return L10n.tr("Localizable", "SecureId.Scans.Header") }
   /// Upload a front side photo of document
   internal static var secureIdUploadFront: String  { return L10n.tr("Localizable", "SecureId.Upload.Front") }
@@ -3009,6 +3087,8 @@ internal final class L10n {
   internal static func stickersSetCount1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stickers.Set.Count1_zero", p1)
   }
+  /// Sorry, this sticker set doesn't seem to exist.
+  internal static var stickerSetDontExist: String  { return L10n.tr("Localizable", "StickerSet.DontExist") }
   /// Remove
   internal static var stickerSetRemove: String  { return L10n.tr("Localizable", "StickerSet.Remove") }
   /// Clear %@

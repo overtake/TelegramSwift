@@ -25,30 +25,9 @@ enum ChatInitialAction : Equatable {
     case start(parameter: String, behavior: ChatInitialActionBehavior)
     case inputText(text: String, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
+    case ad
 }
 
-func ==(lhs:ChatInitialAction, rhs:ChatInitialAction) -> Bool {
-    switch lhs {
-    case let .start(lhsText, lhsBehavior):
-        if case let .start(rhsText, rhsBehavior) = rhs, lhsText == rhsText, lhsBehavior == rhsBehavior {
-            return true
-        } else {
-            return false
-        }
-    case let .inputText(lhsText, lhsBehavior):
-        if case let .inputText(rhsText, rhsBehavior) = rhs, lhsText == rhsText, lhsBehavior == rhsBehavior {
-            return true
-        } else {
-            return false
-        }
-    case let .files(lhsList, lhsBehavior):
-        if case let .files(rhsList, rhsBehavior) = rhs, lhsList == rhsList, lhsBehavior == rhsBehavior {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 var globalLinkExecutor:TextViewInteractions {
     get {
@@ -392,7 +371,8 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         }
                     case actions_me[4]:
                         let vars = urlVars(with: string)
-                        if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret], let secret = rawSecret.data(using: .utf8)  {
+                        if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret]  {
+                            let secret = ObjcUtils.data(fromHexString: rawSecret)!
                             let server = escape(with: server)
                             return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                         }
@@ -520,9 +500,10 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         return .socks(ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), applyProxy: applyProxy)
                     }
                 case known_scheme[6]:
-                    if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret], let secret = rawSecret.data(using: .utf8) {
+                    if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
                         let server = escape(with: server)
-                        return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
+                       
+                        return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
                     }
                 case known_scheme[7]:
                     if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId) {
@@ -591,6 +572,11 @@ func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
                 return (ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), true)
             }
             return (nil , true)
+        } else if action.hasPrefix("proxy") {
+            if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let secret = vars[keyURLSecret] {
+                let server = escape(with: server)
+                return (ProxyServerSettings(host: server, port: port, connection: .mtp(secret: ObjcUtils.data(fromHexString: secret))), true)
+            }
         }
         
     }

@@ -317,7 +317,9 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
     func updateHeader(_ interfaceState:ChatPresentationInterfaceState, _ animated:Bool) {
         
         let state:ChatHeaderState
-        if interfaceState.isSearchMode {
+        if let initialAction = interfaceState.initialAction, case .ad = initialAction {
+            state = .sponsored
+        } else if interfaceState.isSearchMode {
             state = .search(searchInteractions)
         } else if interfaceState.reportStatus == .canReport {
             state = .report
@@ -894,7 +896,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.viewDidLoad()
         
         
-       
         genericView.tableView.delegate = self
         updateSidebar()
         
@@ -1059,6 +1060,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return current
             })
             
+        }
+        
+        chatInteraction.startRecording = { [weak self] hold in
+            guard let chatInteraction = self?.chatInteraction else {return}
+            if chatInteraction.presentation.recordingState != nil || chatInteraction.presentation.state != .normal {
+                NSSound.beep()
+                return
+            }
+            if let peer = chatInteraction.presentation.peer {
+                if peer.mediaRestricted {
+                    return alertForMediaRestriction(peer)
+                }
+                if chatInteraction.presentation.effectiveInput.inputText.isEmpty {
+                    let state: ChatRecordingState
+                    
+                    switch FastSettings.recordingState {
+                    case .voice:
+                        state = ChatRecordingAudioState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
+                        state.start()
+                    case .video:
+                        state = ChatRecordingVideoState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
+                        showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: mainWindow)
+                    }
+                    
+                    chatInteraction.update({$0.withRecordingState(state)})
+                }
+            }
         }
         
         let scrollAfterSend:()->Void = { [weak self] in
@@ -1313,6 +1341,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.openFeedInfo = { [weak self] groupId in
             guard let `self` = self else {return}
             self.navigationController?.push(ChatListController(self.account, groupId: groupId))
+        }
+        
+        chatInteraction.openProxySettings = { [weak self] in
+            guard let `self` = self else {return}
+            let f = proxyListController(postbox: self.account.postbox, network: self.account.network)
+            f({ [weak self] controller in
+                self?.navigationController?.push(controller)
+            })
         }
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
@@ -2226,7 +2262,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             self?.changeState()
                         }, theme.icons.chatActionEdit))
                         
-                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings  {
+                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, !self.isAdChat  {
                             if self.chatInteraction.peerId != account.peerId {
                                 items.append(SPopoverItem(!notificationSettings.isMuted ? tr(L10n.chatContextEnableNotifications) : tr(L10n.chatContextDisableNotifications), { [weak self] in
                                     self?.chatInteraction.toggleNotifications()
@@ -2286,6 +2322,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else if chatInteraction.presentation.isSearchMode {
             chatInteraction.update({$0.updatedSearchMode(false)})
             result = .invoked
+        } else if chatInteraction.presentation.recordingState != nil {
+            chatInteraction.update({$0.withoutRecordingState()})
+            return .invoked
         }
         
         return result
@@ -2301,6 +2340,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         return !self.chatInteraction.presentation.isSearchMode && self.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .rejected : .invokeNext
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        if let recordingState = chatInteraction.presentation.recordingState {
+            recordingState.stop()
+            chatInteraction.mediaPromise.set(recordingState.data)
+            closeAllModals()
+            chatInteraction.update({$0.withoutRecordingState()})
+            return .invoked
+        }
+        return super.returnKeyAction()
     }
     
     override func nextKeyAction() -> KeyHandlerResult {
@@ -2373,6 +2423,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.viewDidAppear(animated)
         
         
+   
+        
         if let peer = chatInteraction.peer {
             if peer.isRestrictedChannel, let reason = peer.restrictionText {
                 alert(for: mainWindow, info: reason, completion: { [weak self] in
@@ -2437,6 +2489,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.chatInteraction.startRecording(true)
+            return .invoked
+        }, with: self, for: .R, priority: .medium, modifierFlags: [.command])
+        
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.genericView.inputView.makeMonospace()
             return .invoked
         }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
@@ -2494,12 +2552,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.applyAction(action: action)
     }
     
-    
+    private let isAdChat: Bool
     
     public init(account:Account, chatLocation:ChatLocation, messageId:MessageId? = nil, initialAction:ChatInitialAction? = nil) {
         self.chatLocation = chatLocation
         self.chatInteraction = ChatInteraction(chatLocation: chatLocation, account:account)
+        if let action = initialAction {
+            switch action {
+            case .ad:
+                isAdChat = true
+            default:
+                isAdChat = false
+            }
+        } else {
+            isAdChat = false
+        }
         super.init(account)
+        
+        
         self.chatInteraction.update(animated: false, {$0.updatedInitialAction(initialAction)})
         account.context.checkFirstRecentlyForDuplicate(peerId: chatInteraction.peerId)
         
@@ -2628,7 +2698,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             
-            if value.isSearchMode != oldValue.isSearchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.reportStatus != oldValue.reportStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.canAddContact != oldValue.canAddContact {
+            if value.isSearchMode != oldValue.isSearchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.reportStatus != oldValue.reportStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.canAddContact != oldValue.canAddContact || value.initialAction != oldValue.initialAction {
                 genericView.updateHeader(value, animated)
             }
             

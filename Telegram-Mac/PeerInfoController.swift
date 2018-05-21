@@ -55,6 +55,7 @@ class PeerInfoTitleBarView : TitledBarView {
 class PeerInfoArguments {
     let peerId:PeerId
     let account:Account
+    let isAd: Bool
     let pushViewController:(ViewController) -> Void
     
     let pullNavigation:()->NavigationViewController?
@@ -118,11 +119,12 @@ class PeerInfoArguments {
         pushViewController(PeerMediaController(account: account, peerId: peerId, tagMask: .photoOrVideo))
     }
     
-    init(account:Account, peerId:PeerId, state:PeerInfoState, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?) {
+    init(account:Account, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.account = account
         self.peerId = peerId
+        self.isAd = isAd
         self.pushViewController = pushViewController
         self.pullNavigation = pullNavigation
     }
@@ -208,8 +210,7 @@ class PeerInfoController: EditableViewController<TableView> {
     private var _userArguments:UserInfoArguments!
     private var _channelArguments:ChannelInfoArguments!
     var disposable:MetaDisposable = MetaDisposable()
-    
-    init(account:Account, peer:Peer) {
+    init(account:Account, peer:Peer, isAd: Bool = false) {
         peerAtomic = Atomic(value: peer)
         self.peerId = peer.id
         super.init(account)
@@ -220,16 +221,16 @@ class PeerInfoController: EditableViewController<TableView> {
             self?.navigationController?.push(controller)
         }
         
-        _groupArguments = GroupInfoArguments(account: account, peerId: peerId, state: GroupInfoState(), pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+        _groupArguments = GroupInfoArguments(account: account, peerId: peerId, state: GroupInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
         
-        _userArguments = UserInfoArguments(account: account, peerId: peerId, state: UserInfoState(), pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+        _userArguments = UserInfoArguments(account: account, peerId: peerId, state: UserInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
         
         
-        _channelArguments = ChannelInfoArguments(account: account, peerId: peerId, state: ChannelInfoState(), pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+        _channelArguments = ChannelInfoArguments(account: account, peerId: peerId, state: ChannelInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
 

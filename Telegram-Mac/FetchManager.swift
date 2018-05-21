@@ -82,7 +82,7 @@ private final class FetchManagerStatusContext {
 
 private final class FetchManagerCategoryContext {
     private let postbox: Postbox
-    private let entryCompleted: (FetchManagerLocationEntryId) -> Void
+    private let entryCompleted: (FetchManagerLocationEntryId, FetchResourceSourceType) -> Void
     
     private var topEntryIdAndPriority: (FetchManagerLocationEntryId, FetchManagerPriorityKey)?
     private var entries: [FetchManagerLocationEntryId: FetchManagerLocationEntry] = [:]
@@ -90,7 +90,7 @@ private final class FetchManagerCategoryContext {
     private var activeContexts: [FetchManagerLocationEntryId: FetchManagerActiveContext] = [:]
     private var statusContexts: [FetchManagerLocationEntryId: FetchManagerStatusContext] = [:]
     
-    init(postbox: Postbox, entryCompleted: @escaping (FetchManagerLocationEntryId) -> Void) {
+    init(postbox: Postbox, entryCompleted: @escaping (FetchManagerLocationEntryId, FetchResourceSourceType) -> Void) {
         self.postbox = postbox
         self.entryCompleted = entryCompleted
     }
@@ -156,7 +156,7 @@ private final class FetchManagerCategoryContext {
                 if let entry = self.entries[id] {
                     let entryCompleted = self.entryCompleted
                     activeContext.disposable = self.postbox.mediaBox.fetchedResource(entry.resource, tag: entry.fetchTag, implNext: true).start(next: { value in
-                        entryCompleted(id)
+                        entryCompleted(id, value)
                     })
                 } else {
                     assertionFailure()
@@ -203,7 +203,7 @@ private final class FetchManagerCategoryContext {
                     self.activeContexts[id] = activeContext
                     let entryCompleted = self.entryCompleted
                     activeContext.disposable = self.postbox.mediaBox.fetchedResource(entry.resource, tag: entry.fetchTag, implNext: true).start(next: { value in
-                        entryCompleted(id)
+                        entryCompleted(id, value)
                     })
                 }
             }
@@ -309,9 +309,26 @@ final class FetchManager {
             context = current
         } else {
             let queue = self.queue
-            context = FetchManagerCategoryContext(postbox: self.postbox, entryCompleted: { [weak self] id in
+            context = FetchManagerCategoryContext(postbox: self.postbox, entryCompleted: { [weak self] id, source in
                 queue.async {
                     if let strongSelf = self {
+                        let postbox = strongSelf.postbox
+                        switch source {
+                        case .remote:
+                            switch id.locationKey {
+                            case let .messageId(messageId):
+                                _ = (strongSelf.postbox.messageAtId(messageId) |> map { $0?.media.first as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, Void> in
+                                    if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo {
+                                        return copyToDownloads(file, postbox: postbox)
+                                    }
+                                    return .single(Void())
+                                }).start()
+                            default:
+                                break
+                            }
+                        default:
+                            break
+                        }
                         strongSelf.withCategoryContext(key, { context in
                             context.cancelEntry(id)
                         })
@@ -418,6 +435,9 @@ final class FetchManager {
                                         strongSelf.withCategoryContext(category, { context in
                                             context.withFetchStatusContext(entryId, { statusContext in
                                                 statusContext.originalStatus = status
+                                                
+              
+                                                
                                                 if let combinedStatus = statusContext.combinedStatus {
                                                     for f in statusContext.subscribers.copyItems() {
                                                         f(combinedStatus)

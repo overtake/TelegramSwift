@@ -17,6 +17,7 @@ enum ChatListPinnedType {
     case some
     case last
     case none
+    case ad
 }
 
 
@@ -154,6 +155,9 @@ class ChatListRowItem: TableRowItem {
 
     
     var isMuted:Bool {
+        if pinnedType == .ad {
+            return false
+        }
         if let peerNotificationSettings = peerNotificationSettings as? TelegramPeerNotificationSettings {
             if case .muted(_) = peerNotificationSettings.muteState {
                 return true
@@ -252,7 +256,15 @@ class ChatListRowItem: TableRowItem {
         self.messageText = chatListText(account: account, location: .group(groupId), for: message, renderedPeer: nil, embeddedState: nil)
         hasDraft = false
         
-        if let message = message {
+        
+        if case .ad = pinnedType {
+            let sponsored:NSMutableAttributedString = NSMutableAttributedString()
+            _ = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
+            self.date = sponsored
+            dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
+            dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
+
+        } else if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= account.context.timeDifference
@@ -307,7 +319,15 @@ class ChatListRowItem: TableRowItem {
         self.messageText = chatListText(account: account, location: .peer(renderedPeer.peerId), for: message, renderedPeer: renderedPeer, embeddedState:embeddedState)
         
         
-        if let message = message {
+        if case .ad = pinnedType {
+            let sponsored:NSMutableAttributedString = NSMutableAttributedString()
+            let range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
+            sponsored.setSelected(color: .white,range: range)
+            self.date = sponsored
+            dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
+            dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
+            
+        } else if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= account.context.timeDifference
@@ -318,6 +338,7 @@ class ChatListRowItem: TableRowItem {
             dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
         }
+        
         
         let tagSummaryCount = summaryInfo.tagSummaryCount ?? 0
         let actionsSummaryCount = summaryInfo.actionsSummaryCount ?? 0
@@ -455,9 +476,11 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+            if pinnedType != .ad {
+                items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+            }
             
-            if account.peerId != peer.id {
+            if account.peerId != peer.id, pinnedType != .ad {
                 items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
             }
             
@@ -469,7 +492,7 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(tr(L10n.chatListContextDeleteChat), handler: deleteChat))
             }
 
-            if let peer = peer as? TelegramGroup {
+            if let peer = peer as? TelegramGroup, pinnedType != .ad {
                 items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                 switch peer.membership {
                 case .Member:
@@ -480,22 +503,13 @@ class ChatListRowItem: TableRowItem {
                     break
                 }
                 items.append(ContextMenuItem(tr(L10n.chatListContextDeleteAndExit), handler: deleteChat))
-            } else if let peer = peer as? TelegramChannel {
+            } else if let peer = peer as? TelegramChannel, pinnedType != .ad {
                 
                 if case .broadcast = peer.info {
-                    //L10n.chatListGroupChannel
-                    
-//
-//                    items.append(ContextMenuItem(L10n.chatListGroupChannel, handler: { [weak self] in
-//                        guard let `self` = self else {return}
-//                        _ = updatePeerGroupIdInteractively(postbox: self.account.postbox, peerId: peer.id, groupId: Namespaces.PeerGroup.feed).start()
-//                    }))
-//
-                   
                     
                     items.append(ContextMenuItem(tr(L10n.chatListContextLeaveChannel), handler: deleteChat))
 
-                } else {
+                } else if pinnedType != .ad {
                     if peer.addressName == nil {
                         items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                     }
@@ -518,7 +532,9 @@ class ChatListRowItem: TableRowItem {
                     })
                 }
             }
-            items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+            if pinnedType != .ad {
+                items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+            }
             
         }
         return .single(items)

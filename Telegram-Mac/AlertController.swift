@@ -33,11 +33,11 @@ class AlertController: ViewController {
     private let okTitle:String
     private let cancelTitle:String?
     private let thridTitle:String?
-    private let account: Account
+    private let account: Account?
     private let peerId: PeerId?
     private let accessory: CGImage?
     private let disposable = MetaDisposable()
-    init(_ window: NSWindow, account: Account, peerId: PeerId?, header: String, text:String? = nil, okTitle: String? = nil, cancelTitle: String? = nil, thridTitle: String? = nil, accessory: CGImage? = nil) {
+    init(_ window: NSWindow, account: Account?, peerId: PeerId?, header: String, text:String? = nil, okTitle: String? = nil, cancelTitle: String? = nil, thridTitle: String? = nil, accessory: CGImage? = nil) {
         self.account = account
         self.accessory = accessory
         self.peerId = peerId
@@ -63,7 +63,7 @@ class AlertController: ViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let peerId = peerId {
+        if let peerId = peerId, let account = account {
             disposable.set((account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
                 self?.layoutAndReady(peer)
             }))
@@ -78,7 +78,7 @@ class AlertController: ViewController {
     private func layoutAndReady(_ peer: Peer?) {
         let maxWidth = genericView.layoutButtons(okTitle: okTitle, cancelTitle: cancelTitle, okHandler: { [weak self] in
             guard let `self` = self else {return}
-            self.close(self.checkBoxSelectd ? .alertThirdButtonReturn : .OK)
+            self.close(self.thridTitle != nil && self.checkBoxSelectd ? .alertThirdButtonReturn : .OK)
         }, cancelHandler: { [weak self] in
             self?.close(.cancel)
         })

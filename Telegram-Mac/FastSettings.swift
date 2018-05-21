@@ -53,6 +53,8 @@ class FastSettings {
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
     private static let kAutomaticallyPlayGifs = "kAutomaticallyPlayGifs"
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
+    
+    private static let kNoticeAdChannel = "kNoticeAdChannel"
 
     private static let kBadgeFilter = "kBadgeFilter"
 
@@ -145,6 +147,15 @@ class FastSettings {
         let value = UserDefaults.standard.integer(forKey: "tooltip:\(tooltip.rawValue)")
         UserDefaults.standard.set(value + 1, forKey: "tooltip:\(tooltip.rawValue)")
         return value < 12
+    }
+    
+    static var showAdAlert: Bool {
+        return !UserDefaults.standard.bool(forKey: kNoticeAdChannel)
+    }
+    
+    static func adAlertViewed() {
+        UserDefaults.standard.set(true, forKey: kNoticeAdChannel)
+        UserDefaults.standard.synchronize()
     }
     
     static func openInQuickLook(_ ext: String) -> Bool {
@@ -246,8 +257,8 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
     })
 }
 
-func copyToDownloads(_ file: TelegramMediaFile, account:Account) -> Signal<Void, Void>  {
-    return downloadFilePath(file, account) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
+func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Void, Void>  {
+    return downloadFilePath(file, postbox) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
         var adopted = adopted
         var i:Int = 1
         let deletedPathExt = adopted.nsstring.deletingPathExtension
@@ -268,8 +279,8 @@ func copyToDownloads(_ file: TelegramMediaFile, account:Account) -> Signal<Void,
     
 }
 
-private func downloadFilePath(_ file: TelegramMediaFile, _ account:Account) -> Signal<(String, String), Void> {
-    return combineLatest(account.postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: account.postbox)) |> mapToSignal { data, settings -> Signal< (String, String), Void> in
+private func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String), Void> {
+    return combineLatest(postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: postbox)) |> mapToSignal { data, settings -> Signal< (String, String), Void> in
         if data.complete {
             var ext:String = ""
             let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
@@ -292,7 +303,7 @@ private func downloadFilePath(_ file: TelegramMediaFile, _ account:Account) -> S
 }
 
 func showInFinder(_ file:TelegramMediaFile, account:Account)  {
-    let path = downloadFilePath(file, account) |> deliverOnMainQueue
+    let path = downloadFilePath(file, account.postbox) |> deliverOnMainQueue
     
     _ = path.start(next: { (boxPath, adopted) in
         do {

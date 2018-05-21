@@ -318,7 +318,7 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     sectionId += 1
     
     entries.append(.storageUsage(sectionId, tr(L10n.dataAndStorageStorageUsage)))
- //   entries.append(.networkUsage(sectionId, tr(L10n.dataAndStorageNetworkUsage)))
+    entries.append(.networkUsage(sectionId, tr(L10n.dataAndStorageNetworkUsage)))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
@@ -367,7 +367,7 @@ class DataAndStorageViewController: TableViewController {
             statePromise.set(stateValue.modify { f($0) })
         }
         
-        let pushControllerImpl = { [weak self] controller in
+        let pushControllerImpl:(ViewController)->Void = { [weak self] controller in
             self?.navigationController?.push(controller)
         }
         
@@ -390,7 +390,7 @@ class DataAndStorageViewController: TableViewController {
         let arguments = DataAndStorageControllerArguments(openStorageUsage: {
             pushControllerImpl(StorageUsageController(account))
         }, openNetworkUsage: {
-           // pushControllerImpl?(networkUsageStatsController(account: account))
+            networkUsageStatsController(account: account, f: pushControllerImpl)
         }, openCategorySettings: { category, title in
             pushControllerImpl(DownloadSettingsViewController(account, category, title, updateCategory: { category in
                 _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current -> AutomaticMediaDownloadSettings in
