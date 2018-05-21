@@ -244,7 +244,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         f(PhoneNumberIntroController(account))
     })
     
-    f(InputDataController(dataSignal: state.get() |> map {editInfoEntries(state: $0, arguments: arguments, updateState: updateState)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: state.get() |> map {editInfoEntries(state: $0, arguments: arguments, updateState: updateState)} |> distinctUntilChanged, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()

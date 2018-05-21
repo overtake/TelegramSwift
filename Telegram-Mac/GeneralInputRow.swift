@@ -162,9 +162,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         super.layout()
         if let item = item as? GeneralInputRowItem {
             textView.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right,textView.frame.height)
-            
             secureField.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right, secureField.frame.height)
-            
             cleanImage.centerY(x: frame.width - item.insets.right - cleanImage.frame.width)
         }
     }
@@ -186,10 +184,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         super.set(item: item, animated:animated)
         textView.animates = false
         
-        
         if let item = item as? GeneralInputRowItem {
-            
-           
             
             cleanImage.set(image: theme.icons.recentDismiss, for: .Normal)
             _ = cleanImage.sizeToFit()
@@ -201,17 +196,19 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
                 
                 
                 secureField.removeFromSuperview()
-                addSubview(textView, positioned: .below, relativeTo: cleanImage)
+                if textView.superview == nil {
+                    addSubview(textView, positioned: .below, relativeTo: cleanImage)
+                }
                // secureField.isHidden = true
                // textView.isHidden = false
                 
                 
                 
                 if item.holdText {
-                    textView.defaultText = item.placeholder.string
-                    // if item.text != textView.string() {
-                    textView.setString(item.text, animated: false)
-                    // }
+                      if item.text != textView.string().replacingOccurrences(of: item.placeholder.string, with: "") {
+                        textView.defaultText = item.placeholder.string
+                        textView.setString(item.text, animated: false)
+                     }
                 } else {
                     if textView.placeholderAttributedString == nil || !textView.placeholderAttributedString!.isEqual(to: item.placeholder) {
                         textView.setPlaceholderAttributedString(item.placeholder, update: false)

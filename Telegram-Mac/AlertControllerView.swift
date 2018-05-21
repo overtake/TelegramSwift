@@ -82,12 +82,14 @@ class AlertControllerView: View {
         
     }
     
-    func layoutTexts(with header: String, information: String?, account: Account, peer: Peer?, thridTitle: String?, accessory: CGImage?, maxWidth: CGFloat) -> Void {
+    func layoutTexts(with header: String, information: String?, account: Account?, peer: Peer?, thridTitle: String?, accessory: CGImage?, maxWidth: CGFloat) -> Void {
         
         var height: CGFloat = 130
         var width: CGFloat = frame.width
         
-        photoView.setPeer(account: account, peer: peer)
+        if let account = account {
+            photoView.setPeer(account: account, peer: peer)
+        }
         accessoryImage.image = accessory
         accessoryImage.sizeToFit()
         

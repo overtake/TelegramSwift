@@ -51,20 +51,7 @@ class ChatInputActionsView: View, Notifable {
         
         
         voice.set(handler: { [weak self] _ in
-            self?.stop()
-        }, for: .Up)
-        
-        
-        
-        voice.set(handler: { [weak self] _ in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.presentation.peer {
-                if peer.mediaRestricted {
-                    return alertForMediaRestriction(peer)
-                }
-                if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
-                    strongSelf.start()
-                }
-            }
+            self?.chatInteraction.startRecording(false)
         }, for: .LongMouseDown)
 
         
@@ -224,20 +211,6 @@ class ChatInputActionsView: View, Notifable {
         return false
     }
     
-    func start() {
-        let state: ChatRecordingState
-        
-        switch FastSettings.recordingState {
-        case .voice:
-            state = ChatRecordingAudioState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat)
-            state.start()
-        case .video:
-            state = ChatRecordingVideoState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat)
-            showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: mainWindow)
-        }
-     
-        chatInteraction.update({$0.withRecordingState(state)})
-    }
     
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {

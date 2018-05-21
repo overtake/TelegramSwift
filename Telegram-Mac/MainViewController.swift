@@ -49,7 +49,6 @@ class MainViewController: TelegramViewController {
         
         tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), selectedImage: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true), controller: settings, longHoverHandler: { [weak self] control in
             self?.showFastSettings(control)
-            
         }))
         
         tabController.updateLocalizationAndTheme()
@@ -66,9 +65,33 @@ class MainViewController: TelegramViewController {
         }
     }
     
-
+    private func showCallsTab() {
+        tabController.insert(tab: TabItem(image: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), selectedImage: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true), controller: phoneCalls), at: 1)
+    }
+    private func hideCallsTab() {
+        tabController.remove(at: 1)
+    }
+    
+    private var showCallTabs: Bool = true
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        prefDisposable.set((account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue).start(next: { [weak self] view in
+            guard let `self` = self else {return}
+            let settings = view.values[ApplicationSpecificPreferencesKeys.baseAppSettings] as? BaseApplicationSettings ?? BaseApplicationSettings.defaultSettings
+            if settings.showCallsTab != self.showCallTabs {
+                self.showCallTabs = settings.showCallsTab
+                if self.showCallTabs {
+                    self.showCallsTab()
+                } else {
+                    self.hideCallsTab()
+                }
+            }
+        }))
+    }
     
     private let settingsDisposable = MetaDisposable()
+    private let prefDisposable = MetaDisposable()
     private var quickController: ViewController?
     private func showFastSettings(_ control:Control) {
         
@@ -148,19 +171,23 @@ class MainViewController: TelegramViewController {
         
         
         if !tabController.isEmpty {
-            tabController.replace(tab: tabController.tab(at: 0).withUpdatedImages(theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true)), at: 0)
+            var index: Int = 0
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true)), at: index)
+            index += 1
+            if showCallTabs {
+                tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true)), at: index)
+                index += 1
+            }
             
-            tabController.replace(tab: tabController.tab(at: 1).withUpdatedImages(theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true)), at: 1)
-            
-            tabController.replace(tab: tabController.tab(at: 2).withUpdatedImages(theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList"), selected: false), theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList_Highlighted"), selected: true)), at: 2)
-            
-            tabController.replace(tab: tabController.tab(at: 3).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: 3)
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList"), selected: false), theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList_Highlighted"), selected: true)), at: index)
+            index += 1
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: index)
         }
     }
     
     func checkSettings(_ index:Int) {
-        
-        if index == 3 && account.context.layout != .single {
+        let isSettings = tabController.tab(at: index).controller is AccountViewController
+        if isSettings && account.context.layout != .single {
             account.context.mainNavigation?.push(GeneralSettingsViewController(account), false)
         } else {
             account.context.mainNavigation?.enumerateControllers( { controller, index in
@@ -185,7 +212,7 @@ class MainViewController: TelegramViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if !animated {
-            self.tabController.select(index:2)
+            self.tabController.select(index: chatIndex)
         }
     }
     
@@ -200,10 +227,27 @@ class MainViewController: TelegramViewController {
         self.tabController.current?.viewWillDisappear(animated)
     }
     
+    private var chatIndex: Int {
+        if showCallTabs {
+            return 2
+        } else {
+            return 1
+        }
+    }
+    
+    private var settingsIndex: Int {
+        if showCallTabs {
+            return 3
+        } else {
+            return 2
+        }
+    }
+    
     func showPreferences() {
         account.context.switchSplitLayout?(.dual)
         if self.account.context.layout != .minimisize {
-            self.tabController.select(index:3)
+            
+            self.tabController.select(index:settingsIndex)
         }
     }
     
@@ -224,5 +268,7 @@ class MainViewController: TelegramViewController {
 
     deinit {
         layoutDisposable.dispose()
+        prefDisposable.dispose()
+        settingsDisposable.dispose()
     }
 }

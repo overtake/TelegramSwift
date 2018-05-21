@@ -59,7 +59,21 @@ class ChatMapRowItem: ChatMediaItem {
         
         if isLiveLocationView {
             liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
-            updatedText = TextViewLayout(.initialize(string: "Updated 2 minutes ago", color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
+            
+            var editedDate:Int32 = object.message!.timestamp
+            for attr in object.message!.attributes {
+                if let attr = attr as? EditedMessageAttribute {
+                    editedDate = attr.date
+                }
+            }
+                        
+            var time:TimeInterval = Date().timeIntervalSince1970
+            time -= account.context.timeDifference
+            let timeUpdated = Int32(time) - editedDate
+                
+            
+            
+            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }
     
@@ -135,7 +149,7 @@ class ChatMapRowItem: ChatMediaItem {
         if isLiveLocationView {
             liveText?.measure(width: _contentSize.width - elementsContentInset * 2)
             updatedText?.measure(width: _contentSize.width - elementsContentInset * 2)
-            return super.height + 40
+            return super.height + (renderType == .bubble ? 46 : 40)
         }
         return super.height
     }
@@ -165,6 +179,7 @@ private class LiveLocationRowView : ChatMediaView {
     override func updateColors() {
         super.updateColors()
         liveText.backgroundColor = contentColor
+        updatedText.backgroundColor = contentColor
     }
     
     private var textFrame: NSRect {

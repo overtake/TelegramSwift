@@ -491,7 +491,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
         }
     }
     
-    if entries.count == 1 && !isLoading {
+    if entries.isEmpty && !isLoading {
         entries.append(.searchEmpty)
     }
     
@@ -535,7 +535,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                 }
             } else {
                 return  account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
-                    return $0.flatMap({$0.chatMainPeer}).filter {($0.isSupergroup || $0.isGroup) && $0.canInviteUsers}
+                    return $0.compactMap({$0.chatMainPeer}).filter {($0.isSupergroup || $0.isGroup) && $0.canInviteUsers}
                 } |> deliverOn(prepareQueue) |> map { entries -> [SelectPeerEntry] in
                     var common:[SelectPeerEntry] = []
                     

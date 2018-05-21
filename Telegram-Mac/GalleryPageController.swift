@@ -437,7 +437,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
             captionView.update(caption)
-            captionView.background = .blackTransparent
+            captionView.backgroundColor = .blackTransparent
+            captionView.disableBackgroundDrawing = true
             captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
             captionView.layer?.cornerRadius = .cornerRadius
             

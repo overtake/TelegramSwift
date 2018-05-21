@@ -114,6 +114,12 @@ public class TabBarController: ViewController, TabViewDelegate {
     public func replace(tab: TabItem, at index:Int) -> Void {
         genericView.tabView.replaceTab(tab, at: index)
     }
+    public func insert(tab: TabItem, at index: Int) -> Void {
+        genericView.tabView.insertTab(tab, at: index)
+    }
+    public func remove(at index: Int) -> Void {
+        genericView.tabView.removeTab(at: index)
+    }
     public var isEmpty:Bool {
         return genericView.tabView.isEmpty
     }

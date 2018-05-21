@@ -309,7 +309,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecuri
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxy: ProxySettings?) -> [PrivacyAndSecurityEntry] {
+private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxy: ProxySettings) -> [PrivacyAndSecurityEntry] {
     var entries: [PrivacyAndSecurityEntry] = []
     
     var sectionId:Int = 1
@@ -347,7 +347,18 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     sectionId += 1
     
     entries.append(.proxyHeader(sectionId: sectionId))
-    entries.append(.proxySettings(sectionId: sectionId, proxy != nil ? tr(L10n.proxySettingsSocks5) : tr(L10n.proxySettingsDisabled)))
+    let text: String
+    if let active = proxy.activeServer, proxy.enabled {
+        switch active.connection {
+        case .socks5:
+            text = L10n.proxySettingsSocks5
+        case .mtp:
+            text = L10n.proxySettingsMTP
+        }
+    } else {
+        text = L10n.proxySettingsDisabled
+    }
+    entries.append(.proxySettings(sectionId: sectionId, text))
     
 
     entries.append(.section(sectionId: sectionId))
@@ -416,9 +427,7 @@ class PrivacyAndSecurityViewController: TableViewController {
             self?.show(toaster: ControllerToaster(text: text))
         }
         
-        let proxySettings:Signal<ProxySettings?, Void> = account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in
-            return view.values[PreferencesKeys.proxySettings] as? ProxySettings
-        } |> deliverOnMainQueue
+        let proxySettings:Signal<ProxySettings, Void> = proxySettingsSignal(account.postbox)
 
         let currentInfoDisposable = MetaDisposable()
         actionsDisposable.add(currentInfoDisposable)

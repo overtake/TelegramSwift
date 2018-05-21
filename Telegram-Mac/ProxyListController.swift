@@ -253,10 +253,17 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
             
             if data[_id_export] != nil {
                 updateState { current in
-                    var link = "https://t.me/socks?server=\(current.server.host)&port=\(current.server.port)"
+                    let prefix: String
+                    switch current.server.connection {
+                    case .mtp:
+                        prefix = "proxy"
+                    case .socks5:
+                        prefix = "socks"
+                    }
+                    var link = "https://t.me/\(prefix)?server=\(current.server.host)&port=\(current.server.port)"
                     switch current.server.connection {
                     case let .mtp(secret):
-                        link += "&secret=\(String(data: secret, encoding: .utf8)!)"
+                        link += "&secret=\((secret as NSData).hexString)"
                     case let .socks5(username, password):
                         if let username = username {
                             link += "&user=\(username)"
@@ -313,7 +320,7 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
             let port = data[_id_port]!.stringValue!
             switch current.server.connection {
             case .mtp:
-                return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .mtp(secret: (data[_id_secret]?.stringValue ?? "").data(using: .utf8)!)))
+                return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .mtp(secret: ObjcUtils.data(fromHexString: data[_id_secret]?.stringValue ?? ""))))
             case .socks5:
                 return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .socks5(username: data[_id_username]?.stringValue, password: data[_id_pass]?.stringValue)))
             }
@@ -379,7 +386,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     
     switch server.connection {
     case let .mtp(secret):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(String(data: secret, encoding: .utf8)!), error: nil, identifier: _id_secret, mode: .plain, placeholder: L10n.proxySettingsSecret, inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string((secret as NSData).hexString), error: nil, identifier: _id_secret, mode: .plain, placeholder: L10n.proxySettingsSecret, inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
         index += 1
     case let .socks5(username, password):
         entries.append(.sectionId(sectionId))
@@ -393,6 +400,10 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
         index += 1
     }
     
+    if case .mtp = server.connection {
+        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.proxySettingsMtpSponsor, color: theme.colors.grayText, detectBold: true))
+        index += 1
+    }
     
     if !server.host.isEmpty && server.port > 0 {
         entries.append(.sectionId(sectionId))

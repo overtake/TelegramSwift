@@ -142,7 +142,7 @@ public class SplitView : View {
     public var state: SplitViewState = .none {
         didSet {
             let notify:Bool = state != oldValue;
-            assert(notify);
+           // assert(notify);
             if(notify) {
                 self.delegate?.splitViewDidNeedSwapToLayout(state: state);
             }

@@ -84,8 +84,15 @@ class GeneralInteractedRowView: GeneralRowView {
             textView?.backgroundColor = theme.colors.background
             
             if item.enabled {
-                overlay.set(handler:{ _ in
+                overlay.set(handler:{ [weak self] _ in
                     item.action()
+                    switch item.type {
+                    case let .switchable(enabled):
+                        item.type = .switchable(!enabled)
+                        self?.switchView?.setIsOn(!enabled)
+                    default:
+                        break
+                    }
                 }, for: .SingleClick)
             }
             

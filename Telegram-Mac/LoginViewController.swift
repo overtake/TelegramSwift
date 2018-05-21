@@ -656,8 +656,9 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
     }
     
     override func controlTextDidChange(_ obj: Notification) {
-        
         if let field = obj.object as? NSTextField {
+            hasChanges = true
+
             let code = codeText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
             let dec = code.prefix(4)
             
@@ -748,6 +749,8 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         return false
     }
     
+    fileprivate var hasChanges: Bool = false
+    
     func update(selectedItem:CountryItem?, update:Bool, updateCode:Bool = true) -> Void {
         self.selectedItem = selectedItem
         if update {
@@ -822,7 +825,9 @@ class LoginAuthInfoView : View {
     }
     
     func updateCountryCode(_ code: String) {
-        phoneNumberContainer.update(selectedItem: manager.item(bySmallCountryName: code), update: true)
+        if !phoneNumberContainer.hasChanges {
+            phoneNumberContainer.update(selectedItem: manager.item(bySmallCountryName: code), update: true)
+        }
     }
     
 

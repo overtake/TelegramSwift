@@ -921,6 +921,7 @@ public class TextView: Control {
        // self.layer?.drawsAsynchronously = System.drawAsync
     }
 
+    public var disableBackgroundDrawing: Bool = false
 
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         //backgroundColor = .random
@@ -929,14 +930,12 @@ public class TextView: Control {
         if let layout = layout {
             
            
-            
-            
             ctx.setAllowsAntialiasing(true)
             
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
             
-            if backingScaleFactor == 1.0 {
+            if backingScaleFactor == 1.0 && !disableBackgroundDrawing {
                 ctx.setFillColor(backgroundColor.cgColor)
                 for line in layout.lines {
                     ctx.fill(NSMakeRect(0, line.frame.minY - line.frame.height - 2, line.frame.width, line.frame.height + 6))

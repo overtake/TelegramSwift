@@ -27,6 +27,17 @@ class SearchTextField: NSTextView {
         return super.becomeFirstResponder()
     }
     
+    override func paste(_ sender: Any?) {
+        
+        let text = NSPasteboard.general.string(forType: .string)?.nsstring
+        if let text = text {
+            var modified = text.replacingOccurrences(of: "\n", with: " ")
+            modified = text.replacingOccurrences(of: "\n", with: " ")
+            appendText(modified)
+            self.delegate?.textDidChange?(Notification(name: NSControl.textDidChangeNotification))
+        }
+    }
+    
 }
 
 public enum SearchFieldState {

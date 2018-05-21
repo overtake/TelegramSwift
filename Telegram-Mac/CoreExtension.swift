@@ -844,12 +844,13 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
     }
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
-        if case .broadcast = peer.info {
-            if peer.hasAdminRights(.canEditMessages) {
-                
-                return peer.hasAdminRights(.canPinMessages) ? true : message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
-            } else if !peer.hasAdminRights(.canPostMessages) {
-                return false
+        if case .broadcast = peer.info,  !peer.hasAdminRights(.canPostMessages) {
+            return false
+        } else if case .group = peer.info {
+            if peer.hasAdminRights(.canPinMessages) {
+                return !message.flags.contains(.Incoming)
+            } else if peer.hasAdminRights(.canEditMessages) {
+                return message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
             }
         }
     }
@@ -1147,6 +1148,17 @@ extension UpdateTwoStepVerificationPasswordResult : Equatable {
             } else {
                 return false
             }
+        }
+    }
+}
+
+extension SecureIdGender {
+    static func gender(from mrz: TGPassportMRZ) -> SecureIdGender {
+        switch mrz.gender.lowercased() {
+        case "f":
+            return .female
+        default:
+            return .male
         }
     }
 }
@@ -1617,6 +1629,20 @@ extension SecureIdRequestedFormField  {
         }
     }
     
+    func isEqualToMRZ(_ mrz: TGPassportMRZ) -> Bool {
+        switch mrz.documentType.lowercased() {
+        case "p":
+            if case .passport = self {
+                return true
+            } else {
+                return false
+            }
+        default:
+            return false
+        }
+        return false
+    }
+    
 }
 
 
@@ -1718,7 +1744,7 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
         
         
         
-        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
+        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId ?? peerId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
             if result {
                 return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
             } else {
@@ -1740,17 +1766,32 @@ func applyExternalProxy(_ server:ProxyServerSettings, postbox:Postbox, network: 
             textInfo += "\n" + L10n.proxyForceEnableTextPassword(pass)
         }
     case let .mtp(secret):
-        textInfo += "\n" + L10n.proxyForceEnableTextSecret(String(data: secret, encoding: .utf8)!)
+        textInfo += "\n" + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
     }
    
     textInfo += "\n\n" + tr(L10n.proxyForceEnableText)
+   
+    if case .mtp = server.connection {
+        textInfo += "\n\n" + L10n.proxyForceEnableMTPDesc
+    }
     
-    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo, okTitle: L10n.proxyForceEnableConnect)
-        |> filter {$0} |> map {_ in} |> mapToSignal {
-            return updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
-                return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
-            })
-    }).start()
+    modernConfirm(for: mainWindow, account: nil, peerId: nil, accessory: theme.icons.confirmAppAccessoryIcon, header: L10n.proxyForceEnableHeader1, information: textInfo, okTitle: L10n.proxyForceEnableOK, thridTitle: L10n.proxyForceEnableEnable, successHandler: { result in
+        _ = updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
+            
+            var current = current.withAddedServer(server)
+            if result == .thrid {
+                current = current.withUpdatedActiveServer(server).withUpdatedEnabled(true)
+            }
+            return current
+        }).start()
+    })
+    
+//    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo, okTitle: L10n.proxyForceEnableConnect)
+//        |> filter {$0} |> map {_ in} |> mapToSignal {
+//            return updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
+//                return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
+//            })
+//    }).start()
 }
 
 

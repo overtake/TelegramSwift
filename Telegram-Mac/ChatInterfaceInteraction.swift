@@ -120,6 +120,9 @@ final class ChatInteraction : InterfaceObserver  {
     var jumpToDate:(Date)->Void = {_ in}
     var openFeedInfo: (PeerGroupId)->Void = {_ in}
     var showNextPost:()->Void = {}
+    var startRecording:(Bool)->Void = {_ in}
+    var openProxySettings: ()->Void = {}
+    
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
@@ -271,6 +274,8 @@ final class ChatInteraction : InterfaceObserver  {
                 if invoke {
                     showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true )
                 }
+            default:
+                break
             }
         }
     }

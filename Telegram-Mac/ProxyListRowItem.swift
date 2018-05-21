@@ -47,6 +47,14 @@ class ProxyListRowItem: GeneralRowItem {
                 self.status = (isConnecting: true, isCurrent: true)
             case .online, .updating:
                 statusText = L10n.proxySettingsItemConnected
+                if let status = status {
+                    switch status {
+                    case let .available(ping):
+                        statusText = L10n.proxySettingsItemConnectedPing("\(Int(ping * 1000))")
+                    default:
+                        break
+                    }
+                }
                 color = theme.colors.blueUI
                 self.status = (isConnecting: false, isCurrent: true)
             }

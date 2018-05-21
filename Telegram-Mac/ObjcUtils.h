@@ -21,6 +21,7 @@
 @end
 
 @interface ObjcUtils : NSObject
++ (NSData *)dataFromHexString:(NSString *)string;
 + (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
 +(NSString *) md5:(NSString *)string;
 + (NSArray<NSView *> *)findElementsByClass:(NSString *)className inView:(NSView *)view;
