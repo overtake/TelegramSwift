@@ -237,11 +237,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     postbox = nil
                     self.proxyDisposable.set(nil)
                 }
-                
+                #if !APP_STORE
                 if let postbox = postbox {
-                    self.proxyDisposable.set((postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> deliverOnMainQueue).start(next: { settings in
+                    self.proxyDisposable.set((postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> delay(5.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { settings in
                         let settings = settings.values[PreferencesKeys.networkSettings] as? NetworkSettings
-                        if var applicationUpdateUrlPrefix = settings?.applicationUpdateUrlPrefix {
+                        if let applicationUpdateUrlPrefix = settings?.applicationUpdateUrlPrefix {
                             self.updater.basicDomain = applicationUpdateUrlPrefix
                         } else {
                             self.updater.basicDomain = nil
@@ -251,6 +251,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 } else {
                     self.proxyDisposable.set(nil)
                 }
+                #endif
             } else {
                 self.proxyDisposable.set(nil)
             }
