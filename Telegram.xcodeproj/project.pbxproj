@@ -34,6 +34,8 @@
 		9F21F65020B59C0500332C85 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		9F21F65120B59C1000332C85 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9F21F65220B59C1000332C85 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21F65420B5A72800332C85 /* LocationModalController.swift */; };
+		9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F21F65C20B5A9C900332C85 /* MapKit.framework */; };
 		9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */; };
 		9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */; };
 		9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */; };
@@ -711,6 +713,8 @@
 		9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBackgroundView.swift; sourceTree = "<group>"; };
 		9F18DD91206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureIdVerificationDocumentsContext.swift; sourceTree = "<group>"; };
 		9F18DD92206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureIdVerificationDocument.swift; sourceTree = "<group>"; };
+		9F21F65420B5A72800332C85 /* LocationModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationModalController.swift; sourceTree = "<group>"; };
+		9F21F65C20B5A9C900332C85 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkUsageStatsController.swift; sourceTree = "<group>"; };
 		9F3EAB3D20A5ED2F003FE7E3 /* genann.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = genann.h; sourceTree = "<group>"; };
 		9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ocr.mm; sourceTree = "<group>"; };
@@ -1518,6 +1522,7 @@
 				C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */,
 				C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
+				9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */,
 				C250B0351DB78A0A004E9FBE /* Quartz.framework in Frameworks */,
 				C250B0331DB788B3004E9FBE /* Foundation.framework in Frameworks */,
 				C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */,
@@ -1555,6 +1560,14 @@
 				9FC8ADA5206925F60094F7B4 /* PassportWindowController.swift */,
 			);
 			name = "secure-id";
+			sourceTree = "<group>";
+		};
+		9F21F65320B5A41B00332C85 /* location */ = {
+			isa = PBXGroup;
+			children = (
+				9F21F65420B5A72800332C85 /* LocationModalController.swift */,
+			);
+			name = location;
 			sourceTree = "<group>";
 		};
 		9F3EAB3C20A5ED2F003FE7E3 /* ocr */ = {
@@ -2158,6 +2171,7 @@
 		C22B635A1D969D7E00085C19 /* input */ = {
 			isa = PBXGroup;
 			children = (
+				9F21F65320B5A41B00332C85 /* location */,
 				C2777B5C1DCE48F4008B69DD /* panels */,
 				C29B5F3F1DC7858100D13E65 /* context */,
 				C22B635B1D96A14E00085C19 /* ChatInputView.swift */,
@@ -3554,6 +3568,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9F21F65C20B5A9C900332C85 /* MapKit.framework */,
 				9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */,
 				9FFAE513205AB50C000C028E /* libz.tbd */,
 				9FFAE510205AB4AB000C028E /* libbz2.tbd */,
@@ -3668,6 +3683,9 @@
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.Mac = {
+								enabled = 1;
+							};
+							com.apple.Maps.Mac = {
 								enabled = 1;
 							};
 							com.apple.Sandbox = {
@@ -4174,6 +4192,7 @@
 				C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */,
+				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				9FFAE4F5205A8C89000C028E /* MediaTrackFrameDecoder.swift in Sources */,
