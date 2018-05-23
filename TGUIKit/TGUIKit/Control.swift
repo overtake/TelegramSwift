@@ -271,7 +271,7 @@ open class Control: View {
         }
     }
     
-    func send(event:ControlEvent) -> Void {
+    public func send(event:ControlEvent) -> Void {
         for (e,handler) in handlers {
             if e == event {
                 handler(self)

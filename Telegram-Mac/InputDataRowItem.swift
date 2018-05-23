@@ -198,6 +198,8 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         }
     }
     
+    
+    
     override func controlTextDidChange(_ obj: Notification) {
         if let item = item as? InputDataRowItem {
             let string = secureField.stringValue
@@ -215,7 +217,16 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
     }
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        return false
+        if let item = item as? InputDataRowItem, let string = pasteboard.string(forType: .string) {
+            let updated = item.filter(string)
+            if updated == string {
+                return false
+            } else {
+                NSSound.beep()
+                shakeView()
+            }
+        }
+        return true
     }
     
     override func updateColors() {

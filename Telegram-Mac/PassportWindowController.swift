@@ -54,9 +54,10 @@ class PassportWindowController  {
         window.contentView = navigationController.view
         
         window.closeInterceptor = { [weak self] in
-            guard let `self` = self else {return}
+            guard let `self` = self else {return true}
             self.window.orderOut(nil)
             passport = nil
+            return true
         }
         (navigationController.view as? View)?.customHandler.layout = { [weak self] _ in
             self?.windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))

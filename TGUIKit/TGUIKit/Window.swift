@@ -127,7 +127,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
-    public var closeInterceptor:(()->Void)? = nil
+    public var closeInterceptor:(()->Bool)? = nil
     public var orderOutHandler:(()->Void)? = nil
     public weak var navigationController: NavigationViewController?
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
@@ -354,8 +354,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
     }
 
     public override func close() {
-        if let closeInterceptor = closeInterceptor {
-            closeInterceptor()
+        if let closeInterceptor = closeInterceptor, closeInterceptor() {
             return
         }
         if isReleasedWhenClosed {

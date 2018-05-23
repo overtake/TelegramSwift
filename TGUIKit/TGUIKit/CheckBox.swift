@@ -43,7 +43,7 @@ public class CheckBox: Control {
         textView.centerY(x: imageView.frame.maxX + 10)
     }
     
-    override func send(event: ControlEvent) {
+    override public func send(event: ControlEvent) {
         switch event {
         case .Click:
             self.isSelected = !isSelected

@@ -76,7 +76,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case notifications(index: Int)
     case language(index: Int, current: String, languages:[LocalizationInfo]?)
     case appearance(index: Int)
-    case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)
+    case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, [Peer]?)
     case dataAndStorage(index: Int)
     case about(index: Int)
     case faq(index: Int)
@@ -130,7 +130,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return index
         case let .appearance(index):
             return index
-        case let .privacy(index, _, _):
+        case let .privacy(index, _, _, _):
             return index
         case let .dataAndStorage(index):
             return index
@@ -189,13 +189,25 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .privacy(lhsIndex, lhsPrivacy, lhsWebSessions):
-            if case let .privacy(rhsIndex, rhsPrivacy, rhsWebSessions) = rhs {
+        case let .privacy(lhsIndex, lhsPrivacy, lhsWebSessions, lhsBlockedPeers):
+            if case let .privacy(rhsIndex, rhsPrivacy, rhsWebSessions, rhsBlockedPeers) = rhs {
                 if let lhsWebSessions = lhsWebSessions, let rhsWebSessions = rhsWebSessions {
                     if lhsWebSessions.0 != rhsWebSessions.0 {
                         return false
                     }
                 } else if (lhsWebSessions != nil) != (rhsWebSessions != nil) {
+                    return false
+                }
+                if let lhsBlockedPeers = lhsBlockedPeers, let rhsBlockedPeers = rhsBlockedPeers {
+                    if lhsBlockedPeers.count != rhsBlockedPeers.count {
+                        return false
+                    }
+                    for i in 0 ..< lhsBlockedPeers.count {
+                        if !lhsBlockedPeers[i].isEqual(rhsBlockedPeers[i]) {
+                            return false
+                        }
+                    }
+                } else if (lhsBlockedPeers != nil) != (rhsBlockedPeers != nil) {
                     return false
                 }
                 return lhsIndex == rhsIndex && lhsPrivacy == rhsPrivacy
@@ -267,7 +279,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: .next, action: {
                 arguments.presentController(NotificationSettingsViewController(arguments.account), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .language(_, current, languages):
+        case let .language(_, _, languages):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(""), action: {
                 arguments.presentController(LanguageViewController(arguments.account, languages: languages), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
@@ -275,9 +287,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, action: {
                 arguments.presentController(AppearanceViewController(arguments.account), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .privacy(_, let privacySettings, let webSessions):
+        case .privacy(_, let privacySettings, let webSessions, let blockedPeers):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, action: {
-                 arguments.presentController(PrivacyAndSecurityViewController(arguments.account, initialSettings: .single((privacySettings, webSessions))), true)
+                 arguments.presentController(PrivacyAndSecurityViewController(arguments.account, initialSettings: .single((privacySettings, webSessions, blockedPeers))), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .dataAndStorage:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, action: {
@@ -317,7 +329,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), languages: [LocalizationInfo]?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers:[Peer]?, proxySettings: (ProxySettings, ConnectionStatus), languages: [LocalizationInfo]?) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -349,7 +361,7 @@ private func accountInfoEntries(peerView:PeerView, language: Language, privacySe
     index += 1
     entries.append(.notifications(index: index))
     index += 1
-    entries.append(.privacy(index: index, privacySettings, webSessions))
+    entries.append(.privacy(index: index, privacySettings, webSessions, blockedPeers))
     index += 1
     entries.append(.dataAndStorage(index: index))
     index += 1
@@ -388,6 +400,27 @@ class LayoutAccountController : TableViewController {
     }
     
     
+    override func getRightBarViewOnce() -> BarView {
+        let button = TextButtonBarView(controller: self, text: L10n.navigationEdit, style: navigationButtonStyle, alignment:.Right)
+        let account = self.account
+        let accountManager = self.accountManager
+        button.set(handler: { [weak self] _ in
+            guard let `self` = self else {return}
+            let first: Atomic<Bool> = Atomic(value: true)
+            editAccountInfoController(account: account, accountManager: accountManager, f: { [weak self] controller in
+                self?.arguments?.presentController(controller, first.swap(false))
+            })
+        }, for: .Click)
+        return button
+    }
+    
+    override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
+        (rightBarView as? TextButtonBarView)?.set(text: L10n.navigationEdit, for: .Normal)
+        (rightBarView as? TextButtonBarView)?.set(color: theme.colors.blueUI, for: .Normal)
+        (rightBarView as? TextButtonBarView)?.needsLayout = true
+    }
+    
     override func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
         return true
     }
@@ -396,17 +429,16 @@ class LayoutAccountController : TableViewController {
         return true
     }
     
+    private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus))> = Promise()
+    private let languages: Promise<[LocalizationInfo]?> = Promise()
+    private let blockedPeers: Promise<[Peer]?> = Promise()
+    private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.border = [.Right]
         genericView.delegate = self
         self.rightBarView.border = [.Right]
-        let network = self.account.network
         let account = self.account
-        
-        let settings = combineLatest(Signal<AccountPrivacySettings?, Void>.single(nil) |> then(requestAccountPrivacySettings(account: account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, Void>.single(nil) |> then(webSessions(network: account.network) |> map {Optional($0)}), proxySettingsSignal(account.postbox) |> mapToSignal { settings in
-            return network.connectionStatus |> map {(settings, $0)}
-        })
         
         let previous:Atomic<[AppearanceWrapperEntry<AccountInfoEntry>]> = Atomic(value: [])
         
@@ -432,13 +464,14 @@ class LayoutAccountController : TableViewController {
             
         })
         
+        self.arguments = arguments
+        
         let atomicSize = self.atomicSize
         
-        let languages = Signal<[LocalizationInfo]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue)
 
         
-        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings |> deliverOnPrepareQueue, languages) |> map { peerView, appearance, settings, languages -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, languages: languages).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings.get() |> deliverOnPrepareQueue, languages.get() |> deliverOnPrepareQueue, blockedPeers.get() |> deliverOnPrepareQueue) |> map { peerView, appearance, settings, languages, blockedPeers -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, blockedPeers: blockedPeers, proxySettings: settings.2, languages: languages).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -449,9 +482,9 @@ class LayoutAccountController : TableViewController {
             self?.navigationWillChangeController()
             self?.readyOnce()
         }))
-        
-        
     }
+    
+    
     
     
     override func navigationWillChangeController() {
@@ -469,7 +502,7 @@ class LayoutAccountController : TableViewController {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.privacy(index: 0, nil, nil).stableId)) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.privacy(index: 0, nil, nil, nil).stableId)) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is LanguageViewController {
@@ -508,8 +541,19 @@ class LayoutAccountController : TableViewController {
         super.viewDidAppear(animated)
         (navigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         updateLocalizationAndTheme()
+        
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let account = self.account
+        
+        settings.set(combineLatest(Signal<AccountPrivacySettings?, Void>.single(nil) |> then(requestAccountPrivacySettings(account: account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, Void>.single(nil) |> then(webSessions(network: account.network) |> map {Optional($0)}), proxySettingsSignal(account.postbox) |> mapToSignal { settings in
+            return account.network.connectionStatus |> map {(settings, $0)}
+            }))
+        languages.set(Signal<[LocalizationInfo]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
+        blockedPeers.set(Signal<[Peer]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))
+    }
     
     override func getLeftBarViewOnce() -> BarView {
         return BarView(controller: self)

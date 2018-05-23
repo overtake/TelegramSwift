@@ -259,6 +259,7 @@ class GalleryViewer: NSResponder {
         
         window.closeInterceptor = { [weak self] in
             _ = self?.interactions.dismiss()
+            return true
         }
         
         window.set(handler: interactions.next, with:self, for: .RightArrow)

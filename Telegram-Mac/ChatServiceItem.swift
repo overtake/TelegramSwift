@@ -330,7 +330,11 @@ class ChatServiceRowView: TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return .clear
+        if let item = item as? ChatServiceItem {
+            return item.isBubbled ? .clear : theme.colors.background
+        } else {
+            return .clear
+        }
     }
     
     required init?(coder: NSCoder) {

@@ -547,7 +547,8 @@ struct ChatInterfaceHistoryScrollState: PostboxCoding, Equatable {
 final class ChatEditState : Equatable {
     let inputState:ChatTextInputState
     let message:Message
-    init(message:Message, state:ChatTextInputState? = nil) {
+    let isLoading: Bool
+    init(message:Message, state:ChatTextInputState? = nil, isLoading: Bool = false) {
         self.message = message
         if let state = state {
             self.inputState = state
@@ -564,14 +565,18 @@ final class ChatEditState : Equatable {
             }
             self.inputState = ChatTextInputState(inputText:message.text, selectionRange:message.text.length ..< message.text.length, attributes: attributes )
         }
+        self.isLoading = isLoading
     }
     
+    func withUpdatedLoading(_ isLoading: Bool) -> ChatEditState {
+        return ChatEditState(message: self.message, state: self.inputState, isLoading: isLoading)
+    }
     func withUpdated(state:ChatTextInputState) -> ChatEditState {
-        return ChatEditState(message:message, state:state)
+        return ChatEditState(message: self.message, state: state, isLoading: self.isLoading)
     }
     
     static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
-        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState
+        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.isLoading == rhs.isLoading
     }
 }
 
@@ -781,6 +786,10 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     
     func withUpdatedDismissedForceReplyId(_ dismissedId: MessageId?) -> ChatInterfaceState {
         return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: dismissedId, editState: self.editState)
+    }
+    
+    func updatedEditState(_ f:(ChatEditState?)->ChatEditState?) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: f(self.editState))
     }
     
     func withEditMessage(_ message:Message) -> ChatInterfaceState {

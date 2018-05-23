@@ -1103,9 +1103,7 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
     sectionId += 1
     
     if let email = state.emailIntermediateState?.email, !email.isEmpty {
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: L10n.secureIdEmailActivateCodePlaceholder, inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: { text -> String in
-            return text.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
-        }, limit: Int32(email.length)))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: L10n.secureIdEmailActivateCodePlaceholder, inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: Int32(email.length)))
         index += 1
         
         entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: L10n.secureIdEmailActivateDescription(email), color: theme.colors.grayText, detectBold: true))
@@ -1177,9 +1175,7 @@ private func confirmPhoneNumberEntries( _ state: PassportState, phoneNumber: Str
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: L10n.secureIdPhoneNumberHeader, color: theme.colors.grayText, detectBold: true))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_phone_code, mode: .plain, placeholder: L10n.secureIdPhoneNumberConfirmCodePlaceholder, inputPlaceholder: L10n.secureIdPhoneNumberConfirmCodeInputPlaceholder, filter: { (text) -> String in
-        return text.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
-    }, limit: 6))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_phone_code, mode: .plain, placeholder: L10n.secureIdPhoneNumberConfirmCodePlaceholder, inputPlaceholder: L10n.secureIdPhoneNumberConfirmCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     
     index += 1
     
@@ -1541,9 +1537,7 @@ private func recoverEmailEntries(emailPattern: String) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: L10n.secureIdEmailActivateCodePlaceholder, inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: { text -> String in
-        return text.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
-    }, limit: 6))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: L10n.secureIdEmailActivateCodePlaceholder, inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     index += 1
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: L10n.secureIdRecoverPasswordSentEmailCode(emailPattern), color: theme.colors.grayText, detectBold: false))
@@ -1665,7 +1659,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         }
         
         let closeAfterSuccessful:()->Void = { [weak self] in
-            self?.window?.closeInterceptor?()
+            _ = self?.window?.closeInterceptor?()
         }
         
         

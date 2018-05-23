@@ -187,7 +187,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsTextSizeHeader)))
     descIndex += 1
     
-    let sizes:[Int32] = [11, 12, 13, 14, 15]
+    let sizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
             
     entries.append(.font(sectionId, index, Int32(settings.fontSize), sizes))
     index += 1

@@ -445,6 +445,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             view.addSubview(captionView)
             captionView.change(opacity: 1.0)
             captionView.centerX(y: 90)
+        } else {
+            captionView.update(nil)
         }
         
         configureCaptionAutohide()

@@ -17,6 +17,10 @@ class EStickView: TableStickView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
@@ -30,7 +34,7 @@ class EStickView: TableStickView {
             var f = focus(item.layout.0.size)
             f.origin.x = 20
             f.origin.y -= 1
-            item.layout.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+            item.layout.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
         }
     }
     

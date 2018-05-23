@@ -40,7 +40,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_enable, equatable: InputDataEquatable(state.settings.effectiveActiveServer != nil), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_enable, equatable: InputDataEquatable(!state.settings.servers.isEmpty || state.settings.effectiveActiveServer != nil), item: { initialSize, stableId in
         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsEnable, type: .switchable(state.settings.effectiveActiveServer != nil), action: {
             if state.settings.enabled {
                 arguments.disconnect()
@@ -377,7 +377,8 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     entries.append(.input(sectionId: sectionId, index: index, value: .string(server.host), error: nil, identifier: _id_host, mode: .plain, placeholder: L10n.proxySettingsServer, inputPlaceholder: L10n.proxySettingsServer, filter: {$0}, limit: 255))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string("\(server.port > 0 ? "\(server.port)" : "")"), error: nil, identifier: _id_port, mode: .plain, placeholder: L10n.proxySettingsPort, inputPlaceholder: L10n.proxySettingsPort, filter: {$0.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)}, limit: 10))
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string("\(server.port > 0 ? "\(server.port)" : "")"), error: nil, identifier: _id_port, mode: .plain, placeholder: L10n.proxySettingsPort, inputPlaceholder: L10n.proxySettingsPort, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 10))
     index += 1
     
 

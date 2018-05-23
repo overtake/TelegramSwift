@@ -139,9 +139,9 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         guard let item = item as? InputDataDateRowItem else {return}
         guard !ignoreChanges else {return}
         
-        var day = dayInput.string().trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
-        var month = monthInput.string().trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
-        var year = yearInput.string().trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
+        var day = String(dayInput.string().unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})
+        var month = String(monthInput.string().unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})
+        var year = String(yearInput.string().unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})
         
         var _month:String?
         var _year: String?
