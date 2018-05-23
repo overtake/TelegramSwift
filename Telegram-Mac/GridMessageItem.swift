@@ -262,7 +262,7 @@ final class GridMessageItemNode: GridItemNode {
                 if let selectionView = self.selectionView {
                     selectionView.set(selected: selected, animated: animated)
                 } else {
-                    selectionView = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    selectionView = SelectingControl(unselectedImage: theme.icons.chatGroupToggleUnselected, selectedImage: theme.icons.chatGroupToggleSelected)
                     
                     addSubview(selectionView!)
                     selectionView?.set(selected: selected, animated: animated)

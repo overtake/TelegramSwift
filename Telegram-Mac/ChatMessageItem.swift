@@ -184,12 +184,15 @@ class ChatMessageItem: ChatRowItem {
                                         if text.range(of: "t.me") != nil {
                                             pb.setString(text, forType: .string)
                                         } else {
-                                            pb.setString(username.hasPrefix("@") ? "@\(username)" : "\(username)", forType: .string)
+                                            pb.setString(!username.hasPrefix("@") ? "@\(username)" : "\(username)", forType: .string)
                                             return
                                         }
+                                    } else if case let .joinchat(hash, _, _) = attribute {
+                                        pb.setString("https://t.me/joinchat/\(hash)", forType: .string)
+                                        return
                                     }
-                                    
                                 }
+                                
                                 pb.setString(strongSelf.textLayout.attributedString.string.nsstring.substring(with: strongSelf.textLayout.selectedRange.range), forType: .string)
                             }
                             

@@ -124,6 +124,8 @@ final class ChatInteraction : InterfaceObserver  {
     var openProxySettings: ()->Void = {}
     
     
+    let loadingMessage: ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
+    
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     func addContact() {

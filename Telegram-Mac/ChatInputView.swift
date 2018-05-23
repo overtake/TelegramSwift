@@ -196,7 +196,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             urlPreviewChanged = urlPreviewChanged || value.interfaceState.composeDisableUrlPreview != oldValue.interfaceState.composeDisableUrlPreview
             
             
-            if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState?.message.id != oldValue.interfaceState.editState?.message.id || urlPreviewChanged {
+            if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged {
                 updateAdditions(value,animated)
             }
             
@@ -585,6 +585,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func textViewIsTypingEnabled() -> Bool {
+        if let editState = chatInteraction.presentation.interfaceState.editState {
+            if editState.isLoading {
+                return false
+            }
+        }
         return self.chatState == .normal || self.chatState == .editing
     }
     

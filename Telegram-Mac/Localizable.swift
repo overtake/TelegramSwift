@@ -2381,6 +2381,10 @@ internal final class L10n {
   }
   /// Send Video
   internal static var previewSenderSendVideoZero: String  { return L10n.tr("Localizable", "PreviewSender.SendVideo_zero") }
+  /// %@ users
+  internal static func privacyAndSecurityBlockedUsers(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PrivacyAndSecurity.BlockedUsers", p1)
+  }
   /// CONNECTED WEBSITES
   internal static var privacyAndSecurityWebAuthorizationHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.WebAuthorizationHeader") }
   /// Active Sessions

@@ -112,6 +112,8 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
         bp += 1
     }
     
+    
+    
     required init(frame frameRect: NSRect, chatInteraction:ChatInteraction, account:Account) {
         self.chatInteraction = chatInteraction
         header = ChatHeaderController(chatInteraction)
@@ -131,6 +133,8 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
         }, for: .Click)
         scroller.forceHide()
         tableView.addSubview(scroller)
+        
+        
 
         searchInteractions = ChatSearchInteractions( jump: { message in
             chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
@@ -805,6 +809,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let dateDisposable:MetaDisposable = MetaDisposable()
     private let interactiveReadingDisposable: MetaDisposable = MetaDisposable()
     private let showRightControlsDisposable: MetaDisposable = MetaDisposable()
+    private let editMessageDisposable: MetaDisposable = MetaDisposable()
     var chatInteraction:ChatInteraction
     
     var nextTransaction:TransactionHandler = TransactionHandler()
@@ -1131,6 +1136,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
        
+        let editMessage:(ChatEditState)->Void = { [weak self] state in
+            guard let `self` = self else {return}
+            let presentation = self.chatInteraction.presentation
+            let inputState = state.inputState.subInputState(from: NSMakeRange(0, state.inputState.inputText.length))
+            self.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoading(true)})})})
+            self.editMessageDisposable.set((requestEditMessage(account: self.account, messageId: state.message.id, text: inputState.inputText, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
+            |> deliverOnMainQueue |> afterDisposed { [weak self] in
+                self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoading(false)})})})
+            }).start(completed: { [weak self] in
+                guard let `self` = self else {return}
+                self.chatInteraction.beginEditingMessage(nil)
+                self.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedComposeDisableUrlPreview(nil)})})
+            }))
+        }
         
         chatInteraction.sendMessage = { [weak self] in
             if let strongSelf = self {
@@ -1138,12 +1157,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if presentation.abilityToSend {
                     var setNextToTransaction = false
                     if let state = presentation.interfaceState.editState {
-                        let inputState = state.inputState.subInputState(from: NSMakeRange(0, state.inputState.inputText.length))
-                        _ = (requestEditMessage(account: strongSelf.account, messageId:state.message.id, text: inputState.inputText, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil) |> deliverOnMainQueue).start(completed: { [weak self] in
-                        self?.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedComposeDisableUrlPreview(nil)})})
-
-                        })
-                        strongSelf.chatInteraction.beginEditingMessage(nil)
+                       editMessage(state)
                     } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                         setNextToTransaction = true
                         let _ = (Sender.enqueue(input: presentation.effectiveInput, account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil) |> deliverOnMainQueue).start(completed: scrollAfterSend)
@@ -1158,12 +1172,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return Sender.forwardMessages(messageIds: messageIds,account: strongSelf.account,peerId: strongSelf.chatInteraction.peerId) |> map { ($0, messageIds.count != fwdIds.count) }
                             }
                             return .complete()
-                            } |> deliverOnMainQueue).start(next: { [weak self] (ids, alert) in
-                                if let peer = self?.chatInteraction.peer {
-                                    alertForMediaRestriction(peer)
-                                    scrollAfterSend()
-                                }
-                            })
+                        } |> deliverOnMainQueue).start(next: { [weak strongSelf] (ids, alert) in
+                            if let peer = strongSelf?.chatInteraction.peer {
+                                alertForMediaRestriction(peer)
+                                scrollAfterSend()
+                            }
+                        })
                     }
                     
                     if setNextToTransaction {
@@ -1425,7 +1439,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.requestMessageActionCallback = {[weak self] messageId, isGame, data in
+        chatInteraction.requestMessageActionCallback = { [weak self] messageId, isGame, data in
             if let strongSelf = self {
                 strongSelf.botCallbackAlertMessage.set(.single((L10n.chatInlineRequestLoading, false)))
                 self?.messageActionCallbackDisposable.set((requestMessageActionCallback(account: strongSelf.account, messageId: messageId, isGame:isGame, data: data) |> deliverOnMainQueue).start(next: { [weak strongSelf] (result) in
@@ -1495,9 +1509,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
                             |> take(1)
+                        strongSelf.chatInteraction.loadingMessage.set(true)
                         strongSelf.messageIndexDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak strongSelf] message in
                             if let strongSelf = strongSelf, let message = message {
                                 let toIndex = MessageIndex(message)
+                                strongSelf.chatInteraction.loadingMessage.set(false)
                                 strongSelf.setLocation(.Scroll(index: MessageHistoryAnchorIndex.message(toIndex), anchorIndex: MessageHistoryAnchorIndex.message(toIndex), sourceIndex: MessageHistoryAnchorIndex.message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), animated: state.animated))
                             }
                         }, completed: {
@@ -2258,7 +2274,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                         
                         
-                        items.append(SPopoverItem(tr(L10n.chatContextEdit1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.chatContextEditHelp)))" : ""),  { [weak self] in
+                        items.append(SPopoverItem(tr(L10n.chatContextEdit1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(L10n.chatContextEditHelp))" : ""),  { [weak self] in
                             self?.changeState()
                         }, theme.icons.chatActionEdit))
                         
@@ -2310,6 +2326,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.changeState()
             result = .invoked
         } else if chatInteraction.presentation.state == .editing {
+            editMessageDisposable.set(nil)
             chatInteraction.update({$0.withoutEditMessage()})
             result = .invoked
         } else if case let .contextRequest(request) = chatInteraction.presentation.inputContext {
@@ -2419,11 +2436,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
     }
+    
+    override func didRemovedFromStack() {
+        super.didRemovedFromStack()
+        editMessageDisposable.dispose()
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        
-   
         
         if let peer = chatInteraction.peer {
             if peer.isRestrictedChannel, let reason = peer.restrictionText {

@@ -20,6 +20,7 @@ class ChatInputAccessory: Node {
     private var displayNode:ChatAccessoryModel?
     
     private let dismiss:ImageButton = ImageButton()
+    private let progress: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))
     let container:ChatAccessoryView = ChatAccessoryView()
     
     
@@ -49,8 +50,14 @@ class ChatInputAccessory: Node {
         dismiss.set(image: theme.icons.dismissAccessory, for: .Normal)
         _ = dismiss.sizeToFit()
         
+        progress.progressColor = theme.colors.blueUI
+        //progress.setFrameSize(dismiss.frame.size)
+        progress.isHidden = true
+        progress.set(handler: { [weak self] _ in
+            self?.dismiss.send(event: .Click)
+        }, for: .Click)
         view?.addSubview(dismiss)
-        
+        view?.addSubview(progress)
         self.view = view
         
     }
@@ -65,19 +72,24 @@ class ChatInputAccessory: Node {
     
     func update(with state:ChatPresentationInterfaceState, account:Account, animated:Bool) -> Void {
         
+        dismiss.isHidden = false
+        progress.isHidden = true
+      
         displayNode = nil
         dismiss.removeAllHandlers()
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
             displayNode = ChatUrlPreviewModel(account: account, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissUrlPreview()
-                }, for: .Click)
-            
+            }, for: .Click)
         } else if let editState = state.interfaceState.editState {
             displayNode = EditMessageModel(message:editState.message, account:account)
+            dismiss.isHidden = editState.isLoading
+            progress.isHidden = !editState.isLoading
             dismiss.set(handler: { [weak self] _ in
                 self?.dismissEdit()
             }, for: .Click)
+            
         } else if !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardIds:state.interfaceState.forwardMessageIds,account:account)
             dismiss.set(handler: { [weak self] _ in
@@ -109,6 +121,7 @@ class ChatInputAccessory: Node {
             super.frame = newValue
             self.container.frame = NSMakeRect(49, 0, newValue.width, size.height)
             dismiss.centerY(x: 0)
+            progress.centerY(x: 5)
             displayNode?.setNeedDisplay()
         }
     }

@@ -257,7 +257,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                 nameY = (frame.height - t) / 2.0
                 
                 let sY = nameY + name.0.size.height + 4.0
-                status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
                 
             }
             
@@ -265,7 +265,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                 ctx.draw(theme.icons.peerInfoVerify, in: NSMakeRect(item.textInset + name.0.size.width + 3, nameY + 4, theme.icons.peerInfoVerify.backingSize.width, theme.icons.peerInfoVerify.backingSize.height))
             }
             
-            name.1.draw(NSMakeRect(item.textInset, nameY, name.0.size.width, name.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+            name.1.draw(NSMakeRect(item.textInset, nameY, name.0.size.width, name.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
         }
         
     }

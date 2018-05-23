@@ -291,8 +291,11 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         }))
         
         _window.closeInterceptor = { [weak self] in
-            self?._window.orderOut(nil)
-            instantController = nil
+            if let window = self?._window, !window.styleMask.contains(.fullScreen) {
+                self?._window.orderOut(nil)
+                instantController = nil
+            }
+            return true
         }
         
         let closeKeyboardHandler:()->KeyHandlerResult = { [weak self] in

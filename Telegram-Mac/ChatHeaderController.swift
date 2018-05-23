@@ -483,7 +483,8 @@ class ChatSearchHeader : View, Notifable {
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
     private let inputInteraction: CSearchInteraction = CSearchInteraction()
-    
+    private let parentInteractions: ChatInteraction
+    private let loadingDisposable = MetaDisposable()
     private var messages:[Message] = []
     private var currentIndex:Int = 0 {
         didSet {
@@ -492,6 +493,7 @@ class ChatSearchHeader : View, Notifable {
     }
     init(_ interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
+        self.parentInteractions = chatInteraction
         self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: chatInteraction.account)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: self.chatInteraction)
@@ -503,7 +505,14 @@ class ChatSearchHeader : View, Notifable {
         }
         
         initialize()
+        
+        parentInteractions.loadingMessage.set(false)
+        
         inputInteraction.add(observer: self)
+        self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
+            NSLog("\(loading)")
+            self?.searchView.isLoading = loading
+        }))
     }
     
     private var calendarAbility: Bool {
@@ -607,7 +616,7 @@ class ChatSearchHeader : View, Notifable {
      
         self.searchView.searchInteractions = SearchInteractions({ [weak self] state in
             if state.state == .None {
-                self?.searchView.isLoading = false
+                self?.parentInteractions.loadingMessage.set(false)
             }
         }, { [weak self] state in
             if let strongSelf = self {
@@ -616,17 +625,17 @@ class ChatSearchHeader : View, Notifable {
                 strongSelf.updateSearchState()
                 switch strongSelf.searchView.tokenState {
                 case .none:
-                    if state.request == tr(L10n.chatSearchFrom), let peer = strongSelf.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
+                    if state.request == L10n.chatSearchFrom, let peer = strongSelf.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
                         strongSelf.query.set(.single(""))
                         strongSelf.searchView.initToken()
                     } else {
-                        strongSelf.searchView.isLoading = true
+                        strongSelf.parentInteractions.loadingMessage.set(true)
                         strongSelf.query.set(.single(state.request))
                     }
                     
                 case .from(_, let complete):
                     if complete {
-                        strongSelf.searchView.isLoading = true
+                        strongSelf.parentInteractions.loadingMessage.set(true)
                         strongSelf.query.set(.single(state.request))
                     }
                 }
@@ -653,13 +662,13 @@ class ChatSearchHeader : View, Notifable {
             self?.messages = messages
             self?.currentIndex = -1
             self?.prevAction()
-            self?.searchView.isLoading = false
+            self?.parentInteractions.loadingMessage.set(false)
             
         }, error: { [weak self] in
             self?.messages = []
             self?.currentIndex = -1
             self?.prevAction()
-            self?.searchView.isLoading = false
+            self?.parentInteractions.loadingMessage.set(false)
         }))
 
         next.autohighlight = false
@@ -805,7 +814,6 @@ class ChatSearchHeader : View, Notifable {
                 window.removeAllHandlers(for: self)
                 self.searchView.change(state: .None, false)
             }
-            
         }
     }
     
@@ -813,6 +821,7 @@ class ChatSearchHeader : View, Notifable {
     deinit {
         disposable.dispose()
         inputInteraction.remove(observer: self)
+        loadingDisposable.set(nil)
         if let window = window as? Window {
             window.removeAllHandlers(for: self)
 
@@ -826,6 +835,7 @@ class ChatSearchHeader : View, Notifable {
     init(frame frameRect: NSRect, interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        self.parentInteractions = chatInteraction
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: chatInteraction)
         super.init(frame: frameRect)
         initialize()
