@@ -372,15 +372,15 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
         let settings = self.settings
         return search |> map {SearchState(state: .Focus, request: $0.request)} |> distinctUntilChanged |> mapToSignal { search -> Signal<[SelectPeerEntry], Void> in
             
-            let filter:ChannelMembersFilter
+            let filter:ChannelMembersCategoryFilter
             
             if !search.request.isEmpty {
                 filter = .search(search.request)
             } else {
-                filter = .none
+                filter = .all
             }
             
-            let participantsSignal:Signal<[RenderedChannelParticipant]?, Void> = channelMembers(postbox: account.postbox, network: account.network, peerId: peerId, filter: filter) |> map {_ = _renderedResult.swap($0.reduce([:], { current, participant in
+            let participantsSignal:Signal<[RenderedChannelParticipant]?, Void> = channelMembers(postbox: account.postbox, network: account.network, peerId: peerId, category: .recent(filter)) |> map {_ = _renderedResult.swap($0.reduce([:], { current, participant in
                 var current = current
                 current[participant.peer.id] = participant
                 return current

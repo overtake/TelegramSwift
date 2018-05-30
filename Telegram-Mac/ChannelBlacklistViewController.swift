@@ -409,7 +409,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                             })
                         }
                         
-                        strongSelf?.updatePeerDisposable.set(showModalProgress(signal: peerUpdate |> then(updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: updatedRights)) |> then(applyPeer), for: mainWindow).start())
+                        strongSelf?.updatePeerDisposable.set(showModalProgress(signal: peerUpdate |> then(updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: updatedRights) |> map {_ in return}) |> then(applyPeer), for: mainWindow).start())
                    // }
                 default:
                     break
@@ -435,7 +435,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                     return .complete()
                 }
             
-            self?.removePeerDisposable.set((updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: TelegramChannelBannedRights(flags: [], untilDate: 0)) |> then(applyPeers) |> deliverOnMainQueue).start(error: { _ in
+            self?.removePeerDisposable.set((updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: TelegramChannelBannedRights(flags: [], untilDate: 0)) |> map {_ in return} |> then(applyPeers) |> deliverOnMainQueue).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }

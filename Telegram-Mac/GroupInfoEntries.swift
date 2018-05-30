@@ -384,7 +384,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                         return state.withUpdatedTemporaryParticipants(temporaryParticipants).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds).withUpdatedRemovingParticipantIds(removingParticipantIds)
                     }
                     
-                    return (peerId.namespace == Namespaces.Peer.CloudChannel ? updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: TelegramChannelBannedRights(flags: [.banReadMessages], untilDate: 0)) : removePeerMember(account: account, peerId: peerId, memberId: memberId))
+                    return (peerId.namespace == Namespaces.Peer.CloudChannel ? updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: TelegramChannelBannedRights(flags: [.banReadMessages], untilDate: 0)) |> map {_ in return} : removePeerMember(account: account, peerId: peerId, memberId: memberId))
                         |> deliverOnMainQueue
                         |> afterDisposed {
                             updateState { state in
