@@ -92,7 +92,7 @@ class ChatInputAttachView: ImageButton {
                     }
                 }
                 
-                let items = [SPopoverItem(tr(L10n.inputAttachPopoverPhotoOrVideo), {
+                var items = [SPopoverItem(tr(L10n.inputAttachPopoverPhotoOrVideo), {
                     attachPhotoOrVideo()
                 }, theme.icons.chatAttachPhoto), SPopoverItem(tr(L10n.inputAttachPopoverPicture), { [weak strongSelf] in
                     if  let strongSelf = strongSelf, let window = strongSelf.kitWindow {
@@ -107,6 +107,10 @@ class ChatInputAttachView: ImageButton {
                     attachFile()
                 }, theme.icons.chatAttachFile)]
                 
+                items.append(SPopoverItem(L10n.inputAttachPopoverLocation, {
+                    showModal(with: LocationModalController(chatInteraction), for: mainWindow)
+                }, theme.icons.chatAttachLocation))
+//
                 strongSelf.controller = SPopoverViewController(items: items)
                 showPopover(for: strongSelf, with: strongSelf.controller!, edge: nil, inset: NSMakePoint(0,0))
             }
@@ -122,10 +126,7 @@ class ChatInputAttachView: ImageButton {
                 Queue.mainQueue().justDispatch {
                     attachFile()
                 }
-                
             }
-            
-            
         }, for: .Click)
 
     }

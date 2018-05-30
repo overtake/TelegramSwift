@@ -510,7 +510,6 @@ class ChatSearchHeader : View, Notifable {
         
         inputInteraction.add(observer: self)
         self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
-            NSLog("\(loading)")
             self?.searchView.isLoading = loading
         }))
     }

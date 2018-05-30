@@ -22,6 +22,8 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
     
     if let resource = resource as? LocalFileGifMediaResource {
         return fetchGifMediaResource(resource: resource)
+    } else if let mapSnapshotResource = resource as? MapSnapshotMediaResource {
+        return fetchMapSnapshotResource(resource: mapSnapshotResource)
     }
     
 //    if let resource = resource as? VideoLibraryMediaResource {

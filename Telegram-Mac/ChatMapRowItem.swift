@@ -13,14 +13,14 @@ import TelegramCoreMac
 
 final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let map:TelegramMediaMap
-    let resource:HttpReferenceMediaResource
+    let resource:TelegramMediaResource
     let image:TelegramMediaImage
     let venueText:TextViewLayout?
     let isVenue:Bool
     let defaultImageSize:NSSize
     let url:String
     fileprivate(set) var arguments:TransformImageArguments
-    init(map:TelegramMediaMap, resource:HttpReferenceMediaResource, presentation: ChatMediaPresentation, automaticDownload: Bool) {
+    init(map:TelegramMediaMap, resource:TelegramMediaResource, presentation: ChatMediaPresentation, automaticDownload: Bool) {
         self.map = map
         self.isVenue = map.venue != nil
         self.resource = resource
@@ -44,7 +44,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
 }
 
 func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> Bool {
-    return lhs.resource.url == rhs.resource.url
+    return lhs.resource.isEqual(to: rhs.resource)
 }
 
 class ChatMapRowItem: ChatMediaItem {
@@ -53,8 +53,9 @@ class ChatMapRowItem: ChatMediaItem {
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         super.init(initialSize, chatInteraction, account, object, downloadSettings)
         let map = media as! TelegramMediaMap
-        let isVenue = map.venue != nil
-        let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
+      //  let isVenue = map.venue != nil
+        let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2)
+        //let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         
         if isLiveLocationView {
@@ -71,8 +72,6 @@ class ChatMapRowItem: ChatMediaItem {
             time -= account.context.timeDifference
             let timeUpdated = Int32(time) - editedDate
                 
-            
-            
             updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }

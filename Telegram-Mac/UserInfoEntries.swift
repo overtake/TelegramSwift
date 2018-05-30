@@ -186,6 +186,11 @@ class UserInfoArguments : PeerInfoArguments {
         pullNavigation()?.back()
     }
     
+    func botPrivacy() {
+        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/privacy"), account: account, peerId: peerId, replyId: nil).start()
+        pullNavigation()?.back()
+    }
+    
     func startSecretChat() {
         
         let signal = account.postbox.modify { [weak self] modifier -> (Peer?, Account?) in
@@ -281,6 +286,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case botShare(sectionId: Int, name: String)
     case botHelp(sectionId: Int)
     case botSettings(sectionId: Int)
+    case botPrivacy(sectionId: Int)
     case startSecretChat(sectionId:Int)
     case sharedMedia(sectionId:Int)
     case notifications(sectionId:Int, settings: PeerNotificationSettings?)
@@ -403,6 +409,12 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .botPrivacy(sectionId):
+            if case .botPrivacy(sectionId) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .shareContact(sectionId):
             switch entry {
             case .shareContact(sectionId):
@@ -513,26 +525,28 @@ enum UserInfoEntry: PeerInfoEntry {
             return 8
         case .botHelp:
             return 9
-        case .shareContact:
+        case .botPrivacy:
             return 10
-        case .addContact:
+        case .shareContact:
             return 11
-        case .startSecretChat:
+        case .addContact:
             return 12
-        case .sharedMedia:
+        case .startSecretChat:
             return 13
-        case .notifications:
+        case .sharedMedia:
             return 14
-        case .encryptionKey:
+        case .notifications:
             return 15
-        case .groupInCommon:
+        case .encryptionKey:
             return 16
-        case .block:
+        case .groupInCommon:
             return 17
+        case .block:
+            return 18
         case .deleteChat:
-            return 18
+            return 19
         case .deleteContact:
-            return 18
+            return 20
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -557,6 +571,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botShare(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .botSettings(sectionId):
+            return (sectionId * 1000) + stableIndex
+        case let .botPrivacy(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .botHelp(sectionId):
             return (sectionId * 1000) + stableIndex
@@ -638,6 +654,10 @@ enum UserInfoEntry: PeerInfoEntry {
         case .botHelp:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotHelp, nameStyle: blueActionButton, type: .none, action: {
                 arguments.botHelp()
+            })
+        case .botPrivacy:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotPrivacy, nameStyle: blueActionButton, type: .none, action: {
+                arguments.botPrivacy()
             })
         case .shareContact:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoShareContact), nameStyle: blueActionButton, type: .none, action: {
@@ -747,6 +767,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                                 }
                                 if command.text == "help" {
                                     entries.append(UserInfoEntry.botHelp(sectionId: sectionId))
+                                }
+                                if command.text == "privacy" {
+                                    entries.append(UserInfoEntry.botPrivacy(sectionId: sectionId))
                                 }
                             }
                         }

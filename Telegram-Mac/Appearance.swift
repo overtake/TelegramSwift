@@ -12,6 +12,56 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 
+private func generateLocationPinIcon(_ background: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.round(size, size.width / 2)
+        
+        ctx.setFillColor(background.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
+        
+        let icon = #imageLiteral(resourceName: "Icon_LocationPin").precomposed(.white)
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+
+    })!
+}
+
+private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
+    return generateImage(size, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        ctx.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        ctx.addLine(to: CGPoint(x: (rect.midX), y: rect.minY))
+        ctx.closePath()
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fillPath()
+    })!
+}
+
+private func generateLocationMapPinIcon(_ background: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(40, 46), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        ctx.setFillColor(background.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(0, 6, size.width, size.height - 6))
+        
+        let icon = #imageLiteral(resourceName: "Icon_LocationPin").precomposed(.white)
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2) + 3, icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+        
+        let triangle = generateTriangle(NSMakeSize(12, 10), color: background)
+        let triangleRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - triangle.backingSize.width) / 2), 0, triangle.backingSize.width, triangle.backingSize.height)
+        
+        ctx.draw(triangle, in: triangleRect)
+
+    })!
+}
+
 private func generateLockerBody(_ color: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(12.5, 12.5), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -749,6 +799,11 @@ struct TelegramIconsTheme {
     let chatOverlayLockArrowRecording: CGImage
     let chatOverlayLockerBodyRecording: CGImage
     let chatOverlayLockerHeadRecording: CGImage
+    
+    let locationPin: CGImage
+    let locationMapPin: CGImage
+    let locationMapLocate: CGImage
+    let locationMapLocated: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1157,7 +1212,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatOverlaySendRecording: #imageLiteral(resourceName: "Icon_ChatOverlayRecordingSend").precomposed(.white),
                                                chatOverlayLockArrowRecording: #imageLiteral(resourceName: "Icon_DropdownArrow").precomposed(palette.blueIcon, flipVertical: true),
                                                chatOverlayLockerBodyRecording: generateLockerBody(palette.blueIcon, backgroundColor: palette.background),
-                                               chatOverlayLockerHeadRecording: generateLockerHead(palette.blueIcon, backgroundColor: palette.background)
+                                               chatOverlayLockerHeadRecording: generateLockerHead(palette.blueIcon, backgroundColor: palette.background),
+                                               locationPin: generateLocationPinIcon(palette.blueIcon),
+                                               locationMapPin: generateLocationMapPinIcon(palette.blueIcon),
+                                               locationMapLocate: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.grayIcon),
+                                               locationMapLocated: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.blueIcon)
     )
 }
 

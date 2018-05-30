@@ -113,7 +113,7 @@ class PeerListContainerView : View {
         tableView.setFrameOrigin(0, 49)
         
         proxyConnecting.centerX()
-        proxyConnecting.centerY(addition: -1)
+        proxyConnecting.centerY(addition: -1 - (backingScaleFactor == 2.0 ? 0.5 : 0))
         self.needsDisplay = true
     }
 }
@@ -383,11 +383,11 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0
             searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
-                if completed {
+              // if completed {
                     self?.searchController?.viewDidDisappear(true)
                     self?.searchController?.removeFromSuperview()
                     self?.searchController = nil
-                }
+              //  }
             })
         }
     }

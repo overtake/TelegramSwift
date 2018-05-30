@@ -289,6 +289,38 @@
             endingLineNumber = "185"
             landmarkName = "updateTwoStepVerificationPassword(network:currentPassword:updatedPassword:)"
             landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #5 (__ObjC.MTRpcError) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, __ObjC.MTRpcError&gt; in closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.5640939"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "185"
+                  endingLineNumber = "185"
+                  offsetFromSymbolStart = "545">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (TelegramCoreMac.TwoStepAuthData) -&gt; TelegramCoreMac.UpdateTwoStepVerificationPasswordResult in closure #5 (__ObjC.MTRpcError) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, __ObjC.MTRpcError&gt; in closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.567593"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "186"
+                  endingLineNumber = "186"
+                  offsetFromSymbolStart = "25">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -305,6 +337,38 @@
             endingLineNumber = "192"
             landmarkName = "updateTwoStepVerificationPassword(network:currentPassword:updatedPassword:)"
             landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.5728019"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "192"
+                  endingLineNumber = "192"
+                  offsetFromSymbolStart = "13267">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #6 (__ObjC.MTRpcError) -&gt; TelegramCoreMac.UpdateTwoStepVerificationPasswordError in closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.576324"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "193"
+                  endingLineNumber = "193"
+                  offsetFromSymbolStart = "15">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
