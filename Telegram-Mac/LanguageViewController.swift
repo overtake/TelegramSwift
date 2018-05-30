@@ -182,6 +182,12 @@ class LanguageViewController: TableViewController {
     override var enableBack: Bool {
         return true
     }
+    private let defaultLanguages:[LocalizationInfo]?
+    
+    init(_ account: Account, languages: [LocalizationInfo]? = nil) {
+        self.defaultLanguages = languages
+        super.init(account)
+    }
     
     deinit {
         applyDisposable.dispose()
@@ -213,7 +219,7 @@ class LanguageViewController: TableViewController {
         
         let initialSize = atomicSize
 
-        genericView.merge(with: combineLatest(Signal<[LocalizationInfo]?, Void>.single(nil) |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnMainQueue), appearanceSignal)
+        genericView.merge(with: combineLatest(Signal<[LocalizationInfo]?, Void>.single(defaultLanguages) |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnMainQueue), appearanceSignal)
         |> mapToSignal { infos, appearance in
             return searchPromise.get() |> map { state in
                 return (infos, appearance, state)

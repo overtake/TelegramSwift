@@ -16,3 +16,6 @@
 [submodule "submodules/libtgvoip"]
 	path = submodules/libtgvoip
 	url = https://github.com/grishka/libtgvoip
+[submodule "submodules/Sparkle"]
+	path = submodules/Sparkle
+	url = https://github.com/sparkle-project/Sparkle

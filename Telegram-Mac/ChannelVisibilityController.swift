@@ -250,20 +250,20 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
         case let .typeHeader(_, title):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: title)
         case let .typePublic(_, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPublic), type: .selectable(stateback: { return selected}), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelPublic, type: .selectable(selected), action: {
                 arguments.updateCurrentType(.publicChannel)
             })
         case let .typePrivate(_, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelPrivate), type: .selectable(stateback: { return selected}), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelPrivate, type: .selectable(selected), action: {
                 arguments.updateCurrentType(.privateChannel)
             })
         case let .typeInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .publicLinkAvailability(_, value):
             if value {
-                return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: tr(L10n.channelVisibilityChecking), color: theme.colors.redUI, font:.normal(.text)))
+                return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: L10n.channelVisibilityChecking, color: theme.colors.redUI, font:.normal(.text)))
             } else {
-                return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: tr(L10n.channelPublicNamesLimitError), color: theme.colors.redUI, font:.normal(.text)))
+                return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: L10n.channelPublicNamesLimitError, color: theme.colors.redUI, font:.normal(.text)))
             }
         case let .privateLink(_, link):
             let color:NSColor
@@ -272,7 +272,7 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
             } else {
                 color = theme.colors.grayText
             }
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string:link ?? tr(L10n.channelVisibilityLoading), color: color, font:.normal(.text)), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:5, bottom:8), action: {
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string:link ?? L10n.channelVisibilityLoading, color: color, font:.normal(.text)), drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:5, bottom:8), action: {
                 if let link = link {
                     arguments.displayPrivateLinkMenu(link)
                 }

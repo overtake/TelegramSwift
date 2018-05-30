@@ -69,6 +69,14 @@
          contextName = "ChannelTypeSettingsViewController.privateEntries(with : CreateChannelResult) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
+         contextName = "VideoMessageCorner.draw(_:in:):ChatVideoMessageContentView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1).(closure #1):ChatListController.swift">
          <PersistentStrings>
             <PersistentString
@@ -78,14 +86,6 @@
       </ContextState>
       <ContextState
          contextName = "TextView.update(TextViewLayout) -&gt; ():TextView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "VideoMessageCorner.draw(_:in:):ChatVideoMessageContentView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "bounds">
-            </PersistentString>
-         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "(preparedTableTransaction(from : ChatHistoryView?, to : ChatHistoryView, account : Account, table : TableView, interaction : ChatInteraction, animated : Bool, scrollPosition : ChatHistoryViewScrollPosition?, reason : ChatHistoryViewTransitionReason) -&gt; Signal&lt;ChatTableTransaction, ()&gt;).(closure #1):ChatController.swift">
@@ -431,10 +431,10 @@
          contextName = "TableView.item(stableId : AnyHashable) -&gt; TableRowItem?:TableView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.listhash">
+               value = "stableId">
             </PersistentString>
             <PersistentString
-               value = "stableId">
+               value = "self.listhash">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -570,10 +570,10 @@
          contextName = "ViewController.(viewDidAppear(Bool) -&gt; ()).(closure #1):ViewController.swift">
       </ContextState>
       <ContextState
-         contextName = "ChatRowItem.rightSize.getter:ChatRowItem.swift">
+         contextName = "closure #1 in closure #2 in transformOutgoingMessageMedia(postbox:network:media:opportunistic:):TransformOutgoingMessageMedia.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in closure #2 in transformOutgoingMessageMedia(postbox:network:media:opportunistic:):TransformOutgoingMessageMedia.swift">
+         contextName = "ChatRowItem.rightSize.getter:ChatRowItem.swift">
       </ContextState>
       <ContextState
          contextName = "SuggestionLocalizationViewController.viewDidLoad() -&gt; ():SuggestionLocalizationViewController.swift">
@@ -898,7 +898,7 @@
                value = "self.width">
             </PersistentString>
             <PersistentString
-               value = "inset">
+               value = "prop * CGFloat(items.count) + fitInset">
             </PersistentString>
             <PersistentString
                value = "prop * 5">
@@ -910,7 +910,7 @@
                value = "fitInset">
             </PersistentString>
             <PersistentString
-               value = "prop * CGFloat(items.count) + fitInset">
+               value = "inset">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1191,6 +1191,14 @@
       </ContextState>
       <ContextState
          contextName = "Popover.hide() -&gt; ():Popover.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PassportController.viewDidLoad():PassportController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "errors">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatRowView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatRowView.swift">

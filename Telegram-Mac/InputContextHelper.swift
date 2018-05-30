@@ -479,7 +479,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            let future = NSMakeSize(frame.width, min(genericView.listHeight,min(superview.frame.height - 50 - relativeView.frame.height, 140)))
+            let future = NSMakeSize(frame.width, min(genericView.listHeight,min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))))
             //  genericView.change(size: future, animated: animated)
             //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
             
@@ -531,26 +531,26 @@ class InputContextHelper: NSObject {
     
     func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, animated:Bool) {
         
-        controller._frameRect = NSMakeRect(0, 0, view.frame.width, 140)
+        controller._frameRect = NSMakeRect(0, 0, view.frame.width, floor(view.frame.height / 2))
         controller.loadViewIfNeeded()
         controller.superview = view
         controller.genericView.relativeView = relativeView
         controller.genericView.position = position
         let initialSize = controller.atomicSize
+        let previosEntries = self.entries
+        let account = self.account
+        let chatInteraction = self.chatInteraction
         
-        let makeSignal = combineLatest(entries(for: result, initialSize:initialSize.modify {$0}, chatInteraction: chatInteraction), appearanceSignal) |> map { [weak self] entries, appearance -> (TableUpdateTransition,Bool, Bool) in
-            if let strongSelf = self {
-                let entries = entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-                let previous = strongSelf.entries.swap(entries)
-                let previousIsEmpty:Bool = previous?.isEmpty ?? true
-                return (prepareEntries(left: previous, right: entries, account: strongSelf.account, initialSize: initialSize.modify({$0}), chatInteraction:strongSelf.chatInteraction),!entries.isEmpty, previousIsEmpty)
-            }
-            return (TableUpdateTransition(deleted: [], inserted: [], updated: []), false, false)
+        let makeSignal = combineLatest(entries(for: result, initialSize:initialSize.modify {$0}, chatInteraction: chatInteraction), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
+            let entries = entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let previous = previosEntries.swap(entries)
+            let previousIsEmpty:Bool = previous?.isEmpty ?? true
+            return (prepareEntries(left: previous, right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction:chatInteraction),!entries.isEmpty, previousIsEmpty)
         } |> deliverOnMainQueue
         
-        disposable.set(makeSignal.start(next: { [weak self, weak view] transition, show, previousIsEmpty in
+        disposable.set(makeSignal.start(next: { [weak self, weak view, weak relativeView] transition, show, previousIsEmpty in
         
-            if show, let controller = self?.controller {
+            if show, let controller = self?.controller, let relativeView = relativeView {
                 if previousIsEmpty {
                     controller.genericView.removeAll()
                 }
@@ -571,7 +571,7 @@ class InputContextHelper: NSObject {
 
                 }
                 
-            } else if let controller = self?.controller {
+            } else if let controller = self?.controller, let relativeView = relativeView {
                 controller.viewWillDisappear(animated)
                 if animated {
                     controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak controller] completed in
@@ -673,8 +673,6 @@ class InputContextHelper: NSObject {
                         entries.append(.emoji(clue, index))
                         index += 1
                     }
-                default:
-                    break
                 }
                 entries.sort(by: <)
                 subscriber.putNext(entries)

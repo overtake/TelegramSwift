@@ -159,7 +159,7 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     
     override func getCenterBarViewOnce() -> TitledBarView {
         let formatter:DateFormatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: appAppearance.language.languageCode)
         formatter.dateFormat = "MMMM"
         let monthString:String = formatter.string(from: month.month)
         formatter.dateFormat = "yyyy"

@@ -34,7 +34,9 @@ class TextAndLabelItem: GeneralRowItem {
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text.trimmed.fullTrimmed, color: theme.colors.text, font: .normal(.title))
         if detectLinks {
-            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], account: account, openInfo: openInfo, hashtag: hashtag)
+            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], account: account, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
+                applyExternalProxy(settings, postbox: account.postbox, network: account.network)
+            })
         }
         
         
@@ -109,14 +111,17 @@ class TextAndLabelRowView: GeneralRowView {
         super.draw(layer, in: ctx)
         
         if let item = item as? TextAndLabelItem, let label = item.labelLayout {
-            
-            label.1.draw(NSMakeRect(item.inset.left, item.labelY, label.0.size.width, label.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+            label.1.draw(NSMakeRect(item.inset.left, item.labelY, label.0.size.width, label.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
             if item.drawCustomSeparator {
                 ctx.setFillColor(theme.colors.border.cgColor)
                 ctx.fill(NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.left - item.inset.right, .borderSize))
             }
         }
         
+    }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.background
     }
     
     override func mouseUp(with event: NSEvent) {

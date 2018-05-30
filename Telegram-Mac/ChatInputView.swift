@@ -124,15 +124,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func updateInterface(with interaction:ChatInteraction, account:Account) -> Void {
         self.chatInteraction = interaction
         self.account = account
-       
         actionsView.prepare(with: chatInteraction)
-
-        
         needUpdateChatState(with: chatState, false)
         needUpdateReplyMarkup(with: interaction.presentation, false)
 
         setFrameSize(frame.size)
-        
         textView.textColor = theme.colors.text
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
@@ -181,12 +177,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func notify(with value: Any, oldValue:Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
        
-            
             if value.effectiveInput != oldValue.effectiveInput {
                 updateInput(value, prevState: oldValue, animated)
             }
-            
-            
             updateAttachments(value.interfaceState,animated)
             
             var urlPreviewChanged:Bool
@@ -203,7 +196,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             urlPreviewChanged = urlPreviewChanged || value.interfaceState.composeDisableUrlPreview != oldValue.interfaceState.composeDisableUrlPreview
             
             
-            if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.editState?.message.id != oldValue.editState?.message.id || urlPreviewChanged {
+            if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged {
                 updateAdditions(value,animated)
             }
             
@@ -254,16 +247,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     var defaultContentHeight:CGFloat {
-       
-        return chatState == .normal || chatState == .editing ? textView.frame.height : CGFloat(textView.min_height)
+       return chatState == .normal || chatState == .editing ? textView.frame.height : CGFloat(textView.min_height)
     }
     
-
-    
     func needUpdateChatState(with state:ChatState, _ animated:Bool) -> Void {
-        
         CATransaction.begin()
-        
         if animated {
             textViewHeightChanged(defaultContentHeight, animated: animated)
         }
@@ -331,8 +319,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if animated {
                 self.restrictedView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-
-
             self.addSubview(self.restrictedView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
@@ -395,15 +381,13 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let keyboardWidth = frame.width - 40
         
         bottomView.setFrameSize( NSMakeSize(keyboardWidth, bottomHeight))
-        
-        
         if let markup = replyMarkupModel, markup.hasButtons {
             markup.measureSize(keyboardWidth)
             markup.view?.setFrameSize(NSMakeSize(markup.size.width, markup.size.height + 5))
             markup.layout()
         }
         contentView.setFrameSize(frame.width, contentView.frame.height)
-        textView.setFrameSize(textViewSize())
+        textView.setFrameSize(textViewSize(textView))
         actionsView.setFrameSize(NSWidth(actionsView.frame), NSHeight(actionsView.frame))
         attachView.setFrameSize(NSWidth(attachView.frame), NSHeight(attachView.frame))
         _ts.setFrameSize(frame.width, .borderSize)
@@ -495,6 +479,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 let text = textView.string().stringEmojiReplacements
                 if textView.string() != text {
                     self.textView.setString(text)
+                    let attributed = self.textView.attributedString()
+                    let range = self.textView.selectedRange()
+                    let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
+                    chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
                 }
             }
             
@@ -506,7 +494,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             return true
         }
-        
         return false
     }
     
@@ -556,7 +543,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func canTransformInputText() -> Bool {
-        if let editState = chatInteraction.presentation.editState {
+        if let editState = chatInteraction.presentation.interfaceState.editState {
             return editState.message.media.isEmpty
         }
         return true
@@ -593,11 +580,16 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         formatterDisposable.dispose()
     }
     
-    func textViewSize() -> NSSize {
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
         return NSMakeSize(NSWidth(contentView.frame) - NSWidth(actionsView.frame) - NSWidth(attachView.frame), NSHeight(textView.frame))
     }
     
     func textViewIsTypingEnabled() -> Bool {
+        if let editState = chatInteraction.presentation.interfaceState.editState {
+            if editState.isLoading {
+                return false
+            }
+        }
         return self.chatState == .normal || self.chatState == .editing
     }
     
@@ -605,8 +597,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         guard range.min != range.max else {
             return
         }
-        
-        let attributed = self.textView.attributedString()
         
         let close:()->Void = { [weak self] in
             if let strongSelf = self {
@@ -635,7 +625,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         formatterPopover?.show(relativeTo: textView.inputView.selectedRangeRect, of: textView, preferredEdge: .maxY)
     }
     
-    func maxCharactersLimit() -> Int32 {
+    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         return chatInteraction.presentation.maxInputCharacters
     }
     

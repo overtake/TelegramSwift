@@ -13,14 +13,14 @@ import TelegramCoreMac
 
 final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let map:TelegramMediaMap
-    let resource:HttpReferenceMediaResource
+    let resource:TelegramMediaResource
     let image:TelegramMediaImage
     let venueText:TextViewLayout?
     let isVenue:Bool
     let defaultImageSize:NSSize
     let url:String
     fileprivate(set) var arguments:TransformImageArguments
-    init(map:TelegramMediaMap, resource:HttpReferenceMediaResource, presentation: ChatMediaPresentation, automaticDownload: Bool) {
+    init(map:TelegramMediaMap, resource:TelegramMediaResource, presentation: ChatMediaPresentation, automaticDownload: Bool) {
         self.map = map
         self.isVenue = map.venue != nil
         self.resource = resource
@@ -44,7 +44,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
 }
 
 func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> Bool {
-    return lhs.resource.url == rhs.resource.url
+    return lhs.resource.isEqual(to: rhs.resource)
 }
 
 class ChatMapRowItem: ChatMediaItem {
@@ -53,12 +53,26 @@ class ChatMapRowItem: ChatMediaItem {
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         super.init(initialSize, chatInteraction, account, object, downloadSettings)
         let map = media as! TelegramMediaMap
-        let isVenue = map.venue != nil
-        let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
+      //  let isVenue = map.venue != nil
+        let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2)
+        //let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         
         if isLiveLocationView {
-            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            
+            var editedDate:Int32 = object.message!.timestamp
+            for attr in object.message!.attributes {
+                if let attr = attr as? EditedMessageAttribute {
+                    editedDate = attr.date
+                }
+            }
+                        
+            var time:TimeInterval = Date().timeIntervalSince1970
+            time -= account.context.timeDifference
+            let timeUpdated = Int32(time) - editedDate
+                
+            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }
     
@@ -90,13 +104,15 @@ class ChatMapRowItem: ChatMediaItem {
     }
     
     var isLiveLocationView: Bool {
-//        if let media = media as? TelegramMediaMap, let message = message {
-//            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-//                if message.timestamp < message.timestamp + liveBroadcastingTimeout {
-//                    return true
-//                }
-//            }
-//        }
+        if let media = media as? TelegramMediaMap, let message = message {
+            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                var time:TimeInterval = Date().timeIntervalSince1970
+                time -= account.context.timeDifference
+                if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                    return true
+                }
+            }
+        }
         return false
     }
     
@@ -132,7 +148,7 @@ class ChatMapRowItem: ChatMediaItem {
         if isLiveLocationView {
             liveText?.measure(width: _contentSize.width - elementsContentInset * 2)
             updatedText?.measure(width: _contentSize.width - elementsContentInset * 2)
-            return super.height + 40
+            return super.height + (renderType == .bubble ? 46 : 40)
         }
         return super.height
     }
@@ -144,7 +160,8 @@ private class LiveLocationRowView : ChatMediaView {
     private let updatedText: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(updatedText)
+        rowView.addSubview(updatedText)
+        rowView.addSubview(liveText)
     }
     
     
@@ -153,22 +170,33 @@ private class LiveLocationRowView : ChatMediaView {
         guard let item = item as? ChatMapRowItem else {return}
         
         liveText.update(item.liveText)
+        updatedText.update(item.updatedText)
         super.set(item: item, animated: animated)
-        addSubview(liveText)
 
     }
     
     override func updateColors() {
         super.updateColors()
         liveText.backgroundColor = contentColor
+        updatedText.backgroundColor = contentColor
     }
     
+    private var textFrame: NSRect {
+        guard let item = item as? ChatMapRowItem, let liveText = item.liveText else {return NSZeroRect}
+        
+        return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset, liveText.layoutSize.width, liveText.layoutSize.height)
+    }
+    private var updateFrame: NSRect {
+        guard let item = item as? ChatMapRowItem, let updatedText = item.updatedText else {return NSZeroRect}
+        
+        return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset + liveText.frame.height, updatedText.layoutSize.width, updatedText.layoutSize.height)
+    }
     
     override func layout() {
         super.layout()
-        guard let item = item as? ChatMapRowItem else {return}
-
-        liveText.setFrameOrigin(item.elementsContentInset, 50)
+        
+        liveText.frame = textFrame
+        updatedText.frame = updateFrame
     }
     
     required init?(coder: NSCoder) {

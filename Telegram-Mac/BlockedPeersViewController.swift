@@ -253,7 +253,13 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     
     private let disposable:MetaDisposable = MetaDisposable()
     private let openPeerDisposable = MetaDisposable()
-
+    private let defaultPeers:[Peer]?
+    private let updated:([Peer]?) -> Void
+    init(_ account: Account, _ defaultPeers:[Peer]?, updated: @escaping([Peer]?) -> Void) {
+        self.defaultPeers = defaultPeers
+        self.updated = updated
+        super.init(account)
+    }
 
     
     override func viewDidLoad() {
@@ -313,7 +319,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
         })
         
         
-        let peersSignal: Signal<[Peer]?, NoError> = .single(nil) |> then(requestBlockedPeers(account: account) |> map { Optional($0) })
+        let peersSignal: Signal<[Peer]?, NoError> = .single(defaultPeers) |> then(requestBlockedPeers(account: account) |> map { Optional($0) })
         
         peersPromise.set(peersSignal)
         
@@ -323,15 +329,16 @@ class BlockedPeersViewController: EditableViewController<TableView> {
         
         let signal = combineLatest(statePromise.get(), peersPromise.get(), appearanceSignal)
             |> deliverOnMainQueue
-            |> map { state, peers, appearance -> TableUpdateTransition in
+            |> map { state, peers, appearance -> (TableUpdateTransition, [Peer]?) in
                 let entries = blockedPeersControllerEntries(state: state, peers: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-                return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
-        }
+                return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), peers)
+            }
         
-        disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition in
+        disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition, newValue in
             if let strongSelf = self {
                 strongSelf.genericView.merge(with: transition)
                 strongSelf.readyOnce()
+                strongSelf.updated(newValue)
                 strongSelf.rightBarView.isHidden = strongSelf.genericView.item(at: 0) is SearchEmptyRowItem
             }
         }))

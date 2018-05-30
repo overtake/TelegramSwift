@@ -27,6 +27,17 @@ class SearchTextField: NSTextView {
         return super.becomeFirstResponder()
     }
     
+    override func paste(_ sender: Any?) {
+        
+        let text = NSPasteboard.general.string(forType: .string)?.nsstring
+        if let text = text {
+            var modified = text.replacingOccurrences(of: "\n", with: " ")
+            modified = text.replacingOccurrences(of: "\n", with: " ")
+            appendText(modified)
+            self.delegate?.textDidChange?(Notification(name: NSControl.textDidChangeNotification))
+        }
+    }
+    
 }
 
 public enum SearchFieldState {
@@ -318,25 +329,25 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             }
             return .rejected
             
-        }, with: self, priority: .high)
+        }, with: self, priority: .modal)
         
         self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
-        }, with: self, for: .RightArrow, priority: .high)
+        }, with: self, for: .RightArrow, priority: .modal)
         
         self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
-            }, with: self, for: .LeftArrow, priority: .high)
+            }, with: self, for: .LeftArrow, priority: .modal)
         
         self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
             return self?.input
-        }, with: self, priority: .high)
+        }, with: self, priority: .modal)
     }
     
     
@@ -431,10 +442,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             if isEmpty {
                 change(state: .None, false)
             }
-            return
+            self.kitWindow?.removeAllHandlers(for: self)
+            self.kitWindow?.removeObserver(for: self)
         }
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
     }
     
     

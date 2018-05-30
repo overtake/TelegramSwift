@@ -18,27 +18,27 @@ enum ChatInputRecodingState {
 
 class ChatInputRecordingView: View {
 
-    let descView:TextView = TextView()
-    let timerView:TextView = TextView()
-    let peakLayer:CALayer = CALayer()
+    private let descView:TextView = TextView()
+    private let timerView:TextView = TextView()
+    private let statusImage:ImageView = ImageView()
+    private let recView: View = View(frame: NSMakeRect(0, 0, 14, 14))
     
-    let statusImage:ImageView = ImageView()
+    private let chatInteraction:ChatInteraction
+    private let recorder:ChatRecordingState
     
-    var state:ChatInputRecodingState = .none
-    let chatInteraction:ChatInteraction
-    let recorder:ChatRecordingState
-    var inside:Bool = false
-    var currentLevel:CGFloat = 1
+    private let disposable:MetaDisposable = MetaDisposable()
     
-    let disposable:MetaDisposable = MetaDisposable()
-    
+    private let overlayController: ChatRecorderOverlayWindowController
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction, recorder:ChatRecordingState) {
         self.chatInteraction = chatInteraction
         self.recorder = recorder
+        overlayController = ChatRecorderOverlayWindowController(account: chatInteraction.account, parent: mainWindow, chatInteraction: chatInteraction)
         super.init(frame: frameRect)
         
-        peakLayer.frame = NSMakeRect(0, 0, 14, 14)
-        peakLayer.cornerRadius = peakLayer.frame.width / 2
+        
+        
+      //  peakLayer.frame = NSMakeRect(0, 0, 14, 14)
+      //  peakLayer.cornerRadius = peakLayer.frame.width / 2
         
         statusImage.image = FastSettings.recordingState == .voice ? theme.icons.chatVoiceRecording : theme.icons.chatVideoRecording
         statusImage.animates = true
@@ -46,16 +46,21 @@ class ChatInputRecordingView: View {
         
         
         
-        layer?.addSublayer(peakLayer)
+      //  layer?.addSublayer(peakLayer)
         addSubview(descView)
         addSubview(timerView)
-        addSubview(statusImage)
+      //  addSubview(statusImage)
+        addSubview(recView)
         
-        disposable.set((combineLatest(recorder.micLevel, recorder.status) |> deliverOnMainQueue).start(next: { [weak self] (micLevel, state) in
+        recView.layer?.cornerRadius = recView.frame.width / 2
+        
+        disposable.set(combineLatest(recorder.status |> deliverOnMainQueue, recorder.holdpromise.get() |> deliverOnMainQueue).start(next: { [weak self] state, hold in
             if case let .recording(duration) = state {
-                self?.update(duration, CGFloat(micLevel), true)
+                self?.update(duration, true, hold)
             }
         }))
+        
+        
         updateLocalizationAndTheme()
     }
     
@@ -65,43 +70,36 @@ class ChatInputRecordingView: View {
         backgroundColor = theme.colors.background
         descView.backgroundColor = theme.colors.background
         timerView.backgroundColor = theme.colors.background
-        peakLayer.backgroundColor = theme.colors.redUI.cgColor
+        recView.backgroundColor = theme.colors.blueUI
+      //  peakLayer.backgroundColor = theme.colors.redUI.cgColor
 
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if let window = newWindow as? Window {
-            window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
-                self?.updateInside()
-                return .rejected
-            }, with: self, for: .leftMouseDragged, priority: .modal)
+        if let _ = newWindow as? Window {
+            overlayController.show(animated: true)
+            let animate = CABasicAnimation(keyPath: "opacity")
+            animate.fromValue = 1.0
+            animate.toValue = 0.3
+            animate.repeatCount = 10000
+            animate.duration = 1.5
+            
+            animate.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+            recView.layer?.add(animate, forKey: "opacity")
         } else {
             (window as? Window)?.removeAllHandlers(for: self)
+            overlayController.hide(animated: true)
+            recView.layer?.removeAllAnimations()
         }
     }
     
     override func viewDidMoveToWindow() {
-        update(0, 0, false)
+        update(0, false, false)
     }
 
 
-    private func updateInside() {
-        guard let superview = superview, let window = window else {
-            return;
-        }
-        let mouse = superview.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-        let inside = mouse.x > 0 && mouse.y > 0 && (mouse.x < superview.frame.width && mouse.y < superview.frame.height)
-        
-
-        if inside != self.inside {
-            self.inside = inside
-            let descLayout = TextViewLayout(.initialize(string:tr(L10n.audioRecordReleaseOut), color: inside ? theme.colors.text : theme.colors.redUI, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
-            descLayout.measure(width: frame.width - 50 - 100 - 60)
-            descView.update(descLayout)
-        }
-    }
     
-    func update(_ duration:TimeInterval, _ peakLevel:CGFloat, _ animated:Bool) {
+    func update(_ duration:TimeInterval, _ animated:Bool, _ hold: Bool) {
         
         let intDuration:Int = Int(duration)
         let ms = duration - TimeInterval(intDuration);
@@ -110,20 +108,9 @@ class ChatInputRecordingView: View {
         timerLayout.measure(width: .greatestFiniteMagnitude)
         timerView.update(timerLayout)
         
-        
-        updateInside()
-        
-        
-        //let scale = min(max(currentLevel * 0.8 + peakLevel * 0.2,1),2);
-        let power = min(mappingRange(Double(peakLevel), 0, 1, 1, 1.5),1.5);
-       // mappingRange(<#T##x: Double##Double#>, <#T##in_min: Double##Double#>, <#T##in_max: Double##Double#>, <#T##out_min: Double##Double#>, <#T##out_max: Double##Double#>)
-        
-        
-        //if peakLayer.presentation()?.animation(forKey: "transform") == nil {
-            peakLayer.animateScale(from:currentLevel, to: CGFloat(power), duration: 0.1, removeOnCompletion:false)
-            self.currentLevel = CGFloat(power)
-       // }
-      
+        let descLayout = TextViewLayout(.initialize(string: hold ? L10n.audioRecordHelpFixed : L10n.audioRecordHelpPlain, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
+        descLayout.measure(width: frame.width - 50 - 100 - 60)
+        descView.update(descLayout)
         
         self.needsLayout = true
         
@@ -143,8 +130,8 @@ class ChatInputRecordingView: View {
     
     override func layout() {
         super.layout()
-        peakLayer.frame = NSMakeRect(20, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - peakLayer.frame.height) / 2), 14, 14)
-        timerView.centerY(x:peakLayer.frame.maxX + 10)
+        recView.centerY(x: 20)
+        timerView.centerY(x: recView.frame.maxX + 10)
         statusImage.centerY(x: frame.width - statusImage.frame.width - 20)
         
         let max = (frame.width - (statusImage.frame.width + 20 + 50))

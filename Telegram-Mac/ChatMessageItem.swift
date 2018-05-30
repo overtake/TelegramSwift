@@ -184,12 +184,19 @@ class ChatMessageItem: ChatRowItem {
                                         if text.range(of: "t.me") != nil {
                                             pb.setString(text, forType: .string)
                                         } else {
+<<<<<<< HEAD
                                             pb.setString(username.hasPrefix("@") ? username : "@\(username)", forType: .string)
+=======
+                                            pb.setString(!username.hasPrefix("@") ? "@\(username)" : "\(username)", forType: .string)
+>>>>>>> streaming
                                             return
                                         }
+                                    } else if case let .joinchat(hash, _, _) = attribute {
+                                        pb.setString("https://t.me/joinchat/\(hash)", forType: .string)
+                                        return
                                     }
-                                    
                                 }
+                                
                                 pb.setString(strongSelf.textLayout.attributedString.string.nsstring.substring(with: strongSelf.textLayout.selectedRange.range), forType: .string)
                             }
                             
@@ -442,7 +449,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, account:Account, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxySettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode ) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, account:Account, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxyServerSettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode ) -> NSAttributedString {
         var entities: TextEntitiesMessageAttribute?
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {

@@ -82,13 +82,13 @@ class GlobalBadgeNode: Node {
                     excludeTotal -= peerCount
                 }
                 
-                var totalValue = max(0, totalValue)
+                let totalValue = max(0, totalValue)
                 excludeTotal = max(0, excludeTotal)
                 var dockTile:String? = nil
                 if totalValue > 0 {
                      dockTile = "\(totalValue)"
                 }
-                if totalValue == 0 {
+                if excludeTotal == 0 {
                     strongSelf.attributedString = nil
                 } else {
                     strongSelf.attributedString = .initialize(string: Int(excludeTotal).prettyNumber, color: .white, font: .bold(.small))

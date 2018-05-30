@@ -163,9 +163,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         
         switch self {
         case let .keepMedia(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .context(stateback: {
-                return value
-            }), action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .context(value), action: {
                 arguments.updateKeepMedia()
             })
 
@@ -182,9 +180,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .peersHeader(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .peer(_, _, peer, value):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, isLookSavedMessage: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(stateback: { () -> String in
-                return value
-            }), action: { 
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, isLookSavedMessage: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), action: { 
                 arguments.openPeerMedia(peer.id)
             })
         case .section:

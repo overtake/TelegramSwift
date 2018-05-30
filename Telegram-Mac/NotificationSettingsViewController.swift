@@ -142,29 +142,21 @@ fileprivate func prepareEntries(from:NotificationsSettingsList?, to:Notification
             
             switch entry.entry {
             case .notifications:
-                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsToggleNotifications), type: .switchable(stateback: { () -> Bool in
-                    return to.settings.enabled
-                }), action: {
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsToggleNotifications), type: .switchable(to.settings.enabled), action: {
                     interactions.toggleNotifications()
                 })
             case .messagePreview:
-                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsMessagesPreview), type: .switchable(stateback: { () -> Bool in
-                    return to.settings.displayPreviews
-                }), action: {
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsMessagesPreview), type: .switchable(to.settings.displayPreviews), action: {
                     interactions.toggleMessagesPreview()
                 })
             case let .badgeFilter(enabled):
-                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.notificationSettingsIncludeMutedChats, type: .switchable(stateback: { () -> Bool in
-                    return enabled
-                }), action: {
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.notificationSettingsIncludeMutedChats, type: .switchable(enabled), action: {
                     interactions.toggleBadgeFilter(!enabled)
                 })
             case let .whiteSpace(_, height):
                 return GeneralRowItem(initialSize, height: height, stableId: entry.stableId)
             case .notificationTone:
-                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsNotificationTone), type: .context(stateback: { () -> String in
-                    return to.settings.tone.isEmpty ? tr(L10n.notificationSettingsToneDefault) : localizedString(to.settings.tone)
-                }), action: {
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.notificationSettingsNotificationTone), type: .context(to.settings.tone.isEmpty ? tr(L10n.notificationSettingsToneDefault) : localizedString(to.settings.tone)), action: {
                     interactions.showToneOptions()
                 })
             case .resetNotifications:
@@ -181,14 +173,7 @@ fileprivate func prepareEntries(from:NotificationsSettingsList?, to:Notification
                     return GeneralRowItem(initialSize, stableId:entry.stableId)
                 case let .MessageEntry(_, _, _, notifySettings,_, renderedPeer, _):
                     if let peer = renderedPeer.chatMainPeer {
-                        return ShortPeerRowItem(initialSize, peer: peer, account: account, height: 40, photoSize: NSMakeSize(30,30), inset: NSEdgeInsets(left:30,right:30), generalType:.switchable(stateback: {
-                            if let notifySettings = notifySettings as? TelegramPeerNotificationSettings {
-                                if case .muted(_) = notifySettings.muteState {
-                                    return false
-                                }
-                            }
-                            return true
-                        }), action:{
+                        return ShortPeerRowItem(initialSize, peer: peer, account: account, height: 40, photoSize: NSMakeSize(30,30), inset: NSEdgeInsets(left:30,right:30), generalType:.switchable(!((notifySettings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action:{
                             interactions.togglePeerId(peer.id)
                         })
                     }
@@ -197,14 +182,7 @@ fileprivate func prepareEntries(from:NotificationsSettingsList?, to:Notification
                     fatalError("feed not supported in notification settings")
                 }
             case let .searchPeer(peer, _, notifySettings):
-                return ShortPeerRowItem(initialSize, peer: peer, account: account, height: 40, photoSize: NSMakeSize(30,30), inset: NSEdgeInsets(left:30,right:30), generalType:.switchable(stateback: {
-                    if let notifySettings = notifySettings as? TelegramPeerNotificationSettings {
-                        if case .muted(_) = notifySettings.muteState {
-                            return false
-                        }
-                    }
-                    return true
-                }), action:{
+                return ShortPeerRowItem(initialSize, peer: peer, account: account, height: 40, photoSize: NSMakeSize(30,30), inset: NSEdgeInsets(left:30,right:30), generalType:.switchable(((notifySettings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action:{
                     interactions.togglePeerId(peer.id)
                 })
                 

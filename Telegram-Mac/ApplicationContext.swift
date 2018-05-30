@@ -56,7 +56,7 @@ enum MigrationData {
 
 
 func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, Void> {
-    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
+    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, rootPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
 
@@ -138,12 +138,13 @@ final class PasscodeAccessContext {
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     let localizationDisposable:MetaDisposable = MetaDisposable()
-    let rootController: AuthController
+    let rootController: MajorNavigationController
     let window:Window
     init(window:Window, account: UnauthorizedAccount, localization: LocalizationSettings?) {
         self.account = account
         self.window = window
-        self.rootController = AuthController(account)
+        self.rootController = MajorNavigationController(AuthController.self, AuthController(account))
+        rootController.alwaysAnimate = true
         let authSize = NSMakeSize(650, 600)
         
         setDefaultTheme(for: window)
@@ -245,6 +246,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     private let suggestedLocalizationDisposable = MetaDisposable()
     private let appearanceDisposable = MetaDisposable()
     private let requestAccessDisposable = MetaDisposable()
+    private let alertsDisposable = MetaDisposable()
     private let audioDisposable = MetaDisposable()
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
@@ -446,6 +448,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsUnlocked), name: NSNotification.Name(rawValue: "com.apple.screenIsUnlocked"), object: nil)
         
+        
+        alertsDisposable.set((account.stateManager.displayAlerts |> deliverOnMainQueue).start(next: { alerts in
+            for text in alerts {
+                alert(for: window, info: text)
+            }
+        }))
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             
@@ -664,6 +672,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         appearanceDisposable.dispose()
         requestAccessDisposable.dispose()
         audioDisposable.dispose()
+        alertsDisposable.dispose()
         viewer?.close()
         
         for window in NSApp.windows {
@@ -834,7 +843,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             let messageId = MessageId(peerId: PeerId(namespace: namespace, id: id), namespace: msgNamespace, id: msgId)
             
             requestAccessDisposable.set(requestMessageActionCallback(account: account, messageId: messageId, isGame: false, data: MemoryBuffer(data: callbackData)).start())
-            _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, network: self.account.network, stateManager: self.account.stateManager, index: MessageIndex.upperBound(peerId: messageId.peerId)).start()
+            _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: MessageIndex.upperBound(peerId: messageId.peerId)).start()
         }
     }
     
@@ -847,7 +856,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             
             if let callbackData = userInfo["inline.callbackDecline"] as? Data {
                 requestAccessDisposable.set(requestMessageActionCallback(account: account, messageId: messageId, isGame: false, data: MemoryBuffer(data: callbackData)).start())
-                _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, network: self.account.network, stateManager: self.account.stateManager, index: MessageIndex.upperBound(peerId: messageId.peerId)).start()
+                _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: MessageIndex.upperBound(peerId: messageId.peerId)).start()
                 return
             }
             

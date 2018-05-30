@@ -315,6 +315,16 @@ class ChatRowItem: TableRowItem {
                     return isBubbled
                 }
             }
+            if let media = media as? TelegramMediaMap {
+                if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                    var time:TimeInterval = Date().timeIntervalSince1970
+                    time -= account.context.timeDifference
+                    if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                        return false
+                    }
+                }
+                return media.venue == nil
+            }
             return isBubbled && media.isInteractiveMedia && captionLayout == nil
         }
         return false
@@ -755,6 +765,13 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if let media = media as? TelegramMediaMap {
+                    if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                        var time:TimeInterval = Date().timeIntervalSince1970
+                        time -= account.context.timeDifference
+                        if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                            return false
+                        }
+                    }
                     return media.venue == nil
                 }
                 return media.isInteractiveMedia && !hasGroupCaption
@@ -787,8 +804,8 @@ class ChatRowItem: TableRowItem {
                     isFull = false
                 }
                 
-                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull ? .none : .both)
-                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull ? .none : .both)
+                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
+                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
             }
             
             self.itemType = itemType
@@ -1466,7 +1483,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
             
             return account.postbox.modify { modifier -> [ContextMenuItem] in
                 if file.isAnimated && file.isVideo {
-                    let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
+                    let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
                     if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
                         items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                             let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()

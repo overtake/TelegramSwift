@@ -220,7 +220,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                
                 var scroll: TableScrollState
                 if view.entries.count > targetIndex, let message = view.entries[targetIndex].message {
-                    scroll = .center(id: ChatHistoryEntryId.message(message), animated: false, focus: true, inset: 0)
+                    scroll = .center(id: ChatHistoryEntryId.message(message), innerId: nil, animated: false, focus: true, inset: 0)
                 } else {
                     scroll = .none(nil)
                 }

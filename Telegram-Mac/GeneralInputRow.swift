@@ -99,7 +99,6 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
 
     
     let textView:TGModernGrowingTextView
-    
     private let secureField: NSSecureTextField = NSSecureTextField(frame: NSMakeRect(0, 0, 100, 16))
     
     private let cleanImage: ImageButton = ImageButton()
@@ -163,9 +162,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         super.layout()
         if let item = item as? GeneralInputRowItem {
             textView.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right,textView.frame.height)
-            
             secureField.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right, secureField.frame.height)
-            
             cleanImage.centerY(x: frame.width - item.insets.right - cleanImage.frame.width)
         }
     }
@@ -187,10 +184,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         super.set(item: item, animated:animated)
         textView.animates = false
         
-        
         if let item = item as? GeneralInputRowItem {
-            
-           
             
             cleanImage.set(image: theme.icons.recentDismiss, for: .Normal)
             _ = cleanImage.sizeToFit()
@@ -202,17 +196,19 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
                 
                 
                 secureField.removeFromSuperview()
-                addSubview(textView, positioned: .below, relativeTo: cleanImage)
+                if textView.superview == nil {
+                    addSubview(textView, positioned: .below, relativeTo: cleanImage)
+                }
                // secureField.isHidden = true
                // textView.isHidden = false
                 
                 
                 
                 if item.holdText {
-                    textView.defaultText = item.placeholder.string
-                    // if item.text != textView.string() {
-                    textView.setString(item.text, animated: false)
-                    // }
+                      if item.text != textView.string().replacingOccurrences(of: item.placeholder.string, with: "") {
+                        textView.defaultText = item.placeholder.string
+                        textView.setString(item.text, animated: false)
+                     }
                 } else {
                     if textView.placeholderAttributedString == nil || !textView.placeholderAttributedString!.isEqual(to: item.placeholder) {
                         textView.setPlaceholderAttributedString(item.placeholder, update: false)
@@ -251,7 +247,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         window?.makeFirstResponder(firstResponder)
     }
     
-    public func maxCharactersLimit() -> Int32 {
+    public func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         if let item = item as? GeneralInputRowItem {
             return item.limit
         }
@@ -268,7 +264,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         
     }
     
-    func textViewSize() -> NSSize {
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
         return textView.frame.size
     }
     

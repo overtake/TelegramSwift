@@ -10,42 +10,41 @@ import Cocoa
 import PostboxMac
 import SwiftSignalKitMac
 class BaseApplicationSettings: PreferencesEntry, Equatable {
-    let fontSize: Int32
     let handleInAppKeys: Bool
     let sidebar: Bool
-    
+    let showCallsTab: Bool
     static var defaultSettings: BaseApplicationSettings {
-        return BaseApplicationSettings(fontSize: 13, handleInAppKeys: false, sidebar: true)
+        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true)
     }
     
-    init(fontSize:Int32, handleInAppKeys: Bool, sidebar: Bool) {
-        self.fontSize = fontSize
+    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool) {
         self.handleInAppKeys = handleInAppKeys
         self.sidebar = sidebar
+        self.showCallsTab = showCallsTab
     }
     
     required init(decoder: PostboxDecoder) {
-        self.fontSize = decoder.decodeInt32ForKey("f", orElse: 0)
+        self.showCallsTab = decoder.decodeInt32ForKey("c", orElse: 1) != 0
         self.handleInAppKeys = decoder.decodeInt32ForKey("h", orElse: 0) != 0
         self.sidebar = decoder.decodeInt32ForKey("e", orElse: 0) != 0
     }
     
     func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.fontSize, forKey: "f")
+        encoder.encodeInt32(self.showCallsTab ? 1 : 0, forKey: "c")
         encoder.encodeInt32(self.handleInAppKeys ? 1 : 0, forKey: "h")
         encoder.encodeInt32(self.sidebar ? 1 : 0, forKey: "e")
     }
     
-    func withUpdatedFontSize(_ fontSize: Int32) -> BaseApplicationSettings {
-        return BaseApplicationSettings(fontSize: fontSize, handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar)
+    func withUpdatedShowCallsTab(_ showCallsTab: Bool) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: showCallsTab)
     }
     
     func withUpdatedSidebar(_ sidebar: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(fontSize: self.fontSize, handleInAppKeys: self.handleInAppKeys, sidebar: sidebar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: sidebar, showCallsTab: self.showCallsTab)
     }
     
     func withUpdatedInAppKeyHandle(_ handleInAppKeys: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(fontSize: self.fontSize, handleInAppKeys: handleInAppKeys, sidebar: self.sidebar)
+        return BaseApplicationSettings(handleInAppKeys: handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab)
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -57,7 +56,7 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
     }
     
     static func ==(lhs: BaseApplicationSettings, rhs: BaseApplicationSettings) -> Bool {
-        if lhs.fontSize != rhs.fontSize {
+        if lhs.showCallsTab != rhs.showCallsTab {
             return false
         }
         if lhs.handleInAppKeys != rhs.handleInAppKeys {

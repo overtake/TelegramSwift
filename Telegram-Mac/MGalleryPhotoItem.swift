@@ -15,6 +15,7 @@ import TGUIKit
 class MGalleryPhotoItem: MGalleryItem {
     
     let media:TelegramMediaImage
+    let secureIdAccessContext: SecureIdAccessContext?
     private let representation:TelegramMediaImageRepresentation
     override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
@@ -41,8 +42,13 @@ class MGalleryPhotoItem: MGalleryItem {
                     self.media = entry.message!.media[0] as! TelegramMediaImage
                 }
             }
+            secureIdAccessContext = nil
         case .instantMedia(let media):
             self.media = media.media as! TelegramMediaImage
+            secureIdAccessContext = nil
+        case let .secureIdDocument(document, _):
+            self.media = document.image
+            self.secureIdAccessContext = document.context
         default:
             fatalError("photo item not supported entry type")
         }
@@ -54,14 +60,8 @@ class MGalleryPhotoItem: MGalleryItem {
     
     override var sizeValue: NSSize {
         if let largest = media.representations.last {
-            if let modifiedSize = modifiedSize, largest.dimensions.width == 0 {
-                let lhsProportion = modifiedSize.width/modifiedSize.height
-                let rhsProportion = largest.dimensions.width/largest.dimensions.height
-                
-                if lhsProportion != rhsProportion {
-                    return modifiedSize.fitted(pagerSize)
-                }
-                
+            if let modifiedSize = modifiedSize {
+                return modifiedSize.fitted(pagerSize)
             }
             return largest.dimensions.fitted(pagerSize)
         }
@@ -91,6 +91,7 @@ class MGalleryPhotoItem: MGalleryItem {
         
         let account = self.account
         let media = self.media
+        let secureIdAccessContext = self.secureIdAccessContext
         
         let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, Void> in
             if let strongSelf = self {
@@ -98,7 +99,7 @@ class MGalleryPhotoItem: MGalleryItem {
             }
             return .complete()
         } |> distinctUntilChanged |> mapToSignal { size -> Signal<CGImage?, Void> in
-            return chatGalleryPhoto(account: account, photo: media, scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
+            return chatGalleryPhoto(account: account, photo: media, scale: System.backingScale, secureIdAccessContext: secureIdAccessContext) |> deliverOn(account.graphicsThreadPool) |> map { transform in
                 return transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
             }
         }

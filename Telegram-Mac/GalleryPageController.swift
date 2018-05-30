@@ -415,7 +415,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         
         if startIndex != pageController.selectedIndex || force {
-            if startIndex > 0 && startIndex < pageController.arrangedObjects.count {
+            if startIndex != -1, startIndex <= pageController.arrangedObjects.count - 1 {
                 self.item(at: startIndex).disappear(for: previousView?.contentView)
             }
             startIndex = pageController.selectedIndex
@@ -437,13 +437,16 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
             captionView.update(caption)
-            captionView.background = .blackTransparent
+            captionView.backgroundColor = .blackTransparent
+            captionView.disableBackgroundDrawing = true
             captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
             captionView.layer?.cornerRadius = .cornerRadius
             
             view.addSubview(captionView)
             captionView.change(opacity: 1.0)
             captionView.centerX(y: 90)
+        } else {
+            captionView.update(nil)
         }
         
         configureCaptionAutohide()

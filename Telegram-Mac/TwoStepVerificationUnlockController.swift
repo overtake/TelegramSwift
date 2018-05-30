@@ -124,7 +124,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                                 updateState {
                                     $0.withUpdatedChecking(true)
                                 }
-                                setupResultDisposable.set((requestTwoStepVerificationPasswordRecoveryCode(account: account) |> deliverOnMainQueue).start(next: { emailPattern in
+                                setupResultDisposable.set((requestTwoStepVerificationPasswordRecoveryCode(network: account.network) |> deliverOnMainQueue).start(next: { emailPattern in
                                     updateState {
                                         $0.withUpdatedChecking(false)
                                     }
@@ -210,7 +210,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                             case .access:
                                 return .complete()
                             case let .manage(password, _, _):
-                                return updateTwoStepVerificationPassword(account: account, currentPassword: password, updatedPassword: .none)
+                                return updateTwoStepVerificationPassword(network: account.network, currentPassword: password, updatedPassword: .none)
                                     |> mapToSignal { _ -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
                                         return .complete()
                                 }
@@ -250,7 +250,7 @@ class TwoStepVerificationUnlockController: TableViewController {
             updateState { state in
                 return state.withUpdatedChecking(true)
             }
-            setupDisposable.set((updateTwoStepVerificationPassword(account: account, currentPassword: nil, updatedPassword: .none) |> deliverOnMainQueue).start(next: { _ in
+            setupDisposable.set((updateTwoStepVerificationPassword(network: account.network, currentPassword: nil, updatedPassword: .none) |> deliverOnMainQueue).start(next: { _ in
                 updateState { state in
                     return state.withUpdatedChecking(false)
                 }
@@ -302,7 +302,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                                     }
                                 
                                     if let password = password, !wasChecking {
-                                        checkDisposable.set((requestTwoStepVerifiationSettings(account: account, password: password) |> deliverOnMainQueue).start(next: { settings in
+                                        checkDisposable.set((requestTwoStepVerifiationSettings(network: account.network, password: password) |> deliverOnMainQueue).start(next: { settings in
                                             updateState {
                                                 $0.withUpdatedChecking(false)
                                             }

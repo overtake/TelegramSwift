@@ -179,9 +179,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                     
                 }
                 
-                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize))))" , type: .selectable(stateback: { [weak self] () -> Bool in
-                    return self?.sizeIndex[categoryId]?.0 ?? false
-                }), action: {
+                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize))))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), action: {
                     toggleCheck(categoryId, index)
                 }))
                 

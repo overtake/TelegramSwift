@@ -11,7 +11,7 @@ import PostboxMac
 import TelegramCoreMac
 import TGUIKit
 import SwiftSignalKitMac
-
+import MapKit
 
 
 final class ReplyMarkupInteractions {
@@ -120,6 +120,11 @@ final class ChatInteraction : InterfaceObserver  {
     var jumpToDate:(Date)->Void = {_ in}
     var openFeedInfo: (PeerGroupId)->Void = {_ in}
     var showNextPost:()->Void = {}
+    var startRecording:(Bool)->Void = {_ in}
+    var openProxySettings: ()->Void = {}
+    var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
+    
+    let loadingMessage: ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
@@ -129,18 +134,17 @@ final class ChatInteraction : InterfaceObserver  {
     
     func disableProxy() {
         let account = self.account
-        disableProxyDisposable.set((account.postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> take(1) |> map { prefs -> ProxySettings? in
-            return prefs.values[PreferencesKeys.proxySettings] as? ProxySettings
-        } |> deliverOnMainQueue |> mapToSignal { setting in
-            return confirmSignal(for: mainWindow, information: tr(L10n.proxyForceDisable(setting?.host ?? "")))
-        } |> filter {$0} |> mapToSignal { _ in
-            return applyProxySettings(postbox: account.postbox, network: account.network, settings: nil)
+        disableProxyDisposable.set(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
+            return current.withUpdatedEnabled(false)
         }).start())
         
     }
     
-    func applyProxy(_ proxy:ProxySettings) -> Void {
-        applyExternalProxy(proxy, postbox: account.postbox, network: account.network)
+    func applyProxy(_ server:ProxyServerSettings) -> Void {
+        applyExternalProxy(server, postbox: account.postbox, network: account.network)
+//        disableProxyDisposable.set(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
+//            return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
+//        }).start())
     }
     
     
@@ -272,6 +276,8 @@ final class ChatInteraction : InterfaceObserver  {
                 if invoke {
                     showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true )
                 }
+            default:
+                break
             }
         }
     }
@@ -284,7 +290,7 @@ final class ChatInteraction : InterfaceObserver  {
                 if let strongSelf = self {
                     switch button.action {
                     case let .url(url):
-                        execute(inapp: inApp(for: url.nsstring, account: strongSelf.account, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText))
+                        execute(inapp: inApp(for: url.nsstring, account: strongSelf.account, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
                     case .text:
                         _ = (enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], media: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil)]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
@@ -296,7 +302,7 @@ final class ChatInteraction : InterfaceObserver  {
                     case let .callback(data):
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, false, data)
                     case let .switchInline(samePeer: same, query: query):
-                        let text = "@\(keyboardMessage.inlinePeer?.username ?? "") \(query)"
+                        let text = "@\(keyboardMessage.inlinePeer?.username ?? keyboardMessage.author?.username ?? "") \(query)"
                         if same {
                             strongSelf.updateInput(with: text)
                         } else {

@@ -242,9 +242,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
         case let .automaticMediaDownloadHeader(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .automaticDownloadMedia(_ , value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownload, type: .switchable(stateback: {
-                return value
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownload, type: .switchable(value), action: {
                 arguments.toggleAutomaticDownload(!value)
             })
         case let .photos(_, category, enabled):
@@ -276,15 +274,11 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
                 arguments.resetDownloadSettings()
             }, enabled: enabled)
         case let .downloadFolder(_, path):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageDownloadFolder, type: .context(stateback: { () -> String in
-                return path
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageDownloadFolder, type: .context(path), action: {
                 arguments.selectDownloadFolder()
             })
         case let .automaticCopyToDownload(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "L10n.dataAndStorageAutomaticDownloadToDownloadFolder", type: .switchable( stateback: { () -> Bool in
-                return value
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "L10n.dataAndStorageAutomaticDownloadToDownloadFolder", type: .switchable(value), action: {
                 arguments.toggleAutomaticDownload(!value)
             })
         default:
@@ -324,7 +318,7 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     sectionId += 1
     
     entries.append(.storageUsage(sectionId, tr(L10n.dataAndStorageStorageUsage)))
- //   entries.append(.networkUsage(sectionId, tr(L10n.dataAndStorageNetworkUsage)))
+    entries.append(.networkUsage(sectionId, tr(L10n.dataAndStorageNetworkUsage)))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
@@ -373,7 +367,7 @@ class DataAndStorageViewController: TableViewController {
             statePromise.set(stateValue.modify { f($0) })
         }
         
-        let pushControllerImpl = { [weak self] controller in
+        let pushControllerImpl:(ViewController)->Void = { [weak self] controller in
             self?.navigationController?.push(controller)
         }
         
@@ -396,7 +390,7 @@ class DataAndStorageViewController: TableViewController {
         let arguments = DataAndStorageControllerArguments(openStorageUsage: {
             pushControllerImpl(StorageUsageController(account))
         }, openNetworkUsage: {
-           // pushControllerImpl?(networkUsageStatsController(account: account))
+            networkUsageStatsController(account: account, f: pushControllerImpl)
         }, openCategorySettings: { category, title in
             pushControllerImpl(DownloadSettingsViewController(account, category, title, updateCategory: { category in
                 _ = updateMediaDownloadSettingsInteractively(postbox: account.postbox, { current -> AutomaticMediaDownloadSettings in
@@ -423,7 +417,7 @@ class DataAndStorageViewController: TableViewController {
                 return current.withUpdatedAutomaticDownload(enabled)
             }).start()
         }, resetDownloadSettings: {
-            _ = (confirmSignal(for: mainWindow, header: appName, information: L10n.dataAndStorageConfirmResetSettings, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel, swapColors: true) |> filter {$0} |> mapToSignal { _ -> Signal<Void, Void> in
+            _ = (confirmSignal(for: mainWindow, header: appName, information: L10n.dataAndStorageConfirmResetSettings, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, Void> in
                 return updateMediaDownloadSettingsInteractively(postbox: account.postbox, { _ -> AutomaticMediaDownloadSettings in
                     return AutomaticMediaDownloadSettings.defaultSettings
                 })

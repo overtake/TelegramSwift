@@ -87,16 +87,12 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             let localizationKey = "AppearanceSettings.ColorTheme." + palette.name.lowercased().replacingOccurrences(of: " ", with: "_")
             let localized = _NSLocalizedString(localizationKey)
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: localized != localizationKey ? localized : palette.name, type: .selectable(stateback: { () -> Bool in
-                return selected
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: localized != localizationKey ? localized : palette.name, type: .selectable(selected), action: {
                 arguments.togglePalette(palette, wallpaper)
             })
         case let .chatView(_, _, selected, value):
             //, description: tr(L10n.generalSettingsDarkModeDescription)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: !value ? tr(L10n.appearanceSettingsChatViewClassic) : tr(L10n.appearanceSettingsChatViewBubbles), type: .selectable(stateback: { () -> Bool in
-                return selected
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: !value ? tr(L10n.appearanceSettingsChatViewClassic) : tr(L10n.appearanceSettingsChatViewBubbles), type: .selectable(selected), action: {
                 arguments.toggleBubbles(value)
             })
         case .chatBackground:
@@ -104,9 +100,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
                 arguments.selectChatBackground()
             })
         case let .accentColor(_, _, color):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(stateback: { () -> NSColor in
-                return color
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(color), action: {
                 arguments.selectAccentColor()
             })
         case .description(_, _, let text):
@@ -193,7 +187,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsTextSizeHeader)))
     descIndex += 1
     
-    let sizes:[Int32] = [11, 12, 13, 14, 15]
+    let sizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
             
     entries.append(.font(sectionId, index, Int32(settings.fontSize), sizes))
     index += 1
@@ -206,9 +200,9 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsChatPreviewHeader)))
     descIndex += 1
     
-    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName1), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     
-    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: tr(L10n.appearanceSettingsChatPreviewUserName2), lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
 
     
     entries.append(.section(sectionId))
@@ -366,9 +360,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         super.viewDidLoad()
         let account = self.account
         let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, wallpaper in
-            
             _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
-                
                 return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: wallpaper, defaultNightName: palette.isDark ? palette.name : settings.defaultNightName, defaultDayName: !palette.isDark ? palette.name : settings.defaultDayName)
                 
             }).start()

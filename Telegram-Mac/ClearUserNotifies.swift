@@ -11,7 +11,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-private let queue:Queue = Queue(name: "clearUserNotifiesQueue", target: nil)
+private let queue:Queue = Queue(name: "clearUserNotifiesQueue")
 
 func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
     queue.async {

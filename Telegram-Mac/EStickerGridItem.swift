@@ -72,7 +72,7 @@ final class StickerGridSectionNode: View {
     override func updateLocalizationAndTheme() {
         backgroundColor = theme.colors.background
         textView.backgroundColor = theme.colors.background
-        let textLayout = TextViewLayout(.initialize(string: collectionInfo.packInfo.title.uppercased(), color: theme.colors.grayText, font: .medium(.title)), constrainedWidth: 300, maximumNumberOfLines: 1, truncationType: .end)
+        let textLayout = TextViewLayout(.initialize(string: collectionInfo.packInfo.title.fixed.uppercased(), color: theme.colors.grayText, font: .medium(.title)), constrainedWidth: 300, maximumNumberOfLines: 1, truncationType: .end)
         textLayout.measure()
         textView.update(textLayout)
         
@@ -146,8 +146,10 @@ final class StickerGridItem: GridItem {
         case .speficicPack:
             reference = file.stickerReference
         }
-        if index.packIndex.collectionIndex != -1 {
+        if index.packIndex.collectionIndex >= 0 {
             self.section = StickerGridSection(collectionId: collectionId, packInfo: packInfo, inputInteraction: inputNodeInteraction, reference:  reference)
+        } else if index.packIndex.collectionIndex <= -2 {
+            self.section = StickerGridSection(collectionId: collectionId, packInfo: ChatMediaGridPackHeaderInfo.pack(StickerPackCollectionInfo(id: index.packIndex.collectionId, flags: [], accessHash: 0, title: file.stickerText ?? "", shortName: "", hash: 0, count: 0), true), inputInteraction: inputNodeInteraction, reference:  nil)
         } else {
             self.section = nil
         }
@@ -189,13 +191,12 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
         if let currentState = currentState, let state = currentState.3 {
             let menu = NSMenu()
             let file = currentState.1
-            if state == .recent {
-                if let reference = file.stickerReference, case let .id(id, _) = reference {
-                    menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
-                        self?.inputNodeInteraction?.navigateToCollectionId(.pack(ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
-                    }))
-                }
-            } else if state == .saved, let mediaId = file.id {
+            if let reference = file.stickerReference{
+                menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
+                    self?.inputNodeInteraction?.showStickerPack(reference)
+                }))
+            }
+             if state == .saved, let mediaId = file.id {
                 menu.addItem(ContextMenuItem(tr(L10n.contextRemoveFaveSticker), handler: {
                     _ = removeSavedSticker(postbox: currentState.0.postbox, mediaId: mediaId).start()
                 }))

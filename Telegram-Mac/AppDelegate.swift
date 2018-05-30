@@ -61,8 +61,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private let context = Promise<ApplicationContext?>()
     private let contextDisposable = MetaDisposable()
     private let handleEventContextDisposable = MetaDisposable()
+    private let proxyDisposable = MetaDisposable()
     private var activity:Any?
-
+    
 
     func applicationWillFinishLaunching(_ notification: Notification) {
        
@@ -71,8 +72,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
-        
         
         
         if #available(OSX 10.12.2, *) {
@@ -124,7 +123,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #if !APP_STORE
             self.updater.automaticallyChecksForUpdates = true
            // self.updater.automaticallyDownloadsUpdates = false
-            self.updater.checkForUpdatesInBackground()
+           // self.updater.checkForUpdatesInBackground()
         #endif
         
         
@@ -166,7 +165,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
 
         let logger = Logger(basePath: containerUrl.path + "/logs")
-        logger.logToConsole = false
+        logger.logToConsole = TEST_SERVER
         logger.logToFile = UserDefaults.standard.bool(forKey: "enablelogs")
         
         #if DEBUG
@@ -204,9 +203,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchInterface() {
         
         self.accountManagerPromise.set(accountManager(basePath: containerUrl + "/accounts-metadata"))
-        
         let _ = (accountManagerPromise.get() |> mapToSignal { manager in
-                return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), accountManager: manager, appGroupPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+                return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
         }).start()
         
         
@@ -227,10 +225,44 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             context?.showRoot(for: self.window)
             
+            if let context = context {
+                let postbox: Postbox?
+                
+                switch context {
+                case let .authorized(authorized):
+                    postbox = authorized.account.postbox
+                case let .unauthorized(unauthorized):
+                    postbox = unauthorized.account.postbox
+                default:
+                    postbox = nil
+                    self.proxyDisposable.set(nil)
+                }
+                #if !APP_STORE
+                if let postbox = postbox {
+                    self.proxyDisposable.set((postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> delay(5.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { settings in
+                        let settings = settings.values[PreferencesKeys.networkSettings] as? NetworkSettings
+                        if let applicationUpdateUrlPrefix = settings?.applicationUpdateUrlPrefix {
+                            self.updater.basicDomain = applicationUpdateUrlPrefix
+                        } else {
+                            self.updater.basicDomain = nil
+                        }
+                        self.updater.checkForUpdatesInBackground()
+                    }))
+                } else {
+                    self.proxyDisposable.set(nil)
+                }
+                #endif
+            } else {
+                self.proxyDisposable.set(nil)
+            }
+            
         }))
         
         saveIntermediateDate()
         self.window.contentView?.wantsLayer = true
+        
+        
+        
         
     }
     
@@ -285,7 +317,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             if let proxy = settings.0 {
                                 applyExternalProxy(proxy, postbox: context.account.postbox, network: context.account.network)
                             } else {
-                                _ = applyProxySettings(postbox: context.account.postbox, network: context.account.network, settings: nil).start()
+                                _ = updateProxySettingsInteractively(postbox: context.account.postbox, network: context.account.network, { current -> ProxySettings in
+                                    return current.withUpdatedActiveServer(nil)
+                                }).start()
                             }
                         }
                     default:
@@ -318,7 +352,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        window.makeKeyAndOrderFront(sender)
+        if viewer != nil {
+            viewer?.windowDidResignKey()
+        } else if let passport = passport {
+            passport.window.makeKeyAndOrderFront(nil)
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
         
         return true
     }
@@ -362,6 +402,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         if contextValue != nil {
             if viewer != nil {
                 viewer?.windowDidResignKey()
+            } else if let passport = passport {
+                passport.window.makeKeyAndOrderFront(nil)
             } else {
                 window.makeKeyAndOrderFront(nil)
             }

@@ -572,9 +572,7 @@ enum TwoStepVerificationResetEntry: TableItemListNodeEntry {
         case let .codeEntry(_, text):
             return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: tr(L10n.twoStepAuthRecoveryCode), text: text, limit: 6, textChangeHandler: { updatedText in
                 arguments.updateEntryText(updatedText)
-            }, textFilter: { text -> String in
-                return text.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)
-            })
+            }, textFilter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})})
         case let .codeInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { _ in
                 arguments.openEmailInaccessible()

@@ -156,21 +156,15 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
         case .header(_, _, let text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case .allAdmins(_, _, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "All Admins", type: .switchable (stateback: {
-                return enabled
-            }), action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chanelEventFilterAllAdmins, type: .switchable (enabled), action: {
                 arguments.toggleAllAdmins()
             })
         case .allEvents(_, _, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "All Events", type: .switchable (stateback: {
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chanelEventFilterAllEvents, type: .switchable (enabled), action: {
                 arguments.toggleAllEvents()
             })
         case let .filter(_, _, flag, name, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, type: .selectable(enabled), action: {
                 arguments.toggleFlags(flag)
             })
         case .adminsLoading:
@@ -184,9 +178,7 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             case .member:
                 status = tr(L10n.adminsAdmin)
             }
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: { 
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
                 arguments.toggleAdmin(participant.peer.id)
             })
         }

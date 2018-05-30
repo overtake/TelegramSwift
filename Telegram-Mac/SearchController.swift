@@ -255,7 +255,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                     status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
                 }
             }
-            return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right])
+            return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right], contextMenuItems: {
+                return []
+            })
         case let .localPeer(peer, _, secretChat, drawBorder), let .recentlySearch(peer, _, secretChat, drawBorder):
             
             var canRemoveFromRecent: Bool = false

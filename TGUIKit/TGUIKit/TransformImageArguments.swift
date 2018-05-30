@@ -91,6 +91,7 @@ public enum TransformImageResizeMode {
     case blurBackground
     case none
     case fillTransparent
+    case imageColor(NSColor)
 }
 
 public struct TransformImageArguments: Equatable {

@@ -145,7 +145,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
-                        controller = APSingleResourceController(account: account, wrapper: wrapper)
+                        controller = APSingleResourceController(account: account, wrapper: wrapper, streamable: false)
                     } else {
                         controller = APChatVoiceController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
                     }
@@ -173,18 +173,21 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 case let .playing(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
                     durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50)
-                    break
+                    stateThumbView.isHidden = true
                 case .stoped, .waiting, .fetching:
                     playingProgressView.state = .None
                     durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
+                    stateThumbView.isHidden = false
                 case let .paused(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: true)
                     durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50)
+                    stateThumbView.isHidden = false
                 }
                 
             } else {
                 playingProgressView.state = .None
                 durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
+                stateThumbView.isHidden = false
             }
         }
     }

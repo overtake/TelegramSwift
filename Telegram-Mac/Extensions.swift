@@ -28,7 +28,7 @@ extension MessageHistoryHole {
 
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
         let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
@@ -1651,6 +1651,18 @@ func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], Voi
     }
 }
 
+func randomInt32() -> Int32 {
+    let uRandom = arc4random()
+    let value: Int32
+    let dif = Int(uRandom) - Int(INT32_MAX)
+    if dif > 0 {
+        value = Int32(dif)
+    } else {
+        value = Int32(uRandom)
+    }
+    return value
+}
+
 
 func + <K,V>(left: Dictionary<K,V>, right: Dictionary<K,V>)
     -> Dictionary<K,V>
@@ -1809,6 +1821,29 @@ func synced(_ lock: Any, closure: ()->Void) {
 }
 
 
+extension NSData {
+    
+    var hexString: String {
+        let buf = bytes.assumingMemoryBound(to: UInt8.self)
+        let charA = UInt8(UnicodeScalar("a").value)
+        let char0 = UInt8(UnicodeScalar("0").value)
+        
+        func itoh(_ value: UInt8) -> UInt8 {
+            return (value > 9) ? (charA + value - 10) : (char0 + value)
+        }
+        
+        let hexLen = length * 2
+        let ptr = UnsafeMutablePointer<UInt8>.allocate(capacity: hexLen)
+        
+        for i in 0 ..< length {
+            ptr[i*2] = itoh((buf[i] >> 4) & 0xF)
+            ptr[i*2+1] = itoh(buf[i] & 0xF)
+        }
+        
+        return String(bytesNoCopy: ptr, length: hexLen, encoding: .utf8, freeWhenDone: true)!
+    }
+}
+
 extension NSTextView {
     
     var selectedRangeRect: NSRect {
@@ -1834,6 +1869,8 @@ extension NSTextView {
       //  rect.origin.y += 10
         return rect
     }
+    
+
     
 }
 
@@ -2126,3 +2163,11 @@ extension NSImage {
 }
 
 
+extension Window {
+    var titleView: NSView? {
+        if let windowView = contentView?.superview {
+            return ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first
+        }
+        return nil
+    }
+}

@@ -156,8 +156,8 @@ public extension CALayer {
         self.add(animation, forKey: key)
     }
     
-    public func animateScaleSpring(from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
-        let animation = makeSpringBounceAnimation("transform", initialVelocity)
+    public func animateScaleSpring(from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        let animation = bounce ? makeSpringBounceAnimation("transform", initialVelocity) : makeSpringAnimation("transform")
         
         var fr = CATransform3DIdentity
         fr = CATransform3DTranslate(fr, floorToScreenPixels(scaleFactor: System.backingScale, frame.width / 2), floorToScreenPixels(scaleFactor: System.backingScale, frame.height / 2), 0)

@@ -55,6 +55,7 @@ class PeerInfoTitleBarView : TitledBarView {
 class PeerInfoArguments {
     let peerId:PeerId
     let account:Account
+    let isAd: Bool
     let pushViewController:(ViewController) -> Void
     
     let pullNavigation:()->NavigationViewController?
@@ -74,9 +75,8 @@ class PeerInfoArguments {
         return value.modify {$0}
     }
     
-    
     func updateInfoState(_ f: (PeerInfoState) -> PeerInfoState) -> Void {
-        _statePromise.set(.single(value.modify({f($0)})))
+        _statePromise.set(.single(value.modify(f)))
     }
     
     func updateEditable(_ editable:Bool, peerView:PeerView) {
@@ -119,11 +119,12 @@ class PeerInfoArguments {
         pushViewController(PeerMediaController(account: account, peerId: peerId, tagMask: .photoOrVideo))
     }
     
-    init(account:Account, peerId:PeerId, state:PeerInfoState, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?) {
+    init(account:Account, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.account = account
         self.peerId = peerId
+        self.isAd = isAd
         self.pushViewController = pushViewController
         self.pullNavigation = pullNavigation
     }
@@ -209,8 +210,7 @@ class PeerInfoController: EditableViewController<TableView> {
     private var _userArguments:UserInfoArguments!
     private var _channelArguments:ChannelInfoArguments!
     var disposable:MetaDisposable = MetaDisposable()
-    
-    init(account:Account, peer:Peer) {
+    init(account:Account, peer:Peer, isAd: Bool = false) {
         peerAtomic = Atomic(value: peer)
         self.peerId = peer.id
         super.init(account)
@@ -221,16 +221,16 @@ class PeerInfoController: EditableViewController<TableView> {
             self?.navigationController?.push(controller)
         }
         
-        _groupArguments = GroupInfoArguments(account: account, peerId: peerId, state: GroupInfoState(), pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+        _groupArguments = GroupInfoArguments(account: account, peerId: peerId, state: GroupInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
         
-        _userArguments = UserInfoArguments(account: account, peerId: peerId, state: UserInfoState(), pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+        _userArguments = UserInfoArguments(account: account, peerId: peerId, state: UserInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
         
         
-        _channelArguments = ChannelInfoArguments(account: account, peerId: peerId, state: ChannelInfoState(), pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+        _channelArguments = ChannelInfoArguments(account: account, peerId: peerId, state: ChannelInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
 
@@ -334,7 +334,7 @@ class PeerInfoController: EditableViewController<TableView> {
         }
         
         
-        let transition = combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> distinctUntilChanged |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
+        let transition = combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
             |> map { [weak peerAtomic] view, state, appearance, inputActivities -> (PeerView, TableUpdateTransition) in
                 
                 let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
@@ -370,7 +370,7 @@ class PeerInfoController: EditableViewController<TableView> {
                 } else if let peer = peer as? TelegramGroup {
                     editable = peer.role == .creator || peer.role == .admin || !peer.flags.contains(.adminsEnabled)
                 } else if peer is TelegramUser {
-                    editable = peerView.peerIsContact && account.peerId != peer.id
+                    editable = account.peerId != peer.id
                 } else {
                     editable = false
                 }
