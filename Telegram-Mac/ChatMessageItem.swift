@@ -184,11 +184,7 @@ class ChatMessageItem: ChatRowItem {
                                         if text.range(of: "t.me") != nil {
                                             pb.setString(text, forType: .string)
                                         } else {
-<<<<<<< HEAD
-                                            pb.setString(username.hasPrefix("@") ? username : "@\(username)", forType: .string)
-=======
                                             pb.setString(!username.hasPrefix("@") ? "@\(username)" : "\(username)", forType: .string)
->>>>>>> streaming
                                             return
                                         }
                                     } else if case let .joinchat(hash, _, _) = attribute {
