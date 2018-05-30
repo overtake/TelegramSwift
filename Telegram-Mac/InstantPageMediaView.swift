@@ -37,7 +37,7 @@ final class InstantPageMediaView: View, InstantPageView {
         s = s |> delay(0.01, queue: Queue.mainQueue())
         playerDisposable.set(s.start(next: { [weak self] in
             if let strongSelf = self {
-                let accept = strongSelf.window != nil && strongSelf.window!.isKeyWindow
+                 let accept = strongSelf.window != nil && strongSelf.window!.isKeyWindow
                 (strongSelf.imageView as? GIFPlayerView)?.set(path: accept ? strongSelf.videoPath : nil)
             }
         }))
@@ -66,7 +66,7 @@ final class InstantPageMediaView: View, InstantPageView {
         
         switch arguments {
         case .image:
-            self.imageView = TransformImageView()
+             self.imageView = TransformImageView()
         case let .video(_, autoplay):
             if autoplay {
                 self.imageView = GIFPlayerView()
@@ -84,14 +84,14 @@ final class InstantPageMediaView: View, InstantPageView {
         self.addSubview(self.imageView)
         addSubview(progressView)
         
-        
+
         
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
             guard let `self` = self else {return}
             
             self.progressView.fetchControls = FetchControls(fetch: { [weak self] in
                 guard let `self` = self else {return}
-                
+
                 switch status {
                 case .Remote:
                     if let image = media.media as? TelegramMediaImage {
@@ -125,8 +125,8 @@ final class InstantPageMediaView: View, InstantPageView {
         if let image = media.media as? TelegramMediaImage {
             
             self.imageView.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
-            
-            
+
+           
             self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: image).start())
             if let largest = largestImageRepresentation(image.representations) {
                 statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start(next: updateProgressState))
@@ -137,7 +137,7 @@ final class InstantPageMediaView: View, InstantPageView {
             self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, file: file).start())
             
             self.imageView.setSignal( chatMessageVideoThumbnail(account: account, file: file, scale: backingScaleFactor))
-            
+
             switch arguments {
             case let .video(_, autoplay):
                 if autoplay {
@@ -207,9 +207,9 @@ final class InstantPageMediaView: View, InstantPageView {
                     break
                 }
                 
-                
+           
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: radius), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
-                
+
             } else if let file = self.media.media as? TelegramMediaFile {
                 let imageSize = file.dimensions?.aspectFilled(size) ?? size
                 let boundingSize = size
@@ -220,4 +220,3 @@ final class InstantPageMediaView: View, InstantPageView {
         progressView.center()
     }
 }
-

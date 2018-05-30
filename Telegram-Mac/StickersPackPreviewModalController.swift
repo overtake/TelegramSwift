@@ -262,12 +262,16 @@ class StickersPackPreviewModalController: ModalViewController {
         
         
         disposable.set((loadedStickerPack(postbox: account.postbox, network: account.network, reference: reference) |> deliverOnMainQueue).start(next: { [weak self] result in
-            if let strongSelf = self {
-                strongSelf.genericView.layout(with: result, arguments: strongSelf.arguments)
-                strongSelf.readyOnce()
+            guard let `self` = self else {return}
+            switch result {
+            case .none:
+                alert(for: mainWindow, info: L10n.stickerSetDontExist)
+                self.close()
+            default:
+                self.genericView.layout(with: result, arguments: self.arguments)
+                self.readyOnce()
             }
-        }, error: { error in
-            
+
         }))
 
     }

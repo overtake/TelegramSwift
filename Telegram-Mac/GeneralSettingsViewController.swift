@@ -18,7 +18,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case header(sectionId: Int, uniqueId:Int, text:String)
     case handleInAppKeys(sectionId:Int, enabled:Bool)
     case darkMode(sectionId:Int, enabled: Bool)
-    case fontSize(sectionId:Int, enabled: Bool)
+    case showCallsTab(sectionId:Int, enabled: Bool)
     case sidebar(sectionId:Int, enabled: Bool)
     case autoplayGifs(sectionId:Int, enabled: Bool)
     case inAppSounds(sectionId:Int, enabled: Bool)
@@ -35,7 +35,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return uniqueId
         case .darkMode:
             return 0
-        case .fontSize:
+        case .showCallsTab:
             return 1
         case .enterBehavior:
             return 2
@@ -68,7 +68,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         switch self {
         case let .header(sectionId, _, _):
             return (sectionId * 1000) + stableId
-        case let .fontSize(sectionId, _):
+        case let .showCallsTab(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .darkMode(sectionId, _):
             return (sectionId * 1000) + stableId
@@ -103,194 +103,71 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         switch self {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId)
-        case let .fontSize(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsLargeFonts), description: tr(L10n.generalSettingsFontDescription), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
-                arguments.toggleFonts(!enabled)
+        case let .showCallsTab(sectionId: _, enabled: enabled):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShowCallsTab, type: .switchable(enabled), action: {
+                arguments.toggleCallsTab(!enabled)
             })
         case let .darkMode(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(enabled), action: {
                 _ = updateThemeSettings(postbox: arguments.account.postbox, palette: !enabled ? darkPalette : whitePalette).start()
 
             })
         case let .handleInAppKeys(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsMediaKeysForInAppPlayer), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsMediaKeysForInAppPlayer), type: .switchable(enabled), action: {
                 arguments.toggleInAppKeys(!enabled)
             })
         case let .sidebar(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEnableSidebar), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEnableSidebar), type: .switchable(enabled), action: {
                 arguments.toggleSidebar(!enabled)
             })
         case let .autoplayGifs(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAutoplayGifs), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAutoplayGifs), type: .switchable(enabled), action: {
                 arguments.toggleAutoplayGifs(!enabled)
             })
         case let .inAppSounds(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInAppSounds), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInAppSounds), type: .switchable(enabled), action: {
                 arguments.toggleInAppSounds(!enabled)
             })
         case let .emojiReplacements(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEmojiReplacements), type: .switchable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEmojiReplacements), type: .switchable(enabled), action: {
                 arguments.toggleEmojiReplacements(!enabled)
             })
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .enterBehavior(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByEnter), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByEnter), type: .selectable(enabled), action: {
                 arguments.toggleInput(.enter)
             })
         case let .cmdEnterBehavior(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByCmdEnter), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsSendByCmdEnter), type: .selectable(enabled), action: {
                 arguments.toggleInput(.cmdEnter)
             })
         case let .forceTouchEdit(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchEdit), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchEdit), type: .selectable(enabled), action: {
                 arguments.toggleForceTouchAction(.edit)
             })
         case let .forceTouchReply(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchReply), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchReply), type: .selectable(enabled), action: {
                arguments.toggleForceTouchAction(.reply)
             })
         case let .forceTouchForward(sectionId: _, enabled: enabled):
-            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchForward), type: .selectable(stateback: { () -> Bool in
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchForward), type: .selectable(enabled), action: {
                 arguments.toggleForceTouchAction(.forward)
             })
 		case let .instantViewScrollBySpace(sectionId: _, enabled: enabled):
-			return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInstantViewScrollBySpace), type: .switchable(stateback: { () -> Bool in
-				return enabled
-			}), action: {
+			return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInstantViewScrollBySpace), type: .switchable(enabled), action: {
 				arguments.toggleInstantViewScrollBySpace(!enabled)
 			})
         }
     }
-    
 }
-
-private func ==(lhs: GeneralSettingsEntry, rhs: GeneralSettingsEntry) -> Bool {
-    switch lhs {
-    case let .header(sectionId, uniqueId, text):
-        if case .header(sectionId, uniqueId, text) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .fontSize(sectionId, enabled):
-        if case .fontSize(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .darkMode(sectionId, enabled):
-        if case .darkMode(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .handleInAppKeys(sectionId, enabled):
-        if case .handleInAppKeys(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .sidebar(sectionId, enabled):
-        if case .sidebar(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .autoplayGifs(sectionId, enabled):
-        if case .autoplayGifs(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .inAppSounds(sectionId, enabled):
-        if case .inAppSounds(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .emojiReplacements(sectionId, enabled):
-        if case .emojiReplacements(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .enterBehavior(sectionId, enabled):
-        if case .enterBehavior(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .cmdEnterBehavior(sectionId, enabled):
-        if case .cmdEnterBehavior(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .forceTouchReply(sectionId, enabled):
-        if case .forceTouchReply(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .forceTouchEdit(sectionId, enabled):
-        if case .forceTouchEdit(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .forceTouchForward(sectionId, enabled):
-        if case .forceTouchForward(sectionId, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-	case let .instantViewScrollBySpace(sectionId, enabled):
-		if case .instantViewScrollBySpace(sectionId, enabled) = rhs {
-			return true
-		} else {
-			return false
-		}
-    case let .section(sectionId):
-        if case .section(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
-
 private func <(lhs: GeneralSettingsEntry, rhs: GeneralSettingsEntry) -> Bool {
     return lhs.sortIndex < rhs.sortIndex
 }
 
 private final class GeneralSettingsArguments {
     let account:Account
-    let toggleFonts:(Bool) -> Void
+    let toggleCallsTab:(Bool) -> Void
     let toggleInAppKeys:(Bool) -> Void
     let toggleInput:(SendingType)-> Void
     let toggleSidebar:(Bool) -> Void
@@ -299,9 +176,9 @@ private final class GeneralSettingsArguments {
     let toggleForceTouchAction:(ForceTouchAction) -> Void
 	let toggleInstantViewScrollBySpace:(Bool) -> Void
     let toggleAutoplayGifs:(Bool) -> Void
-    init(account:Account, toggleFonts:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void) {
+    init(account:Account, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void) {
         self.account = account
-        self.toggleFonts = toggleFonts
+        self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
         self.toggleInput = toggleInput
         self.toggleSidebar = toggleSidebar
@@ -327,7 +204,6 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
    // headerUnique -= 1
     
     //entries.append(.darkMode(sectionId: sectionId, enabled: appearance.presentation.dark))
-    //entries.append(.fontSize(sectionId: sectionId, enabled: appearance.presentation.fontSize > 13.0))
 
     
    // entries.append(.section(sectionId: sectionId))
@@ -348,6 +224,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     headerUnique -= 1
     
     
+    
+    
     //entries.append(.largeFonts(sectionId: sectionId, enabled: baseSettings.fontSize > 13))
     #if !APP_STORE
         entries.append(.handleInAppKeys(sectionId: sectionId, enabled: baseSettings.handleInAppKeys))
@@ -357,7 +235,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
 
     entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies))
-    
+    entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab))
+
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -405,8 +284,10 @@ class GeneralSettingsViewController: TableViewController {
         
         let forceTouchPromise:ValuePromise<ForceTouchAction> = ValuePromise(FastSettings.forceTouchAction, ignoreRepeated: true)
         
-        let arguments = GeneralSettingsArguments(account: account, toggleFonts: { enable in
-            _ = updateApplicationFontSize(postbox: postbox, fontSize: enable ? 15.0 : 13.0).start()
+        let arguments = GeneralSettingsArguments(account: account, toggleCallsTab: { enable in
+            _ = updateBaseAppSettingsInteractively(postbox: postbox, { settings -> BaseApplicationSettings in
+                return settings.withUpdatedShowCallsTab(enable)
+            }).start()
         }, toggleInAppKeys: { enable in
             _ = updateBaseAppSettingsInteractively(postbox: postbox, { settings -> BaseApplicationSettings in
                 return settings.withUpdatedInAppKeyHandle(enable)

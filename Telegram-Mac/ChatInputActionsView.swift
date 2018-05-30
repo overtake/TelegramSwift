@@ -51,20 +51,7 @@ class ChatInputActionsView: View, Notifable {
         
         
         voice.set(handler: { [weak self] _ in
-            self?.stop()
-        }, for: .Up)
-        
-        
-        
-        voice.set(handler: { [weak self] _ in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.presentation.peer {
-                if peer.mediaRestricted {
-                    return alertForMediaRestriction(peer)
-                }
-                if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
-                    strongSelf.start()
-                }
-            }
+            self?.chatInteraction.startRecording(false)
         }, for: .LongMouseDown)
 
         
@@ -143,24 +130,27 @@ class ChatInputActionsView: View, Notifable {
     private func addHoverObserver() {
         
         entertaiments.set(handler: { [weak self] (state) in
-            if let strongSelf = self {
-                let chatInteraction = strongSelf.chatInteraction
-                var enabled = false
+            guard let `self` = self else {return}
+            let chatInteraction = self.chatInteraction
+            var enabled = false
+            
+            if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
+                enabled = sidebarEnabled
+            }
+            if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
+                if !hasPopover(mainWindow) {
+                    self.showEntertainment()
+                }
                 
-                if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
-                    enabled = sidebarEnabled
-                }
-                if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
-                    if !hasPopover(mainWindow) {
-                        let rect = NSMakeRect(0, 0, 350, 350)
-                        strongSelf.entertaimentsPopover._frameRect = rect
-                        strongSelf.entertaimentsPopover.view.frame = rect
-                        showPopover(for: strongSelf.entertaiments, with: strongSelf.entertaimentsPopover, edge: .maxX, inset:NSMakePoint(strongSelf.frame.width - strongSelf.entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
-                    }
-                    
-                }
             }
         }, for: .Hover)
+    }
+    
+    private func showEntertainment() {
+        let rect = NSMakeRect(0, 0, 350, floor(mainWindow.frame.height - 150))
+        entertaimentsPopover._frameRect = rect
+        entertaimentsPopover.view.frame = rect
+        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
     }
     
     private func addClickObserver() {
@@ -224,25 +214,11 @@ class ChatInputActionsView: View, Notifable {
         return false
     }
     
-    func start() {
-        let state: ChatRecordingState
-        
-        switch FastSettings.recordingState {
-        case .voice:
-            state = ChatRecordingAudioState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat)
-            state.start()
-        case .video:
-            state = ChatRecordingVideoState(account: chatInteraction.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat)
-            showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: mainWindow)
-        }
-     
-        chatInteraction.update({$0.withRecordingState(state)})
-    }
     
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || value.editState != oldValue.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout {
+            if value.interfaceState != oldValue.interfaceState || value.interfaceState.editState != oldValue.interfaceState.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout {
             
                 var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width + iconsInset * 2, frame.height)
                 

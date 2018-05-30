@@ -28,9 +28,9 @@ final class InstantPageLayout {
     
     func flattenedItemsWithOrigin(_ origin: CGPoint) -> [InstantPageItem] {
         return self.items.map({ item in
-            var item = item
-            item.frame = item.frame.offsetBy(dx: origin.x, dy: origin.y)
-            return item
+            var _item = item
+            _item.frame = item.frame.offsetBy(dx: origin.x, dy: origin.y)
+            return _item
         })
     }
 }
@@ -457,9 +457,10 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
             contentSize.height += textItem.frame.size.height
             
             var indexItem = indexItems[index]
-            indexItem.frame = indexItem.frame.offsetBy(dx: horizontalInset, dy: textItem.frame.minY)
+            var _item = indexItem
+            _item.frame = indexItem.frame.offsetBy(dx: horizontalInset, dy: textItem.frame.minY)
             
-            listItems.append(indexItem)
+            listItems.append(_item)
             listItems.append(textItem)
             
         }
@@ -546,7 +547,36 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         contentSize.height += verticalInset
         return InstantPageLayout(origin: CGPoint(), contentSize: contentSize, items: items)
     case let .audio(id, caption):
-        break
+        var contentSize = CGSize(width: boundingWidth, height: 0.0)
+        var items: [InstantPageItem] = []
+        
+        if let file = media[id] as? TelegramMediaFile {
+            let mediaIndex = mediaIndexCounter
+            mediaIndexCounter += 1
+            let item = InstantPageAudioItem(frame: CGRect(origin: CGPoint(x: horizontalInset, y: 0.0), size: CGSize(width: boundingWidth, height: 48.0)), media: InstantPageMedia(index: mediaIndex, media: file, caption: ""))
+            
+            contentSize.height += item.frame.size.height
+            items.append(item)
+            
+            if case .empty = caption {
+            } else {
+                contentSize.height += 10.0
+                
+                let styleStack = InstantPageTextStyleStack()
+                styleStack.push(.textColor(theme.colors.grayText))
+                styleStack.push(.fontSize(15.0))
+                if presentation.fontSerif {
+                    styleStack.push(.fontSerif(true))
+                }
+                let captionItem = layoutTextItemWithString(attributedStringForRichText(caption, styleStack: styleStack), boundingWidth: boundingWidth - horizontalInset * 2.0)
+                captionItem.frame = captionItem.frame.offsetBy(dx: floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - captionItem.frame.size.width) / 2.0), dy: contentSize.height)
+                captionItem.alignment = .center
+                contentSize.height += captionItem.frame.size.height
+                items.append(captionItem)
+            }
+        }
+        
+        return InstantPageLayout(origin: CGPoint(), contentSize: contentSize, items: items)
     case let .slideshow(blocks, caption):
         
         var medias:[InstantPageMedia] = []
@@ -600,7 +630,6 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
             
         }
         return InstantPageLayout(origin: CGPoint(), contentSize: contentSize, items: items)
-        
     case .unsupported:
         break
     }

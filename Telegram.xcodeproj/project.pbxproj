@@ -13,22 +13,50 @@
 		9F0E6F76203EC7090086699C /* DFRPrivateHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F74203EC7090086699C /* DFRPrivateHeader.m */; };
 		9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F77203ED1380086699C /* AppKit.framework */; };
 		9F0E6F7A203EFE870086699C /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F79203EFE870086699C /* Preferences.swift */; };
-		9F10CE7F2060FEC5002DD61A /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F10CE802060FEC5002DD61A /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F10CE812060FEC9002DD61A /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		9F10CE822060FEC9002DD61A /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C231992D1EE006330011BEBE /* Sparkle.framework */; };
-		9F10CE832060FEC9002DD61A /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		9F10CE8820610127002DD61A /* PassportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8720610127002DD61A /* PassportController.swift */; };
+		9F10CE8A20611536002DD61A /* PassportHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8920611536002DD61A /* PassportHeaderItem.swift */; };
+		9F10CE8E20617C36002DD61A /* PassportInsertPasswordItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8D20617C36002DD61A /* PassportInsertPasswordItem.swift */; };
+		9F10CE922061BE19002DD61A /* InputDataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE912061BE19002DD61A /* InputDataController.swift */; };
+		9F10CE942061C8C8002DD61A /* InputDataControllerEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE932061C8C8002DD61A /* InputDataControllerEntries.swift */; };
+		9F10CE962061C98E002DD61A /* InputDataRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE952061C98E002DD61A /* InputDataRowItem.swift */; };
+		9F10CE9820626B1B002DD61A /* PassportDocumentRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE9720626B1B002DD61A /* PassportDocumentRowItem.swift */; };
+		9F10CE9A206284F8002DD61A /* InputDataDateRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */; };
+		9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F12D342209251CF0072928B /* EditAccountInfoItem.swift */; };
 		9F14CBF32007DEB300F22DA9 /* ChatWallpaperModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF22007DEB300F22DA9 /* ChatWallpaperModalController.swift */; };
 		9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
 		9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */; };
 		9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */; };
 		9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */; };
+		9F18DD93206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F18DD91206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift */; };
+		9F18DD94206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F18DD92206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift */; };
+		9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1AE5E320B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift */; };
+		9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */; };
+		9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21F65420B5A72800332C85 /* LocationModalController.swift */; };
+		9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F21F65C20B5A9C900332C85 /* MapKit.framework */; };
+		9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */; };
+		9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */; };
+		9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */; };
+		9F3EAB4620A5ED2F003FE7E3 /* genann.c in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB4220A5ED2F003FE7E3 /* genann.c */; };
+		9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB4320A5ED2F003FE7E3 /* fast-edge.cpp */; };
+		9F3EAB4B20A5F90B003FE7E3 /* TGPassportMRZ.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB4A20A5F90B003FE7E3 /* TGPassportMRZ.m */; };
+		9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F580BE420A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift */; };
 		9F5B6E792011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
 		9F5B6E7A2011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
 		9F62AE7E202D85B7007FB557 /* FetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE7D202D85B7007FB557 /* FetchManager.swift */; };
 		9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */; };
 		9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */; };
+		9F72973420B878B00067F815 /* MapResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72973320B878B00067F815 /* MapResources.swift */; };
+		9F72973920BD5BB50067F815 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F72973A20BD5BBD0067F815 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F72973B20BD5BCF0067F815 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		9F72973C20BD5BCF0067F815 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		9F72973D20BD5BCF0067F815 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		9F72974020BD9C6A0067F815 /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72973F20BD9C6A0067F815 /* VideoPlayer.swift */; };
+		9F7943B020854E2F00FEDB81 /* ProxyListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7943AF20854E2F00FEDB81 /* ProxyListRowItem.swift */; };
+		9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7943B120855DC200FEDB81 /* ProxyListController.swift */; };
 		9F88A134200FD425007B899E /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
+		9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */; };
+		9F9206F020727AF30054E581 /* ChangePhoneNumberContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */; };
 		9F9483B1202AF816006E873D /* CrashHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9483B0202AF816006E873D /* CrashHandler.swift */; };
 		9FA0E52A20519E33001E5649 /* MP4Atom.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E52920519E33001E5649 /* MP4Atom.m */; };
 		9FA0E52D20519FCC001E5649 /* LiveUploadingHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E52C20519FCC001E5649 /* LiveUploadingHelper.m */; };
@@ -36,7 +64,15 @@
 		9FA0E53B2052EDFF001E5649 /* HackUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E5392052EDFE001E5649 /* HackUtils.m */; };
 		9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E53C205693DA001E5649 /* WebSessionsController.swift */; };
 		9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E53E2056E159001E5649 /* WebAuthorizationRowItem.swift */; };
+		9FB14FBF209889A500688EF9 /* EDSunriseSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FB14FBE209889A500688EF9 /* EDSunriseSet.m */; };
 		9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */; };
+		9FC8AD9A2062A5610094F7B4 /* InputDataDataSelectorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */; };
+		9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */; };
+		9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD9F2062D5E70094F7B4 /* PassportAcceptRowItem.swift */; };
+		9FC8ADA22062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8ADA12062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift */; };
+		9FC8ADA42063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8ADA32063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift */; };
+		9FC8ADA6206925F60094F7B4 /* PassportWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8ADA5206925F60094F7B4 /* PassportWindowController.swift */; };
+		9FC8ADA8206A77E00094F7B4 /* countries in Resources */ = {isa = PBXBuildFile; fileRef = 9FC8ADA7206A77E00094F7B4 /* countries */; };
 		9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */; };
 		9FFAE4EE205A8C89000C028E /* FFMpegPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DD205A8C81000C028E /* FFMpegPacket.swift */; };
 		9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */; };
@@ -394,6 +430,8 @@
 		C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB261DF980DE0027CE3A /* AudioRecorder.swift */; };
 		C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB281DF981320027CE3A /* AudioWaveform.swift */; };
 		C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */ = {isa = PBXBuildFile; fileRef = C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */; };
+		C2905E1C207E4D9E00990AD7 /* InstantPageAudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2905E1B207E4D9E00990AD7 /* InstantPageAudioView.swift */; };
+		C2905E1E207E545600990AD7 /* InstantPageAudioItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2905E1D207E545600990AD7 /* InstantPageAudioItem.swift */; };
 		C291942F1DCC6E2200359491 /* DeclareEncodables.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291942E1DCC6E2200359491 /* DeclareEncodables.swift */; };
 		C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */; };
 		C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA17801E2FD50A00887153 /* ImageUtils.swift */; };
@@ -490,8 +528,6 @@
 		C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB12091ED87C5A00BDE46A /* ControllerExtension.swift */; };
 		C2BB2DB01F8BDF6700520255 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
 		C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C415E41FA33D1A00FF36F4 /* InputFormatterPopover.swift */; };
-		C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */; };
-		C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C738F01DD898DA00CE9D8A /* AVKit.framework */; };
 		C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */; };
 		C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */; };
 		C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B9281E8011B000380D79 /* IOKit.framework */; };
@@ -597,8 +633,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9F10CE7F2060FEC5002DD61A /* Sparkle.framework in Copy Files */,
-				9F10CE802060FEC5002DD61A /* HockeySDK.framework in Copy Files */,
+				9F72973A20BD5BBD0067F815 /* HockeySDK.framework in Copy Files */,
+				9F72973920BD5BB50067F815 /* Sparkle.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -654,13 +690,23 @@
 /* Begin PBXFileReference section */
 		9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentColorRowItem.swift; sourceTree = "<group>"; };
 		9F0B8F181FFB9DFC00073D3F /* AccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentColorModalController.swift; sourceTree = "<group>"; };
+		9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F0E6F71203EBB6F0086699C /* TouchBarMaker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TouchBarMaker.swift; sourceTree = "<group>"; };
 		9F0E6F74203EC7090086699C /* DFRPrivateHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DFRPrivateHeader.m; sourceTree = "<group>"; };
 		9F0E6F75203EC7090086699C /* DFRPrivateHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFRPrivateHeader.h; sourceTree = "<group>"; };
 		9F0E6F77203ED1380086699C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		9F0E6F79203EFE870086699C /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DFRFoundation.framework; path = ../../../../System/Library/PrivateFrameworks/DFRFoundation.framework; sourceTree = "<group>"; };
-		9F10CE7B2060315C002DD61A /* TelegramShare-Objc-Bridge-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TelegramShare-Objc-Bridge-Header.h"; sourceTree = "<group>"; };
+		9F10CE8720610127002DD61A /* PassportController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportController.swift; sourceTree = "<group>"; };
+		9F10CE8920611536002DD61A /* PassportHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportHeaderItem.swift; sourceTree = "<group>"; };
+		9F10CE8D20617C36002DD61A /* PassportInsertPasswordItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportInsertPasswordItem.swift; sourceTree = "<group>"; };
+		9F10CE912061BE19002DD61A /* InputDataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataController.swift; sourceTree = "<group>"; };
+		9F10CE932061C8C8002DD61A /* InputDataControllerEntries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataControllerEntries.swift; sourceTree = "<group>"; };
+		9F10CE952061C98E002DD61A /* InputDataRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataRowItem.swift; sourceTree = "<group>"; };
+		9F10CE9720626B1B002DD61A /* PassportDocumentRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportDocumentRowItem.swift; sourceTree = "<group>"; };
+		9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataDateRowItem.swift; sourceTree = "<group>"; };
+		9F12D342209251CF0072928B /* EditAccountInfoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccountInfoItem.swift; sourceTree = "<group>"; };
 		9F13CCE22006719400ECF301 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9F13CCE3200671AF00ECF301 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9F14CBF22007DEB300F22DA9 /* ChatWallpaperModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatWallpaperModalController.swift; sourceTree = "<group>"; };
@@ -668,10 +714,35 @@
 		9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeGridControllerItem.swift; sourceTree = "<group>"; };
 		9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "builtin-wallpaper-0.jpg"; sourceTree = "<group>"; };
 		9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBackgroundView.swift; sourceTree = "<group>"; };
+		9F18DD91206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureIdVerificationDocumentsContext.swift; sourceTree = "<group>"; };
+		9F18DD92206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureIdVerificationDocument.swift; sourceTree = "<group>"; };
+		9F1AE5E320B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPlaceSuggestionRowItem.swift; sourceTree = "<group>"; };
+		9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSendCurrentItem.swift; sourceTree = "<group>"; };
+		9F21F65420B5A72800332C85 /* LocationModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationModalController.swift; sourceTree = "<group>"; };
+		9F21F65C20B5A9C900332C85 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkUsageStatsController.swift; sourceTree = "<group>"; };
+		9F3EAB3D20A5ED2F003FE7E3 /* genann.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = genann.h; sourceTree = "<group>"; };
+		9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ocr.mm; sourceTree = "<group>"; };
+		9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = ocr_nn.bin; sourceTree = "<group>"; };
+		9F3EAB4020A5ED2F003FE7E3 /* fast-edge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "fast-edge.h"; sourceTree = "<group>"; };
+		9F3EAB4120A5ED2F003FE7E3 /* ocr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ocr.h; sourceTree = "<group>"; };
+		9F3EAB4220A5ED2F003FE7E3 /* genann.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = genann.c; sourceTree = "<group>"; };
+		9F3EAB4320A5ED2F003FE7E3 /* fast-edge.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "fast-edge.cpp"; sourceTree = "<group>"; };
+		9F3EAB4920A5F90B003FE7E3 /* TGPassportMRZ.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGPassportMRZ.h; sourceTree = "<group>"; };
+		9F3EAB4A20A5F90B003FE7E3 /* TGPassportMRZ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGPassportMRZ.m; sourceTree = "<group>"; };
+		9F52E74E2074C12B0048791C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		9F52E7502074C16D0048791C /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/MainMenu.strings; sourceTree = "<group>"; };
+		9F52E7522074C1710048791C /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/MainMenu.strings; sourceTree = "<group>"; };
+		9F580BE420A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatRecorderOverlayWindow.swift; sourceTree = "<group>"; };
 		9F5B6E78201145FA00C58B2A /* MergeLists.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MergeLists.swift; sourceTree = "<group>"; };
 		9F62AE7D202D85B7007FB557 /* FetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchManager.swift; sourceTree = "<group>"; };
 		9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchManagerLocation.swift; sourceTree = "<group>"; };
 		9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchMediaUtils.swift; sourceTree = "<group>"; };
+		9F72973320B878B00067F815 /* MapResources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapResources.swift; sourceTree = "<group>"; };
+		9F72973F20BD9C6A0067F815 /* VideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
+		9F7943AF20854E2F00FEDB81 /* ProxyListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyListRowItem.swift; sourceTree = "<group>"; };
+		9F7943B120855DC200FEDB81 /* ProxyListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyListController.swift; sourceTree = "<group>"; };
+		9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccountInfoController.swift; sourceTree = "<group>"; };
 		9F8FDED6205A7AE0001A7A77 /* hwcontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hwcontext.h; sourceTree = "<group>"; };
 		9F8FDED7205A7AE0001A7A77 /* time.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = time.h; sourceTree = "<group>"; };
 		9F8FDED8205A7AE0001A7A77 /* hwcontext_cuda.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hwcontext_cuda.h; sourceTree = "<group>"; };
@@ -769,6 +840,7 @@
 		9F8FDF38205A7AE7001A7A77 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavcodec.a; sourceTree = "<group>"; };
 		9F8FDF39205A7AE7001A7A77 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavformat.a; sourceTree = "<group>"; };
 		9F8FDF3A205A7AE7001A7A77 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libswresample.a; sourceTree = "<group>"; };
+		9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePhoneNumberContainerView.swift; sourceTree = "<group>"; };
 		9F9483B0202AF816006E873D /* CrashHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashHandler.swift; sourceTree = "<group>"; };
 		9FA0E52820519E33001E5649 /* MP4Atom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MP4Atom.h; sourceTree = "<group>"; };
 		9FA0E52920519E33001E5649 /* MP4Atom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MP4Atom.m; sourceTree = "<group>"; };
@@ -779,7 +851,16 @@
 		9FA0E53A2052EDFF001E5649 /* HackUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HackUtils.h; sourceTree = "<group>"; };
 		9FA0E53C205693DA001E5649 /* WebSessionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSessionsController.swift; sourceTree = "<group>"; };
 		9FA0E53E2056E159001E5649 /* WebAuthorizationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAuthorizationRowItem.swift; sourceTree = "<group>"; };
+		9FB14FBD2098896200688EF9 /* EDSunriseSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EDSunriseSet.h; sourceTree = "<group>"; };
+		9FB14FBE209889A500688EF9 /* EDSunriseSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EDSunriseSet.m; sourceTree = "<group>"; };
 		9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadSettingsViewController.swift; sourceTree = "<group>"; };
+		9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataDataSelectorRowItem.swift; sourceTree = "<group>"; };
+		9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValuesSelectorModalController.swift; sourceTree = "<group>"; };
+		9FC8AD9F2062D5E70094F7B4 /* PassportAcceptRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportAcceptRowItem.swift; sourceTree = "<group>"; };
+		9FC8ADA12062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportNewPhoneNumberRowItem.swift; sourceTree = "<group>"; };
+		9FC8ADA32063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportTwoStepVerificationIntroItem.swift; sourceTree = "<group>"; };
+		9FC8ADA5206925F60094F7B4 /* PassportWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportWindowController.swift; sourceTree = "<group>"; };
+		9FC8ADA7206A77E00094F7B4 /* countries */ = {isa = PBXFileReference; lastKnownFileType = text; path = countries; sourceTree = "<group>"; };
 		9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaPassthroughVideoFrameDecoder.swift; sourceTree = "<group>"; };
 		9FFAE4DD205A8C81000C028E /* FFMpegPacket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegPacket.swift; sourceTree = "<group>"; };
 		9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaFrameSource.swift; sourceTree = "<group>"; };
@@ -1111,7 +1192,7 @@
 		C253E2391DE4D3DB0022A29F /* ChatInterfaceInputContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceInputContext.swift; sourceTree = "<group>"; };
 		C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInterfaceStateContextQueries.swift; sourceTree = "<group>"; };
 		C253E23D1DE61CB50022A29F /* ContextListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextListRowItem.swift; sourceTree = "<group>"; };
-		C25692971EDD85FB009EE421 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		C25692971EDD85FB009EE421 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
 		C256A9151FB9E1490043D497 /* AdditionalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalSettings.swift; sourceTree = "<group>"; };
 		C258D1B31F8D385700458478 /* PreHistorySettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreHistorySettingsController.swift; sourceTree = "<group>"; };
@@ -1181,6 +1262,8 @@
 		C28BAB281DF981320027CE3A /* AudioWaveform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioWaveform.swift; sourceTree = "<group>"; };
 		C28BAB2A1DF9C2790027CE3A /* DateUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DateUtils.h; sourceTree = "<group>"; };
 		C28BAB2B1DF9C2790027CE3A /* DateUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DateUtils.mm; sourceTree = "<group>"; };
+		C2905E1B207E4D9E00990AD7 /* InstantPageAudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageAudioView.swift; sourceTree = "<group>"; };
+		C2905E1D207E545600990AD7 /* InstantPageAudioItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageAudioItem.swift; sourceTree = "<group>"; };
 		C291942E1DCC6E2200359491 /* DeclareEncodables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeclareEncodables.swift; sourceTree = "<group>"; };
 		C291E2721E8AFA2C00D397BA /* ShareApplicationContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareApplicationContext.swift; sourceTree = "<group>"; };
 		C29340F01F506C310074991E /* EmptyGroupstickerSearchRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyGroupstickerSearchRowItem.swift; sourceTree = "<group>"; };
@@ -1272,7 +1355,6 @@
 		C2BB2DAF1F8BDF6700520255 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		C2C030CC1DD5097400617711 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		C2C415E41FA33D1A00FF36F4 /* InputFormatterPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputFormatterPopover.swift; sourceTree = "<group>"; };
-		C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxySettingsViewController.swift; sourceTree = "<group>"; };
 		C2C738F01DD898DA00CE9D8A /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C2C73A5A1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelEventFilterModalController.swift; sourceTree = "<group>"; };
 		C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClearUserNotifies.swift; sourceTree = "<group>"; };
@@ -1421,9 +1503,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F10CE812060FEC9002DD61A /* DFRFoundation.framework in Frameworks */,
-				9F10CE822060FEC9002DD61A /* Sparkle.framework in Frameworks */,
-				9F10CE832060FEC9002DD61A /* HockeySDK.framework in Frameworks */,
+				9F72973B20BD5BCF0067F815 /* Sparkle.framework in Frameworks */,
+				9F72973C20BD5BCF0067F815 /* DFRFoundation.framework in Frameworks */,
+				9F72973D20BD5BCF0067F815 /* HockeySDK.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
@@ -1442,11 +1524,11 @@
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */,
-				C2C738F11DD898DA00CE9D8A /* AVKit.framework in Frameworks */,
 				C2FBC1DF1DC61B580063A23B /* MtProtoKitMac.framework in Frameworks */,
 				C2FBC1D91DC61B050063A23B /* SwiftSignalKitMac.framework in Frameworks */,
 				C2FBC1D71DC61AFF0063A23B /* TelegramCoreMac.framework in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
+				9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */,
 				C250B0351DB78A0A004E9FBE /* Quartz.framework in Frameworks */,
 				C250B0331DB788B3004E9FBE /* Foundation.framework in Frameworks */,
 				C234CA911D97E117003023F7 /* PostboxMac.framework in Frameworks */,
@@ -1469,6 +1551,55 @@
 			path = DFRPrivate;
 			sourceTree = "<group>";
 		};
+		9F10CE862060FFB7002DD61A /* secure-id */ = {
+			isa = PBXGroup;
+			children = (
+				9F10CE8720610127002DD61A /* PassportController.swift */,
+				9F10CE8920611536002DD61A /* PassportHeaderItem.swift */,
+				9F10CE8D20617C36002DD61A /* PassportInsertPasswordItem.swift */,
+				9F10CE9720626B1B002DD61A /* PassportDocumentRowItem.swift */,
+				9FC8AD9F2062D5E70094F7B4 /* PassportAcceptRowItem.swift */,
+				9FC8ADA12062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift */,
+				9FC8ADA32063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift */,
+				9F18DD92206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift */,
+				9F18DD91206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift */,
+				9FC8ADA5206925F60094F7B4 /* PassportWindowController.swift */,
+			);
+			name = "secure-id";
+			sourceTree = "<group>";
+		};
+		9F21F65320B5A41B00332C85 /* location */ = {
+			isa = PBXGroup;
+			children = (
+				9F21F65420B5A72800332C85 /* LocationModalController.swift */,
+				9F1AE5E320B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift */,
+				9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */,
+			);
+			name = location;
+			sourceTree = "<group>";
+		};
+		9F3EAB3C20A5ED2F003FE7E3 /* ocr */ = {
+			isa = PBXGroup;
+			children = (
+				9F3EAB3D20A5ED2F003FE7E3 /* genann.h */,
+				9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */,
+				9F3EAB4020A5ED2F003FE7E3 /* fast-edge.h */,
+				9F3EAB4120A5ED2F003FE7E3 /* ocr.h */,
+				9F3EAB4220A5ED2F003FE7E3 /* genann.c */,
+				9F3EAB4320A5ED2F003FE7E3 /* fast-edge.cpp */,
+			);
+			path = ocr;
+			sourceTree = "<group>";
+		};
+		9F3EAB4820A5F90B003FE7E3 /* mrz */ = {
+			isa = PBXGroup;
+			children = (
+				9F3EAB4920A5F90B003FE7E3 /* TGPassportMRZ.h */,
+				9F3EAB4A20A5F90B003FE7E3 /* TGPassportMRZ.m */,
+			);
+			path = mrz;
+			sourceTree = "<group>";
+		};
 		9F62AE7F202D85CC007FB557 /* fetch */ = {
 			isa = PBXGroup;
 			children = (
@@ -1477,6 +1608,23 @@
 				9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */,
 			);
 			name = fetch;
+			sourceTree = "<group>";
+		};
+		9F72973E20BD9C580067F815 /* video-player */ = {
+			isa = PBXGroup;
+			children = (
+				9F72973F20BD9C6A0067F815 /* VideoPlayer.swift */,
+			);
+			name = "video-player";
+			sourceTree = "<group>";
+		};
+		9F7943AE20854E1900FEDB81 /* proxy */ = {
+			isa = PBXGroup;
+			children = (
+				9F7943AF20854E2F00FEDB81 /* ProxyListRowItem.swift */,
+				9F7943B120855DC200FEDB81 /* ProxyListController.swift */,
+			);
+			name = proxy;
 			sourceTree = "<group>";
 		};
 		9F8FDED3205A7AD5001A7A77 /* ffmpeg */ = {
@@ -1845,6 +1993,7 @@
 				C221ED5B1EA69AA300471C65 /* StorageUsageController.swift */,
 				C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */,
 				9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */,
+				9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */,
 			);
 			name = "data-and-storage";
 			sourceTree = "<group>";
@@ -1938,6 +2087,12 @@
 				C2271DB61DAE132C001792B6 /* GeneralInteractedRowView.swift */,
 				C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */,
 				C2A5067A1DF5BE6900971A93 /* GeneralTextRowItem.swift */,
+				9F10CE912061BE19002DD61A /* InputDataController.swift */,
+				9F10CE932061C8C8002DD61A /* InputDataControllerEntries.swift */,
+				9F10CE952061C98E002DD61A /* InputDataRowItem.swift */,
+				9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */,
+				9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */,
+				9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -1954,6 +2109,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				9F10CE862060FFB7002DD61A /* secure-id */,
 				C20CAD131FE436C600EFF8BF /* appearance */,
 				C21BE3AD1FD0980200C1C849 /* developer */,
 				C275E9ED1F8FC99600D3D8C0 /* change-phone-number */,
@@ -2014,6 +2170,8 @@
 		C22B63531D967F3800085C19 /* external-objc */ = {
 			isa = PBXGroup;
 			children = (
+				9FB14FBD2098896200688EF9 /* EDSunriseSet.h */,
+				9FB14FBE209889A500688EF9 /* EDSunriseSet.m */,
 				C2B6488A1EB2533800BA574B /* TGGifConverter.h */,
 				C2B6488B1EB2533800BA574B /* TGGifConverter.m */,
 				C22B63541D967F4500085C19 /* TGInputTextTag.h */,
@@ -2029,6 +2187,7 @@
 		C22B635A1D969D7E00085C19 /* input */ = {
 			isa = PBXGroup;
 			children = (
+				9F21F65320B5A41B00332C85 /* location */,
 				C2777B5C1DCE48F4008B69DD /* panels */,
 				C29B5F3F1DC7858100D13E65 /* context */,
 				C22B635B1D96A14E00085C19 /* ChatInputView.swift */,
@@ -2044,6 +2203,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				9F72973E20BD9C580067F815 /* video-player */,
 				C2A7592E1FB1C19E009FCF07 /* alert */,
 				C22552491F7BE6BB0007944D /* video-record */,
 				C235A47A1EFBDC6400D463FD /* appearance */,
@@ -2123,6 +2283,8 @@
 			children = (
 				C230B8EE1DD3358C0057F596 /* AccountViewController.swift */,
 				C230B8F01DD348970057F596 /* AccountInfoItem.swift */,
+				9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */,
+				9F12D342209251CF0072928B /* EditAccountInfoItem.swift */,
 			);
 			name = account;
 			sourceTree = "<group>";
@@ -2307,6 +2469,8 @@
 				C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */,
 				C29F4C7C1F47283600DBFC00 /* InstantPageBrowser.swift */,
 				C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */,
+				C2905E1B207E4D9E00990AD7 /* InstantPageAudioView.swift */,
+				C2905E1D207E545600990AD7 /* InstantPageAudioItem.swift */,
 			);
 			name = instantpage;
 			sourceTree = "<group>";
@@ -2349,11 +2513,12 @@
 		C24D9FC81E250328002CD3F3 /* privacy */ = {
 			isa = PBXGroup;
 			children = (
+				C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */,
+				9F7943AE20854E1900FEDB81 /* proxy */,
 				C2F9C4461F94FFC0002B2CBF /* two-step-verification */,
 				C2E52A0B1EB8C367009AF87D /* selective-privacy */,
 				C248BD271E706DBC004B9106 /* sessions */,
 				C24D9FC51E250094002CD3F3 /* passcode */,
-				C24D9FC91E25033E002CD3F3 /* PrivacyAndSecurityViewController.swift */,
 				C248BD231E706104004B9106 /* BlockedPeersViewController.swift */,
 			);
 			name = privacy;
@@ -2412,6 +2577,8 @@
 		C24DAB971E082FDF005EE404 /* objc */ = {
 			isa = PBXGroup;
 			children = (
+				9F3EAB4820A5F90B003FE7E3 /* mrz */,
+				9F3EAB3C20A5ED2F003FE7E3 /* ocr */,
 				9FA0E53A2052EDFF001E5649 /* HackUtils.h */,
 				9FA0E5392052EDFE001E5649 /* HackUtils.m */,
 				C24102661FD587C400DB8625 /* RHARCSupport.h */,
@@ -2497,6 +2664,7 @@
 		C252532B1DF043D800ADBC98 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */,
 				9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */,
 				C2786FF21FEBF088001FB044 /* palettes */,
 				C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */,
@@ -2515,6 +2683,7 @@
 				C21074261E77F7A3006EE5EF /* Release.xcconfig */,
 				C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */,
 				C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */,
+				9FC8ADA7206A77E00094F7B4 /* countries */,
 			);
 			name = resources;
 			sourceTree = "<group>";
@@ -2674,6 +2843,7 @@
 				C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */,
 				C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */,
 				C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */,
+				9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */,
 			);
 			name = "change-phone-number";
 			sourceTree = "<group>";
@@ -2863,6 +3033,7 @@
 				C209C38C1F276D4C009231FE /* ChatSearchView.swift */,
 				C25BB1681F867FEE0089ED02 /* ChatMessageAccessoryView.swift */,
 				C20CAD111FE291E200EFF8BF /* ChatBubbleAccessoryForward.swift */,
+				9F580BE420A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift */,
 			);
 			name = elements;
 			sourceTree = "<group>";
@@ -3020,7 +3191,6 @@
 		C2C5C2031EF8228C00AEA252 /* proxy */ = {
 			isa = PBXGroup;
 			children = (
-				C2C5C2041EF822B900AEA252 /* ProxySettingsViewController.swift */,
 				C2AF01121F01543200D8AC1D /* ExportProxyModalController.swift */,
 			);
 			name = proxy;
@@ -3072,6 +3242,7 @@
 				C253A9441D90303200CDC850 /* FastBlur.m */,
 				C2CBCABF1D81528700142EC0 /* System.swift */,
 				C296AF851D8DB178001DBB59 /* MediaUtils.swift */,
+				9F72973320B878B00067F815 /* MapResources.swift */,
 				C253A94A1D9032A000CDC850 /* Telegram-Mac-Bridging-Header.h */,
 				C276248A1D95AF7600FE5B2B /* ObjcUtils.h */,
 				C276248B1D95AF7600FE5B2B /* ObjcUtils.m */,
@@ -3105,7 +3276,6 @@
 				C241026E1FD58EA800DB8625 /* SImageView.swift */,
 				9F9483B0202AF816006E873D /* CrashHandler.swift */,
 				9FA0E5332051A41A001E5649 /* PreUploadManager.swift */,
-				9F10CE7B2060315C002DD61A /* TelegramShare-Objc-Bridge-Header.h */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -3416,6 +3586,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9F21F65C20B5A9C900332C85 /* MapKit.framework */,
+				9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */,
 				9FFAE513205AB50C000C028E /* libz.tbd */,
 				9FFAE510205AB4AB000C028E /* libbz2.tbd */,
 				9FFAE50E205AB4A3000C028E /* libiconv.tbd */,
@@ -3423,6 +3595,7 @@
 				9F0E6F77203ED1380086699C /* AppKit.framework */,
 				C251FB501FEE300E0035E5D7 /* Telegram.xcodeproj */,
 				C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */,
+				9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */,
 				C2EBBEA01FB5CA94009AD8ED /* CoreServices.framework */,
 				C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */,
 				C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */,
@@ -3530,6 +3703,9 @@
 							com.apple.ApplicationGroups.Mac = {
 								enabled = 1;
 							};
+							com.apple.Maps.Mac = {
+								enabled = 1;
+							};
 							com.apple.Sandbox = {
 								enabled = 1;
 							};
@@ -3593,6 +3769,7 @@
 			files = (
 				9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */,
 				C2057FA51EBBCEA7000423DC /* voip_busy.caf in Resources */,
+				9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */,
 				C2057FA61EBBCEA7000423DC /* voip_end.caf in Resources */,
 				C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */,
 				C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */,
@@ -3609,6 +3786,7 @@
 				C2CFCABE1EBB4A4D00843F6A /* voip_connecting.mp3 in Resources */,
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
+				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
@@ -3698,6 +3876,7 @@
 				9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
+				9F7943B020854E2F00FEDB81 /* ProxyListRowItem.swift in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2EA177F1E2FD50000887153 /* TransformImageView.swift in Sources */,
 				C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */,
@@ -3739,6 +3918,7 @@
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C21BE3B11FD14CDB00C1C849 /* ParseAppearanceColors.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
+				9F72973420B878B00067F815 /* MapResources.swift in Sources */,
 				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,
 				C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */,
 				9FFAE506205A928C000C028E /* RingByteBuffer.swift in Sources */,
@@ -3746,6 +3926,7 @@
 				C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
+				9F10CE962061C98E002DD61A /* InputDataRowItem.swift in Sources */,
 				C258D1B41F8D385700458478 /* PreHistorySettingsController.swift in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
@@ -3758,8 +3939,11 @@
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
+				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
 				C210959A1E9FE04700E10BDB /* ChatVideoMessageContentView.swift in Sources */,
 				C20CAD151FE436E300EFF8BF /* TextSizeSettingsRowItem.swift in Sources */,
+				9F10CE922061BE19002DD61A /* InputDataController.swift in Sources */,
+				9F10CE9820626B1B002DD61A /* PassportDocumentRowItem.swift in Sources */,
 				C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */,
 				C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */,
 				C20CAD121FE291E300EFF8BF /* ChatBubbleAccessoryForward.swift in Sources */,
@@ -3771,6 +3955,7 @@
 				C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */,
 				C2A759301FB1C476009FCF07 /* AlertController.swift in Sources */,
 				C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */,
+				9FC8ADA6206925F60094F7B4 /* PassportWindowController.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
 				C250B0271DB69694004E9FBE /* WPArticleLayout.swift in Sources */,
@@ -3819,6 +4004,7 @@
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
 				C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */,
+				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
 				C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
@@ -3831,6 +4017,7 @@
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C234A7FE1ED725C300EBBECE /* LanguageViewController.swift in Sources */,
 				C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */,
+				9F9206F020727AF30054E581 /* ChangePhoneNumberContainerView.swift in Sources */,
 				C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */,
 				C2B6488C1EB2533800BA574B /* TGGifConverter.m in Sources */,
 				C2EA53471F751EF300C183F7 /* GalleryMessageEntry.swift in Sources */,
@@ -3844,10 +4031,13 @@
 				C2271F3A1DB4D0540045E719 /* EStickersViewController.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
 				C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */,
+				9F10CE9A206284F8002DD61A /* InputDataDateRowItem.swift in Sources */,
 				C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
 				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
+				9FC8ADA22062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift in Sources */,
 				9F0E6F7A203EFE870086699C /* Preferences.swift in Sources */,
+				9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */,
 				9F0E6F72203EBB6F0086699C /* TouchBarMaker.swift in Sources */,
 				C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */,
 				C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */,
@@ -3878,6 +4068,7 @@
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
 				C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */,
 				C2B648891EB0C48600BA574B /* PIPVideoWindow.swift in Sources */,
+				9F3EAB4B20A5F90B003FE7E3 /* TGPassportMRZ.m in Sources */,
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
@@ -3908,11 +4099,11 @@
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
-				C2C5C2051EF822B900AEA252 /* ProxySettingsViewController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,
+				9FB14FBF209889A500688EF9 /* EDSunriseSet.m in Sources */,
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
 				C2DF47E01DE846AB003AA6C0 /* ChatAudioContentView.swift in Sources */,
 				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
@@ -3922,6 +4113,7 @@
 				C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */,
 				C2DF47C21DE79574003AA6C0 /* info.c in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */,
+				C2905E1C207E4D9E00990AD7 /* InstantPageAudioView.swift in Sources */,
 				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */,
@@ -3941,6 +4133,7 @@
 				C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */,
 				C2AF011D1F03D4C600D8AC1D /* TGCallAesCtr.m in Sources */,
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
+				9F10CE8820610127002DD61A /* PassportController.swift in Sources */,
 				9FFAE509205A92B9000C028E /* RingBuffer.m in Sources */,
 				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
@@ -3954,6 +4147,7 @@
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
 				C2DE5D401F3CB0380081EC1E /* InstantPageTileView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
+				9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */,
 				C221ED581EA687B600471C65 /* AutomaticMediaDownloadCategoryPeers.swift in Sources */,
 				C24BA3BD1E9D30F800E8970B /* DeleteSupergroupMessagesModalController.swift in Sources */,
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
@@ -3962,6 +4156,7 @@
 				C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */,
 				C232E9F61E1437B100C4D38C /* SearchResultModalController.swift in Sources */,
 				C2A16E551E117BD000585A85 /* CreateChannelViewController.swift in Sources */,
+				9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */,
 				9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */,
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
@@ -3974,6 +4169,7 @@
 				C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */,
 				C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */,
 				C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */,
+				9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */,
 				C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */,
 				9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* ChatGIFContentView.swift in Sources */,
@@ -3998,6 +4194,7 @@
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
 				C2E064641ECCB24000387BB8 /* NativeCallSettingsViewController.swift in Sources */,
 				C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */,
+				9F3EAB4620A5ED2F003FE7E3 /* genann.c in Sources */,
 				C230BEB41EE97B6F0029586C /* RestictedModalViewController.swift in Sources */,
 				C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */,
 				C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */,
@@ -4007,12 +4204,15 @@
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
+				9F18DD94206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift in Sources */,
 				C25F714A1E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift in Sources */,
 				C226743A1DC1273E000BA9ED /* PeerMediaGridController.swift in Sources */,
 				C24DABA31E083185005EE404 /* YTVimeoExtractorOperation.m in Sources */,
+				9F10CE8E20617C36002DD61A /* PassportInsertPasswordItem.swift in Sources */,
 				C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */,
+				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				9FFAE4F5205A8C89000C028E /* MediaTrackFrameDecoder.swift in Sources */,
@@ -4032,6 +4232,7 @@
 				C2057FAA1EBC6A3C000423DC /* ChatCallRowItem.swift in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */,
+				9F10CE942061C8C8002DD61A /* InputDataControllerEntries.swift in Sources */,
 				C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
@@ -4052,12 +4253,14 @@
 				C221ED5A1EA6896400471C65 /* VoiceCallSettings.swift in Sources */,
 				C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */,
 				C253E22E1DE33A7C0022A29F /* ChatMusicRowItem.swift in Sources */,
+				9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
 				C21178001F16BB8300AC706D /* BioViewController.swift in Sources */,
 				C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */,
 				C230B8F61DD371430057F596 /* SPopoverViewController.swift in Sources */,
 				C22674331DBF665A000BA9ED /* EStickerPackEntries.swift in Sources */,
+				9FC8ADA42063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift in Sources */,
 				C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */,
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
@@ -4065,6 +4268,8 @@
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				C26E82D11E83EFFE0046DF2F /* TimeObserver.m in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
+				9F72974020BD9C6A0067F815 /* VideoPlayer.swift in Sources */,
+				9F10CE8A20611536002DD61A /* PassportHeaderItem.swift in Sources */,
 				C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */,
 				9F0E6F76203EC7090086699C /* DFRPrivateHeader.m in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
@@ -4101,6 +4306,7 @@
 				C2DE5D361F3CACCF0081EC1E /* InstantPageLayoutSpacings.swift in Sources */,
 				C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */,
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,
+				9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */,
 				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				C2AF3B821E5CD79200DFDD81 /* ConvertGroupViewController.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,
@@ -4116,6 +4322,7 @@
 				C27A8E991EC9D48000C8E7E7 /* QuickSwitcherModalController.swift in Sources */,
 				C230BEB21EE97B290029586C /* ChannelEventLogController.swift in Sources */,
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
+				C2905E1E207E545600990AD7 /* InstantPageAudioItem.swift in Sources */,
 				9FFAE4FC205A8C89000C028E /* MediaTrackDecodableFrame.swift in Sources */,
 				C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
@@ -4133,12 +4340,16 @@
 				C29C3E711E43881500193A7E /* StickerPreviewModalController.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,
+				9F18DD93206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift in Sources */,
+				9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */,
 				C241025D1FD5702D00DB8625 /* ChatMessageBubbleImages.swift in Sources */,
+				9FC8AD9A2062A5610094F7B4 /* InputDataDataSelectorRowItem.swift in Sources */,
 				9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,
 				C24949121E5B704900D7ED5D /* AccountsListViewController.swift in Sources */,
 				C241026F1FD58EA900DB8625 /* SImageView.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
+				9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */,
 				9FFAE4F1205A8C89000C028E /* MediaTrackFrame.swift in Sources */,
 				C2DE5D2A1F3CA69D0081EC1E /* InstantPageMedia.swift in Sources */,
 				C2DE5D2E1F3CA72E0081EC1E /* InstantPageView.swift in Sources */,
@@ -4151,6 +4362,7 @@
 				C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */,
 				C2E8694D1F43500D00BDD0A2 /* ChatNavigationMention.swift in Sources */,
 				C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */,
+				9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */,
 				C253E2311DE34FBB0022A29F /* AudioPlayerController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4208,6 +4420,9 @@
 				C21656D61EE4A8430041A6BA /* it */,
 				C21656D81EE4A8470041A6BA /* nl */,
 				C21656DA1EE4A8490041A6BA /* pt-BR */,
+				9F52E74E2074C12B0048791C /* Base */,
+				9F52E7502074C16D0048791C /* ru */,
+				9F52E7522074C1710048791C /* uk */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -4289,7 +4504,6 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
-					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4325,6 +4539,11 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"SHARE=1",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4333,7 +4552,7 @@
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Debug Hockeyapp";
@@ -4350,6 +4569,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4357,7 +4577,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Debug AppStore";
@@ -4374,6 +4594,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4383,7 +4604,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Release AppStore";
@@ -4463,7 +4684,6 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
-					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4498,6 +4718,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4505,7 +4726,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/TelegramShare-Objc-Bridge-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 			};
 			name = "Release Hockeyapp";
@@ -4638,7 +4859,6 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
-					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4695,7 +4915,6 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
-					"$(PROJECT_DIR)/thrid-party/ffmpeg/include",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";

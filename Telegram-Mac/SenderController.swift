@@ -87,10 +87,10 @@ class Sender: NSObject {
         } else if let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             
             if let imageSource = CGImageSourceCreateWithData(thumbData as CFData, options) {
-                if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
-                    let imageRep = NSBitmapImageRep(cgImage: image)
-                    let options: [NSBitmapImageRep.PropertyKey: Any] = [NSBitmapImageRep.PropertyKey.compressionFactor: 0.6]
-                    let compressedData: Data? = imageRep.representation(using: NSBitmapImageRep.FileType.jpeg, properties: options)
+                if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options), let data = NSImage(cgImage: image, size: image.backingSize).tiffRepresentation(using: .jpeg, factor: 0.6) {
+                    
+                    let imageRep = NSBitmapImageRep(data: data)
+                    let compressedData: Data? = imageRep?.representation(using: NSBitmapImageRep.FileType.jpeg, properties: [:])
                     
                     if let compressedData = compressedData {
                         let resource = LocalFileMediaResource(fileId: arc4random64())
@@ -220,11 +220,12 @@ class Sender: NSObject {
                             if size.width / 10 > size.height || size.height < 40 {
                                 makeFileMedia(true)
                             } else {
-                                let imageRep = NSBitmapImageRep(cgImage: image)
-                                let options: [NSBitmapImageRep.PropertyKey: Any] = [NSBitmapImageRep.PropertyKey.compressionFactor: Float(0.83)]
+                                let data = NSImage(cgImage: image, size: image.backingSize).tiffRepresentation(using: .jpeg, factor: 0.83)
                                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
-                                try? imageRep.representation(using: NSBitmapImageRep.FileType.jpeg, properties: options)?.write(to: URL(fileURLWithPath: path))
-                                
+                                if let data = data {
+                                    let imageRep = NSBitmapImageRep(data: data)
+                                    try? imageRep?.representation(using: NSBitmapImageRep.FileType.jpeg, properties: [:])?.write(to: URL(fileURLWithPath: path))
+                                }
                                 
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)

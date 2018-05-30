@@ -72,7 +72,7 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 
                 
-                caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText)
+                caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
                 captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true)
                 captionLayout?.interactions = globalLinkExecutor
                 
@@ -100,7 +100,7 @@ class ChatGroupedItem: ChatRowItem {
             showChatGallery(account: account, message: message, self.table, self.parameters, type: type)
             
         }, showMessage: { [weak self] message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: true, inset: 0))
+                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
         }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: account, renderType: entry.renderType), media: message.media.first!, automaticDownload: downloadSettings.isDownloable(message))
         
         self.parameters?.automaticDownloadFunc = { message in
@@ -745,6 +745,54 @@ private class ChatGroupedView : ChatRowView {
         return super.backdorColor
     }
     
+    override func focusAnimation(_ innerId: AnyHashable?) {
+        if let innerId = innerId {
+            guard let item = item as? ChatGroupedItem else {return}
+
+            for i in 0 ..< item.layout.count {
+                if AnyHashable(ChatHistoryEntryId.message(item.layout.messages[i])) == innerId {
+                    selectionBackground.removeFromSuperview()
+                    selectionBackground.setFrameSize(item.layout.frame(at: i).size)
+                    
+                    var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
+                    
+                    if item.hasBubble  {
+                        if item.captionLayout != nil {
+                            positionFlags.remove(.bottom)
+                        }
+                        if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                            positionFlags.remove(.top)
+                        }
+                    }
+                    selectionBackground.layer?.opacity = 0
+
+                    selectionBackground.positionFlags = positionFlags
+                    contents[i].addSubview(selectionBackground)
+                    
+                    let animation: CABasicAnimation = makeSpringAnimation("opacity")
+                    
+                    animation.fromValue = selectionBackground.layer?.presentation()?.opacity ?? 0
+                    animation.toValue = 1.0
+                    animation.autoreverses = true
+                    animation.isRemovedOnCompletion = true
+                    animation.fillMode = kCAFillModeForwards
+                    
+                    animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
+                        if completed {
+                            self?.selectionBackground.removeFromSuperview()
+                        }
+                    })
+                    animation.isAdditive = false
+                    
+                    selectionBackground.layer?.add(animation, forKey: "opacity")
+                    
+                    break
+                }
+            }
+        } else {
+            super.focusAnimation(innerId)
+        }
+    }
     
     
     override func onShowContextMenu() {
@@ -758,6 +806,7 @@ private class ChatGroupedView : ChatRowView {
         for i in 0 ..< item.layout.count {
             if NSPointInRect(point, item.layout.frame(at: i)) {
                 selectionBackground.removeFromSuperview()
+                selectionBackground.layer?.opacity = 1.0
                 selectionBackground.setFrameSize(item.layout.frame(at: i).size)
                 
                 var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []

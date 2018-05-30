@@ -203,9 +203,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
                 arguments.navigateToAccounts()
             })
         case let .toggleLogs(_, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Enable Logs", type: .switchable(stateback: {
-                return enabled
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Enable Logs", type: .switchable(enabled), action: {
                 arguments.toggleLogs(!enabled)
             })
         case .section:

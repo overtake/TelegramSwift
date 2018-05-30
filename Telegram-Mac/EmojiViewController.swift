@@ -392,7 +392,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     
     func scrollTo(stableId:AnyHashable) -> Void {
         genericView.tabs.changeSelection(stableId: stableId)
-        genericView.tableView.scroll(to: .top(id: stableId, animated: true, focus: false, inset: 0), inset:NSEdgeInsets(top:3))
+        genericView.tableView.scroll(to: .top(id: stableId, innerId: nil, animated: true, focus: false, inset: 0), inset:NSEdgeInsets(top:3))
     }
     
 

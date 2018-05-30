@@ -134,7 +134,9 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
             subscriber.putNext(next)
         }, error: { error in
             subscriber.putError(error)
-            //beforeDisposable.dispose()
+            if disposeAfterComplete {
+                beforeDisposable.dispose()
+            }
             modal.close()
         }, completed: {
             subscriber.putCompletion()

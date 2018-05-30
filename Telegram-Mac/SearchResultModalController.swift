@@ -144,7 +144,7 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
     
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         if let item = item as? ChatListMessageRowItem, let message = item.message {
-            chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: true, inset: 0))
+            chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
         }
         close()
     }

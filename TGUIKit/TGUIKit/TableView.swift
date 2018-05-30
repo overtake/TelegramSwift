@@ -85,7 +85,9 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
         self.grouping = grouping
         super.init(deleted: deleted, inserted: inserted, updated: updated, animateVisibleOnly: animateVisibleOnly)
     }
-    
+    public override var description: String {
+        return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count), state: \(state)"
+    }
 }
 
 public final class TableEntriesTransition<T> : TableUpdateTransition {
@@ -141,9 +143,9 @@ public func ==(lhs: TableSavingSide, rhs: TableSavingSide) -> Bool {
 }
 
 public enum TableScrollState :Equatable {
-    case top(id: AnyHashable, animated: Bool, focus: Bool, inset: CGFloat); // stableId, animated, focus, inset
-    case bottom(id: AnyHashable, animated: Bool, focus: Bool, inset: CGFloat); //  stableId, animated, focus, inset
-    case center(id: AnyHashable, animated: Bool, focus: Bool, inset: CGFloat); //  stableId, animated, focus, inset
+    case top(id: AnyHashable, innerId: AnyHashable?, animated: Bool, focus: Bool, inset: CGFloat); // stableId, animated, focus, inset
+    case bottom(id: AnyHashable, innerId: AnyHashable?, animated: Bool, focus: Bool, inset: CGFloat); //  stableId, animated, focus, inset
+    case center(id: AnyHashable, innerId: AnyHashable?, animated: Bool, focus: Bool, inset: CGFloat); //  stableId, animated, focus, inset
     case saveVisible(TableSavingSide)
     case none(TableAnimationInterface?);
     case down(Bool);
@@ -151,14 +153,15 @@ public enum TableScrollState :Equatable {
 }
 
 public extension TableScrollState {
-    public func swap(to stableId:AnyHashable) -> TableScrollState {
+    
+    public func swap(to stableId:AnyHashable, innerId: AnyHashable? = nil) -> TableScrollState {
         switch self {
-        case let .top(_, animated, focus, inset):
-            return .top(id: stableId, animated: animated, focus: focus, inset: inset)
-        case let .bottom(_, animated, focus, inset):
-            return .bottom(id: stableId, animated: animated, focus: focus, inset: inset)
-        case let .center(_, animated, focus, inset):
-            return .center(id: stableId, animated: animated, focus: focus, inset: inset)
+        case let .top(_, _, animated, focus, inset):
+            return .top(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: inset)
+        case let .bottom(_, _, animated, focus, inset):
+            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: inset)
+        case let .center(_, _, animated, focus, inset):
+            return .center(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: inset)
         default:
             return self
         }
@@ -166,11 +169,11 @@ public extension TableScrollState {
     
     public var animated: Bool {
         switch self {
-        case let .top(_, animated, _, _):
+        case let .top(_, _, animated, _, _):
             return animated
-        case let .bottom(_, animated, _, _):
+        case let .bottom(_, _, animated, _, _):
             return animated
-        case let .center(_, animated, _, _):
+        case let .center(_, _, animated, _, _):
             return animated
         case .down(let animated):
             return animated
@@ -182,56 +185,6 @@ public extension TableScrollState {
     }
 }
 
-public func ==(lhs:TableScrollState, rhs:TableScrollState) -> Bool {
-    switch lhs {
-    case let .top(stableId, animated, focus, inset):
-        if case .top(stableId, animated, focus, inset) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .bottom(stableId, animated, focus, inset):
-        if case .bottom(stableId, animated, focus, inset) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .center(stableId, animated, focus, inset):
-        if case .center(stableId, animated, focus, inset) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .down(lhsAnimated):
-        switch rhs {
-        case let .down(rhsAnimated):
-            return lhsAnimated == rhsAnimated
-        default:
-            return false
-        }
-    case let .up(lhsAnimated):
-        switch rhs {
-        case let .up(rhsAnimated):
-            return lhsAnimated == rhsAnimated
-        default:
-            return false
-        }
-    case .none:
-        switch rhs {
-        case .none:
-            return true
-        default:
-            return false
-        }
-    case let .saveVisible(lhsType):
-        switch rhs {
-        case let .saveVisible(rhsType):
-            return lhsType == rhsType
-        default:
-            return false
-        }
-    }
-}
 
 protocol SelectDelegate : class {
     func selectRow(index:Int) -> Void;
@@ -268,7 +221,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
 
     
-
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return super.hitTest(point)
+    }
     
     override func addSubview(_ view: NSView) {
         super.addSubview(view)
@@ -597,6 +552,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             listener.first = false
                         }
                     }
+                    
+                    if strongSelf.needUpdateVisibleAfterScroll {
+                        let range = strongSelf.visibleRows()
+                        for i in range.location ..< range.location + range.length {
+                            if let view = strongSelf.viewNecessary(at: i) {
+                                view.updateMouse()
+                            }
+                        }
+                    }
                 }
  
             })
@@ -920,9 +884,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
+    
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Bool {
         
-        assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className)")
+        assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className), stableId: \(item.stableId)")
         self.listhash[item.stableId] = item;
         self.list.insert(item, at: min(at, list.count));
         item.table = self;
@@ -1142,7 +1107,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
         }
         if let hash = selectedhash.modify({$0}), scroll {
-            self.scroll(to: .top(id: hash, animated: animated, focus: false, inset: 0), inset: NSEdgeInsets(), true)
+            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: false, inset: 0), inset: NSEdgeInsets(), true)
         }
     }
     
@@ -1186,7 +1151,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if let hash = selectedhash.modify({$0}), scroll {
-            self.scroll(to: .bottom(id: hash, animated: animated, focus: false, inset: 0), inset: NSEdgeInsets(), true)
+            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: false, inset: 0), inset: NSEdgeInsets(), true)
         }
     }
     
@@ -1396,9 +1361,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
-        if transition.isEmpty {
-            return
-        }
         
         let oldEmpty = self.isEmpty
         
@@ -1511,6 +1473,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                 }
                 if let item = self.item(stableId: visible.0.stableId) {
+                    
+                    if !item.canBeAnchor {
+                        continue
+                    }
                     
                     nrect = rectOf(item: item)
                     
@@ -1729,22 +1695,26 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var animate:Bool = false
         var focus: Bool = false
         var relativeInset: CGFloat = 0
+        var innerId: AnyHashable? = nil
         switch state {
-        case let .center(stableId, _animate, _focus, _inset):
+        case let .center(stableId, _innerId, _animate, _focus, _inset):
             item = self.item(stableId: stableId)
             animate = _animate
             relativeInset = _inset
             focus = _focus
-        case let .bottom(stableId, _animate, _focus, _inset):
+            innerId = _innerId
+        case let .bottom(stableId, _innerId, _animate, _focus, _inset):
             item = self.item(stableId: stableId)
             animate = _animate
             relativeInset = _inset
             focus = _focus
-        case let .top(stableId, _animate, _focus, _inset):
+            innerId = _innerId
+        case let .top(stableId, _innerId, _animate, _focus, _inset):
             item = self.item(stableId: stableId)
             animate = _animate
             relativeInset = _inset
             focus = _focus
+            innerId = _innerId
         case let .down(_animate):
             animate = _animate
             if !tableView.isFlipped {
@@ -1769,8 +1739,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let item = item {
             rowRect = self.rectOf(item: item)
             var state = state
-            if case let .center(id, animated, focus, inset) = state, rowRect.height > frame.height {
-                state = .top(id: id, animated: animated, focus: focus, inset: inset)
+            if case let .center(id, innerId, animated, focus, inset) = state, rowRect.height > frame.height {
+                state = .top(id: id, innerId: innerId, animated: animated, focus: focus, inset: inset)
             }
             switch state {
             case .bottom:
@@ -1805,7 +1775,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.height {
                     if focus {
-                        view.focusAnimation()
+                        view.focusAnimation(innerId)
                     }
                     return
                 }
@@ -1819,7 +1789,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if let item = item, !applied, let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
                     applied = true
                     if focus {
-                        view.focusAnimation()
+                        view.focusAnimation(innerId)
                     }
                 }
             })
@@ -1849,7 +1819,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         } else {
             if let item = item, focus {
-                viewNecessary(at: item.index)?.focusAnimation()
+                viewNecessary(at: item.index)?.focusAnimation(innerId)
             }
         }
 
@@ -1873,18 +1843,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    override open func scrollWheel(with event: NSEvent) {
-        super.scrollWheel(with: event)
-        if needUpdateVisibleAfterScroll {
-            let range = visibleRows()
-            for i in range.location ..< range.location + range.length {
-                if let view = viewNecessary(at: i) {
-                    view.updateMouse()
-                }
-            }
-        }
-        
-    }
     
     public func enumerateItems(with callback:(TableRowItem)->Bool) {
         for item in list {

@@ -105,22 +105,6 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ChatListController.swift"
-            timestampString = "535363057.216673"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "159"
-            endingLineNumber = "159"
-            landmarkName = "selectionWillChange(row:item:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "thrid-party/objc/NumberPluralizationForm.m"
             timestampString = "535363057.216952"
             startingColumnNumber = "9223372036854775807"
@@ -169,22 +153,6 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/AudioPlayerController.swift"
-            timestampString = "536155719.503314"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "772"
-            endingLineNumber = "772"
-            landmarkName = "tags"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "submodules/TelegramCore/TelegramCore/SearchPeers.swift"
             timestampString = "536181232.947543"
             startingColumnNumber = "9223372036854775807"
@@ -202,13 +170,205 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/MediaUtils.swift"
-            timestampString = "536270602.840636"
+            timestampString = "544639112.064329"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "135"
-            endingLineNumber = "135"
+            startingLineNumber = "140"
+            endingLineNumber = "140"
             landmarkName = "chatMessageFileDatas(account:file:pathExtension:progressive:justThumbail:)"
             landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "TGUIKit/TGUIKit/TableView.swift"
+            timestampString = "544727755.39748"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1527"
+            endingLineNumber = "1527"
+            landmarkName = "merge(with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/GroupInfoEntries.swift"
+            timestampString = "545150551.877407"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "466"
+            endingLineNumber = "466"
+            landmarkName = "==(_:_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/GroupInfoEntries.swift"
+            timestampString = "545150551.87756"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "465"
+            endingLineNumber = "465"
+            landmarkName = "==(_:_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/GroupInfoEntries.swift"
+            timestampString = "545150551.877636"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "459"
+            endingLineNumber = "459"
+            landmarkName = "isEqual(to:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/GroupInfoEntries.swift"
+            timestampString = "545150551.8777159"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "461"
+            endingLineNumber = "461"
+            landmarkName = "isEqual(to:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+            timestampString = "545068621.441635"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "97"
+            endingLineNumber = "97"
+            landmarkName = "updateTwoStepVerificationPassword(network:currentPassword:updatedPassword:)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+            timestampString = "545068658.365296"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "185"
+            endingLineNumber = "185"
+            landmarkName = "updateTwoStepVerificationPassword(network:currentPassword:updatedPassword:)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #5 (__ObjC.MTRpcError) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, __ObjC.MTRpcError&gt; in closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.5640939"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "185"
+                  endingLineNumber = "185"
+                  offsetFromSymbolStart = "545">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (TelegramCoreMac.TwoStepAuthData) -&gt; TelegramCoreMac.UpdateTwoStepVerificationPasswordResult in closure #5 (__ObjC.MTRpcError) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, __ObjC.MTRpcError&gt; in closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.567593"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "186"
+                  endingLineNumber = "186"
+                  offsetFromSymbolStart = "25">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+            timestampString = "545068660.335566"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "192"
+            endingLineNumber = "192"
+            landmarkName = "updateTwoStepVerificationPassword(network:currentPassword:updatedPassword:)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.5728019"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "192"
+                  endingLineNumber = "192"
+                  offsetFromSymbolStart = "13267">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #6 (__ObjC.MTRpcError) -&gt; TelegramCoreMac.UpdateTwoStepVerificationPasswordError in closure #3 (TelegramCoreMac.TwoStepAuthData, Swift.Optional&lt;TelegramCoreMac.TwoStepVerificationSecureSecret&gt;) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt; in TelegramCoreMac.updateTwoStepVerificationPassword(network: TelegramCoreMac.Network, currentPassword: Swift.Optional&lt;Swift.String&gt;, updatedPassword: TelegramCoreMac.UpdatedTwoStepVerificationPassword) -&gt; SwiftSignalKitMac.Signal&lt;TelegramCoreMac.UpdateTwoStepVerificationPasswordResult, TelegramCoreMac.UpdateTwoStepVerificationPasswordError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/mikhailfilimonov/Dropbox/Telegram/submodules/TelegramCore/TelegramCore/TwoStepVerification.swift"
+                  timestampString = "549229814.576324"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "193"
+                  endingLineNumber = "193"
+                  offsetFromSymbolStart = "15">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

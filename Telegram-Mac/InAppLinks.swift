@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Foundation
 import TGUIKit
 import TelegramCoreMac
 import PostboxMac
@@ -24,30 +25,9 @@ enum ChatInitialAction : Equatable {
     case start(parameter: String, behavior: ChatInitialActionBehavior)
     case inputText(text: String, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
+    case ad
 }
 
-func ==(lhs:ChatInitialAction, rhs:ChatInitialAction) -> Bool {
-    switch lhs {
-    case let .start(lhsText, lhsBehavior):
-        if case let .start(rhsText, rhsBehavior) = rhs, lhsText == rhsText, lhsBehavior == rhsBehavior {
-            return true
-        } else {
-            return false
-        }
-    case let .inputText(lhsText, lhsBehavior):
-        if case let .inputText(rhsText, rhsBehavior) = rhs, lhsText == rhsText, lhsBehavior == rhsBehavior {
-            return true
-        } else {
-            return false
-        }
-    case let .files(lhsList, lhsBehavior):
-        if case let .files(rhsList, rhsBehavior) = rhs, lhsList == rhsList, lhsBehavior == rhsBehavior {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 var globalLinkExecutor:TextViewInteractions {
     get {
@@ -118,7 +98,7 @@ func execute(inapp:inAppLink) {
     switch inapp {
     case let .external(link,needConfirm):
         var url:String = link.trimmed
-        if !url.hasPrefix("http") && !url.hasPrefix("ftp") {
+        if !url.hasPrefix("http") && !url.hasPrefix("ftp"), url.range(of: "://") == nil {
             if isValidEmail(link) {
                 url = "mailto:" + url
             } else {
@@ -236,12 +216,32 @@ func execute(inapp:inAppLink) {
         applyProxy(settings)
     case .nothing:
         break
+    case let .requestSecureId(account, value):
+        if value.payload.isEmpty {
+            alert(for: mainWindow, info: "payload is empty")
+            return
+        }
+        _ = (requestSecureIdForm(postbox: account.postbox, network: account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
+            return account.postbox.loadedPeerWithId(account.peerId) |> mapError {_ in return .generic} |> map { peer in
+                return (form, peer)
+        }
+        } |> deliverOnMainQueue).start(next: { form, peer in
+            let passport = PassportWindowController(account: account, peer: peer, request: value, form: form)
+            passport.show()
+        }, error: { error in
+            switch error {
+            case .serverError(let text):
+                alert(for: mainWindow, info: text)
+            case .generic:
+                alert(for: mainWindow, info: "An error occured")
+            }
+        })
     }
     
 }
 
-private func escape(with link:String) -> String {
-    var escaped = link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link
+private func escape(with link:String, addPercent: Bool = true) -> String {
+    var escaped = addPercent ? link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link : link
     escaped = escaped.replacingOccurrences(of: "%21", with: "!")
     escaped = escaped.replacingOccurrences(of: "%24", with: "$")
     escaped = escaped.replacingOccurrences(of: "%26", with: "&")
@@ -262,8 +262,14 @@ private func escape(with link:String) -> String {
     escaped = escaped.replacingOccurrences(of: "%0A", with: "\n")
     escaped = escaped.replacingOccurrences(of: "%25", with: "%")
     escaped = escaped.replacingOccurrences(of: "%2E", with: ".")
+    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
+    escaped = escaped.replacingOccurrences(of: "%7D", with: "}")
+    escaped = escaped.replacingOccurrences(of: "%7B", with: "{")
+    escaped = escaped.replacingOccurrences(of: "%5B", with: "[")
+    escaped = escaped.replacingOccurrences(of: "%5D", with: "]")
     return escaped
 }
+
 
 private func urlVars(with url:String) -> [String:String] {
     var vars:[String:String] = [:]
@@ -282,7 +288,21 @@ private func urlVars(with url:String) -> [String:String] {
 }
 
 
+enum SecureIdPermission : String {
+    case identity = "identity"
+    case address = "address"
+    case email = "email"
+    case phone = "phone"
+}
 
+struct inAppSecureIdRequest {
+    let peerId: PeerId
+    let scope: String
+    let callback: String?
+    let publicKey: String
+    let payload: Data
+    let errors:Array<[String:String]>?
+}
 
 enum inAppLink {
     case external(link:String, Bool) // link, confirm
@@ -297,14 +317,15 @@ enum inAppLink {
     case logout(()->Void)
     case stickerPack(StickerPackReference, account:Account, peerId:PeerId?)
     case nothing
-    case socks(ProxySettings, applyProxy:(ProxySettings)->Void)
+    case socks(ProxyServerSettings, applyProxy:(ProxyServerSettings)->Void)
+    case requestSecureId(account: Account, value: inAppSecureIdRequest)
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone?","socks?"]
+let actions_me:[String] = ["joinchat/","addstickers/","confirmphone?","socks?", "proxy?"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve?domain=","msg_url?url=","join?invite=","addstickers?set=","confirmphone", "socks?"]
+let known_scheme:[String] = ["resolve?","msg_url?","join?","addstickers?","confirmphone?", "socks?", "proxy?", "passport?"]
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -314,14 +335,16 @@ private let keyURLSet = "set";
 private let keyURLText = "text";
 private let keyURLStart = "start";
 private let keyURLStartGroup = "startgroup";
-
+private let keyURLSecret = "secret";
 
 private let keyURLHost = "server";
 private let keyURLPort = "port";
 private let keyURLUser = "user";
 private let keyURLPass = "pass";
 
-func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
+let legacyPassportUsername = "telegrampassport"
+
+func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
     let external = url
     let url = url.lowercased.nsstring
     for domain in telegram_me {
@@ -330,7 +353,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
             let string = external.substring(from: range.location + range.length)
             for action in actions_me {
                 if string.hasPrefix(action) {
-                    let value = string.substring(from: string.index(string.startIndex, offsetBy: action.length))
+                    let value = String(string[string.index(string.startIndex, offsetBy: action.length) ..< string.endIndex])
                     switch action {
                     case actions_me[0]:
                         if let openInfo = openInfo {
@@ -344,7 +367,14 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                             let server = escape(with: server)
                             let username = vars[keyURLUser] != nil ? escape(with: vars[keyURLUser]!) : nil
                             let pass = vars[keyURLPass] != nil ? escape(with: vars[keyURLPass]!) : nil
-                            return .socks(ProxySettings(host: server, port: port, username: username, password: pass, useForCalls: false), applyProxy: applyProxy)
+                            return .socks(ProxyServerSettings(host: server, port: port, connection: .socks5(username: username, password: pass)), applyProxy: applyProxy)
+                        }
+                    case actions_me[4]:
+                        let vars = urlVars(with: string)
+                        if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret]  {
+                            let secret = ObjcUtils.data(fromHexString: rawSecret)!
+                            let server = escape(with: server)
+                            return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                         }
                     default:
                         break
@@ -435,7 +465,12 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                                 break
                             }
                         }
-                        return .followResolvedName(username: username, postId: post, account: account, action: action, callback:openInfo)
+                        if username == legacyPassportUsername {
+                            return inApp(for: external.replacingOccurrences(of: "tg://resolve?", with: "tg://passport?").nsstring, account: account, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
+                            //return inapp
+                        } else {
+                            return .followResolvedName(username: username, postId: post, account: account, action: action, callback:openInfo)
+                        }
                     }
                 case known_scheme[1]:
                     if let url = vars[keyURLUrl] {
@@ -458,10 +493,32 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                     if let set = vars[keyURLSet] {
                         return .stickerPack(.name(set), account:account, peerId:nil)
                     }
+                
                 case known_scheme[5]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)
-                        return .socks(ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), applyProxy: applyProxy)
+                        return .socks(ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), applyProxy: applyProxy)
+                    }
+                case known_scheme[6]:
+                    if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
+                        let server = escape(with: server)
+                       
+                        return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
+                    }
+                case known_scheme[7]:
+                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId) {
+                        let payload = vars["payload"]?.data(using: .utf8) ?? Data()
+                        var errors: Array<[String:String]>?
+                        if let maybeErrors = vars["errors"] {
+                            let raw = escape(with: maybeErrors, addPercent: false)
+                            if let data = raw.data(using: .utf8) {
+                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
+                                    errors = json as? Array<[String:String]>
+                                }
+                            }
+                        }
+                        let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
+                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope, addPercent: false), callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
                     }
                 default:
                     break
@@ -475,6 +532,18 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
     }
     
     return .external(link: external as String, confirm)
+}
+
+func addUrlParameter(value: String, to url: String) -> String {
+    if let _ = url.range(of: "?") {
+        return url + "&" + value
+    } else {
+        if url.hasSuffix("/") {
+            return url + value
+        } else {
+            return url + "/" + value
+        }
+    }
 }
 
 func makeInAppLink(with action:String, params:[String:Any]) -> String {
@@ -491,7 +560,7 @@ func makeInAppLink(with action:String, params:[String:Any]) -> String {
     return link
 }
 
-func proxySettings(from url:String) -> (ProxySettings?, Bool) {
+func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
     let url = url.nsstring
     if url.hasPrefix(telegram_scheme) {
         let action = url.substring(from: telegram_scheme.length)
@@ -500,9 +569,14 @@ func proxySettings(from url:String) -> (ProxySettings?, Bool) {
         if action.hasPrefix("socks") {
             if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                 let server = escape(with: server)
-                return (ProxySettings(host: server, port: port, username: vars[keyURLUser], password: vars[keyURLPass], useForCalls: false), true)
+                return (ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), true)
             }
             return (nil , true)
+        } else if action.hasPrefix("proxy") {
+            if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let secret = vars[keyURLSecret] {
+                let server = escape(with: server)
+                return (ProxyServerSettings(host: server, port: port, connection: .mtp(secret: ObjcUtils.data(fromHexString: secret))), true)
+            }
         }
         
     }

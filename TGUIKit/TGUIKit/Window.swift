@@ -127,7 +127,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
-    public var closeInterceptor:(()->Void)? = nil
+    public var closeInterceptor:(()->Bool)? = nil
     public var orderOutHandler:(()->Void)? = nil
     public weak var navigationController: NavigationViewController?
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
@@ -175,7 +175,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                 copy.append(handle)
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
-                if copy[i].object.value == object  {
+                if copy[i].object.value === object  {
                     newKeyHandlers[key]?.remove(at: i)
                 }
             }
@@ -193,7 +193,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                 copy.append(handle)
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
-                if copy[i].object.value == object  {
+                if copy[i].object.value === object  {
                     newMouseHandlers[key]?.remove(at: i)
                 }
             }
@@ -206,7 +206,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
             copyGesture.append(gesture)
         }
         for i in stride(from: swipeHandlers.count - 1, to: -1 , by: -1) {
-            if copyGesture[i].object.value == object {
+            if copyGesture[i].object.value === object {
                 copyGesture.remove(at: i)
             }
         }
@@ -354,8 +354,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
     }
 
     public override func close() {
-        if let closeInterceptor = closeInterceptor {
-            closeInterceptor()
+        if let closeInterceptor = closeInterceptor, closeInterceptor() {
             return
         }
         if isReleasedWhenClosed {

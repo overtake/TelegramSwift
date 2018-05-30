@@ -295,14 +295,8 @@ class ContactsController: PeersListController {
                 let first:Bool = !first.swap(true)
                 let entries = entriesForView(view).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
 
-                if first {
-                    let subEntries = Array(entries.suffix(50))
-                    let firstSignal = prepareEntries(from: previousEntries.swap(subEntries), to: subEntries, account: account, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first)
-                    let secondSignal = prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first)
-                    return firstSignal |> then(secondSignal)
-                } else {
-                    return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first)
-                }
+                return prepareEntries(from: previousEntries.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first)
+
             }
         |> deliverOnMainQueue
         

@@ -58,58 +58,44 @@ public func reportMessages(postbox: Postbox, network: Network, peerId: PeerId, m
     }
 }
 
-public struct WebAuthorization : Equatable {
-    public let hash: Int64
-    public let botId: PeerId
-    public let domain: String
-    public let browser: String
-    public let platform: String
-    public let dateCreated: Int32
-    public let dateActive: Int32
-    public let ip: String
-    public let region: String
-    
-    public static func ==(lhs: WebAuthorization, rhs: WebAuthorization) -> Bool {
-        return lhs.hash == rhs.hash && lhs.botId == rhs.botId && lhs.domain == rhs.domain && lhs.browser == rhs.browser && lhs.platform == rhs.platform && lhs.dateActive == rhs.dateActive && lhs.dateCreated == rhs.dateCreated && lhs.ip == rhs.ip && lhs.region == rhs.region
-    }
-}
-
-public func webSessions(network: Network) -> Signal<([WebAuthorization], [PeerId: Peer]), NoError> {
-    return network.request(Api.functions.account.getWebAuthorizations())
-        |> retryRequest
-        |> map { result -> ([WebAuthorization], [PeerId : Peer]) in
-            var sessions: [WebAuthorization] = []
-            var peers:[PeerId : Peer] = [:]
-            switch result {
-            case let .webAuthorizations(authorizations, users):
-                for authorization in authorizations {
-                    switch authorization {
-                    case let .webAuthorization(hash, botId, domain, browser, platform, dateCreated, dateActive, ip, region):
-                        sessions.append(WebAuthorization(hash: hash, botId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), domain: domain, browser: browser, platform: platform, dateCreated: dateCreated, dateActive: dateActive, ip: ip, region: region))
-                        
-                    }
-                }
-                for user in users {
-                    let peer = TelegramUser(user: user)
-                    peers[peer.id] = peer
-                }
-            }
-            return (sessions, peers)
-    }
-}
-
-
-public func terminateWebSession(network: Network, hash: Int64) -> Signal<Bool, Void> {
-    return network.request(Api.functions.account.resetWebAuthorization(hash: hash)) |> retryRequest |> map { result in
-        switch result {
-        case .boolFalse:
-            return false
-        case .boolTrue:
-            return true
+public func getCountryCode(network: Network)->Signal<String, Void> {
+    return network.request(Api.functions.help.getNearestDc()) |> retryRequest |> map { value in
+        switch value {
+        case let .nearestDc(country, _, _):
+            return country
         }
     }
 }
 
-public func terminateAllWebSessions(network: Network) -> Signal<Void, Void> {
-    return network.request(Api.functions.account.resetWebAuthorizations()) |> retryRequest |> map {_ in}
-}
+
+
+//public func dropSecureId(network: Network, currentPassword: String) -> Signal<Void, AuthorizationPasswordVerificationError> {
+//    return twoStepAuthData(network)
+//        |> mapError { _ -> AuthorizationPasswordVerificationError in
+//            return .generic
+//        }
+//        |> mapToSignal { authData -> Signal<Void, AuthorizationPasswordVerificationError> in
+//            if let currentSalt = authData.currentSalt {
+//                var data = Data()
+//                data.append(currentSalt)
+//                data.append(currentPassword.data(using: .utf8, allowLossyConversion: true)!)
+//                data.append(currentSalt)
+//                currentPasswordHash = Buffer(data: sha256Digest(data))
+//            } else {
+//                currentPasswordHash = Buffer(data: Data())
+//            }
+//            
+//            let flags: Int32 = 1 << 1
+//            
+//            let settings = network.request(Api.functions.account.getPasswordSettings(currentPasswordHash: currentPasswordHash), automaticFloodWait: false) |> mapError {_ in return AuthorizationPasswordVerificationError.generic}
+//    
+//            
+//            return settings |> mapToSignal { value -> Signal<Void, AuthorizationPasswordVerificationError> in
+//                switch value {
+//                case let .passwordSettings(email, secureSalt, _, _):
+//                    return network.request(Api.functions.account.updatePasswordSettings(currentPasswordHash: currentPasswordHash, newSettings: Api.account.PasswordInputSettings.passwordInputSettings(flags: flags, newSalt: secureSalt, newPasswordHash: currentPasswordHash, hint: nil, email: email, newSecureSalt: secureSalt, newSecureSecret: nil, newSecureSecretId: nil)), automaticFloodWait: false) |> map {_ in} |> mapError {_ in return AuthorizationPasswordVerificationError.generic}
+//                }
+//            }
+//    }
+//}
+

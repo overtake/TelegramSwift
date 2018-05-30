@@ -280,7 +280,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                                     okTitle = tr(L10n.chatMessageDeleteForEveryone)
                                 }
                                 if let window = self?.window {
-                                    confirm(for: window, header: tr(L10n.chatConfirmActionUndonable), information: tr(L10n.chatConfirmDeleteMessages), okTitle: okTitle, thridTitle:thrid, swapColors: true, successHandler: { result in
+                                    confirm(for: window, header: tr(L10n.chatConfirmActionUndonable), information: tr(L10n.chatConfirmDeleteMessages), okTitle: okTitle, thridTitle:thrid, successHandler: { result in
                                         let type:InteractiveMessagesDeletionType
                                         switch result {
                                         case .basic:

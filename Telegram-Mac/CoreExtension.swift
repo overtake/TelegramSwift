@@ -414,6 +414,8 @@ public extension PeerView {
                 return true
             case .unmuted:
                 return false
+            case .default:
+                return false
             }
         } else {
             return false
@@ -427,6 +429,8 @@ public extension TelegramPeerNotificationSettings {
         case .muted:
             return true
         case .unmuted:
+            return false
+        case .default:
             return false
         }
     }
@@ -525,6 +529,10 @@ public extension Message {
             }
         }
         return nil
+    }
+    
+    var isHasInlineKeyboard: Bool {
+        return replyMarkup?.flags.contains(.inline) ?? false
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
@@ -836,12 +844,13 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
     }
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
-        if case .broadcast = peer.info {
-            if peer.hasAdminRights(.canEditMessages) {
-                
-                return peer.hasAdminRights(.canPinMessages) ? true : message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
-            } else if !peer.hasAdminRights(.canPostMessages) {
-                return false
+        if case .broadcast = peer.info,  !peer.hasAdminRights(.canPostMessages) {
+            return false
+        } else if case .group = peer.info {
+            if peer.hasAdminRights(.canPinMessages) {
+                return !message.flags.contains(.Incoming)
+            } else if peer.hasAdminRights(.canEditMessages) {
+                return message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
             }
         }
     }
@@ -1091,6 +1100,575 @@ extension Signal {
     }
 }
 
+extension SentSecureValueType {
+    var rawValue: String {
+        switch self {
+        case .email:
+            return L10n.secureIdRequestPermissionEmail
+        case .phone:
+            return L10n.secureIdRequestPermissionPhone
+        case .passport:
+            return L10n.secureIdRequestPermissionPassport
+        case .address:
+            return L10n.secureIdRequestPermissionAddress
+        case .personalDetails:
+            return L10n.secureIdRequestPermissionPersonalDetails
+        case .driversLicense:
+            return L10n.secureIdRequestPermissionDriversLicense
+        case .utilityBill:
+            return L10n.secureIdRequestPermissionUtilityBill
+        case .rentalAgreement:
+            return L10n.secureIdRequestPermissionRentalAgreement
+        case .idCard:
+            return L10n.secureIdRequestPermissionIDCard
+        case .bankStatement:
+            return L10n.secureIdRequestPermissionBankStatement
+        case .internalPassport:
+            return L10n.secureIdRequestPermissionInternalPassport
+        case .passportRegistration:
+            return L10n.secureIdRequestPermissionPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdRequestPermissionTemporaryRegistration
+        }
+    }
+}
+
+extension UpdateTwoStepVerificationPasswordResult : Equatable {
+    public static func ==(lhs: UpdateTwoStepVerificationPasswordResult, rhs: UpdateTwoStepVerificationPasswordResult) -> Bool {
+        switch lhs {
+        case .none:
+            if case .none = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .password(password, lhsPendingEmailPattern):
+            if case .password(password, let rhsPendingEmailPattern) = rhs {
+                return lhsPendingEmailPattern == rhsPendingEmailPattern
+            } else {
+                return false
+            }
+        }
+    }
+}
+
+extension SecureIdGender {
+    static func gender(from mrz: TGPassportMRZ) -> SecureIdGender {
+        switch mrz.gender.lowercased() {
+        case "f":
+            return .female
+        default:
+            return .male
+        }
+    }
+}
+
+extension SecureIdForm {
+    func searchContext(for field: SecureIdRequestedFormField) -> SecureIdValueWithContext? {
+         let index = values.index(where: { context -> Bool in
+            switch context.value {
+            case .address:
+                if case .address = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .bankStatement:
+                if case .bankStatement = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .driversLicense:
+                if case .driversLicense = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .idCard:
+                if case .idCard = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .passport:
+                if case .passport = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .personalDetails:
+                if case .personalDetails = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .rentalAgreement:
+                if case .rentalAgreement = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .utilityBill:
+                if case .utilityBill = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .phone:
+                if case .phone = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .email:
+                if case .email = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .internalPassport:
+                if case .internalPassport = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .passportRegistration:
+                if case .passportRegistration = field {
+                    return true
+                } else {
+                    return false
+                }
+            case .temporaryRegistration:
+                if case .temporaryRegistration = field {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        })
+        if let index = index {
+            return values[index]
+        } else {
+            return nil
+        }
+    }
+    
+
+}
+
+extension SecureIdValue {
+    func isSame(of value: SecureIdValue) -> Bool {
+        switch self {
+        case .address:
+            if case .address = value {
+                return true
+            } else {
+                return false
+            }
+        case .bankStatement:
+            if case .bankStatement = value {
+                return true
+            } else {
+                return false
+            }
+        case .driversLicense:
+            if case .driversLicense = value {
+                return true
+            } else {
+                return false
+            }
+        case .idCard:
+            if case .idCard = value {
+                return true
+            } else {
+                return false
+            }
+        case .passport:
+            if case .passport = value {
+                return true
+            } else {
+                return false
+            }
+        case .personalDetails:
+            if case .personalDetails = value {
+                return true
+            } else {
+                return false
+            }
+        case .rentalAgreement:
+            if case .rentalAgreement = value {
+                return true
+            } else {
+                return false
+            }
+        case .utilityBill:
+            if case .utilityBill = value {
+                return true
+            } else {
+                return false
+            }
+        case .phone:
+            if case .phone = value {
+                return true
+            } else {
+                return false
+            }
+        case .email:
+            if case .email = value {
+                return true
+            } else {
+                return false
+            }
+        case .internalPassport(_):
+            if case .internalPassport = value {
+                return true
+            } else {
+                return false
+            }
+        case .passportRegistration(_):
+            if case .passportRegistration = value {
+                return true
+            } else {
+                return false
+            }
+        case .temporaryRegistration(_):
+            if case .temporaryRegistration = value {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    func isSame(of value: SecureIdValueKey) -> Bool {
+        return self.key == value
+    }
+    
+    var secureIdValueAccessContext: SecureIdValueAccessContext? {
+        switch self {
+        case .email:
+            return generateSecureIdValueEmptyAccessContext()
+        case .phone:
+            return generateSecureIdValueEmptyAccessContext()
+        default:
+            return generateSecureIdValueAccessContext()
+        }
+    }
+    
+    
+    var addressValue: SecureIdAddressValue? {
+        switch self {
+        case let .address(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var identifier: String? {
+        switch self {
+        case let .passport(value):
+            return value.identifier
+        case let .driversLicense(value):
+            return value.identifier
+        case let .idCard(value):
+            return value.identifier
+        case let .internalPassport(value):
+            return value.identifier
+        default:
+            return nil
+        }
+    }
+    
+    var personalDetails: SecureIdPersonalDetailsValue? {
+        switch self {
+        case let .personalDetails(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var selfieVerificationDocument: SecureIdVerificationDocumentReference? {
+        switch self {
+        case let .idCard(value):
+            return value.selfieDocument
+        case let .passport(value):
+            return value.selfieDocument
+        case let .driversLicense(value):
+            return value.selfieDocument
+        case let .internalPassport(value):
+            return value.selfieDocument
+        default:
+            return nil
+        }
+    }
+    
+    var verificationDocuments: [SecureIdVerificationDocumentReference]? {
+        switch self {
+        case let .bankStatement(value):
+            return value.verificationDocuments
+        case let .rentalAgreement(value):
+            return value.verificationDocuments
+        case let .utilityBill(value):
+            return value.verificationDocuments
+        case let .passportRegistration(value):
+            return value.verificationDocuments
+        case let .temporaryRegistration(value):
+            return value.verificationDocuments
+        default:
+            return nil
+        }
+    }
+    
+    var frontSideVerificationDocument: SecureIdVerificationDocumentReference? {
+        switch self {
+        case let .idCard(value):
+            return value.frontSideDocument
+        case let .passport(value):
+            return value.frontSideDocument
+        case let .driversLicense(value):
+            return value.frontSideDocument
+        case let .internalPassport(value):
+            return value.frontSideDocument
+        default:
+            return nil
+        }
+    }
+    
+    var backSideVerificationDocument: SecureIdVerificationDocumentReference? {
+        switch self {
+        case let .idCard(value):
+            return value.frontSideDocument
+        case let .driversLicense(value):
+            return value.frontSideDocument
+        default:
+            return nil
+        }
+    }
+    
+    var hasBacksideDocument: Bool {
+        switch self {
+        case .idCard:
+            return true
+        case .driversLicense:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var passportValue: SecureIdPassportValue? {
+        switch self {
+        case let .passport(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var phoneValue: SecureIdPhoneValue? {
+        switch self {
+        case let .phone(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    var emailValue: SecureIdEmailValue? {
+        switch self {
+        case let .email(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+
+    
+    var expiryDate: SecureIdDate? {
+        switch self {
+        case let .idCard(value):
+            return value.expiryDate
+        case let .passport(value):
+            return value.expiryDate
+        case let .driversLicense(value):
+            return value.expiryDate
+        default:
+            return nil
+        }
+    }
+}
+
+
+extension SecureIdRequestedFormField {
+    var rawValue: String {
+        switch self {
+        case .email:
+            return L10n.secureIdRequestPermissionEmail
+        case .phone:
+            return L10n.secureIdRequestPermissionPhone
+        case .address:
+            return L10n.secureIdRequestPermissionAddress
+        case .utilityBill:
+            return L10n.secureIdRequestPermissionUtilityBill
+        case .bankStatement:
+            return L10n.secureIdRequestPermissionBankStatement
+        case .rentalAgreement:
+            return L10n.secureIdRequestPermissionRentalAgreement
+        case .passport:
+            return L10n.secureIdRequestPermissionPassport
+        case .idCard:
+            return L10n.secureIdRequestPermissionIDCard
+        case .driversLicense:
+            return L10n.secureIdRequestPermissionDriversLicense
+        case .personalDetails:
+            return L10n.secureIdRequestPermissionPersonalDetails
+        case .internalPassport:
+            return L10n.secureIdRequestPermissionInternalPassport
+        case .passportRegistration:
+            return L10n.secureIdRequestPermissionPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdRequestPermissionTemporaryRegistration
+        }
+    }
+    
+    var uploadFrontTitleText: String {
+        switch self {
+        case .idCard:
+            return L10n.secureIdUploadFront
+        case .driversLicense:
+            return L10n.secureIdUploadFront
+        default:
+            return L10n.secureIdUploadMain
+        }
+    }
+    
+    var uploadBackTitleText: String {
+        switch self {
+        case .idCard:
+            return L10n.secureIdUploadReverse
+        case .driversLicense:
+            return L10n.secureIdUploadReverse
+        default:
+            return L10n.secureIdUploadMain
+        }
+    }
+    
+    var hasBacksideDocument: Bool {
+        switch self {
+        case .idCard:
+            return true
+        case .driversLicense:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var hasSelfie: Bool {
+        switch self {
+        case let .passport(selfie), let .idCard(selfie), let .driversLicense(selfie), let .internalPassport(selfie):
+            return selfie
+        default:
+            return false
+        }
+    }
+    
+    var rawDescription: String {
+        switch self {
+        case .email:
+            return L10n.secureIdRequestPermissionEmailEmpty
+        case .phone:
+            return L10n.secureIdRequestPermissionPhoneEmpty
+        case .address:
+            return L10n.secureIdRequestPermissionAddressEmpty
+        default:
+            return L10n.secureIdRequestPermissionIdentityEmpty
+        }
+    }
+}
+
+var dateFormatter: DateFormatter {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "dd.MM.yyyy"
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter
+}
+
+extension SecureIdRequestedFormField  {
+    var valueKey: SecureIdValueKey {
+        switch self {
+        case .address:
+            return .address
+        case .bankStatement:
+            return .bankStatement
+        case .driversLicense:
+            return .driversLicense
+        case .email:
+            return .email
+        case .idCard:
+            return .idCard
+        case .passport:
+            return .passport
+        case .personalDetails:
+            return .personalDetails
+        case .phone:
+            return .phone
+        case .rentalAgreement:
+            return .rentalAgreement
+        case .utilityBill:
+            return .utilityBill
+        case .internalPassport:
+            return .internalPassport
+        case .passportRegistration:
+            return .passportRegistration
+        case .temporaryRegistration:
+            return .temporaryRegistration
+        }
+    }
+    
+    func isEqualToMRZ(_ mrz: TGPassportMRZ) -> Bool {
+        switch mrz.documentType.lowercased() {
+        case "p":
+            if case .passport = self {
+                return true
+            } else {
+                return false
+            }
+        default:
+            return false
+        }
+        return false
+    }
+    
+}
+
+
+
+extension InputDataValue {
+    var secureIdDate: SecureIdDate? {
+        switch self {
+        case let .date(day, month, year):
+            if let day = day, let month = month, let year = year {
+                return SecureIdDate(day: day, month: month, year: year)
+            }
+            
+            return nil
+        default:
+            return nil
+        }
+    }
+}
+
+extension SecureIdDate {
+    var inputDataValue: InputDataValue {
+        return .date(day, month, year)
+    }
+}
+
+
 public func peerCompactDisplayTitles(_ peerIds: [PeerId], _ dict: SimpleDictionary<PeerId, Peer>) -> String {
     var names:String = ""
     for peerId in peerIds {
@@ -1166,7 +1744,7 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
         
         
         
-        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
+        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId ?? peerId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
             if result {
                 return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
             } else {
@@ -1177,20 +1755,61 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
 
 }
 
-func applyExternalProxy(_ proxy:ProxySettings, postbox:Postbox, network: Network) {
-    var textInfo = tr(L10n.proxyForceEnableTextIP(proxy.host)) + "\n" + tr(L10n.proxyForceEnableTextPort(Int(proxy.port)))
-    if let user = proxy.username {
-        textInfo += "\n" + tr(L10n.proxyForceEnableTextUsername(user))
+func applyExternalProxy(_ server:ProxyServerSettings, postbox:Postbox, network: Network) {
+    var textInfo = tr(L10n.proxyForceEnableTextIP(server.host)) + "\n" + tr(L10n.proxyForceEnableTextPort(Int(server.port)))
+    switch server.connection {
+    case let .socks5(username, password):
+        if let user = username {
+            textInfo += "\n" + L10n.proxyForceEnableTextUsername(user)
+        }
+        if let pass = password {
+            textInfo += "\n" + L10n.proxyForceEnableTextPassword(pass)
+        }
+    case let .mtp(secret):
+        textInfo += "\n" + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
     }
-    if let pass = proxy.password {
-        textInfo += "\n" + tr(L10n.proxyForceEnableTextPassword(pass))
-    }
+   
     textInfo += "\n\n" + tr(L10n.proxyForceEnableText)
+   
+    if case .mtp = server.connection {
+        textInfo += "\n\n" + L10n.proxyForceEnableMTPDesc
+    }
     
-    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo)
-        |> filter {$0} |> map {_ in} |> mapToSignal {
-            return applyProxySettings(postbox: postbox, network: network, settings: proxy)
-    }).start()
+    modernConfirm(for: mainWindow, account: nil, peerId: nil, accessory: theme.icons.confirmAppAccessoryIcon, header: L10n.proxyForceEnableHeader1, information: textInfo, okTitle: L10n.proxyForceEnableOK, thridTitle: L10n.proxyForceEnableEnable, successHandler: { result in
+        _ = updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
+            
+            var current = current.withAddedServer(server)
+            if result == .thrid {
+                current = current.withUpdatedActiveServer(server).withUpdatedEnabled(true)
+            }
+            return current
+        }).start()
+    })
+    
+//    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo, okTitle: L10n.proxyForceEnableConnect)
+//        |> filter {$0} |> map {_ in} |> mapToSignal {
+//            return updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
+//                return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
+//            })
+//    }).start()
+}
+
+
+extension SecureIdGender {
+    var stringValue: String {
+        switch self {
+        case .female:
+            return L10n.secureIdGenderFemale
+        case .male:
+            return L10n.secureIdGenderMale
+        }
+    }
+}
+
+extension SecureIdDate {
+    var stringValue: String {
+        return "\(day).\(month).\(year)"
+    }
 }
 
 extension PostboxAccessChallengeData {
@@ -1358,3 +1977,55 @@ func wallpaperPath(_ resource: TelegramMediaResource) -> String {
 func fileExtenstion(_ file: TelegramMediaFile) -> String {
     return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
 }
+
+func proxySettingsSignal(_ postbox: Postbox) -> Signal<ProxySettings, Void>  {
+    return postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in
+        return view.values[PreferencesKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
+    }
+}
+
+public extension ProxySettings {
+    public func withUpdatedActiveServer(_ activeServer: ProxyServerSettings?) -> ProxySettings {
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withUpdatedEnabled(_ enabled: Bool) -> ProxySettings {
+        return ProxySettings(enabled: enabled, servers: self.servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withAddedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
+        var servers = self.servers
+        if servers.first(where: {$0 == proxy}) == nil {
+            servers.append(proxy)
+        }
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withUpdatedServer(_ current: ProxyServerSettings, with updated: ProxyServerSettings) -> ProxySettings {
+        var servers = self.servers
+        if let index = servers.index(where: {$0 == current}) {
+            servers[index] = updated
+        }
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+    }
+    
+    public func withUpdatedUseForCalls(_ enable: Bool) -> ProxySettings {
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: enable)
+    }
+    
+    public func withRemovedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
+        var servers = self.servers
+        var activeServer = self.activeServer
+        var enabled: Bool = self.enabled
+        if let index = servers.index(where: {$0 == proxy}) {
+            let current = servers.remove(at: index)
+            if current == activeServer {
+                activeServer = nil
+                enabled = false
+            }
+        }
+        return ProxySettings(enabled: enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
+    }
+}
+
+

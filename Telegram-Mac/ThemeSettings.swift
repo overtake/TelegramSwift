@@ -227,7 +227,7 @@ func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void
     return postbox.modify { modifier -> Void in
         modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-            return ThemePaletteSettings(palette: current.palette, bubbled: bubbled, fontSize: current.fontSize, wallpaper: !bubbled ? .color(Int32(current.palette.background.rgb)) : current.wallpaper, defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
+            return ThemePaletteSettings(palette: current.palette, bubbled: bubbled, fontSize: current.fontSize, wallpaper: !bubbled ? .color(Int32(current.palette.background.rgb)) : (current.palette == dayClassic ? .builtin : current.wallpaper), defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
         })
     }
 }

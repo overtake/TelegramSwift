@@ -78,6 +78,8 @@ class GalleryThumbsControl: ViewController {
                 newItems = items
             case .photo:
                 newItems = items
+            case .secureIdDocument:
+                newItems = items
             }
         }
 

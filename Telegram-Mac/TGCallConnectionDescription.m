@@ -27,10 +27,11 @@
 
 @implementation TGCallConnection
     
-- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections {
+- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections maxLayer:(int32_t)maxLayer {
     self = [super init];
     if (self != nil) {
         _key = key;
+        _maxLayer = maxLayer;
         _keyHash = keyHash;
         _defaultConnection = defaultConnection;
         _alternativeConnections = alternativeConnections;

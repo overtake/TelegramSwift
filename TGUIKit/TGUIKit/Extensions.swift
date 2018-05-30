@@ -317,6 +317,17 @@ public extension NSView {
                     return NSPointInRect(location, self.bounds)
                 } else {
                     var s = view.superview
+                    if let view = view as? NSTableView {
+                        let somePoint = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                        let row = view.row(at: somePoint)
+                        if row >= 0 {
+                            let someView = view.rowView(atRow: row, makeIfNecessary: false)
+                            if let someView = someView {
+                                let hit = someView.hitTest(someView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+                                return hit == self
+                            }
+                        }
+                    }
                     while let sv = s {
                         if sv == self {
                             return NSPointInRect(location, self.bounds)
@@ -324,6 +335,9 @@ public extension NSView {
                         s = sv.superview
                     }
                 }
+            } else {
+                var bp:Int = 0
+                bp += 1
             }
             
         }
@@ -1030,7 +1044,27 @@ public extension NSTextField {
     }
     
     public var textView:NSTextView? {
-        return (self.window?.fieldEditor(true, for: self) as? NSTextView)
+        let textView = (self.window?.fieldEditor(true, for: self) as? NSTextView)
+        textView?.backgroundColor = .clear
+        textView?.drawsBackground = true
+        return textView
+    }
+}
+
+public extension NSTextView {
+    public func selectAllText() {
+        setSelectedRange(NSMakeRange(0, self.string.length))
+    }
+    
+    public func appendText(_ text: String) -> Void {
+        let inputText = self.attributedString().mutableCopy() as! NSMutableAttributedString
+        
+        if selectedRange.upperBound - selectedRange.lowerBound > 0 {
+            inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: NSAttributedString(string: text))
+        } else {
+            inputText.insert(NSAttributedString(string: text), at: selectedRange.lowerBound)
+        }
+        self.string = inputText.string
     }
 }
 
@@ -1172,5 +1206,22 @@ extension NSResponder {
     @available(OSX 10.12.2, *)
     var touchBar: NSTouchBar? {
         return nil
+    }
+}
+
+public extension Sequence where Iterator.Element: Hashable {
+    var uniqueElements: [Iterator.Element] {
+        return Array( Set(self) )
+    }
+}
+public extension Sequence where Iterator.Element: Equatable {
+    var uniqueElements: [Iterator.Element] {
+        return self.reduce([]){
+            uniqueElements, element in
+            
+            uniqueElements.contains(element)
+                ? uniqueElements
+                : uniqueElements + [element]
+        }
     }
 }

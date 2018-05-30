@@ -56,7 +56,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 let controller:APController
 
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId))
+                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
                 } else {
                     controller = APChatMusicController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
@@ -72,9 +72,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            
-           // open()
-            
             fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
         }
     }
@@ -125,36 +122,20 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
         
-        let file:TelegramMediaFile = media as! TelegramMediaFile
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media) || parameters?.presentation != parameters?.presentation
-        
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
-        
-        if mediaUpdated {
-            
-            globalAudio?.add(listener: self)
-            
-            if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id))
-                    |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
-                        if let pendingStatus = pendingStatus {
-                            return .Fetching(isActive: true, progress: pendingStatus.progress)
-                        } else {
-                            return resourceStatus
-                        }
-                    } |> deliverOnMainQueue
-            } else {
-                updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue
-            }
-            
-            
-            
-            self.setNeedsDisplay()
-        }
-        
 
+        
+        if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
+            updatedStatusSignal = account.pendingMessageManager.pendingMessageStatus(parent.id) |> map { pendingStatus in
+                if let pendingStatus = pendingStatus {
+                    return .Fetching(isActive: true, progress: pendingStatus.progress)
+                } else {
+                    return .Local
+                }
+            } |> deliverOnMainQueue
+        }
         
         if let updatedStatusSignal = updatedStatusSignal {
             self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
@@ -171,9 +152,17 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                     }
                 }
             }))
-            checkState()
         }
+       
         
+        
+        globalAudio?.add(listener: self)
+        self.setNeedsDisplay()
+        
+        self.fetchStatus = .Local
+        progressView.state = .Play
+        checkState()
+
     }
     
     var leftInset:CGFloat {

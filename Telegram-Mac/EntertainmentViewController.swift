@@ -93,9 +93,9 @@ class EntertainmentViewController: NavigationViewController {
         self.gifs = GIFViewController(account: account)
         
         var items:[SectionControllerItem] = []
-        items.append(SectionControllerItem(title:{tr(L10n.entertainmentEmoji).uppercased()}, controller: emoji))
-        items.append(SectionControllerItem(title: {tr(L10n.entertainmentStickers).uppercased()}, controller: stickers))
-        items.append(SectionControllerItem(title: {tr(L10n.entertainmentGIF ).uppercased()}, controller: gifs))
+        items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))
+        items.append(SectionControllerItem(title: {L10n.entertainmentStickers.uppercased()}, controller: stickers))
+        items.append(SectionControllerItem(title: {L10n.entertainmentGIF.uppercased()}, controller: gifs))
         self.section = SectionViewController(sections: items, selected: Int(FastSettings.entertainmentState.rawValue))
         super.init(section)
         bar = .init(height: 0)

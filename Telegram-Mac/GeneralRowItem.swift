@@ -9,18 +9,27 @@
 import Cocoa
 import TGUIKit
 
+enum InputDataValueErrorTarget : Equatable {
+    case data
+    case files
+}
 
+struct InputDataValueError : Equatable {
+    let description: String
+    let target: InputDataValueErrorTarget
+}
 
-enum GeneralInteractedType {
+enum GeneralInteractedType : Equatable {
     case none
     case next
-    case selectable(stateback:()->Bool)
-    case switchable(stateback:()->Bool)
-    case context(stateback:()->String)
-    case image(stateback:()->CGImage)
-    case button(stateback:()->String)
-    case search(stateback:(String)->Bool)
-    case colorSelector(stateback:()->NSColor)
+    case nextContext(String)
+    case selectable(Bool)
+    case switchable(Bool)
+    case context(String)
+    case image(CGImage)
+    case button(String)
+    case search(Bool)
+    case colorSelector(NSColor)
 }
 
 class GeneralRowItem: TableRowItem {
@@ -29,7 +38,11 @@ class GeneralRowItem: TableRowItem {
     let enabled: Bool
     let _height:CGFloat
     override var height: CGFloat {
-        return _height
+        var height = _height
+        if let errorLayout = errorLayout {
+            height += errorLayout.layoutSize.height
+        }
+        return height
     }
     
     private let _stableId:AnyHashable
@@ -48,11 +61,15 @@ class GeneralRowItem: TableRowItem {
     let inset:NSEdgeInsets
     
     private(set) var action:()->Void
-    private(set) var type:GeneralInteractedType
+    var type:GeneralInteractedType
     
     let backgroundColor: NSColor
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor = .clear) {
+    let error: InputDataValueError?
+    let errorLayout: TextViewLayout?
+
+    
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor = .clear, error: InputDataValueError? = nil) {
         self.type = type
         _height = height
         _stableId = stableId
@@ -62,10 +79,24 @@ class GeneralRowItem: TableRowItem {
         self.drawCustomSeparator = drawCustomSeparator
         self.action = action
         self.enabled = enabled
+        self.error = error
+        
+        if let error = error {
+            errorLayout = TextViewLayout(.initialize(string: error.description, color: theme.colors.redUI, font: .normal(.text)))
+        } else {
+            errorLayout = nil
+        }
+        
         super.init(initialSize)
         
         let _ = self.makeSize(initialSize.width)
     }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        errorLayout?.measure(width: width - inset.left - inset.right)
+        return super.makeSize(width, oldWidth: oldWidth)
+    }
+    
     override var instantlyResize: Bool {
         return true
     }

@@ -10,6 +10,7 @@ import Cocoa
 
 import PostboxMac
 import SwiftSignalKitMac
+import TelegramCoreMac
 
 final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize?
@@ -35,7 +36,7 @@ final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation 
     }
 }
 
-final class CachedScaledImageRepresentation: CachedMediaResourceRepresentation {
+class CachedScaledImageRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize
     
     var uniqueId: String {
@@ -54,6 +55,8 @@ final class CachedScaledImageRepresentation: CachedMediaResourceRepresentation {
         }
     }
 }
+
+
 
 final class CachedVideoFirstFrameRepresentation: CachedMediaResourceRepresentation {
     var uniqueId: String {

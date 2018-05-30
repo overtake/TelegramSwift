@@ -303,7 +303,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
                     if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: wrapper) {
                         controller.playOrPause()
                     } else {
-                        let controller = APSingleResourceController(account: item.account, wrapper: wrapper)
+                        let controller = APSingleResourceController(account: item.account, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
                         item.chatInteraction.inlineAudioPlayer(controller)
                         controller.start()

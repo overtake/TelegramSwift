@@ -9,6 +9,15 @@
 #import <Foundation/Foundation.h>
 #import "TGCallConnectionDescription.h"
 
+
+@interface CProxy : NSObject
+@property(nonatomic, strong, readonly) NSString *host;
+@property(nonatomic, assign, readonly) int32_t port;
+@property(nonatomic, strong, readonly) NSString *user;
+@property(nonatomic, strong, readonly) NSString *pass;
+-(id)initWithHost:(NSString*)host port:(int32_t)port user:(NSString *)user pass:(NSString *)pass;
+@end
+
 @interface AudioDevice : NSObject
 @property(nonatomic, strong, readonly) NSString *deviceId;
 @property(nonatomic, strong, readonly) NSString *deviceName;

@@ -99,6 +99,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    open func hasFirstResponder() -> Bool {
+        return false
+    }
+    
+    open func nextResponder() -> NSResponder? {
+        return nil
+    }
+    
     open var firstResponder:NSResponder? {
         return self
     }
@@ -274,6 +282,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         menuDisposable.dispose()
     }
     
+    open var mouseInsideField: Bool {
+        return false
+    }
     
     open override func copy() -> Any {
         let view:View = View(frame:bounds)
@@ -286,7 +297,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         updateColors()
     }
     
-    open func focusAnimation() {
+    open func focusAnimation(_ innerId: AnyHashable?) {
         
     }
     

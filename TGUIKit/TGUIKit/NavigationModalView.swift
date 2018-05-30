@@ -95,6 +95,9 @@ class NavigationModalView: Control {
                 self?.close()
                 return .invoked
             }, with: self, priority: .high)
+            self.kitWindow?.set(responder: { () -> NSResponder? in
+                return nil
+            }, with: self, priority: .modal)
         } else {
             // self.viewController?.navigationController?.lock = false
         }

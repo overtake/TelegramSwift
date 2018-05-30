@@ -20,6 +20,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case addContact
     case pinned(MessageId)
     case report
+    case sponsored
     var stableId:Int {
         switch self {
         case .none:
@@ -32,6 +33,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 3
         case .pinned:
             return 4
+        case .sponsored:
+            return 5
         }
     }
     
@@ -46,6 +49,8 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .addContact:
             return 44
         case .pinned:
+            return 44
+        case .sponsored:
             return 44
         }
     }
@@ -121,6 +126,8 @@ class ChatHeaderController {
             view = ChatSearchHeader(interactions, chatInteraction: chatInteraction)
         case .report:
             view = ChatReportView(chatInteraction)
+        case .sponsored:
+            view = ChatSponsoredView(chatInteraction: chatInteraction)
         case .none:
             view = nil
         
@@ -143,6 +150,90 @@ struct ChatSearchInteractions {
     let searchRequest:(String, PeerId?) -> Signal<[Message],Void>
 }
 
+private class ChatSponsoredModel: ChatAccessoryModel {
+    
+
+    init() {
+        super.init()
+        update()
+    }
+    
+    func update() {
+        self.headerAttr = .initialize(string: "Proxy Sponsored", color: theme.colors.link, font: .medium(.text))
+        self.messageAttr = .initialize(string: "This channel is shown by your proxy server.", color: theme.colors.text, font: .normal(.text))
+        nodeReady.set(.single(true))
+        self.setNeedDisplay()
+    }
+}
+
+private final class ChatSponsoredView : Control {
+    private let chatInteraction:ChatInteraction
+    private let container:ChatAccessoryView = ChatAccessoryView()
+    private let dismiss:ImageButton = ImageButton()
+    private let node: ChatSponsoredModel = ChatSponsoredModel()
+    init(chatInteraction:ChatInteraction) {
+        self.chatInteraction = chatInteraction
+        super.init()
+        
+        dismiss.disableActions()
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        _ = self.dismiss.sizeToFit()
+        
+        self.set(handler: { _ in
+            confirm(for: mainWindow, header: L10n.chatProxySponsoredAlertHeader, information: L10n.chatProxySponsoredAlertText, cancelTitle: "", thridTitle: L10n.chatProxySponsoredAlertSettings, successHandler: { result in
+                switch result {
+                case .thrid:
+                    chatInteraction.openProxySettings()
+                default:
+                    break
+                }
+            })
+        }, for: .Click)
+        
+        dismiss.set(handler: { _ in
+            FastSettings.adAlertViewed()
+            chatInteraction.update({$0.withoutInitialAction()})
+        }, for: .SingleClick)
+        
+        node.view = container
+        
+        addSubview(dismiss)
+        container.userInteractionEnabled = false
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+        addSubview(container)
+        updateLocalizationAndTheme()
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        self.backgroundColor = theme.colors.background
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        container.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        node.update()
+        node.measureSize(frame.width - 70)
+        container.setFrameSize(frame.width - 70, node.size.height)
+        container.centerY(x: 20)
+        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
+        node.setNeedDisplay()
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
 class ChatPinnedView : Control {
     private let node:ReplyModel
     private let chatInteraction:ChatInteraction
@@ -160,7 +251,7 @@ class ChatPinnedView : Control {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] _ in
-            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, animated: true, focus: true, inset: 0))
+            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
@@ -392,7 +483,8 @@ class ChatSearchHeader : View, Notifable {
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
     private let inputInteraction: CSearchInteraction = CSearchInteraction()
-    
+    private let parentInteractions: ChatInteraction
+    private let loadingDisposable = MetaDisposable()
     private var messages:[Message] = []
     private var currentIndex:Int = 0 {
         didSet {
@@ -401,6 +493,7 @@ class ChatSearchHeader : View, Notifable {
     }
     init(_ interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
+        self.parentInteractions = chatInteraction
         self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: chatInteraction.account)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: self.chatInteraction)
@@ -412,7 +505,13 @@ class ChatSearchHeader : View, Notifable {
         }
         
         initialize()
+        
+        parentInteractions.loadingMessage.set(false)
+        
         inputInteraction.add(observer: self)
+        self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
+            self?.searchView.isLoading = loading
+        }))
     }
     
     private var calendarAbility: Bool {
@@ -516,7 +615,7 @@ class ChatSearchHeader : View, Notifable {
      
         self.searchView.searchInteractions = SearchInteractions({ [weak self] state in
             if state.state == .None {
-                self?.searchView.isLoading = false
+                self?.parentInteractions.loadingMessage.set(false)
             }
         }, { [weak self] state in
             if let strongSelf = self {
@@ -525,17 +624,17 @@ class ChatSearchHeader : View, Notifable {
                 strongSelf.updateSearchState()
                 switch strongSelf.searchView.tokenState {
                 case .none:
-                    if state.request == tr(L10n.chatSearchFrom), let peer = strongSelf.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
+                    if state.request == L10n.chatSearchFrom, let peer = strongSelf.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
                         strongSelf.query.set(.single(""))
                         strongSelf.searchView.initToken()
                     } else {
-                        strongSelf.searchView.isLoading = true
+                        strongSelf.parentInteractions.loadingMessage.set(true)
                         strongSelf.query.set(.single(state.request))
                     }
                     
                 case .from(_, let complete):
                     if complete {
-                        strongSelf.searchView.isLoading = true
+                        strongSelf.parentInteractions.loadingMessage.set(true)
                         strongSelf.query.set(.single(state.request))
                     }
                 }
@@ -562,13 +661,13 @@ class ChatSearchHeader : View, Notifable {
             self?.messages = messages
             self?.currentIndex = -1
             self?.prevAction()
-            self?.searchView.isLoading = false
+            self?.parentInteractions.loadingMessage.set(false)
             
         }, error: { [weak self] in
             self?.messages = []
             self?.currentIndex = -1
             self?.prevAction()
-            self?.searchView.isLoading = false
+            self?.parentInteractions.loadingMessage.set(false)
         }))
 
         next.autohighlight = false
@@ -711,11 +810,9 @@ class ChatSearchHeader : View, Notifable {
             }, with: self, for: .DownArrow, priority: .medium)
         } else {
             if let window = window as? Window {
-                window.remove(object: self, for: .UpArrow)
-                window.remove(object: self, for: .DownArrow)
+                window.removeAllHandlers(for: self)
                 self.searchView.change(state: .None, false)
             }
-            
         }
     }
     
@@ -723,6 +820,11 @@ class ChatSearchHeader : View, Notifable {
     deinit {
         disposable.dispose()
         inputInteraction.remove(observer: self)
+        loadingDisposable.set(nil)
+        if let window = window as? Window {
+            window.removeAllHandlers(for: self)
+
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -732,6 +834,7 @@ class ChatSearchHeader : View, Notifable {
     init(frame frameRect: NSRect, interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        self.parentInteractions = chatInteraction
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: chatInteraction)
         super.init(frame: frameRect)
         initialize()

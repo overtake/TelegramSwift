@@ -106,7 +106,7 @@ class TwoStepVerificationPasswordEntryController: TableViewController {
                     if case let .change(current) = mode {
                         currentPassword = current
                     }
-                    updatePasswordDisposable.set((updateTwoStepVerificationPassword(account: account, currentPassword: currentPassword, updatedPassword: .password(password: password, hint: hint, email: skipEmail ? "" : email)) |> deliverOnMainQueue).start(next: { update in
+                    updatePasswordDisposable.set((updateTwoStepVerificationPassword(network: account.network, currentPassword: currentPassword, updatedPassword: .password(password: password, hint: hint, email: skipEmail ? "" : email)) |> deliverOnMainQueue).start(next: { update in
                         updateState {
                             $0.withUpdatedUpdating(false)
                         }

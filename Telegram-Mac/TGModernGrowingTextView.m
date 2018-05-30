@@ -10,6 +10,24 @@
 #import <QuartzCore/QuartzCore.h>
 #import "DateUtils.h"
 
+@interface MarkdownUndoItem : NSObject
+    @property (nonatomic, strong) NSAttributedString *was;
+    @property (nonatomic, strong) NSAttributedString *be;
+    @property (nonatomic, assign) NSRange inRange;
+    -(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange;
+@end
+
+@implementation MarkdownUndoItem
+    -(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange {
+        if (self = [super init]) {
+            self.was = was;
+            self.be = be;
+            self.inRange = inRange;
+        }
+        return self;
+    }
+@end
+
 static NSString* (^localizationFunc)(NSString *key);
 
 void setInputLocalizationFunc(NSString* (^localizationF)(NSString *key)) {
@@ -52,6 +70,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 
 @interface TGModernGrowingTextView ()
 @property (nonatomic, assign) NSRange _selectedRange;
+
 - (void)refreshAttributes;
 @end
 
@@ -59,10 +78,18 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 
 @interface TGGrowingTextView ()
+    @property (nonatomic, strong) NSUndoManager *undo;
+    @property (nonatomic, strong) NSMutableArray<MarkdownUndoItem *> *markdownItems;
 @end
 
 @implementation TGGrowingTextView
 
+-(instancetype)initWithFrame:(NSRect)frameRect {
+    if(self = [super initWithFrame:frameRect]) {
+        self.markdownItems = [NSMutableArray array];
+    }
+    return self;
+}
 
 -(NSPoint)textContainerOrigin {
     
@@ -167,7 +194,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 
 -(void)boldWord:(id)sender {
-    [self changeFontMarkdown:[NSFont boldSystemFontOfSize:self.font.pointSize]];
+     [self changeFontMarkdown:[NSFont boldSystemFontOfSize:self.font.pointSize]];
+
    // [self.textStorage addAttribute:NSFontAttributeName value:[NSFont boldSystemFontOfSize:self.font.pointSize] range:self.selectedRange];
    // [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
 }
@@ -200,6 +228,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         return;
     }
     
+    
+    NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
+
     NSRange effectiveRange;
     NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
     
@@ -247,10 +278,39 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         }
     }
     
+    NSAttributedString *be = [self.attributedString attributedSubstringFromRange:self.selectedRange];
+    
+ 
+    
     [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
-
+    
+    MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:be inRange:self.selectedRange];
+    [self addItem:item];
+    
 }
 
+    
+- (void)addItem:(MarkdownUndoItem *)item {
+    [[self undoManager] registerUndoWithTarget:self selector:@selector(removeItem:) object:item];
+    if (![[self undoManager] isUndoing]) {
+        [[self undoManager] setActionName:NSLocalizedString(@"actions.add-item", @"Add Item")];
+    }
+    [[self textStorage] replaceCharactersInRange:item.inRange withAttributedString:item.be];
+    [self.markdownItems addObject:item];
+    [self.weakd textViewTextDidChangeSelectedRange:self.selectedRange];
+}
+    
+- (void)removeItem:(MarkdownUndoItem *)item {
+    [[self undoManager] registerUndoWithTarget:self selector:@selector(addItem:) object:item];
+    if (![[self undoManager] isUndoing]) {
+        [[self undoManager] setActionName:NSLocalizedString(@"actions.remove-item", @"Remove Item")];
+    }
+    if ([self.markdownItems indexOfObject:item] != NSNotFound) {
+        [[self textStorage] replaceCharactersInRange:item.inRange withAttributedString:item.was];
+        [self.markdownItems removeObject:item];
+        [self.weakd textViewTextDidChangeSelectedRange:self.selectedRange];
+    }
+}
 
 
 -(BOOL)validateMenuItem:(NSMenuItem *)menuItem {
@@ -376,6 +436,8 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         
         
         [super keyDown:theEvent];
+    } else if(_weakd == nil) {
+        [super keyDown:theEvent];
     }
     
 }
@@ -456,10 +518,13 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectionDidChanged:) name:NSTextViewDidChangeSelectionNotification object:_textView];
         
         self._undo = [[NSUndoManager alloc] init];
+        self.textView.undo = self._undo;
         self.autoresizesSubviews = YES;
         _textView.delegate = self;
         
         [_textView setDrawsBackground:YES];
+        
+
         
         self.scrollView = [[GrowingScrollView alloc] initWithFrame:self.bounds];
         [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
@@ -515,11 +580,13 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         _notify_next = YES;
         return;
     }
+    
+
     if ((self._selectedRange.location != self.textView.selectedRange.location) || (self._selectedRange.length != self.textView.selectedRange.length)) {
         [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
         self._selectedRange = self.textView.selectedRange;
     }
-    
+        
     NSRect newRect = [_textView.layoutManager usedRectForTextContainer:_textView.textContainer];
     
     NSSize size = newRect.size;
@@ -561,9 +628,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 -(void)update:(BOOL)notify {
     [self textDidChange:[NSNotification notificationWithName:NSTextDidChangeNotification object:notify ? _textView : nil]];
-    [__undo removeAllActionsWithTarget:_textView];
-    [__undo removeAllActions];
-
 }
 
 
@@ -610,7 +674,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 - (void)textDidChange:(NSNotification *)notification {
     
     
-    int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit];
+    int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit: self];
     
     if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
         NSString *sub = [self.string substringWithRange:NSMakeRange(_defaultText.length, limit)];
@@ -667,7 +731,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         
         [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
-        newSize.width = [_delegate textViewSize].width;
+        newSize.width = [_delegate textViewSize: self].width;
         
         NSSize layoutSize = NSMakeSize(roundf(newSize.width), roundf(newSize.height));
         
@@ -756,9 +820,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
                 text = @"";
             }
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate textViewTextDidChange:text];
-        });
+        [self.delegate textViewTextDidChange:text];
         
     }
     
@@ -835,15 +897,12 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             pAnim.removedOnCompletion = YES;
             pAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             pAnim.duration = 0.2;
-            pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, NSMinY(_placeholder.frame))];
-            pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)) : NSMakePoint(self._endXPlaceholder, NSMinY(_placeholder.frame))];
+            pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
+            pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
             
             
             [_placeholder.layer removeAnimationForKey:@"position"];
-            [_placeholder.layer addAnimation:pAnim forKey:@"position"];
-            
-            
-            
+            [_placeholder.layer addAnimation:pAnim forKey:@"position"]; 
             
         } else {
             if (_placeholder.layer.animationKeys.count == 0) {
@@ -852,7 +911,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         }
         
         
-        [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)) : NSMakePoint(NSMinX(_placeholder.frame) + 30, roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))];
+        [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
         
         _placeholder.layer.opacity = self._needShowPlaceholder ? 1.0 : 0.0;
         
@@ -881,6 +940,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     [_placeholder sizeToFit];
     [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+    [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
 }
 
 -(BOOL)_needShowPlaceholder {
@@ -898,7 +958,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_placeholder sizeToFit];
     
     [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
-    
+    [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0)))];
     BOOL animates = _animates;
     _animates = NO;
     if (self.string.length == 0) {
@@ -936,7 +996,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             return;
         }
         
+        
+        
         [_textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
+        
         
 
         __block NSMutableArray<TGInputTextTagAndRange *> *inputTextTags = [[NSMutableArray alloc] init];
@@ -1160,12 +1223,17 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)addInputTextTag:(TGInputTextTag *)tag range:(NSRange)range {
+    NSAttributedString *was = [self.textView.textStorage attributedSubstringFromRange:range];
     [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tag range:range];
+    MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:[self.textView.textStorage attributedSubstringFromRange:range] inRange:range];
+    [self.textView addItem:item];
 }
 
 static int64_t nextId = 0;
 
 -(void)addLink:(NSString *)link {
+    if (self.selectedRange.length == 0)
+        return;
     id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
     [self addInputTextTag:tag range:self.selectedRange];
     [self update:YES];

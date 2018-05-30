@@ -563,7 +563,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         let list:Signal<TableUpdateTransition, Void> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue, genericView.searchView.stateValue.get() |> deliverOnPrepareQueue) |> mapToSignal { location, search, state -> Signal<TableUpdateTransition, Void> in
             
-            if state == .None {
+            if state == .Focus, search.isEmpty {
                 return combineLatest(account.postbox.loadedPeerWithId(account.peerId), recentPeers(account: account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { user, top, recent -> TableUpdateTransition in
                     
                     var entries:[SelectablePeersEntry] = []
@@ -620,7 +620,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
 
                 }
-            } else if search.isEmpty {
+            } else if state == .None {
                 
                 
                 var signal:Signal<(ChatListView,ViewUpdateType),Void>
@@ -682,7 +682,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 }
             } else {
                 return account.postbox.searchPeers(query: search.lowercased(), groupId: nil) |> map {
-                    return $0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
+                    return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 } |> mapToSignal { peers -> Signal<([Peer], [PeerId: PeerStatusStringResult]), Void> in
                     let keys = peers.map {PostboxViewKey.peer(peerId: $0.id)}
                     return account.postbox.combinedView(keys: keys) |> map { values -> ([Peer], [PeerId: PeerStatusStringResult]) in
@@ -818,15 +818,15 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         return false
     }
     
-    func textViewSize() -> NSSize {
-        return NSMakeSize(frame.width - 40, genericView.textView.frame.height)
+    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
+        return NSMakeSize(frame.width - 40, textView.frame.height)
     }
     
     func textViewIsTypingEnabled() -> Bool {
         return true
     }
     
-    func maxCharactersLimit() -> Int32 {
+    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         return 200
     }
     

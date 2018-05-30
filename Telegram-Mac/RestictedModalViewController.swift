@@ -203,26 +203,23 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(50, 50), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, action: {})
         case let .rightItem(_, _, name, right, flags, value, enabled):
             //ControlStyle(font: NSFont.)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? .text : .gray), type: .switchable(stateback: { () -> Bool in
-                return value
-            }), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? .text : .gray), type: .switchable(value), action: {
                 arguments.toggleRight(right, flags)
             }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: .white, stateOnColor: theme.colors.blueUI, stateOffColor: theme.colors.redUI, disabledColor: theme.colors.grayBackground, borderColor: .clear))
         case .description(_, _, let name):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: name)
         case .blockFor(_, _, let until):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelBlockUserBlockFor), type: .context(stateback: { () -> String in
-                if until == 0 || until == .max {
-                    return tr(L10n.channelBanForever)
-                } else {
-                    let formatter = DateFormatter()
-                    formatter.dateStyle = .medium
-                    formatter.timeZone = NSTimeZone.local
-                    formatter.timeStyle = .short
-                    return formatter.string(from: Date(timeIntervalSince1970: TimeInterval(until)))
-                }
-                
-            }), action: { 
+            let text: String
+            if until == 0 || until == .max {
+                text = L10n.channelBanForever
+            } else {
+                let formatter = DateFormatter()
+                formatter.dateStyle = .medium
+                formatter.timeZone = NSTimeZone.local
+                formatter.timeStyle = .short
+                text = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(until)))
+            }
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelBlockUserBlockFor, type: .context(text), action: {
                 arguments.changeUntil()
             })
         }

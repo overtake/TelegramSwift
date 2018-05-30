@@ -13,7 +13,7 @@ import Cocoa
 open class TabItem: NSObject {
     let image: CGImage
     let selectedImage: CGImage
-    let controller:ViewController
+    public let controller:ViewController
     let subNode:Node?
     let longHoverHandler:((Control)->Void)?
     public init(image: CGImage, selectedImage: CGImage, controller:ViewController, subNode:Node? = nil, longHoverHandler:((Control)->Void)? = nil) {

@@ -81,43 +81,33 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
         super.viewDidLoad()
         let initialSize = atomicSize.modify({$0})
         
-        peerViewDisposable.set((account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peerView in
+        let update: Promise<Void> = Promise(Void())
+        
+        peerViewDisposable.set(combineLatest(account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue, update.get()).start(next: { [weak self] peerView, _ in
             if let strongSelf = self, let peer = peerViewMainPeer(peerView) as? TelegramChannel {
+                
+                _ = strongSelf.genericView.removeAll()
+                
                 _ = strongSelf.genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: 0))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(L10n.supergroupDeleteRestrictionDeleteMessage), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
-                    if let strongSelf = strongSelf {
-                        return strongSelf.options.contains(.deleteMessages)
-                    }
-                    return false
-                }), action: {
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(L10n.supergroupDeleteRestrictionDeleteMessage), type: .selectable(strongSelf.options.contains(.deleteMessages)), action: {
                     
                 }))
                 
                 if peer.hasAdminRights(.canBanUsers) {
-                    _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: tr(L10n.supergroupDeleteRestrictionBanUser), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
-                        if let strongSelf = strongSelf {
-                            return strongSelf.options.contains(.banUser)
-                        }
-                        return false
-                    }), action: { [weak strongSelf] in
+                    _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: tr(L10n.supergroupDeleteRestrictionBanUser), type: .selectable(strongSelf.options.contains(.banUser)), action: { [weak strongSelf] in
                         if let strongSelf = strongSelf {
                             if strongSelf.options.contains(.banUser) {
                                 strongSelf.options.remove(.banUser)
                             } else {
                                 strongSelf.options.insert(.banUser)
                             }
-                            strongSelf.genericView.reloadData()
+                            update.set(.single(Void()))
                         }
                     }))
                 }
                
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 3, name: tr(L10n.supergroupDeleteRestrictionReportSpam), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
-                    if let strongSelf = strongSelf {
-                        return strongSelf.options.contains(.reportSpam)
-                    }
-                    return false
-                }), action: { [weak strongSelf] in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 3, name: tr(L10n.supergroupDeleteRestrictionReportSpam), type: .selectable(strongSelf.options.contains(.reportSpam)), action: { [weak strongSelf] in
                     if let strongSelf = strongSelf {
                         if strongSelf.options.contains(.reportSpam) {
                             strongSelf.options.remove(.reportSpam)
@@ -125,15 +115,11 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                             strongSelf.options.insert(.reportSpam)
                         }
                         strongSelf.genericView.reloadData()
+                        update.set(.single(Void()))
                     }
                 }))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 4, name: tr(L10n.supergroupDeleteRestrictionDeleteAllMessages), type: .selectable(stateback: { [weak strongSelf] () -> Bool in
-                    if let strongSelf = strongSelf {
-                        return strongSelf.options.contains(.deleteAllMessages)
-                    }
-                    return false
-                }), action: { [weak strongSelf] in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 4, name: tr(L10n.supergroupDeleteRestrictionDeleteAllMessages), type: .selectable(strongSelf.options.contains(.deleteAllMessages)), action: { [weak strongSelf] in
                     if let strongSelf = strongSelf {
                         if strongSelf.options.contains(.deleteAllMessages) {
                             strongSelf.options.remove(.deleteAllMessages)
@@ -141,6 +127,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                             strongSelf.options.insert(.deleteAllMessages)
                         }
                         strongSelf.genericView.reloadData()
+                        update.set(.single(Void()))
                     }
                 }))
                 

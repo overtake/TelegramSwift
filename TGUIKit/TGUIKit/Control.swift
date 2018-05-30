@@ -253,7 +253,7 @@ open class Control: View {
         mouseIsDown = false
         
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
-            if isEnabled {
+            if isEnabled && layer!.opacity > 0 {
                 send(event: .Up)
                 
                 if mouseInside() && !longInvoked {
@@ -271,7 +271,7 @@ open class Control: View {
         }
     }
     
-    func send(event:ControlEvent) -> Void {
+    public func send(event:ControlEvent) -> Void {
         for (e,handler) in handlers {
             if e == event {
                 handler(self)
@@ -297,7 +297,7 @@ open class Control: View {
     }
     
     public func updateState() -> Void {
-        if mouseInside() {
+        if mouseInside(), !inLiveResize {
             if mouseIsDown && canHighlight {
                 self.controlState = .Highlight
             } else if mouseMovedInside {
