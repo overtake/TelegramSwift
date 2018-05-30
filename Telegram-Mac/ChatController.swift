@@ -1141,7 +1141,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let presentation = self.chatInteraction.presentation
             let inputState = state.inputState.subInputState(from: NSMakeRange(0, state.inputState.inputText.length))
             self.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoading(true)})})})
-            self.editMessageDisposable.set((requestEditMessage(account: self.account, messageId: state.message.id, text: inputState.inputText, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
+            self.editMessageDisposable.set((requestEditMessage(account: self.account, messageId: state.message.id, text: inputState.inputText, media: RequestEditMessageMedia.keep, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
             |> deliverOnMainQueue |> afterDisposed { [weak self] in
                 self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoading(false)})})})
             }).start(completed: { [weak self] in
@@ -1814,7 +1814,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         
-        let connectionStatus = account.network.connectionStatus |> deliverOnMainQueue |> beforeNext { [weak self] status -> Void in
+        let connectionStatus = account.network.connectionStatus |> delay(0.5, queue: Queue.mainQueue()) |> deliverOnMainQueue |> beforeNext { [weak self] status -> Void in
             
             (self?.centerBarView as? ChatTitleBarView)?.connectionStatus = status
         }
@@ -1826,7 +1826,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         })
         
         
-        connectionStatusDisposable.set((connectionStatus |> delay(0.5, queue: Queue.mainQueue())).start())
+        connectionStatusDisposable.set((connectionStatus).start())
         
         
         var beginPendingTime:CFAbsoluteTime?
