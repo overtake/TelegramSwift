@@ -348,6 +348,8 @@ func chatMessagePhoto(account: Account, photo: TelegramMediaImage, toRepresentat
                         c.fill(arguments.drawingRect)
                     case .none:
                         break
+                    case .imageColor:
+                        break
                     }
                 }
                 
@@ -638,14 +640,29 @@ func chatWebpageSnippetPhoto(account: Account, photo: TelegramMediaImage, scale:
                 c.setBlendMode(.copy)
                 if let blurredThumbnailImage = blurredThumbnailImage {
                     c.interpolationQuality = .low
-                    c.draw(blurredThumbnailImage, in: fittedRect)
+                    switch arguments.resizeMode {
+                    case let .imageColor(color):
+                        c.clip(to: fittedRect, mask: blurredThumbnailImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(fittedRect)
+                    default:
+                        c.draw(blurredThumbnailImage, in: fittedRect)
+                    }
                     c.setBlendMode(.normal)
                 }
                 
                 if let fullSizeImage = fullSizeImage {
                     c.interpolationQuality = .medium
-                    c.draw(fullSizeImage, in: fittedRect)
+                    switch arguments.resizeMode {
+                    case let .imageColor(color):
+                        c.clip(to: fittedRect, mask: fullSizeImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(fittedRect)
+                    default:
+                        c.draw(fullSizeImage, in: fittedRect)
+                    }
                 }
+                
             })
             
             addCorners(context, arguments: arguments, scale:scale)
@@ -1426,6 +1443,8 @@ func mediaGridMessageVideo(postbox: Postbox, file: TelegramMediaFile, scale: CGF
                         c.setFillColor(theme.colors.transparentBackground.cgColor)
                         c.fill(arguments.drawingRect)
                     case .none:
+                        break
+                    case .imageColor:
                         break
                     }
                 }

@@ -40,7 +40,15 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_enable, equatable: InputDataEquatable(!state.settings.servers.isEmpty || state.settings.effectiveActiveServer != nil), item: { initialSize, stableId in
+    struct UpdateEnableRow : Equatable {
+        let enabled: Bool
+        let hasActiveServer: Bool
+        let hasServers: Bool
+    }
+    
+    let updateEnableRow: UpdateEnableRow = UpdateEnableRow(enabled: state.settings.enabled, hasActiveServer: state.settings.effectiveActiveServer != nil, hasServers: !state.settings.servers.isEmpty)
+    
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_enable, equatable: InputDataEquatable(updateEnableRow), item: { initialSize, stableId in
         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsEnable, type: .switchable(state.settings.effectiveActiveServer != nil), action: {
             if state.settings.enabled {
                 arguments.disconnect()

@@ -1207,6 +1207,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        chatInteraction.sendLocation = { [weak self] coordinate, venue in
+            guard let `self` = self else {return}
+            _ = Sender.enqueue(media: TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil), account: self.account, peerId: self.chatInteraction.peerId, chatInteraction: self.chatInteraction).start(completed: scrollAfterSend)
+        }
+        
         chatInteraction.scrollToLatest = { [weak self] removeStack in
             if let strongSelf = self {
                 if removeStack {

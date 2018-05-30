@@ -130,24 +130,27 @@ class ChatInputActionsView: View, Notifable {
     private func addHoverObserver() {
         
         entertaiments.set(handler: { [weak self] (state) in
-            if let strongSelf = self {
-                let chatInteraction = strongSelf.chatInteraction
-                var enabled = false
+            guard let `self` = self else {return}
+            let chatInteraction = self.chatInteraction
+            var enabled = false
+            
+            if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
+                enabled = sidebarEnabled
+            }
+            if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
+                if !hasPopover(mainWindow) {
+                    self.showEntertainment()
+                }
                 
-                if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
-                    enabled = sidebarEnabled
-                }
-                if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
-                    if !hasPopover(mainWindow) {
-                        let rect = NSMakeRect(0, 0, 350, 350)
-                        strongSelf.entertaimentsPopover._frameRect = rect
-                        strongSelf.entertaimentsPopover.view.frame = rect
-                        showPopover(for: strongSelf.entertaiments, with: strongSelf.entertaimentsPopover, edge: .maxX, inset:NSMakePoint(strongSelf.frame.width - strongSelf.entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
-                    }
-                    
-                }
             }
         }, for: .Hover)
+    }
+    
+    private func showEntertainment() {
+        let rect = NSMakeRect(0, 0, 350, floor(mainWindow.frame.height - 150))
+        entertaimentsPopover._frameRect = rect
+        entertaimentsPopover.view.frame = rect
+        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
     }
     
     private func addClickObserver() {

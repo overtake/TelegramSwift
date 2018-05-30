@@ -297,7 +297,7 @@ open class Control: View {
     }
     
     public func updateState() -> Void {
-        if mouseInside() {
+        if mouseInside(), !inLiveResize {
             if mouseIsDown && canHighlight {
                 self.controlState = .Highlight
             } else if mouseMovedInside {

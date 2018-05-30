@@ -1473,6 +1473,8 @@ internal final class L10n {
   internal static var inlineModalActionTitle: String  { return L10n.tr("Localizable", "InlineModalAction.Title") }
   /// File
   internal static var inputAttachPopoverFile: String  { return L10n.tr("Localizable", "InputAttach.Popover.File") }
+  /// Location
+  internal static var inputAttachPopoverLocation: String  { return L10n.tr("Localizable", "InputAttach.Popover.Location") }
   /// Photo Or Video
   internal static var inputAttachPopoverPhotoOrVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.PhotoOrVideo") }
   /// Camera
@@ -1519,6 +1521,18 @@ internal final class L10n {
   internal static var linkInvationConfirmOk: String  { return L10n.tr("Localizable", "LinkInvation.Confirm.Ok") }
   /// Are you sure you want to revoke this link? Once you do, no one will be able to join the group using it.
   internal static var linkInvationGroupConfirmRevoke: String  { return L10n.tr("Localizable", "LinkInvation.Group.Confirm.Revoke") }
+  /// Accurate to %@
+  internal static func locationSendAccurateTo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Location.Send.AccurateTo", p1)
+  }
+  /// Locating...
+  internal static var locationSendLocating: String  { return L10n.tr("Localizable", "Location.Send.Locating") }
+  /// Send My Current Location
+  internal static var locationSendMyLocation: String  { return L10n.tr("Localizable", "Location.Send.MyLocation") }
+  /// Send This Location
+  internal static var locationSendThisLocation: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation") }
+  /// Unknown Location
+  internal static var locationSendThisLocationUnknown: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation.Unknown") }
   /// code
   internal static var loginCodePlaceholder: String  { return L10n.tr("Localizable", "Login.codePlaceholder") }
   /// Continue on English
@@ -1753,8 +1767,6 @@ internal final class L10n {
   internal static var networkUsageHeaderVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Videos") }
   /// You have new message
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
-  /// Mute
-  internal static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
   /// Include muted chats in badge
   internal static var notificationSettingsIncludeMutedChats: String  { return L10n.tr("Localizable", "NotificationSettings.IncludeMutedChats") }
   /// Message Preview
@@ -2115,6 +2127,8 @@ internal final class L10n {
   internal static var peerInfoBotAddToGroup: String  { return L10n.tr("Localizable", "PeerInfo.Bot.AddToGroup") }
   /// Help
   internal static var peerInfoBotHelp: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Help") }
+  /// Privacy
+  internal static var peerInfoBotPrivacy: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Privacy") }
   /// Settings
   internal static var peerInfoBotSettings: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Settings") }
   /// Share

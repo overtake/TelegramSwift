@@ -11,7 +11,7 @@ import PostboxMac
 import TelegramCoreMac
 import TGUIKit
 import SwiftSignalKitMac
-
+import MapKit
 
 
 final class ReplyMarkupInteractions {
@@ -122,7 +122,7 @@ final class ChatInteraction : InterfaceObserver  {
     var showNextPost:()->Void = {}
     var startRecording:(Bool)->Void = {_ in}
     var openProxySettings: ()->Void = {}
-    
+    var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
     
     let loadingMessage: ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
     

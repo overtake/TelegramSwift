@@ -479,7 +479,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            let future = NSMakeSize(frame.width, min(genericView.listHeight,min(superview.frame.height - 50 - relativeView.frame.height, 140)))
+            let future = NSMakeSize(frame.width, min(genericView.listHeight,min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))))
             //  genericView.change(size: future, animated: animated)
             //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
             
@@ -531,7 +531,7 @@ class InputContextHelper: NSObject {
     
     func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, animated:Bool) {
         
-        controller._frameRect = NSMakeRect(0, 0, view.frame.width, 140)
+        controller._frameRect = NSMakeRect(0, 0, view.frame.width, floor(view.frame.height / 2))
         controller.loadViewIfNeeded()
         controller.superview = view
         controller.genericView.relativeView = relativeView
