@@ -2005,8 +2005,14 @@ public extension ProxySettings {
         var servers = self.servers
         if let index = servers.index(where: {$0 == current}) {
             servers[index] = updated
+        } else {
+            servers.append(updated)
         }
-        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
+        var activeServer = self.activeServer
+        if activeServer == current {
+            activeServer = updated
+        }
+        return ProxySettings(enabled: self.enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
     }
     
     public func withUpdatedUseForCalls(_ enable: Bool) -> ProxySettings {
@@ -2018,11 +2024,11 @@ public extension ProxySettings {
         var activeServer = self.activeServer
         var enabled: Bool = self.enabled
         if let index = servers.index(where: {$0 == proxy}) {
-            let current = servers.remove(at: index)
-            if current == activeServer {
-                activeServer = nil
-                enabled = false
-            }
+            _ = servers.remove(at: index)
+        }
+        if proxy == activeServer {
+            activeServer = nil
+            enabled = false
         }
         return ProxySettings(enabled: enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
     }

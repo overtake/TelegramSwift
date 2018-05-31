@@ -559,7 +559,7 @@ wml:text/vnd.wap.wml
 wmlc:application/vnd.wap.wmlc
 wmls:text/vnd.wap.wmlscript
 wmlsc:application/vnd.wap.wmlscriptc
-word:application/msword
+doc:application/msword
 wp:application/wordperfect
 wp5:application/wordperfect
 wp5:application/wordperfect6.0

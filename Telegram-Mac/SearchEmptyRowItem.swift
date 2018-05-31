@@ -50,7 +50,7 @@ class SearchEmptyRowItem: TableRowItem {
                 }
                 return true
             })
-            return table.frame.height - basic - 50
+            return table.frame.height - basic
         } else {
             return initialSize.height
         }
