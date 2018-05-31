@@ -1525,12 +1525,18 @@ internal final class L10n {
   internal static func locationSendAccurateTo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Location.Send.AccurateTo", p1)
   }
+  /// Hide nearby places
+  internal static var locationSendHideNearby: String  { return L10n.tr("Localizable", "Location.Send.HideNearby") }
   /// Locating...
   internal static var locationSendLocating: String  { return L10n.tr("Localizable", "Location.Send.Locating") }
   /// Send My Current Location
   internal static var locationSendMyLocation: String  { return L10n.tr("Localizable", "Location.Send.MyLocation") }
+  /// Show nearby places
+  internal static var locationSendShowNearby: String  { return L10n.tr("Localizable", "Location.Send.ShowNearby") }
   /// Send This Location
   internal static var locationSendThisLocation: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation") }
+  /// Location
+  internal static var locationSendTitle: String  { return L10n.tr("Localizable", "Location.Send.Title") }
   /// Unknown Location
   internal static var locationSendThisLocationUnknown: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation.Unknown") }
   /// code

@@ -246,7 +246,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                     replyMessageText = pullText(from: message) as String
                 }
             }
-            return tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefix(30)))
+            return tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefixWithDots(15)))
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
                 return tr(L10n.chatServiceGroupRemovedSelf(authorName))
