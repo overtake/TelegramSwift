@@ -380,7 +380,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
                 filter = .all
             }
             
-            let participantsSignal:Signal<[RenderedChannelParticipant]?, Void> = channelMembers(postbox: account.postbox, network: account.network, peerId: peerId, category: .recent(filter)) |> map {_ = _renderedResult.swap($0.reduce([:], { current, participant in
+            let participantsSignal:Signal<[RenderedChannelParticipant]?, Void> = channelMembers(postbox: account.postbox, network: account.network, peerId: peerId, category: .recent(filter)) |> map {_ = _renderedResult.swap(($0 ?? []).reduce([:], { current, participant in
                 var current = current
                 current[participant.peer.id] = participant
                 return current
