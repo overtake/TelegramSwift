@@ -69,7 +69,13 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
                 break
             }
         }
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _id_calls, equatable: InputDataEquatable(state.settings.useForCalls && enabled), item: { initialSize, stableId in
+        
+        struct UseForCallEquatable : Equatable {
+            let enabled: Bool
+            let useForCalls: Bool
+        }
+        
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _id_calls, equatable: InputDataEquatable(UseForCallEquatable(enabled: enabled, useForCalls: state.settings.useForCalls)), item: { initialSize, stableId in
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsUseForCalls, type: .switchable(state.settings.useForCalls && enabled), action: {
                 arguments.enableForCalls(!state.settings.useForCalls)
             }, enabled: enabled)
@@ -98,15 +104,16 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     
     for proxy in list {
         struct ProxyEquatable : Equatable {
-            let waiting: Bool
+            let enabled: Bool
+            let isActiveServer: Bool
             let connectionStatus: ConnectionStatus?
             let proxy: ProxyServerSettings
             let status: ProxyServerStatus?
         }
-        let value = ProxyEquatable(waiting: !state.settings.enabled && state.settings.activeServer == proxy, connectionStatus: proxy == state.settings.effectiveActiveServer ? status : nil, proxy: proxy, status: statuses[proxy])
+        let value = ProxyEquatable(enabled: state.settings.enabled, isActiveServer: state.settings.activeServer == proxy, connectionStatus: proxy == state.settings.effectiveActiveServer ? status : nil, proxy: proxy, status: statuses[proxy])
         
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: InputDataIdentifier("_proxy_\(proxy.hashValue))"), equatable: InputDataEquatable(value), item: { initialSize, stableId -> TableRowItem in
-            return ProxyListRowItem(initialSize, stableId: stableId, proxy: proxy, waiting: value.waiting, connectionStatus: value.connectionStatus, status: value.status, action: {
+            return ProxyListRowItem(initialSize, stableId: stableId, proxy: proxy, waiting: !value.enabled && state.settings.activeServer == proxy, connectionStatus: value.connectionStatus, status: value.status, action: {
                 arguments.connect(proxy)
             }, info: {
                 arguments.edit(proxy)
@@ -255,6 +262,8 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
         title = L10n.proxySettingsMTP
     }
     
+    weak var _controller: ViewController?
+    
     let controller = InputDataController(dataSignal: statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return addProxySettingsEntries(state: state)
     }, title: title, validateData: { data -> InputDataValidation in
@@ -282,7 +291,7 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
                     }
                     
                     copyToClipboard(link)
-                    alert(for: mainWindow, info: L10n.shareLinkCopied)
+                    _controller?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
                     
                     return current
                 }
@@ -337,6 +346,8 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
     }, afterDisappear: {
         actionsDisposable.dispose()
     }, identifier: "proxy")
+    
+    _controller = controller
     
     return (controller)
 }

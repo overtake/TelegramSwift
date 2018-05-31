@@ -221,10 +221,8 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         var settings:(ProxySettings, ConnectionStatus)? = nil
         
         
-       // let next:Atomic<Bool> = Atomic(value: false)
         
         proxyDisposable.set(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), Void> in
-            //_ = next.swap(false)
             return account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
             }
