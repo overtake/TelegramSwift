@@ -30,14 +30,13 @@ private enum PickLocationState : Equatable {
 
 private enum LocationViewState : Equatable {
     case normal(PickLocationState)
-    case expanded
+    case expanded(CLLocation?)
 }
 
 
 private final class LocationPinView : View {
     private let locationPin: ImageView = ImageView()
     private let dotView: View = View(frame: NSMakeRect(0, 0, 4, 4))
-   //private var state: PickLocationState = .custom(locating: false)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(locationPin)
@@ -88,8 +87,7 @@ private final class LocationMapView : View {
     fileprivate let tableView: TableView = TableView(frame: NSZeroRect)
     fileprivate let locateButton: ImageButton = ImageButton()
     
-    private let locationPinView = LocationPinView.init(frame: NSMakeRect(0, 0, 40, 70))
-    
+    private let locationPinView = LocationPinView(frame: NSMakeRect(0, 0, 40, 70))
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -99,6 +97,7 @@ private final class LocationMapView : View {
         mapView.isZoomEnabled = true
         mapView.isScrollEnabled = true
         mapView.showsUserLocation = true
+        mapView.showsZoomControls = true
         mapView.wantsLayer = true
         header.addSubview(headerTextView)
         header.addSubview(dismiss)
@@ -137,7 +136,7 @@ private final class LocationMapView : View {
         loadingView.progressColor = theme.colors.blueUI
         expandContainer.border = [.Top]
         expandContainer.backgroundColor = theme.colors.background
-        let title = TextViewLayout(.initialize(string: "Location", color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        let title = TextViewLayout(.initialize(string: L10n.locationSendTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         title.measure(width: frame.width - 20)
         
         headerTextView.update(title)
@@ -167,7 +166,7 @@ private final class LocationMapView : View {
             }
             locationPinView.change(opacity: loading ? 0 : 1, animated: animated)
             locationPinView.updateState(pickState, animated: animated)
-            expandButton.set(text: "Show nearby places", for: .Normal)
+            expandButton.set(text: L10n.locationSendShowNearby, for: .Normal)
             //NSMakeRect(0, frame.height - 50 - expandContainer.frame.height, frame.width, 50)
             tableView.change(size: NSMakeSize(frame.width, 60), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
             tableView.change(pos: NSMakePoint(0, frame.height - 60 - (hasExpand ? expandContainer.frame.height : 0)), animated: animated, duration: duration, timingFunction: timingFunction)
@@ -177,7 +176,7 @@ private final class LocationMapView : View {
             locateButton.userInteractionEnabled = false
             locateButton.set(image: theme.icons.locationMapLocate, for: .Normal)
             locationPinView.change(opacity: 0, animated: animated)
-            expandButton.set(text: "Hide nearby places", for: .Normal)
+            expandButton.set(text: L10n.locationSendHideNearby, for: .Normal)
             let tableHeight = min(tableView.listHeight, frame.height - (hasExpand ? expandContainer.frame.height : 0) - header.frame.height - 50)
             tableView.change(size: NSMakeSize(frame.width, tableHeight), animated: animated, duration: duration, timingFunction: timingFunction)
             tableView.change(pos: NSMakePoint(0, frame.height - (hasExpand ? expandContainer.frame.height : 0) - tableHeight), animated: animated, duration: duration, timingFunction: timingFunction)
@@ -201,7 +200,7 @@ private final class LocationMapView : View {
                 guard let `self` = self else {return}
                 switch state {
                 case .normal:
-                    toggleExpand(.expanded)
+                    toggleExpand(.expanded(self.mapView.userLocation.location))
                 case .expanded:
                     toggleExpand(.normal(.user(self.mapView.userLocation.location)))
                 }
@@ -239,6 +238,11 @@ private final class LocationMapView : View {
         
         expandButton.center()
         loadingView.center()
+        
+        let zoomControls = HackUtils.findElements(byClass: "MKZoomSegmentedControl", in: mapView).first as? NSView
+        if let zoomControls = zoomControls {
+            zoomControls.setFrameOrigin(20, 20)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -266,6 +270,7 @@ private enum MapItemEntryId : Hashable {
     case expandNearby
     case nearby(Int32)
     case search
+    case searchEmptyId
     var hashValue: Int {
         return 0
     }
@@ -276,6 +281,7 @@ private enum MapItemEntry : TableItemListNodeEntry {
     case expandNearby(index: Int32, expand: Bool, loading: Bool)
     case nearby(index: Int32, result: ChatContextResult)
     case search(index: Int32)
+    case searchEmpty(index: Int32, loading: Bool)
     var index: Int32 {
         switch self {
         case let .currentLocation(index, _):
@@ -285,6 +291,8 @@ private enum MapItemEntry : TableItemListNodeEntry {
         case let .nearby(index, _):
             return index
         case let .search(index):
+            return index
+        case let .searchEmpty(index, _):
             return index
         }
     }
@@ -297,6 +305,8 @@ private enum MapItemEntry : TableItemListNodeEntry {
             return .expandNearby
         case .search:
             return .search
+        case .searchEmpty:
+            return .searchEmptyId
         case let .nearby(index, _):
             return .nearby(index)
         }
@@ -323,6 +333,8 @@ private enum MapItemEntry : TableItemListNodeEntry {
             return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, action: {
                 arguments.sendCurrent()
             })
+        case let .searchEmpty(_, loading):
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading)
         default:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -365,10 +377,16 @@ private func mapEntries(result: [ChatContextResult], loading: Bool, location: CL
     case .expanded:
         entries.append(.search(index: index))
         index += 1
-        for value in result {
-            entries.append(.nearby(index: index, result: value))
+        if !result.isEmpty {
+            for value in result {
+                entries.append(.nearby(index: index, result: value))
+                index += 1
+            }
+        } else {
+            entries.append(MapItemEntry.searchEmpty(index: index, loading: false))
             index += 1
         }
+       
     case .normal:
         break
     }
@@ -488,10 +506,13 @@ class LocationModalController: ModalViewController {
                     self?.chatInteraction.sendLocation(location.coordinate, nil)
                     self?.close()
                 }
-            case .expanded:
+            case let .expanded(location):
                 if let media = media {
                     let coordinate = CLLocationCoordinate2D(latitude: media.latitude, longitude: media.longitude)
                     self?.chatInteraction.sendLocation(coordinate, media.venue)
+                    self?.close()
+                } else if let location = location {
+                    self?.chatInteraction.sendLocation(location.coordinate, nil)
                     self?.close()
                 }
             }
@@ -525,8 +546,10 @@ class LocationModalController: ModalViewController {
             delegate.focusUserLocation(genericView.mapView)
         }
         
+        var handleRegion: Bool = true
+        
         delegate.willChangeRegion = { [weak self] in
-            guard let `self` = self else {return}
+            guard let `self` = self, handleRegion else {return}
             if self.delegate.isPinRaised {
                 state.set(.normal(.custom(nil, named: nil)))
             } else {
@@ -534,7 +557,7 @@ class LocationModalController: ModalViewController {
             }
         }
         delegate.didChangeRegion = { [weak self] in
-            guard let `self` = self else {return}
+            guard let `self` = self, handleRegion else {return}
             if self.delegate.isPinRaised {
                 state.set(.normal(.custom(self.genericView.getSelectedLocation(), named: nil)))
             } else {
@@ -545,19 +568,36 @@ class LocationModalController: ModalViewController {
         let peerId = chatInteraction.peerId
         let account = self.chatInteraction.account
         
-        let search:ValuePromise<String> = ValuePromise("", ignoreRepeated: true)
+        let search:Promise<String> = Promise("")
         
+        var cachedData:[String : ChatContextResultCollection] = [:]
+        let previousResult:Atomic<ChatContextResultCollection?> = Atomic(value: nil)
         let peerSignal: Signal<PeerId?, Void> = .single(nil) |> then(resolvePeerByName(account: chatInteraction.account, name: "foursquare") )
-        let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue)
-            |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool), NoError> in
+        let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
+            |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {
-                    return requestChatContextResults(account: account, botId: botId, peerId: peerId, query: query, offset: "", geopoint: ChatContextGeoPoint(latitude: location.coordinate.latitude, longtitude: location.coordinate.longitude)) |> map {($0, location.location, false)}
+                    let first = Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), Void>.single((cachedData[query] ?? previousResult.modify {$0}, location.location, cachedData[query] == nil, !query.isEmpty))
+                    if cachedData[query] == nil {
+                        return first |> then(requestChatContextResults(account: account, botId: botId, peerId: peerId, query: query, offset: "", geopoint: ChatContextGeoPoint(latitude: location.coordinate.latitude, longtitude: location.coordinate.longitude))
+                            |> deliverOnPrepareQueue |> map { result in
+                                var value = result
+                                if let result = result {
+                                    cachedData[query] = result
+                                }
+                                value = previousResult.modify {_ in result}
+                                
+                                return (value, location.location, false, !query.isEmpty)
+                            })
+                    } else {
+                        return first
+                    }
+                    
                 } else {
-                    return .single((nil, location?.location, botId == nil))
+                    return .single((nil, location?.location, botId == nil, false))
                 }
         }
         
-        let signal: Signal<(ChatContextResultCollection?, CLLocation?, Bool), NoError> = .single((nil, nil, true)) |> then(requestSignal)
+        let signal: Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> = .single((nil, nil, true, false)) |> then(requestSignal)
         
         let previous: Atomic<[AppearanceWrapperEntry<MapItemEntry>]> = Atomic(value: [])
         
@@ -567,7 +607,13 @@ class LocationModalController: ModalViewController {
         }, sendVenue: { [weak self] venue in
             self?.sendLocation(venue)
         }, searchVenues: { query in
-            search.set(query)
+            prepareQueue.async {
+                if cachedData[query] != nil {
+                    search.set(.single(query))
+                } else {
+                    search.set(.single(query) |> delay(0.2, queue: prepareQueue))
+                }
+            }
         })
         
         let stateModified = state.get() |> mapToSignal { state -> Signal<LocationViewState, Void> in
@@ -587,12 +633,12 @@ class LocationModalController: ModalViewController {
                 break
             }
             return .single(state)
-        }
+        } |> distinctUntilChanged
         
         let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), Void> = combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateModified |> deliverOnPrepareQueue) |> map { data, appearance, state in
             let results:[ChatContextResult] = data.0?.results ?? []
             let entries = mapEntries(result: results, loading: data.2, location: data.1, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), data.2, state, !results.isEmpty)
+            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), data.2, state, !results.isEmpty || data.3)
         } |> deliverOnMainQueue
         
         let animated:Atomic<Bool> = Atomic(value: false)
@@ -600,9 +646,15 @@ class LocationModalController: ModalViewController {
         disposable.set(transition.start(next: { [weak self] transition, loading, expanded, hasVenues in
             guard let `self` = self else {return}
             self.genericView.tableView.merge(with: transition)
+            switch expanded {
+            case .expanded:
+                handleRegion = false
+            default:
+                handleRegion = true
+            }
             self.genericView.updateExpandState(expanded, loading: loading, hasVenues: hasVenues, animated: animated.swap(true), toggleExpand: { [weak self] viewState in
                 self?.genericView.tableView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
-
+                search.set(.single(""))
                 state.set(viewState)
             })
             self.readyOnce()

@@ -108,7 +108,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         textView.delegate = self
         textView.textFont = .normal(.text)
         
-        textView.min_height = 16
+        //textView.min_height = 16
         textView.max_height = 1500
         secureField.isBordered = false
         secureField.isBezeled = false

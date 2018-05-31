@@ -70,9 +70,11 @@ class ProxyListRowItem: GeneralRowItem {
                     statusText = L10n.proxySettingsItemChecking
                 }
             }
+            
             self.status = (isConnecting: false, isCurrent: false)
         }
-        
+        statusText = title.lowercased() + ": " + statusText
+
         self.statusLayout = TextViewLayout(.initialize(string: statusText, color: color, font: .normal(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 50, stableId: stableId, action: action, inset: NSEdgeInsetsMake(0, 60, 0, 30))
     }

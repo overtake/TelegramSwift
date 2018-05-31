@@ -268,7 +268,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 self?.needsDisplay = true
                 self?.activities?.view?.isHidden = !show
             })
-            addSubview(activities.view!)
+            container.addSubview(activities.view!)
             
         } else {
             hiddenStatus = true
