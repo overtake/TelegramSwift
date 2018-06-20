@@ -256,6 +256,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     installed[nightBluePalette.name] = nightBluePalette
     installed[dayClassic.name] = dayClassic
     installed[darkPalette.name] = darkPalette
+    installed[mojavePalette.name] = darkPalette
 
 
     entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .color(Int32(dayClassic.background.rgb))))
@@ -267,9 +268,12 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
     index += 1
     
-    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette, .color(Int32(darkPalette.background.rgb))))
-    index += 1
+//    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette, .color(Int32(darkPalette.background.rgb))))
+//    index += 1
 
+    
+    entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, .color(Int32(mojavePalette.background.rgb))))
+    index += 1
 
     
     var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")

@@ -27,6 +27,19 @@ private func generateLocationPinIcon(_ background: NSColor) -> CGImage {
     })!
 }
 
+private func generateChatTabSelected(_ color: NSColor, _ icon: CGImage) -> CGImage {
+    let main = #imageLiteral(resourceName: "Icon_TabChatList_Highlighted").precomposed(color)
+    return generateImage(main.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.draw(main, in: NSMakeRect(0, 0, size.width, size.height))
+        
+        
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2) - 2, floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2) + 2, icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+        
+    })!
+}
+
 private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         let rect = CGRect(origin: CGPoint(), size: size)
@@ -713,6 +726,7 @@ struct TelegramIconsTheme {
     let settingsStorage: CGImage
     let settingsProxy: CGImage
     let settingsAppearance: CGImage
+    let settingsPassport: CGImage
     
     let settingsAskQuestionActive: CGImage
     let settingsFaqActive: CGImage
@@ -724,6 +738,7 @@ struct TelegramIconsTheme {
     let settingsStorageActive: CGImage
     let settingsProxyActive: CGImage
     let settingsAppearanceActive: CGImage
+    let settingsPassportActive: CGImage
 
     let generalCheck: CGImage
     let settingsAbout: CGImage
@@ -804,6 +819,14 @@ struct TelegramIconsTheme {
     let locationMapPin: CGImage
     let locationMapLocate: CGImage
     let locationMapLocated: CGImage
+    
+    let chatTabIconSelected: CGImage
+    let chatTabIconSelectedUp: CGImage
+    let chatTabIconSelectedDown: CGImage
+    let chatTabIcon: CGImage
+    
+    let passportSettings: CGImage
+    let passportInfo: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1148,6 +1171,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsStorage: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(flipVertical: true)),
                                                settingsProxy: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)),
                                                settingsAppearance: generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)),
+                                               settingsPassport: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)),
                                                settingsAskQuestionActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsFaqActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsGeneralActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(.white, flipVertical: true), background: palette.blueSelect),
@@ -1158,6 +1182,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsStorageActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsProxyActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsAppearanceActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsPassportActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                generalCheck: #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon),
                                                settingsAbout: #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon),
                                                settingsLogout: #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI),
@@ -1216,7 +1241,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                locationPin: generateLocationPinIcon(palette.blueIcon),
                                                locationMapPin: generateLocationMapPinIcon(palette.blueIcon),
                                                locationMapLocate: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.grayIcon),
-                                               locationMapLocated: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.blueIcon)
+                                               locationMapLocated: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.blueIcon),
+                                               chatTabIconSelected: #imageLiteral(resourceName: "Icon_TabChatList_Highlighted").precomposed(palette.blueIcon),
+                                               chatTabIconSelectedUp: generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background, flipVertical: true)),
+                                               chatTabIconSelectedDown: generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background)),
+                                               chatTabIcon: #imageLiteral(resourceName: "Icon_TabChatList").precomposed(palette.grayIcon),
+                                               passportSettings: #imageLiteral(resourceName: "Icon_PassportSettings").precomposed(palette.grayIcon),
+                                               passportInfo: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon)
     )
 }
 
@@ -1263,6 +1294,8 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
         palette = dayClassic
     case nightBluePalette.name:
         palette = nightBluePalette
+    case mojavePalette.name:
+        palette = mojavePalette
     default:
         palette = settings.palette
     }

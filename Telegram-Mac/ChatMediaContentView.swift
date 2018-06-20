@@ -100,8 +100,8 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     func delete() -> Void {
         if let parent = parent {
-            _ = account?.postbox.modify({ modifier -> Void in
-                modifier.deleteMessages([parent.id])
+            _ = account?.postbox.transaction({ transaction -> Void in
+                transaction.deleteMessages([parent.id])
             }).start()
         }
     }

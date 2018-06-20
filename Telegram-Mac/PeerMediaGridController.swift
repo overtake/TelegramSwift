@@ -262,10 +262,12 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     }
     
     
-    private var requestCount:Int {
+    private var screenCount:Int {
         let screenCount = (frame.width / 100) * (frame.height / 100)
         return Int(screenCount * 4)
     }
+    
+    private var requestCount:Int  = 0
     
     func enableScroll() -> Void {
         
@@ -283,7 +285,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                 break
             }
             if let index = index {
-                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: historyView.originalView.anchorIndex, count: self.requestCount)
+                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: historyView.originalView.anchorIndex, count: self.requestCount + self.screenCount)
                 
                 self.disableScroll()
                 
@@ -291,24 +293,6 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
             }
             
         }
-        
-//        genericView.grid.visibleItemsUpdated = { [weak self] visibleItems in
-//
-//            if let strongSelf = self, let historyView = strongSelf.historyView, let top = visibleItems.top, let bottom = visibleItems.bottom {
-//                if top.0 < 5 && historyView.originalView.laterId != nil {
-//                    //
-//                    let lastEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - top.0, 0), historyView.filteredEntries.count - 1)]
-//                    let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(lastEntry.entry.index), anchorIndex: historyView.originalView.anchorIndex, count: strongSelf.requestCount)
-//
-//                    strongSelf._chatHistoryLocation.set(location)
-//                    strongSelf.disableScroll()
-//                } else if bottom.0 >= historyView.filteredEntries.count - 5 && historyView.originalView.earlierId != nil {
-//                    let firstEntry = historyView.filteredEntries[min(max(historyView.filteredEntries.count - 1 - bottom.0, 0), historyView.filteredEntries.count - 1)]
-//                    strongSelf._chatHistoryLocation.set(ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(firstEntry.entry.index), anchorIndex: historyView.originalView.anchorIndex, count: strongSelf.requestCount))
-//                    strongSelf.disableScroll()
-//                }
-//            }
-//        }
     }
     
     func disableScroll() -> Void {
@@ -316,14 +300,27 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
         genericView.grid.scrollHandler = {_ in}
     }
     
+    var itemSize: NSSize {
+        let count = ceil(bounds.width / 120)
+        let width = floorToScreenPixels(scaleFactor: view.backingScaleFactor, bounds.width / count)
+        return NSMakeSize(width - 4, width)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.bounds.width, type: .fixed(itemSize: CGSize(width: 120, height: 120), lineSpacing: 4)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
         
-        self._chatHistoryLocation.set(ChatHistoryLocation.Initial(count: requestCount))
+        
+        genericView.grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.bounds.width, type: .fixed(itemSize: itemSize, lineSpacing: 4)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
+        
+        self._chatHistoryLocation.set(ChatHistoryLocation.Initial(count: screenCount))
 
         
+    }
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        genericView.grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.bounds.width, type: .fixed(itemSize: itemSize, lineSpacing: 4)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
     }
     
   
@@ -337,7 +334,10 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
         super.init()
         
         let historyViewUpdate = self.chatHistoryLocation
-            |> distinctUntilChanged
+            |> distinctUntilChanged |> beforeNext { [weak self] location -> ChatHistoryLocation in
+                self?.requestCount += location.count
+                return location
+            }
             |> mapToSignal { (location) in
                 return chatHistoryViewForLocation(location, account: account, chatLocation: chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask)
             }
@@ -357,7 +357,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                     }
                 }
                 return .complete()
-            case let .HistoryView(view, type, scrollPosition, _):
+            case let .HistoryView(view, type, _, _):
                 let reason: ChatHistoryViewTransitionReason
                 var prepareOnMainQueue = false
                 switch type {
@@ -429,7 +429,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                 }
             }
             
-            let updateLayout = GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.frame.width, type: .fixed(itemSize: CGSize(width: 120, height: 120), lineSpacing: 4)), transition: .immediate)
+            let updateLayout = GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.frame.width, type: .fixed(itemSize: self.itemSize, lineSpacing: 4)), transition: .immediate)
             
             self.genericView.grid.transaction(GridNodeTransaction(deleteItems: transition.deleteItems, insertItems: transition.insertItems, updateItems: transition.updateItems, scrollToItem: transition.scrollToItem, updateLayout: updateLayout, itemTransition: .immediate, stationaryItems: transition.stationaryItems, updateFirstIndexInSectionOffset: transition.topOffsetWithinMonth), completion: completion)
             

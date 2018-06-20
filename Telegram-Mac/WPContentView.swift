@@ -36,10 +36,16 @@ class WPContentView: View, MultipleSelectable {
                 subview.background = backgroundColor
             }
             if let content = content {
-                instantPageButton?.set(image: content.presentation.ivIcon, for: .Normal)
-                instantPageButton?.set(image: content.presentation.ivIcon, for: .Highlight)
                 instantPageButton?.layer?.borderColor = content.presentation.activity.cgColor
                 instantPageButton?.set(color: content.presentation.activity, for: .Normal)
+                
+                if content.hasInstantPage {
+                    instantPageButton?.set(image: content.presentation.ivIcon, for: .Normal)
+                    instantPageButton?.set(image: content.presentation.ivIcon, for: .Highlight)
+                } else {
+                    instantPageButton?.removeImage(for: .Normal)
+                    instantPageButton?.removeImage(for: .Highlight)
+                }
             }
             
             setNeedsDisplay()
@@ -80,6 +86,10 @@ class WPContentView: View, MultipleSelectable {
         needsDisplay = true
     }
     
+    func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        return convert(point, from: nil)
+    }
+    
     required public override init() {
         super.init()
         super.addSubview(containerView)
@@ -105,7 +115,7 @@ class WPContentView: View, MultipleSelectable {
     func update(with layout:WPLayout) -> Void {
         self.content = layout
         
-        if layout.hasInstantPage {
+        if layout.hasInstantPage || layout.isProxyConfig {
             if instantPageButton == nil {
                 instantPageButton = TitleButton()
                 
@@ -118,16 +128,20 @@ class WPContentView: View, MultipleSelectable {
             instantPageButton?.layer?.borderColor = theme.colors.blueIcon.cgColor
 
             instantPageButton?.set(color: theme.colors.blueIcon, for: .Normal)
-            instantPageButton?.set(image: theme.icons.chatInstantView, for: .Normal)
+         
             instantPageButton?.set(font: .medium(.title), for: .Normal)
             instantPageButton?.set(background: .clear, for: .Normal)
-            instantPageButton?.set(text: tr(L10n.chatInstantView), for: .Normal)
+            instantPageButton?.set(text: layout.isProxyConfig ? L10n.chatApplyProxy : L10n.chatInstantView, for: .Normal)
             _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
             
             instantPageButton?.removeAllHandlers()
             instantPageButton?.set(handler : { [weak layout] _ in
                 if let content = layout {
-                   showInstantPage(InstantPageViewController(content.account, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
+                    if content.hasInstantPage {
+                        showInstantPage(InstantPageViewController(content.account, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
+                    } else if let proxyConfig = content.proxyConfig {
+                        applyExternalProxy(proxyConfig, postbox: content.account.postbox, network: content.account.network)
+                    }
                 }
             }, for: .Click)
             

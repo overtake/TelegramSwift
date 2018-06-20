@@ -325,6 +325,8 @@ class ChatServiceRowView: TableRowView {
     required init(frame frameRect: NSRect) {
         textView = TextView()
         textView.isSelectable = false
+        //textView.userInteractionEnabled = false
+        textView.isEventLess = true
         super.init(frame: frameRect)
         addSubview(textView)
     }

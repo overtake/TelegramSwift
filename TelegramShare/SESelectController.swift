@@ -425,8 +425,15 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                     return .never()
                 }
             } else {
-                return ( search.request.isEmpty ? recentPeers(account: account) : account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
-                    return $0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
+                return ( search.request.isEmpty ? recentPeers(account: account) |> map { recent -> [Peer] in
+                    switch recent {
+                    case .disabled:
+                        return []
+                    case let .peers(peers):
+                        return peers
+                    }
+                    } : account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
+                        return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
                     var entries:[SelectablePeersEntry] = []
                     var i:Int32 = Int32.max
                     for peer in peers {

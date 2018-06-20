@@ -181,6 +181,7 @@ class GalleryViewer: NSResponder {
     
     let interactions:GalleryInteractions = GalleryInteractions()
     let contentInteractions:ChatMediaLayoutParameters?
+    fileprivate var firstStableId: AnyHashable? = nil
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -316,8 +317,8 @@ class GalleryViewer: NSResponder {
 
         let pagerSize = self.pagerSize
         
-        ready.set(account.postbox.modify { modifier -> Peer? in
-            return modifier.getPeer(peerId)
+        ready.set(account.postbox.transaction { transaction -> Peer? in
+            return transaction.getPeer(peerId)
         } |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
             if let peer = peer {
                 var representations:[TelegramMediaImageRepresentation] = []
@@ -410,9 +411,9 @@ class GalleryViewer: NSResponder {
         }))
     }
     
-    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, reversed:Bool = false) {
+    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, firstStableId: AnyHashable? = nil, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, reversed:Bool = false) {
         self.init(account: account, delegate, contentInteractions, type: .history, reversed: reversed)
-        
+        self.firstStableId = firstStableId
         let pagerSize = self.pagerSize
         
         let totalCount:Int = instantMedias.count
@@ -719,7 +720,7 @@ class GalleryViewer: NSResponder {
                 pager.selectedIndex.set(index)
                 
                 if case let .photo(_, _, _, reference) = item.entry {
-                    _ = removeUserPhoto(account: account, reference: index == 0 ? nil : reference).start()
+                    _ = removeAccountPhoto(network: account.network, reference: index == 0 ? nil : reference).start()
                 }
             }
             
@@ -802,6 +803,10 @@ class GalleryViewer: NSResponder {
             if let strongSelf = self {
                 strongSelf.backgroundView.change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
+                    if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
+                        let view = strongSelf?.delegate?.contentInteractionView(for: firstStableId, animateIn: false)
+                        return view?.subviews[innerIndex]
+                    }
                     if ignoreStableId != stableId {
                         return strongSelf?.delegate?.contentInteractionView(for: stableId, animateIn: false)
                     }
@@ -827,9 +832,14 @@ class GalleryViewer: NSResponder {
         if animated {
             backgroundView.change(opacity: 0, duration: 0.15, timingFunction: kCAMediaTimingFunctionSpring)
             controls.animateOut()
-            self.pager.animateOut(to: {[weak self] (stableId) -> NSView? in
+            self.pager.animateOut(to: { [weak self] stableId in
+                if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {
+                    let view = self?.delegate?.contentInteractionView(for: firstStableId, animateIn: false)
+                    return view?.subviews[innerIndex]
+                }
                 return self?.delegate?.contentInteractionView(for: stableId, animateIn: true)
             }, completion: { [weak self] interactive, stableId in
+               
                 if let stableId = stableId {
                     self?.delegate?.interactionControllerDidFinishAnimation(interactive: interactive, for: stableId)
                 }
@@ -940,10 +950,10 @@ func showPhotosGallery(account:Account, peerId:PeerId, firstStableId:AnyHashable
   //  }
 }
 
-func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
+func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, firstStableId:AnyHashable? = nil, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
     //if viewer == nil {
     viewer?.clean()
-    let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, delegate, contentInteractions)
+    let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, delegate, contentInteractions)
     gallery.show()
    // }
 }

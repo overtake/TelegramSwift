@@ -25,18 +25,22 @@ class KeyHandler : Comparable {
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let modifierFlags:NSEvent.ModifierFlags?
-    
+    let date: TimeInterval
     init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEvent.ModifierFlags?) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
         self.modifierFlags = flags
+        self.date = Date().timeIntervalSince1970
     }
 }
 func ==(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
     return lhs.priority == rhs.priority
 }
 func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
+    if lhs.priority == rhs.priority {
+        return lhs.date < rhs.date
+    }
     return lhs.priority < rhs.priority
 }
 
@@ -122,7 +126,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeHandler] = []
     private var responsders:[ResponderObserver] = []
-    private var mouseHandlers:[NSEvent.EventType:[MouseObserver]] = [:]
+    private var mouseHandlers:[UInt:[MouseObserver]] = [:]
     private var swipePoints:[NSPoint] = []
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
@@ -182,7 +186,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
         }
         self.keyHandlers = newKeyHandlers
         
-        var newMouseHandlers:[NSEvent.EventType:[MouseObserver]] = [:]
+        var newMouseHandlers:[UInt:[MouseObserver]] = [:]
         for (key, handlers) in mouseHandlers {
             newMouseHandlers[key] = handlers
         }
@@ -247,7 +251,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
         }
         self.keyHandlers = newKeyHandlers
         
-        var newMouseHandlers:[NSEvent.EventType:[MouseObserver]] = [:]
+        var newMouseHandlers:[UInt:[MouseObserver]] = [:]
         for (key, handlers) in mouseHandlers {
             newMouseHandlers[key] = handlers
         }
@@ -279,16 +283,16 @@ public class Window: NSWindow, NSTouchBarDelegate {
     }
     
     public func set(mouseHandler:@escaping(NSEvent) -> KeyHandlerResult, with object:NSObject, for type:NSEvent.EventType, priority:HandlerPriority = .low) -> Void {
-        var handlers:[MouseObserver]? = mouseHandlers[type]
+        var handlers:[MouseObserver]? = mouseHandlers[type.rawValue]
         if handlers == nil {
             handlers = []
-            mouseHandlers[type] = handlers
+            mouseHandlers[type.rawValue] = handlers
         }
-        mouseHandlers[type]?.append(MouseObserver(mouseHandler, object, priority, type))
+        mouseHandlers[type.rawValue]?.append(MouseObserver(mouseHandler, object, priority, type))
     }
     
     public func remove(object:NSObject, for type:NSEvent.EventType) {
-        let handlers = mouseHandlers[type]
+        let handlers = mouseHandlers[type.rawValue]
         if let handlers = handlers {
             var copy:[MouseObserver] = []
             for handle in handlers {
@@ -296,7 +300,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
                 if copy[i].object.value == object || copy[i].object.value == nil  {
-                    mouseHandlers[type]?.remove(at: i)
+                    mouseHandlers[type.rawValue]?.remove(at: i)
                 }
             }
         }
@@ -386,8 +390,14 @@ public class Window: NSWindow, NSTouchBarDelegate {
     
     public override func sendEvent(_ event: NSEvent) {
         
+//        let testEvent = NSEvent.EventType.init(rawValue: 36)!
+//        
+//        NSLog("\(testEvent)")
+        
+        let eventType = event.type
+        
         if sheets.isEmpty {
-            if event.type == .keyDown {
+            if eventType == .keyDown {
                 
                 
                 if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.LeftArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.RightArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Tab {
@@ -434,8 +444,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                         }
                     }
                 }
-                
-            } else if let handlers = mouseHandlers[event.type] {
+            } else if let handlers = mouseHandlers[eventType.rawValue] {
                 let sorted = handlers.sorted(by: >)
                 loop: for handle in sorted {
                     switch handle.handler(event) {

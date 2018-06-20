@@ -580,9 +580,20 @@ func chatWebpageSnippetPhoto(account: Account, photo: TelegramMediaImage, scale:
             assertNotOnMainThread()
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
             
+            
             let drawingRect = arguments.drawingRect
-            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize)
+            switch arguments.resizeMode {
+            case .none:
+                break
+            default:
+                fittedSize = fittedSize.fitted(arguments.imageSize)
+            }
+            var fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+//
+//            let drawingRect = arguments.drawingRect
+//            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
+//            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -592,10 +603,13 @@ func chatWebpageSnippetPhoto(account: Account, photo: TelegramMediaImage, scale:
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
-                        fittedSize = image.backingSize.aspectFilled(arguments.boundingSize)//.fitted(image.backingSize)
-                        fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
-                        
-                        
+                        switch arguments.resizeMode {
+                        case .none:
+                              fittedSize = image.backingSize.aspectFilled(arguments.boundingSize)//.fitted(image.backingSize)
+                              fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                        default:
+                            break
+                        }
                     }
                 } else {
                     let imageSource = CGImageSourceCreateIncremental(nil)
@@ -605,8 +619,13 @@ func chatWebpageSnippetPhoto(account: Account, photo: TelegramMediaImage, scale:
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
                     if let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
-                        fittedSize = image.backingSize.aspectFilled(arguments.boundingSize)//.fitted(image.backingSize)
-                        fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                        switch arguments.resizeMode {
+                        case .none:
+                            fittedSize = image.backingSize.aspectFilled(arguments.boundingSize)//.fitted(image.backingSize)
+                            fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                        default:
+                            break
+                        }
                     }
                 }
             }
@@ -630,39 +649,60 @@ func chatWebpageSnippetPhoto(account: Account, photo: TelegramMediaImage, scale:
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             
-            context.withContext(isHighQuality: fullSizeImage != nil, { c in
+            context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.setFillColor(.clear)
-                    c.fill(arguments.drawingRect)
+                    switch arguments.resizeMode {
+                    case .blurBackground:
+                        let blurSourceImage = thumbnailImage ?? fullSizeImage
+                        
+                        if let fullSizeImage = blurSourceImage {
+                            let thumbnailSize = CGSize(width: fullSizeImage.width, height: fullSizeImage.height)
+                            let thumbnailContextSize = thumbnailSize.aspectFitted(CGSize(width: 74.0, height: 74.0))
+                            let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
+                            thumbnailContext.withFlippedContext { c in
+                                c.interpolationQuality = .none
+                                c.draw(fullSizeImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
+                            }
+                            telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
+                            telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
+                            
+                            if let blurredImage = thumbnailContext.generateImage() {
+                                let filledSize = thumbnailSize.aspectFilled(arguments.drawingRect.size)
+                                c.interpolationQuality = .medium
+                                c.draw(blurredImage, in: CGRect(origin: CGPoint(x: arguments.drawingRect.minX + (arguments.drawingRect.width - filledSize.width) / 2.0, y: arguments.drawingRect.minY + (arguments.drawingRect.height - filledSize.height) / 2.0), size: filledSize))
+                                c.setBlendMode(.normal)
+                                c.setFillColor(NSColor(white: 1.0, alpha: 0.5).cgColor)
+                                c.fill(arguments.drawingRect)
+                                c.setBlendMode(.copy)
+                            }
+                        } else {
+                            c.fill(arguments.drawingRect)
+                        }
+                    case let .fill(color):
+                        c.setFillColor(color.cgColor)
+                        c.fill(arguments.drawingRect)
+                    case .fillTransparent:
+                        c.setFillColor(theme.colors.transparentBackground.cgColor)
+                        c.fill(arguments.drawingRect)
+                    case .none:
+                        break
+                    case .imageColor:
+                        break
+                    }
                 }
                 
                 c.setBlendMode(.copy)
-                if let blurredThumbnailImage = blurredThumbnailImage {
+                if let cgImage = blurredThumbnailImage {
                     c.interpolationQuality = .low
-                    switch arguments.resizeMode {
-                    case let .imageColor(color):
-                        c.clip(to: fittedRect, mask: blurredThumbnailImage)
-                        c.setFillColor(color.cgColor)
-                        c.fill(fittedRect)
-                    default:
-                        c.draw(blurredThumbnailImage, in: fittedRect)
-                    }
+                    c.draw(cgImage, in: fittedRect)
                     c.setBlendMode(.normal)
                 }
                 
                 if let fullSizeImage = fullSizeImage {
                     c.interpolationQuality = .medium
-                    switch arguments.resizeMode {
-                    case let .imageColor(color):
-                        c.clip(to: fittedRect, mask: fullSizeImage)
-                        c.setFillColor(color.cgColor)
-                        c.fill(fittedRect)
-                    default:
-                        c.draw(fullSizeImage, in: fittedRect)
-                    }
+                    c.draw(fullSizeImage, in: fittedRect)
                 }
-                
             })
             
             addCorners(context, arguments: arguments, scale:scale)
@@ -1708,7 +1748,7 @@ func chatMessageImageFile(account: Account, file: TelegramMediaFile, progressive
                      if let fullSizeData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                         let options = NSMutableDictionary()
                         options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                        
+                        options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
                         
                         //   options[kCGImageSourceShouldCache as NSString] = false as NSNumber
                         if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options) {

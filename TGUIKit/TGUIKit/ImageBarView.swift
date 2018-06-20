@@ -23,6 +23,7 @@ public class ImageBarView: BarView {
     
     
     
+    
     public override func layout() {
         super.layout()
         button.center()

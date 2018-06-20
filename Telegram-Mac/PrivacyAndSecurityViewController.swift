@@ -24,7 +24,8 @@ private final class PrivacyAndSecurityControllerArguments {
     let openWebAuthorizations: () -> Void
     let setupAccountAutoremove: () -> Void
     let openProxySettings:() ->Void
-    init(account: Account, openBlockedUsers: @escaping ([Peer]?) -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping () -> Void, openActiveSessions: @escaping () -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void) {
+    let togglePeerSuggestions:(Bool)->Void
+    init(account: Account, openBlockedUsers: @escaping ([Peer]?) -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping () -> Void, openActiveSessions: @escaping () -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void) {
         self.account = account
         self.openBlockedUsers = openBlockedUsers
         self.openLastSeenPrivacy = openLastSeenPrivacy
@@ -36,6 +37,7 @@ private final class PrivacyAndSecurityControllerArguments {
         self.openWebAuthorizations = openWebAuthorizations
         self.setupAccountAutoremove = setupAccountAutoremove
         self.openProxySettings = openProxySettings
+        self.togglePeerSuggestions = togglePeerSuggestions
     }
 }
 
@@ -57,6 +59,8 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case accountInfo(sectionId:Int)
     case proxyHeader(sectionId:Int)
     case proxySettings(sectionId:Int, String)
+    case togglePeerSuggestions(sectionId: Int, enabled: Bool)
+    case togglePeerSuggestionsDesc(sectionId: Int)
     case section(sectionId:Int)
     
     var sectionId: Int {
@@ -90,6 +94,10 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .accountInfo(sectionId):
             return sectionId
         case let .proxySettings(sectionId, _):
+            return sectionId
+        case let .togglePeerSuggestions(sectionId, _):
+            return sectionId
+        case let .togglePeerSuggestionsDesc(sectionId):
             return sectionId
         case let .proxyHeader(sectionId):
             return sectionId
@@ -132,6 +140,10 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return 14
         case .proxySettings:
             return 15
+        case .togglePeerSuggestions:
+            return 16
+        case .togglePeerSuggestionsDesc:
+            return 17
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -185,6 +197,18 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             }
         case let .proxySettings(sectionId, text):
             if case .proxySettings(sectionId, text) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .togglePeerSuggestions(sectionId, enabled):
+            if case .togglePeerSuggestions(sectionId, enabled) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .togglePeerSuggestionsDesc(sectionId):
+            if case .togglePeerSuggestionsDesc(sectionId) = rhs {
                 return true
             } else {
                 return false
@@ -272,6 +296,18 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsUseProxy), type: .context(text), action: {
                 arguments.openProxySettings()
             })
+        case let .togglePeerSuggestions(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.suggestFrequentContacts, type: .switchable(enabled), action: {
+                if enabled {
+                    confirm(for: mainWindow, information: L10n.suggestFrequentContactsAlert, successHandler: { _ in
+                        arguments.togglePeerSuggestions(!enabled)
+                    })
+                } else {
+                    arguments.togglePeerSuggestions(!enabled)
+                }
+            }, autoswitch: false)
+        case .togglePeerSuggestionsDesc:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.suggestFrequentContactsDesc, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .section :
             return GeneralRowItem(initialSize, height:20, stableId: stableId)
         }
@@ -338,7 +374,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecuri
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers: [Peer]?, proxy: ProxySettings) -> [PrivacyAndSecurityEntry] {
+private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers: [Peer]?, proxy: ProxySettings, recentPeers: RecentPeers) -> [PrivacyAndSecurityEntry] {
     var entries: [PrivacyAndSecurityEntry] = []
     
     var sectionId:Int = 1
@@ -410,6 +446,22 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     }
     entries.append(.accountInfo(sectionId: sectionId))
     
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    
+    let enabled: Bool
+    switch recentPeers {
+    case .disabled:
+        enabled = false
+    case .peers:
+        enabled = true
+    }
+    
+    entries.append(.togglePeerSuggestions(sectionId: sectionId, enabled: enabled))
+    entries.append(.togglePeerSuggestionsDesc(sectionId: sectionId))
+    
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
@@ -417,6 +469,7 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         entries.append(.webAuthorizationsHeader(sectionId: sectionId))
         entries.append(.webAuthorizations(sectionId: sectionId))
     }
+    
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -452,10 +505,7 @@ class PrivacyAndSecurityViewController: TableViewController {
             self?.navigationController?.push(c)
         }
         
-        let showToaster:(String)->Void = { [weak self] text in
-            self?.show(toaster: ControllerToaster(text: text))
-        }
-        
+
         let proxySettings:Signal<ProxySettings, Void> = proxySettingsSignal(account.postbox)
 
         let currentInfoDisposable = MetaDisposable()
@@ -651,13 +701,23 @@ class PrivacyAndSecurityViewController: TableViewController {
         }, openProxySettings: { [weak self] in
             if let account = self?.account {
                 
-                proxyListController(postbox: account.postbox, network: account.network) ({ controller in
+                proxyListController(postbox: account.postbox, network: account.network, share: { servers in
+                    var message: String = ""
+                    for server in servers {
+                        message += server.link + "\n\n"
+                    }
+                    message = message.trimmed
+                    
+                    showModal(with: ShareModalController(ShareLinkObject(account, link: message)), for: mainWindow)
+                }) ({ controller in
                     pushControllerImpl(controller)
                 })
                 //pushControllerImpl(proxyListController(postbox: account.postbox, network: account.network))
                 
 //                pushControllerImpl(controller)
             }
+        }, togglePeerSuggestions: { enabled in
+            _ = (updateRecentPeersEnabled(postbox: account.postbox, network: account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(postbox: account.postbox, network: account.network) : Signal<Void, Void>.complete())).start()
         })
         
         
@@ -666,9 +726,9 @@ class PrivacyAndSecurityViewController: TableViewController {
                 
       
         
-        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, appearanceSignal, proxySettings, privacySettingsPromise.get() |> deliverOnMainQueue)
-            |> map { state, appearance, proxy, values -> TableUpdateTransition in
-                let entries = privacyAndSecurityControllerEntries(state: state, privacySettings: values.0, webSessions: values.1, blockedPeers: values.2, proxy: proxy).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, appearanceSignal, proxySettings, privacySettingsPromise.get() |> deliverOnMainQueue, recentPeers(account: account) |> deliverOnMainQueue)
+            |> map { state, appearance, proxy, values, recentPeers -> TableUpdateTransition in
+                let entries = privacyAndSecurityControllerEntries(state: state, privacySettings: values.0, webSessions: values.1, blockedPeers: values.2, proxy: proxy, recentPeers: recentPeers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
             } |> afterDisposed {
                 actionsDisposable.dispose()

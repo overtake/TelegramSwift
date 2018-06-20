@@ -144,8 +144,8 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func delete() -> Void {
         if let item = item as? PeerMediaFileRowItem {
-            _ = item.account.postbox.modify({ modifier -> Void in
-                modifier.deleteMessages([item.message.id])
+            _ = item.account.postbox.transaction({ transaction -> Void in
+                transaction.deleteMessages([item.message.id])
             }).start()
         }
     }

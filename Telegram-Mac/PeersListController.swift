@@ -149,11 +149,9 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         return nil
     }
     
-    private let globalPeerDisposable:MetaDisposable = MetaDisposable()
     private let progressDisposable = MetaDisposable()
     private let createSecretChatDisposable = MetaDisposable()
     private let layoutDisposable = MetaDisposable()
-    private let proxyDisposable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
     private let followGlobal:Bool
     private let searchOptions: AppSearchOptions
@@ -180,12 +178,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     }
     
     deinit {
-        globalPeerDisposable.dispose()
         progressDisposable.dispose()
         createSecretChatDisposable.dispose()
         layoutDisposable.dispose()
         actionsDisposable.dispose()
-        proxyDisposable.dispose()
     }
     
     override func viewDidResized(_ size: NSSize) {
@@ -200,11 +196,21 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         let account = self.account
         let actionsDisposable = self.actionsDisposable
         
+        actionsDisposable.add((account.context.cancelGlobalSearch.get() |> deliverOnMainQueue).start(next: { [weak self] animated in
+            self?.genericView.searchView.cancel(animated)
+        }))
+        
         genericView.mode = mode
         
         if followGlobal, mode.groupId == nil {
-            globalPeerDisposable.set((globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
-                self?.genericView.tableView.changeSelection(stableId: location)
+            actionsDisposable.add((globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
+                guard let `self` = self else {return}
+                self.genericView.tableView.changeSelection(stableId: location)
+                if location == nil {
+                    if !self.genericView.searchView.isEmpty {
+                        self.window?.makeFirstResponder(self.genericView.searchView.input)
+                    }
+                }
             }))
         }
         
@@ -222,7 +228,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         
         
         
-        proxyDisposable.set(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), Void> in
+        actionsDisposable.add(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), Void> in
             return account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
             }
@@ -242,7 +248,15 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                     return
                 }
             }
-            proxyListController(postbox: account.postbox, network: account.network)( { controller in
+            proxyListController(postbox: account.postbox, network: account.network, share: { servers in
+                var message: String = ""
+                for server in servers {
+                    message += server.link + "\n\n"
+                }
+                message = message.trimmed
+
+                showModal(with: ShareModalController(ShareLinkObject(account, link: message)), for: mainWindow)
+            })( { controller in
                 pushController(controller)
             })
         }
@@ -466,7 +480,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 navigation.removeModalAction()
             } else {
                 let chat:ChatController = addition ? ChatAdditionController(account: self.account, chatLocation: chatLocation, messageId: message?.id) : ChatController(account: self.account, chatLocation: chatLocation, messageId: message?.id, initialAction: initialAction)
-                navigation.push(chat)
+                navigation.push(chat, self.account.context.layout == .single)
             }
         }
         if close {
@@ -490,6 +504,14 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         super.updateLocalizationAndTheme()
     }
 
+    private var effectiveTableView: TableView {
+        switch genericView.searchView.state {
+        case .Focus:
+            return searchController?.genericView ?? genericView.tableView
+        case .None:
+            return genericView.tableView
+        }
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -501,30 +523,30 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                     return strongSelf.escapeKeyAction()
                 }
                 return .invokeNext
-                }, with: self, for: .Escape, priority:.low)
+            }, with: self, for: .Escape, priority:.low)
             
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                if let item = self?.genericView.tableView.selectedItem(), item.index > 0 {
-                    self?.genericView.tableView.selectPrev()
+                if let item = self?.effectiveTableView.selectedItem(), item.index > 0 {
+                    self?.effectiveTableView.selectPrev()
                 }
                 return .invoked
-                }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
+            }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.genericView.tableView.selectNext()
+                self?.effectiveTableView.selectNext()
                 return .invoked
-                }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
+            }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.genericView.tableView.selectNext()
+                self?.effectiveTableView.selectNext()
                 return .invoked
-                }, with: self, for: .Tab, priority: .low, modifierFlags: [.control])
+            }, with: self, for: .Tab, priority: .low, modifierFlags: [.control])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.genericView.tableView.selectPrev()
+                self?.effectiveTableView.selectPrev()
                 return .invoked
-                }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
+            }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
             
             #if DEBUG
                 self.window?.set(handler: { () -> KeyHandlerResult in

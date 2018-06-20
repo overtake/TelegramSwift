@@ -13,12 +13,12 @@ import SwiftSignalKitMac
 import PostboxMac
 import WebKit
 
-private let webview: WebView = WebView(frame: NSZeroRect)
 
 class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
     private var indicator:ProgressIndicator!
     private let content:TelegramMediaWebpageLoadedContent
     private let account:Account
+    private let webview: WebView = WebView(frame: NSZeroRect)
     override func loadView() {
         super.loadView()
         webview.frameLoadDelegate = self

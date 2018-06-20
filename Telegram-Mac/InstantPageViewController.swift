@@ -240,8 +240,8 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     }
     
     func openNewTab(_ mediaId: MediaId, _ url: String) {
-        let getMedia = account.postbox.modify { modifier -> Media? in
-            return modifier.getMedia(mediaId)
+        let getMedia = account.postbox.transaction { transaction -> Media? in
+            return transaction.getMedia(mediaId)
         } |> deliverOnMainQueue
         mediaDisposable.set(getMedia.start(next: { [weak self] media in
             if let media = media as? TelegramMediaWebpage, let strongSelf = self {
@@ -335,18 +335,18 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             
             return true
         }))
-        actualizeDisposable.set((actualizedWebpage(postbox: account.postbox, network: account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
-            switch webpage.content {
-            case .Loaded(let content):
-                if content.instantPage != nil {
-                    self?.webPage = webpage
-                    self?.reloadData()
-                }
-            default:
-                break
-            }
-            
-        }))
+//        actualizeDisposable.set((actualizedWebpage(postbox: account.postbox, network: account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
+//            switch webpage.content {
+//            case .Loaded(let content):
+//                if content.instantPage != nil {
+//                    self?.webPage = webpage
+//                    self?.reloadData()
+//                }
+//            default:
+//                break
+//            }
+//            
+//        }))
 
     }
 	

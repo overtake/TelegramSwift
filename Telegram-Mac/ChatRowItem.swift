@@ -550,6 +550,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
+        
         return false
     }
     
@@ -1316,9 +1317,9 @@ class ChatRowItem: TableRowItem {
     }
     
     func deleteMessage() {
-        _ = account.postbox.modify { [weak message] modifier -> Void in
+        _ = account.postbox.transaction { [weak message] transaction -> Void in
             if let message = message {
-                modifier.deleteMessages([message.id])
+                transaction.deleteMessages([message.id])
             }
         }.start()
     }
@@ -1481,9 +1482,9 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
         return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
             var items = items
             
-            return account.postbox.modify { modifier -> [ContextMenuItem] in
+            return account.postbox.transaction { transaction -> [ContextMenuItem] in
                 if file.isAnimated && file.isVideo {
-                    let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
+                    let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
                     if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
                         items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                             let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
@@ -1532,8 +1533,8 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                     }
                     
                     if file.isSticker, let fileId = file.id {
-                        return account.postbox.modify { modifier -> [ContextMenuItem] in
-                            let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
+                        return account.postbox.transaction { transaction -> [ContextMenuItem] in
+                            let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
                             items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
                                 
                                 if !saved {

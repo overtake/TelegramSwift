@@ -21,13 +21,13 @@ class GeneralTextRowItem: GeneralRowItem {
     private let alignment:NSTextAlignment
     fileprivate let centerViewAlignment: Bool
     fileprivate let additionLoading: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, linkExecutor: TextViewInteractions = globalLinkExecutor) {
         self.text = text
         self.additionLoading = additionLoading
         self.alignment = alignment
         self.centerViewAlignment = centerViewAlignment
         layout = TextViewLayout(text, truncationType: .end, alignment: alignment)
-        layout.interactions = globalLinkExecutor
+        layout.interactions = linkExecutor
         super.init(initialSize, height: height, stableId: stableId, type: .none, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     

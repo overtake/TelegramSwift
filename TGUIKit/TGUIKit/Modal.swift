@@ -430,6 +430,14 @@ public func showModal(with controller:ModalViewController, for window:Window, is
     controller.modal?.show()
 }
 
+public func closeModal(_ type: ModalViewController.Type) -> Void {
+    for weakModal in activeModals {
+        if let controller = weakModal.value?.controller, controller.isKind(of: type) {
+            weakModal.value?.close()
+        }
+    }
+}
+
 public func showModal(with controller: NavigationViewController, for window:Window, isOverlay: Bool = false) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {

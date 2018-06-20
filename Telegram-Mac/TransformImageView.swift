@@ -79,9 +79,7 @@ open class TransformImageView: NSView {
                 if strongSelf.layer?.contents == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
-                
                 self?.layer?.contents = next
-                
                 if !strongSelf.first && animate {
                     self?.layer?.animateContents()
                 }

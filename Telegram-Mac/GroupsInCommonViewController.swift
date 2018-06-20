@@ -132,10 +132,10 @@ class GroupsInCommonViewController: TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<GroupsInCommonEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
         let signal = combineLatest(Signal<([Peer], Bool), Void>.single(([], true)), appearanceSignal |> take(1)) |> then(combineLatest(groupsInCommon(account: account, peerId: peerId) |> mapToSignal { peerIds -> Signal<([Peer], Bool), Void> in
-            return account.postbox.modify { modififer -> ([Peer], Bool) in
+            return account.postbox.transaction { transaction -> ([Peer], Bool) in
                 var peers:[Peer] = []
                 for peerId in peerIds {
-                    if let peer = modififer.getPeer(peerId) {
+                    if let peer = transaction.getPeer(peerId) {
                         peers.append(peer)
                     }
                 }

@@ -195,7 +195,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions, boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: parent != nil ? .blurBackground : .fill(theme.colors.grayBackground))
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: dimensions.fitted(NSMakeSize(320, 320)), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: parent != nil ? .blurBackground : .fill(theme.colors.grayBackground))
             
             
             self.image.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)

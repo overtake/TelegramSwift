@@ -933,8 +933,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         if behavior.limit == 1 {
             singleAction = { [weak self] peer in
                 
-                _ = (self?.account.postbox.modify { modifier -> Void in
-                    updatePeers(modifier: modifier, peers: [peer], update: { _, updated -> Peer? in
+                _ = (self?.account.postbox.transaction { transaction -> Void in
+                    updatePeers(transaction: transaction, peers: [peer], update: { _, updated -> Peer? in
                         return updated
                     })
                 })?.start()
@@ -967,8 +967,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     }
     
     func confirmSelected(_ peerIds:[PeerId], _ peers:[Peer]) {
-        let signal = account.postbox.modify { modifier -> Void in
-            updatePeers(modifier: modifier, peers: peers, update: { (_, updated) -> Peer? in
+        let signal = account.postbox.transaction { transaction -> Void in
+            updatePeers(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
                 return updated
             })
         } |> deliverOnMainQueue |> mapToSignal { [weak self] () -> Signal<[PeerId], Void> in

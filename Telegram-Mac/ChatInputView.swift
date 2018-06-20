@@ -586,7 +586,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func textViewIsTypingEnabled() -> Bool {
         if let editState = chatInteraction.presentation.interfaceState.editState {
-            if editState.isLoading {
+            if editState.loadingState != .none {
                 return false
             }
         }

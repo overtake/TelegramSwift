@@ -50,8 +50,8 @@ public struct AdditionalSettings: PreferencesEntry, Equatable {
 }
 
 func updateAdditionalSettingsInteractively(postbox: Postbox, _ f: @escaping (AdditionalSettings) -> AdditionalSettings) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.additionalSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.additionalSettings, { entry in
             let currentSettings: AdditionalSettings
             if let entry = entry as? AdditionalSettings {
                 currentSettings = entry

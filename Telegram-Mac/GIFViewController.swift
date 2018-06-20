@@ -30,9 +30,9 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     }
                 }
             }, menuItems: { file in
-                return account.postbox.modify{ modifier -> [ContextMenuItem] in
+                return account.postbox.transaction { transaction -> [ContextMenuItem] in
                     if let mediaId = file.id {
-                        let gifItems = modifier.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
+                        let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
                         if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
                             return [ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                                 let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()

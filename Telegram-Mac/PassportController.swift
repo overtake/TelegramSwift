@@ -29,6 +29,7 @@ private let _id_expire_date = InputDataIdentifier("expire_date")
 private let _id_identifier = InputDataIdentifier("document_no")
 
 private let _id_country = InputDataIdentifier("country_iso2")
+private let _id_residence = InputDataIdentifier("residence_iso2")
 private let _id_gender = InputDataIdentifier("gender")
 
 private let _id_email_code = InputDataIdentifier("email_code")
@@ -67,16 +68,24 @@ private extension SecureIdVerificationDocument {
 
 private let cManager: CountryManager = CountryManager()
 
+private struct EditSettingsValues {
+    let values:[SecureIdValue]
+    func hasValue(_ relative: SecureIdRequestedFormField) -> Bool {
+        return values.contains(where: {$0.key == relative.valueKey})
+    }
+}
+
 private final class PassportArguments {
     let account: Account
     let checkPassword:((String, ()->Void))->Void
-    let requestField:(SecureIdRequestedFormField,  SecureIdValue?, SecureIdValue?, [SecureIdRequestedFormField])->Void
+    let requestField:(SecureIdRequestedFormField,  SecureIdValue?, SecureIdValue?, [SecureIdRequestedFormField], EditSettingsValues?)->Void
     let createPassword: ()->Void
     let abortVerification: ()-> Void
     let authorize:()->Void
     let botPrivacy:()->Void
     let forgotPassword:()->Void
-    init(account: Account, checkPassword:@escaping((String, ()->Void))->Void, requestField:@escaping(SecureIdRequestedFormField, SecureIdValue?, SecureIdValue?, [SecureIdRequestedFormField])->Void, createPassword: @escaping()->Void, abortVerification: @escaping()->Void, authorize: @escaping()->Void, botPrivacy:@escaping()->Void, forgotPassword: @escaping()->Void) {
+    let deletePassport:()->Void
+    init(account: Account, checkPassword:@escaping((String, ()->Void))->Void, requestField:@escaping(SecureIdRequestedFormField, SecureIdValue?, SecureIdValue?, [SecureIdRequestedFormField], EditSettingsValues?)->Void, createPassword: @escaping()->Void, abortVerification: @escaping()->Void, authorize: @escaping()->Void, botPrivacy:@escaping()->Void, forgotPassword: @escaping()->Void, deletePassport:@escaping()->Void) {
         self.account = account
         self.checkPassword = checkPassword
         self.requestField = requestField
@@ -85,33 +94,25 @@ private final class PassportArguments {
         self.botPrivacy = botPrivacy
         self.authorize = authorize
         self.forgotPassword = forgotPassword
+        self.deletePassport = deletePassport
     }
 }
 
-struct SecureIdDocumentValue {
-    let document: SecureIdVerificationDocument
-    let stableId: AnyHashable
-    let context: SecureIdAccessContext
-    init(document: SecureIdVerificationDocument, context: SecureIdAccessContext, stableId: AnyHashable) {
-        self.document = document
-        self.stableId = stableId
-        self.context = context
-    }
-    var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], reference: nil)
-    }
-}
+
 
 private enum PassportEntryId : Hashable {
     case header
     case loading
     case sectionId(Int32)
-    case emptyField(SecureIdRequestedFormField)
-    case filledField(SecureIdRequestedFormField)
+    case emptyFieldId(SecureIdRequestedFormField)
+    case filledFieldId(SecureIdRequestedFormField)
+    case savedFieldId(SecureIdValueKey)
     case description(Int32)
     case accept
     case requestPassword
     case createPassword
+    case deletePassport
+    case settingsHeader
     var hashValue: Int {
         return 0
     }
@@ -133,10 +134,13 @@ private enum PassportEntry : TableItemListNodeEntry {
     case accept(sectionId: Int32, index: Int32, enabled: Bool)
     case emptyField(sectionId: Int32, index: Int32, fieldType: SecureIdRequestedFormField, relative: [SecureIdRequestedFormField])
     case filledField(sectionId: Int32, index: Int32, fieldType: SecureIdRequestedFormField, relative: [SecureIdRequestedFormField], description: FieldDescription, value: SecureIdValue, relativeValue: SecureIdValue?)
+    case savedField(sectionId: Int32, index: Int32, valueType: SecureIdValueKey, relative: [SecureIdValueKey], relativeValues: [SecureIdValue], title: String, description: String)
     case description(sectionId: Int32, index: Int32, text: String)
-    case requestPassword(sectionId: Int32, index: Int32, hasRecoveryEmail: Bool)
+    case settingsHeader(sectionId: Int32, index: Int32)
+    case requestPassword(sectionId: Int32, index: Int32, hasRecoveryEmail: Bool, isSettings: Bool)
     case createPassword(sectionId: Int32, index: Int32, peer: Peer)
     case loading
+    case deletePassport(sectionId: Int32, index: Int32)
     case sectionId(Int32)
     
     var stableId: PassportEntryId {
@@ -144,9 +148,11 @@ private enum PassportEntry : TableItemListNodeEntry {
         case .header:
             return .header
         case let .emptyField(_, _, fieldType, _):
-            return .emptyField(fieldType)
+            return .emptyFieldId(fieldType)
         case let .filledField(_, _, fieldType, _, _, _, _):
-            return .filledField(fieldType)
+            return .filledFieldId(fieldType)
+        case let .savedField(_, _, type, _, _, _, _):
+            return .savedFieldId(type)
         case let .description(_, index, _):
             return .description(index)
         case .accept:
@@ -157,6 +163,10 @@ private enum PassportEntry : TableItemListNodeEntry {
             return .requestPassword
         case .createPassword:
             return .createPassword
+        case .deletePassport:
+            return .deletePassport
+        case .settingsHeader:
+            return .settingsHeader
         case .sectionId(let id):
             return .sectionId(id)
         }
@@ -172,11 +182,17 @@ private enum PassportEntry : TableItemListNodeEntry {
             return (section * 1000) + index
         case let .filledField(section, index, _, _, _, _, _):
             return (section * 1000) + index
+        case let .savedField(section, index, _, _, _, _, _):
+            return (section * 1000) + index
         case let .description(section, index, _):
             return (section * 1000) + index
-        case let .requestPassword(section, index, _):
+        case let .requestPassword(section, index, _, _):
             return (section * 1000) + index
         case let .createPassword(section, index, _):
+            return (section * 1000) + index
+        case let .deletePassport(section, index):
+            return (section * 1000) + index
+        case let .settingsHeader(section, index):
             return (section * 1000) + index
         case .loading:
             return 0
@@ -191,7 +207,7 @@ private enum PassportEntry : TableItemListNodeEntry {
             return PassportHeaderItem(initialSize, account: arguments.account, stableId: stableId, requestedFields: requestedFields, peer: peer)
         case let .emptyField(_, _, fieldType, relative):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: fieldType.rawValue, description: fieldType.rawDescription, type: .none, action: {
-                arguments.requestField(fieldType, nil, nil, relative)
+                arguments.requestField(fieldType, nil, nil, relative, nil)
             })
         case let .accept(_, _, enabled):
             return PassportAcceptRowItem(initialSize, stableId: stableId, enabled: enabled, action: {
@@ -199,10 +215,16 @@ private enum PassportEntry : TableItemListNodeEntry {
             })
         case let .filledField(_, _, fieldType, relative, description, value, relativeValue):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: fieldType.rawValue, description: description.text, descTextColor: description.isError ? theme.colors.redUI : theme.colors.grayText, type: .selectable(!description.isError), action: {
-                arguments.requestField(fieldType, value, relativeValue, relative)
+                arguments.requestField(fieldType, value, relativeValue, relative, nil)
             })
-        case .requestPassword(_, _, let hasRecoveryEmail):
-            return PassportInsertPasswordItem(initialSize, stableId: stableId, checkPasswordAction: arguments.checkPassword, forgotPassword: arguments.forgotPassword, hasRecoveryEmail: hasRecoveryEmail)
+        case let .savedField(_, _, fieldType, relative, relativeValues, title, description):
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, description: description, type: .next, action: {
+                arguments.requestField(fieldType.requestFieldType, relativeValues.first(where: {$0.key == fieldType}), nil, relative.map({$0.requestFieldType}), EditSettingsValues(values: relativeValues))
+                    //SecureIdRequestedFormField,  SecureIdValue?, SecureIdValue?, [SecureIdRequestedFormField]
+            })
+        case .requestPassword(_, _, let hasRecoveryEmail, let isSettings):
+            return PassportInsertPasswordItem(initialSize, stableId: stableId, checkPasswordAction: arguments.checkPassword, forgotPassword: arguments.forgotPassword, hasRecoveryEmail: hasRecoveryEmail, isSettings: isSettings)
         case .createPassword(_, _, let peer):
             return PassportTwoStepVerificationIntroItem(initialSize, stableId: stableId, peer: peer, action: arguments.createPassword)
         case let .description(_, _, text):
@@ -216,6 +238,12 @@ private enum PassportEntry : TableItemListNodeEntry {
                     break
                 }
             }))
+        case .deletePassport:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.secureIdDeletePassport, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, action: {
+                arguments.deletePassport()
+            })
+        case .settingsHeader:
+            return PassportSettingsHeaderItem(initialSize, stableId: stableId)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .sectionId:
@@ -254,14 +282,20 @@ private func ==(lhs: PassportEntry, rhs: PassportEntry) -> Bool {
         } else {
             return false
         }
+    case let .savedField(sectionId, index, fieldType, relative, relativeValues, title, description):
+        if case .savedField(sectionId, index, fieldType, relative, relativeValues, title, description) = rhs {
+            return true
+        } else {
+            return false
+        }
     case let .description(sectionId, index, text):
         if case .description(sectionId, index, text) = rhs {
             return true
         } else {
             return false
         }
-    case let .requestPassword(sectionId, index, hasRecoveryEmail):
-        if case .requestPassword(sectionId, index, hasRecoveryEmail) = rhs {
+    case let .requestPassword(sectionId, index, hasRecoveryEmail, isSettings):
+        if case .requestPassword(sectionId, index, hasRecoveryEmail, isSettings) = rhs {
             return true
         } else {
             return false
@@ -269,6 +303,18 @@ private func ==(lhs: PassportEntry, rhs: PassportEntry) -> Bool {
     case let .createPassword(sectionId, index, lhsPeer):
         if case .createPassword(sectionId, index, let rhsPeer) = rhs {
             return lhsPeer.isEqual(rhsPeer)
+        } else {
+            return false
+        }
+    case let .deletePassport(sectionId, index):
+        if case .deletePassport(sectionId, index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .settingsHeader(sectionId, index):
+        if case .settingsHeader(sectionId, index) = rhs {
+            return true
         } else {
             return false
         }
@@ -287,7 +333,7 @@ private func ==(lhs: PassportEntry, rhs: PassportEntry) -> Bool {
     }
 }
 
-private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: SecureIdForm?, peer: Peer, passwordData: TwoStepVerificationConfiguration?, state: PassportState) -> ([PassportEntry], Bool) {
+private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: SecureIdForm?, peer: Peer?, passwordData: TwoStepVerificationConfiguration?, state: PassportState) -> ([PassportEntry], Bool) {
     var entries:[PassportEntry] = []
     
     var enabled: Bool = false
@@ -296,7 +342,59 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
     if let _ = passwordData {
         var sectionId: Int32 = 0
         var index: Int32 = 0
-        if state.passwordSettings == nil, let form = encryptedForm {
+        
+        if state.viewState == .settings {
+            entries.append(.sectionId(sectionId))
+            sectionId += 1
+            
+            let pdKeys:[SecureIdValueKey] = [.personalDetails, .idCard, .passport, .driversLicense, .internalPassport]
+            let pdValues:[SecureIdValue] = state.values.map{$0.value}.filter{pdKeys.contains($0.key)}
+            let pdDesc = pdValues.map({$0.key.requestFieldType.rawValue}).joined(separator: ", ")
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .personalDetails, relative: pdKeys, relativeValues: pdValues, title: L10n.secureIdIdentityDocument, description: pdDesc.isEmpty ? L10n.secureIdRequestPermissionIdentityEmpty : pdDesc))
+            index += 1
+            
+            let aKeys:[SecureIdValueKey] = [.address, .rentalAgreement, .utilityBill, .bankStatement, .passportRegistration, .temporaryRegistration]
+            //
+            let aValues:[SecureIdValue] = state.values.map{$0.value}.filter{aKeys.contains($0.key)}
+            let aDesc = aValues.map({$0.key.requestFieldType.rawValue}).joined(separator: ", ")
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .address, relative: aKeys, relativeValues: aValues, title: L10n.secureIdResidentialAddress, description:  aDesc.isEmpty ? L10n.secureIdRequestPermissionAddressEmpty : aDesc))
+            index += 1
+            
+            var pValue: String? = nil
+            var eValue: String? = nil
+            
+            if let value = state.values.filter({$0.value.key == .phone}).first {
+                switch value.value {
+                case let .phone(value):
+                    pValue = formatPhoneNumber(value.phone)
+                default:
+                    break
+                }
+            }
+            if let value = state.values.filter({$0.value.key == .email}).first {
+                switch value.value {
+                case let .email(value):
+                    eValue = value.email
+                default:
+                    break
+                }
+            }
+            
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .phone, relative: [], relativeValues: state.values.filter{$0.value.key == .phone}.map {$0.value}, title: L10n.secureIdPhoneNumber, description: pValue ?? L10n.secureIdRequestPermissionPhoneEmpty))
+            index += 1
+            
+            
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .email, relative: [], relativeValues: state.values.filter{$0.value.key == .email}.map {$0.value}, title: L10n.secureIdEmail, description: eValue ?? L10n.secureIdRequestPermissionEmailEmpty))
+            index += 1
+            
+            entries.append(.sectionId(sectionId))
+            sectionId += 1
+            if !state.values.isEmpty {
+                entries.append(.deletePassport(sectionId: sectionId, index: index))
+                index += 1
+            }
+            
+        } else if state.passwordSettings == nil {
             if let passwordData = passwordData {
                 switch passwordData {
                 case let .notSet(pendingEmailPattern):
@@ -305,8 +403,10 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                     sectionId += 1
                     
                     if pendingEmailPattern.isEmpty {
-                        entries.append(.createPassword(sectionId: sectionId, index: index, peer: peer))
-                        index += 1
+                        if let peer = peer {
+                            entries.append(.createPassword(sectionId: sectionId, index: index, peer: peer))
+                            index += 1
+                        }
                     } else {
                         let emailText = L10n.twoStepAuthConfirmationText + "\n\n[\(tr(L10n.twoStepAuthConfirmationAbort))](abortVerification)"
                         entries.append(.description(sectionId: sectionId, index: index, text: emailText))
@@ -314,19 +414,33 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                     }
                 case let .set(_, hasRecoveryEmail, _):
                     
-                    
-                    entries.append(.header(sectionId: sectionId, index: index, requestedFields: form.requestedFields, peer: peer))
-                    index += 1
+                    if let peer = peer, let form = encryptedForm {
+                        entries.append(.header(sectionId: sectionId, index: index, requestedFields: form.requestedFields, peer: peer))
+                        index += 1
+                    }
+                   
                
                     entries.append(.sectionId(sectionId))
                     sectionId += 1
                     
-                    entries.append(.requestPassword(sectionId: sectionId, index: index, hasRecoveryEmail: hasRecoveryEmail))
+                    if encryptedForm == nil {
+                        entries.append(.sectionId(sectionId))
+                        sectionId += 1
+                        entries.append(.settingsHeader(sectionId: sectionId, index: index))
+                        index += 1
+                        
+                        entries.append(.sectionId(sectionId))
+                        sectionId += 1
+                        entries.append(.sectionId(sectionId))
+                        sectionId += 1
+                    }
+                    
+                    entries.append(.requestPassword(sectionId: sectionId, index: index, hasRecoveryEmail: hasRecoveryEmail, isSettings: encryptedForm == nil))
                     index += 1
                 }
             }
             
-        } else if let form = form {
+        } else if let form = form, let peer = peer {
             
             entries.append(.header(sectionId: sectionId, index: index, requestedFields: form.requestedFields, peer: peer))
             index += 1
@@ -535,25 +649,27 @@ private func ==(lhs: EmailIntermediateState, rhs: EmailIntermediateState) -> Boo
 }
 
 private final class DetailsIntermediateState : Equatable {
-    let firstName: InputDataValue
-    let lastName: InputDataValue
-    let birthday: InputDataValue
-    let countryCode: InputDataValue
-    let gender: InputDataValue
+    let firstName: InputDataValue?
+    let lastName: InputDataValue?
+    let birthday: InputDataValue?
+    let citizenship: InputDataValue?
+    let residence: InputDataValue?
+    let gender: InputDataValue?
     let expiryDate: InputDataValue?
     let identifier: InputDataValue?
-    init(firstName: InputDataValue, lastName: InputDataValue, birthday: InputDataValue, countryCode: InputDataValue, gender: InputDataValue, expiryDate: InputDataValue?, identifier: InputDataValue?) {
+    init(firstName: InputDataValue?, lastName: InputDataValue?, birthday: InputDataValue?, citizenship: InputDataValue?, residence: InputDataValue?, gender: InputDataValue?, expiryDate: InputDataValue?, identifier: InputDataValue?) {
         self.firstName = firstName
         self.lastName = lastName
         self.birthday = birthday
-        self.countryCode = countryCode
+        self.citizenship = citizenship
+        self.residence = residence
         self.gender = gender
         self.expiryDate = expiryDate
         self.identifier = identifier
     }
     
     convenience init(_ data: [InputDataIdentifier : InputDataValue]) {
-        self.init(firstName: data[_id_first_name]!, lastName: data[_id_last_name]!, birthday: data[_id_birthday]!, countryCode: data[_id_country]!, gender: data[_id_gender]!, expiryDate: data[_id_expire_date], identifier: data[_id_identifier])
+        self.init(firstName: data[_id_first_name], lastName: data[_id_last_name], birthday: data[_id_birthday], citizenship: data[_id_country], residence: data[_id_residence], gender: data[_id_gender], expiryDate: data[_id_expire_date], identifier: data[_id_identifier])
     }
     
     fileprivate func validateErrors(currentState: DetailsIntermediateState, errors:[InputDataIdentifier : InputDataValueError]?) -> [InputDataIdentifier : InputDataValidationFailAction] {
@@ -568,8 +684,11 @@ private final class DetailsIntermediateState : Equatable {
         if errors?[_id_birthday] != nil, currentState.birthday == birthday {
             fails[_id_birthday] = .shake
         }
-        if errors?[_id_country] != nil, currentState.countryCode == countryCode {
+        if errors?[_id_country] != nil, currentState.citizenship == citizenship {
             fails[_id_country] = .shake
+        }
+        if errors?[_id_residence] != nil, currentState.residence == residence {
+            fails[_id_residence] = .shake
         }
         if errors?[_id_gender] != nil, currentState.gender == gender {
             fails[_id_gender] = .shake
@@ -585,18 +704,18 @@ private final class DetailsIntermediateState : Equatable {
 }
 
 private func ==(lhs: DetailsIntermediateState, rhs: DetailsIntermediateState) -> Bool {
-    return lhs.firstName == rhs.firstName && lhs.lastName == rhs.lastName && lhs.birthday == rhs.birthday && lhs.countryCode == rhs.countryCode && lhs.gender == rhs.gender && lhs.expiryDate == rhs.expiryDate && lhs.identifier == rhs.identifier
+    return lhs.firstName == rhs.firstName && lhs.lastName == rhs.lastName && lhs.birthday == rhs.birthday && lhs.residence == rhs.residence && lhs.citizenship == rhs.citizenship && lhs.gender == rhs.gender && lhs.expiryDate == rhs.expiryDate && lhs.identifier == rhs.identifier
 }
 
 private final class AddressIntermediateState : Equatable {
-    let street1: InputDataValue
-    let street2: InputDataValue
-    let city: InputDataValue
-    let state: InputDataValue
-    let countryCode: InputDataValue
-    let postcode: InputDataValue
+    let street1: InputDataValue?
+    let street2: InputDataValue?
+    let city: InputDataValue?
+    let state: InputDataValue?
+    let countryCode: InputDataValue?
+    let postcode: InputDataValue?
     
-    init(street1: InputDataValue, street2: InputDataValue, city: InputDataValue, state: InputDataValue, countryCode: InputDataValue, postcode: InputDataValue) {
+    init(street1: InputDataValue?, street2: InputDataValue?, city: InputDataValue?, state: InputDataValue?, countryCode: InputDataValue?, postcode: InputDataValue?) {
         self.street1 = street1
         self.street2 = street2
         self.city = city
@@ -606,7 +725,7 @@ private final class AddressIntermediateState : Equatable {
     }
     
     convenience init(_ data: [InputDataIdentifier : InputDataValue]) {
-        self.init(street1: data[_id_street1]!, street2: data[_id_street2]!, city: data[_id_city]!, state: data[_id_state]!, countryCode: data[_id_country]!, postcode: data[_id_postcode]!)
+        self.init(street1: data[_id_street1], street2: data[_id_street2], city: data[_id_city], state: data[_id_state], countryCode: data[_id_country], postcode: data[_id_postcode])
     }
     
     fileprivate func validateErrors(currentState: AddressIntermediateState, errors:[InputDataIdentifier : InputDataValueError]?) -> [InputDataIdentifier : InputDataValidationFailAction] {
@@ -638,6 +757,11 @@ private func ==(lhs: AddressIntermediateState, rhs: AddressIntermediateState) ->
     return lhs.street1 == rhs.street1 && lhs.street2 == rhs.street2 && lhs.city == rhs.city && lhs.state == rhs.state && lhs.countryCode == rhs.countryCode && lhs.postcode == rhs.postcode
 }
 
+private enum PassportViewState {
+    case plain
+    case settings
+}
+
 private final class PassportState : Equatable {
     let account: Account
     let peer: Peer
@@ -659,14 +783,16 @@ private final class PassportState : Equatable {
     let frontSideFile: [SecureIdValueKey : SecureIdVerificationDocument]
     let backSideFile: [SecureIdValueKey : SecureIdVerificationDocument]
     
-    init(account: Account, peer: Peer, errors: [SecureIdValueKey: [InputDataIdentifier : InputDataValueError]] = [:], passwordSettings:TwoStepVerificationSettings? = nil, password: UpdateTwoStepVerificationPasswordResult? = nil, values: [SecureIdValueWithContext] = [], accessContext: SecureIdAccessContext? = nil, verifyDocumentContext: SecureIdVerificationDocumentsContext? = nil, files: [SecureIdValueKey : [SecureIdVerificationDocument]] = [:], emailIntermediateState: EmailIntermediateState? = nil, detailsIntermediateState: DetailsIntermediateState? = nil, addressIntermediateState: AddressIntermediateState? = nil, selfies: [SecureIdValueKey : SecureIdVerificationDocument] = [:], frontSideFile: [SecureIdValueKey : SecureIdVerificationDocument] = [:], backSideFile: [SecureIdValueKey : SecureIdVerificationDocument] = [:]) {
+    let viewState: PassportViewState
+    
+    init(account: Account, peer: Peer, viewState: PassportViewState, errors: [SecureIdValueKey: [InputDataIdentifier : InputDataValueError]] = [:], passwordSettings:TwoStepVerificationSettings? = nil, password: UpdateTwoStepVerificationPasswordResult? = nil, values: [SecureIdValueWithContext] = [], accessContext: SecureIdAccessContext? = nil, verifyDocumentContext: SecureIdVerificationDocumentsContext? = nil, files: [SecureIdValueKey : [SecureIdVerificationDocument]] = [:], emailIntermediateState: EmailIntermediateState? = nil, detailsIntermediateState: DetailsIntermediateState? = nil, addressIntermediateState: AddressIntermediateState? = nil, selfies: [SecureIdValueKey : SecureIdVerificationDocument] = [:], frontSideFile: [SecureIdValueKey : SecureIdVerificationDocument] = [:], backSideFile: [SecureIdValueKey : SecureIdVerificationDocument] = [:]) {
         self.account = account
         self.peer = peer
         self.errors = errors
         self.passwordSettings = passwordSettings
         self.password = password
         self.values = values
-        
+        self.viewState = viewState
         
         self.accessContext = accessContext
         self.verifyDocumentContext = verifyDocumentContext
@@ -694,11 +820,11 @@ private final class PassportState : Equatable {
     
     
     func withUpdatedPassword(_ password: UpdateTwoStepVerificationPasswordResult?) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedPasswordSettings(_ settings: TwoStepVerificationSettings?) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: settings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: settings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     
@@ -772,7 +898,7 @@ private final class PassportState : Equatable {
             }
         }
         
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: selfies, frontSideFile: frontSideFile, backSideFile: backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: selfies, frontSideFile: frontSideFile, backSideFile: backSideFile)
     }
     
     func withRemovedValue(_ key: SecureIdValueKey) -> PassportState {
@@ -795,15 +921,15 @@ private final class PassportState : Equatable {
         var backSideFile = self.backSideFile
         backSideFile.removeValue(forKey: key)
         
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: selfies, frontSideFile: frontSideFile, backSideFile: backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: selfies, frontSideFile: frontSideFile, backSideFile: backSideFile)
     }
     
     func withUpdatedAccessContext(_ accessContext: SecureIdAccessContext) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedVerifyDocumentContext(_ verifyDocumentContext: SecureIdVerificationDocumentsContext) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedFileState(id: Int64, state: SecureIdVerificationLocalDocumentState) -> PassportState {
@@ -864,7 +990,7 @@ private final class PassportState : Equatable {
                 }
             }
         }
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: selfies, frontSideFile: frontSideFile, backSideFile: backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: selfies, frontSideFile: frontSideFile, backSideFile: backSideFile)
     }
     
     func withAppendFiles(_ files: [SecureIdVerificationDocument], for valueKey: SecureIdValueKey) -> PassportState {
@@ -872,13 +998,13 @@ private final class PassportState : Equatable {
         current.append(contentsOf: files)
         var dictionary = self.files
         dictionary[valueKey] = current
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: dictionary, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: dictionary, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedFiles(_ files: [SecureIdVerificationDocument], for valueKey: SecureIdValueKey) -> PassportState {
         var dictionary = self.files
         dictionary[valueKey] = files
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: dictionary, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: dictionary, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withRemovedFile(_ file: SecureIdVerificationDocument, for valueKey: SecureIdValueKey) -> PassportState {
@@ -893,24 +1019,26 @@ private final class PassportState : Equatable {
         }
         var dictionary = self.files
         dictionary[valueKey] = files
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: dictionary, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: dictionary, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withRemovedValues() -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: [], accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: [], accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedIntermediateEmailState(_ emailIntermediateState: EmailIntermediateState?) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedDetailsState(_ detailsIntermediateState: DetailsIntermediateState?) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: detailsIntermediateState, addressIntermediateState: addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     func withUpdatedAddressState(_ addressState: AddressIntermediateState?) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: addressState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
-    
+    func withUpdatedViewState(_ viewState: PassportViewState) -> PassportState {
+        return PassportState(account: self.account, peer: self.peer, viewState: viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+    }
     func withUpdatedSelfie(_ value: SecureIdVerificationDocument?, for key: SecureIdValueKey) -> PassportState {
         var selfies = self.selfies
         if let value = value {
@@ -918,7 +1046,7 @@ private final class PassportState : Equatable {
         } else {
             selfies.removeValue(forKey: key)
         }
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedFrontSide(_ value: SecureIdVerificationDocument?, for key: SecureIdValueKey) -> PassportState {
@@ -928,7 +1056,7 @@ private final class PassportState : Equatable {
         } else {
             frontSideFile.removeValue(forKey: key)
         }
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: frontSideFile, backSideFile: self.backSideFile)
     }
     
     func withUpdatedBackSide(_ value: SecureIdVerificationDocument?, for key: SecureIdValueKey) -> PassportState {
@@ -938,7 +1066,7 @@ private final class PassportState : Equatable {
         } else {
             backSideFile.removeValue(forKey: key)
         }
-        return PassportState(account: self.account, peer: self.peer, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: self.errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: backSideFile)
     }
     
     func errors(for key: SecureIdValueKey) -> [InputDataIdentifier : InputDataValueError] {
@@ -988,10 +1116,10 @@ private final class PassportState : Equatable {
         default:
             errors.removeValue(forKey: key)
         }
-        return PassportState(account: self.account, peer: self.peer, errors: errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
     func withUpdatedErrors(_ errors: [SecureIdValueKey: [InputDataIdentifier : InputDataValueError]]) -> PassportState {
-        return PassportState(account: self.account, peer: self.peer, errors: errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
+        return PassportState(account: self.account, peer: self.peer, viewState: self.viewState, errors: errors, passwordSettings: self.passwordSettings, password: self.password, values: self.values, accessContext: self.accessContext, verifyDocumentContext: self.verifyDocumentContext, files: self.files, emailIntermediateState: self.emailIntermediateState, detailsIntermediateState: self.detailsIntermediateState, addressIntermediateState: self.addressIntermediateState, selfies: self.selfies, frontSideFile: self.frontSideFile, backSideFile: self.backSideFile)
     }
 }
 private func ==(lhs: PassportState, rhs: PassportState) -> Bool {
@@ -1035,7 +1163,7 @@ private func ==(lhs: PassportState, rhs: PassportState) -> Bool {
     }
     
     
-    return lhs.passwordSettings?.email == rhs.passwordSettings?.email && lhs.password == rhs.password && lhs.values == rhs.values && (lhs.accessContext == nil && rhs.accessContext == nil) && lhs.emailIntermediateState == rhs.emailIntermediateState && lhs.detailsIntermediateState == rhs.detailsIntermediateState && lhs.addressIntermediateState == rhs.addressIntermediateState && lhs.errors == rhs.errors
+    return lhs.passwordSettings?.email == rhs.passwordSettings?.email && lhs.password == rhs.password && lhs.values == rhs.values && (lhs.accessContext == nil && rhs.accessContext == nil) && lhs.emailIntermediateState == rhs.emailIntermediateState && lhs.detailsIntermediateState == rhs.detailsIntermediateState && lhs.addressIntermediateState == rhs.addressIntermediateState && lhs.errors == rhs.errors && lhs.viewState == rhs.viewState
 }
 
 
@@ -1186,7 +1314,7 @@ private func confirmPhoneNumberEntries( _ state: PassportState, phoneNumber: Str
     return entries
 }
 
-private func addressEntries( _ state: PassportState, relative: SecureIdRequestedFormField?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
+private func addressEntries( _ state: PassportState, hasMainField: Bool, relative: SecureIdRequestedFormField?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
@@ -1205,44 +1333,47 @@ private func addressEntries( _ state: PassportState, relative: SecureIdRequested
     let aErrors: [InputDataIdentifier : InputDataValueError]? = state.errors[.address]
 
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: L10n.secureIdAddressHeader, color: theme.colors.grayText, detectBold: true))
-    index += 1
-    
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street1 ?? .string(address?.street1), error: aErrors?[_id_street1], identifier: _id_street1, mode: .plain, placeholder: L10n.secureIdAddressStreetPlaceholder, inputPlaceholder: L10n.secureIdAddressStreetInputPlaceholder, filter: nonFilter, limit: 255))
-    index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street2 ?? .string(address?.street2), error: aErrors?[_id_street2], identifier: _id_street2, mode: .plain, placeholder: "", inputPlaceholder: L10n.secureIdAddressStreet1InputPlaceholder, filter: nonFilter, limit: 255))
-    index += 1
-    
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.city ?? .string(address?.city), error: aErrors?[_id_city], identifier: _id_city, mode: .plain, placeholder: L10n.secureIdAddressCityPlaceholder, inputPlaceholder: L10n.secureIdAddressCityInputPlaceholder, filter: nonFilter, limit: 255))
-    index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.state ?? .string(address?.state), error: aErrors?[_id_state], identifier: _id_state, mode: .plain, placeholder: L10n.secureIdAddressRegionPlaceholder, inputPlaceholder: L10n.secureIdAddressRegionInputPlaceholder, filter: nonFilter, limit: 255))
-    index += 1
-    
-    let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
-    
-    let countries: [ValuesSelectorValue<InputDataValue>] = filedata.components(separatedBy: "\n").compactMap { country in
-        let entry = country.components(separatedBy: "|")
-        if entry.count == 2 {
-            return ValuesSelectorValue(localized: entry[1], value: .string(entry[0]))
-        } else {
-            return nil
+    if hasMainField {
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: L10n.secureIdAddressHeader, color: theme.colors.grayText, detectBold: true))
+        index += 1
+        
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street1 ?? .string(address?.street1), error: aErrors?[_id_street1], identifier: _id_street1, mode: .plain, placeholder: L10n.secureIdAddressStreetPlaceholder, inputPlaceholder: L10n.secureIdAddressStreetInputPlaceholder, filter: nonFilter, limit: 255))
+        index += 1
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street2 ?? .string(address?.street2), error: aErrors?[_id_street2], identifier: _id_street2, mode: .plain, placeholder: "", inputPlaceholder: L10n.secureIdAddressStreet1InputPlaceholder, filter: nonFilter, limit: 255))
+        index += 1
+        
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.city ?? .string(address?.city), error: aErrors?[_id_city], identifier: _id_city, mode: .plain, placeholder: L10n.secureIdAddressCityPlaceholder, inputPlaceholder: L10n.secureIdAddressCityInputPlaceholder, filter: nonFilter, limit: 255))
+        index += 1
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.state ?? .string(address?.state), error: aErrors?[_id_state], identifier: _id_state, mode: .plain, placeholder: L10n.secureIdAddressRegionPlaceholder, inputPlaceholder: L10n.secureIdAddressRegionInputPlaceholder, filter: nonFilter, limit: 255))
+        index += 1
+        
+        let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
+        
+        let countries: [ValuesSelectorValue<InputDataValue>] = filedata.components(separatedBy: "\n").compactMap { country in
+            let entry = country.components(separatedBy: "|")
+            if entry.count == 2 {
+                return ValuesSelectorValue(localized: entry[1], value: .string(entry[0]))
+            } else {
+                return nil
+            }
         }
+        
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, values: countries))
+        index += 1
+        
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, placeholder: L10n.secureIdAddressPostcodePlaceholder, inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { string in
+            let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            let lower = "abcdefghijklmnopqrstuvwxyz"
+            return string.trimmingCharacters(in: CharacterSet(charactersIn: upper + lower + "0987654321" + "-").inverted)
+        }, limit: 10))
+        index += 1
+        
+        
+        entries.append(.sectionId(sectionId))
+        sectionId += 1
     }
     
-    entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, values: countries))
-    index += 1
-    
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, placeholder: L10n.secureIdAddressPostcodePlaceholder, inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { string in
-        let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        let lower = "abcdefghijklmnopqrstuvwxyz"
-        return string.trimmingCharacters(in: CharacterSet(charactersIn: upper + lower + "0987654321" + "-").inverted)
-    }, limit: 10))
-    index += 1
-    
-    
-    entries.append(.sectionId(sectionId))
-    sectionId += 1
-    
+
     
     if let relative = relative {
         let rErrors = state.errors[relative.valueKey]
@@ -1308,7 +1439,7 @@ private func addressEntries( _ state: PassportState, relative: SecureIdRequested
     
 }
 
-private func identityEntries( _ state: PassportState, relative: SecureIdRequestedFormField?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
+private func identityEntries( _ state: PassportState, hasMainField: Bool, relative: SecureIdRequestedFormField?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
@@ -1335,35 +1466,43 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
         return text.trimmingCharacters(in: CharacterSet(charactersIn: upper + lower).inverted)
     }
     
-//
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderFirstName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: nameFilter, limit: 255))
-    index += 1
-
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderLastName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: nameFilter, limit: 255))
-    index += 1
-
-    let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: L10n.secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: L10n.secureIdGenderFemale, value: .gender(.female))]
-
-    entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, values: genders))
-    index += 1
-
-    entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.birthday ?? personalDetails?.birthdate.inputDataValue ?? .date(nil, nil, nil), error: pdErrors?[_id_birthday], identifier: _id_birthday, placeholder: L10n.secureIdIdentityPlaceholderBirthday))
-    index += 1
-
-    
-    let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
-    
-    let countries: [ValuesSelectorValue<InputDataValue>] = filedata.components(separatedBy: "\n").compactMap { country in
-        let entry = country.components(separatedBy: "|")
-        if entry.count == 2 {
-            return ValuesSelectorValue(localized: entry[1], value: .string(entry[0]))
-        } else {
-            return nil
+    if hasMainField {
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderFirstName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: nameFilter, limit: 255))
+        index += 1
+        
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, placeholder: L10n.secureIdIdentityPlaceholderLastName, inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: nameFilter, limit: 255))
+        index += 1
+        
+        let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: L10n.secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: L10n.secureIdGenderFemale, value: .gender(.female))]
+        
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, values: genders))
+        index += 1
+        
+        entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.birthday ?? personalDetails?.birthdate.inputDataValue ?? .date(nil, nil, nil), error: pdErrors?[_id_birthday], identifier: _id_birthday, placeholder: L10n.secureIdIdentityPlaceholderBirthday))
+        index += 1
+        
+        let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
+        
+        let countries: [ValuesSelectorValue<InputDataValue>] = filedata.components(separatedBy: "\n").compactMap { country in
+            let entry = country.components(separatedBy: "|")
+            if entry.count == 2 {
+                return ValuesSelectorValue(localized: entry[1], value: .string(entry[0]))
+            } else {
+                return nil
+            }
         }
+        
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCitizenship, values: countries))
+        index += 1
+        
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.residence ?? .string(personalDetails?.residenceCountryCode), error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: L10n.secureIdIdentityPlaceholderResidence, values: countries))
+        index += 1
+
     }
     
-    entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.countryCode ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCountry, values: countries))
-    index += 1
+    
+
+    
 
     if let relative = relative {
         let rErrors = state.errors[relative.valueKey]
@@ -1433,10 +1572,9 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
                                     var current = current
                                     if let mrz = mrz {
                                         if relative.isEqualToMRZ(mrz) {
-                                            NSLog("\(mrz)")
                                             let expiryDate = dateFormatter.string(from: mrz.expiryDate).components(separatedBy: ".").map({Int32($0)})
                                             let birthDate = dateFormatter.string(from: mrz.birthDate).components(separatedBy: ".").map({Int32($0)})
-                                            let details = DetailsIntermediateState(firstName: .string(mrz.firstName), lastName: .string(mrz.lastName), birthday: .date(birthDate[0], birthDate[1], birthDate[2]), countryCode: .string(mrz.issuingCountry), gender: .gender(SecureIdGender.gender(from: mrz)), expiryDate: .date(expiryDate[0], expiryDate[1], expiryDate[2]), identifier: .string(mrz.documentNumber))
+                                            let details = DetailsIntermediateState(firstName: .string(mrz.firstName), lastName: .string(mrz.lastName), birthday: .date(birthDate[0], birthDate[1], birthDate[2]), citizenship: .string(mrz.issuingCountry), residence: current.detailsIntermediateState?.residence, gender: .gender(SecureIdGender.gender(from: mrz)), expiryDate: .date(expiryDate[0], expiryDate[1], expiryDate[2]), identifier: .string(mrz.documentNumber))
                                             current = current.withUpdatedDetailsState(details)
                                         }
                                     }
@@ -1464,10 +1602,23 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
                     entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_backside, placeholder: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleReverseSide, description: relative.uploadBackTitleText, icon: theme.icons.passportIdCardReverse, action: {
                         filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
                             if let file = files?.first {
-                                let localFile:SecureIdVerificationDocument = .local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: file, randomId: arc4random64()), state: .uploading(0)))
-                                
-                                updateState { current in
-                                    return current.withUpdatedBackSide(localFile, for: relative.valueKey)
+                                if let image = NSImage(contentsOfFile: file) {
+                                    let string = recognizeMRZ(image.precomposed(), nil)
+                                    let mrz = TGPassportMRZ.parseLines(string?.components(separatedBy: "\n"))
+                                    let localFile:SecureIdVerificationDocument = .local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: file, randomId: arc4random64()), state: .uploading(0)))
+                                    
+                                    updateState { current in
+                                        var current = current
+                                        if let mrz = mrz {
+                                            if relative.isEqualToMRZ(mrz) {
+                                                let expiryDate = dateFormatter.string(from: mrz.expiryDate).components(separatedBy: ".").map({Int32($0)})
+                                                let birthDate = dateFormatter.string(from: mrz.birthDate).components(separatedBy: ".").map({Int32($0)})
+                                                let details = DetailsIntermediateState(firstName: .string(mrz.firstName), lastName: .string(mrz.lastName), birthday: .date(birthDate[0], birthDate[1], birthDate[2]), citizenship: .string(mrz.issuingCountry), residence: current.detailsIntermediateState?.residence, gender: .gender(SecureIdGender.gender(from: mrz)), expiryDate: .date(expiryDate[0], expiryDate[1], expiryDate[2]), identifier: .string(mrz.documentNumber))
+                                                current = current.withUpdatedDetailsState(details)
+                                            }
+                                        }
+                                        return current.withUpdatedBackSide(localFile, for: relative.valueKey)
+                                    }
                                 }
                             }
                         })
@@ -1508,8 +1659,8 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
             }
         }
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.secureIdIdentityScanDescription, color: theme.colors.grayText, detectBold: true))
-        index += 1
+//        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.secureIdIdentityScanDescription, color: theme.colors.grayText, detectBold: true))
+//        index += 1
         
     }
     
@@ -1519,7 +1670,7 @@ private func identityEntries( _ state: PassportState, relative: SecureIdRequeste
     sectionId += 1
     
     if personalDetails != nil || relativeValue != nil {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, name: L10n.secureIdDeleteIdentity, color: theme.colors.redUI, icon: nil, type: .none))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, name: relativeValue != nil ? L10n.secureIdDeleteIdentity : L10n.secureIdDeletePersonalDetails, color: theme.colors.redUI, icon: nil, type: .none))
         entries.append(.sectionId(sectionId))
         sectionId += 1
     }
@@ -1555,6 +1706,7 @@ final class PassportControllerView : View {
         addSubview(tableView)
         addSubview(authorize)
         updateLocalizationAndTheme()
+        layout()
     }
     
     override func updateLocalizationAndTheme() {
@@ -1580,17 +1732,16 @@ final class PassportControllerView : View {
 
 class PassportController: TelegramGenericViewController<PassportControllerView> {
 
-    private let form: EncryptedSecureIdForm
+    private let form: EncryptedSecureIdForm?
     private let disposable = MetaDisposable()
     private let peer: Peer
-    private let request: inAppSecureIdRequest
-    init(_ account: Account, _ peer: Peer, request: inAppSecureIdRequest, _ form: EncryptedSecureIdForm) {
+    private let request: inAppSecureIdRequest?
+    init(_ account: Account, _ peer: Peer, request: inAppSecureIdRequest?, _ form: EncryptedSecureIdForm?) {
         self.form = form
         self.peer = peer
         self.request = request
         super.init(account)
         
-        //bar = .init(height: 0)
     }
     
     override var enableBack: Bool {
@@ -1598,7 +1749,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
     }
     
     override func backSettings() -> (String, CGImage?) {
-        return (L10n.navigationCancel, nil)
+        return (form == nil ? L10n.navigationBack : L10n.navigationCancel, form == nil ? #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(theme.colors.blueIcon) : nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -1619,6 +1770,31 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             
             return .rejected
         }, with: self, for: .leftMouseDown)
+    }
+    
+    override func requestUpdateRightBar() {
+        rightView?.set(image: theme.icons.passportInfo)
+    }
+    
+    private var rightView: ImageBarView?
+    
+    override func getRightBarViewOnce() -> BarView {
+        if form == nil {
+            let account = self.account
+            rightView = ImageBarView(controller: self, theme.icons.passportInfo)
+            rightView?.button.set(handler: { _ in
+                confirm(for: mainWindow, header: L10n.secureIdInfoTitle, information: L10n.secureIdInfo, cancelTitle: "", thridTitle: L10n.secureIdInfoMore, successHandler: { result in
+                    if result == .thrid {
+                        openFaq(account: account)
+                    }
+                })
+            }, for: .Click)
+            
+            return rightView!
+        } else {
+            return super.getRightBarViewOnce()
+        }
+       
     }
     
     override func viewDidLoad() {
@@ -1646,9 +1822,9 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         actionsDisposable.add(phoneNewActivationDisposable)
         actionsDisposable.add(recoverPasswordDisposable)
         
-        let state:ValuePromise<PassportState> = ValuePromise(PassportState(account: account, peer: peer), ignoreRepeated: true)
+        let state:ValuePromise<PassportState> = ValuePromise(PassportState(account: account, peer: peer, viewState: .plain), ignoreRepeated: true)
         
-        let stateValue:Atomic<PassportState> = Atomic(value: PassportState(account: account, peer: peer))
+        let stateValue:Atomic<PassportState> = Atomic(value: PassportState(account: account, peer: peer, viewState: .plain))
         
         var _stateValue: PassportState {
             return stateValue.modify({$0})
@@ -1660,6 +1836,10 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         
         let closeAfterSuccessful:()->Void = { [weak self] in
             _ = self?.window?.closeInterceptor?()
+        }
+        
+        let closeController:()->Void = { [weak self] in
+            self?.navigationController?.back()
         }
         
         
@@ -1688,29 +1868,58 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                             passwordVerificationData.set( twoStepVerificationConfiguration(account: account) |> mapToSignal { config in
                                 switch config {
                                 case .set:
-                                    return accessSecureId(network: account.network, password: password) |> map { context in
-                                        return (decryptedSecureIdForm(context: context, form: encryptedForm), context)
-                                        } |> deliverOnMainQueue |> mapToSignal { (form, context) in
-                                            return requestTwoStepVerifiationSettings(network: account.network, password: password) |> mapError {_ in return SecureIdAccessError.generic} |> map { settings in
-                                                return (form, context, settings)
-                                            }
-                                    } |> map { form, context, settings in
-                                        updateState { current in
-                                            var current = current
-                                            if let form = form {
-                                                current = form.values.reduce(current, { current, value -> PassportState in
+                                    if let encryptedForm = encryptedForm {
+                                        return accessSecureId(network: account.network, password: password) |> map { context in
+                                            return (decryptedSecureIdForm(context: context, form: encryptedForm), context)
+                                            } |> deliverOnMainQueue |> mapToSignal { (form, context) in
+                                                return requestTwoStepVerifiationSettings(network: account.network, password: password) |> mapError {_ in return SecureIdAccessError.generic} |> map { settings in
+                                                    return (form, context, settings)
+                                                }
+                                            } |> map { form, context, settings in
+                                                updateState { current in
+                                                    var current = current
+                                                    if let form = form {
+                                                        current = form.values.reduce(current, { current, value -> PassportState in
+                                                            return current.withUpdatedValue(value)
+                                                        })
+                                                    }
+                                                    //return current
+                                                    return current.withUpdatedAccessContext(context).withUpdatedPasswordSettings(settings).withUpdatedVerifyDocumentContext(SecureIdVerificationDocumentsContext(postbox: account.postbox, network: account.network, context: context, update: updateVerifyDocumentState))
+                                                }
+                                                formValue.set(.single((nil, form)))
+                                                return Optional(config)
+                                            } |> mapError {_ in return}
+                                    } else {
+                                        let signal = accessSecureId(network: account.network, password: password) |> mapToSignal { context in
+                                            return getAllSecureIdValues(network: account.network)
+                                                |> map { encryptedValues in
+                                                    return decryptedAllSecureIdValues(context: context, encryptedValues: encryptedValues)
+                                                }
+                                                |> mapError {_ in return SecureIdAccessError.generic}
+                                                |> map {($0, context)}
+                                            } |> mapToSignal { values, context in
+                                                return requestTwoStepVerifiationSettings(network: account.network, password: password) |> mapError {_ in return SecureIdAccessError.generic} |> map { settings in
+                                                    return (values, settings, context)
+                                                }
+                                            } |> deliverOnMainQueue
+                                        
+                                        return signal |> map { values, passwordSettings, context in
+                                            updateState { current in
+                                                var current = current.withRemovedValues()
+                                                current = values.reduce(current, { current, value -> PassportState in
                                                     return current.withUpdatedValue(value)
                                                 })
+                                                return current.withUpdatedViewState(.settings).withUpdatedPasswordSettings(passwordSettings).withUpdatedAccessContext(context).withUpdatedVerifyDocumentContext(SecureIdVerificationDocumentsContext(postbox: account.postbox, network: account.network, context: context, update: updateVerifyDocumentState))
                                             }
-                                            return current.withUpdatedAccessContext(context).withUpdatedPasswordSettings(settings).withUpdatedVerifyDocumentContext(SecureIdVerificationDocumentsContext(postbox: account.postbox, network: account.network, context: context, update: updateVerifyDocumentState))
-                                        }
-                                        formValue.set(.single((nil, form)))
-                                        return Optional(config)
-                                    } |> mapError {_ in return}
+                                             return Optional(config)
+                                        } |> mapError {_ in}
+                                        
+                                    }
+                                    
                                 default:
                                     return .single(Optional(config))
                                 }
-                                })
+                            })
                         default:
                             break
                         }
@@ -1734,96 +1943,124 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         
         let previous: Atomic<[AppearanceWrapperEntry<PassportEntry>]> = Atomic(value: [])
         
-        var checkPasswordImpl:(String, @escaping()->Void)->Void = { _, _ in}
         
         let arguments = PassportArguments(account: account, checkPassword: { value, shake in
-            checkPassword.set(showModalProgress(signal: accessSecureId(network: account.network, password: value) |> map { context in
-                return (decryptedSecureIdForm(context: context, form: encryptedForm), context)
-                } |> deliverOnMainQueue |> mapToSignal { (form, context) in
+            if let encryptedForm = encryptedForm {
+                checkPassword.set(showModalProgress(signal: accessSecureId(network: account.network, password: value) |> map { context in
+                    return (decryptedSecureIdForm(context: context, form: encryptedForm), context)
+                    } |> deliverOnMainQueue |> mapToSignal { (form, context) in
+                        return requestTwoStepVerifiationSettings(network: account.network, password: value) |> mapError {_ in return SecureIdAccessError.generic} |> map { settings in
+                            return (form, context, settings)
+                        }
+                    } |> deliverOnMainQueue, for: mainWindow).start(next: { form, context, settings in
+                        
+                        updateState { current in
+                            var current = current.withRemovedValues()
+                            if let form = form {
+                                current = form.values.reduce(current, { current, value -> PassportState in
+                                    return current.withUpdatedValue(value)
+                                })
+                                var errors:[SecureIdValueKey: [InputDataIdentifier : InputDataValueError]] = [:]
+                                
+                                for value in form.values {
+                                    var cErrors = errors[value.value.key] ?? [:]
+                                    
+                                    for(eKey, eValue) in value.errors {
+                                        switch eKey {
+                                        case let .field(field):
+                                            switch field {
+                                            case let .address(f):
+                                                cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
+                                            case let .driversLicense(f):
+                                                cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
+                                            case let .idCard(f):
+                                                cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
+                                            case let .passport(f):
+                                                cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
+                                            case let .personalDetails(f):
+                                                cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
+                                            case let .internalPassport(f):
+                                                cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
+                                            }
+                                        case .files:
+                                            cErrors[_id_scan] = InputDataValueError(description: eValue, target: .files)
+                                        case let .file(hash):
+                                            cErrors[InputDataIdentifier("file_\(hash.base64EncodedString())")] = InputDataValueError(description: eValue, target: .files)
+                                        case .selfie:
+                                            cErrors[_id_selfie] = InputDataValueError(description: eValue, target: .files)
+                                        case .frontSide:
+                                            cErrors[_id_frontside] = InputDataValueError(description: eValue, target: .files)
+                                        case .backSide:
+                                            cErrors[_id_backside] = InputDataValueError(description: eValue, target: .files)
+                                        }
+                                    }
+                                    errors[value.value.key] = cErrors
+                                }
+                                current = current.withUpdatedErrors(errors)
+                            }
+                            return current.withUpdatedAccessContext(context).withUpdatedPasswordSettings(settings).withUpdatedVerifyDocumentContext(SecureIdVerificationDocumentsContext(postbox: account.postbox, network: account.network, context: context, update: updateVerifyDocumentState))
+                        }
+                        formValue.set(.single((nil, form)))
+                    }, error: { error in
+                        switch error {
+                        case .secretPasswordMismatch:
+                            confirm(for: mainWindow, header: L10n.telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
+                                switch result {
+                                case .basic:
+                                    break
+                                case .thrid:
+                                    _ = showModalProgress(signal: updateTwoStepVerificationPassword(network: account.network, currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
+                                        updateState { current in
+                                            return current.withUpdatedPassword(nil)
+                                        }
+                                        passwordVerificationData.set(.single(.notSet(pendingEmailPattern: "")))
+                                    }, error: { error in
+                                        
+                                    })
+                                }
+                            })
+                        case .passwordError:
+                            shake()
+                        case .generic:
+                            shake()
+                        }
+                        
+                    }))
+            } else {
+                let signal = accessSecureId(network: account.network, password: value) |> mapToSignal { context in
+                    return getAllSecureIdValues(network: account.network)
+                        |> map { encryptedValues in
+                            return decryptedAllSecureIdValues(context: context, encryptedValues: encryptedValues)
+                        }
+                        |> mapError {_ in return SecureIdAccessError.generic}
+                        |> map {($0, context)}
+                } |> mapToSignal { values, context in
                     return requestTwoStepVerifiationSettings(network: account.network, password: value) |> mapError {_ in return SecureIdAccessError.generic} |> map { settings in
-                        return (form, context, settings)
+                        return (values, settings, context)
                     }
-                }, for: mainWindow).start(next: { form, context, settings in
-                updateState { current in
-                    var current = current.withRemovedValues()
-                    if let form = form {
-                        current = form.values.reduce(current, { current, value -> PassportState in
+                } |> deliverOnMainQueue
+                
+                
+                    
+                checkPassword.set(showModalProgress(signal: signal, for: mainWindow).start(next: { values, passwordSettings, context in
+                    
+                    updateState { current in
+                        var current = current.withRemovedValues()
+                        current = values.reduce(current, { current, value -> PassportState in
                             return current.withUpdatedValue(value)
                         })
-                        var errors:[SecureIdValueKey: [InputDataIdentifier : InputDataValueError]] = [:]
-                        
-                        for value in form.values {
-                            var cErrors = errors[value.value.key] ?? [:]
-                            
-                            for(eKey, eValue) in value.errors {
-                                switch eKey {
-                                case let .field(field):
-                                    switch field {
-                                    case let .address(f):
-                                        cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
-                                    case let .driversLicense(f):
-                                        cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
-                                    case let .idCard(f):
-                                        cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
-                                    case let .passport(f):
-                                        cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
-                                    case let .personalDetails(f):
-                                        cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
-                                    case let .internalPassport(f):
-                                        cErrors[InputDataIdentifier(f.rawValue)] = InputDataValueError(description: eValue, target: .data)
-                                    }
-                                case .files:
-                                    cErrors[_id_scan] = InputDataValueError(description: eValue, target: .files)
-                                case let .file(hash):
-                                    cErrors[InputDataIdentifier("file_\(hash.base64EncodedString())")] = InputDataValueError(description: eValue, target: .files)
-                                case .selfie:
-                                    cErrors[_id_selfie] = InputDataValueError(description: eValue, target: .files)
-                                case .frontSide:
-                                    cErrors[_id_frontside] = InputDataValueError(description: eValue, target: .files)
-                                case .backSide:
-                                    cErrors[_id_backside] = InputDataValueError(description: eValue, target: .files)
-                                }
-                            }
-                            errors[value.value.key] = cErrors
-                        }
-                        current = current.withUpdatedErrors(errors)
+                        return current.withUpdatedViewState(.settings).withUpdatedPasswordSettings(passwordSettings).withUpdatedAccessContext(context).withUpdatedVerifyDocumentContext(SecureIdVerificationDocumentsContext(postbox: account.postbox, network: account.network, context: context, update: updateVerifyDocumentState))
                     }
-                    return current.withUpdatedAccessContext(context).withUpdatedPasswordSettings(settings).withUpdatedVerifyDocumentContext(SecureIdVerificationDocumentsContext(postbox: account.postbox, network: account.network, context: context, update: updateVerifyDocumentState))
-                }
-                formValue.set(.single((nil, form)))
-            }, error: { error in
-                switch error {
-                case .secretPasswordMismatch:
-                    confirm(for: mainWindow, header: L10n.telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
-                        switch result {
-                        case .basic:
-                            break
-                        case .thrid:
-                            _ = showModalProgress(signal: updateTwoStepVerificationPassword(network: account.network, currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
-                                updateState { current in
-                                    return current.withUpdatedPassword(nil)
-                                }
-                                passwordVerificationData.set(.single(.notSet(pendingEmailPattern: "")))
-                            }, error: { error in
-                                
-                            })
-                        }
-                    })
-                case .passwordError:
-                    shake()
-                case .generic:
-                    shake()
-                }
-                
-            }))
-            
-            
-        }, requestField: { field, value, relativeValue, relative in
-            
+                }, error: { error in
+                   shake()
+                }))
+            }
+        }, requestField: { field, value, relativeValue, relative, editSettings in
+
             let valueKey = value?.key
             let proccessValue:([SecureIdValue])->InputDataValidation = { values in
                 return .fail(.doSomething(next: { f in
-                    
+
                     let signal: Signal<[SecureIdValueWithContext], SaveSecureIdValueError> = state.get() |> take(1) |> mapError {_ in return SaveSecureIdValueError.generic} |> mapToSignal { state in
                         if let context = state.accessContext {
                             return combineLatest(values.map({ value in
@@ -1833,10 +2070,8 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                             return .fail(.generic)
                         }
                         } |> deliverOnMainQueue
-                    
+
                     saveValueDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { values in
-                        var bp:Int = 0
-                        bp += 1
                         updateState { current in
                             return values.reduce(current, { current, value in
                                 return current.withUpdatedValue(value).withRemovedErrors(for: value.value.key)
@@ -1848,7 +2083,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }))
                 }))
             }
-            
+
             let removeValue:(SecureIdValueKey) -> Void = { valueKey in
                 saveValueDisposable.set(showModalProgress(signal: deleteSecureIdValues(network: account.network, keys: Set(arrayLiteral: valueKey)), for: mainWindow).start(completed: {
                     updateState { current in
@@ -1856,7 +2091,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }
                 }))
             }
-            
+
             let removeValueInteractive:([SecureIdValueKey]) -> InputDataValidation = { valueKeys in
                 return .fail(.doSomething { f in
                     saveValueDisposable.set(showModalProgress(signal: deleteSecureIdValues(network: account.network, keys: Set(valueKeys)) |> deliverOnMainQueue, for: mainWindow).start(completed: {
@@ -1869,15 +2104,15 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }))
                 })
             }
-            
+
             switch field {
             case .address:
                 var loadedData: AddressIntermediateState?
-                let push:(SecureIdRequestedFormField, SecureIdRequestedFormField?) -> Void = { field, relative in
+                let push:(SecureIdRequestedFormField, SecureIdRequestedFormField?, Bool) -> Void = { field, relative, hasMainField in
                     presentController(InputDataController(dataSignal: state.get() |> map { state in
-                        return addressEntries(state, relative: relative, updateState: updateState)
+                        return addressEntries(state, hasMainField: hasMainField, relative: relative, updateState: updateState)
                     }, title: relative?.rawValue ?? field.rawValue, validateData: { data in
-                            
+
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
                                 modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmAppAccessoryIcon, header: L10n.telegramPassportController, information: L10n.secureIdConfirmDeleteDocument, thridTitle: L10n.secureIdConfirmDeleteAddress, successHandler: { result in
@@ -1895,32 +2130,32 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 })
                             })
                         }
-                        
+
                         let current = AddressIntermediateState(data)
-                        
-                        
-                        
+
+
+
                         let street1 = data[_id_street1]?.stringValue ?? ""
                         let street2 = data[_id_street2]?.stringValue ?? ""
                         let city = data[_id_city]?.stringValue ?? ""
                         let state = data[_id_state]?.stringValue ?? ""
                         let countryCode = data[_id_country]?.stringValue ?? ""
                         let postcode = data[_id_postcode]?.stringValue ?? ""
-                        
+
                         var fails:[InputDataIdentifier : InputDataValidationFailAction] = [:]
-                        if street1.isEmpty {
+                        if street1.isEmpty && hasMainField {
                             fails[_id_street1] = .shake
                         }
-                        if countryCode.isEmpty {
+                        if countryCode.isEmpty && hasMainField {
                             fails[_id_country] = .shake
                         }
-                        if city.isEmpty {
+                        if city.isEmpty && hasMainField {
                             fails[_id_city] = .shake
                         }
-                        if postcode.isEmpty {
+                        if postcode.isEmpty && hasMainField {
                             fails[_id_postcode] = .shake
                         }
-                        
+
                         var fileIndex: Int = 0
                         var verifiedDocuments:[SecureIdVerificationDocumentReference] = []
                         while data[InputDataIdentifier("_file_\(fileIndex)")] != nil {
@@ -1936,20 +2171,20 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 case .uploading:
                                     fails[identifier] = .shake
                                 }
-                                
+
                             }
                             fileIndex += 1
                         }
-                        
+
                         if relative != nil, verifiedDocuments.isEmpty {
                             fails[_id_scan] = .shake
                         }
-                        
-                        
+
+
                         if !fails.isEmpty {
                             return .fail(.fields(fails))
                         }
-                    
+
                         var values:[SecureIdValue] = []
                         if let relative = relative {
                             switch relative {
@@ -1959,12 +2194,18 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 values.append(SecureIdValue.rentalAgreement(SecureIdRentalAgreementValue(verificationDocuments: verifiedDocuments)))
                             case .utilityBill:
                                 values.append(SecureIdValue.utilityBill(SecureIdUtilityBillValue(verificationDocuments: verifiedDocuments)))
+                            case .passportRegistration:
+                                values.append(SecureIdValue.passportRegistration(SecureIdPassportRegistrationValue(verificationDocuments: verifiedDocuments)))
+                            case .temporaryRegistration:
+                                values.append(SecureIdValue.temporaryRegistration(SecureIdTemporaryRegistrationValue(verificationDocuments: verifiedDocuments)))
                             default:
                                 break
                             }
                         }
-                        values.append(SecureIdValue.address(SecureIdAddressValue(street1: street1, street2: street2, city: city, state: state, countryCode: countryCode, postcode: postcode)))
-                        
+                        if hasMainField {
+                            values.append(SecureIdValue.address(SecureIdAddressValue(street1: street1, street2: street2, city: city, state: state, countryCode: countryCode, postcode: postcode)))
+                        }
+
                         if let loadedData = loadedData {
                             var fails = loadedData.validateErrors(currentState: current, errors: _stateValue.errors(for: .address))
                             if let relative = relative {
@@ -1992,7 +2233,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 return .fail(.fields(fails))
                             }
                         }
-                        
+
                         return .fail(.none)
                     }, updateDatas: { data in
                         updateState { current in
@@ -2005,14 +2246,22 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                     }, didLoaded: { data in
                         loadedData = AddressIntermediateState(data)
-                    }))
+                    }, identifier: "passport"))
                 }
-                
-                if relative.count > 1 {
-                    let values:[ValuesSelectorValue<SecureIdRequestedFormField>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
+
+                if let editSettings = editSettings {
+                    var values:[ValuesSelectorValue<SecureIdRequestedFormField>] = []
+                    for relative in relative {
+                        values.append(ValuesSelectorValue<SecureIdRequestedFormField>(localized: editSettings.hasValue(relative) ? relative.descEdit : relative.descAdd, value: relative))
+                    }
                     showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdIdentityDocument, onComplete: { selected in
+                        push(selected.value, selected.value == .address ? nil : selected.value, selected.value == .address)
+                    }), for: mainWindow)
+                } else if relative.count > 1 {
+                    let values:[ValuesSelectorValue<SecureIdRequestedFormField>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
+                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdResidentialAddress, onComplete: { selected in
                         filePanel(with: photoExts,for: mainWindow, completion: { files in
-                            push(field, selected.value)
+                            push(field, selected.value, true)
                             if let files = files {
                                 let localFiles:[SecureIdVerificationDocument] = files.map({SecureIdVerificationDocument.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                                 updateState { current in
@@ -2022,30 +2271,32 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         })
                     }), for: mainWindow)
                 } else if relative.count == 1 {
-                    push(field, relative[0])
+                    push(field, relative[0], true)
                 } else {
-                    push(field, nil)
+                    push(field, nil, true)
                 }
-               
-                
+
+
             case .personalDetails:
                 var loadedData:DetailsIntermediateState?
-                let push:(SecureIdRequestedFormField, SecureIdRequestedFormField?) ->Void = { field, relative in
+                let push:(SecureIdRequestedFormField, SecureIdRequestedFormField?, Bool) ->Void = { field, relative, hasMainField in
                     presentController(InputDataController(dataSignal: state.get() |> map { state in
-                        return identityEntries(state, relative: relative, updateState: updateState)
+                        return identityEntries(state, hasMainField: hasMainField, relative: relative, updateState: updateState)
                     }, title: relative?.rawValue ?? field.rawValue, validateData: { data in
-                        
-                        
+
+
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
-                                modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmAppAccessoryIcon, header: L10n.telegramPassportController, information: L10n.secureIdConfirmDeleteDocument, thridTitle: L10n.secureIdConfirmDeletePersonalDetails, successHandler: { result in
+                                modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmAppAccessoryIcon, header: L10n.telegramPassportController, information: hasMainField && relative != nil ? L10n.secureIdConfirmDeleteDocument : hasMainField ? L10n.secureIdDeleteConfirmPersonalDetails : L10n.secureIdConfirmDeleteDocument, thridTitle: hasMainField && relative != nil ? L10n.secureIdDeletePersonalDetails : nil, successHandler: { result in
                                     var keys: [SecureIdValueKey] = []
                                     if let relative = relative {
                                         keys.append(relative.valueKey)
                                     }
                                     switch result {
                                     case .basic:
-                                        break
+                                        if hasMainField && relative == nil {
+                                            keys.append(field.valueKey)
+                                        }
                                     case .thrid:
                                         keys.append(field.valueKey)
                                     }
@@ -2053,45 +2304,50 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 })
                             })
                         }
-                        
+
                         let firstName = data[_id_first_name]?.stringValue ?? ""
                         let lastName = data[_id_last_name]?.stringValue ?? ""
                         let birthday = data[_id_birthday]?.secureIdDate
                         let countryCode = data[_id_country]?.stringValue ?? ""
+                        let residence = data[_id_residence]?.stringValue ?? ""
                         let gender = data[_id_gender]?.gender
                         let identifier = data[_id_identifier]?.stringValue
-                    
+
                         let expiryDate = data[_id_expire_date]?.secureIdDate
-                        
+
                         let selfie = data[_id_selfie]?.secureIdDocument
                         let frontside = data[_id_frontside]?.secureIdDocument
                         let backside = data[_id_backside]?.secureIdDocument
-                        
+
                         var fails:[InputDataIdentifier : InputDataValidationFailAction] = [:]
-                        if firstName.isEmpty {
+                        if firstName.isEmpty && hasMainField {
                             fails[_id_first_name] = .shake
                         }
-                        if lastName.isEmpty {
+                        if lastName.isEmpty && hasMainField {
                             fails[_id_last_name] = .shake
                         }
-                        if countryCode.isEmpty {
+                        if countryCode.isEmpty && hasMainField {
                             fails[_id_country] = .shake
                         }
-                        if gender == nil {
-                            fails[_id_gender] = .shake
-                        }
-                        if birthday == nil {
+                        if residence.isEmpty && hasMainField {
                             fails[_id_birthday] = .shake
                         }
+                        if gender == nil && hasMainField {
+                            fails[_id_gender] = .shake
+                        }
+                        if birthday == nil && hasMainField {
+                            fails[_id_birthday] = .shake
+                        }
+                        
                         if let identifier = identifier, identifier.isEmpty {
                             fails[_id_identifier] = .shake
                         }
-                        
-                        
+
+
                         if let relative = relative, relative.hasSelfie, selfie == nil {
                             fails[_id_selfie_scan] = .shake
                         }
-                        
+
                         var selfieDocument: SecureIdVerificationDocumentReference? = nil
                         var frontsideDocument: SecureIdVerificationDocumentReference? = nil
                         var backsideDocument: SecureIdVerificationDocumentReference? = nil
@@ -2109,7 +2365,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 }
                             }
                         }
-                        
+
                         if let relative = relative {
                             if frontside == nil {
                                 fails[_id_frontside] = .shake
@@ -2119,7 +2375,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                     fails[_id_backside] = .shake
                                 }
                             }
-                            
+
                             if let frontside = frontside {
                                 switch frontside {
                                 case let .remote(reference):
@@ -2147,20 +2403,22 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 }
                             }
                         }
-                        
-                        
-                        
+
+
+
                         if !fails.isEmpty {
                             return .fail(.fields(fails))
                         }
-                        
-                        let _birthday = birthday!
-                        let _gender = gender!
-                        
+
+                      
+
                         var values: [SecureIdValue] = []
-                        
-                        values.append(SecureIdValue.personalDetails(SecureIdPersonalDetailsValue(firstName: firstName, lastName: lastName, birthdate: _birthday, countryCode: countryCode, gender: _gender)))
-                        
+                        if hasMainField {
+                            let _birthday = birthday!
+                            let _gender = gender!
+                            values.append(SecureIdValue.personalDetails(SecureIdPersonalDetailsValue(firstName: firstName, lastName: lastName, birthdate: _birthday, countryCode: countryCode, residenceCountryCode: residence, gender: _gender)))
+                        }
+
                         if let relative = relative {
                             let _identifier = identifier!
                             switch relative.valueKey {
@@ -2177,7 +2435,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 break
                             }
                         }
-                        
+
                         let current = DetailsIntermediateState(data)
                         if let loadedData = loadedData {
                             var fails = loadedData.validateErrors(currentState: current, errors: _stateValue.errors(for: .personalDetails))
@@ -2218,10 +2476,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 }
                             }
                             if fails.isEmpty {
-                                if let relative = relative {
-                                    
-                                }
-                                if loadedData == current {
+                                if loadedData == current && values.last == value {
                                     return .success(.navigationBack)
                                 }
                                 return proccessValue(values)
@@ -2229,7 +2484,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 return .fail(.fields(fails))
                             }
                         }
-                        
+
                         return .fail(.none)
                     }, updateDatas: { data in
                         updateState { current in
@@ -2242,13 +2497,21 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                     }, didLoaded: { data in
                         loadedData = DetailsIntermediateState(data)
-                    }))
+                    }, identifier: "passport"))
                 }
-                
-                if relative.count > 1 {
+
+                if let editSettings = editSettings {
+                    var values:[ValuesSelectorValue<SecureIdRequestedFormField>] = []
+                    for relative in relative {
+                        values.append(ValuesSelectorValue<SecureIdRequestedFormField>(localized: editSettings.hasValue(relative) ? relative.descEdit : relative.descAdd, value: relative))
+                    }
+                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdIdentityDocument, onComplete: { selected in
+                        push(selected.value, selected.value == .personalDetails ? nil : selected.value, selected.value == .personalDetails)
+                    }), for: mainWindow)
+                } else if relative.count > 1 {
                     let values:[ValuesSelectorValue<SecureIdRequestedFormField>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
                     showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdIdentityDocument, onComplete: { selected in
-                        push(field, selected.value)
+                        push(field, selected.value, true)
 //                        filePanel(with: photoExts,for: mainWindow, completion: { files in
 //                            if let files = files {
 //                                push(field, selected.value)
@@ -2260,11 +2523,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 //                        })
                     }), for: mainWindow)
                 } else if relative.count == 1 {
-                    push(field, relative[0])
+                    push(field, relative[0], true)
                 } else {
-                    push(field, nil)
+                    push(field, nil, true)
                 }
-                
+
 
             case .email:
                 if let valueKey = valueKey {
@@ -2277,7 +2540,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     var _activateEmail: String? = nil
                     let validate: ([InputDataIdentifier : InputDataValue]) -> InputDataValidation = { data in
                         let email = data[_id_email_def]?.stringValue ?? data[_id_email_new]?.stringValue
-                        
+
                         if let code = data[_id_email_code]?.stringValue, !code.isEmpty, let payload = _payload, let activateEmail = _activateEmail {
                             return .fail(.doSomething { f in
                                 if let context = _stateValue.accessContext {
@@ -2290,7 +2553,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                             })
 
                         }
-                        
+
                         if data[_id_email_def] == nil, let email = email, isValidEmail(email)  {
                             return .fail(.doSomething { parent in
                                 emailNewActivationDisposable.set(showModalProgress(signal: secureIdPrepareEmailVerification(network: account.network, value: .init(email: email)), for: mainWindow).start(next: { payload in
@@ -2300,12 +2563,12 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                         return current.withUpdatedIntermediateEmailState(EmailIntermediateState(email: email, length: payload.length))
                                     }
                                 }, error: { error in
-                                    
+
                                 }))
-                                
+
                             })
                         }
-                        
+
                         if let email = email, isValidEmail(email) {
                             return proccessValue([SecureIdValue.email(SecureIdEmailValue(email: email))])
                         } else {
@@ -2326,11 +2589,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         updateState { current in
                             return current.withUpdatedIntermediateEmailState(nil)
                         }
-                    }))
+                    }, identifier: "passport"))
                 }
 
             case .phone:
-               
+
                 if let valueKey = valueKey {
                     confirm(for: mainWindow, information: L10n.secureIdRemovePhoneNumber, successHandler: { _ in
                         _ = removeValue(valueKey)
@@ -2372,11 +2635,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                                                 }))
                                                             }
                                                         })
-                                                    }))
+                                                    }, identifier: "passport"))
                                                 }, error: { error in
                                                     alert(for: mainWindow, info: "\(error)")
                                                 }))
-                                                
+
                                             }
                                         }
                                     default:
@@ -2397,23 +2660,23 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         return phoneNumberEntries(state, updateState: updateState)
                     }, title: title, validateData: validate, afterDisappear: {
 
-                    }))
+                    }, identifier: "passport"))
                 }
             default:
                 fatalError()
             }
-            
+
         }, createPassword: {
             let promise:Promise<[InputDataEntry]> = Promise()
             promise.set(state.get() |> map { state in
                 return createPasswordEntries(state)
             })
             let controller = InputDataController(dataSignal: promise.get(), title: L10n.secureIdCreatePasswordTitle, validateData: { data in
-                
+
                 let password = data[_id_c_password]!.stringValue!
                 let repassword = data[_id_c_repassword]!.stringValue!
                 let hint = data[_id_c_hint]!.stringValue!
-                
+
                 var emptyFields:[InputDataIdentifier : InputDataValidationFailAction] = [:]
                 if password.isEmpty {
                     emptyFields[_id_c_password] = .shake
@@ -2421,16 +2684,16 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 if repassword.isEmpty {
                     emptyFields[_id_c_repassword] = .shake
                 }
-                
+
                 if !emptyFields.isEmpty {
                     return .fail(.fields(emptyFields))
                 }
-                
+
                 if password != repassword {
                     return .fail(.fields([_id_c_repassword : .shake]))
                 }
-                
-                
+
+
                 let updatePassword: (String, String?) -> Void = { password, email in
                     updateState { current in
                         return current.withUpdatedPassword(.password(password: password, pendingEmailPattern: email))
@@ -2445,7 +2708,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         |> mapError {_ in return}
                         |> mapToSignal { settings in
                             return twoStepVerificationConfiguration(account: account) |> map { configuration in
-                                
+
                                 switch configuration {
                                 case .set:
                                     updateState { current in
@@ -2458,13 +2721,13 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                             }
                     }))
                 }
-                
+
                 if let email = data[_id_c_email]?.stringValue {
                     if isValidEmail(email) {
                         updatePassword(password, email)
                         return .success(.navigationBack)
                     } else {
-                        
+
                         if email.isEmpty {
                             return .fail(.doSomething(next: { f in
                                 confirm(for: mainWindow, information: L10n.twoStepAuthEmailSkipAlert, okTitle: L10n.twoStepAuthEmailSkip, successHandler: { result in
@@ -2475,17 +2738,17 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         } else {
                             return .fail(.fields([_id_c_email : .shake]))
                         }
-                        
+
                     }
                 }
-                
+
                 return .fail(.none)
-            })
-            
+            }, identifier: "passport")
+
             presentController(controller)
         }, abortVerification: {
             emailActivation.set(nil)
-            
+
             passwordVerificationData.set(showModalProgress(signal: updateTwoStepVerificationPassword(network: account.network, currentPassword: nil, updatedPassword: .none)
                 |> mapError {_ in return}
                 |> mapToSignal { _ in
@@ -2495,27 +2758,30 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     return .single(TwoStepVerificationConfiguration.notSet(pendingEmailPattern: ""))
             }, for: mainWindow))
         }, authorize: {
-            authorizeDisposable.set(showModalProgress(signal: state.get() |> take(1) |> mapError { _ in return GrantSecureIdAccessError.generic} |> mapToSignal { state -> Signal<Void, GrantSecureIdAccessError> in
-                return grantSecureIdAccess(network: account.network, peerId: inAppRequest.peerId, publicKey: inAppRequest.publicKey, scope: inAppRequest.scope, opaquePayload: inAppRequest.payload, values: state.values)
-            } |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-                alert(for: mainWindow, info: "\(error)")
-            }, completed: {
-                executeCallback(true)
-                closeAfterSuccessful()
-            }))
+            if let inAppRequest = inAppRequest {
+                authorizeDisposable.set(showModalProgress(signal: state.get() |> take(1) |> mapError { _ in return GrantSecureIdAccessError.generic} |> mapToSignal { state -> Signal<Void, GrantSecureIdAccessError> in
+                    return grantSecureIdAccess(network: account.network, peerId: inAppRequest.peerId, publicKey: inAppRequest.publicKey, scope: inAppRequest.scope, opaquePayload: inAppRequest.payload, values: state.values)
+                } |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                        alert(for: mainWindow, info: "\(error)")
+                }, completed: {
+                        executeCallback(true)
+                        closeAfterSuccessful()
+                }))
+            }
+            
         }, botPrivacy: { [weak self] in
-            if let url = self?.form.termsUrl {
+            if let url = self?.form?.termsUrl {
                 execute(inapp: .external(link: url, false))
             }
         }, forgotPassword: {
              recoverPasswordDisposable.set(showModalProgress(signal: requestTwoStepVerificationPasswordRecoveryCode(network: account.network) |> deliverOnMainQueue, for: mainWindow).start(next: { emailPattern in
                 presentController(InputDataController(dataSignal: .single(recoverEmailEntries(emailPattern: emailPattern)), title: L10n.secureIdRecoverPassword, validateData: { data -> InputDataValidation in
-                    
+
                     let code = data[_id_email_code]?.stringValue ?? ""
                     if code.isEmpty {
                         return .fail(.fields([_id_email_code : .shake]))
                     }
-                    
+
                     return .fail(.doSomething { f in
                         confirm(for: mainWindow, information: L10n.secureIdWarningDataLost, successHandler: { _ in
                             recoverPasswordDisposable.set(showModalProgress(signal: recoverTwoStepVerificationPassword(network: account.network, code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
@@ -2525,32 +2791,48 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                     return current.withUpdatedPassword(nil)
                                 }
                                 passwordVerificationData.set(.single(.notSet(pendingEmailPattern: "")))
-                                
+
                                 f(.success(.navigationBack))
                             }))
                         })
                     })
 
-                }))
+                }, identifier: "passport"))
             }))
        //
+        }, deletePassport: {
+            confirm(for: mainWindow, header: L10n.secureIdInfoTitle, information: L10n.secureIdInfoDeletePassport, successHandler: { _ in
+                updateState { current in
+                    let signal = deleteSecureIdValues(network: account.network, keys: Set(current.values.map{$0.value.key}))
+                    
+                    _ = (signal |> deliverOnMainQueue).start(next: {
+                       
+                    }, error:{ error in
+                        alert(for: mainWindow, info: "\(error)")
+                    }, completed: {
+                        updateState { current in
+                            return current.withRemovedValues()
+                        }
+                        closeController()
+                    })
+                    return current
+                }
+            })
         })
         
         
-        checkPasswordImpl = { value, shake in
-            arguments.checkPassword((value, shake))
-        }
+        let botPeerSignal = form != nil ? account.postbox.loadedPeerWithId(form!.peerId) |> map {Optional($0)} |> deliverOnPrepareQueue : Signal<Peer?, Void>.single(nil)
         
-        let signal: Signal<(TableUpdateTransition, Bool, Bool), Void> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, formValue.get() |> deliverOnPrepareQueue, passwordVerificationData.get() |> deliverOnPrepareQueue, state.get() |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(form.peerId) |> deliverOnPrepareQueue) |> map { appearance, form, passwordData, state, peer in
-            
+        let signal: Signal<(TableUpdateTransition, Bool, Bool), Void> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, formValue.get() |> deliverOnPrepareQueue, passwordVerificationData.get() |> deliverOnPrepareQueue, state.get() |> deliverOnPrepareQueue, botPeerSignal) |> map { appearance, form, passwordData, state, peer in
+
             let (entries, enabled) = passportEntries(encryptedForm: form.0, form: form.1, peer: peer, passwordData: passwordData, state: state)
-            
+
             let converted = entries.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(converted), right: converted, initialSize: initialSize.modify{$0}, arguments: arguments), enabled, form.1 != nil)
         } |> deliverOnMainQueue |> afterDisposed {
             actionsDisposable.dispose()
         }
-        
+
         disposable.set(signal.start(next: { [weak self] transition, enabled, isVisible in
             self?.genericView.tableView.merge(with: transition)
             self?.genericView.updateEnabled(enabled, isVisible: isVisible, action: arguments.authorize)
@@ -2565,6 +2847,9 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
     
     private var dismissed:Bool = false
     override func invokeNavigationBack() -> Bool {
+        if form == nil {
+            return true
+        }
         if !dismissed {
             confirm(for: mainWindow, information: L10n.secureIdConfirmCancel, successHandler: { [weak self] _ in
                 guard let `self` = self else {return}
@@ -2578,7 +2863,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
     }
     
     private func executeCallback(_ success: Bool) {
-        if let callback = request.callback {
+        if let request = request, let callback = request.callback {
             if callback.hasPrefix("tgbot") {
                 let r = callback.nsstring.range(of: "://")
                 if r.location != NSNotFound {

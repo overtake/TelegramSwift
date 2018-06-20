@@ -35,12 +35,12 @@ class PassportInsertPasswordItem: GeneralRowItem {
     fileprivate let checkPasswordAction:((String, ()->Void))->Void
     fileprivate let forgotPassword: ()->Void
     fileprivate let hasRecoveryEmail: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, checkPasswordAction: @escaping((String, ()->Void))->Void, forgotPassword: @escaping()->Void, hasRecoveryEmail: Bool) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, checkPasswordAction: @escaping((String, ()->Void))->Void, forgotPassword: @escaping()->Void, hasRecoveryEmail: Bool, isSettings: Bool) {
         self._stableId = stableId
         self.checkPasswordAction = checkPasswordAction
         self.forgotPassword = forgotPassword
         self.hasRecoveryEmail = hasRecoveryEmail
-        descLayout = TextViewLayout(.initialize(string: L10n.secureIdInsertPasswordDescription, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        descLayout = TextViewLayout(.initialize(string: isSettings ? L10n.secureIdInsertPasswordSettingsDescription : L10n.secureIdInsertPasswordDescription, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }

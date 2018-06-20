@@ -62,8 +62,21 @@ class GroupedLayout {
         self.messages = messages
     }
     
+    func contentNode(for index: Int) -> ChatMediaContentView.Type {
+        return ChatLayoutUtils.contentNode(for: messages[index].media[0])
+    }
+    
     var count: Int {
         return messages.count
+    }
+    
+    func message(at point: NSPoint) -> Message? {
+        for i in 0 ..< messages.count {
+            if NSPointInRect(point, frame(at: i)) {
+                return messages[i]
+            }
+        }
+        return nil
     }
     
     func measure(_ maxSize: NSSize, spacing: CGFloat = 4.0) {

@@ -522,8 +522,8 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             let peerId = self.chatInteraction?.peerId
             switch reference {
             case let .id(id, _):
-                let signal = account.postbox.modify { modifier -> Bool in
-                    return modifier.getItemCollectionInfo(collectionId: ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)) != nil
+                let signal = account.postbox.transaction { transaction -> Bool in
+                    return transaction.getItemCollectionInfo(collectionId: ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)) != nil
                 } |> deliverOnMainQueue
 
                 _ = signal.start(next: { [weak self] installed in
@@ -548,6 +548,8 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         disposable.dispose()
         chatInteraction?.remove(observer: self)
     }
+    
+    private var requestCount: Int = 150
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
@@ -585,22 +587,33 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         })
         
         
+        let requestCount:()->Int = { [weak self] in
+            return self?.requestCount ?? 250
+        }
+        
+        
         genericView.searchView.searchInteractions = searchInteractions
 
-        let itemCollectionsView = combineLatest(itemCollectionsViewPosition.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue)
+        let itemCollectionsView = combineLatest(itemCollectionsViewPosition.get()
+            |> distinctUntilChanged
+            |> deliverOnMainQueue
+            |> beforeNext { [weak self] position -> StickerPacksCollectionPosition in
+                self?.requestCount += 200
+                return position
+            }, search.get() |> deliverOnMainQueue)
             |> mapToSignal { position, search -> Signal<((ItemCollectionsView?, (FoundStickerSets?, Bool)?), StickerPacksCollectionUpdate), NoError> in
                 
                 if search.request.isEmpty {
                     switch position {
                     case .initial:
-                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 150)
+                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: requestCount())
                             |> map { view  in
                                 return ((view, nil), .generic)
                         }
                     case let .scroll(aroundIndex):
                         var firstTime = true
                         
-                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: 250)
+                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: requestCount())
                             |> map { view  in
                                 let update: StickerPacksCollectionUpdate
                                 if firstTime {
@@ -613,7 +626,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                         }
                     case let .navigate(index):
                         var firstTime = true
-                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: 250)
+                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: requestCount())
                             |> map { view in
                                 let update: StickerPacksCollectionUpdate
                                 if firstTime {

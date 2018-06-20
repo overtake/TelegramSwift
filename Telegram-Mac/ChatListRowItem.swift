@@ -204,6 +204,15 @@ class ChatListRowItem: TableRowItem {
         
         return false
     }
+    
+    
+    var isUnreadMarked: Bool {
+        if let readState = readState {
+            return readState.markedUnread
+        }
+        return false
+    }
+    
     var isSecret:Bool {
         return renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat
     }
@@ -284,6 +293,9 @@ class ChatListRowItem: TableRowItem {
             let totalCount = unreadCounters.unreadCount + unreadCounters.unreadMutedCount
             badgeNode = BadgeNode(.initialize(string: "\(totalCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
             badgeSelectedNode = BadgeNode(.initialize(string: "\(totalCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
+        } else if isUnreadMarked {
+            badgeNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
+            badgeSelectedNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
         }
         
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -361,6 +373,9 @@ class ChatListRowItem: TableRowItem {
             
             badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
             badgeSelectedNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
+        } else if isUnreadMarked {
+            badgeNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
+            badgeSelectedNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
         }
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -448,7 +463,7 @@ class ChatListRowItem: TableRowItem {
                         
                         switch result {
                         case .limitExceeded:
-                            alert(for: mainWindow, info: L10n.chatListContextPinError)
+                            alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
                         default:
                             break
                         }
@@ -491,6 +506,20 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                 items.append(ContextMenuItem(tr(L10n.chatListContextDeleteChat), handler: deleteChat))
             }
+            
+            if !isUnreadMarked && badgeNode == nil && mentionsCount == nil {
+                items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsUnread), handler: { [weak self] in
+                    guard let `self` = self else {return}
+                    _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()
+                    
+                }))
+                
+            } else if badgeNode != nil || mentionsCount != nil || isUnreadMarked {
+                items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsRead), handler: { [weak self] in
+                    guard let `self` = self else {return}
+                    _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()
+                }))
+            }
 
             if let peer = peer as? TelegramGroup, pinnedType != .ad {
                 items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
@@ -525,7 +554,7 @@ class ChatListRowItem: TableRowItem {
                         
                         switch result {
                         case .limitExceeded:
-                            alert(for: mainWindow, info: tr(L10n.chatListContextPinError))
+                            alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
                         default:
                             break
                         }

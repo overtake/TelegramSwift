@@ -326,12 +326,39 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             if includeHoles {
                 entries.append(.HoleEntry(hole))
             }
-        case let .MessageEntry(message,read, location, _):
+        case let .MessageEntry(_msg, read, location, _):
+            
+            var message = _msg
+            //TODO
+            if message.media.isEmpty, let server = proxySettings(from: message.text).0 {
+                var textInfo = ""
+                 let name: String
+                switch server.connection {
+                case let .socks5(username, password):
+                    if let user = username {
+                        textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextUsername(user)
+                    }
+                    if let pass = password {
+                        textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextPassword(pass)
+                    }
+                    name = L10n.chatMessageSocks5Config
+                case let .mtp(secret):
+                    textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
+                    name = L10n.chatMessageMTProxyConfig
+                }
+                
+               
+                
+                let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent(url: message.text, displayUrl: "", hash: 0, type: "proxy", websiteName: name, title: L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port)), text: textInfo, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: nil, file: nil, instantPage: nil)))
+                message = message.withUpdatedMedia([media]).withUpdatedText("")
+            }
             
             var disableEntry = false
             if let action = message.media.first as? TelegramMediaAction {
                 switch action.action {
                 case .historyCleared:
+                    disableEntry = true
+                case .groupMigratedToChannel:
                     disableEntry = true
                 default:
                     break
@@ -481,7 +508,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             
             
             
-            let entry: ChatHistoryEntry = .MessageEntry(message,read, renderType,itemType,fwdType, location)
+            let entry: ChatHistoryEntry = .MessageEntry(message, read, renderType,itemType,fwdType, location)
             
             
             if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {

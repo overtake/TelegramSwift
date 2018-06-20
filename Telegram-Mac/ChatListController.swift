@@ -93,6 +93,7 @@ class ChatListController : PeersListController {
     private let stateValue:ValuePromise<ChatListRowState> = ValuePromise(.plain)
     private let removePeerIdGroupDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
+    private let scrollDisposable = MetaDisposable()
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -113,24 +114,33 @@ class ChatListController : PeersListController {
             
             var signal:Signal<(ChatListView,ViewUpdateType),Void>
             var scroll:TableScrollState? = nil
-            switch(location) {
+            var removeNextAnimation: Bool = false
+            switch location {
             case let .Initial(count, st):
                 signal = account.viewTracker.tailChatListView(groupId: groupId, count: count)
                 scroll = st
-            case let .Index(index):
+            case let .Index(index, st):
                 signal = account.viewTracker.aroundChatListView(groupId: groupId, index: index, count: 100)
+                scroll = st
+                removeNextAnimation = st != nil
             }
             
              return combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
                 |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, Void> in
                 
-                let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
-                    
-                if previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex {
-                    scroll = nil
-                }
+                    let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
+                        
+                    if (previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex) && !removeNextAnimation {
+                        scroll = nil
+                    }
                 
+                    if removeNextAnimation {
+                        removeNextAnimation = false
+                    }
+                   
+                    
                 _ = previousChatList.swap(value.0)
+                    
                     
                 let stateWasUpdated = previousState.swap(state) != state
                     var prepare = value.0.entries
@@ -186,11 +196,28 @@ class ChatListController : PeersListController {
         
         request.set(.single(.Initial(50, nil)))
         
+        genericView.tableView.addScroll(listener: TableScrollListener({ [weak self] scroll in
+
+            guard let `self` = self, let view = previousChatList.modify({$0}) else {return}
+            #if !STABLE && !APP_STORE
+            if scroll.visibleRows.location == 0 && view.laterIndex != nil {
+                self.lastScrolledIndex = nil
+            }
+            self.account.context.mainViewController.isUpChatList = scroll.visibleRows.location > 0 || view.laterIndex != nil
+            #else
+            self.account.context.mainViewController.isUpChatList = false
+            #endif
+           
+        }))
+        
         genericView.tableView.setScrollHandler({ [weak self] scroll in
             
             let view = previousChatList.modify({$0})
             
             if let strongSelf = self, let view = view {
+                
+               
+                
                 var messageIndex:ChatListIndex?
                 
                 switch scroll.direction {
@@ -203,22 +230,76 @@ class ChatListController : PeersListController {
                 }
                 if let messageIndex = messageIndex {
                     _ = animated.swap(false)
-                    strongSelf.request.set(.single(.Index(messageIndex)))
+                    strongSelf.request.set(.single(.Index(messageIndex, nil)))
                 }
             }
         })
         
+//        return account.postbox.unreadMessageCountsView(items: items) |> map { view in
+//            var totalCount:Int32 = 0
+//            if let total = view.count(for: .total(value, .messages)) {
+//                totalCount = total
+//            }
+//            
+//            return (view, totalCount)
+//        }
+        
     }
+
+    private var lastScrolledIndex: ChatListIndex? = nil
+    
     
     override func scrollup() {
         
-        let view = previousChatList.modify({$0})
-        if view?.laterIndex != nil {
-            _ = first.swap(true)
-            request.set(.single(.Initial(100, .up(true))))
-        } else {
-            genericView.tableView.scroll(to: .up(true))
+        let lastScrolledIndex = self.lastScrolledIndex
+        
+        let scrollToTop:()->Void = { [weak self] in
+            guard let `self` = self else {return}
+
+            let view = self.previousChatList.modify({$0})
+            if view?.laterIndex != nil {
+                _ = self.first.swap(true)
+                self.request.set(.single(.Initial(100, .up(true))))
+            } else {
+                self.genericView.tableView.scroll(to: .up(true))
+            }
         }
+        
+        #if !STABLE && !APP_STORE
+        let view = self.previousChatList.modify({$0})
+        
+        
+        if lastScrolledIndex == nil, view?.laterIndex != nil || genericView.tableView.scrollPosition().current.visibleRows.location > 0  {
+            scrollToTop()
+            return
+        }
+        let postbox = account.postbox
+        
+        let signal:Signal<ChatListIndex?, Void> = account.context.badgeFilter.get() |> mapToSignal { filter -> Signal<ChatListIndex?, Void> in
+            return postbox.transaction { transaction -> ChatListIndex? in
+                return transaction.getEarliestUnreadChatListIndex(filtered: filter == .filtered, earlierThan: lastScrolledIndex)
+            }
+            } |> deliverOnMainQueue
+        
+        scrollDisposable.set(signal.start(next: { [weak self] index in
+            guard let `self` = self else {return}
+            if let index = index {
+                self.lastScrolledIndex = index
+                self.request.set(.single(ChatListIndexRequest.Index(index, TableScrollState.center(id: ChatLocation.peer(index.messageIndex.id.peerId), innerId: nil, animated: true, focus: true, inset: 0))))
+            } else {
+                self.lastScrolledIndex = nil
+                scrollToTop()
+            }
+        }))
+        
+        #else
+            scrollToTop()
+        #endif
+        
+       
+        
+        
+
         
     }
     
@@ -243,6 +324,7 @@ class ChatListController : PeersListController {
     deinit {
         removePeerIdGroupDisposable.dispose()
         disposable.dispose()
+        scrollDisposable.dispose()
     }
     
     

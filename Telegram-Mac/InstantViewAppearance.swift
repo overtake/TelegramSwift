@@ -76,8 +76,8 @@ public struct InstantViewAppearance: PreferencesEntry, Equatable {
 }
 
 func updateInstantViewAppearanceSettingsInteractively(postbox: Postbox, _ f: @escaping (InstantViewAppearance) -> InstantViewAppearance) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.instantViewAppearance, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.instantViewAppearance, { entry in
             let currentSettings: InstantViewAppearance
             if let entry = entry as? InstantViewAppearance {
                 currentSettings = entry

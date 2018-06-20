@@ -188,6 +188,7 @@ final class PassportDocumentRowView : TableRowView {
                     self.imageView.addSubview(self.progressView)
                     self.progressView.center()
                 }
+               
             default:
                 if item.uploadingProgress == nil {
                     self.progressView.state = .None
@@ -195,6 +196,11 @@ final class PassportDocumentRowView : TableRowView {
                 }
             }
         }))
+        
+        self.progressView.fetchControls = FetchControls(fetch: { [weak item] in
+            guard let item = item else {return}
+            item.removeAction(item.documentValue.document)
+        })
         
         imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, photo: item.image, scale: backingScaleFactor, small: true, secureIdAccessContext: item.accessContext))
         _ = chatMessagePhotoInteractiveFetched(account: item.account, photo: item.documentValue.image).start()
