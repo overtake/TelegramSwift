@@ -14,6 +14,8 @@ final class MediaTrackFrame {
         self.resetDecoder = resetDecoder
         self.decoded = decoded
         self.rotationAngle = rotationAngle
+        
+ 
     }
     
     var position: CMTime {

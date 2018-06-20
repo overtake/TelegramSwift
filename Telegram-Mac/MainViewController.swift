@@ -22,6 +22,22 @@ class MainViewController: TelegramViewController {
     private var settings:AccountViewController
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
+    private let badgeCountDisposable: MetaDisposable = MetaDisposable()
+    
+    var isUpChatList: Bool = false {
+        didSet {
+            if isUpChatList != oldValue {
+                updateLocalizationAndTheme()
+            }
+        }
+    }
+    private var hasScollThumb: Bool = false {
+        didSet {
+            if hasScollThumb != oldValue {
+               updateLocalizationAndTheme()
+            }
+        }
+    }
     
     override var navigationController: NavigationViewController? {
         didSet {
@@ -45,7 +61,7 @@ class MainViewController: TelegramViewController {
         
         tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), selectedImage: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true), controller: phoneCalls))
         
-        tabController.add(tab: TabBadgeItem(account, controller: chatList, image: theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList"), selected: false), selectedImage: theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList_Highlighted"), selected: true)))
+        tabController.add(tab: TabBadgeItem(account, controller: chatList, image: theme.icons.chatTabIcon, selectedImage: hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected))
         
         tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), selectedImage: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true), controller: settings, longHoverHandler: { [weak self] control in
             self?.showFastSettings(control)
@@ -88,6 +104,26 @@ class MainViewController: TelegramViewController {
                 }
             }
         }))
+        
+        let items:[UnreadMessageCountsItem] = [.total(.raw, .messages)]
+        let postbox = self.account.postbox
+        badgeCountDisposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), Void> in
+            return postbox.unreadMessageCountsView(items: items) |> map { view in
+                var totalCount:Int32 = 0
+                if let total = view.count(for: .total(value, .messages)) {
+                    totalCount = total
+                }
+                
+                return (view, totalCount)
+            }
+            
+        } |> deliverOnMainQueue).start(next: { [weak self] _, totalValue in
+            #if !STABLE && !APP_STORE
+            self?.hasScollThumb = totalValue > 0
+            #else
+            self?.hasScollThumb = false
+            #endif
+        }))
     }
     
     private let settingsDisposable = MetaDisposable()
@@ -95,8 +131,8 @@ class MainViewController: TelegramViewController {
     private var quickController: ViewController?
     private func showFastSettings(_ control:Control) {
         
-        let passcodeData = account.postbox.modify { modifier -> PostboxAccessChallengeData in
-            return modifier.getAccessChallengeData()
+        let passcodeData = account.postbox.transaction { transaction -> PostboxAccessChallengeData in
+            return transaction.getAccessChallengeData()
         } |> deliverOnMainQueue
         
         let applicationSettings = appNotificationSettings(postbox: account.postbox) |> take(1)  |> deliverOnMainQueue
@@ -137,7 +173,8 @@ class MainViewController: TelegramViewController {
                 palettes[whitePalette.name] = whitePalette
                 palettes[darkPalette.name] = darkPalette
                 palettes[nightBluePalette.name] = nightBluePalette
-                
+                palettes[mojavePalette.name] = mojavePalette
+
                 if !theme.colors.isDark {
                     palette = palettes[settings.defaultNightName] ?? nightBluePalette
                 } else {
@@ -179,7 +216,7 @@ class MainViewController: TelegramViewController {
                 index += 1
             }
             
-            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList"), selected: false), theme.tabBar.icon(key: 2, image: #imageLiteral(resourceName: "Icon_TabChatList_Highlighted"), selected: true)), at: index)
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.chatTabIcon, hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected), at: index)
             index += 1
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: index)
         }

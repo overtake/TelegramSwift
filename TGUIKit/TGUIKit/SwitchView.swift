@@ -28,6 +28,7 @@ public struct SwitchViewAppearance {
 
 public class SwitchView: Control {
     private let disposable = MetaDisposable()
+    public var autoswitch: Bool = true
     public var presentation: SwitchViewAppearance = switchViewAppearance {
         didSet {
             let animates = self.animates
@@ -90,7 +91,9 @@ public class SwitchView: Control {
                 let control = control as! SwitchView
                 let animates = control.animates
                 control.animates = true
-                control.isOn = !control.isOn
+                if strongSelf.autoswitch {
+                    control.isOn = !control.isOn
+                }
                 control.animates = animates
             }
             

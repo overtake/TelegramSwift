@@ -13,7 +13,11 @@
 		9F0E6F76203EC7090086699C /* DFRPrivateHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F74203EC7090086699C /* DFRPrivateHeader.m */; };
 		9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F77203ED1380086699C /* AppKit.framework */; };
 		9F0E6F7A203EFE870086699C /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F79203EFE870086699C /* Preferences.swift */; };
-		9F10CE8820610127002DD61A /* PassportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8720610127002DD61A /* PassportController.swift */; };
+		9F106F1220DA5CEB008AE8DF /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F106F1420DA5CEB008AE8DF /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F106F1520DA5CF9008AE8DF /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		9F106F1620DA5CF9008AE8DF /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		9F106F1720DA5CF9008AE8DF /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		9F10CE8A20611536002DD61A /* PassportHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8920611536002DD61A /* PassportHeaderItem.swift */; };
 		9F10CE8E20617C36002DD61A /* PassportInsertPasswordItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8D20617C36002DD61A /* PassportInsertPasswordItem.swift */; };
 		9F10CE922061BE19002DD61A /* InputDataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE912061BE19002DD61A /* InputDataController.swift */; };
@@ -33,6 +37,7 @@
 		9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */; };
 		9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21F65420B5A72800332C85 /* LocationModalController.swift */; };
 		9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F21F65C20B5A9C900332C85 /* MapKit.framework */; };
+		9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8720610127002DD61A /* PassportController.swift */; };
 		9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */; };
 		9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */; };
 		9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */; };
@@ -46,12 +51,9 @@
 		9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */; };
 		9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */; };
 		9F72973420B878B00067F815 /* MapResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72973320B878B00067F815 /* MapResources.swift */; };
-		9F72973920BD5BB50067F815 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F72973A20BD5BBD0067F815 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F72973B20BD5BCF0067F815 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
-		9F72973C20BD5BCF0067F815 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		9F72973D20BD5BCF0067F815 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		9F72974020BD9C6A0067F815 /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72973F20BD9C6A0067F815 /* VideoPlayer.swift */; };
+		9F72974620C038120067F815 /* TelegramMediaProxySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72974520C038120067F815 /* TelegramMediaProxySettings.swift */; };
+		9F72974820C597800067F815 /* TermsModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72974720C597800067F815 /* TermsModalController.swift */; };
 		9F7943B020854E2F00FEDB81 /* ProxyListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7943AF20854E2F00FEDB81 /* ProxyListRowItem.swift */; };
 		9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7943B120855DC200FEDB81 /* ProxyListController.swift */; };
 		9F88A134200FD425007B899E /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
@@ -423,6 +425,7 @@
 		C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFE81DE9DA61009B9629 /* CountryManager.swift */; };
 		C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */; };
 		C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */; };
+		C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27BAC7920CFCE68007A7508 /* PassportSettingsHeaderItem.swift */; };
 		C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */; };
 		C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */; };
 		C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */; };
@@ -633,12 +636,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9F72973A20BD5BBD0067F815 /* HockeySDK.framework in Copy Files */,
-				9F72973920BD5BB50067F815 /* Sparkle.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
 				C224F2931E43CDBE002FF0B2 /* SwiftSignalKitMac.framework in Copy Files */,
+				9F106F1220DA5CEB008AE8DF /* Sparkle.framework in Copy Files */,
+				9F106F1420DA5CEB008AE8DF /* HockeySDK.framework in Copy Files */,
 				C224F2921E43CD93002FF0B2 /* TelegramCoreMac.framework in Copy Files */,
 			);
 			name = "Copy Files";
@@ -740,6 +743,8 @@
 		9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchMediaUtils.swift; sourceTree = "<group>"; };
 		9F72973320B878B00067F815 /* MapResources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapResources.swift; sourceTree = "<group>"; };
 		9F72973F20BD9C6A0067F815 /* VideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
+		9F72974520C038120067F815 /* TelegramMediaProxySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramMediaProxySettings.swift; sourceTree = "<group>"; };
+		9F72974720C597800067F815 /* TermsModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsModalController.swift; sourceTree = "<group>"; };
 		9F7943AF20854E2F00FEDB81 /* ProxyListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyListRowItem.swift; sourceTree = "<group>"; };
 		9F7943B120855DC200FEDB81 /* ProxyListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyListController.swift; sourceTree = "<group>"; };
 		9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccountInfoController.swift; sourceTree = "<group>"; };
@@ -1254,6 +1259,7 @@
 		C27AAFE81DE9DA61009B9629 /* CountryManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CountryManager.swift; sourceTree = "<group>"; };
 		C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyComposeController.swift; sourceTree = "<group>"; };
+		C27BAC7920CFCE68007A7508 /* PassportSettingsHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportSettingsHeaderItem.swift; sourceTree = "<group>"; };
 		C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreparedChatHistoryViewTransition.swift; sourceTree = "<group>"; };
 		C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListViewIntermediateState.swift; sourceTree = "<group>"; };
 		C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntertainmentViewController.swift; sourceTree = "<group>"; };
@@ -1503,11 +1509,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F72973B20BD5BCF0067F815 /* Sparkle.framework in Frameworks */,
-				9F72973C20BD5BCF0067F815 /* DFRFoundation.framework in Frameworks */,
-				9F72973D20BD5BCF0067F815 /* HockeySDK.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
+				9F106F1520DA5CF9008AE8DF /* Sparkle.framework in Frameworks */,
+				9F106F1620DA5CF9008AE8DF /* DFRFoundation.framework in Frameworks */,
+				9F106F1720DA5CF9008AE8DF /* HockeySDK.framework in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
 				9FFAE50B205AA1FB000C028E /* libavcodec.a in Frameworks */,
 				9FFAE50C205AA1FB000C028E /* libavformat.a in Frameworks */,
@@ -1564,6 +1570,7 @@
 				9F18DD92206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift */,
 				9F18DD91206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift */,
 				9FC8ADA5206925F60094F7B4 /* PassportWindowController.swift */,
+				C27BAC7920CFCE68007A7508 /* PassportSettingsHeaderItem.swift */,
 			);
 			name = "secure-id";
 			sourceTree = "<group>";
@@ -3276,6 +3283,7 @@
 				C241026E1FD58EA800DB8625 /* SImageView.swift */,
 				9F9483B0202AF816006E873D /* CrashHandler.swift */,
 				9FA0E5332051A41A001E5649 /* PreUploadManager.swift */,
+				9F72974520C038120067F815 /* TelegramMediaProxySettings.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -3524,6 +3532,7 @@
 				C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */,
 				C22EE6181E66ECB200334C38 /* ReportReasonModalController.swift */,
 				C24BA3BC1E9D30F800E8970B /* DeleteSupergroupMessagesModalController.swift */,
+				9F72974720C597800067F815 /* TermsModalController.swift */,
 			);
 			name = overlay;
 			sourceTree = "<group>";
@@ -3856,6 +3865,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */,
 				C2593FBF1F7D242E00F6D2B1 /* TGPaintShader.m in Sources */,
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
@@ -3947,6 +3957,7 @@
 				C2DEC87F1DECB8C800F6544A /* TelegramApplicationContext.swift in Sources */,
 				C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */,
 				C20CAD121FE291E300EFF8BF /* ChatBubbleAccessoryForward.swift in Sources */,
+				9F72974820C597800067F815 /* TermsModalController.swift in Sources */,
 				C218FF9C1F4204C400DD7D35 /* InstantPageChannelView.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
 				C218FF9A1F42030B00DD7D35 /* InstantPageChannelItem.swift in Sources */,
@@ -4133,7 +4144,6 @@
 				C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */,
 				C2AF011D1F03D4C600D8AC1D /* TGCallAesCtr.m in Sources */,
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
-				9F10CE8820610127002DD61A /* PassportController.swift in Sources */,
 				9FFAE509205A92B9000C028E /* RingBuffer.m in Sources */,
 				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
@@ -4184,6 +4194,7 @@
 				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */,
+				9F72974620C038120067F815 /* TelegramMediaProxySettings.swift in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
 				C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,
@@ -4292,6 +4303,7 @@
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
 				C2271F4F1D9C38F500424F7B /* SPopoverRowItem.swift in Sources */,
 				C2FD34151E6C9003008D13D4 /* BaseApplicationSettings.swift in Sources */,
+				C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */,
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
@@ -4512,7 +4524,6 @@
 					"$(PROJECT_DIR)/thrid-party/libwebp/lib",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
-					"$(PROJECT_DIR)/Telegram-Mac/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4692,7 +4703,6 @@
 					"$(PROJECT_DIR)/thrid-party/libwebp/lib",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
-					"$(PROJECT_DIR)/Telegram-Mac/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4867,7 +4877,6 @@
 					"$(PROJECT_DIR)/thrid-party/libwebp/lib",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
-					"$(PROJECT_DIR)/Telegram-Mac/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -4923,10 +4932,10 @@
 					"$(PROJECT_DIR)/thrid-party/libwebp/lib",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
-					"$(PROJECT_DIR)/Telegram-Mac/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";

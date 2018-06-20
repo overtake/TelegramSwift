@@ -387,24 +387,9 @@ extension Media {
 
 enum ChatListIndexRequest :Equatable {
     case Initial(Int, TableScrollState?)
-    case Index(ChatListIndex)
+    case Index(ChatListIndex, TableScrollState?)
 }
 
-func ==(lhs:ChatListIndexRequest, rhs:ChatListIndexRequest) -> Bool {
-    switch lhs {
-    case let .Initial(lhsCount, _):
-        if case let .Initial(rhsCount, _) = rhs {
-            return rhsCount == lhsCount
-        }
-        
-    case let .Index(lhsIndex):
-        if case let .Index(rhsIndex) = rhs {
-            return lhsIndex == rhsIndex
-        }
-    }
-    
-    return false
-}
 
 public extension PeerView {
     var isMuted:Bool {
@@ -612,6 +597,14 @@ public extension Message {
     }
     
     func withUpdatedStableId(_ stableId:UInt32) -> Message {
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
+    }
+    func withUpdatedId(_ messageId:MessageId) -> Message {
+        return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
+    }
+    
+    
+    func withUpdatedText(_ text:String) -> Message {
         return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
     }
     
@@ -828,6 +821,9 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
             if file.isInstantVideo {
                 return false
             }
+            if file.isVoice {
+                return false
+            }
         }
         if media is TelegramMediaContact {
             return false
@@ -835,10 +831,15 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
         if media is TelegramMediaAction {
             return false
         }
+        if media is TelegramMediaMap {
+            return false
+        }
     }
     
     for attr in message.attributes {
         if attr is InlineBotMessageAttribute {
+            return false
+        } else if attr is AutoremoveTimeoutMessageAttribute {
             return false
         }
     }
@@ -1344,6 +1345,8 @@ extension SecureIdValue {
         return self.key == value
     }
     
+    
+    
     var secureIdValueAccessContext: SecureIdValueAccessContext? {
         switch self {
         case .email:
@@ -1439,9 +1442,9 @@ extension SecureIdValue {
     var backSideVerificationDocument: SecureIdVerificationDocumentReference? {
         switch self {
         case let .idCard(value):
-            return value.frontSideDocument
+            return value.backSideDocument
         case let .driversLicense(value):
-            return value.frontSideDocument
+            return value.backSideDocument
         default:
             return nil
         }
@@ -1484,7 +1487,9 @@ extension SecureIdValue {
         }
     }
     
-
+    var requestFieldType: SecureIdRequestedFormField {
+        return key.requestFieldType
+    }
     
     var expiryDate: SecureIdDate? {
         switch self {
@@ -1496,6 +1501,39 @@ extension SecureIdValue {
             return value.expiryDate
         default:
             return nil
+        }
+    }
+}
+
+extension SecureIdValueKey {
+    var requestFieldType: SecureIdRequestedFormField {
+        switch self {
+        case .address:
+            return .address
+        case .bankStatement:
+            return .bankStatement
+        case .driversLicense:
+            return .driversLicense(selfie: true)
+        case .email:
+            return .email
+        case .idCard:
+            return .idCard(selfie: true)
+        case .internalPassport:
+            return .internalPassport(selfie: true)
+        case .passport:
+            return .passport(selfie: true)
+        case .passportRegistration:
+            return .passportRegistration
+        case .personalDetails:
+            return .personalDetails
+        case .phone:
+            return .phone
+        case .rentalAgreement:
+            return .rentalAgreement
+        case .temporaryRegistration:
+            return .temporaryRegistration
+        case .utilityBill:
+            return .utilityBill
         }
     }
 }
@@ -1585,6 +1623,68 @@ extension SecureIdRequestedFormField {
             return L10n.secureIdRequestPermissionAddressEmpty
         default:
             return L10n.secureIdRequestPermissionIdentityEmpty
+        }
+    }
+    
+    var descAdd: String {
+        switch self {
+        case .email:
+            return ""
+        case .phone:
+            return ""
+        case .address:
+            return L10n.secureIdAddResidentialAddress
+        case .utilityBill:
+            return L10n.secureIdAddUtilityBill
+        case .bankStatement:
+            return L10n.secureIdAddBankStatement
+        case .rentalAgreement:
+            return L10n.secureIdAddRentalAgreement
+        case .passport:
+            return L10n.secureIdAddPassport
+        case .idCard:
+            return L10n.secureIdAddID
+        case .driversLicense:
+            return L10n.secureIdAddDriverLicense
+        case .personalDetails:
+            return L10n.secureIdAddPersonalDetails
+        case .internalPassport:
+            return L10n.secureIdAddInternalPassport
+        case .passportRegistration:
+            return L10n.secureIdAddPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdAddTemporaryRegistration
+        }
+    }
+    
+    var descEdit: String {
+        switch self {
+        case .email:
+            return ""
+        case .phone:
+            return ""
+        case .address:
+            return L10n.secureIdEditResidentialAddress
+        case .utilityBill:
+            return L10n.secureIdEditUtilityBill
+        case .bankStatement:
+            return L10n.secureIdEditBankStatement
+        case .rentalAgreement:
+            return L10n.secureIdEditRentalAgreement
+        case .passport:
+            return L10n.secureIdEditPassport
+        case .idCard:
+            return L10n.secureIdEditID
+        case .driversLicense:
+            return L10n.secureIdEditDriverLicense
+        case .personalDetails:
+            return L10n.secureIdEditPersonalDetails
+        case .internalPassport:
+            return L10n.secureIdEditInternalPassport
+        case .passportRegistration:
+            return L10n.secureIdEditPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdEditTemporaryRegistration
         }
     }
 }
@@ -2034,4 +2134,75 @@ public extension ProxySettings {
     }
 }
 
+extension ProxyServerSettings {
+    var link: String {
+        let prefix: String
+        switch self.connection {
+        case .mtp:
+            prefix = "proxy"
+        case .socks5:
+            prefix = "socks"
+        }
+        var link = "tg://\(prefix)?server=\(self.host)&port=\(self.port)"
+        switch self.connection {
+        case let .mtp(secret):
+            link += "&secret=\((secret as NSData).hexString)"
+        case let .socks5(username, password):
+            if let username = username {
+                link += "&user=\(username)"
+            }
+            if let password = password {
+                link += "&pass=\(password)"
+            }
+        }
+        return link
+    }
+}
 
+extension RequestEditMessageMedia : Equatable {
+    public static func ==(lhs: RequestEditMessageMedia, rhs: RequestEditMessageMedia) -> Bool {
+        switch lhs {
+        case .keep:
+            if case .keep = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .update(lhsMedia):
+            if case let .update(rhsMedia) = rhs {
+                if lhsMedia.isEqual(rhsMedia) {
+                    return true
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+}
+struct SecureIdDocumentValue {
+    let document: SecureIdVerificationDocument
+    let stableId: AnyHashable
+    let context: SecureIdAccessContext
+    init(document: SecureIdVerificationDocument, context: SecureIdAccessContext, stableId: AnyHashable) {
+        self.document = document
+        self.stableId = stableId
+        self.context = context
+    }
+    var image: TelegramMediaImage {
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], reference: nil)
+    }
+}
+
+func openFaq(account: Account) {
+    let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
+    
+    _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
+        if let webpage = webpage {
+            showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
+        } else {
+            execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
+        }
+    })
+}

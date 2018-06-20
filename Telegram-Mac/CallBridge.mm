@@ -182,17 +182,19 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
 //
 -(void)startTransmissionIfNeeded:(bool)outgoing connection:(TGCallConnection *)connection {
     
-    voip_config_t config = { 0 };
-    config.init_timeout = TGCallConnectTimeout;
-    config.recv_timeout = TGCallPacketTimeout;
-    config.data_saving = false;
+    tgvoip::VoIPController::Config config = tgvoip::VoIPController::Config();
+    config.initTimeout = TGCallConnectTimeout;
+    config.recvTimeout = TGCallPacketTimeout;
+    config.dataSaving = tgvoip::DATA_SAVING_NEVER;
     config.enableAEC = false;
     config.enableNS = true;
     config.enableAGC = true;
     
-    strncpy(config.logFilePath, [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String], sizeof(config.logFilePath));    //memset(config.logFilePath, 0, sizeof(config.logFilePath));
+    config.logFilePath = [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String];
     
-    _controller.controller->SetConfig(&config);
+  //  strncpy(config.logFilePath, [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String], sizeof(config.logFilePath));    //memset(config.logFilePath, 0, sizeof(config.logFilePath));
+    
+    _controller.controller->SetConfig(config);
     
     
     std::vector<tgvoip::Endpoint> endpoints {};

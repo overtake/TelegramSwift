@@ -221,8 +221,8 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
 }
 
 func updateMediaDownloadSettingsInteractively(postbox: Postbox, _ f: @escaping (AutomaticMediaDownloadSettings) -> AutomaticMediaDownloadSettings) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings, { entry in
             let currentSettings: AutomaticMediaDownloadSettings
             if let entry = entry as? AutomaticMediaDownloadSettings {
                 currentSettings = entry

@@ -90,8 +90,13 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                 
                 _ = strongSelf.genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: 0))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(L10n.supergroupDeleteRestrictionDeleteMessage), type: .selectable(strongSelf.options.contains(.deleteMessages)), action: {
-                    
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(L10n.supergroupDeleteRestrictionDeleteMessage), type: .selectable(strongSelf.options.contains(.deleteMessages)), action: { [weak strongSelf] in
+                    if let strongSelf = strongSelf {
+                        if !strongSelf.options.isEmpty {
+                            strongSelf.options.remove(.deleteMessages)
+                        }
+                        update.set(.single(Void()))
+                    }
                 }))
                 
                 if peer.hasAdminRights(.canBanUsers) {
@@ -99,6 +104,9 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                         if let strongSelf = strongSelf {
                             if strongSelf.options.contains(.banUser) {
                                 strongSelf.options.remove(.banUser)
+                                if strongSelf.options.isEmpty {
+                                    strongSelf.options.insert(.deleteMessages)
+                                }
                             } else {
                                 strongSelf.options.insert(.banUser)
                             }
@@ -111,6 +119,9 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     if let strongSelf = strongSelf {
                         if strongSelf.options.contains(.reportSpam) {
                             strongSelf.options.remove(.reportSpam)
+                            if strongSelf.options.isEmpty {
+                                strongSelf.options.insert(.deleteMessages)
+                            }
                         } else {
                             strongSelf.options.insert(.reportSpam)
                         }
@@ -123,6 +134,9 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     if let strongSelf = strongSelf {
                         if strongSelf.options.contains(.deleteAllMessages) {
                             strongSelf.options.remove(.deleteAllMessages)
+                            if strongSelf.options.isEmpty {
+                                strongSelf.options.insert(.deleteMessages)
+                            }
                         } else {
                             strongSelf.options.insert(.deleteAllMessages)
                         }

@@ -75,6 +75,8 @@ internal final class L10n {
   internal static var accountSettingsLogout: String  { return L10n.tr("Localizable", "AccountSettings.Logout") }
   /// Notifications
   internal static var accountSettingsNotifications: String  { return L10n.tr("Localizable", "AccountSettings.Notifications") }
+  /// Telegram Passport
+  internal static var accountSettingsPassport: String  { return L10n.tr("Localizable", "AccountSettings.Passport") }
   /// Privacy and Security
   internal static var accountSettingsPrivacyAndSecurity: String  { return L10n.tr("Localizable", "AccountSettings.PrivacyAndSecurity") }
   /// Proxy
@@ -129,6 +131,8 @@ internal final class L10n {
   internal static var alertOK: String  { return L10n.tr("Localizable", "Alert.OK") }
   /// Sorry, this user doesn't seem to exist.
   internal static var alertUserDoesntExists: String  { return L10n.tr("Localizable", "Alert.UserDoesntExists") }
+  /// Update App
+  internal static var alertButtonOKUpdateApp: String  { return L10n.tr("Localizable", "Alert.ButtonOK.UpdateApp") }
   /// Can't forward messages to this conversation.
   internal static var alertForwardError: String  { return L10n.tr("Localizable", "Alert.Forward.Error") }
   /// Delete
@@ -173,6 +177,8 @@ internal final class L10n {
   internal static var appearanceSettingsColorThemeDayClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.day_classic") }
   /// COLOR THEME
   internal static var appearanceSettingsColorThemeHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.Header") }
+  /// Dark Mojave
+  internal static var appearanceSettingsColorThemeMojave: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.mojave") }
   /// Night Blue
   internal static var appearanceSettingsColorThemeNightBlue: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.night_blue") }
   /// TEXT SIZE
@@ -583,6 +589,8 @@ internal final class L10n {
   internal static var channelVisibilityConfirmRevoke: String  { return L10n.tr("Localizable", "ChannelVisibility.Confirm.Revoke") }
   /// admin
   internal static var chatAdminBadge: String  { return L10n.tr("Localizable", "Chat.AdminBadge") }
+  /// ADD PROXY
+  internal static var chatApplyProxy: String  { return L10n.tr("Localizable", "Chat.ApplyProxy") }
   /// Cancel
   internal static var chatCancel: String  { return L10n.tr("Localizable", "Chat.Cancel") }
   /// Copy Selected Text
@@ -663,6 +671,10 @@ internal final class L10n {
   internal static var chatContextInfo: String  { return L10n.tr("Localizable", "Chat.Context.Info") }
   /// Remove from Favorites
   internal static var chatContextRemoveFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.RemoveFavoriteSticker") }
+  /// Copy Link to Proxy
+  internal static var chatCopyProxyConfiguration: String  { return L10n.tr("Localizable", "Chat.Copy.ProxyConfiguration") }
+  /// Click to edit Media
+  internal static var chatEditMessageMedia: String  { return L10n.tr("Localizable", "Chat.EditMessage.Media") }
   /// Link Preview
   internal static var chatEmptyLinkPreview: String  { return L10n.tr("Localizable", "Chat.Empty.LinkPreview") }
   /// Pinned message
@@ -755,6 +767,12 @@ internal final class L10n {
   internal static var chatMessageUnsupported: String  { return L10n.tr("Localizable", "Chat.Message.Unsupported") }
   /// via
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
+  /// MTProxy Configuration
+  internal static var chatMessageMTProxyConfig: String  { return L10n.tr("Localizable", "Chat.Message.MTProxy.Config") }
+  /// SOCKS5 Configuration
+  internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
+  /// SHOW MESSAGE
+  internal static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
   /// Proxy Sponsor
   internal static var chatProxySponsoredAlertHeader: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertHeader") }
   /// Settings
@@ -895,12 +913,16 @@ internal final class L10n {
   internal static var chatListContextLeaveChannel: String  { return L10n.tr("Localizable", "ChatList.Context.LeaveChannel") }
   /// Leave Group
   internal static var chatListContextLeaveGroup: String  { return L10n.tr("Localizable", "ChatList.Context.LeaveGroup") }
+  /// Mark As Read
+  internal static var chatListContextMaskAsRead: String  { return L10n.tr("Localizable", "ChatList.Context.MaskAsRead") }
+  /// Mark As Unread
+  internal static var chatListContextMaskAsUnread: String  { return L10n.tr("Localizable", "ChatList.Context.MaskAsUnread") }
   /// Mute
   internal static var chatListContextMute: String  { return L10n.tr("Localizable", "ChatList.Context.Mute") }
   /// Pin
   internal static var chatListContextPin: String  { return L10n.tr("Localizable", "ChatList.Context.Pin") }
   /// Sorry, you can pin no more than 5 chats to the top.
-  internal static var chatListContextPinError: String  { return L10n.tr("Localizable", "ChatList.Context.PinError") }
+  internal static var chatListContextPinErrorNew: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew") }
   /// Return to Group
   internal static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
   /// Unmute
@@ -2589,6 +2611,8 @@ internal final class L10n {
   internal static var proxySettingsServer: String  { return L10n.tr("Localizable", "ProxySettings.Server") }
   /// Share this link with friends to circumvent censorship in your country
   internal static var proxySettingsShare: String  { return L10n.tr("Localizable", "ProxySettings.Share") }
+  /// Share Proxy List
+  internal static var proxySettingsShareProxyList: String  { return L10n.tr("Localizable", "ProxySettings.ShareProxyList") }
   /// SOCKS5
   internal static var proxySettingsSocks5: String  { return L10n.tr("Localizable", "ProxySettings.Socks5") }
   /// Proxy Settings
@@ -2610,10 +2634,6 @@ internal final class L10n {
   /// connected (ping: %@)
   internal static func proxySettingsItemConnectedPing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ProxySettings.Item.ConnectedPing", p1)
-  }
-  /// last connection %@
-  internal static func proxySettingsItemLastConnection(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ProxySettings.Item.LastConnection", p1)
   }
   /// unavailable
   internal static var proxySettingsItemNeverConnected: String  { return L10n.tr("Localizable", "ProxySettings.Item.NeverConnected") }
@@ -2723,12 +2743,22 @@ internal final class L10n {
   internal static var searchFieldSearch: String  { return L10n.tr("Localizable", "SearchField.Search") }
   /// Off
   internal static var secretTimerOff: String  { return L10n.tr("Localizable", "SecretTimer.Off") }
+  /// Sorry, your Telegram app is out of date and can’t handle this request. Please update Telegram.
+  internal static var secureIdAppVersionOutdated: String  { return L10n.tr("Localizable", "SecureId.AppVersionOutdated") }
   /// Delete Address
   internal static var secureIdDeleteAddress: String  { return L10n.tr("Localizable", "SecureId.DeleteAddress") }
   /// Delete Document
   internal static var secureIdDeleteIdentity: String  { return L10n.tr("Localizable", "SecureId.DeleteIdentity") }
+  /// Delete Passport
+  internal static var secureIdDeletePassport: String  { return L10n.tr("Localizable", "SecureId.DeletePassport") }
+  /// Email Address
+  internal static var secureIdEmail: String  { return L10n.tr("Localizable", "SecureId.Email") }
   /// Identity Document
   internal static var secureIdIdentityDocument: String  { return L10n.tr("Localizable", "SecureId.IdentityDocument") }
+  /// With Telegram Passport you can easily sign up for websites and services that require identity veritification.\n\nYour information, personal data, and documents are protected by end-to-end encryption. Nobody including Telegram, can access them without your permission.
+  internal static var secureIdInfo: String  { return L10n.tr("Localizable", "SecureId.Info") }
+  /// Phone Number
+  internal static var secureIdPhoneNumber: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber") }
   /// Password Recovery
   internal static var secureIdRecoverPassword: String  { return L10n.tr("Localizable", "SecureId.RecoverPassword") }
   /// Delete Email Address?
@@ -2753,6 +2783,28 @@ internal final class L10n {
   internal static func secureIdAcceptPolicy(_ p1: String) -> String {
     return L10n.tr("Localizable", "SecureId.Accept.Policy", p1)
   }
+  /// Add Bank Statement
+  internal static var secureIdAddBankStatement: String  { return L10n.tr("Localizable", "SecureId.Add.BankStatement") }
+  /// Add Driver's License
+  internal static var secureIdAddDriverLicense: String  { return L10n.tr("Localizable", "SecureId.Add.DriverLicense") }
+  /// Add Identity Card
+  internal static var secureIdAddID: String  { return L10n.tr("Localizable", "SecureId.Add.ID") }
+  /// Add Internal Passport
+  internal static var secureIdAddInternalPassport: String  { return L10n.tr("Localizable", "SecureId.Add.InternalPassport") }
+  /// Add Passport
+  internal static var secureIdAddPassport: String  { return L10n.tr("Localizable", "SecureId.Add.Passport") }
+  /// Add Passport Registration
+  internal static var secureIdAddPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Add.PassportRegistration") }
+  /// Add Personal Details
+  internal static var secureIdAddPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Add.PersonalDetails") }
+  /// Add Rental Agreement
+  internal static var secureIdAddRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Add.RentalAgreement") }
+  /// Add Residential Address
+  internal static var secureIdAddResidentialAddress: String  { return L10n.tr("Localizable", "SecureId.Add.ResidentialAddress") }
+  /// Add Temporary Registration
+  internal static var secureIdAddTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.Add.TemporaryRegistration") }
+  /// Add Utility Bill
+  internal static var secureIdAddUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Add.UtilityBill") }
   /// ADDRESS
   internal static var secureIdAddressHeader: String  { return L10n.tr("Localizable", "SecureId.Address.Header") }
   /// City
@@ -2781,8 +2833,6 @@ internal final class L10n {
   internal static var secureIdConfirmDeleteAddress: String  { return L10n.tr("Localizable", "SecureId.Confirm.DeleteAddress") }
   /// Are you sure your want to delete this document?
   internal static var secureIdConfirmDeleteDocument: String  { return L10n.tr("Localizable", "SecureId.Confirm.DeleteDocument") }
-  /// Delete Personal details
-  internal static var secureIdConfirmDeletePersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Confirm.DeletePersonalDetails") }
   /// Please create a password to protect your passport info. You'll be asked to enter it when you log in.
   internal static var secureIdCreatePasswordDescription: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Description") }
   /// PASSWORD
@@ -2809,6 +2859,32 @@ internal final class L10n {
   internal static var secureIdCreatePasswordHintInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.InputPlaceholder") }
   /// Hint
   internal static var secureIdCreatePasswordHintPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.Placeholder") }
+  /// Delete Personal Details
+  internal static var secureIdDeletePersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Delete.PersonalDetails") }
+  /// Are you sure you want to delete personal details?
+  internal static var secureIdDeleteConfirmPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Delete.Confirm.PersonalDetails") }
+  /// Edit Bank Statement
+  internal static var secureIdEditBankStatement: String  { return L10n.tr("Localizable", "SecureId.Edit.BankStatement") }
+  /// Edit Driver's License
+  internal static var secureIdEditDriverLicense: String  { return L10n.tr("Localizable", "SecureId.Edit.DriverLicense") }
+  /// Edit Identity Card
+  internal static var secureIdEditID: String  { return L10n.tr("Localizable", "SecureId.Edit.ID") }
+  /// Edit Internal Passport
+  internal static var secureIdEditInternalPassport: String  { return L10n.tr("Localizable", "SecureId.Edit.InternalPassport") }
+  /// Edit Passport
+  internal static var secureIdEditPassport: String  { return L10n.tr("Localizable", "SecureId.Edit.Passport") }
+  /// Edit Passport Registration
+  internal static var secureIdEditPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Edit.PassportRegistration") }
+  /// Edit Personal Details
+  internal static var secureIdEditPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Edit.PersonalDetails") }
+  /// Edit Rental Agreement
+  internal static var secureIdEditRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Edit.RentalAgreement") }
+  /// Edit Residential Address
+  internal static var secureIdEditResidentialAddress: String  { return L10n.tr("Localizable", "SecureId.Edit.ResidentialAddress") }
+  /// Edit Temporary Registration
+  internal static var secureIdEditTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.Edit.TemporaryRegistration") }
+  /// Edit Utility Bill
+  internal static var secureIdEditUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Edit.UtilityBill") }
   /// Use %@
   internal static func secureIdEmailUseSame(_ p1: String) -> String {
     return L10n.tr("Localizable", "SecureId.Email.UseSame", p1)
@@ -2881,6 +2957,8 @@ internal final class L10n {
   internal static var secureIdIdentityPassportPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.Passport.Placeholder") }
   /// Birthday
   internal static var secureIdIdentityPlaceholderBirthday: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.Birthday") }
+  /// Citizenship
+  internal static var secureIdIdentityPlaceholderCitizenship: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.Citizenship") }
   /// Country
   internal static var secureIdIdentityPlaceholderCountry: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.Country") }
   /// Expiry Date
@@ -2893,14 +2971,24 @@ internal final class L10n {
   internal static var secureIdIdentityPlaceholderIssuedDate: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.IssuedDate") }
   /// Surname
   internal static var secureIdIdentityPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.LastName") }
-  /// The document must contain:\n• photograph, first name and last name\n• date of birthday\n• citizenship\ndocumment issue date and document number.
+  /// Residence
+  internal static var secureIdIdentityPlaceholderResidence: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.Residence") }
+  /// The document must contain your first and last name, your residential address, a stamp / barcode / QR code / logo, and issue date, no more than 3 month ago.
   internal static var secureIdIdentityScanDescription: String  { return L10n.tr("Localizable", "SecureId.IdentityScan.Description") }
+  /// Are you sure you want to delete your Telegram Passport? All details will be lost.
+  internal static var secureIdInfoDeletePassport: String  { return L10n.tr("Localizable", "SecureId.Info.DeletePassport") }
+  /// More Info
+  internal static var secureIdInfoMore: String  { return L10n.tr("Localizable", "SecureId.Info.More") }
+  /// What is Telegram Passport?
+  internal static var secureIdInfoTitle: String  { return L10n.tr("Localizable", "SecureId.Info.Title") }
   /// Please provide the password for accessing your personal data
   internal static var secureIdInsertPasswordDescription: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Description") }
   /// Next
   internal static var secureIdInsertPasswordNext: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Next") }
   /// Enter your password
   internal static var secureIdInsertPasswordPassword: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Password") }
+  /// Please enter your Telegram password to decrypt your data
+  internal static var secureIdInsertPasswordSettingsDescription: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Settings.Description") }
   /// E-Mail
   internal static var secureIdInstallEmailTitle: String  { return L10n.tr("Localizable", "SecureId.InstallEmail.Title") }
   /// Phone Number
@@ -2943,7 +3031,7 @@ internal final class L10n {
   internal static var secureIdRequestPermissionDriversLicense: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.DriversLicense") }
   /// E-Mail
   internal static var secureIdRequestPermissionEmail: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Email") }
-  /// ID Card
+  /// Identity Card
   internal static var secureIdRequestPermissionIDCard: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.IDCard") }
   /// Internal Passport
   internal static var secureIdRequestPermissionInternalPassport: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.InternalPassport") }
@@ -2971,7 +3059,7 @@ internal final class L10n {
   internal static var secureIdRequestPermissionPhoneEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone.Empty") }
   /// REQUESTED INFORMATION
   internal static var secureIdRequestedInformationHeader: String  { return L10n.tr("Localizable", "SecureId.RequestedInformation.Header") }
-  /// REQUESTED FILES
+  /// SCANS
   internal static var secureIdScansHeader: String  { return L10n.tr("Localizable", "SecureId.Scans.Header") }
   /// Upload a front side photo of document
   internal static var secureIdUploadFront: String  { return L10n.tr("Localizable", "SecureId.Upload.Front") }
@@ -3139,6 +3227,12 @@ internal final class L10n {
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   internal static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
+  /// Suggest Frequent Contacts
+  internal static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
+  /// This will delete all data about the people you message frequently as well the inline bots you are likely to use.
+  internal static var suggestFrequentContactsAlert: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts.Alert") }
+  /// Display people you message frequently at the top of the search section for quick access.
+  internal static var suggestFrequentContactsDesc: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts.Desc") }
   /// Choose your language
   internal static var suggestLocalizationHeader: String  { return L10n.tr("Localizable", "Suggest.Localization.Header") }
   /// Other
@@ -3239,6 +3333,28 @@ internal final class L10n {
   internal static var telegramUsernameSettingsViewController: String  { return L10n.tr("Localizable", "Telegram.UsernameSettingsViewController") }
   /// Logged in with Telegram
   internal static var telegramWebSessionsController: String  { return L10n.tr("Localizable", "Telegram.WebSessionsController") }
+  /// Agree & Continue
+  internal static var termsOfServiceAccept: String  { return L10n.tr("Localizable", "TermsOfService.Accept") }
+  /// I confirm that I am %@ or over.
+  internal static func termsOfServiceConfirmAge(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TermsOfService.ConfirmAge", p1)
+  }
+  /// Decline
+  internal static var termsOfServiceDisagree: String  { return L10n.tr("Localizable", "TermsOfService.Disagree") }
+  /// Please agree and proceed to %@.
+  internal static func termsOfServiceProceedBot(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TermsOfService.ProceedBot", p1)
+  }
+  /// Terms of Service
+  internal static var termsOfServiceTitle: String  { return L10n.tr("Localizable", "TermsOfService.Title") }
+  /// Decline & Deactivate
+  internal static var termsOfServiceDisagreeOK: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.OK") }
+  /// We're very sorry, but this means we must part ways here. Unlike others, we don't use your data for ad targeting or other commercial purposes. Telegram only stores the information it needs to function as a feature-rich cloud service. You can adjust how we use your data (e.g., delete synced contacts) in Privacy & Security settings.\n\nBut if you're generally not OK with Telegram's modest needs, it won't be possible for us to provide this service.
+  internal static var termsOfServiceDisagreeText: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.Text") }
+  /// Warning, this will irreversibly delete your Telegram account along with all the data you store in the Telegram cloud.\n\nWe will provide a tool to download your data before June, 23 – so you may want to wait a little before deleting.
+  internal static var termsOfServiceDisagreeTextLast: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.Text.Last") }
+  /// Delete Now
+  internal static var termsOfServiceDisagreeTextLastOK: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.Text.Last.OK") }
   /// Copy
   internal static var textCopy: String  { return L10n.tr("Localizable", "Text.Copy") }
   /// Copy Command

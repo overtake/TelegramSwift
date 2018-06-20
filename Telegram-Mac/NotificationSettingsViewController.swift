@@ -274,7 +274,7 @@ class NotificationSettingsViewController: TableViewController {
                 switch(location) {
                 case let .Initial(count, _):
                     signal = account.viewTracker.tailChatListView(groupId: nil, count: count) |> map {$0.0}
-                case let .Index(index):
+                case let .Index(index, _):
                     signal = account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 100) |> map {$0.0}
                 }
                 
@@ -303,7 +303,7 @@ class NotificationSettingsViewController: TableViewController {
                 
                 
                 var ids:[PeerId:Peer] = [:]
-                let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})},account.postbox.searchContacts(query: search.request.lowercased()))
+                let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})},account.postbox.searchContacts(query: search.request.lowercased()))
                     |> map { (peers, contacts) -> [Peer] in
                         return (peers + contacts).filter({ (peer) -> Bool in
                             let first = ids[peer.id] == nil
@@ -316,8 +316,8 @@ class NotificationSettingsViewController: TableViewController {
                     
                     return combineLatest(peers.map { peer -> Signal<TelegramPeerNotificationSettings?, Void> in
                         
-                        return account.postbox.modify { (modifier) -> TelegramPeerNotificationSettings? in
-                            return modifier.getPeerNotificationSettings(peer.id) as? TelegramPeerNotificationSettings
+                        return account.postbox.transaction { transaction -> TelegramPeerNotificationSettings? in
+                            return transaction.getPeerNotificationSettings(peer.id) as? TelegramPeerNotificationSettings
                         }
                         
                     }) |> map { (settings) -> [NotificationSettingsEntry] in

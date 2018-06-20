@@ -192,10 +192,11 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     func startSecretChat() {
-        
-        let signal = account.postbox.modify { [weak self] modifier -> (Peer?, Account?) in
+        let account = self.account
+        let peerId = self.peerId
+        let signal = account.postbox.transaction { transaction -> (Peer?, Account?) in
             
-            if let peerId = self?.peerId, let peer = modifier.getPeer(peerId), let account = self?.account {
+            if let peer = transaction.getPeer(peerId) {
                 return (peer, account)
             } else {
                 return (nil, nil)

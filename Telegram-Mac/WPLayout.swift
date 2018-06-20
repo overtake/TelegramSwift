@@ -158,19 +158,35 @@ class WPLayout: Equatable {
     }
     
     func layout(with size:NSSize) -> Void {
-        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width) , size.height + (hasInstantPage ? 30 + 6 : 0))
+        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width) , size.height + (hasInstantPage ? 30 + 6 : 0) + (isProxyConfig ? 30 + 6 : 0))
         self.contentRect = NSMakeRect(insets.left, insets.top, size.width, size.height)
         self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.top + insets.bottom)
     }
     
     var hasInstantPage: Bool {
-        if let _ = content.instantPage {
+        if let instantPage = content.instantPage {
             if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
                 return false
+            }
+            if instantPage.blocks.count == 3 {
+                switch instantPage.blocks[2] {
+                case .collage, .slideshow:
+                    return false
+                default:
+                    break
+                }
             }
             return true
         }
         return  false
+    }
+    
+    var isProxyConfig: Bool {
+        return content.type == "proxy"
+    }
+    
+    var proxyConfig: ProxyServerSettings? {
+        return proxySettings(from: content.url).0
     }
     
 }

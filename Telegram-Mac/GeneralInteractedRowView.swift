@@ -46,6 +46,7 @@ class GeneralInteractedRowView: GeneralRowView {
                     switchView = SwitchView(frame: NSMakeRect(0, 0, 32, 20))
                     addSubview(switchView!)
                 }
+                switchView?.autoswitch = item.autoswitch
                 switchView?.presentation = item.switchAppearance
                 switchView?.setIsOn(stateback,animated:animated)
                 
@@ -88,8 +89,11 @@ class GeneralInteractedRowView: GeneralRowView {
                     item.action()
                     switch item.type {
                     case let .switchable(enabled):
-                        item.type = .switchable(!enabled)
-                        self?.switchView?.setIsOn(!enabled)
+                        if item.autoswitch {
+                            item.type = .switchable(!enabled)
+                            self?.switchView?.setIsOn(!enabled)
+                        }
+                       
                     default:
                         break
                     }

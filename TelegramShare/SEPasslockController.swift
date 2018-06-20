@@ -193,8 +193,8 @@ class SEPasslockController: ModalViewController {
         }, for: .Click)
         valueDisposable.set((genericView.value.get() |> mapToSignal { [weak self] value in
             if let strongSelf = self {
-                return strongSelf.account.postbox.modify { modifier -> (String, String?) in
-                    switch modifier.getAccessChallengeData() {
+                return strongSelf.account.postbox.transaction { transaction -> (String, String?) in
+                    switch transaction.getAccessChallengeData() {
                     case .none:
                         return (value, nil)
                     case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):

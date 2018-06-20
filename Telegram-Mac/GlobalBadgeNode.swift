@@ -57,7 +57,7 @@ class GlobalBadgeNode: Node {
         self.layoutChanged = layoutChanged
         super.init(View())
         
-        var items:[UnreadMessageCountsItem] = [.total(.raw)]
+        var items:[UnreadMessageCountsItem] = [.total(.raw, .messages)]
         if let peerId = excludePeerId {
             items.append(.peer(peerId))
         }
@@ -67,7 +67,7 @@ class GlobalBadgeNode: Node {
             
             return account.postbox.unreadMessageCountsView(items: items) |> map { view in
                 var totalCount:Int32 = 0
-                if let total = view.count(for: .total(value)) {
+                if let total = view.count(for: .total(value, .chats)) {
                     totalCount = total
                 }
                 

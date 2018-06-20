@@ -262,10 +262,10 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         actionsDisposable.add(removePeerDisposable)
         
         let peersPromise = Promise<[Peer]>()
-        peersPromise.set(account.postbox.modify { modifier -> [Peer] in
+        peersPromise.set(account.postbox.transaction { transaction -> [Peer] in
             var result: [Peer] = []
             for peerId in initialPeerIds {
-                if let peer = modifier.getPeer(peerId) {
+                if let peer = transaction.getPeer(peerId) {
                     result.append(peer)
                 }
             }
@@ -300,11 +300,11 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[Peer], NoError> in
-                        return account.postbox.modify { modifier -> [Peer] in
+                        return account.postbox.transaction { transaction -> [Peer] in
                             var updatedPeers = peers
                             var existingIds = Set(updatedPeers.map { $0.id })
                             for peerId in peerIds {
-                                if let peer = modifier.getPeer(peerId), !existingIds.contains(peerId) {
+                                if let peer = transaction.getPeer(peerId), !existingIds.contains(peerId) {
                                     existingIds.insert(peerId)
                                     updatedPeers.append(peer)
                                 }

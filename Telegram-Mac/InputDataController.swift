@@ -41,8 +41,9 @@ class InputDataController: GenericViewController<TableView> {
     private let _removeAfterDisappear: Bool
     private let hasDone: Bool
     private let updateDoneEnabled:([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void
+    private let customRightButton:(()->BarView?)?
     let identifier: String
-    init(dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "") {
+    init(dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: (()->BarView?)? = nil) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -52,6 +53,7 @@ class InputDataController: GenericViewController<TableView> {
         self._removeAfterDisappear = removeAfterDisappear
         self.hasDone = hasDone
         self.updateDoneEnabled = updateDoneEnabled
+        self.customRightButton = customRightButton
         super.init()
         values.set(dataSignal)
     }
@@ -75,7 +77,7 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return hasDone ? TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce()
+        return customRightButton?() ?? (hasDone ? TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
     }
     
     private var doneView: TextButtonBarView {

@@ -480,8 +480,8 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 return (EventLogTableTransition(result: items, addition: _previousState == state && _previousSearchState == searchState && _previousAppearance == appearance, state: state, maxId: maxId, eventLog: result), result.peers.map {$0.value})
                 
                 }  |> mapToSignal { transition, peers in
-                    return account.postbox.modify { modifier in
-                        updatePeers(modifier: modifier, peers: peers, update: { (previous, updated) -> Peer? in
+                    return account.postbox.transaction { transaction in
+                        updatePeers(transaction: transaction, peers: peers, update: { (previous, updated) -> Peer? in
                             return updated
                         })
                         return Optional(transition)

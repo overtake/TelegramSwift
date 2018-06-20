@@ -104,6 +104,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         if peer.id == account.peerId {
                             return false
                         }
+                        if peer.displayTitle == L10n.peerDeletedUser {
+                            return false
+                        }
                         
                         if global.isChannel, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder == nil {
                             return false
@@ -302,11 +305,14 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
                         if peer.id == account.peerId {
                             return false
                         }
+                        
                         if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
                             return false
                         }
                     }
-                    
+                    if peer.displayTitle == L10n.peerDeletedUser {
+                        return false
+                    }
                     if peer.indexName.matchesByTokens(normalizedQuery) {
                         return true
                     }

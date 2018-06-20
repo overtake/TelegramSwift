@@ -353,10 +353,10 @@ class AuthController : GenericViewController<AuthHeaderView> {
             updateProxyUI()
         }
         
-        let countryDisposable = (getCountryCode(network: account.network) |> deliverOnMainQueue).start(next: { [weak self] country in
-            self?.genericView.loginView.updateCountryCode(country)
-        })
-        proxyDisposable.add(countryDisposable)
+//        let countryDisposable = (getCountryCode(network: account.network) |> deliverOnMainQueue).start(next: { [weak self] country in
+//            self?.genericView.loginView.updateCountryCode(country)
+//        })
+//        proxyDisposable.add(countryDisposable)
         
         
         genericView.proxyButton.set(handler: {  _ in

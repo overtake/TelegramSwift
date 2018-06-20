@@ -880,13 +880,17 @@ class LoginAuthInfoView : View {
                     self?.signupView.isHidden = true
                 }
             })
-        case let .confirmationCodeEntry(number, type, hash, timeout, nextType):
+        case let .confirmationCodeEntry(number, type, hash, timeout, nextType, terms):
             codeInputContainer.updateLocalizationAndTheme()
             codeInputContainer.isHidden = false
             codeInputContainer.undo = []
             codeInputContainer.update(number: number, type: type, hash: hash, timeout: timeout, nextType: nextType, animated: animated)
             phoneNumberContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
+            
+            if let terms = terms {
+                terms
+            }
 
             codeInputContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {

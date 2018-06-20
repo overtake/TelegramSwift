@@ -72,8 +72,8 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
 
 
 func updateBaseAppSettingsInteractively(postbox: Postbox, _ f: @escaping (BaseApplicationSettings) -> BaseApplicationSettings) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.baseAppSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.baseAppSettings, { entry in
             let currentSettings: BaseApplicationSettings
             if let entry = entry as? BaseApplicationSettings {
                 currentSettings = entry

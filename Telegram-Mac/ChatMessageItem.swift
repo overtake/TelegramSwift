@@ -23,6 +23,38 @@ class ChatMessageItem: ChatRowItem {
         webpageLayout?.table = self.table
     }
     
+    override var isSharable: Bool {
+        if let webpage = webpageLayout {
+            if webpage.content.type == "proxy" {
+                return true
+            }
+        }
+        return super.isSharable
+    }
+    
+    var actionButtonText: String? {
+        if let webpage = webpageLayout, !webpage.hasInstantPage {
+            let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
+            switch link {
+            case let .followResolvedName(_, postId, _, _, _):
+                if let _ = postId {
+                    return L10n.chatMessageActionShowMessage
+                }
+            default:
+                break
+            }
+        }
+        
+        return nil
+    }
+    
+    func invokeAction() {
+        if let webpage = webpageLayout {
+            let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
+            execute(inapp: link)
+        }
+    }
+    
     var webpageLayout:WPLayout?
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ account:Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
@@ -115,7 +147,18 @@ class ChatMessageItem: ChatRowItem {
                 let presentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble), renderType: entry.renderType)
                 switch webpage.content {
                 case let .Loaded(content):
-                    if content.file == nil {
+                    var forceArticle: Bool = false
+                    if let instantPage = content.instantPage {
+                        if instantPage.blocks.count == 3 {
+                            switch instantPage.blocks[2] {
+                            case .collage, .slideshow:
+                                forceArticle = true
+                            default:
+                                break
+                            }
+                        }
+                    }
+                    if content.file == nil || forceArticle {
                         webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation, downloadSettings: downloadSettings)
                     } else {
                         webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation, downloadSettings: downloadSettings)
@@ -275,6 +318,12 @@ class ChatMessageItem: ChatRowItem {
                     if let _ = webpageLayout.imageSize, webpageLayout.isFullImageSize || textLayout.layoutSize.height - 10 <= webpageLayout.contrainedImageSize.height {
                         return rightSize.height
                     }
+                    if actionButtonText != nil {
+                        return rightSize.height
+                    }
+                    if webpageLayout.groupLayout != nil {
+                        return rightSize.height
+                    }
                 } else {
                     return rightSize.height
                 }
@@ -301,7 +350,7 @@ class ChatMessageItem: ChatRowItem {
      
         webpageLayout?.measure(width: min(width, 380))
         
-        let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.contentRect.width ?? width), min(280, width)) : width
+        let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(280, width)) : width
         
         textLayout.measure(width: textBlockWidth)
 
@@ -311,6 +360,9 @@ class ChatMessageItem: ChatRowItem {
         if let webpageLayout = webpageLayout {
             contentSize.height += webpageLayout.size.height + defaultContentInnerInset
             contentSize.width = max(webpageLayout.size.width, contentSize.width)
+            if let _ = actionButtonText {
+                contentSize.height += 36
+            }
         }
         
         return contentSize
@@ -335,7 +387,15 @@ class ChatMessageItem: ChatRowItem {
         
         let account = self.account!
         
-        if let file = webpageLayout?.content.file {
+        var media: Media? = webpageLayout?.content.file ?? webpageLayout?.content.image
+        
+        if let groupLayout = (webpageLayout as? WPArticleLayout)?.groupLayout {
+            if let message = groupLayout.message(at: location) {
+                media = message.media.first
+            }
+        }
+        
+        if let file = media as? TelegramMediaFile {
             items = items |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
                 var items = items
                 return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
@@ -346,8 +406,8 @@ class ChatMessageItem: ChatRowItem {
                     }
                     
                     if file.isSticker, let fileId = file.id {
-                        return account.postbox.modify { modifier -> [ContextMenuItem] in
-                            let saved = getIsStickerSaved(modifier: modifier, fileId: fileId)
+                        return account.postbox.transaction { transaction -> [ContextMenuItem] in
+                            let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
                             items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
                                 
                                 if !saved {
@@ -368,7 +428,7 @@ class ChatMessageItem: ChatRowItem {
                     return .single(items)
                 }
             }
-        } else if let image = webpageLayout?.content.image {
+        } else if let image = media as? TelegramMediaImage {
             items = items |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
                 var items = items
                 if let resource = image.representations.last?.resource {
@@ -430,9 +490,15 @@ class ChatMessageItem: ChatRowItem {
                             copyToClipboard(text)
                         }), at: 1)
                     } else {
-                        items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: {
-                            copyToClipboard(text)
-                        }), at: items.isEmpty ? 0 : 1)
+                        if let content = self?.webpageLayout?.content, content.type == "proxy" {
+                            items.insert(ContextMenuItem(L10n.chatCopyProxyConfiguration, handler: {
+                                copyToClipboard(content.url)
+                            }), at: items.isEmpty ? 0 : 1)
+                        } else {
+                            items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: {
+                                copyToClipboard(text)
+                            }), at: items.isEmpty ? 0 : 1)
+                        }
                     }
                 }
             }

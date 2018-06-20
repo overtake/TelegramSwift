@@ -8,6 +8,7 @@
 import Cocoa
 import PostboxMac
 import SwiftSignalKitMac
+import TelegramCoreMac
 import TGUIKit
 
 public enum PresentationThemeParsingError: Error {
@@ -206,8 +207,8 @@ func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
 
 
 func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
             return ThemePaletteSettings(palette: palette, bubbled: current.bubbled, fontSize: current.fontSize, wallpaper: current.wallpaper, defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
         })
@@ -215,8 +216,8 @@ func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void
 }
 
 func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = f(entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme)
             return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: current.fontSize, wallpaper: current.wallpaper, defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
         })
@@ -224,8 +225,8 @@ func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettin
 }
 
 func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
             return ThemePaletteSettings(palette: current.palette, bubbled: bubbled, fontSize: current.fontSize, wallpaper: !bubbled ? .color(Int32(current.palette.background.rgb)) : (current.palette == dayClassic ? .builtin : current.wallpaper), defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
         })
@@ -233,8 +234,8 @@ func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void
 }
 
 func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
             return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: fontSize, wallpaper: current.wallpaper, defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
         })
@@ -242,8 +243,8 @@ func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Vo
 }
 
 func updateApplicationWallpaper(postbox: Postbox, wallpaper: TelegramWallpaper) -> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
             return ThemePaletteSettings(palette: current.palette, bubbled: current.bubbled, fontSize: current.fontSize, wallpaper: wallpaper, defaultNightName: current.defaultNightName, defaultDayName: current.defaultDayName)
         })

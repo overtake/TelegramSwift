@@ -349,11 +349,11 @@ class ChatListRowView: TableRowView {
                         if foundAllPeers {
                             return .single(cachedResult)
                         } else {
-                            return postbox.modify { modifier -> [(Peer, PeerInputActivity)] in
+                            return postbox.transaction { transaction -> [(Peer, PeerInputActivity)] in
                                 var result: [(Peer, PeerInputActivity)] = []
                                 var peerCache: [PeerId: Peer] = [:]
                                 for (peerId, activity) in activities {
-                                    if let peer = modifier.getPeer(peerId) {
+                                    if let peer = transaction.getPeer(peerId) {
                                         result.append((peer, activity))
                                         peerCache[peerId] = peer
                                     }

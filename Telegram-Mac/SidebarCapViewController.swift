@@ -101,8 +101,8 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
                 case .group:
                     return .single(false)
                 case let .peer(peerId):
-                    return postbox.modify { modifier -> Bool in
-                        return modifier.getPeer(peerId)?.canSendMessage ?? false
+                    return postbox.transaction { transaction -> Bool in
+                        return transaction.getPeer(peerId)?.canSendMessage ?? false
                     }
                 }
             } else {

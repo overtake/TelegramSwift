@@ -19,6 +19,10 @@ struct InstantPageMedia: Equatable, Identifiable {
         return index
     }
     
+    func withUpdatedIndex(_ index: Int) -> InstantPageMedia {
+        return InstantPageMedia(index: index, media: self.media, caption: self.caption)
+    }
+    
     static func ==(lhs: InstantPageMedia, rhs: InstantPageMedia) -> Bool {
         return lhs.index == rhs.index && lhs.media.isEqual(rhs.media) && lhs.caption == rhs.caption
     }

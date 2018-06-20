@@ -66,9 +66,9 @@ enum SecureIdVerificationDocumentId: Hashable {
     var hashValue: Int {
         switch self {
             case let .local(id):
-                return id.hashValue
+                return Int(id)
             case let .remote(id):
-                return id.hashValue
+                return Int(id)
         }
     }
 }

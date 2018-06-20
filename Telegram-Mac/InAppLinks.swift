@@ -234,10 +234,31 @@ func execute(inapp:inAppLink) {
                 alert(for: mainWindow, info: text)
             case .generic:
                 alert(for: mainWindow, info: "An error occured")
+            case .versionOutdated:
+                updateAppAsYouWish(text: L10n.secureIdAppVersionOutdated, updateApp: true)
+            }
+        })
+    case let .unsupportedScheme(account, path):
+        _ = (getDeepLinkInfo(network: account.network, path: path) |> deliverOnMainQueue).start(next: { info in
+            if let info = info {
+               updateAppAsYouWish(text: info.message, updateApp: info.updateApp)
             }
         })
     }
     
+}
+
+private func updateAppAsYouWish(text: String, updateApp: Bool) {
+    //
+    confirm(for: mainWindow, header: appName, information: text, okTitle: updateApp ? L10n.alertButtonOKUpdateApp : L10n.modalOK, cancelTitle: updateApp ? L10n.modalCancel : "", thridTitle: nil, successHandler: { _ in
+        if updateApp {
+            #if APP_STORE
+            execute(inapp: inAppLink.external(link: "https://itunes.apple.com/us/app/telegram/id747648890", false))
+            #else
+            (NSApp.delegate as? AppDelegate)?.checkForUpdates(text)
+            #endif
+        }
+    })
 }
 
 private func escape(with link:String, addPercent: Bool = true) -> String {
@@ -319,6 +340,7 @@ enum inAppLink {
     case nothing
     case socks(ProxyServerSettings, applyProxy:(ProxyServerSettings)->Void)
     case requestSecureId(account: Account, value: inAppSecureIdRequest)
+    case unsupportedScheme(account: Account, path: String)
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
@@ -344,7 +366,7 @@ private let keyURLPass = "pass";
 
 let legacyPassportUsername = "telegrampassport"
 
-func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
+func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
     let external = url
     let url = url.lowercased.nsstring
     for domain in telegram_me {
@@ -356,11 +378,13 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                     let value = String(string[string.index(string.startIndex, offsetBy: action.length) ..< string.endIndex])
                     switch action {
                     case actions_me[0]:
-                        if let openInfo = openInfo {
+                        if let openInfo = openInfo, let account = account {
                             return .joinchat(value, account: account, callback: openInfo)
                         }
                     case actions_me[1]:
-                        return .stickerPack(StickerPackReference.name(value), account: account, peerId: peerId)
+                        if let account = account {
+                            return .stickerPack(StickerPackReference.name(value), account: account, peerId: peerId)
+                        }
                     case actions_me[3]:
                         let vars = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
@@ -393,7 +417,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                             action = .start(parameter: value, behavior: .none)
                             break loop;
                         case keyURLStartGroup:
-                            if let openInfo = openInfo {
+                            if let openInfo = openInfo, let account = account {
                                 return .inviteBotToGroup(username: username, account: account, action: nil, callback: openInfo)
                             }
                             break loop;
@@ -406,7 +430,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                 if let openInfo = openInfo {
                     if username == "iv" {
                         return .external(link: url as String, false)
-                    } else {
+                    } else if let account = account {
                         return .followResolvedName(username: username, postId: nil, account: account, action: action, callback: openInfo)
                     }
                 }
@@ -419,11 +443,11 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         return .external(link: url as String, false)
                     } else if name.hasPrefix("share") {
                         let params = urlVars(with: url as String)
-                        if let url = params["url"] {
+                        if let url = params["url"], let account = account {
                             return .shareUrl(account, url)
                         }
                         return .external(link: url as String, false)
-                    } else {
+                    } else if let account = account {
                         return .followResolvedName(username: name, postId: post, account: account, action:nil, callback: openInfo)
                     }
                 }
@@ -431,7 +455,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
         }
     }
     
-    if url.hasPrefix("@"), let openInfo = openInfo {
+    if url.hasPrefix("@"), let openInfo = openInfo, let account = account {
         return .followResolvedName(username: url.substring(from: 1), postId: nil, account: account, action:nil, callback: openInfo)
     }
     
@@ -468,7 +492,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve?", with: "tg://passport?").nsstring, account: account, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
                             //return inapp
-                        } else {
+                        } else if let account = account {
                             return .followResolvedName(username: username, postId: post, account: account, action: action, callback:openInfo)
                         }
                     }
@@ -476,7 +500,7 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                     if let url = vars[keyURLUrl] {
                         let url = url.nsstring.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
                         let text = vars[keyURLText]?.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
-                        if let url = url {
+                        if let url = url, let account = account {
                             var applied = url
                             if let text = text {
                                 applied += "\n" + text
@@ -486,11 +510,11 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         }
                     }
                 case known_scheme[2]:
-                    if let invite = vars[keyURLInvite], let openInfo = openInfo {
+                    if let invite = vars[keyURLInvite], let openInfo = openInfo, let account = account {
                         return .joinchat(invite, account: account, callback: openInfo)
                     }
                 case known_scheme[3]:
-                    if let set = vars[keyURLSet] {
+                    if let set = vars[keyURLSet], let account = account {
                         return .stickerPack(.name(set), account:account, peerId:nil)
                     }
                 
@@ -506,27 +530,34 @@ func inApp(for url:NSString, account:Account, peerId:PeerId? = nil, openInfo:((P
                         return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
                     }
                 case known_scheme[7]:
-                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId) {
-                        let payload = vars["payload"]?.data(using: .utf8) ?? Data()
-                        var errors: Array<[String:String]>?
-                        if let maybeErrors = vars["errors"] {
-                            let raw = escape(with: maybeErrors, addPercent: false)
-                            if let data = raw.data(using: .utf8) {
-                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
-                                    errors = json as? Array<[String:String]>
-                                }
-                            }
-                        }
-                        let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
-                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope, addPercent: false), callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
-                    }
+                    break
+//                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let account = account {
+//                        let payload = vars["payload"]?.data(using: .utf8) ?? Data()
+//                        var errors: Array<[String:String]>?
+//                        if let maybeErrors = vars["errors"] {
+//                            let raw = escape(with: maybeErrors, addPercent: false)
+//                            if let data = raw.data(using: .utf8) {
+//                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
+//                                    errors = json as? Array<[String:String]>
+//                                }
+//                            }
+//                        }
+//                        let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
+//                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope, addPercent: false), callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
+//                    }
                 default:
                     break
                 }
-                
+               
                 return .nothing
 
             }
+        }
+        if let account = account {
+            var path = url.substring(from: telegram_scheme.length)
+            let qLocation = path.nsstring.range(of: "?").location
+            path = path.nsstring.substring(to: qLocation != NSNotFound ? qLocation : path.length)
+            return .unsupportedScheme(account: account, path: path)
         }
        
     }
@@ -562,7 +593,7 @@ func makeInAppLink(with action:String, params:[String:Any]) -> String {
 
 func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
     let url = url.nsstring
-    if url.hasPrefix(telegram_scheme) {
+    if url.hasPrefix(telegram_scheme), let _ = URL(string: url as String) {
         let action = url.substring(from: telegram_scheme.length)
         
         let vars = urlVars(with: url as String)
@@ -579,6 +610,14 @@ func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
             }
         }
         
+    } else if let _ = URL(string: url as String) {
+        let link = inApp(for: url, applyProxy: {_ in})
+        switch link {
+        case let .socks(settings, _):
+            return (settings, true)
+        default:
+            break
+        }
     }
     return (nil, false)
 }

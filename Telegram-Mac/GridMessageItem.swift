@@ -159,12 +159,12 @@ final class GridMessageItemNode: GridItemNode {
             backgroundColor = theme.colors.background
             statusDisposable.set(nil)
             fetchingDisposable.set(nil)
-            
+
             if let media = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(media.representations)?.dimensions {
                 mediaDimensions = largestSize
-                
+
                 let imageSize = largestSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
-                
+
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
 
                 if !self.imageView.hasImage {
@@ -179,15 +179,15 @@ final class GridMessageItemNode: GridItemNode {
                 progressView?.removeFromSuperview()
                 progressView = nil
             } else if let file = media as? TelegramMediaFile, let imgSize = file.previewRepresentations.last?.dimensions {
-                
-                mediaDimensions = imgSize
-                
-                let imageSize = imgSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
 
-                
+                mediaDimensions = imgSize
+
+                let imageSize = imgSize.aspectFilled(NSMakeSize(bounds.width, bounds.height))
+
+
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
 
-                
+
                 if self.imageView.layer?.contents == nil {
                     self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, file: file, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                         if let strongSelf = self {
@@ -197,11 +197,11 @@ final class GridMessageItemNode: GridItemNode {
                         }
                     })
                 }
-                
-                
-                
+
+
+
                 statusDisposable.set((chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue).start(next: { [weak self] status in
-                    
+
                     if let strongSelf = self {
                         if strongSelf.progressView == nil {
                             strongSelf.progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
@@ -210,7 +210,7 @@ final class GridMessageItemNode: GridItemNode {
                             strongSelf.progressView?.center()
                         }
                         strongSelf._status = status
-                        
+
                         switch status {
                         case let .Fetching(_, progress):
                             strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
@@ -219,21 +219,21 @@ final class GridMessageItemNode: GridItemNode {
                         case .Local:
                            strongSelf.progressView?.state = .Play
                         }
-                        
+
                     }
                 }))
-                
+
             }
-            
-            
+
+
             self.currentState = (account, media, mediaDimensions ?? NSMakeSize(100, 100))
         } else {
             needsLayout = true
         }
-        
+
         self.message = message
         self.chatInteraction = chatInteraction
-        
+
         self.updateSelectionState(animated: false)
         
     }

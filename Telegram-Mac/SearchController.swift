@@ -359,7 +359,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
         let groupId: PeerGroupId? = self.groupId
-        let searchItems = searchQuery.get() |> mapToSignal { (query) -> Signal<([ChatListSearchEntry], Bool), Void> in
+        let searchItems = searchQuery.get() |> mapToSignal { (query) -> Signal<([ChatListSearchEntry], Bool, Bool), Void> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
                 
@@ -471,7 +471,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             entries.append(.emptySearch)
                         }
                         return (entries, remotePeers.2 || remoteMessages.1)
-                }
+                    } |> map { value in
+                        return (value.0, value.1, false)
+                    }
                 
             } else {
                 
@@ -483,23 +485,30 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     ids[account.peerId] = account.peerId
                     
                     var topIds:[PeerId:PeerId] = [:]
-                    for t in top {
+                    var topPeers:[Peer] = []
+                    switch top {
+                    case let .peers(peers):
+                        topPeers = peers
+                    default:
+                        break
+                    }
+                    for t in topPeers {
                         topIds[t.id] = t.id
                     }
                     var recent = recent.filter({ rendered in
-                        for i in 0 ..< top.count {
+                        for i in 0 ..< topPeers.count {
                             if i <= 4 {
-                                return top[i].id != rendered.peerId
+                                return topPeers[i].id != rendered.peerId
                             }
                         }
                         return true
                     })
 
-                    if top.count > 0 {
+                    if topPeers.count > 0 {
                         entries.append(.separator(text: tr(L10n.searchSeparatorPopular), index: i, state: recent.isEmpty ? .none : state.0))
                     }
                     
-                    for peer in top {
+                    for peer in topPeers {
                         if ids[peer.id] == nil {
                             ids[peer.id] = peer.id
                             var stop:Bool = false
@@ -540,22 +549,37 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                     
                     return (entries.sorted(by: <), false)
+                } |> map {value in
+                    return (value.0, value.1, true)
                 }
             }
         }
         
         
-        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { value, appearance in
-            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1)
+        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, globalPeerHandler.get() |> deliverOnPrepareQueue |> distinctUntilChanged) |> map { value, appearance, location in
+            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location)
         }
-        |> map { entries, loading -> (TableUpdateTransition, Bool) in
+        |> map { entries, loading, location -> (TableUpdateTransition, Bool, ChatLocation?) in
             let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, initialSize:atomicSize.modify { $0 })
-            return (transition, loading)
+            return (transition, loading, location)
         } |> deliverOnMainQueue
         
-        disposable.set(transition.start(next: { [weak self] transition, loading in
+        disposable.set((transition).start(next: { [weak self] (transition, loading, location) in
             self?.genericView.merge(with: transition)
             self?.isLoading.set(.single(loading))
+            if let location = location {
+                switch location {
+                case let .peer(peerId):
+                    let item = self?.genericView.item(stableId: ChatListSearchEntryStableId.globalPeerId(peerId)) ?? self?.genericView.item(stableId: ChatListSearchEntryStableId.localPeerId(peerId))
+                    if let item = item {
+                        _ = self?.genericView.select(item: item, notify: false, byClick: false)
+                    }
+                default:
+                    self?.genericView.cancelSelection()
+                }
+            } else {
+                self?.genericView.cancelSelection()
+            }
         }))
 
         
@@ -689,9 +713,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         let storedPeer: Signal<Void, Void>
         if let peer = peer {
-             storedPeer = account.postbox.modify { modifier -> Void in
-                if modifier.getPeer(peer.id) == nil {
-                    updatePeers(modifier: modifier, peers: [peer], update: { (previous, updated) -> Peer? in
+             storedPeer = account.postbox.transaction { transaction -> Void in
+                if transaction.getPeer(peer.id) == nil {
+                    updatePeers(transaction: transaction, peers: [peer], update: { (previous, updated) -> Peer? in
                         return updated
                     })
                 }
@@ -711,7 +735,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
         
         openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( completed: { [weak self] in
-            self?.open(peerId, message, !(item is ChatListMessageRowItem) && byClick)
+            //!(item is ChatListMessageRowItem) && byClick
+            self?.open(peerId, message, false)
         }))
         
     }
@@ -723,6 +748,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             peer = item.peer
         } else if let item = item as? ShortPeerRowItem {
             peer = item.peer
+        } else if let item = item as? SeparatorRowItem {
+            switch item.state {
+            case .none:
+                return false
+            default:
+                return true
+            }
         }
         
         if let peer = peer, let modalAction = navigationController?.modalAction {

@@ -34,6 +34,8 @@ final class FFMpegMediaPassthroughVideoFrameDecoder: MediaTrackFrameDecoder {
             let dict = attachments[0] as! NSMutableDictionary
             
             dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleBufferAttachmentKey_ResetDecoderBeforeDecoding as NSString as String)
+       //     dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleBufferAttachmentKey_SpeedMultiplier as NSString as String)
+
         }
         
         return MediaTrackFrame(type: .video, sampleBuffer: sampleBuffer!, resetDecoder: resetDecoder, decoded: false, rotationAngle: self.rotationAngle)

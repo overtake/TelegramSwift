@@ -238,6 +238,10 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     public func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         let range = input.selectedRange()
+        
+        if commandSelector == #selector(insertNewline(_:)) {
+            return true
+        }
         if range.location == 0 {
             if commandSelector == #selector(moveLeft(_:)) {
                 if let index = selectedIndex {

@@ -20,8 +20,8 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool,Void>, ac
                             return ApplicationContext.unauthorized(UnauthorizedApplicationContext(window: window, account: account, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings))
                         }
                     case let .authorized(account):
-                        let paslock:Signal<PostboxAccessChallengeData, Void> = !ignorepasslock ? account.postbox.modify { modifier -> PostboxAccessChallengeData in
-                            return modifier.getAccessChallengeData()
+                        let paslock:Signal<PostboxAccessChallengeData, Void> = !ignorepasslock ? account.postbox.transaction { transaction -> PostboxAccessChallengeData in
+                            return transaction.getAccessChallengeData()
                         } |> deliverOnMainQueue : .single(.none)
                             
                         return paslock |> mapToSignal { access -> Signal<ApplicationContext?, Void> in
@@ -248,6 +248,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     private let requestAccessDisposable = MetaDisposable()
     private let alertsDisposable = MetaDisposable()
     private let audioDisposable = MetaDisposable()
+    private let termDisposable = MetaDisposable()
+    private let someActionsDisposable = DisposableSet()
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
         lockedScreenPromise.set(.single(_lockedValue))
@@ -311,14 +313,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 
         window.navigationController = rightController
         
-        applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), network: account.network, postbox: account.postbox)
+        leftController = MainViewController(account, accountManager: accountManager);
+
+        
+        applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), leftController, network: account.network, postbox: account.postbox)
         
        
         
         account.applicationContext = applicationContext
         
         
-        leftController = MainViewController(account, accountManager: accountManager);
         
         leftController.navigationController = rightController
         
@@ -326,6 +330,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
        
         
         super.init()
+        
+        termDisposable.set((account.stateManager.termsOfServiceUpdate |> deliverOnMainQueue).start(next: { terms in
+            if let terms = terms {
+                showModal(with: TermsModalController(account, terms: terms), for: mainWindow)
+            } else {
+                closeModal(TermsModalController.self)
+            }
+        }))
         
         applicationContext.switchSplitLayout = { [weak self] layout in
             self?.splitView.state = layout
@@ -375,8 +387,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }))
         
         let passlock = Signal<Void, Void>.single(Void()) |> delay(15, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, Void> in
-            return account.postbox.modify { modifier -> Int32? in
-                return modifier.getAccessChallengeData().timeout
+            return account.postbox.transaction { transaction -> Int32? in
+                return transaction.getAccessChallengeData().timeout
             }
         } |> map { [weak self] timeout -> Bool in
             if let timeout = timeout {
@@ -443,6 +455,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
+                
+       // NotificationCenter.default.addObserver(self, selector: #selector(windiwDidProfileChanged), name: Notification.Name.ns, object: window)
+
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
                 
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
@@ -459,8 +474,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             
             if let strongSelf = self {
                 if !strongSelf._lockedValue.passcodeLock {
-                    self?._passlock.set(account.postbox.modify { modifier -> Bool in
-                        switch modifier.getAccessChallengeData() {
+                    self?._passlock.set(account.postbox.transaction { transaction -> Bool in
+                        switch transaction.getAccessChallengeData() {
                         case .none:
                             return false
                         default:
@@ -527,7 +542,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         audioDisposable.set(globalAudioPromise.get().start(next: { [weak self] controller in
             self?.prepareTouchBarAccessability(controller)
         }))
+        
+        someActionsDisposable.add(managedUpdatedRecentPeers(postbox: account.postbox, network: account.network).start())
+        
     }
+    
     
     private func prepareTouchBarAccessability(_ controller: APController?) {
         setTextViewEnableTouchBar(controller == nil)
@@ -560,19 +579,26 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }).start())
     }
     
+    @objc public func windiwDidProfileChanged() {
+        var bp:Int = 0
+        bp += 1
+    }
     
-    @objc open func windowDidBecomeKey() {
+    
+    @objc public func windowDidBecomeKey() {
         self.resignTimestamp = nil
     }
     
-    @objc open func windiwDidChangeBackingProperties() {
+    @objc public func windiwDidChangeBackingProperties() {
         _ = System.scaleFactor.swap(window.backingScaleFactor)
     }
     
     
-    @objc open func windowDidResignKey() {
+    @objc public func windowDidResignKey() {
         self.resignTimestamp = Int32(Date().timeIntervalSince1970)
     }
+    
+    
     
     
     func splitViewDidNeedSwapToLayout(state: SplitViewState) {
@@ -612,8 +638,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     @objc func screenIsLocked() {
         
         if !_lockedValue.passcodeLock {
-            _passlock.set(account.postbox.modify { modifier -> Bool in
-                switch modifier.getAccessChallengeData() {
+            _passlock.set(account.postbox.transaction { transaction -> Bool in
+                switch transaction.getAccessChallengeData() {
                 case .none:
                     return false
                 default:
@@ -673,7 +699,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         requestAccessDisposable.dispose()
         audioDisposable.dispose()
         alertsDisposable.dispose()
+        termDisposable.dispose()
         viewer?.close()
+        someActionsDisposable.dispose()
         
         for window in NSApp.windows {
             if window != self.window {

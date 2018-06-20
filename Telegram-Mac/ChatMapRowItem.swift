@@ -19,6 +19,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let isVenue:Bool
     let defaultImageSize:NSSize
     let url:String
+    
     fileprivate(set) var arguments:TransformImageArguments
     init(map:TelegramMediaMap, resource:TelegramMediaResource, presentation: ChatMediaPresentation, automaticDownload: Bool) {
         self.map = map
@@ -59,7 +60,7 @@ class ChatMapRowItem: ChatMediaItem {
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         
         if isLiveLocationView {
-            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .bold(.text)), maximumNumberOfLines: 1, truncationType: .end)
             
             var editedDate:Int32 = object.message!.timestamp
             for attr in object.message!.attributes {
@@ -116,6 +117,26 @@ class ChatMapRowItem: ChatMediaItem {
         return false
     }
     
+    var liveLocationTimeout: Int32 {
+        if let media = media as? TelegramMediaMap {
+            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                return liveBroadcastingTimeout
+            }
+        }
+        return 0
+    }
+    
+    var liveLocationProgress: TimeInterval {
+        if let media = media as? TelegramMediaMap {
+            if let liveBroadcastingTimeout = media.liveBroadcastingTimeout, let message = message {
+                var time:TimeInterval = Date().timeIntervalSince1970
+                time -= account.context.timeDifference
+                return 100.0 - (Double(time) - Double(message.timestamp)) / Double(liveBroadcastingTimeout) * 100.0
+            }
+        }
+        return 0
+    }
+    
     override func viewClass() -> AnyClass {
         return isLiveLocationView ? LiveLocationRowView.self : super.viewClass()
     }
@@ -158,10 +179,12 @@ class ChatMapRowItem: ChatMediaItem {
 private class LiveLocationRowView : ChatMediaView {
     private let liveText: TextView = TextView()
     private let updatedText: TextView = TextView()
+    private let progress:TimableProgressView = TimableProgressView(TimableProgressTheme(seconds: 20))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         rowView.addSubview(updatedText)
         rowView.addSubview(liveText)
+        rowView.addSubview(progress)
     }
     
     
@@ -171,6 +194,21 @@ private class LiveLocationRowView : ChatMediaView {
         
         liveText.update(item.liveText)
         updatedText.update(item.updatedText)
+        
+//        let difference:()->TimeInterval = {
+//            return TimeInterval((countdownBeginTime + attribute.timeout)) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+//        }
+//        let start = difference() / Double(attribute.timeout) * 100.0
+        if item.isLiveLocationView {
+            progress.theme = TimableProgressTheme(backgroundColor: backdorColor, foregroundColor: theme.chat.textColor(item.isIncoming, item.renderType == .bubble), seconds: Double(item.liveLocationTimeout), start: item.liveLocationProgress, borderWidth: 2)
+            progress.progress = 0
+            progress.isHidden = false
+        } else {
+            progress.isHidden = true
+        }
+        
+        
+        progress.startAnimation()
         super.set(item: item, animated: animated)
 
     }
@@ -192,11 +230,18 @@ private class LiveLocationRowView : ChatMediaView {
         return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset + liveText.frame.height, updatedText.layoutSize.width, updatedText.layoutSize.height)
     }
     
+    private var progressFrame: NSRect {
+        guard let item = item as? ChatMapRowItem else {return NSZeroRect}
+        
+        return NSMakeRect(contentFrame.maxX - progress.frame.width, contentFrame.maxY + item.defaultContentInnerInset + 4, 25, 25)
+    }
+    
     override func layout() {
         super.layout()
         
         liveText.frame = textFrame
         updatedText.frame = updateFrame
+        progress.frame = progressFrame
     }
     
     required init?(coder: NSCoder) {

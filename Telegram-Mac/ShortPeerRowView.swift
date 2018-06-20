@@ -57,8 +57,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         if let item = item as? ShortPeerRowItem {
             
-            ctx.setFillColor(backdorColor.cgColor)
-            ctx.fill(NSMakeRect(0, 0, layer.bounds.width - .borderSize, layer.bounds.height))
+            //ctx.setFillColor(backdorColor.cgColor)
+            //ctx.fill(NSMakeRect(0, 0, layer.bounds.width - .borderSize, layer.bounds.height))
             if layer == container.layer {
                 
                 let canSeparate: Bool = item.index != item.table!.count - 1
@@ -66,7 +66,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 if !item.isSelected && item.drawCustomSeparator && (canSeparate || item.drawLastSeparator) {
                     ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(item.textInset, container.frame.height - .borderSize, container.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right), .borderSize))
+                    ctx.fill(NSMakeRect(item.textInset, container.frame.height - .borderSize, container.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset, .borderSize))
                 }
                 
                 if let leftImage = item.leftImage {
@@ -94,7 +94,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 let canSeparate: Bool = item.index != item.table!.count - 1
                 if !item.isSelected && item.drawCustomSeparator && (canSeparate || item.drawLastSeparator) {
                     ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(30, container.frame.height - .borderSize, frame.width, .borderSize))
+                  //  ctx.fill(NSMakeRect(30, container.frame.height - .borderSize, frame.width, .borderSize))
                 }
                
             }
@@ -206,7 +206,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 deleteControl = ImageButton()
                 deleteControl?.autohighlight = false
                 deleteControl?.set(image: theme.icons.deleteItem, for: .Normal)
-                deleteControl?.sizeToFit()
+                _ = deleteControl?.sizeToFit()
                 
                 addSubview(deleteControl!)
                 deleteControl?.layer?.opacity = 0

@@ -24,6 +24,9 @@ class WPArticleContentView: WPContentView {
     private let statusDisposable = MetaDisposable()
     private var countAccessoryView: ChatMessageAccessoryView?
     private var downloadIndicator: RadialProgressView?
+    
+    private var groupedContents: [ChatMediaContentView] = []
+    private let groupedContentView: View = View()
     override var backgroundColor: NSColor {
         didSet {
             self.setNeedsDisplay()
@@ -71,7 +74,6 @@ class WPArticleContentView: WPContentView {
             }
             
             if ExternalVideoLoader.isPlayable(content) {
-                
                 openExternalDisposable.set((sharedVideoLoader.status(for: content) |> deliverOnMainQueue).start(next: { (status) in
                     if let status = status {
                         switch status {
@@ -131,6 +133,62 @@ class WPArticleContentView: WPContentView {
     override func update(with layout: WPLayout) {
         
         if let layout = layout as? WPArticleLayout {
+            
+            if let groupLayout = layout.groupLayout {
+                addSubview(groupedContentView)
+                groupedContentView.setFrameSize(groupLayout.dimensions)
+                
+                if groupedContents.count > groupLayout.count {
+                    let contentCount = groupedContents.count
+                    let layoutCount = groupLayout.count
+                    
+                    for i in layoutCount ..< contentCount {
+                        groupedContents[i].removeFromSuperview()
+                    }
+                    groupedContents = groupedContents.subarray(with: NSMakeRange(0, layoutCount))
+                    
+                    for i in 0 ..< groupedContents.count {
+                        if !groupedContents[i].isKind(of: groupLayout.contentNode(for: i))  {
+                            let node = groupLayout.contentNode(for: i)
+                            let view = node.init(frame:NSZeroRect)
+                            replaceSubview(groupedContents[i], with: view)
+                            groupedContents[i] = view
+                        }
+                    }
+                } else if groupedContents.count < groupLayout.count {
+                    let contentCount = groupedContents.count
+                    for i in contentCount ..< groupLayout.count {
+                        let node = groupLayout.contentNode(for: i)
+                        let view = node.init(frame:NSZeroRect)
+                        groupedContents.append(view)
+                    }
+                }
+                
+                for content in groupedContents {
+                    groupedContentView.addSubview(content)
+                }
+                
+                assert(groupedContents.count == groupLayout.count)
+                
+                for i in 0 ..< groupLayout.count {
+                    groupedContents[i].change(size: groupLayout.frame(at: i).size, animated: false)
+                    let positionFlags: GroupLayoutPositionFlags = groupLayout.position(at: i)
+
+                    
+                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: groupLayout.messages[i], table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)
+                    
+                    groupedContents[i].change(pos: groupLayout.frame(at: i).origin, animated: false)
+                }
+                
+            } else {
+                while !groupedContents.isEmpty {
+                    groupedContents[0].removeFromSuperview()
+                    groupedContents.removeFirst()
+                }
+                groupedContentView.removeFromSuperview()
+            }
+            
+
             if ExternalVideoLoader.isPlayable(layout.content) {
                 loadingStatusDisposable.set((sharedVideoLoader.status(for: layout.content) |> deliverOnMainQueue).start(next: { [weak self] status in
                     if let status = status , let strongSelf = self {
@@ -310,6 +368,14 @@ class WPArticleContentView: WPContentView {
             
             playIcon?.isHidden = progressIndicator != nil
             
+            if groupedContentView.superview != nil {
+                var origin:NSPoint = NSZeroPoint
+                if let textLayout = layout.textLayout {
+                    origin.y += textLayout.layoutSize.height + 6.0
+                }
+                groupedContentView.setFrameOrigin(origin)
+            }
+            
             if let imageView = imageView {
                 
               
@@ -348,9 +414,14 @@ class WPArticleContentView: WPContentView {
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
-        return self.imageView ?? self
+        return !groupedContentView.subviews.isEmpty ? groupedContentView : self.imageView ?? self
     }
     
-   
+    override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        if !groupedContents.isEmpty {
+            return groupedContentView.convert(point, from: nil)
+        }
+        return super.convertWindowPointToContent(point)
+    }
     
 }

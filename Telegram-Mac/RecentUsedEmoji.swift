@@ -60,8 +60,8 @@ func ==(lhs: RecentUsedEmoji, rhs: RecentUsedEmoji) -> Bool {
 
 
 func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             var emojies: [String]
             if let entry = entry as? RecentUsedEmoji {
                 emojies = entry.emojies
@@ -85,8 +85,8 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, Void> {
 }
 
 func modifySkinEmoji(_ emoji:String, postbox: Postbox) -> Signal<Void, Void> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             if let settings = (entry as? RecentUsedEmoji) {
                 var skinModifiers = settings.skinModifiers
                 var index:Int? = nil

@@ -10,9 +10,11 @@ import Cocoa
 import TGUIKit
 import TelegramCoreMac
 import PostboxMac
+import SwiftSignalKitMac
+
 class ChatEmptyPeerItem: TableRowItem {
 
-    let textViewLayout:TextViewLayout
+    private(set) var textViewLayout:TextViewLayout
     
     override var stableId: AnyHashable {
         return 0
@@ -29,6 +31,8 @@ class ChatEmptyPeerItem: TableRowItem {
         }
         return initialSize.height
     }
+    
+    private let peerViewDisposable = MetaDisposable()
     
     init(_ initialSize: NSSize, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
@@ -49,11 +53,36 @@ class ChatEmptyPeerItem: TableRowItem {
             _ = attr.append(string: tr(L10n.chatEmptyChat), color: theme.colors.grayText, font: .normal(.text))
         }
         textViewLayout = TextViewLayout(attr, alignment: .center)
+        textViewLayout.interactions = globalLinkExecutor
+        
         super.init(initialSize)
+        
+        
+        if chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
+            peerViewDisposable.set((chatInteraction.account.postbox.peerView(id: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
+                if let cachedData = peerView.cachedData as? CachedUserData, let user = peerView.peers[peerView.peerId], user.isBot {
+                    if let about = cachedData.botInfo?.description {
+                        guard let `self` = self else {return}
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: about, color: theme.colors.grayText, font: .normal(.text))
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], account: chatInteraction.account, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        self.textViewLayout = TextViewLayout(attr, alignment: .left)
+                        self.textViewLayout.interactions = globalLinkExecutor
+                        self.textViewLayout.measure(width: self.width / 2)
+                        self.redraw()
+                    }
+                }
+            }))
+        }
+        
+    }
+    
+    deinit {
+        peerViewDisposable.dispose()
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        textViewLayout.measure(width: width - 40)
+        textViewLayout.measure(width: width / 2)
         return super.makeSize(width)
     }
     
@@ -69,7 +98,6 @@ class ChatEmptyPeerView : TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
-        textView.userInteractionEnabled = false
         textView.isSelectable = false
     }
     
@@ -85,7 +113,7 @@ class ChatEmptyPeerView : TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? ChatEmptyPeerItem {
-            item.textViewLayout.measure(width: frame.width - 40)
+            item.textViewLayout.measure(width: frame.width / 2)
             textView.update(item.textViewLayout)
             textView.setFrameSize(item.textViewLayout.layoutSize.width + 20, item.textViewLayout.layoutSize.height + 8)
             textView.center()

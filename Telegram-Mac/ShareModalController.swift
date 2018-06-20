@@ -578,14 +578,23 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         return ChatListIndex(pinningIndex: nil, messageIndex: index)
                     }
                     
-                    entries.append(.plain(user, chatListIndex(), nil, top.isEmpty && recent.isEmpty))
+                    var topPeers:[Peer] = []
+                    
+                    switch top {
+                    case let .peers(_top):
+                        topPeers = _top
+                    default:
+                        break
+                    }
+                    
+                    entries.append(.plain(user, chatListIndex(), nil, topPeers.isEmpty && recent.isEmpty))
                     contains[user.id] = user.id
                     
-                    if !top.isEmpty {
+                    if !topPeers.isEmpty {
                         entries.insert(.separator(tr(L10n.searchSeparatorPopular).uppercased(), chatListIndex()), at: 0)
                         
                         var count: Int32 = 0
-                        for peer in top {
+                        for peer in topPeers {
                             if contains[peer.id] == nil {
                                 if share.possibilityPerformTo(peer) {
                                     entries.insert(.plain(peer, chatListIndex(), nil, count < 4), at: 0)
@@ -628,7 +637,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 switch(location) {
                 case let .Initial(count, _):
                     signal = account.viewTracker.tailChatListView(groupId: nil, count: count)
-                case let .Index(index):
+                case let .Index(index, _):
                     signal = account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 30)
                 }
                 

@@ -12,34 +12,3 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import MtProtoKitMac
 
-public func removeUserPhoto(account: Account, reference: TelegramMediaImageReference?) -> Signal<Void, Void> {
-    
-    if let reference = reference {
-        switch reference {
-        case let .cloud(imageId, accesshash):
-            let api = Api.functions.photos.deletePhotos(id: [Api.InputPhoto.inputPhoto(id: imageId, accessHash: accesshash)])
-            return account.network.request(api) |> map {_ in} |> retryRequest
-        }
-    } else {
-        let api = Api.functions.photos.updateProfilePhoto(id: Api.InputPhoto.inputPhotoEmpty)
-        return account.network.request(api) |> map { _ in } |> retryRequest
-    }
-}
-
-
-func channelAdminIds(postbox: Postbox, network: Network, peerId: PeerId, hash: Int32) -> Signal<[PeerId], Void> {
-    return postbox.modify { modifier in
-        if let peer = modifier.getPeer(peerId) as? TelegramChannel, case .group = peer.info, let apiChannel = apiInputChannel(peer) {
-            let api = Api.functions.channels.getParticipants(channel: apiChannel, filter: .channelParticipantsAdmins, offset: 0, limit: 100, hash: hash)
-            return network.request(api) |> retryRequest |> mapToSignal { result in
-                switch result {
-                case let .channelParticipants(_, _, users):
-                    return .single(users.map({TelegramUser(user: $0).id}))
-                default:
-                    return .complete()
-                }
-            }
-        }
-        return .complete()
-    } |> switchToLatest
-}

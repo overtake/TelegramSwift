@@ -107,7 +107,9 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         func check() {
             if inputText.startIndex != inputText.index(before: index) {
                 let prev = inputText.index(before: inputText.index(before: index))
-                if (inputText[prev] != spaceScalar && inputText[prev] != newlineScalar) {
+                let scalars:CharacterSet = CharacterSet.alphanumerics
+                
+                if let scalar = inputText[prev].unicodeScalars.first, scalars.contains(scalar) && inputText[prev] != newlineScalar {
                     possibleTypes = []
                 }
             }

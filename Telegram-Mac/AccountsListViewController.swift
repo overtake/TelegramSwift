@@ -139,15 +139,15 @@ class AccountsListViewController : GenericViewController<TableView> {
                 switch entry {
                 case .newAccount:
                     return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.accountsControllerNewAccount), nameStyle: blueActionButton, type: .none, action: { [weak self] in
-                        let _ = self?.accountManager.modify({ modifier -> Void in
-                            let id = modifier.createRecord([])
-                            modifier.setCurrentId(id)
+                        let _ = self?.accountManager.transaction({ transaction -> Void in
+                            let id = transaction.createRecord([])
+                            transaction.setCurrentId(id)
                         }).start()
                     })
                 case let .record(record, isCurrent, _):
                     return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: "\(record.id.hashValue)", nameStyle: ControlStyle(font: .normal(.title), foregroundColor: isCurrent ? theme.colors.grayText : theme.colors.text), type: .none, action: { [weak self] in
-                        let _ = self?.accountManager.modify({ modifier -> Void in
-                            modifier.setCurrentId(record.id)
+                        let _ = self?.accountManager.transaction({ transaction -> Void in
+                            transaction.setCurrentId(record.id)
                         }).start()
                     })
                 }

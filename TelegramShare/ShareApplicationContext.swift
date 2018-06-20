@@ -32,8 +32,8 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                     return .unauthorized(UnauthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                 }
             case let .authorized(account):
-                let paslock:Signal<PostboxAccessChallengeData, Void> = account.postbox.modify { modifier -> PostboxAccessChallengeData in
-                    return modifier.getAccessChallengeData()
+                let paslock:Signal<PostboxAccessChallengeData, Void> = account.postbox.transaction { transaction -> PostboxAccessChallengeData in
+                    return transaction.getAccessChallengeData()
                 } |> deliverOnMainQueue
                 
                 return paslock |> mapToSignal { access -> Signal<ShareApplicationContext?, Void> in

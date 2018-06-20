@@ -193,7 +193,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
         return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
     })
     
-    return TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated:animated, state: animated ? .none(nil) : .saveVisible(.lower))
+    return TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated:animated, state: animated ? .none(nil) : .saveVisible(.lower), animateVisibleOnly: false)
     
 }
 
@@ -380,7 +380,7 @@ class PeerInfoController: EditableViewController<TableView> {
             }
             self?.set(editable: editable)
             
-       self?.readyOnce()
+            self?.readyOnce()
             self?.genericView.merge(with:transition)
         }))
         

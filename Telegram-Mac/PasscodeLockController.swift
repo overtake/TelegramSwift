@@ -356,8 +356,8 @@ class PasscodeLockController: ModalViewController {
                 self.state = .enable(.confirm)
             case .confirm:
                 if passcodeValues[0] == passcode {
-                    _doneValue.set(account.postbox.modify { modifier -> Bool in
-                        modifier.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: 60*60, attempts: nil))
+                    _doneValue.set(account.postbox.transaction { transaction -> Bool in
+                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: 60*60, attempts: nil))
                         return true
                     })
                     close()
@@ -371,8 +371,8 @@ class PasscodeLockController: ModalViewController {
             switch inner {
             case .old:
                 if current == passcode {
-                    _doneValue.set(account.postbox.modify { modifier -> Bool in
-                        modifier.setAccessChallengeData(.none)
+                    _doneValue.set(account.postbox.transaction { transaction -> Bool in
+                        transaction.setAccessChallengeData(.none)
                         return true
                     })
                     close()
@@ -389,8 +389,8 @@ class PasscodeLockController: ModalViewController {
                 self.state = .change(.confirm)
             case .confirm:
                 if passcodeValues[0] == passcode {
-                    _doneValue.set(account.postbox.modify { modifier -> Bool in
-                        modifier.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: modifier.getAccessChallengeData().timeout, attempts: nil))
+                    _doneValue.set(account.postbox.transaction { transaction -> Bool in
+                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: transaction.getAccessChallengeData().timeout, attempts: nil))
                         return true
                     })
                     close()
@@ -453,8 +453,8 @@ class PasscodeLockController: ModalViewController {
         
         valueDisposable.set((genericView.value.get() |> mapToSignal { [weak self] value in
             if let strongSelf = self {
-                return strongSelf.account.postbox.modify { modifier -> (String, String?) in
-                    switch modifier.getAccessChallengeData() {
+                return strongSelf.account.postbox.transaction { transaction -> (String, String?) in
+                    switch transaction.getAccessChallengeData() {
                     case .none:
                         return (value, nil)
                     case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):

@@ -158,7 +158,7 @@ private extension ProxyServerConnection {
     }
 }
 
-func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool = true) -> (@escaping((InputDataController)) -> Void) -> Void {
+func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}) -> (@escaping(InputDataController) -> Void) -> Void {
     return { f in
         
         let actionsDisposable = DisposableSet()
@@ -168,7 +168,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
         
         let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettingsSignal(postbox) |> map { $0.servers})
         
-        
+        weak var _controller: ViewController? = nil
         
         let stateValue:Atomic<ProxyListState> = Atomic(value: ProxyListState())
         let statePromise:ValuePromise<ProxyListState> = ValuePromise(ignoreRepeated: true)
@@ -213,7 +213,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, {$0.withUpdatedUseForCalls(enable)}).start())
         })
         
-        f((InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)}, title: L10n.proxySettingsTitle, validateData: {
+        let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)}, title: L10n.proxySettingsTitle, validateData: {
             data in
             
             if data[_p_id_add] != nil {
@@ -224,7 +224,27 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             return .fail(.none)
         }, afterDisappear: {
             actionsDisposable.dispose()
-        }, removeAfterDisappear: false, hasDone: false, identifier: "proxy")))
+        }, removeAfterDisappear: false, hasDone: false, identifier: "proxy", customRightButton: {
+            if let controller = _controller {
+                let view = ImageBarView(controller: controller, theme.icons.webgameShare)
+                
+                view.button.set(handler: { control in
+                    showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.proxySettingsShareProxyList, {
+                        updateState { current in
+                            share(Array(current.settings.servers.prefix(20)))
+                            return current
+                        }
+                    })]), edge: .minX, inset: NSMakePoint(0,-50))
+                }, for: .Click)
+                view.set(image: theme.icons.webgameShare, highlightImage: nil)
+                return view
+            }
+            return nil
+            
+        })
+        
+        _controller = controller
+        f(controller)
     }
 }
 
@@ -267,32 +287,10 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
     let controller = InputDataController(dataSignal: statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return addProxySettingsEntries(state: state)
     }, title: title, validateData: { data -> InputDataValidation in
-            
             if data[_id_export] != nil {
                 updateState { current in
-                    let prefix: String
-                    switch current.server.connection {
-                    case .mtp:
-                        prefix = "proxy"
-                    case .socks5:
-                        prefix = "socks"
-                    }
-                    var link = "https://t.me/\(prefix)?server=\(current.server.host)&port=\(current.server.port)"
-                    switch current.server.connection {
-                    case let .mtp(secret):
-                        link += "&secret=\((secret as NSData).hexString)"
-                    case let .socks5(username, password):
-                        if let username = username {
-                            link += "&user=\(username)"
-                        }
-                        if let password = password {
-                            link += "&pass=\(password)"
-                        }
-                    }
-                    
-                    copyToClipboard(link)
+                    copyToClipboard(current.server.link)
                     _controller?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
-                    
                     return current
                 }
                 return .fail(.none)

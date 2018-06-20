@@ -314,6 +314,7 @@ class ContactsController: PeersListController {
         super.viewWillDisappear(animated)
         _ = previousEntries.swap(nil)
         genericView.tableView.removeAll()
+        disposable.set(nil)
     }
 
     deinit {

@@ -335,7 +335,7 @@ class Sender: NSObject {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id), replyToMessageId: nil, localGroupingKey: nil)])
+        return enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil), replyToMessageId: nil, localGroupingKey: nil)])
     }
     
     public static func enqueue(media:[MediaSenderContainer], account:Account, peerId:PeerId, chatInteraction:ChatInteraction) ->Signal<[MessageId?],NoError> {

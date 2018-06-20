@@ -122,46 +122,6 @@ extension ChatTextInputAttribute {
     }
 }
 
-func ==(lhs: ChatTextInputAttribute, rhs: ChatTextInputAttribute) -> Bool {
-    switch lhs {
-    case let .bold(range):
-        if case .bold(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .italic(range):
-        if case .italic(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .pre(range):
-        if case .pre(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .code(range):
-        if case .code(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .uid(range, uid):
-        if case .uid(range, uid) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .url(range, url):
-        if case .url(range, url) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatTextInputAttribute] {
     var inputAttributes:[ChatTextInputAttribute] = []
@@ -544,11 +504,18 @@ struct ChatInterfaceHistoryScrollState: PostboxCoding, Equatable {
     }
 }
 
+enum EditStateLoading : Equatable {
+    case none
+    case loading
+    case progress(Float)
+}
+
 final class ChatEditState : Equatable {
     let inputState:ChatTextInputState
     let message:Message
-    let isLoading: Bool
-    init(message:Message, state:ChatTextInputState? = nil, isLoading: Bool = false) {
+    let editMedia: RequestEditMessageMedia
+    let loadingState: EditStateLoading
+    init(message:Message, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep) {
         self.message = message
         if let state = state {
             self.inputState = state
@@ -565,18 +532,24 @@ final class ChatEditState : Equatable {
             }
             self.inputState = ChatTextInputState(inputText:message.text, selectionRange:message.text.length ..< message.text.length, attributes: attributes )
         }
-        self.isLoading = isLoading
+        self.loadingState = loadingState
+        self.editMedia = editMedia
     }
     
-    func withUpdatedLoading(_ isLoading: Bool) -> ChatEditState {
-        return ChatEditState(message: self.message, state: self.inputState, isLoading: isLoading)
+    func withUpdatedMedia(_ media: Media) -> ChatEditState {
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), state: self.inputState, loadingState: loadingState, editMedia: .update(media))
+    }
+    
+    func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
+        return ChatEditState(message: self.message, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia)
     }
     func withUpdated(state:ChatTextInputState) -> ChatEditState {
-        return ChatEditState(message: self.message, state: state, isLoading: self.isLoading)
+        return ChatEditState(message: self.message, state: state, loadingState: loadingState, editMedia: self.editMedia)
     }
     
     static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
-        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.isLoading == rhs.isLoading
+        
+        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia
     }
 }
 

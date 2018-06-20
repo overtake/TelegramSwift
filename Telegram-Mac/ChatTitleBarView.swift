@@ -22,7 +22,7 @@ private class ConnectionStatusView : View {
         didSet {
             let attr:NSAttributedString
             
-            if case let .connecting(proxy) = status {
+            if case let .connecting(proxy, _) = status {
                 if let _ = proxy {
                     if disableProxyButton == nil {
                         disableProxyButton = TitleButton()
@@ -46,12 +46,12 @@ private class ConnectionStatusView : View {
             }
             
             switch status {
-            case .connecting(let proxy):
-                attr = .initialize(string: proxy != nil ? tr(L10n.chatConnectingStatusConnectingToProxy) : tr(L10n.chatConnectingStatusConnecting), color: theme.colors.text, font: .medium(.header))
+            case let .connecting(proxy, _):
+                attr = .initialize(string: proxy != nil ? L10n.chatConnectingStatusConnectingToProxy : L10n.chatConnectingStatusConnecting, color: theme.colors.text, font: .medium(.header))
             case .updating:
-                attr = .initialize(string: tr(L10n.chatConnectingStatusUpdating), color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: L10n.chatConnectingStatusUpdating, color: theme.colors.text, font: .medium(.header))
             case .waitingForNetwork:
-                attr = .initialize(string: tr(L10n.chatConnectingStatusWaitingNetwork), color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: L10n.chatConnectingStatusWaitingNetwork, color: theme.colors.text, font: .medium(.header))
             case .online:
                 attr = NSAttributedString()
             }
@@ -173,7 +173,7 @@ class ChatTitleBarView: TitledBarView {
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             if let inputActivities = inputActivities  {
-                activities.update(with: inputActivities, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background), layout: { [weak self] show in
+                activities.update(with: inputActivities, for: max(frame.width - 80, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background), layout: { [weak self] show in
                     self?.needsLayout = true
                     self?.hiddenStatus = show
                     self?.setNeedsDisplay()

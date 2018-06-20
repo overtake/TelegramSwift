@@ -438,7 +438,7 @@ enum InputDataValidationBehaviour {
 
 enum InputDataFailResult {
     case alert(String)
-    case doSomething(next: (@escaping(InputDataValidation)->Void) -> Void)
+    case doSomething(next: ((InputDataValidation)->Void) -> Void)
     case textAfter(String, InputDataIdentifier)
     case fields([InputDataIdentifier: InputDataValidationFailAction])
     case none

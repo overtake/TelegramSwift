@@ -257,7 +257,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
-        sdelegate?.selectRow(index: range.location)
+        if range.length > 0 {
+            sdelegate?.selectRow(index: range.location)
+        }
     }
     
     
@@ -438,6 +440,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         let table = TGFlipableTableView(frame:frameRect)
         table.flip = isFlipped
+        
+        
 
         self.tableView = table
         self.tableView.wantsLayer = true
@@ -446,6 +450,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         tableView.autoresizesSubviews = false
 
         super.init(frame: frameRect);
+        
+       // self.scrollsDynamically = true
+       // self.verticalLineScroll = 0
+        //self.verticalScrollElasticity = .none
         self.autoresizesSubviews = false
 
         table.table = self
@@ -1008,14 +1016,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updating = true
         updateScroll(visibleRows())
         self.previousScroll = nil
-        CATransaction.begin()
+       // CATransaction.begin()
     }
     
     public func endUpdates() -> Void {
         updating = false
         updateScroll(visibleRows())
         self.previousScroll = nil
-        CATransaction.commit()
+    //    CATransaction.commit()
     }
     
     public func rectOf(item:TableRowItem) -> NSRect {

@@ -403,8 +403,8 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                                 return .complete()
                         }
                         
-                        let peerUpdate = account.postbox.modify { modifier -> Void in
-                            updatePeers(modifier: modifier, peers: [participant.peer], update: { (_, updated) -> Peer? in
+                        let peerUpdate = account.postbox.transaction { transaction -> Void in
+                            updatePeers(transaction: transaction, peers: [participant.peer], update: { (_, updated) -> Peer? in
                                 return updated
                             })
                         }

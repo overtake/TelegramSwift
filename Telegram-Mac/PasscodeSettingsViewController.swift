@@ -70,58 +70,7 @@ private func <(lhs:PasscodeEntry, rhs:PasscodeEntry) -> Bool {
     return lhs.stableIndex < rhs.stableIndex
 }
 
-private func ==(lhs:PasscodeEntry, rhs:PasscodeEntry) -> Bool {
-    switch lhs {
-    case let .turnOn(sectionId):
-        if case .turnOn(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .turnOff(sectionId):
-        if case .turnOff(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .turnOnDescription(sectionId):
-        if case .turnOnDescription(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .turnOffDescription(sectionId):
-        if case .turnOffDescription(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .change(sectionId):
-        if case .change(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .autoLock(lhsSectionId, lhsTime):
-        if case let .autoLock(rhsSectionId, rhsTime) = rhs {
-            return lhsSectionId == rhsSectionId && lhsTime == rhsTime
-        } else {
-            return false
-        }
-    case let .turnTouchId(lhsSectionId, lhsEnabled):
-        if case let .turnTouchId(rhsSectionId, rhsEnabled) = rhs {
-            return lhsSectionId == rhsSectionId && lhsEnabled == rhsEnabled
-        } else {
-            return false
-        }
-    case let .section(sectionId):
-        if case .section(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
+
 
 private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, _ additional: AdditionalSettings) -> [PasscodeEntry] {
     var entries:[PasscodeEntry] = []
@@ -236,15 +185,15 @@ class PasscodeSettingsViewController: TableViewController {
     }
     
     func updateAwayTimeout(_ timeout:Int32?) {
-        self.actionUpdate.set(account.postbox.modify { modifier -> Bool in
+        self.actionUpdate.set(account.postbox.transaction { transaction -> Bool in
             
-            switch modifier.getAccessChallengeData() {
+            switch transaction.getAccessChallengeData() {
             case .none:
                 break
             case let .numericalPassword(passcode, _, attempts):
-                modifier.setAccessChallengeData(.numericalPassword(value: passcode, timeout: timeout, attempts: attempts))
+                transaction.setAccessChallengeData(.numericalPassword(value: passcode, timeout: timeout, attempts: attempts))
             case let .plaintextPassword(passcode, _, attempts):
-                modifier.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: timeout, attempts: attempts))
+                transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: timeout, attempts: attempts))
             }
             return true
         })
@@ -310,8 +259,8 @@ class PasscodeSettingsViewController: TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<PasscodeEntry>]> = Atomic(value: [])
         
         genericView.merge(with: combineLatest(actionUpdate.get() |> mapToSignal { _ in
-            return account.postbox.modify { modifier -> PostboxAccessChallengeData in
-                return modifier.getAccessChallengeData()
+            return account.postbox.transaction { transaction -> PostboxAccessChallengeData in
+                return transaction.getAccessChallengeData()
             }
         } |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue), additionalSettings(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { passcode, appearance, additional in
             let entries = passcodeSettinsEntry(passcode, additional).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}

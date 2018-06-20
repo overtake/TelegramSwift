@@ -78,6 +78,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case appearance(index: Int)
     case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, [Peer]?)
     case dataAndStorage(index: Int)
+    case passport(index: Int, peer: Peer)
     case about(index: Int)
     case faq(index: Int)
     case ask(index: Int)
@@ -103,12 +104,14 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return 8
         case .appearance:
             return 9
-        case .about:
+        case .passport:
             return 10
-        case .faq:
+        case .about:
             return 11
-        case .ask:
+        case .faq:
             return 12
+        case .ask:
+            return 13
         case let .whiteSpace(index, _):
             return 1000 + index
         }
@@ -135,6 +138,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .dataAndStorage(index):
             return index
         case let .about(index):
+            return index
+        case let .passport(index, _):
             return index
         case let .faq(index):
             return index
@@ -226,6 +231,12 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
+        case let .passport(lhsIndex, lhsPeer):
+            if case let .passport(rhsIndex, rhsPeer) = rhs {
+                return lhsIndex == rhsIndex && lhsPeer.isEqual(rhsPeer)
+            } else {
+                return false
+            }
         case let .faq(lhsIndex):
             if case let .faq(rhsIndex) = rhs {
                 return lhsIndex == rhsIndex
@@ -267,7 +278,15 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case .proxy(_, let status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), action: {
                 let first: Atomic<Bool> = Atomic(value: true)
-                proxyListController(postbox: arguments.account.postbox, network: arguments.account.network)( { controller in
+                proxyListController(postbox: arguments.account.postbox, network: arguments.account.network, share: { servers in
+                    var message: String = ""
+                    for server in servers {
+                        message += server.link + "\n\n"
+                    }
+                    message = message.trimmed
+                    
+                    showModal(with: ShareModalController(ShareLinkObject(arguments.account, link: message)), for: mainWindow)
+                })( { controller in
                     arguments.presentController(controller, first.swap(false))
                 })
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
@@ -299,6 +318,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAbout, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
                 showModal(with: AboutModalController(), for: mainWindow)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+        case let .passport(_, peer):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, action: {
+                arguments.presentController(PassportController(arguments.account, peer, request: nil, nil), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .faq:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
                 
@@ -329,7 +352,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers:[Peer]?, proxySettings: (ProxySettings, ConnectionStatus), languages: [LocalizationInfo]?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers:[Peer]?, proxySettings: (ProxySettings, ConnectionStatus), languages: [LocalizationInfo]?, passportVisible: Bool) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -372,6 +395,13 @@ private func accountInfoEntries(peerView:PeerView, language: Language, privacySe
     entries.append(.appearance(index: index))
     index += 1
     
+    entries.append(.whiteSpace(index: index, height: 20))
+    index += 1
+    
+    if let peer = peerViewMainPeer(peerView) as? TelegramUser, passportVisible {
+        entries.append(.passport(index: index, peer: peer))
+        index += 1
+    }
 
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
@@ -429,9 +459,10 @@ class LayoutAccountController : TableViewController {
         return true
     }
     
-    private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus))> = Promise()
+    private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus), Bool)> = Promise()
     private let languages: Promise<[LocalizationInfo]?> = Promise()
     private let blockedPeers: Promise<[Peer]?> = Promise()
+    private let passportPromise: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -451,15 +482,7 @@ class LayoutAccountController : TableViewController {
             }
             navigation.push(controller, !main || singleLayout == .single)
         }, openFaq: {
-            let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
-            
-            _ = showModalProgress(signal: webpagePreview(account: account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: mainWindow).start(next: { webpage in
-                if let webpage = webpage {
-                    showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
-                } else {
-                    execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
-                }
-            })
+            openFaq(account: account)
         }, ask: {
             
         })
@@ -471,7 +494,7 @@ class LayoutAccountController : TableViewController {
 
         
         let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings.get() |> deliverOnPrepareQueue, languages.get() |> deliverOnPrepareQueue, blockedPeers.get() |> deliverOnPrepareQueue) |> map { peerView, appearance, settings, languages, blockedPeers -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, blockedPeers: blockedPeers, proxySettings: settings.2, languages: languages).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, blockedPeers: blockedPeers, proxySettings: settings.2, languages: languages, passportVisible: settings.3).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -517,6 +540,10 @@ class LayoutAccountController : TableViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.general(index: 0).stableId)) {
                     _ = genericView.select(item: item)
                 }
+            } else if navigation.controller is PassportController {
+                if let item = genericView.item(stableId: AnyHashable(Int(10))) {
+                    _ = genericView.select(item: item)
+                }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
@@ -525,6 +552,10 @@ class LayoutAccountController : TableViewController {
                     }
                 case controller.identifier == "account":
                     if let item = genericView.item(stableId: AnyHashable(Int(0))) {
+                        _ = genericView.select(item: item)
+                    }
+                case controller.identifier == "passport":
+                    if let item = genericView.item(stableId: AnyHashable(Int(10))) {
                         _ = genericView.select(item: item)
                     }
                 default:
@@ -542,6 +573,17 @@ class LayoutAccountController : TableViewController {
         (navigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         updateLocalizationAndTheme()
         
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.passportPromise.set(true)
+            return .invoked
+        }, with: self, for: .P, modifierFlags: [.command])
+        
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.remove(object: self, for: .P)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -550,7 +592,7 @@ class LayoutAccountController : TableViewController {
         
         settings.set(combineLatest(Signal<AccountPrivacySettings?, Void>.single(nil) |> then(requestAccountPrivacySettings(account: account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, Void>.single(nil) |> then(webSessions(network: account.network) |> map {Optional($0)}), proxySettingsSignal(account.postbox) |> mapToSignal { settings in
             return account.network.connectionStatus |> map {(settings, $0)}
-            }))
+        }, passportPromise.get()))
         languages.set(Signal<[LocalizationInfo]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
         blockedPeers.set(Signal<[Peer]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))
     }

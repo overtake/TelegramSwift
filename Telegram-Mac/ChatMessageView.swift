@@ -13,7 +13,7 @@ class ChatMessageView: ChatRowView {
     private let text:TextView = TextView()
 
     private(set) var webpageContent:WPContentView?
-    
+    private var actionButton: TitleButton?
     override func draw(_ dirtyRect: NSRect) {
         
         // Drawing code here.
@@ -22,17 +22,22 @@ class ChatMessageView: ChatRowView {
     required init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
+       // self.layerContentsRedrawPolicy = .never
         self.addSubview(text)
     }
     
     override func layout() {
         super.layout()
         if let item = self.item as? ChatMessageItem {
-            self.text.update(item.textLayout)
             
             if let webpageLayout = item.webpageLayout {
                 webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentInnerInset, webpageLayout.size.width, webpageLayout.size.height)
+                
+                if let webpageContent = webpageContent, let actionButton = actionButton {
+                    actionButton.setFrameOrigin(0, webpageContent.frame.maxY + 6)
+                }
             }
+           
         }
     }
     
@@ -66,6 +71,10 @@ class ChatMessageView: ChatRowView {
     override func set(item:TableRowItem, animated:Bool = false) {
         
         if let item = item as? ChatMessageItem {
+            
+            self.text.update(item.textLayout)
+
+            
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
                 
@@ -76,10 +85,37 @@ class ChatMessageView: ChatRowView {
                     addSubview(webpageContent!)
                 }
                 webpageContent?.update(with: webpageLayout)
+                
+                if let text = item.actionButtonText {
+                    if actionButton == nil {
+                        actionButton = TitleButton()
+                        actionButton?.layer?.cornerRadius = .cornerRadius
+                        actionButton?.layer?.borderWidth = 1
+                        actionButton?.disableActions()
+                        actionButton?.set(font: .normal(.text), for: .Normal)
+                        addSubview(actionButton!)
+                    }
+                    actionButton?.removeAllHandlers()
+                    actionButton?.set(handler: { [weak item] _ in
+                        item?.invokeAction()
+                    }, for: .Click)
+                    actionButton?.set(text: text, for: .Normal)
+                    actionButton?.layer?.borderColor = webpageLayout.presentation.activity.cgColor
+                    actionButton?.set(color: webpageLayout.presentation.activity, for: .Normal)
+                    _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(webpageLayout.size.width, 30), thatFit: true)
+
+                } else {
+                    actionButton?.removeFromSuperview()
+                    actionButton = nil
+                }
+                
             } else {
                 webpageContent?.removeFromSuperview()
                 webpageContent = nil
+                actionButton?.removeFromSuperview()
+                actionButton = nil
             }
+
         }
         super.set(item: item, animated: animated)
 
@@ -92,7 +128,7 @@ class ChatMessageView: ChatRowView {
         let layout = item.textLayout
         
         let index = layout.findIndex(location: point)
-        return point.x < layout.lines[index].frame.maxX
+        return index >= 0 && point.x < layout.lines[index].frame.maxX
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
@@ -103,6 +139,15 @@ class ChatMessageView: ChatRowView {
     }
     
 
+    override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        let main = super.convertWindowPointToContent(point)
+        
+        if let webpageContent = webpageContent, NSPointInRect(main, webpageContent.frame) {
+            return webpageContent.convertWindowPointToContent(point)
+        } else {
+            return main
+        }
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
