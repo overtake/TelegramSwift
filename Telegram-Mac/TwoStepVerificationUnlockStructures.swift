@@ -47,6 +47,7 @@ enum TwoStepVerificationUnlockSettingsEntry: TableItemListNodeEntry {
     case passwordInfo(sectionId: Int32, String)
     
     case pendingEmailInfo(sectionId: Int32, String)
+    case loading
     case section(Int32)
 
     
@@ -70,75 +71,13 @@ enum TwoStepVerificationUnlockSettingsEntry: TableItemListNodeEntry {
             return 7
         case .pendingEmailInfo:
             return 8
+        case .loading:
+            return 9
         case .section(let id):
             return (id + 1) * 1000 - id
         }
     }
-    
-    static func ==(lhs: TwoStepVerificationUnlockSettingsEntry, rhs: TwoStepVerificationUnlockSettingsEntry) -> Bool {
-        switch lhs {
-        case let .passwordEntry(lhsSection, lhsText, lhsValue):
-            if case let .passwordEntry(rhsSection, rhsText, rhsValue) = rhs, lhsSection == rhsSection, lhsText == rhsText, lhsValue == rhsValue {
-                return true
-            } else {
-                return false
-            }
-        case let .passwordEntryInfo(lhsSection, lhsText):
-            if case let .passwordEntryInfo(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .passwordSetupInfo(lhsSection, lhsText):
-            if case let .passwordSetupInfo(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .setupRecoveryEmail(lhsSection, lhsText):
-            if case let .setupRecoveryEmail(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .passwordInfo(lhsSection, lhsText):
-            if case let .passwordInfo(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .pendingEmailInfo(lhsSection, lhsText):
-            if case let .pendingEmailInfo(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .passwordSetup(lhsSection, lhsText):
-            if case let .passwordSetup(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .changePassword(lhsSection, lhsText):
-            if case let .changePassword(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .turnPasswordOff(lhsSection, lhsText):
-            if case let .turnPasswordOff(rhsSection, rhsText) = rhs, lhsSection == rhsSection, lhsText == rhsText {
-                return true
-            } else {
-                return false
-            }
-        case let .section(section):
-            if case .section(section) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
+
     
     var index: Int32 {
         switch self {
@@ -160,6 +99,8 @@ enum TwoStepVerificationUnlockSettingsEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + stableId
         case let .pendingEmailInfo(sectionId, _):
             return (sectionId * 1000) + stableId
+        case .loading:
+            return 0
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -205,6 +146,8 @@ enum TwoStepVerificationUnlockSettingsEntry: TableItemListNodeEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: {_ in
                 arguments.openResetPendingEmail()
             }), inset: NSEdgeInsetsMake(5, 28, 5, 28))
+        case .loading:
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -243,12 +186,12 @@ struct TwoStepVerificationUnlockSettingsControllerState: Equatable {
 
 enum TwoStepVerificationUnlockSettingsControllerMode {
     case access
-    case manage(password: String, email: String, pendingEmailPattern: String)
+    case manage(password: String, email: String, pendingEmailPattern: String, hasSecretValues: Bool)
 }
 
 enum TwoStepVerificationUnlockSettingsControllerData {
     case access(configuration: TwoStepVerificationConfiguration?)
-    case manage(password: String, emailSet: Bool, pendingEmailPattern: String)
+    case manage(password: String, emailSet: Bool, pendingEmailPattern: String, hasSecretValues: Bool)
 }
 
 

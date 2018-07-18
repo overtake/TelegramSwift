@@ -115,7 +115,7 @@ class ChatFileContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: GroupLayoutPositionFlags? = nil) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         let mediaUpdated = true//self.media == nil || !self.media!.isEqual(media)

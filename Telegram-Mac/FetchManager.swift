@@ -37,7 +37,7 @@ private final class FetchManagerLocationEntry {
     var userInitiatedPriorityIndices: [Int32] = []
     
     var priorityKey: FetchManagerPriorityKey? {
-        if self.referenceCount >= 0 {
+        if self.referenceCount > 0 {
             return FetchManagerPriorityKey(locationKey: self.id.locationKey, hasElevatedPriority: self.elevatedPriorityReferenceCount > 0, userInitiatedPriority: userInitiatedPriorityIndices.last)
         } else {
             return nil

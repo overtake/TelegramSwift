@@ -79,6 +79,14 @@ class ChatRowItem: TableRowItem {
     private(set) var peer:Peer?
     private(set) var entry:ChatHistoryEntry
     private(set) var message:Message?
+    
+    var messages: [Message] {
+        if let message = message {
+            return [message]
+        }
+        return []
+    }
+    
     private(set) var itemType:ChatItemType = .Full(isAdmin: false)
     
     var isFullItemType: Bool {
@@ -1456,12 +1464,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
         chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
     }))
     
-//    if canReportMessage(message, account) {
-//        items.append(ContextMenuItem(L10n.messageContextReport, handler: {
-//            _ = reportReasonSelector().start()
-//        }))
-//    }
-    
+
     
     if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId {
         items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: {
@@ -1475,11 +1478,11 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
 
     
-    let signal:Signal<[ContextMenuItem], Void> = .single(items)
+    var signal:Signal<[ContextMenuItem], Void> = .single(items)
     
     
     if let file = message.media.first as? TelegramMediaFile, let mediaId = file.id {
-        return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+        signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
             var items = items
             
             return account.postbox.transaction { transaction -> [ContextMenuItem] in
@@ -1555,7 +1558,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
             
         }
     } else if let image = message.media.first as? TelegramMediaImage {
-        return signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+        signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
             var items = items
             if let resource = image.representations.last?.resource {
                 return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
@@ -1577,6 +1580,49 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                 return .single(items)
             }
         }
+    }
+    
+    signal = signal |> map { items in
+        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup {
+            if peer.hasAdminRights(.canBanUsers), let author = message.author, author.id != chatInteraction.account.peerId {
+                var items = items
+                items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
+                    
+                    _ = showModalProgress(signal: fetchChannelParticipant(account: chatInteraction.account, peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
+                        let info = ChannelParticipantBannedInfo(rights: TelegramChannelBannedRights(flags: [.banSendMessages, .banReadMessages, .banSendMedia, .banSendStickers, .banEmbedLinks], untilDate: .max), restrictedBy: chatInteraction.account.peerId, isMember: true)
+                        if let participant = participant {
+                            var rendered = RenderedChannelParticipant(participant: participant, peer: author)
+                            switch participant {
+                            case let .member(_, _, _, banInfo):
+                                if banInfo == nil {
+                                    rendered = rendered.withUpdatedBannedRights(info)
+                                }
+                                showModal(with: RestrictedModalViewController(account: chatInteraction.account, peerId: chatInteraction.peerId, participant: rendered, unban: false, updated: { updatedRights in
+                                    _ = showModalProgress(signal: updateChannelMemberBannedRights(account: account, peerId: chatInteraction.peerId, memberId: author.id, rights: updatedRights), for: mainWindow).start()
+                                }), for: mainWindow)
+                            default:
+                                break
+                            }
+                        }
+                        
+                    })
+                }))
+                return items
+            }
+        }
+        return items
+    }
+    
+    signal = signal |> map { items in
+        var items = items
+        if canReportMessage(message, account) {
+            items.append(ContextMenuItem(L10n.messageContextReport, handler: {
+                _ = reportReasonSelector().start(next: { reason in
+                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
+                })
+            }))
+        }
+        return items
     }
     
     return signal

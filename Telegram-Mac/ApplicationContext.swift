@@ -545,6 +545,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         someActionsDisposable.add(managedUpdatedRecentPeers(postbox: account.postbox, network: account.network).start())
         
+        
     }
     
     

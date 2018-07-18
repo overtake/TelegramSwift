@@ -769,6 +769,54 @@ public extension NSScrollView {
     }
 }
 
+public struct LayoutPositionFlags : OptionSet {
+    
+    public var rawValue: UInt32
+    
+    public init(rawValue: UInt32) {
+        self.rawValue = rawValue
+    }
+    
+    public init() {
+        self.rawValue = 0
+    }
+    
+    public init(_ flags: LayoutPositionFlags) {
+        var rawValue: UInt32 = 0
+        
+        if flags.contains(LayoutPositionFlags.none) {
+            rawValue |= LayoutPositionFlags.none.rawValue
+        }
+        
+        if flags.contains(LayoutPositionFlags.top) {
+            rawValue |= LayoutPositionFlags.top.rawValue
+        }
+        
+        if flags.contains(LayoutPositionFlags.bottom) {
+            rawValue |= LayoutPositionFlags.bottom.rawValue
+        }
+        
+        if flags.contains(LayoutPositionFlags.left) {
+            rawValue |= LayoutPositionFlags.left.rawValue
+        }
+        if flags.contains(LayoutPositionFlags.right) {
+            rawValue |= LayoutPositionFlags.right.rawValue
+        }
+        if flags.contains(LayoutPositionFlags.inside) {
+            rawValue |= LayoutPositionFlags.inside.rawValue
+        }
+        
+        self.rawValue = rawValue
+    }
+    
+    public static let none = LayoutPositionFlags(rawValue: 0)
+    public static let top = LayoutPositionFlags(rawValue: 1 << 0)
+    public static let bottom = LayoutPositionFlags(rawValue: 1 << 1)
+    public static let left = LayoutPositionFlags(rawValue: 1 << 2)
+    public static let right = LayoutPositionFlags(rawValue: 1 << 3)
+    public static let inside = LayoutPositionFlags(rawValue: 1 << 4)
+}
+
 public extension CGContext {
     public func round(_ size:NSSize,_ corners:CGFloat = .cornerRadius) {
         let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
@@ -783,6 +831,40 @@ public extension CGContext {
         self.closePath()
         self.clip()
 
+    }
+    
+    public func round(_ frame: NSRect, flags: LayoutPositionFlags) {
+        var topLeftRadius: CGFloat = 0
+        var bottomLeftRadius: CGFloat = 0
+        var topRightRadius: CGFloat = 0
+        var bottomRightRadius: CGFloat = 0
+        
+        let minx:CGFloat = frame.minX, midx = frame.midX, maxx = frame.width
+        let miny:CGFloat = frame.minY, midy = frame.midY, maxy = frame.height
+        
+        self.move(to: NSMakePoint(minx, midy))
+        
+        
+        if flags.contains(.top) && flags.contains(.left) {
+            topLeftRadius = .cornerRadius
+        }
+        if flags.contains(.top) && flags.contains(.right) {
+            topRightRadius = .cornerRadius
+        }
+        if flags.contains(.bottom) && flags.contains(.left) {
+            bottomLeftRadius = .cornerRadius
+        }
+        if flags.contains(.bottom) && flags.contains(.right) {
+            bottomRightRadius = .cornerRadius
+        }
+        
+        self.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+        self.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+        self.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+        self.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+        
+        self.closePath()
+        self.clip()
     }
 }
 
@@ -1223,5 +1305,14 @@ public extension Sequence where Iterator.Element: Equatable {
                 ? uniqueElements
                 : uniqueElements + [element]
         }
+    }
+}
+public extension String {
+    public func capitalizingFirstLetter() -> String {
+        return prefix(1).uppercased() + dropFirst()
+    }
+    
+    mutating public func capitalizeFirstLetter() {
+        self = self.capitalizingFirstLetter()
     }
 }

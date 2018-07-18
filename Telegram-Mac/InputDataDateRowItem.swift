@@ -33,9 +33,9 @@ class InputDataDateRowItem: GeneralRowItem, InputDataRowDataValue {
         self.updated = updated
         placeholderLayout = TextViewLayout(.initialize(string: placeholder, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
-        dayHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateDayPlaceholder, color: theme.colors.text, font: .normal(.text)))
-        monthHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateMonthPlaceholder, color: theme.colors.text, font: .normal(.text)))
-        yearHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateYearPlaceholder, color: theme.colors.text, font: .normal(.text)))
+        dayHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateDayPlaceholder1, color: theme.colors.text, font: .normal(.text)))
+        monthHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateMonthPlaceholder1, color: theme.colors.text, font: .normal(.text)))
+        yearHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateYearPlaceholder1, color: theme.colors.text, font: .normal(.text)))
 
         dayHolderLayout.measure(width: .greatestFiniteMagnitude)
         monthHolderLayout.measure(width: .greatestFiniteMagnitude)
@@ -147,17 +147,17 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         var _year: String?
         var _day: String?
         if year.length == 4 {
-            year = "\(min(Int(year)!, 2037))"
+            year = "\(Int(year)!)"
             _year = year
         }
         if month.length > 0 {
             let _m = min(Int(month)!, 12)
             if _m == 0 {
-                month = ""
+                month = "0"
             } else {
                 month = "\(month.length == 2 && _m < 10 ? "0\(_m)" : "\(_m)")"
             }
-            _month = month
+            _month = month == "0" ? nil : month
         }
         
         if day.length > 0 {
@@ -169,11 +169,11 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
             }
             let _d = min(Int(day)!, _max)
             if _d == 0 {
-                day = ""
+                day = "0"
             } else {
                 day = "\(day.length == 2 && _d < 10 ? "0\(_d)" : "\(_d)")"
             }
-            _day = day
+            _day = day == "0" ? nil : day
         }
         
         item._value = .date(_day != nil ? Int32(_day!) : nil, _month != nil ? Int32(_month!) : nil, _year != nil ? Int32(_year!) : nil)
@@ -181,6 +181,17 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         dayInput.setString(day)
         monthInput.setString(month)
         yearInput.setString(year)
+        
+        if month.length == 2, month.prefix(1) == "0" {
+            textViewDidReachedLimit(monthInput)
+        }
+        
+        if day.length == 2, window?.firstResponder == dayInput.inputView {
+            textViewDidReachedLimit(dayInput)
+        }
+        if month.length == 2, window?.firstResponder == monthInput.inputView {
+            textViewDidReachedLimit(monthInput)
+        }
     }
     
     func textViewDidReachedLimit(_ textView: Any) {
@@ -271,7 +282,7 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         
         placeholderTextView.setFrameOrigin(item.inset.left, 14)
         
-        let defaultLeftInset = item.inset.left + 102
+        let defaultLeftInset = item.inset.left + 100
         
         dayInput.setFrameOrigin(defaultLeftInset, 15)
         monthInput.setFrameOrigin(dayInput.frame.maxX + 8, 15)
@@ -329,22 +340,24 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        super.set(item: item, animated: animated)
         
+        
+
         guard let item = item as? InputDataDateRowItem else {return}
         placeholderTextView.update(item.placeholderLayout)
         
         
-        let dayLayout = TextViewLayout(.initialize(string: L10n.inputDataDateDayPlaceholder, color: theme.colors.grayText, font: .normal(.text)))
+        let dayLayout = TextViewLayout(.initialize(string: L10n.inputDataDateDayPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
         dayLayout.measure(width: .greatestFiniteMagnitude)
         
-        let monthLayout = TextViewLayout(.initialize(string: L10n.inputDataDateMonthPlaceholder, color: theme.colors.grayText, font: .normal(.text)))
+        let monthLayout = TextViewLayout(.initialize(string: L10n.inputDataDateMonthPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
         monthLayout.measure(width: .greatestFiniteMagnitude)
         
-        let yearLayout = TextViewLayout(.initialize(string: L10n.inputDataDateYearPlaceholder, color: theme.colors.grayText, font: .normal(.text)))
+        let yearLayout = TextViewLayout(.initialize(string: L10n.inputDataDateYearPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
         yearLayout.measure(width: .greatestFiniteMagnitude)
         
-        
+
+                
         dayInput.min_height = Int32(dayLayout.layoutSize.height)
         dayInput.max_height = Int32(dayLayout.layoutSize.height)
         dayInput.setFrameSize(NSMakeSize(dayLayout.layoutSize.width + 20, dayLayout.layoutSize.height))
@@ -367,34 +380,35 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         switch item.value {
         case let .date(day, month, year):
             if let day = day {
-                dayInput.setString("\(day)")
+                dayInput.setString("\( day < 10 && day > 0 ? "\(day)" : "\(day)")", animated: false)
             } else {
-                dayInput.setString("")
+                dayInput.setString("", animated: false)
             }
             if let month = month {
-                monthInput.setString("\(month)")
+                monthInput.setString("\( month < 10 && month > 0 ? "\(month)" : "\(month)")", animated: false)
             } else {
-                monthInput.setString("")
+                monthInput.setString("", animated: false)
             }
             if let year = year {
-                yearInput.setString("\(year)")
+                yearInput.setString("\(year)", animated: false)
             } else {
-                yearInput.setString("")
+                yearInput.setString("", animated: false)
             }
         default:
-            dayInput.setString("")
-            monthInput.setString("")
-            yearInput.setString("")
+            dayInput.setString("", animated: false)
+            monthInput.setString("", animated: false)
+            yearInput.setString("", animated: false)
         }
         ignoreChanges = false
 
         dayInput.placeholderAttributedString = dayLayout.attributedString
         monthInput.placeholderAttributedString = monthLayout.attributedString
         yearInput.placeholderAttributedString = yearLayout.attributedString
-
         
-        needsLayout = true
-        needsDisplay = true
+
+        super.set(item: item, animated: animated)
+
+        layout()
     }
     
     required init?(coder: NSCoder) {

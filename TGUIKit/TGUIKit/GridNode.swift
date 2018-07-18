@@ -257,7 +257,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
     private var itemNodes: [Int: GridItemNode] = [:]
     private var sectionNodes: [WrappedGridSection: View] = [:]
     private var itemLayout = GridNodeItemLayout(contentSize: CGSize(), items: [], sections: [])
-    
+    private var cachedNodes:[GridItemNode] = []
     private var applyingContentOffset = false
     
     public var visibleItemsUpdated: ((GridNodeVisibleItems) -> Void)?
@@ -870,7 +870,11 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                     itemNode.frame = item.frame
                 }
             } else {
-                let itemNode = self.items[item.index].node(layout: presentationLayoutTransition.layout.layout, gridNode: self)
+                let cachedNode = !cachedNodes.isEmpty ? cachedNodes.removeFirst() : nil
+                
+                let itemNode = self.items[item.index].node(layout: presentationLayoutTransition.layout.layout, gridNode: self, cachedNode: cachedNode)
+            
+                
                 itemNode.frame = item.frame
                 self.addItemNode(index: item.index, itemNode: itemNode, lowestSectionNode: lowestSectionNode)
             }
@@ -1066,6 +1070,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                     })
                 } else {
                     itemNode.removeFromSuperview()
+                    cachedNodes.append(itemNode)
                 }
             }
             
@@ -1101,6 +1106,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             
             for itemNode in removedNodes {
                 itemNode.removeFromSuperview()
+                cachedNodes.append(itemNode)
             }
         }
         
@@ -1171,6 +1177,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         if let itemNode = self.itemNodes.removeValue(forKey: index) {
             if removeNode {
                 itemNode.removeFromSuperview()
+                cachedNodes.append(itemNode)
             }
         }
     }

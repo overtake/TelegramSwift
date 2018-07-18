@@ -189,6 +189,9 @@ const NSTimeInterval kDefaultTransitionAnimationDuration = 0.6;
     if (theEvent.phase == NSEventPhaseBegan) {
         self.scrollDeltaX = 0;
         self.scrollDeltaY = 0;
+        if (theEvent.scrollingDeltaY != 0) {
+            [super scrollWheel:theEvent];
+        }
     } else if (theEvent.phase == NSEventPhaseChanged) {
         self.scrollDeltaX += theEvent.scrollingDeltaX;
         self.scrollDeltaY += theEvent.scrollingDeltaY;

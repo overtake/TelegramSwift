@@ -106,8 +106,12 @@ class PeerInfoArguments {
     func delete() {
         let account = self.account
         let peerId = self.peerId
-               
-        deleteDisposable.set((removeChatInteractively(account: account, peerId:peerId) |> deliverOnMainQueue).start(next: { [weak self] success in
+        
+        let signal = account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, Void> in
+            return removeChatInteractively(account: account, peerId: peerId, userId: peerViewMainPeer(view)?.id)
+        }
+        
+        deleteDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] success in
             if success {
                 self?.pullNavigation()?.close()
             }

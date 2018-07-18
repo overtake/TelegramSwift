@@ -33,12 +33,11 @@ class ReplyModel: ChatAccessoryModel {
         } else {
             
             make(with: nil, display: false)
-            nodeReady.set( account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, Void> in
-                if let message = view.message {
-                    return .single(message)
-                }
-                return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network) |> map {$0.first}
-            } |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
+            var messageViewSignal = account.postbox.messageView(replyMessageId) |> map {$0.message}
+            if !isPinned {
+                messageViewSignal = account.postbox.messageAtId(replyMessageId)
+            }
+            nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
                  self?.make(with: message, isLoading: false, display: true)
                  return message != nil
              })
@@ -48,6 +47,9 @@ class ReplyModel: ChatAccessoryModel {
     override var view: ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
+            view?.customHandler.layout = { [weak self] view in
+                self?.updateImageIfNeeded()
+            }
         }
     }
     

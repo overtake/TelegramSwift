@@ -19,6 +19,7 @@ enum InputDataEntryId : Hashable {
     case dataSelector(InputDataIdentifier)
     case dateSelector(InputDataIdentifier)
     case custom(InputDataIdentifier)
+    case search(InputDataIdentifier)
     case sectionId(Int32)
     var hashValue: Int {
         return 0
@@ -26,7 +27,7 @@ enum InputDataEntryId : Hashable {
     
     var identifier: InputDataIdentifier? {
         switch self {
-        case let .input(identifier), let .selector(identifier), let .dataSelector(identifier), let .dateSelector(identifier), let .general(identifier), let .custom(identifier):
+        case let .input(identifier), let .selector(identifier), let .dataSelector(identifier), let .dateSelector(identifier), let .general(identifier), let .custom(identifier), let .search(identifier):
             return identifier
         default:
             return nil
@@ -187,6 +188,7 @@ enum InputDataEntry : Identifiable, Comparable {
     case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
     case dataSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, description: String?, icon: CGImage?, action:()->Void)
     case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, item:(NSSize, InputDataEntryId)->TableRowItem)
+    case search(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, update:(SearchState)->Void)
     case sectionId(Int32)
     
     var stableId: InputDataEntryId {
@@ -204,6 +206,8 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dateSelector(_, _, _, _, identifier, _):
             return .dateSelector(identifier)
         case let .custom(_, _, _, identifier, _, _):
+            return .custom(identifier)
+        case let .search(_, _, _, identifier, _):
             return .custom(identifier)
         case let .sectionId(index):
             return .sectionId(index)
@@ -226,6 +230,8 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .custom(_, index, _, _, _, _):
             return index
+        case let .search(_, index, _, _, _):
+            return index
         case .sectionId:
             fatalError()
         }
@@ -246,6 +252,8 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dataSelector(index, _, _, _, _, _, _, _, _):
             return index
         case let .custom(index, _, _, _, _, _):
+            return index
+        case let .search(index, _, _, _, _):
             return index
         case .sectionId:
             fatalError()
@@ -281,6 +289,12 @@ enum InputDataEntry : Identifiable, Comparable {
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, placeholder, inputPlaceholder, filter, limit: limit):
             return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: arguments.dataUpdated, limit: limit)
+        case let .search(_, _, value, _, update):
+            return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state in
+                update(state)
+            }, { state in
+                update(state)
+            }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
         }
     }
 }
@@ -330,6 +344,12 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
     case let .custom(sectionId, index, value, identifier, lhsEquatable, _):
         if case .custom(sectionId, index, value, identifier, let rhsEquatable, _) = rhs {
             return lhsEquatable == rhsEquatable
+        } else {
+            return false
+        }
+    case let .search(sectionId, index, value, identifier, _):
+        if case .search(sectionId, index, value, identifier, _) = rhs {
+            return true
         } else {
             return false
         }

@@ -132,7 +132,29 @@ class ChatDateStickView : TableStickView {
         }, for: .Click)
     }
     
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return header && textView.layer?.opacity == 0 ? nil : super.hitTest(point)
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        guard header, let tableView = superview as? TableView else {
+            super.mouseDown(with: event)
+            return
+        }
+        
+        tableView.documentView!.hitTest(tableView.documentView!.convert(event.locationInWindow, from: nil))?.mouseDown(with: event)
+        
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        guard header, let tableView = superview as? TableView else {
+            super.mouseUp(with: event)
+            return
+        }
 
+        tableView.documentView!.hitTest(tableView.documentView!.convert(event.locationInWindow, from: nil))?.mouseUp(with: event)
+        
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

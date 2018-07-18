@@ -206,7 +206,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         
         let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
         
-        if self.skip.modify({min($0 + 1, 35)}) < 35 {
+        if self.skip.modify({min($0 + 1, 3)}) < 3 {
             return
         }
         

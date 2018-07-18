@@ -25,10 +25,8 @@ class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView 
     override func viewDidLoad() {
         super.viewDidLoad()
         let ignore:Atomic<Bool> = Atomic(value: true)
-        languageDisposable.set(combineLatest(appearanceSignal, ready.get() |> deliverOnMainQueue |> take(1)).start(next: { [weak self] _ in
-            if !ignore.swap(false) {
-                self?.updateLocalizationAndTheme()
-            }
+        languageDisposable.set(appearanceSignal.start(next: { [weak self] _ in
+            self?.updateLocalizationAndTheme()
         }))
     }
     

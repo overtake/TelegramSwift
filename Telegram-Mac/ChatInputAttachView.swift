@@ -13,10 +13,12 @@ import TelegramCoreMac
 import PostboxMac
 
 
-class ChatInputAttachView: ImageButton {
+class ChatInputAttachView: ImageButton, Notifable {
         
     private var chatInteraction:ChatInteraction
     private var controller:SPopoverViewController?
+    private let updateMediaDisposable = MetaDisposable()
+    private let editMediaAccessory: ImageView = ImageView()
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init(frame: frameRect)
@@ -83,56 +85,136 @@ class ChatInputAttachView: ImageButton {
             }
         }
         
-        set(handler: { [weak self] (state) in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.presentation.peer {
+        set(handler: { [weak self] control in
+            
+            guard let `self` = self else {return}
+            if let peer = chatInteraction.presentation.peer {
                 
                 if let peer = peer as? TelegramChannel {
                     if peer.hasBannedRights(.banSendMedia) {
                         return
                     }
                 }
-                
-                var items = [SPopoverItem(tr(L10n.inputAttachPopoverPhotoOrVideo), {
-                    attachPhotoOrVideo()
-                }, theme.icons.chatAttachPhoto), SPopoverItem(tr(L10n.inputAttachPopoverPicture), { [weak strongSelf] in
-                    if  let strongSelf = strongSelf, let window = strongSelf.kitWindow {
-                        pickImage(for: window, completion: { (image) in
-                            if let image = image {
-                                strongSelf.chatInteraction.mediaPromise.set(putToTemp(image: image) |> map({[MediaSenderContainer(path:$0)]}))
-                            }
-                        })
-                    }
+                var items:[SPopoverItem] = []
+
+                let updateMedia:([String]?, Bool)->Void = { [weak self] exts, asMedia in
+                    guard let `self` = self else {return}
                     
-                }, theme.icons.chatAttachCamera), SPopoverItem(tr(L10n.inputAttachPopoverFile), {
-                    attachFile()
-                }, theme.icons.chatAttachFile)]
+                    filePanel(with: exts, allowMultiple: false, for: mainWindow, completion: { [weak self] files in
+                        guard let `self` = self else {return}
+                        if let file = files?.first {
+                            self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: file, isFile: !asMedia), account: self.chatInteraction.account) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
+                                self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
+                            }))
+                        }
+                    })
+                }
                 
-                items.append(SPopoverItem(L10n.inputAttachPopoverLocation, {
-                    showModal(with: LocationModalController(chatInteraction), for: mainWindow)
-                }, theme.icons.chatAttachLocation))
-//
-                strongSelf.controller = SPopoverViewController(items: items)
-                showPopover(for: strongSelf, with: strongSelf.controller!, edge: nil, inset: NSMakePoint(0,0))
+                if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.message.media.first, media is TelegramMediaFile || media is TelegramMediaImage {
+                    
+                        items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, {
+                            updateMedia(mediaExts, true)
+                        }, theme.icons.chatAttachPhoto))
+                        
+                        if editState.message.groupingKey == nil {
+                            items.append(SPopoverItem(L10n.inputAttachPopoverFile, {
+                                updateMedia(nil, false)
+                            }, theme.icons.chatAttachFile))
+                        }
+                } else if chatInteraction.presentation.interfaceState.editState == nil {
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, {
+                        attachPhotoOrVideo()
+                    }, theme.icons.chatAttachPhoto))
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPicture, { [weak self] in
+                        guard let `self` = self else {return}
+                        if let window = self.kitWindow {
+                            pickImage(for: window, completion: { (image) in
+                                if let image = image {
+                                    self.chatInteraction.mediaPromise.set(putToTemp(image: image) |> map({[MediaSenderContainer(path:$0)]}))
+                                }
+                            })
+                        }
+                        }, theme.icons.chatAttachCamera))
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverFile, {
+                        attachFile()
+                    }, theme.icons.chatAttachFile))
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverLocation, {
+                        showModal(with: LocationModalController(chatInteraction), for: mainWindow)
+                    }, theme.icons.chatAttachLocation))
+                }
+                
+                
+                if !items.isEmpty {
+                    self.controller = SPopoverViewController(items: items)
+                    showPopover(for: self, with: self.controller!, edge: nil, inset: NSMakePoint(0,0))
+                }
+               
             }
         }, for: .Hover)
         
         set(handler: { [weak self] _ in
-            if let peer = self?.chatInteraction.presentation.peer {
+            guard let `self` = self else {return}
+            if let peer = self.chatInteraction.presentation.peer, self.chatInteraction.presentation.interfaceState.editState == nil {
                 if peer.mediaRestricted {
                     alertForMediaRestriction(peer)
                     return
                 }
-                self?.controller?.popover?.hide()
+                self.controller?.popover?.hide()
                 Queue.mainQueue().justDispatch {
                     attachFile()
                 }
             }
         }, for: .Click)
 
+        chatInteraction.add(observer: self)
+        addSubview(editMediaAccessory)
+        editMediaAccessory.layer?.opacity = 0
+        updateLocalizationAndTheme()
+    }
+    
+    func isEqual(to other: Notifable) -> Bool {
+        if let view = other as? ChatInputAttachView {
+            return view === self
+        } else {
+            return false
+        }
+    }
+    
+    func notify(with value: Any, oldValue: Any, animated: Bool) {
+        let value = value as? ChatPresentationInterfaceState
+        let oldValue = oldValue as? ChatPresentationInterfaceState
+        
+        if value?.interfaceState.editState != oldValue?.interfaceState.editState {
+            if let editState = value?.interfaceState.editState {
+                let isMedia = editState.message.media.first is TelegramMediaFile || editState.message.media.first is TelegramMediaImage
+                editMediaAccessory.change(opacity: isMedia ? 1 : 0)
+                self.highlightHovered = isMedia
+                self.autohighlight = isMedia
+            } else {
+                editMediaAccessory.change(opacity: 0)
+                self.highlightHovered = true
+                self.autohighlight = true
+            }
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        editMediaAccessory.setFrameOrigin(46 - editMediaAccessory.frame.width, 23)
+    }
+    
+    deinit {
+        updateMediaDisposable.dispose()
+        chatInteraction.remove(observer: self)
     }
 
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
+        editMediaAccessory.image = theme.icons.editMessageMedia
+        editMediaAccessory.sizeToFit()
         set(image: theme.icons.chatAttach, for: .Normal)
     }
     

@@ -373,11 +373,12 @@ class ChatListController : PeersListController {
     
     override  func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         if let item = item as? ChatListRowItem, let navigation = navigationController {
-            if !isNew && navigation.controller is ChatController {
+            if !isNew, let controller = navigation.controller as? ChatController {
                 if let modalAction = navigation.modalAction {
                     navigation.controller.invokeNavigation(action: modalAction)
                 }
-                navigation.controller.scrollup()
+                controller.clearReplyStack()
+                controller.scrollup()
             } else {
                 open(with: item.chatLocation, initialAction: item.pinnedType == .ad && FastSettings.showAdAlert ? .ad : nil, addition: mode.groupId != nil)
             }

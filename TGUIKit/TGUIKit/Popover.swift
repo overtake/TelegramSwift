@@ -228,7 +228,16 @@ open class Popover: NSObject {
                                 }
                             }
                             return .invokeNext
-                            },  with: strongSelf, for: .mouseMoved, priority: .high)
+                        },  with: strongSelf, for: .mouseMoved, priority: .high)
+                        
+                        control.kitWindow?.set(mouseHandler: { [weak strongSelf] event -> KeyHandlerResult in
+                            if let strongSelf = strongSelf, !strongSelf.inside() && (!control.mouseInside() || control.continuesAction) {
+                                strongSelf.hide()
+                                return .invokeNext
+                            } else {
+                                return .rejected
+                            }
+                        }, with: strongSelf, for: .leftMouseDown, priority: .high)
                         
                         let hHandler:(Control) -> Void = { [weak strongSelf] _ in
                             
@@ -248,6 +257,7 @@ open class Popover: NSObject {
                 } else if let strongSelf = self {
                     controller?.viewWillDisappear(false)
                     controller?.viewDidDisappear(false)
+                    controller?.didRemovedFromStack()
                     controller?.popover = nil
                     strongSelf.controller = nil
                     strongSelf.window?.removeAllHandlers(for: strongSelf)
@@ -318,6 +328,7 @@ open class Popover: NSObject {
                     if let strongSelf = self, !once {
                         once = true
                         strongSelf.controller?.viewDidDisappear(true)
+                        strongSelf.controller?.didRemovedFromStack()
                         strongSelf.controller?.popover = nil
                         strongSelf.controller = nil
                         strongSelf.background.removeFromSuperview()
@@ -327,6 +338,7 @@ open class Popover: NSObject {
             }
         } else {
             controller?.viewDidDisappear(false)
+            controller?.didRemovedFromStack()
             controller?.popover = nil
             controller = nil
             background.removeFromSuperview()

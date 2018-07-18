@@ -74,11 +74,11 @@ open class ScrollView: NSScrollView{
     public var documentSize:NSSize {
         return self.contentView.documentRect.size;
     }
-    
-
-    open override func draw(_ dirtyRect: NSRect) {
-       
-    }
+//    
+//
+//    open override func draw(_ dirtyRect: NSRect) {
+//       
+//    }
     
     
     public var clipView:TGClipView {
@@ -171,89 +171,89 @@ open class ScrollView: NSScrollView{
     
     let dynamic:CGFloat = 100.0
 
-    open override func scrollWheel(with event: NSEvent) {
-        
-        if deltaCorner > 0 {
-            var origin = clipView.bounds.origin
-            
-            deltaCorner = max(Int64(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 6.0)),40)
-            
-            
-            
-            let deltaScrollY = min(max(Int64(event.scrollingDeltaY),-deltaCorner),deltaCorner)
-            
-            
-            // NSLog("\(event.deltaY)")
-            
-            if  let cgEvent = event.cgEvent?.copy() {
-                
-                
-                
-                // cgEvent.setDoubleValueField(.scrollWheelEventDeltaAxis1, value: Double(min(max(-4,event.deltaY),4)))
-                
-                
-                //if delta == deltaCorner || delta == -deltaCorner || delta == 0 {
-                cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: min(1,cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)))
-                // }
-                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: deltaScrollY)
-                //            if event.scrollingDeltaY > 0 {
-                //
-                //            } else {
-                //                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: )
-                //            }
-                
-                //   NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)) == \(delta)")
-                
-                //  cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: 10)
-                // cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: Int64(delta))
-                
-                let newEvent = NSEvent(cgEvent: cgEvent)!
-                
-                super.scrollWheel(with: newEvent)
-                
-                
-            }  else {
-                //NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount))")
-                
-                super.scrollWheel(with: event)
-            }
-            
-            
-            if origin == clipView.bounds.origin, abs(deltaScrollY) >= deltaCorner
-            {
-                
-                if let documentView = documentView, !(self is HorizontalTableView) {
-                    
-                    if frame.minY < origin.y - frame.height - 50 {
-                        if origin.y > documentView.frame.maxY + dynamic {
-                            clipView.scroll(to: NSMakePoint(origin.x, documentView.frame.minY))
-                        }
-                        
-                        if origin.y < documentView.frame.height {
-                            if documentView.isFlipped {
-                                if origin.y < documentView.frame.height - (frame.height + frame.minY) {
-                                    origin.y -= CGFloat(deltaScrollY)
-                                    clipView.scroll(to: origin)
-                                    reflectScrolledClipView(clipView)
-                                }
-                            } else {
-                                if origin.y + frame.height < documentView.frame.height {
-                                    origin.y += CGFloat(deltaScrollY)
-                                    clipView.scroll(to: origin)
-                                    reflectScrolledClipView(clipView)
-                                }
-                                
-                            }
-                        }
-                    } else if origin.y < -dynamic {
-                        clipView.scroll(to: NSMakePoint(origin.x, 0))
-                    }
-                }
-            }
-        } else {
-            super.scrollWheel(with: event)
-        }
-    }
+//    open override func scrollWheel(with event: NSEvent) {
+//
+//        if deltaCorner > 0 {
+//            var origin = clipView.bounds.origin
+//
+//            deltaCorner = max(Int64(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 6.0)),40)
+//
+//
+//
+//            let deltaScrollY = min(max(Int64(event.scrollingDeltaY),-deltaCorner),deltaCorner)
+//
+//
+//            // NSLog("\(event.deltaY)")
+//
+//            if  let cgEvent = event.cgEvent?.copy() {
+//
+//
+//
+//                // cgEvent.setDoubleValueField(.scrollWheelEventDeltaAxis1, value: Double(min(max(-4,event.deltaY),4)))
+//
+//
+//                //if delta == deltaCorner || delta == -deltaCorner || delta == 0 {
+//                cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: min(1,cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)))
+//                // }
+//                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: deltaScrollY)
+//                //            if event.scrollingDeltaY > 0 {
+//                //
+//                //            } else {
+//                //                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: )
+//                //            }
+//
+//                //   NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)) == \(delta)")
+//
+//                //  cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: 10)
+//                // cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: Int64(delta))
+//
+//                let newEvent = NSEvent(cgEvent: cgEvent)!
+//
+//                super.scrollWheel(with: newEvent)
+//
+//
+//            }  else {
+//                //NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount))")
+//
+//                super.scrollWheel(with: event)
+//            }
+//
+//
+//            if origin == clipView.bounds.origin, abs(deltaScrollY) >= deltaCorner
+//            {
+//
+//                if let documentView = documentView, !(self is HorizontalTableView) {
+//
+//                    if frame.minY < origin.y - frame.height - 50 {
+//                        if origin.y > documentView.frame.maxY + dynamic {
+//                            clipView.scroll(to: NSMakePoint(origin.x, documentView.frame.minY))
+//                        }
+//
+//                        if origin.y < documentView.frame.height {
+//                            if documentView.isFlipped {
+//                                if origin.y < documentView.frame.height - (frame.height + frame.minY) {
+//                                    origin.y -= CGFloat(deltaScrollY)
+//                                    clipView.scroll(to: origin)
+//                                    reflectScrolledClipView(clipView)
+//                                }
+//                            } else {
+//                                if origin.y + frame.height < documentView.frame.height {
+//                                    origin.y += CGFloat(deltaScrollY)
+//                                    clipView.scroll(to: origin)
+//                                    reflectScrolledClipView(clipView)
+//                                }
+//
+//                            }
+//                        }
+//                    } else if origin.y < -dynamic {
+//                        clipView.scroll(to: NSMakePoint(origin.x, 0))
+//                    }
+//                }
+//            }
+//        } else {
+//            super.scrollWheel(with: event)
+//        }
+//    }
 
     
     public func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) -> Void  {

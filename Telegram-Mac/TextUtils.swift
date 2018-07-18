@@ -157,7 +157,7 @@ func chatListText(account:Account, location: ChatLocation, for message:Message?,
             case .image:
                 text = tr(L10n.serviceMessageExpiredPhoto)
             case .file:
-                text = tr(L10n.serviceMessageExpiredFile)
+                text = tr(L10n.serviceMessageExpiredVideo)
             }
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: .white,range: attributedText.range)
@@ -368,10 +368,10 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {
-                return PeerStatusStringResult(title, .initialize(string: tr(L10n.peerServiceNotifications),  color: theme.statusColor, font: theme.statusFont))
+                return PeerStatusStringResult(title, .initialize(string: L10n.peerServiceNotifications,  color: theme.statusColor, font: theme.statusFont))
             }
             if let _ = user.botInfo {
-                return PeerStatusStringResult(title, .initialize(string: tr(L10n.presenceBot),  color: theme.statusColor, font: theme.statusFont))
+                return PeerStatusStringResult(title, .initialize(string: L10n.presenceBot,  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 let (string, activity, _) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
@@ -379,7 +379,7 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
                 return PeerStatusStringResult(title, .initialize(string: string, color: activity && theme.highlightIfActivity ? theme.highlightColor : theme.statusColor, font: theme.statusFont), presence: presence)
 
             } else {
-                return PeerStatusStringResult(title, .initialize(string: tr(L10n.peerStatusRecently), color: theme.statusColor, font: theme.statusFont))
+                return PeerStatusStringResult(title, .initialize(string: L10n.peerStatusRecently, color: theme.statusColor, font: theme.statusFont))
             }
         } else if let group = peer as? TelegramGroup {
             var onlineCount = 0
@@ -400,8 +400,8 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
             if onlineCount > 1 {
                 let string = NSMutableAttributedString()
                 
-                let _ = string.append(string: "\(tr(L10n.peerStatusMemberCountable(group.participantCount))), ", color: theme.statusColor, font: theme.statusFont)
-                let _ = string.append(string: tr(L10n.peerStatusMemberOnlineCountable(onlineCount)), color: theme.statusColor, font: theme.statusFont)
+                let _ = string.append(string: "\(L10n.peerStatusMemberCountable(group.participantCount)), ", color: theme.statusColor, font: theme.statusFont)
+                let _ = string.append(string: L10n.peerStatusMemberOnlineCountable(onlineCount), color: theme.statusColor, font: theme.statusFont)
                 return PeerStatusStringResult(title, string)
             } else {
                 let string = NSAttributedString.initialize(string: tr(L10n.peerStatusMemberCountable(group.participantCount)), color: theme.statusColor, font: theme.statusFont)

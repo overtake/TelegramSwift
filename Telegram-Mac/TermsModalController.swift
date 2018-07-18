@@ -142,6 +142,17 @@ class TermsModalController: ModalViewController {
         return .invoked
     }
     
+    deinit {
+    }
+    
+    override var dynamicSize: Bool {
+        return true
+    }
+    
+    override var closable: Bool {
+        return false
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let attributedString: NSMutableAttributedString = NSMutableAttributedString()
@@ -177,14 +188,5 @@ class TermsModalController: ModalViewController {
         readyOnce()
     }
     
-    deinit {
-    }
-    
-    override var dynamicSize: Bool {
-        return true
-    }
-    
-    override var closable: Bool {
-        return false
-    }
+ 
 }

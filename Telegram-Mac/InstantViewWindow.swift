@@ -461,9 +461,11 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
 
 func showInstantPage(_ page: InstantPageViewController) {
     if let instantController = instantController {
-        instantController.navigation.push(page, true)
-        instantController._window.orderFront(nil)
-        instantController._window.deminiaturize(nil)
+        if page.webPage.webpageId != (instantController.navigationController?.controller as? InstantPageViewController)?.webPage.webpageId {
+            instantController.navigation.push(page, true)
+            instantController._window.orderFront(nil)
+            instantController._window.deminiaturize(nil)
+        }
     } else {
         instantController = InstantViewController(page: page, account: page.account)
         instantController?.show()

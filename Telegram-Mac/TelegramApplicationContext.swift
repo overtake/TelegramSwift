@@ -12,6 +12,15 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
+struct TemporaryPasswordContainer {
+    let date: TimeInterval
+    let password: String
+    
+    var isActive: Bool {
+        return date + 15 * 60 > Date().timeIntervalSince1970
+    }
+}
+
 public var isDebug = false
 
 class TelegramApplicationContext : NSObject {
@@ -24,6 +33,8 @@ class TelegramApplicationContext : NSObject {
     let mainViewController: MainViewController
     let badgeFilter: ValuePromise<UnreadMessageCountsTotalItem> = ValuePromise(ignoreRepeated: true)
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
+    
+
     private(set) var timeDifference:TimeInterval  = 0
     private(set) var recentlyPeerUsed:[PeerId] {
         set {
@@ -46,7 +57,7 @@ class TelegramApplicationContext : NSObject {
     
     weak var mainNavigation:NavigationViewController?
     private let updateDifferenceDisposable = MetaDisposable()
-    
+    private let temporaryPwdDisposable = MetaDisposable()
     let fetchManager: FetchManager
     
     init(_ mainNavigation:NavigationViewController?, _ entertainment:EntertainmentViewController, _ mainViewController: MainViewController, network: Network, postbox: Postbox) {
@@ -55,6 +66,8 @@ class TelegramApplicationContext : NSObject {
         self.fetchManager = FetchManager(postbox: postbox)
         self.mainViewController = mainViewController
         badgeFilter.set(FastSettings.isFiltredBadge ? .filtered : .raw)
+        
+        globalPeerHandler.set(.single(nil))
         
         if network.globalTime > 0 {
             timeDifference = network.globalTime - Date().timeIntervalSince1970
@@ -100,6 +113,7 @@ class TelegramApplicationContext : NSObject {
     
     deinit {
         updateDifferenceDisposable.dispose()
+        temporaryPwdDisposable.dispose()
     }
     
     
@@ -128,6 +142,24 @@ class TelegramApplicationContext : NSObject {
                 break
             }
         }
+    }
+    
+    private var _temporartPassword: String?
+    var temporaryPassword: String? {
+        return _temporartPassword
+    }
+    
+    func resetTemporaryPwd() {
+        _temporartPassword = nil
+        temporaryPwdDisposable.set(nil)
+    }
+    
+    func setTemporaryPwd(_ password: String) -> Void {
+        _temporartPassword = password
+        let signal = Signal<Void, Void>.single(Void()) |> delay(30 * 60, queue: Queue.mainQueue())
+        temporaryPwdDisposable.set(signal.start(next: { [weak self] in
+            self?._temporartPassword = nil
+        }))
     }
     
 }

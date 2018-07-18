@@ -159,8 +159,8 @@ private class ChatSponsoredModel: ChatAccessoryModel {
     }
     
     func update() {
-        self.headerAttr = .initialize(string: "Proxy Sponsored", color: theme.colors.link, font: .medium(.text))
-        self.messageAttr = .initialize(string: "This channel is shown by your proxy server.", color: theme.colors.text, font: .normal(.text))
+        self.headerAttr = .initialize(string: L10n.chatProxySponsoredCapTitle, color: theme.colors.link, font: .medium(.text))
+        self.messageAttr = .initialize(string: L10n.chatProxySponsoredCapDesc, color: theme.colors.text, font: .normal(.text))
         nodeReady.set(.single(true))
         self.setNeedDisplay()
     }
@@ -491,9 +491,11 @@ class ChatSearchHeader : View, Notifable {
             searchView.countValue = (current: currentIndex + 1, total: messages.count)
         }
     }
+    private let calendarController: CalendarController
     init(_ interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.parentInteractions = chatInteraction
+        self.calendarController = CalendarController(NSMakeRect(0,0,250,250), selectHandler: interactions.calendarAction)
         self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: chatInteraction.account)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: self.chatInteraction)
@@ -506,7 +508,7 @@ class ChatSearchHeader : View, Notifable {
         
         initialize()
         
-        parentInteractions.loadingMessage.set(false)
+        parentInteractions.loadingMessage.set(.single(false))
         
         inputInteraction.add(observer: self)
         self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
@@ -615,7 +617,7 @@ class ChatSearchHeader : View, Notifable {
      
         self.searchView.searchInteractions = SearchInteractions({ [weak self] state in
             if state.state == .None {
-                self?.parentInteractions.loadingMessage.set(false)
+                self?.parentInteractions.loadingMessage.set(.single(false))
             }
         }, { [weak self] state in
             if let strongSelf = self {
@@ -628,13 +630,13 @@ class ChatSearchHeader : View, Notifable {
                         strongSelf.query.set(.single(""))
                         strongSelf.searchView.initToken()
                     } else {
-                        strongSelf.parentInteractions.loadingMessage.set(true)
+                        strongSelf.parentInteractions.loadingMessage.set(.single(true))
                         strongSelf.query.set(.single(state.request))
                     }
                     
                 case .from(_, let complete):
                     if complete {
-                        strongSelf.parentInteractions.loadingMessage.set(true)
+                        strongSelf.parentInteractions.loadingMessage.set(.single(true))
                         strongSelf.query.set(.single(state.request))
                     }
                 }
@@ -661,13 +663,13 @@ class ChatSearchHeader : View, Notifable {
             self?.messages = messages
             self?.currentIndex = -1
             self?.prevAction()
-            self?.parentInteractions.loadingMessage.set(false)
+            self?.parentInteractions.loadingMessage.set(.single(false))
             
         }, error: { [weak self] in
             self?.messages = []
             self?.currentIndex = -1
             self?.prevAction()
-            self?.parentInteractions.loadingMessage.set(false)
+            self?.parentInteractions.loadingMessage.set(.single(false))
         }))
 
         next.autohighlight = false
@@ -704,10 +706,11 @@ class ChatSearchHeader : View, Notifable {
             self?.searchView.initToken()
         }, for: .Click)
         
+        
+        
         calendar.set(handler: { [weak self] calendar in
-            if let strongSelf = self {
-                showPopover(for: calendar, with: CalendarController(NSMakeRect(0,0,250,250), selectHandler: strongSelf.interactions.calendarAction), edge: .maxY, inset: NSMakePoint(-160, -40))
-            }
+            guard let `self` = self else {return}
+            showPopover(for: calendar, with: self.calendarController, edge: .maxY, inset: NSMakePoint(-160, -40))
         }, for: .Click)
 
         addSubview(searchView)
@@ -836,6 +839,7 @@ class ChatSearchHeader : View, Notifable {
         self.chatInteraction = chatInteraction
         self.parentInteractions = chatInteraction
         self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: chatInteraction)
+        self.calendarController = CalendarController(NSMakeRect(0,0,250,250), selectHandler: interactions.calendarAction)
         super.init(frame: frameRect)
         initialize()
     }

@@ -185,7 +185,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
 
 }
 
-private func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
+func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     
     
     if MessageIndex(lhsMessage) != MessageIndex(rhsMessage) || lhsMessage.stableVersion != rhsMessage.stableVersion {

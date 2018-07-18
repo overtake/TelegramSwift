@@ -18,13 +18,14 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case header(sectionId: Int, uniqueId:Int, text:String)
     case handleInAppKeys(sectionId:Int, enabled:Bool)
     case darkMode(sectionId:Int, enabled: Bool)
-    case showCallsTab(sectionId:Int, enabled: Bool)
     case sidebar(sectionId:Int, enabled: Bool)
     case autoplayGifs(sectionId:Int, enabled: Bool)
     case inAppSounds(sectionId:Int, enabled: Bool)
     case enterBehavior(sectionId:Int, enabled: Bool)
     case cmdEnterBehavior(sectionId:Int, enabled: Bool)
     case emojiReplacements(sectionId:Int, enabled: Bool)
+    case showCallsTab(sectionId:Int, enabled: Bool)
+    case latestArticles(sectionId:Int, enabled: Bool)
     case forceTouchReply(sectionId:Int, enabled: Bool)
     case forceTouchEdit(sectionId:Int, enabled: Bool)
     case forceTouchForward(sectionId:Int, enabled: Bool)
@@ -35,30 +36,32 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return uniqueId
         case .darkMode:
             return 0
-        case .showCallsTab:
-            return 1
         case .enterBehavior:
-            return 2
+            return 1
         case .cmdEnterBehavior:
-            return 3
+            return 2
         case .handleInAppKeys:
-            return 4
+            return 3
         case .sidebar:
-            return 5
+            return 4
         case .autoplayGifs:
-            return 6
+            return 5
         case .inAppSounds:
-            return 7
+            return 6
         case .emojiReplacements:
+            return 7
+        case .showCallsTab:
             return 8
-        case .forceTouchReply:
+        case .latestArticles:
             return 9
-        case .forceTouchEdit:
+        case .forceTouchReply:
             return 10
-        case .forceTouchForward:
+        case .forceTouchEdit:
             return 11
+        case .forceTouchForward:
+            return 12
 		case .instantViewScrollBySpace:
-			return 12
+			return 13
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -69,6 +72,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .header(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .showCallsTab(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .latestArticles(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .darkMode(sectionId, _):
             return (sectionId * 1000) + stableId
@@ -106,6 +111,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .showCallsTab(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShowCallsTab, type: .switchable(enabled), action: {
                 arguments.toggleCallsTab(!enabled)
+            })
+        case let .latestArticles(sectionId: _, enabled: enabled):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShowArticlesInSearch, type: .switchable(enabled), action: {
+                arguments.toggleLatestArticles(!enabled)
             })
         case let .darkMode(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(enabled), action: {
@@ -176,7 +185,8 @@ private final class GeneralSettingsArguments {
     let toggleForceTouchAction:(ForceTouchAction) -> Void
 	let toggleInstantViewScrollBySpace:(Bool) -> Void
     let toggleAutoplayGifs:(Bool) -> Void
-    init(account:Account, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void) {
+    let toggleLatestArticles: (Bool)->Void
+    init(account:Account, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleLatestArticles: @escaping(Bool)->Void) {
         self.account = account
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -187,6 +197,7 @@ private final class GeneralSettingsArguments {
         self.toggleForceTouchAction = toggleForceTouchAction
 		self.toggleInstantViewScrollBySpace = toggleInstantViewScrollBySpace
         self.toggleAutoplayGifs = toggleAutoplayGifs
+        self.toggleLatestArticles = toggleLatestArticles
     }
    
 }
@@ -236,6 +247,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies))
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab))
+    entries.append(.latestArticles(sectionId: sectionId, enabled: baseSettings.latestArticles))
 
 
     entries.append(.section(sectionId: sectionId))
@@ -308,6 +320,10 @@ class GeneralSettingsViewController: TableViewController {
 			FastSettings.toggleInstantViewScrollBySpace(enable)
         }, toggleAutoplayGifs: { enable in
             FastSettings.toggleAutoPlayGifs(enable)
+        }, toggleLatestArticles: { enable in
+            _ = updateBaseAppSettingsInteractively(postbox: postbox, { settings -> BaseApplicationSettings in
+                return settings.withUpdatedLatestArticles(enable)
+            }).start()
         })
         
         let initialSize = atomicSize

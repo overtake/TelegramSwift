@@ -21,7 +21,7 @@ enum ChatHistoryInitialSearchLocation {
 enum ChatHistoryLocation: Equatable {
     case Initial(count: Int)
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)
-    case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int)
+    case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int, side: TableSavingSide)
     case Scroll(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, sourceIndex: MessageHistoryAnchorIndex, scrollPosition: TableScrollState, count: Int, animated: Bool)
     
     var count: Int {
@@ -30,19 +30,28 @@ enum ChatHistoryLocation: Equatable {
             return count
         case let .InitialSearch(_, count):
             return count
-        case let .Navigation(_, _, count):
+        case let .Navigation(_, _, count, _):
             return count
         case let .Scroll(_, _, _, _, count, _):
             return count
+        }
+    }
+    
+    var side: TableSavingSide? {
+        switch self {
+        case let .Navigation(_, _, _, side):
+            return side
+        default:
+            return nil
         }
     }
 }
 
 func ==(lhs: ChatHistoryLocation, rhs: ChatHistoryLocation) -> Bool {
     switch lhs {
-    case let .Navigation(lhsIndex, lhsAnchorIndex, lhsCount):
+    case let .Navigation(lhsIndex, lhsAnchorIndex, lhsCount, lhsSide):
         switch rhs {
-        case let .Navigation(rhsIndex, rhsAnchorIndex, rhsCount) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex && lhsCount == rhsCount:
+        case let .Navigation(rhsIndex, rhsAnchorIndex, rhsCount, rhsSide) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex && lhsCount == rhsCount && lhsSide == rhsSide:
             return true
         default:
             return false
@@ -241,7 +250,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                 return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: .index(index: anchorIndex, position: scroll, directionHint: .Down, animated: false), initialData: combinedInitialData)
             }
         }
-    case let .Navigation(index, anchorIndex, count):
+    case let .Navigation(index, anchorIndex, count, _):
         var first = true
         
         return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, clipHoles: true, fixedCombinedReadStates: fixedCombinedReadStates, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in

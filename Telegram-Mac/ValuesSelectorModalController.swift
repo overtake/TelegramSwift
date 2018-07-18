@@ -227,7 +227,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
     }
     
     override func firstResponder() -> NSResponder? {
-        return genericView.searchView.input
+        return genericView.searchView.isHidden ? nil : genericView.searchView.input
     }
     
     private func updateSize(_ width: CGFloat, animated: Bool) {

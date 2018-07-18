@@ -21,11 +21,14 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     var icon:TelegramMediaImage?
     var iconArguments:TransformImageArguments?
     var thumb:CGImage? = nil
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
+    let readPercent: Int32?
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry, saveToRecent: Bool = true, readPercent: Int32? = nil) {
+        self.readPercent = readPercent
         super.init(initialSize,interface,account,object)
         iconSize = NSMakeSize(50, 50)
         self.contentInset = NSEdgeInsets(left: 70, right: 10, top: 5, bottom: 5)
-        
+        let isFullRead = readPercent == 100
+
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 
@@ -39,9 +42,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 
                 var iconImageRepresentation:TelegramMediaImageRepresentation? = nil
                 if let image = content.image {
-                    iconImageRepresentation = smallestImageRepresentation(image.representations)
+                    iconImageRepresentation = largestImageRepresentation(image.representations)
                 } else if let file = content.file {
-                    iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations)
+                    iconImageRepresentation = largestImageRepresentation(file.previewRepresentations)
                 }
                 
                 if let iconImageRepresentation = iconImageRepresentation {
@@ -54,19 +57,19 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                
                 let attributedText = NSMutableAttributedString()
 
-                let _ = attributedText.append(string: content.title ?? content.websiteName ?? hostName, color: theme.colors.text, font: .medium(.text))
+                let _ = attributedText.append(string: content.title ?? content.websiteName ?? hostName, color: isFullRead ? theme.colors.grayText : theme.colors.text, font: .medium(.text))
                 
                 if let text = content.text {
                     let _ = attributedText.append(string: "\n")
-                    let _ = attributedText.append(string: text, color: theme.colors.text, font: NSFont.normal(FontSize.text))
-                    attributedText.detectLinks(type: [.Links, .Mentions, .Hashtags], account: account, openInfo: interface.openInfo)
+                    let _ = attributedText.append(string: text, color: isFullRead ? theme.colors.grayText : theme.colors.text, font: NSFont.normal(FontSize.text))
+                    attributedText.detectLinks(type: [.Links], account: account, openInfo: interface.openInfo)
                 }
                 
-                textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 6, truncationType: .end)
+                textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
                 
                 let linkAttributed:NSMutableAttributedString = NSMutableAttributedString()
                 let _ = linkAttributed.append(string: content.displayUrl, color: theme.colors.link, font: NSFont.normal(FontSize.text))
-                linkAttributed.detectLinks(type: [.Links, .Mentions, .Hashtags], account: account, openInfo: interface.openInfo)
+                linkAttributed.detectLinks(type: [.Links], account: account, color: isFullRead ? theme.colors.link.withAlphaComponent(0.7) : theme.colors.link, openInfo: interface.openInfo)
                 
                 linkLayout = TextViewLayout(linkAttributed, maximumNumberOfLines: 1, truncationType: .end)
             }
@@ -101,7 +104,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
             }
             let _ = attributedText.append(string: message.text, color: theme.colors.text, font: NSFont.normal(.text))
 
-            textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 6, truncationType: .end)
+            textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
            
         }
         
@@ -110,27 +113,29 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         textLayout?.interactions = globalLinkExecutor
-        
-        textLayout?.interactions.menuItems = { [weak self] inside in
-            guard let `self` = self else {return .complete()}
-            return self.menuItems(in: NSZeroPoint) |> map { items in
-                var items = items
-                if let layout = self.textLayout, layout.selectedRange.hasSelectText {
-                    let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
-                    items.insert(ContextMenuItem(L10n.textCopy, handler: {
-                        copyToClipboard(text.string)
-                    }), at: 0)
-                    items.insert(ContextSeparatorItem(), at: 1)
+        if message.stableId != UINT32_MAX {
+            textLayout?.interactions.menuItems = { [weak self] inside in
+                guard let `self` = self else {return .complete()}
+                return self.menuItems(in: NSZeroPoint) |> map { items in
+                    var items = items
+                    if let layout = self.textLayout, layout.selectedRange.hasSelectText {
+                        let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
+                        items.insert(ContextMenuItem(L10n.textCopy, handler: {
+                            copyToClipboard(text.string)
+                        }), at: 0)
+                        items.insert(ContextSeparatorItem(), at: 1)
+                    }
+                    return items
                 }
-                return items
             }
         }
+       
         
         linkLayout?.interactions = TextViewInteractions(processURL: { [weak self] url in
             if let webpage = self?.message.media.first as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content {
                     if let _ = content.instantPage {
-                        showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil))
+                        showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil, saveToRecent: saveToRecent))
                         return
                     }
                 }
@@ -143,6 +148,8 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
             }
             return true
         })
+        
+        _ = makeSize(initialSize.width, oldWidth: 0)
         
     }
     
@@ -158,6 +165,10 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
             }
         }
         return false
+    }
+    
+    var isArticle: Bool {
+        return message.stableId == UINT32_MAX
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
@@ -189,6 +200,8 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     private var textView:TextView
     private var linkView:TextView
     private var ivImage: ImageView? = nil
+    private var progressTextView: TextView?
+    private var readProgressView: RadialProgressView?
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame:NSMakeRect(10, 5, 50.0, 50.0))
         textView = TextView()
@@ -210,7 +223,18 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             linkView.isHidden = item.linkLayout == nil
             linkView.update(item.linkLayout, origin: NSMakePoint(item.contentInset.left + (item.hasInstantPage ? 10 : 0),textView.frame.maxY + 2.0))
             ivImage?.setFrameOrigin(item.contentInset.left, textView.frame.maxY + 6.0)
+            readProgressView?.center()
+            progressTextView?.center()
         }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        guard let item = item as? PeerMediaWebpageRowItem, item.isArticle else {
+            super.mouseUp(with: event)
+            return
+        }
+        item.linkLayout?.interactions.processURL(event)
+        
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -219,6 +243,10 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
         textView.backgroundColor = backdorColor
         linkView.backgroundColor = backdorColor
         if let item = item as? PeerMediaWebpageRowItem {
+            
+            textView.userInteractionEnabled = !item.isArticle
+            
+
             
             if item.hasInstantPage {
                 if ivImage == nil {
@@ -245,6 +273,34 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             
             if item.icon == nil {
                 imageView.layer?.contents = item.thumb
+            }
+            
+            if let readProgress = item.readPercent {
+                if readProgressView == nil {
+                    readProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: theme.colors.blueUI, icon: nil, lineWidth: 3), twist: false, size: NSMakeSize(item.iconSize.width, item.iconSize.height))
+                    imageView.addSubview(readProgressView!)
+                    readProgressView?.isEventLess = true
+                    readProgressView?.userInteractionEnabled = false
+                }
+                readProgressView?.state = .ImpossibleFetching(progress: readProgress == 100 ? 0 : Float(readProgress) / 100.0, force: true)
+                
+                
+                if progressTextView == nil {
+                    progressTextView = TextView()
+                    imageView.addSubview(progressTextView!)
+                }
+                let layout = TextViewLayout(.initialize(string: readProgress == 100 ? L10n.articleRead : "\(readProgress)%", color: .white, font: .bold(11)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                progressTextView?.backgroundColor = .clear
+                progressTextView?.update(layout)
+                progressTextView?.isEventLess = true
+                progressTextView?.userInteractionEnabled = false
+                
+            } else {
+                readProgressView?.removeFromSuperview()
+                readProgressView = nil
+                progressTextView?.removeFromSuperview()
+                progressTextView = nil
             }
             
             needsLayout = true

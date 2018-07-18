@@ -1875,7 +1875,7 @@ extension NSTextView {
 }
 
 extension CGContext {
-    func round(_ size:NSSize,_ cornerRadius:CGFloat = .cornerRadius, positionFlags: GroupLayoutPositionFlags? = nil) {
+    func round(_ size:NSSize,_ cornerRadius:CGFloat = .cornerRadius, positionFlags: LayoutPositionFlags? = nil) {
         let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
         let miny:CGFloat = 0, midy = size.height/2.0, maxy = size.height
         

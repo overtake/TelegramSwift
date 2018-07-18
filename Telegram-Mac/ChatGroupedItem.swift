@@ -16,6 +16,11 @@ class ChatGroupedItem: ChatRowItem {
 
     fileprivate var parameters: ChatMediaGalleryParameters?
     fileprivate let layout: GroupedLayout
+    
+    override var messages: [Message] {
+        return layout.messages
+    }
+    
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         var captionLayout: TextViewLayout?
@@ -108,7 +113,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         
         if isBubbleFullFilled, layout.messages.count == 1  {
-            var positionFlags: GroupLayoutPositionFlags = []
+            var positionFlags: LayoutPositionFlags = []
             if captionLayout == nil {
                 positionFlags.insert(.bottom)
                 positionFlags.insert(.left)
@@ -162,7 +167,7 @@ class ChatGroupedItem: ChatRowItem {
         return super.defaultContentTopOffset
     }
     
-    fileprivate var positionFlags: GroupLayoutPositionFlags?
+    fileprivate var positionFlags: LayoutPositionFlags?
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
@@ -493,7 +498,7 @@ private class ChatGroupedView : ChatRowView {
         
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
-            var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
+            var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
                 if item.captionLayout != nil {
@@ -754,7 +759,7 @@ private class ChatGroupedView : ChatRowView {
                     selectionBackground.removeFromSuperview()
                     selectionBackground.setFrameSize(item.layout.frame(at: i).size)
                     
-                    var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
+                    var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
                     
                     if item.hasBubble  {
                         if item.captionLayout != nil {
@@ -809,7 +814,7 @@ private class ChatGroupedView : ChatRowView {
                 selectionBackground.layer?.opacity = 1.0
                 selectionBackground.setFrameSize(item.layout.frame(at: i).size)
                 
-                var positionFlags: GroupLayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
+                var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
                 
                 if item.hasBubble  {
                     if item.captionLayout != nil {

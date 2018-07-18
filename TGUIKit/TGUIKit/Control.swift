@@ -28,6 +28,9 @@ public enum ControlEvent {
     case LongOver
 }
 
+private let longHandleDisposable = MetaDisposable()
+private let longOverHandleDisposable = MetaDisposable()
+
 open class Control: View {
     
     open var isEnabled:Bool = true {
@@ -39,8 +42,7 @@ open class Control: View {
     }
     open var hideAnimated:Bool = false
     
-    private let longHandleDisposable = MetaDisposable()
-    private let longOverHandleDisposable = MetaDisposable()
+
     public var isSelected:Bool {
         didSet {
             if isSelected != oldValue {
@@ -85,6 +87,7 @@ open class Control: View {
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         apply(state: self.controlState)
+        updateTrackingAreas()
     }
     
     public private(set) var controlState:ControlState = .Normal {
@@ -143,8 +146,8 @@ open class Control: View {
         if let trackingArea = self.trackingArea {
             self.removeTrackingArea(trackingArea)
         }
-        longHandleDisposable.dispose()
-        longOverHandleDisposable.dispose()
+    //    longHandleDisposable.dispose()
+     //   longOverHandleDisposable.dispose()
     }
     
     public var controlIsHidden: Bool {
@@ -217,6 +220,7 @@ open class Control: View {
     public func removeAllHandlers() ->Void {
         handlers.removeAll()
     }
+    
     
     override open func mouseDown(with event: NSEvent) {
         mouseIsDown = true
@@ -310,6 +314,8 @@ open class Control: View {
         }
     }
     
+    public var continuesAction: Bool = false
+    
     override open func mouseEntered(with event: NSEvent) {
         if userInteractionEnabled {
             
@@ -326,7 +332,9 @@ open class Control: View {
         }
     }
     
+    
     override open func mouseExited(with event: NSEvent) {
+        longOverHandleDisposable.set(nil)
         if userInteractionEnabled {
             
             updateState()
@@ -334,6 +342,7 @@ open class Control: View {
             super.mouseExited(with: event)
         }
     }
+    
     
     
     

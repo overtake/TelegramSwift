@@ -344,10 +344,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone?","socks?", "proxy?"]
+let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve?","msg_url?","join?","addstickers?","confirmphone?", "socks?", "proxy?", "passport?"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport"]
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -530,21 +530,21 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
                     }
                 case known_scheme[7]:
-                    break
-//                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let account = account {
-//                        let payload = vars["payload"]?.data(using: .utf8) ?? Data()
-//                        var errors: Array<[String:String]>?
-//                        if let maybeErrors = vars["errors"] {
-//                            let raw = escape(with: maybeErrors, addPercent: false)
-//                            if let data = raw.data(using: .utf8) {
-//                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
-//                                    errors = json as? Array<[String:String]>
-//                                }
-//                            }
-//                        }
-//                        let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
-//                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope, addPercent: false), callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
-//                    }
+                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let account = account, let payloadString = vars["payload"] {
+                        
+                        let payload = escape(with: payloadString, addPercent: false).data(using: .utf8) ?? Data()
+                        var errors: Array<[String:String]>?
+                        if let maybeErrors = vars["errors"] {
+                            let raw = escape(with: maybeErrors, addPercent: false)
+                            if let data = raw.data(using: .utf8) {
+                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
+                                    errors = json as? Array<[String:String]>
+                                }
+                            }
+                        }
+                        let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
+                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope, addPercent: false), callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
+                    }
                 default:
                     break
                 }

@@ -16,7 +16,7 @@ private final class MessagePhotoInfo {
     let imageSize: NSSize
     let aspectRatio: CGFloat
     fileprivate(set) var layoutFrame: NSRect = NSZeroRect
-    fileprivate(set) var positionFlags: GroupLayoutPositionFlags = .none
+    fileprivate(set) var positionFlags: LayoutPositionFlags = .none
     
     init(_ message: Message) {
         self.mid = message.id
@@ -339,7 +339,7 @@ class GroupedLayout {
                         let lineHeight: CGFloat = optimal.heights[i]
                         var x: CGFloat = 0.0
                         
-                        var positionFlags: GroupLayoutPositionFlags  = [.none]
+                        var positionFlags: LayoutPositionFlags  = [.none]
                         if i == 0 {
                             positionFlags.insert(.top)
                         }
@@ -349,7 +349,7 @@ class GroupedLayout {
                         
                         for k in 0 ..< count
                         {
-                            var innerPositionFlags:GroupLayoutPositionFlags = positionFlags;
+                            var innerPositionFlags:LayoutPositionFlags = positionFlags;
                             
                             if k == 0 {
                                 innerPositionFlags.insert(.left);
@@ -411,7 +411,7 @@ class GroupedLayout {
         return frame(for: messages[index].id)
     }
     
-    func position(for messageId: MessageId) -> GroupLayoutPositionFlags {
+    func position(for messageId: MessageId) -> LayoutPositionFlags {
         guard let photo = layouts[messageId] else {
             return .none
         }
@@ -446,7 +446,7 @@ class GroupedLayout {
         return false
     }
     
-    func position(at index: Int) -> GroupLayoutPositionFlags {
+    func position(at index: Int) -> LayoutPositionFlags {
         return position(for: messages[index].id)
     }
     

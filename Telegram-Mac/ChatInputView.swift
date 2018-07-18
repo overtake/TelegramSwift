@@ -101,6 +101,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView = TGModernGrowingTextView(frame: NSMakeRect(attachView.frame.width, yInset, contentView.frame.width - actionsView.frame.width, contentView.frame.height - yInset * 2.0))
         textView.textFont = .normal(.text)
         
+        
         contentView.addSubview(textView)
         self.background = theme.colors.background
         
@@ -397,6 +398,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         messageActionsPanelView?.setFrameSize(frame.size)
         blockedActionView?.setFrameSize(frame.size)
         restrictedView?.setFrameSize(frame.size)
+        
+        guard let superview = superview else {return}
+        textView.max_height = Int32(superview.frame.height / 2 + 50)
     }
     
     override func layout() {

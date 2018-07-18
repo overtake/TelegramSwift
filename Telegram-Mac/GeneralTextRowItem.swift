@@ -97,6 +97,10 @@ class GeneralTextRowView : GeneralRowView {
         textView.isSelectable = false
     }
     
+    override var firstResponder: NSResponder? {
+        return nil
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         if let item = item as? GeneralTextRowItem, item.drawCustomSeparator {

@@ -124,7 +124,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openProxySettings: ()->Void = {}
     var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
     
-    let loadingMessage: ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
+    let loadingMessage: Promise<Bool> = Promise()
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     

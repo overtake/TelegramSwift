@@ -31,7 +31,7 @@ class PassportWindowController  {
         
         
         let screen = NSScreen.main!
-        let size = NSMakeSize(420, 630)
+        let size = NSMakeSize(390, 600)
         let center = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width)/2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height)/2), size.width, size.height)
 
         
@@ -46,7 +46,7 @@ class PassportWindowController  {
         
         window.isMovableByWindowBackground = true
         window.name = "Telegram.PassportWindow"
-        window.initSaver()
+        //window.initSaver()
         navigationController._frameRect = NSMakeRect(0, 0, size.width, size.height - 50)
         window.titlebarAppearsTransparent = true
         window.minSize = size

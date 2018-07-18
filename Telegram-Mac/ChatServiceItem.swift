@@ -242,7 +242,7 @@ class ChatServiceItem: ChatRowItem {
                 text = tr(L10n.serviceMessageExpiredPhoto)
             case .file:
                 if message.id.peerId.namespace == Namespaces.Peer.SecretChat {
-                    text = tr(L10n.serviceMessageExpiredFile)
+                    text = tr(L10n.serviceMessageExpiredVideo)
                 } else {
                     text = tr(L10n.serviceMessageExpiredVideo)
                 }

@@ -26,7 +26,6 @@ final class PassportAcceptRowView : TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(button)
-        button.layer?.cornerRadius = .cornerRadius
         button.set(font: .medium(.header), for: .Normal)
         
         button.set(handler: { [weak self] _ in
@@ -39,8 +38,9 @@ final class PassportAcceptRowView : TableRowView {
         super.layout()
         guard let item = item as? GeneralRowItem else {return}
         
-        button.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right, 40))
+        _ = button.sizeToFit(NSZeroSize, NSMakeSize(170, 40), thatFit: true)//.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right, 40))
         button.center()
+        button.layer?.cornerRadius = 20
     }
     
     override func updateColors() {
@@ -54,7 +54,7 @@ final class PassportAcceptRowView : TableRowView {
         
         guard let item = item as? GeneralRowItem else {return}
 
-        button.isEnabled = item.enabled
+        button.userInteractionEnabled = item.enabled
         button.autohighlight = false
         button.set(background: item.enabled ? theme.colors.blueUI : theme.colors.grayForeground, for: .Normal)
         button.set(image: theme.icons.secureIdAuth, for: .Normal)

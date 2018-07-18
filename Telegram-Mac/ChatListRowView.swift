@@ -23,6 +23,7 @@ class ChatListRowView: TableRowView {
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
+    private var animatedView: ChatRowAnimateView?
     override var isFlipped: Bool {
         return true
     }
@@ -95,6 +96,42 @@ class ChatListRowView: TableRowView {
         super.onCloseContextMenu()
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
+    }
+    
+    
+    override func focusAnimation(_ innerId: AnyHashable?) {
+        
+        if animatedView == nil {
+            self.animatedView = ChatRowAnimateView(frame:bounds)
+            self.animatedView?.isEventLess = true
+            addSubview(animatedView!)
+            animatedView?.backgroundColor = NSColor(0x68A8E2)
+            animatedView?.layer?.opacity = 0
+            
+        }
+        animatedView?.stableId = item?.stableId
+        
+        
+        let animation: CABasicAnimation = makeSpringAnimation("opacity")
+        
+        animation.fromValue = animatedView?.layer?.presentation()?.opacity ?? 0
+        animation.toValue = 0.5
+        animation.autoreverses = true
+        animation.isRemovedOnCompletion = true
+        animation.fillMode = kCAFillModeForwards
+        
+        animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
+            if completed {
+                self?.animatedView?.removeFromSuperview()
+                self?.animatedView = nil
+            }
+        })
+        animation.isAdditive = false
+        
+        animatedView?.layer?.add(animation, forKey: "opacity")
+        
+        
+        
     }
     
     override var backdorColor: NSColor {
@@ -271,6 +308,11 @@ class ChatListRowView: TableRowView {
          super.set(item:item, animated:animated)
                 
          if let item = self.item as? ChatListRowItem {
+            
+            if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
+                self.animatedView?.removeFromSuperview()
+                self.animatedView = nil
+            }
             
             
             photo.setState(account: item.account, state: item.photo)

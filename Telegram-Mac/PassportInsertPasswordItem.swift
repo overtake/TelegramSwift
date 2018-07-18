@@ -65,7 +65,7 @@ class PassportInsertPasswordItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return descLayout.layoutSize.height + 36 + 20 + 30 + 15
+        return descLayout.layoutSize.height + 36 + 20 + 30 + 25
     }
 }
 
@@ -155,7 +155,7 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         descTextView.centerX()
         inputContainer.centerX(y: descTextView.frame.maxY + 20)
         nextButton.centerX(y: inputContainer.frame.maxY + 15)
-        forgotPassword.centerY(x: inputContainer.frame.width - forgotPassword.frame.width - 10)
+        forgotPassword.centerY(x: inputContainer.frame.width - forgotPassword.frame.width - 10, addition: backingScaleFactor == 2 ? -0.5 : 0)
     }
     
     @objc func checkPasscode() {
@@ -184,17 +184,19 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         input.placeholderAttributedString = attr
         input.font = .normal(.title)
         input.sizeToFit()
-        
         nextButton.set(font: .normal(.title), for: .Normal)
         nextButton.set(color: .white, for: .Normal)
         nextButton.set(background: theme.colors.blueUI, for: .Normal)
         //TODOLANG
         nextButton.set(text: L10n.secureIdInsertPasswordNext, for: .Normal)
-        _ = nextButton.sizeToFit(NSMakeSize(20, 0), NSMakeSize(.greatestFiniteMagnitude, 30))
-        nextButton.layer?.cornerRadius = .cornerRadius
+        _ = nextButton.sizeToFit(NSMakeSize(40, 0), NSMakeSize(.greatestFiniteMagnitude, 40))
+        nextButton.layer?.cornerRadius = 20
         
         forgotPassword.set(image: theme.icons.passportForgotPassword, for: .Normal)
         _ = forgotPassword.sizeToFit()
+        
+        var bp:Int = 0
+        bp += 1
     }
     
     override func viewDidMoveToWindow() {
@@ -204,7 +206,7 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
     }
     
     override var firstResponder: NSResponder? {
-        return input.textView
+        return input
     }
     
     override var mouseInsideField: Bool {

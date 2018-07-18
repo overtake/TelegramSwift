@@ -309,15 +309,14 @@ private func RestrictedEntries(state: RestrictedControllerState, participant: Re
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, index, tr(L10n.channelUserRestriction)))
+    entries.append(.description(sectionId, index, L10n.channelUserRestriction))
     index += 1
     
     if let peer = peerViewMainPeer(view) as? TelegramChannel {
         switch participant.participant {
         case .member(_, _, _, let banInfo):
-            
             if let banInfo = banInfo {
-                let restrictions:[(TelegramChannelBannedRightsFlags,String)] = [(.banReadMessages, tr(L10n.channelBlockUserCanReadMessages)), (.banSendMessages, tr(L10n.channelBlockUserCanSendMessages)), (.banSendMedia, tr(L10n.channelBlockUserCanSendMedia)), ([.banSendStickers], tr(L10n.channelBlockUserCanSendStickers)), (.banEmbedLinks, tr(L10n.channelBlockUserCanEmbedLinks))]
+                let restrictions:[(TelegramChannelBannedRightsFlags,String)] = [(.banReadMessages, L10n.channelBlockUserCanReadMessages), (.banSendMessages, L10n.channelBlockUserCanSendMessages), (.banSendMedia, L10n.channelBlockUserCanSendMedia), ([.banSendStickers], L10n.channelBlockUserCanSendStickers), (.banEmbedLinks, L10n.channelBlockUserCanEmbedLinks)]
                 let currentRightsFlags: TelegramChannelBannedRightsFlags
                 if let updatedFlags = state.updatedFlags {
                     currentRightsFlags = updatedFlags

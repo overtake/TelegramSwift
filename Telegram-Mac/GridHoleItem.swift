@@ -15,7 +15,7 @@ final class GridHoleItem: GridItem {
 
     let section: GridSection? = nil
     
-    func node(layout: GridNodeLayout, gridNode:GridNode) -> GridItemNode {
+    func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
         return GridHoleItemNode(gridNode)
     }
 }

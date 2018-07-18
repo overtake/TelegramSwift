@@ -28,79 +28,44 @@ final class PeerMediaTypeInteraction {
 
 class MediaTitleBarView: TitledBarView {
 
-    private let button:TitleButton = TitleButton()
-    private let dropdownImage = ImageButton()
     
+    private let segmentController: SegmentController
+    
+    private let interactions:PeerMediaTypeInteraction
     public init(controller: ViewController, interactions:PeerMediaTypeInteraction) {
+        segmentController = SegmentController(frame: NSMakeRect(0, 0, 300, 28))
+        self.interactions = interactions
         super.init(controller: controller)
-        
-        button.set(font: .medium(.title), for: .Normal)
-       
-        
-        button.highlightHovered = true
-        dropdownImage.highlightHovered = true
-        let showDropDown:(Control) -> Void = { [weak self] _ in
-            
-            if let strongSelf = self, !hasPopover(mainWindow) {
-                var items:[SPopoverItem] = []
-                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedMedia), { [weak strongSelf] in
-                    interactions.media()
-                    strongSelf?.button.set(text: tr(L10n.peerMediaSharedMedia), for: .Normal)
-                }))
-                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedFiles), { [weak strongSelf] in
-                    interactions.files()
-                    strongSelf?.button.set(text: tr(L10n.peerMediaPopoverSharedFiles), for: .Normal)
-                }))
-                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedLinks), { [weak strongSelf] in
-                    interactions.links()
-                    strongSelf?.button.set(text: tr(L10n.peerMediaPopoverSharedLinks), for: .Normal)
-                }))
-                items.append(SPopoverItem(tr(L10n.peerMediaPopoverSharedAudio), { [weak strongSelf] in
-                    interactions.audio()
-                    strongSelf?.button.set(text: tr(L10n.peerMediaPopoverSharedAudio), for: .Normal)
-                }))
-                
-                let controller = SPopoverViewController(items: items)
-                showPopover(for: strongSelf, with: controller, edge: .maxY, inset: NSMakePoint( floorToScreenPixels(scaleFactor: System.backingScale, strongSelf.frame.width / 2) - floorToScreenPixels(scaleFactor: System.backingScale, controller.frame.width/2),-50))
-                
-            }
-        }
-        
-        self.set(handler: showDropDown, for: .Click)
-        
-        dropdownImage.userInteractionEnabled = false
-        button.userInteractionEnabled = false
-        
-        //dropdownImage.set(handler: showDropDown, for: .Click)
-        
-        set(handler: { [weak self] control in
-            
-            //self?.dropdownImage.layer?.animateRotateCenter(from: 0, to: 180, duration: 0.2, removeOnCompletion: false)
-            
-        }, for: .Highlight)
-        
-        button.sizeToFit()
-        addSubview(button)
-        
-       
-        addSubview(dropdownImage)
+
+        addSubview(segmentController.view)
+       // updateLocalizationAndTheme()
     }
     
     override func updateLocalizationAndTheme() {
-        button.set(text: tr(L10n.peerMediaSharedMedia), for: .Normal)
-        button.set(color: theme.colors.blueUI, for: .Normal)
-        dropdownImage.set(image: theme.icons.mediaDropdown, for: .Normal)
-        dropdownImage.sizeToFit()
         needsLayout = true
+        segmentController.removeAll()
+        segmentController.add(segment: SegmentedItem(title: L10n.peerMediaMedia, handler: { [weak self] in
+            self?.interactions.media()
+        }))
+        
+        segmentController.add(segment: SegmentedItem(title: L10n.peerMediaFiles, handler: { [weak self] in
+            self?.interactions.files()
+        }))
+        
+        segmentController.add(segment: SegmentedItem(title: L10n.peerMediaLinks, handler: { [weak self] in
+            self?.interactions.links()
+        }))
+        
+        segmentController.add(segment: SegmentedItem(title: L10n.peerMediaAudio, handler: { [weak self] in
+            self?.interactions.audio()
+        }))
     }
     
     
     override func layout() {
         super.layout()
-        button.center()
-        dropdownImage.centerY(x: button.frame.maxX + 4)
-        dropdownImage.setFrameOrigin(dropdownImage.frame.minX, dropdownImage.frame.minY + 1)
-        
+        segmentController.view.setFrameSize(frame.width - 20, segmentController.frame.height)
+        segmentController.view.center()
     }
     
     required init(frame frameRect: NSRect) {

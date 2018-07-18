@@ -73,7 +73,7 @@ class ChatMapRowItem: ChatMediaItem {
             time -= account.context.timeDifference
             let timeUpdated = Int32(time) - editedDate
                 
-            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
+            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }
     
@@ -200,11 +200,13 @@ private class LiveLocationRowView : ChatMediaView {
 //        }
 //        let start = difference() / Double(attribute.timeout) * 100.0
         if item.isLiveLocationView {
-            progress.theme = TimableProgressTheme(backgroundColor: backdorColor, foregroundColor: theme.chat.textColor(item.isIncoming, item.renderType == .bubble), seconds: Double(item.liveLocationTimeout), start: item.liveLocationProgress, borderWidth: 2)
+            progress.theme = TimableProgressTheme(backgroundColor: backdorColor, foregroundColor: theme.colors.blueUI, seconds: Double(item.liveLocationTimeout), start: item.liveLocationProgress, borderWidth: 2)
             progress.progress = 0
             progress.isHidden = false
+            rightView.isHidden = true
         } else {
             progress.isHidden = true
+            rightView.isHidden = false
         }
         
         
@@ -233,7 +235,7 @@ private class LiveLocationRowView : ChatMediaView {
     private var progressFrame: NSRect {
         guard let item = item as? ChatMapRowItem else {return NSZeroRect}
         
-        return NSMakeRect(contentFrame.maxX - progress.frame.width, contentFrame.maxY + item.defaultContentInnerInset + 4, 25, 25)
+        return NSMakeRect(contentFrame.maxX - progress.frame.width - (item.isBubbled ? item.defaultContentInnerInset : 0) - 3, contentFrame.maxY + item.defaultContentInnerInset + 5, 25, 25)
     }
     
     override func layout() {

@@ -12,7 +12,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-private class ChatRowAnimateView: View {
+class ChatRowAnimateView: View {
     var stableId:AnyHashable?
 }
 

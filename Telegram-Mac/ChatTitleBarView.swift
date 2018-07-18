@@ -120,7 +120,7 @@ private class ConnectionStatusView : View {
 }
 
 
-class ChatTitleBarView: TitledBarView {
+class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private var isSingleLayout:Bool = false
     private var connectionStatusView:ConnectionStatusView? = nil
@@ -132,6 +132,7 @@ class ChatTitleBarView: TitledBarView {
     private let badgeNode:GlobalBadgeNode
     private let disposable = MetaDisposable()
     private let closeButton = ImageButton()
+    private var lastestUsersController: ViewController?
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
             if connectionStatus != oldValue {
@@ -261,6 +262,29 @@ class ChatTitleBarView: TitledBarView {
         addSubview(badgeNode.view!)
         
         updateLocalizationAndTheme()
+        
+        self.continuesAction = true
+        
+        self.set(handler: { [weak self] control in
+            self?.showLatestUsers(control)
+        }, for: .LongOver)
+    }
+    
+    private func showLatestUsers(_ control: Control) {
+        if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup {
+            let controller = latestGroupUsers(chatInteraction: chatInteraction) { [weak control, weak self] controller in
+                guard let `self` = self, let parent = self.controller else {return}
+                
+                controller.view.setFrameSize(300, min(controller.genericView.listHeight, parent.view.frame.height / 3 + 30))
+                self.lastestUsersController = nil
+                if let control = control {
+                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-10, -70), delayBeforeShown: 0.4)
+                }
+            }
+            self.lastestUsersController = controller
+            controller.loadViewIfNeeded()
+        }
+       
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -271,9 +295,34 @@ class ChatTitleBarView: TitledBarView {
         
     }
     
+    
+    func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
+        if chatInteraction.peer?.largeProfileImage?.resource.id.uniqueId == stableId.base as? String {
+            return avatarControl
+        }
+        return nil
+    }
+    func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable) {
+        
+    }
+    func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        
+    }
+    
     override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        
+        let point = convert(event.locationInWindow, from: nil)
+
+        
+        if NSPointInRect(point, avatarControl.frame) {
+            if let peer = chatInteraction.peer, let large = peer.largeProfileImage {
+                showPhotosGallery(account: chatInteraction.account, peerId: chatInteraction.peerId, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
+                return
+            }
+        }
+        
         if isSingleLayout {
-            let point = convert(event.locationInWindow, from: nil)
             if point.x > 20 {
                 if chatInteraction.peerId == chatInteraction.account.peerId {
                     chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))

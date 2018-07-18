@@ -12,6 +12,50 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 
+
+private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(10, 10), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.round(size, size.width / 2)
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
+        
+        ctx.setFillColor(activeColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, 6, 6))
+    })!
+}
+
+private func generateEditMessageMediaIcon(_ icon: CGImage, background: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(icon.backingSize.width + 1, icon.backingSize.height + 1), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.round(size, size.width / 2)
+        
+        ctx.setFillColor(background.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
+        
+        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+        
+    })!
+}
+
+private func generatePlayerListAlbumPlaceholder(_ icon: CGImage?, background: NSColor, radius: CGFloat) -> CGImage {
+    return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.round(size, radius)
+        
+        ctx.setFillColor(background.cgColor)
+        ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+        
+        if let icon = icon {
+            let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+            ctx.draw(icon, in: imageRect)
+        }
+       
+    })!
+}
+
 private func generateLocationPinIcon(_ background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -39,6 +83,7 @@ private func generateChatTabSelected(_ color: NSColor, _ icon: CGImage) -> CGIma
         
     })!
 }
+
 
 private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
@@ -827,6 +872,17 @@ struct TelegramIconsTheme {
     
     let passportSettings: CGImage
     let passportInfo: CGImage
+    
+    let editMessageMedia: CGImage
+    
+    let playerMusicPlaceholder: CGImage
+    let chatMusicPlaceholder: CGImage
+    let chatMusicPlaceholderCap: CGImage
+    
+    let searchArticle: CGImage
+    let searchSaved: CGImage
+    
+    let hintPeerActive: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1247,7 +1303,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatTabIconSelectedDown: generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background)),
                                                chatTabIcon: #imageLiteral(resourceName: "Icon_TabChatList").precomposed(palette.grayIcon),
                                                passportSettings: #imageLiteral(resourceName: "Icon_PassportSettings").precomposed(palette.grayIcon),
-                                               passportInfo: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon)
+                                               passportInfo: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon),
+                                               editMessageMedia: generateEditMessageMediaIcon(#imageLiteral(resourceName: "Icon_ReplaceMessageMedia").precomposed(palette.blueIcon), background: palette.background),
+                                               playerMusicPlaceholder: generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.blueUI), background: palette.grayForeground, radius: .cornerRadius),
+                                               chatMusicPlaceholder: generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.fileActivityForeground), background: palette.fileActivityBackground, radius: 20),
+                                               chatMusicPlaceholderCap: generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20),
+                                               searchArticle: #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white),
+                                               searchSaved: #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white),
+                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.blueUI, backgroundColor: palette.background)
     )
 }
 

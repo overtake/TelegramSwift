@@ -224,23 +224,19 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             return .fail(.none)
         }, afterDisappear: {
             actionsDisposable.dispose()
-        }, removeAfterDisappear: false, hasDone: false, identifier: "proxy", customRightButton: {
-            if let controller = _controller {
-                let view = ImageBarView(controller: controller, theme.icons.webgameShare)
-                
-                view.button.set(handler: { control in
-                    showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.proxySettingsShareProxyList, {
-                        updateState { current in
-                            share(Array(current.settings.servers.prefix(20)))
-                            return current
-                        }
-                    })]), edge: .minX, inset: NSMakePoint(0,-50))
-                }, for: .Click)
-                view.set(image: theme.icons.webgameShare, highlightImage: nil)
-                return view
-            }
-            return nil
+        }, removeAfterDisappear: false, hasDone: false, identifier: "proxy", customRightButton: { controller in
+            let view = ImageBarView(controller: controller, theme.icons.webgameShare)
             
+            view.button.set(handler: { control in
+                showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.proxySettingsShareProxyList, {
+                    updateState { current in
+                        share(Array(current.settings.servers.prefix(20)))
+                        return current
+                    }
+                })]), edge: .minX, inset: NSMakePoint(0,-50))
+            }, for: .Click)
+            view.set(image: theme.icons.webgameShare, highlightImage: nil)
+            return view
         })
         
         _controller = controller
