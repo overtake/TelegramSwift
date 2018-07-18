@@ -11,7 +11,7 @@ import Cocoa
 import PostboxMac
 import SwiftSignalKitMac
 
-public struct IVReadState : PostboxCoding {
+public struct IVReadState : PostboxCoding, Equatable {
     let blockId:Int32
     let blockOffset: Int32
     public init(blockId:Int32, blockOffset: Int32) {
@@ -27,6 +27,7 @@ public struct IVReadState : PostboxCoding {
         encoder.encodeInt32(blockId, forKey: "bi")
         encoder.encodeInt32(blockOffset, forKey: "bo")
     }
+
     
 }
 
@@ -61,7 +62,7 @@ public struct InstantViewAppearance: PreferencesEntry, Equatable {
     }
     
     public static func ==(lhs: InstantViewAppearance, rhs: InstantViewAppearance) -> Bool {
-        return lhs.fontSerif == rhs.fontSerif
+        return lhs.fontSerif == rhs.fontSerif && lhs.state == rhs.state
     }
     
     func withUpdatedFontSerif(_ fontSerif: Bool) -> InstantViewAppearance {

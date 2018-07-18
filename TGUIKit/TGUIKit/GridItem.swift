@@ -18,7 +18,7 @@ public protocol GridSection {
 
 public protocol GridItem {
     var section: GridSection? { get }
-    func node(layout: GridNodeLayout, gridNode: GridNode) -> GridItemNode
+    func node(layout: GridNodeLayout, gridNode: GridNode, cachedNode: GridItemNode?) -> GridItemNode
     func update(node: GridItemNode)
     var aspectRatio: CGFloat { get }
 }

@@ -161,6 +161,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 return true
             }
         }
+        if layer?.animation(forKey: "bounds") != nil {
+            return true
+        }
         return false
     }
     
@@ -273,6 +276,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
         self.shouldAnimateOriginChange = animated
         self.scrollCompletion = completion
+        if animated {
+            beginScroll()
+        }
         if animated && abs(bounds.minY - point.y) > frame.height {
             let y:CGFloat
             if bounds.minY < point.y {
@@ -286,7 +292,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.scroll(to: point)
     }
     
-
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
         
@@ -310,6 +315,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         if self.scrollCompletion != nil {
             self.scrollCompletion!(success)
             self.scrollCompletion = nil
+            super.scroll(to: bounds.origin)
         }
     }
     

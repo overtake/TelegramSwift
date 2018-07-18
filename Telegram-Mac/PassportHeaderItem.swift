@@ -29,7 +29,7 @@ class PassportHeaderItem: TableRowItem {
         
         _ = attributed.append(string: L10n.secureIdRequestHeader1(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
         attributed.detectBoldColorInString(with: .bold(.text))
-        self.textLayout = TextViewLayout(attributed, alignment: .center)
+        self.textLayout = TextViewLayout(attributed, alignment: .left)
         
         super.init(initialSize)
         
@@ -38,7 +38,7 @@ class PassportHeaderItem: TableRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         
-        textLayout.measure(width: width - 60)
+        textLayout.measure(width: width - 120)
         
         return super.makeSize(width, oldWidth: oldWidth)
     }
@@ -52,7 +52,7 @@ class PassportHeaderItem: TableRowItem {
     }
     
     override var height: CGFloat {
-        return textLayout.layoutSize.height + 50 + 40 + 20
+        return max(50, textLayout.layoutSize.height)
     }
     
 }
@@ -78,9 +78,9 @@ private final class PassportHeaderRowView : TableRowView {
     override func layout() {
         super.layout()
         
-        botPhoto.centerX(y: 40)
+        botPhoto.centerY(x: 20)
         
-        textView.centerX(y: botPhoto.frame.maxY + 20)
+        textView.centerY(x: botPhoto.frame.maxX + 20)
     }
     
     override func set(item: TableRowItem, animated: Bool) {

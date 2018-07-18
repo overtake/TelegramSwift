@@ -112,19 +112,21 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
+            let maxw = min(320, width - 50)
+            
             var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
             
             if let groupLayout = groupLayout {
-                groupLayout.measure(NSMakeSize(max(contentSize.width, 250), 320))
+                groupLayout.measure(NSMakeSize(max(contentSize.width, 250), maxw))
                 
                 contentSize.height += groupLayout.dimensions.height + 6
                 contentSize.width = max(groupLayout.dimensions.width, contentSize.width)
             }
             
             if let imageSize = imageSize, isFullImageSize {
-                contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, 320), 300))
+                contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
                 if presentation.renderType == .bubble {
-                    contrainedImageSize.width = max(contrainedImageSize.width, 280)
+                    contrainedImageSize.width = max(contrainedImageSize.width, maxw)
                 }
                 textLayout?.cutout = nil
                 smallThumb = false
@@ -162,7 +164,7 @@ class WPArticleLayout: WPLayout {
             }
             
             if let imageSize = imageSize {
-                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imageSize.fitted(NSMakeSize(320, 320)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground)
+                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imageSize.fitted(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground)
                 
                 if imageArguments != self.imageArguments {
                     self.imageArguments = imageArguments

@@ -61,14 +61,13 @@ final class InputDataDataSelectorRowView : GeneralRowView {
     }
     
     override func mouseDown(with event: NSEvent) {
-        
-        guard let item = item as? InputDataDataSelectorRowItem else {return}
-        showModal(with: ValuesSelectorModalController(values: item.values, selected: item.values.first(where: {$0.value == item.value}), title: item.placeholderLayout.attributedString.string, onComplete: { [weak item] newValue in
-            item?._value = newValue.value
-            item?.redraw()
-        }), for: mainWindow)
-       
-       
+        if event.clickCount == 1 {
+            guard let item = item as? InputDataDataSelectorRowItem else {return}
+            showModal(with: ValuesSelectorModalController(values: item.values, selected: item.values.first(where: {$0.value == item.value}), title: item.placeholderLayout.attributedString.string, onComplete: { [weak item] newValue in
+                item?._value = newValue.value
+                item?.redraw()
+            }), for: mainWindow)
+        }
     }
     
     override func shakeView() {

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
+		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
 		C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21178011F17E78E00AC706D /* TimableProgressView.swift */; };
@@ -102,6 +103,7 @@
 
 /* Begin PBXFileReference section */
 		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
+		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
 		C21178011F17E78E00AC706D /* TimableProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimableProgressView.swift; sourceTree = "<group>"; };
@@ -216,6 +218,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9FC76CAB20DBDD370050CE3B /* segment */ = {
+			isa = PBXGroup;
+			children = (
+				9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */,
+				C21656C51EE0A7050041A6BA /* SegmentedControl.swift */,
+			);
+			name = segment;
+			sourceTree = "<group>";
+		};
 		C219E1DE1D8A71680042F0C8 /* layers */ = {
 			isa = PBXGroup;
 			children = (
@@ -418,6 +429,7 @@
 		C2E0DEA91D7EF51C00EF1C8D /* TGUIKit */ = {
 			isa = PBXGroup;
 			children = (
+				9FC76CAB20DBDD370050CE3B /* segment */,
 				C2449A0F1F0E475200DF5650 /* thrid-party */,
 				C2B9BE831EFC373200D6B96F /* presentation */,
 				C2271DA71DAD1728001792B6 /* nodes */,
@@ -469,7 +481,6 @@
 				C29B5F3B1DC66DAC00D13E65 /* DraggingView.swift */,
 				C265058F1E02EBEE001954DC /* MagnifyView.swift */,
 				C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */,
-				C21656C51EE0A7050041A6BA /* SegmentedControl.swift */,
 				C2449A141F0E490C00DF5650 /* ProgressIndicator.swift */,
 				C21178011F17E78E00AC706D /* TimableProgressView.swift */,
 				C24A37151F324A36004ADE5C /* ShadowView.swift */,
@@ -585,6 +596,7 @@
 				C234CA971D981F00003023F7 /* Control.swift in Sources */,
 				C2303E6F1D9950E000098E12 /* Button.swift in Sources */,
 				C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */,
+				9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */,
 				C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */,
 				C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */,
 				C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */,

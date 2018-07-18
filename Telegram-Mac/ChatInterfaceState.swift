@@ -557,6 +557,12 @@ final class ChatEditState : Equatable {
 
 final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     
+    
+    var associatedMessageIds: [MessageId] {
+        return []
+    }
+    
+    
     var historyScrollMessageIndex: MessageIndex? {
         return self.historyScrollState?.messageIndex
     }

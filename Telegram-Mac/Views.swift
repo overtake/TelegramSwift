@@ -87,7 +87,7 @@ class VideoDurationView : View {
 
 class CornerView : View {
 
-    var positionFlags: GroupLayoutPositionFlags? {
+    var positionFlags: LayoutPositionFlags? {
         didSet {
             needsLayout = true
         }

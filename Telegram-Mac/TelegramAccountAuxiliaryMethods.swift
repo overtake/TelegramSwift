@@ -24,6 +24,8 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
         return fetchGifMediaResource(resource: resource)
     } else if let mapSnapshotResource = resource as? MapSnapshotMediaResource {
         return fetchMapSnapshotResource(resource: mapSnapshotResource)
+    } else if let resource = resource as? ExternalMusicAlbumArtResource {
+        return fetchExternalMusicAlbumArtResource(account: account, resource: resource)
     }
     
 //    if let resource = resource as? VideoLibraryMediaResource {

@@ -11,7 +11,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
-private let imagesThreadPool = ThreadPool(threadCount: 10, threadPriority: 0.1)
+private let imagesThreadPool = ThreadPool(threadCount: 3, threadPriority: 0.1)
 
 open class TransformImageView: NSView {
     public var imageUpdated: (() -> Void)?
@@ -27,6 +27,12 @@ open class TransformImageView: NSView {
         self.layer?.disableActions()
         self.background = .clear
         layerContentsRedrawPolicy = .never
+    }
+    
+    var image: CGImage? {
+        didSet {
+            layer?.contents = image
+        }
     }
     
     required public override init(frame frameRect: NSRect) {

@@ -172,7 +172,7 @@ class WPArticleContentView: WPContentView {
                 
                 for i in 0 ..< groupLayout.count {
                     groupedContents[i].change(size: groupLayout.frame(at: i).size, animated: false)
-                    let positionFlags: GroupLayoutPositionFlags = groupLayout.position(at: i)
+                    let positionFlags: LayoutPositionFlags = groupLayout.position(at: i)
 
                     
                     groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: groupLayout.messages[i], table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)

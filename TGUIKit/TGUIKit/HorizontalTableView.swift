@@ -20,6 +20,32 @@ public class HorizontalTableView: TableView {
         self.tableView.border = []
     }
     
+    public override func scrollWheel(with event: NSEvent) {
+                
+        var scrollPoint = contentView.bounds.origin
+        let isInverted: Bool = UserDefaults.standard.bool(forKey: "com.apple.swipescrolldirection")
+        if event.scrollingDeltaY != 0 {
+            if isInverted {
+                scrollPoint.y += -event.scrollingDeltaY
+            } else {
+                scrollPoint.y -= event.scrollingDeltaY
+            }
+        }
+        
+        if event.scrollingDeltaX != 0 {
+            if !isInverted {
+                scrollPoint.y += -event.scrollingDeltaX
+            } else {
+                scrollPoint.y -= event.scrollingDeltaX
+            }
+        }
+               
+        scrollPoint.y = max(0, min(scrollPoint.y, listHeight - clipView.bounds.height))
+        clipView.scroll(to: scrollPoint)
+
+
+    }
+    
     
     open override var hasVerticalScroller: Bool {
         get {

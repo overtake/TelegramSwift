@@ -96,7 +96,7 @@ struct EditInfoState : Equatable {
         let peer = peerView.peers[peerView.peerId] as? TelegramUser
         let about = stateInited ? self.about : (peerView.cachedData as? CachedUserData)?.about ?? self.about
         
-        return EditInfoState(stateInited: self.stateInited, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: peer?.username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState)
+        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: peer?.username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState)
     }
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> EditInfoState {
         return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState))
@@ -208,7 +208,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
                             }
                         }
                     } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                        return  updatePeerPhoto(account: account, peerId: account.peerId, resource: resource)
+                        return  updatePeerPhoto(account: account, peerId: account.peerId, photo: uploadedPeerPhoto(account: account, resource: resource))
                     } |> deliverOnMainQueue
                 
                 photoDisposable.set(updateSignal.start(next: { status in
@@ -244,7 +244,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         f(PhoneNumberIntroController(account))
     })
     
-    f(InputDataController(dataSignal: state.get() |> map {editInfoEntries(state: $0, arguments: arguments, updateState: updateState)} |> distinctUntilChanged, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: state.get() |> map {editInfoEntries(state: $0, arguments: arguments, updateState: updateState)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -274,7 +274,9 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
                     if let about = updates.1 {
                         signals.append(updateAbout(account: account, about: about) |> mapError {_ in})
                     }
-                    updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start())
+                    updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start(completed: {
+                        updateState { $0 }
+                    }))
                 }
                 return current
             }

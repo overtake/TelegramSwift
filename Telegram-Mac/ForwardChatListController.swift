@@ -14,8 +14,9 @@ class ForwardChatListController: ChatListController {
         let button = TextButtonBarView(controller: self, text: tr(L10n.chatCancel))
         
         button.set(handler: { [weak self] _ in
+            self?.navigationController?.removeModalAction()
             self?.navigationController?.back()
-            }, for: .Click)
+        }, for: .Click)
         
         return button
     }
@@ -29,6 +30,7 @@ class ForwardChatListController: ChatListController {
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
+        navigationController?.removeModalAction()
         return .rejected
     }
     

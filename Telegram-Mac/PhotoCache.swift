@@ -10,6 +10,7 @@ import Cocoa
 import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
+import TGUIKit
 
 struct PhotoCachedRecord {
     let date:TimeInterval
@@ -22,59 +23,13 @@ struct PhotoCachedRecord {
     }
 }
 
-struct GroupLayoutPositionFlags : OptionSet {
-    
-    public var rawValue: UInt32
-    
-    public init(rawValue: UInt32) {
-        self.rawValue = rawValue
-    }
-    
-    public init() {
-        self.rawValue = 0
-    }
-    
-    public init(_ flags: GroupLayoutPositionFlags) {
-        var rawValue: UInt32 = 0
-        
-        if flags.contains(GroupLayoutPositionFlags.none) {
-            rawValue |= GroupLayoutPositionFlags.none.rawValue
-        }
-        
-        if flags.contains(GroupLayoutPositionFlags.top) {
-            rawValue |= GroupLayoutPositionFlags.top.rawValue
-        }
-        
-        if flags.contains(GroupLayoutPositionFlags.bottom) {
-            rawValue |= GroupLayoutPositionFlags.bottom.rawValue
-        }
-        
-        if flags.contains(GroupLayoutPositionFlags.left) {
-            rawValue |= GroupLayoutPositionFlags.left.rawValue
-        }
-        if flags.contains(GroupLayoutPositionFlags.right) {
-            rawValue |= GroupLayoutPositionFlags.right.rawValue
-        }
-        if flags.contains(GroupLayoutPositionFlags.inside) {
-            rawValue |= GroupLayoutPositionFlags.inside.rawValue
-        }
-        
-        self.rawValue = rawValue
-    }
-    
-    static let none = GroupLayoutPositionFlags(rawValue: 0)
-    static let top = GroupLayoutPositionFlags(rawValue: 1 << 0)
-    static let bottom = GroupLayoutPositionFlags(rawValue: 1 << 1)
-    static let left = GroupLayoutPositionFlags(rawValue: 1 << 2)
-    static let right = GroupLayoutPositionFlags(rawValue: 1 << 3)
-    static let inside = GroupLayoutPositionFlags(rawValue: 1 << 4)
-}
+
 
 enum PhotoCacheKeyEntry : Hashable {
     case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
     case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat)
-    case media(Media, NSSize, CGFloat, GroupLayoutPositionFlags?)
-    case messageId(stableId: Int64, NSSize, CGFloat, GroupLayoutPositionFlags)
+    case media(Media, NSSize, CGFloat, LayoutPositionFlags?)
+    case messageId(stableId: Int64, NSSize, CGFloat, LayoutPositionFlags)
     var hashValue:Int {
         switch self {
         case let .avatar(peerId, _, _, _):
@@ -242,17 +197,17 @@ func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NS
 }
 
 
-func cachedMedia(media: Media, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal<CGImage?, Void> {
+func cachedMedia(media: Media, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<CGImage?, Void> {
     let entry:PhotoCacheKeyEntry = .media(media, size, scale, positionFlags)
     return .single(stickersCache.cachedImage(for: entry))
 }
 
-func cachedMedia(messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal<CGImage?, Void> {
+func cachedMedia(messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<CGImage?, Void> {
     let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, size, scale, positionFlags ?? [])
     return .single(stickersCache.cachedImage(for: entry))
 }
 
-func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, media: Media, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal <Void, Void> {
+func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, media: Media, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, Void> {
     
     return signal |> filter {$0.1} |> mapToSignal { (image, _) -> Signal<Void, Void> in
         if let image = image {
@@ -263,7 +218,7 @@ func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, media: Media, size: NSSiz
     }
 }
 
-func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: GroupLayoutPositionFlags? = nil) -> Signal <Void, Void> {
+func cacheMedia(signal:Signal<(CGImage?, Bool), Void>, messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, Void> {
     
     return signal |> filter {$0.1} |> take(1) |> mapToSignal { (image, _) -> Signal<Void, Void> in
         if let image = image {

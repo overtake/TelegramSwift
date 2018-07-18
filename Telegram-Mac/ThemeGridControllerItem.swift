@@ -118,7 +118,7 @@ final class ThemeGridControllerItem: GridItem {
     }
     
 
-    func node(layout: GridNodeLayout, gridNode: GridNode) -> GridItemNode {
+    func node(layout: GridNodeLayout, gridNode: GridNode, cachedNode: GridItemNode?) -> GridItemNode {
         let node = ThemeGridControllerItemNode(gridNode)
         node.setup(account: self.account, wallpaper: self.wallpaper, interaction: self.interaction, isSelected: isSelected)
         return node

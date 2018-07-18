@@ -20,7 +20,7 @@ class FWDNavigationAction: NavigationModalAction {
     init(messages:[Message], displayName:String) {
         self.messages = messages
         
-        super.init(reason: tr(L10n.forwardModalActionTitleCountable(messages.count)), desc: tr(L10n.forwardModalActionDescriptionCountable(messages.count, displayName)))
+        super.init(reason: L10n.forwardModalActionTitleCountable(messages.count), desc: L10n.forwardModalActionDescriptionCountable(messages.count, displayName))
     }
     
     override func isInvokable(for value:Any) -> Bool {

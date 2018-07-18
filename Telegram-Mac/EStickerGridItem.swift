@@ -155,8 +155,8 @@ final class StickerGridItem: GridItem {
         }
     }
     
-    func node(layout: GridNodeLayout, gridNode:GridNode) -> GridItemNode {
-        let node = StickerGridItemView(gridNode)
+    func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
+        let node = cachedNode as? StickerGridItemView ?? StickerGridItemView(gridNode)
         node.inputNodeInteraction = self.inputNodeInteraction
         node.setup(account: self.account, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
         node.selected = self.selected
@@ -181,7 +181,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
     private var currentState: (Account, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?, ChatMediaGridPackHeaderInfo?)?
     
     
-    private let imageView: TransformImageView
+    private let imageView: TransformImageView = TransformImageView()
     
     func fileAtPoint(_ point: NSPoint) -> TelegramMediaFile? {
         return currentState?.1
@@ -213,39 +213,63 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
     var selected: (() -> Void)?
     
     override init(_ grid:GridNode) {
-        imageView = TransformImageView()
         super.init(grid)
-        layer?.cornerRadius = .cornerRadius
-        self.autohighlight = false
-        disableActions()
         
-        set(handler: { [weak self] _ in
-            if let (_, file, _, _, packInfo) = self?.currentState {
-                if let packInfo = packInfo {
-                    switch packInfo {
-                    case let .pack(_, installed):
-                        if installed {
-                            self?.inputNodeInteraction?.sendSticker(file)
-                        } else if let reference = file.stickerReference {
-                            self?.inputNodeInteraction?.previewStickerSet(reference)
-                        }
-                    default:
-                        self?.inputNodeInteraction?.sendSticker(file)
-                    }
-                } else {
-                    self?.inputNodeInteraction?.sendSticker(file)
-                }
-            }
-        }, for: .Click)
+        //backgroundColor = .random
+        //layer?.cornerRadius = .cornerRadius
+        addSubview(imageView)
+
         
+//        set(handler: { [weak self] _ in
+//            if let (_, file, _, _, packInfo) = self?.currentState {
+//                if let packInfo = packInfo {
+//                    switch packInfo {
+//                    case let .pack(_, installed):
+//                        if installed {
+//                            self?.inputNodeInteraction?.sendSticker(file)
+//                        } else if let reference = file.stickerReference {
+//                            self?.inputNodeInteraction?.previewStickerSet(reference)
+//                        }
+//                    default:
+//                        self?.inputNodeInteraction?.sendSticker(file)
+//                    }
+//                } else {
+//                    self?.inputNodeInteraction?.sendSticker(file)
+//                }
+//            }
+//        }, for: .Click)
+//
         
         set(handler: { [weak self] (control) in
             if let window = self?.window as? Window, let currentState = self?.currentState, let grid = self?.grid {
                 _ = startStickerPreviewHandle(grid, window: window, account: currentState.0)
             }
-            
         }, for: .LongMouseDown)
-        set(background: theme.colors.background, for: .Normal)
+        set(handler: { [weak self] _ in
+            self?.click()
+        }, for: .SingleClick)
+//        set(background: theme.colors.background, for: .Normal)
+    }
+    
+    private func click() {
+        if mouseInside() || imageView._mouseInside() {
+            if let (_, file, _, _, packInfo) = currentState {
+                if let packInfo = packInfo {
+                    switch packInfo {
+                    case let .pack(_, installed):
+                        if installed {
+                            inputNodeInteraction?.sendSticker(file)
+                        } else if let reference = file.stickerReference {
+                            inputNodeInteraction?.previewStickerSet(reference)
+                        }
+                    default:
+                        inputNodeInteraction?.sendSticker(file)
+                    }
+                } else {
+                    inputNodeInteraction?.sendSticker(file)
+                }
+            }
+        }
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -268,12 +292,11 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
     
     func setup(account: Account, file: TelegramMediaFile, collectionId: ChatMediaGridCollectionStableId? = nil, packInfo: ChatMediaGridPackHeaderInfo?) {
         if let dimensions = file.dimensions {
-            addSubview(imageView)
             
-            set(image: theme.icons.stickerBackgroundActive, for: .Highlight)
-            set(image: theme.icons.stickerBackground, for: .Normal)
-            set(background: theme.colors.background, for: .Normal)
-            set(background: theme.colors.background, for: .Hover)
+//            set(image: theme.icons.stickerBackgroundActive, for: .Highlight)
+//            set(image: theme.icons.stickerBackground, for: .Normal)
+//            set(background: .random, for: .Normal)
+//            set(background: .random, for: .Hover)
             
             imageView.setSignal(signal: cachedMedia(media: file, size: dimensions, scale: backingScaleFactor))
             
@@ -285,12 +308,10 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             
             let imageSize = dimensions.aspectFitted(eStickerSize)
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets()))
-            
+
             imageView.setFrameSize(imageSize)
             currentState = (account, file, dimensions, collectionId, packInfo)
-            return
         }
-        imageView.removeFromSuperview()
     }
     
     

@@ -21,6 +21,10 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         super.init(frame: frameRect)
     }
     
+    override var firstResponder: NSResponder? {
+        return nil
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         if let item = item as? GeneralRowItem {

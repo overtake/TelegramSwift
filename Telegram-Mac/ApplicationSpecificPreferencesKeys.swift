@@ -17,6 +17,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case generatedMediaStoreSettings
     case voiceCallSettings
     case themeSettings = 22
+    case readArticles = 25
     case recentEmoji = 14
     case instantViewAppearance = 11
     case additionalSettings = 15
@@ -32,4 +33,5 @@ struct ApplicationSpecificPreferencesKeys {
     static let recentEmoji = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.recentEmoji.rawValue)
     static let instantViewAppearance = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.instantViewAppearance.rawValue)
     static let additionalSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.additionalSettings.rawValue)
+    static let readArticles = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.readArticles.rawValue)
 }

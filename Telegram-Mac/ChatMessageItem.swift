@@ -224,7 +224,7 @@ class ChatMessageItem: ChatRowItem {
                                             return
                                         }
                                     } else if case let .followResolvedName(username, _, _, _, _) = attribute {
-                                        if text.range(of: "t.me") != nil {
+                                        if telegram_me.first(where: {text.range(of: $0) != nil}) != nil {
                                             pb.setString(text, forType: .string)
                                         } else {
                                             pb.setString(!username.hasPrefix("@") ? "@\(username)" : "\(username)", forType: .string)
@@ -350,7 +350,7 @@ class ChatMessageItem: ChatRowItem {
      
         webpageLayout?.measure(width: min(width, 380))
         
-        let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(280, width)) : width
+        let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(240, width)) : width
         
         textLayout.measure(width: textBlockWidth)
 

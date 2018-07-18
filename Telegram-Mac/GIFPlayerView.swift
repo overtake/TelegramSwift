@@ -48,7 +48,7 @@ class GIFPlayerView: TransformImageView {
     private let maskLayer = CAShapeLayer()
     
     var followWindow:Bool = true
-    var positionFlags: GroupLayoutPositionFlags? {
+    var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
                 let path = CGMutablePath()

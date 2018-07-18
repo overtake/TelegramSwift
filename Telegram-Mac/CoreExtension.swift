@@ -845,8 +845,8 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
     }
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
-        if case .broadcast = peer.info,  !peer.hasAdminRights(.canPostMessages) {
-            return false
+        if case .broadcast = peer.info {
+            return peer.hasAdminRights(.canPostMessages) || peer.hasAdminRights(.canEditMessages)
         } else if case .group = peer.info {
             if peer.hasAdminRights(.canPinMessages) {
                 return !message.flags.contains(.Incoming)
@@ -1692,7 +1692,7 @@ extension SecureIdRequestedFormField {
 var dateFormatter: DateFormatter {
     let formatter = DateFormatter()
     formatter.dateFormat = "dd.MM.yyyy"
-    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+   // formatter.timeZone = TimeZone(secondsFromGMT: 0)
     formatter.locale = Locale(identifier: "en_US_POSIX")
     return formatter
 }

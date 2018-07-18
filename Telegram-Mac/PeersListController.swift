@@ -362,7 +362,11 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         
         if searchController == nil {
             let searchController = SearchController(account: self.account, open:{ [weak self] (peerId, message, close) in
-                self?.open(with: .peer(peerId), message:message, close:close)
+                if let peerId = peerId {
+                    self?.open(with: .peer(peerId), message:message, close:close)
+                } else {
+                    self?.genericView.searchView.cancel(true)
+                }
             }, options: searchOptions, frame:genericView.tableView.frame, groupId: self.mode.groupId)
            
             self.searchController = searchController

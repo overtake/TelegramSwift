@@ -65,7 +65,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     var textFieldLeftInset: CGFloat {
-        return 100
+        return 102
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -79,11 +79,25 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
 }
 
+private final class InputDataSecureField : NSSecureTextField {
+    override func becomeFirstResponder() -> Bool {
+        
+        let success = super.becomeFirstResponder()
+        if success {
+            let tetView = self.currentEditor() as? NSTextView
+            tetView?.insertionPointColor = theme.colors.indicatorColor
+        }
+        //NSTextView* textField = (NSTextView*) [self currentEditor];
+        
+        return success
+    }
+}
+
 
 final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDelegate {
     private let placeholderTextView = TextView()
     private let textView: TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
-    private let secureField: NSSecureTextField = NSSecureTextField(frame: NSMakeRect(0, 0, 100, 16))
+    private let secureField: InputDataSecureField = InputDataSecureField(frame: NSMakeRect(0, 0, 100, 16))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(placeholderTextView)
@@ -236,7 +250,6 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         textView.textColor = theme.colors.text
         secureField.font = .normal(.text)
         secureField.backgroundColor = theme.colors.background
-        
         secureField.textColor = theme.colors.text
     }
     
@@ -269,7 +282,6 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        super.set(item: item, animated: animated)
         
         guard let item = item as? InputDataRowItem else {return}
         placeholderTextView.update(item.placeholderLayout)
@@ -296,7 +308,8 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
             secureField.sizeToFit()
         }
         
-        
+        super.set(item: item, animated: animated)
+
         
         needsLayout = true
         needsDisplay = true

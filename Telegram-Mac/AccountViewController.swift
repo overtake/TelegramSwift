@@ -31,10 +31,21 @@ fileprivate final class AccountInfoArguments {
 
 class AccountViewController: NavigationViewController {
     private var layoutController:LayoutAccountController
+    let passportPromise: Promise<Bool> = Promise(false)
+    private let disposable = MetaDisposable()
     init(_ account:Account, accountManager: AccountManager) {
         self.layoutController = LayoutAccountController(account, accountManager: accountManager)
         super.init(layoutController)
         layoutController.navigationController = self
+        
+        disposable.set(passportPromise.get().start(next: { [weak self] value in
+            self?.layoutController.passportPromise.set(.single(value))
+        }))
+        
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     override func viewDidResized(_ size: NSSize) {
@@ -79,6 +90,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, [Peer]?)
     case dataAndStorage(index: Int)
     case passport(index: Int, peer: Peer)
+    case readArticles(index: Int)
     case about(index: Int)
     case faq(index: Int)
     case ask(index: Int)
@@ -106,12 +118,14 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return 9
         case .passport:
             return 10
-        case .about:
+        case .readArticles:
             return 11
-        case .faq:
+        case .about:
             return 12
-        case .ask:
+        case .faq:
             return 13
+        case .ask:
+            return 14
         case let .whiteSpace(index, _):
             return 1000 + index
         }
@@ -140,6 +154,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .about(index):
             return index
         case let .passport(index, _):
+            return index
+        case let .readArticles(index):
             return index
         case let .faq(index):
             return index
@@ -237,6 +253,12 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
+        case let .readArticles(lhsIndex):
+            if case let .readArticles(rhsIndex) = rhs {
+                return lhsIndex == rhsIndex
+            } else {
+                return false
+            }
         case let .faq(lhsIndex):
             if case let .faq(rhsIndex) = rhs {
                 return lhsIndex == rhsIndex
@@ -328,6 +350,11 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.openFaq()
                 
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+        case .readArticles:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsReadArticles, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
+                
+                
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .ask:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, action: {
                 confirm(for: mainWindow, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
@@ -402,6 +429,8 @@ private func accountInfoEntries(peerView:PeerView, language: Language, privacySe
         entries.append(.passport(index: index, peer: peer))
         index += 1
     }
+    
+
 
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
@@ -462,7 +491,7 @@ class LayoutAccountController : TableViewController {
     private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus), Bool)> = Promise()
     private let languages: Promise<[LocalizationInfo]?> = Promise()
     private let blockedPeers: Promise<[Peer]?> = Promise()
-    private let passportPromise: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    fileprivate let passportPromise: Promise<Bool> = Promise(false)
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -558,6 +587,10 @@ class LayoutAccountController : TableViewController {
                     if let item = genericView.item(stableId: AnyHashable(Int(10))) {
                         _ = genericView.select(item: item)
                     }
+                case controller.identifier == "readarticles":
+                    if let item = genericView.item(stableId: AnyHashable(Int(11))) {
+                        _ = genericView.select(item: item)
+                    }
                 default:
                     genericView.cancelSelection()
                 }
@@ -572,13 +605,6 @@ class LayoutAccountController : TableViewController {
         super.viewDidAppear(animated)
         (navigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         updateLocalizationAndTheme()
-        
-        
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.passportPromise.set(true)
-            return .invoked
-        }, with: self, for: .P, modifierFlags: [.command])
-        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -590,9 +616,16 @@ class LayoutAccountController : TableViewController {
         super.viewWillAppear(animated)
         let account = self.account
         
+        passportPromise.set(twoStepAuthData(account.network) |> map { value in
+            return value.hasSecretValues
+        } |> `catch` { error -> Signal<Bool, NoError> in
+            return .single(false)
+        })
+        
         settings.set(combineLatest(Signal<AccountPrivacySettings?, Void>.single(nil) |> then(requestAccountPrivacySettings(account: account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, Void>.single(nil) |> then(webSessions(network: account.network) |> map {Optional($0)}), proxySettingsSignal(account.postbox) |> mapToSignal { settings in
             return account.network.connectionStatus |> map {(settings, $0)}
-        }, passportPromise.get()))
+            }, passportPromise.get()))
+        
         languages.set(Signal<[LocalizationInfo]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
         blockedPeers.set(Signal<[Peer]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))
     }

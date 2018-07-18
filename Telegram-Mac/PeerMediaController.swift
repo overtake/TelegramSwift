@@ -16,6 +16,8 @@ import PostboxMac
 class PeerMediaControllerView : View {
     
     private let actionsPanelView:MessageActionsPanelView = MessageActionsPanelView(frame: NSMakeRect(0,0,0, 50))
+    private let typesContainerView: View = View()
+    fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 28))
     private weak var mainView:NSView?
     private let separator:View = View()
     private var isSelectionState:Bool = false
@@ -24,6 +26,8 @@ class PeerMediaControllerView : View {
         super.init(frame: frameRect)
         addSubview(actionsPanelView)
         addSubview(separator)
+        typesContainerView.addSubview(segmentControl.view)
+        addSubview(typesContainerView)
         updateLocalizationAndTheme()
     }
     
@@ -43,16 +47,17 @@ class PeerMediaControllerView : View {
         mainView?.removeFromSuperview()
         mainView?.background = theme.colors.background
         self.mainView = view
-        addSubview(view)
+        addSubview(view, positioned: .below, relativeTo: actionsPanelView)
         needsLayout = true
     }
     
     func changeState(selectState:Bool, animated:Bool) {
         assert(mainView != nil)
+        
         self.isSelectionState = selectState
         let inset:CGFloat = selectState ? 50 : 0
 
-        mainView?.animator().setFrameSize(NSMakeSize(frame.width, frame.height - inset))
+      //  mainView?.setFrameSize(NSMakeSize(frame.width, frame.height - inset))
         
         actionsPanelView.change(pos: NSMakePoint(0, frame.height - inset), animated: animated)
         separator.change(pos: NSMakePoint(0, frame.height - inset), animated: animated)
@@ -61,8 +66,10 @@ class PeerMediaControllerView : View {
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        
-        mainView?.frame = NSMakeRect(0, 0, frame.width, frame.height - inset)
+        typesContainerView.frame = NSMakeRect(0, 0, frame.width, 50)
+        segmentControl.view.setFrameSize(frame.width - 40, 28)
+        segmentControl.view.center()
+        mainView?.frame = NSMakeRect(0, typesContainerView.frame.maxY, frame.width, frame.height - inset - typesContainerView.frame.maxY)
         actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
         separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
     }
@@ -88,17 +95,6 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
     private let loadFwdMessagesDisposable = MetaDisposable()
     
-    override func getCenterBarViewOnce() -> TitledBarView {
-        return MediaTitleBarView(controller: self, interactions:PeerMediaTypeInteraction(media: { [weak self] in
-            self?.toggle(with: .photoOrVideo, animated:true)
-            }, files: { [weak self] in
-                self?.toggle(with: .file, animated:true)
-            }, links: { [weak self] in
-                self?.toggle(with: .webpage, animated:true)
-            }, audio: { [weak self] in
-                self?.toggle(with: .music, animated:true)
-        }))
-    }
     
     
     init(account:Account, peerId:PeerId, tagMask:MessageTags) {
@@ -219,7 +215,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 if let header = navigation.header {
                     header.show(true)
                     if let view = header.view as? InlineAudioPlayerView {
-                        view.update(with: controller, tableView: strongSelf.mediaList.genericView)
+                        view.update(with: controller, chatInteraction: strongSelf.interactions, tableView: strongSelf.mediaList.genericView)
                     }
                 }
             }
@@ -323,6 +319,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         mediaGrid.viewDidAppear(false)
         
         requestUpdateCenterBar()
+        updateLocalizationAndTheme()
     }
     
     private func toggle(with mode:PeerMediaCollectionMode, animated:Bool = false) {
@@ -354,14 +351,32 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
     }
     
-    override func requestUpdateCenterBar() {
-        (self.centerBarView as! MediaTitleBarView).updateLocalizationAndTheme()
-    }
     
     deinit {
         messagesActionDisposable.dispose()
         openPeerInfoDisposable.dispose()
         loadFwdMessagesDisposable.dispose()
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        genericView.segmentControl.removeAll()
+        
+        genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaMedia, handler: { [weak self] in
+            self?.toggle(with: .photoOrVideo, animated:true)
+        }))
+        
+        genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaFiles, handler: { [weak self] in
+            self?.toggle(with: .file, animated:true)
+        }))
+        
+        genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaLinks, handler: { [weak self] in
+            self?.toggle(with: .webpage, animated:true)
+        }))
+        
+        genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaAudio, handler: { [weak self] in
+            self?.toggle(with: .music, animated:true)
+        }))
     }
     
     override public func update(with state:ViewControllerState) -> Void {

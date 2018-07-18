@@ -37,6 +37,7 @@ open class TextButtonBarView: BarView {
         
         self.addSubview(button)
         
+        
     }
     
     public func set(image:CGImage, for state:ControlState) -> Void {
@@ -81,7 +82,7 @@ open class TextButtonBarView: BarView {
             width += button.frame.width
         case .Right:
             _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height - .borderSize), thatFit: false)
-            width += button.frame.width + 16
+            width += max(button.frame.width + 16, minWidth)
             let f = focus(button.frame.size)
             button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
         }

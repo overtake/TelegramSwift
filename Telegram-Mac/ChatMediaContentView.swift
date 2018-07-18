@@ -24,9 +24,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     var account:Account?
     var parameters:ChatMediaLayoutParameters?
     private(set) var fetchControls:FetchControls!
-    var fetchStatus: MediaResourceStatus?
+    var fetchStatus: MediaResourceStatus? 
     var dragDisposable:MetaDisposable = MetaDisposable()
-    var positionFlags: GroupLayoutPositionFlags?
+    var positionFlags: LayoutPositionFlags?
     override var backgroundColor: NSColor {
         get {
             return super.backgroundColor
@@ -145,7 +145,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         dragDisposable.dispose()
     }
     
-    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) -> Void  {
+    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) -> Void  {
         self.setContent(size: size)
         self.parameters = parameters
         self.positionFlags = positionFlags

@@ -87,7 +87,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     private let joinDisposable = MetaDisposable()
     private let openPeerInfoDisposable = MetaDisposable()
     private let mediaDisposable = MetaDisposable()
-    
     private var appearance: InstantViewAppearance = InstantViewAppearance.defaultSettings
     private let actualizeDisposable = MetaDisposable()
     
@@ -102,7 +101,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         }
     }
     let message: String?
-    init(_ account: Account, webPage: TelegramMediaWebpage, message: String?) {
+    init(_ account: Account, webPage: TelegramMediaWebpage, message: String?, messageId: MessageId? = nil, saveToRecent: Bool = true) {
         self.webPage = webPage
         self.message = message
         switch webPage.content {
@@ -114,6 +113,16 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         super.init(account)
         bar = .init(height: 0)
         noticeResizeWhenLoaded = false
+        if saveToRecent {
+            _ = updateReadArticlesPreferences(postbox: account.postbox) { current -> ReadArticlesListPreferences in
+                if current.list.first(where: {$0.id == webPage.webpageId}) == nil {
+                    return current.withAddedArticle(ReadArticle(webPage: webPage, messageId: messageId, percent: 0, date: Int32(Date().timeIntervalSince1970)))
+                } else {
+                    return current
+                }
+            }.start()
+        }
+        
     }
     
     override var defaultBarTitle: String {
@@ -132,7 +141,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     }
     
     private func updateLayout() {
-        
         let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, presentation: appearance, openChannel: { [weak self] channel in
             if let account = self?.account {
                 self?.account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(channel.id)))
@@ -276,9 +284,10 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         genericView.deltaCorner = -1
         genericView.documentView = View(frame: genericView.bounds)
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: genericView.contentView, queue: nil, using: { [weak self] _ in
-			guard let strongSelf = self else { return }
-			strongSelf.updateVisibleItems()
-			strongSelf.pageDidScrolled?((documentSize: strongSelf.genericView.frame.size, position: strongSelf.genericView.scrollPosition().current))
+            guard let `self` = self else { return }
+			self.updateVisibleItems()
+			self.pageDidScrolled?((documentSize: self.genericView.frame.size, position: self.genericView.scrollPosition().current))
+            self.saveArticleProgress()
         })
         genericView.hasVerticalScroller = true
         selectManager = InstantPageSelectText(genericView)
@@ -290,12 +299,11 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             self?.appearance = appearance
             self?.reloadData()
             
-            if firstLoad, let currentLayout = self?.currentLayout, let webPage = self?.webPage, let message = self?.message, let scrollView = self?.genericView {
+            if firstLoad, let currentLayout = self?.currentLayout, let webPage = self?.webPage, let scrollView = self?.genericView {
                 firstLoad = false
                 
-                if let mediaId = webPage.id, let state = appearance.state[mediaId] {
-                    self?.applyScrollState(state)
-                } else  {
+                
+                if let message = self?.message {
                     switch webPage.content {
                     case .Loaded(let content):
                         
@@ -316,7 +324,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                                                 if item.matchesAnchor(anchor) {
                                                     scrollView.clipView.scroll(to: item.frame.origin, animated: false)
                                                     scrollView.reflectScrolledClipView(scrollView.clipView)
-                                                    break
+                                                    return true
                                                 }
                                             }
                                         }
@@ -330,6 +338,9 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                     default:
                         break
                     }
+                }
+                if let mediaId = webPage.id, let state = appearance.state[mediaId] {
+                    self?.applyScrollState(state)
                 }
             }
             
@@ -466,6 +477,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             self.visibleItemsWithViews.removeValue(forKey: index)
         }
         
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -508,7 +520,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     private func applyScrollState(_ state: IVReadState) {
         if let currentLayout = currentLayout, Int32(currentLayout.items.count) > state.blockId, let scrollState = scrollState {
             let item = currentLayout.items[Int(state.blockId)]
-            let offset = CGPoint(x: 0, y: genericView.contentInsets.top + item.frame.origin.y + CGFloat(scrollState.blockOffset) - 8)
+            let offset = CGPoint(x: 0, y: genericView.contentInsets.top + item.frame.origin.y + CGFloat(scrollState.blockOffset))
             genericView.clipView.scroll(to: offset, animated: false)
             genericView.reflectScrolledClipView(genericView.clipView)
 
@@ -544,6 +556,21 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 		pageDidScrolled?((documentSize: genericView.frame.size, position: genericView.scrollPosition().current))
 	}
 	
+    private func saveArticleProgress() {
+        let point = CGPoint(x: genericView.frame.size.width / 2.0, y: genericView.contentOffset.y + genericView.contentInsets.top)
+        
+        let id = self.webPage.webpageId
+        
+        let percent = Int32((point.y + frame.height) / genericView.documentSize.height * 100.0)
+        _ = updateReadArticlesPreferences(postbox: account.postbox, { pref in
+            var pref = pref
+            if let article = pref.list.first(where: {$0.id == id}) {
+                pref = pref.withUpdatedArticle(article.withUpdatedPercent(percent))
+            }
+            return pref
+        }).start()
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
         selectManager?.removeHandlers(for: mainWindow)
@@ -557,6 +584,8 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         if let state = scrollState, let mediaId = webPage.id {
             _ = updateInstantViewAppearanceSettingsInteractively(postbox: account.postbox, {$0.withUpdatedIVState(state, for: mediaId)}).start()
         }
+        
+        saveArticleProgress()
     }
     
 }

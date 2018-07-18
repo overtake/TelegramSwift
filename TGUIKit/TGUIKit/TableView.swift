@@ -86,7 +86,7 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
         super.init(deleted: deleted, inserted: inserted, updated: updated, animateVisibleOnly: animateVisibleOnly)
     }
     public override var description: String {
-        return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count), state: \(state)"
+        return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count), state: \(state), animated: \(animated)"
     }
 }
 
@@ -218,6 +218,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func draw(_ dirtyRect: NSRect) {
        
+    }
+    override var isOpaque: Bool {
+        return false
     }
 
     
@@ -450,6 +453,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         tableView.autoresizesSubviews = false
 
         super.init(frame: frameRect);
+        
+        
+        clipView.copiesOnScroll = true
         
        // self.scrollsDynamically = true
        // self.verticalLineScroll = 0
@@ -1203,7 +1209,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         if let delegate = delegate, delegate.isSelectable(row: item.index, item: item) {
             if(self.item(stableId:item.stableId) != nil) {
-                if delegate.selectionWillChange(row: item.index, item: item) {
+                if !notify || delegate.selectionWillChange(row: item.index, item: item) {
                     let new = item.stableId != selectedhash.modify({$0})
                     self.cancelSelection();
                     let _ = selectedhash.swap(item.stableId)
@@ -1517,16 +1523,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                     }
                     
-                    
+                    //self.contentView.scroll(to: NSMakePoint(0, y))
                     self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
                     reflectScrolledClipView(clipView)
-                    
-                    
+                  //  tableView.tile()
+                  //  tableView.display()
                     break
                 }
             }
         }
-        //reflectScrolledClipView(clipView)
         switch state {
         case let .none(animation):
             // print("scroll do nothing")
@@ -1543,7 +1548,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             break
         }
-        
+        //reflectScrolledClipView(clipView)
+      
         
         self.endUpdates()
         
@@ -1815,12 +1821,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
             
+//            clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
+//                self?.removeScroll(listener: scrollListener)
+//            })
+            
             if abs(bounds.minY - clipView.bounds.minY) < height {
                 clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
                     self?.removeScroll(listener: scrollListener)
                 })
             } else {
                 let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
+//                self.removeScroll(listener: scrollListener)
                 clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
                     self?.removeScroll(listener: scrollListener)
                 })

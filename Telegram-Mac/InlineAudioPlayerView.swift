@@ -16,15 +16,16 @@ import SwiftSignalKitMac
 
 class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
-    let previous:ImageButton = ImageButton()
-    let next:ImageButton = ImageButton()
-    let playOrPause:ImageButton = ImageButton()
-    let dismiss:ImageButton = ImageButton()
-    let repeatControl:ImageButton = ImageButton()
-    let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
-    let textView:TextView = TextView()
-    let containerView:View
-    let separator:View = View()
+    private let previous:ImageButton = ImageButton()
+    private let next:ImageButton = ImageButton()
+    private let playOrPause:ImageButton = ImageButton()
+    private let dismiss:ImageButton = ImageButton()
+    private let repeatControl:ImageButton = ImageButton()
+    private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
+    private let textView:TextView = TextView()
+    private let containerView:Control
+    private let separator:View = View()
+    private var chatInteraction: ChatInteraction!
     private var controller:APController? {
         didSet {
             if let controller = controller {
@@ -57,7 +58,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         textView.isSelectable = false
         
-        containerView = View(frame: NSMakeRect(0, 0, 0, header.height))
+        containerView = Control(frame: NSMakeRect(0, 0, 0, header.height))
         
         super.init(header)
 
@@ -110,12 +111,33 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         addSubview(progressView)
         
         textView.userInteractionEnabled = false
-     
+        textView.isEventLess = true
         
         updateLocalizationAndTheme()
         
+        containerView.set(handler: { [weak self] _ in
+            self?.showAudioPlayerList()
+        }, for: .LongOver)
         
+        containerView.set(handler: { [weak self] _ in
+            self?.gotoMessage()
+        }, for: .SingleClick)
         
+    }
+    
+    private func showAudioPlayerList() {
+        guard let window = kitWindow else {return}
+        let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        if NSPointInRect(point, textView.frame) {
+            if let song = controller?.currentSong, controller is APChatMusicController {
+                switch song.stableId {
+                case let .message(message):
+                    showPopover(for: textView, with: PlayerListController(chatInteraction: self.chatInteraction, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                default:
+                    break
+                }
+            }
+        }
     }
     
     func updateStatus(_ ranges: IndexSet, _ size: Int) {
@@ -179,8 +201,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         separator.backgroundColor = theme.colors.border
     }
     
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
+    private func gotoMessage() {
         if let message = message, let controller = controller, let navigation = controller.account.context.mainNavigation {
             if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: false, inset: 0))
@@ -190,7 +211,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
     }
     
-    func update(with controller:APController, tableView:TableView) {
+    func update(with controller:APController, chatInteraction: ChatInteraction, tableView:TableView) {
+        self.chatInteraction = chatInteraction
         self.controller?.remove(listener: self)
         self.controller = controller
         self.controller?.add(listener: self)

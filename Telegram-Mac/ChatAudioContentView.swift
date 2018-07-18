@@ -25,6 +25,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     let statusDisposable = MetaDisposable()
     let fetchDisposable = MetaDisposable()
     
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -39,12 +40,26 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
     }
     
+    override var fetchStatus: MediaResourceStatus? {
+        didSet {
+            if let fetchStatus = fetchStatus {
+                switch fetchStatus {
+                case let .Fetching(_, progress):
+                    progressView.state = .Fetching(progress: progress, force: false)
+                case .Remote:
+                    progressView.state = .Remote
+                case .Local:
+                    progressView.state = .Play
+                }
+            }
+        }
+    }
+    
     override func layout() {
         super.layout()
         textView.centerY(x:leftInset)
     }
     
-    private var testPlayer: MediaPlayer?
     
     override func open() {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters, let account = account, let parent = parent  {
@@ -120,12 +135,14 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         }
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
+        
 
+        
         
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
             updatedStatusSignal = account.pendingMessageManager.pendingMessageStatus(parent.id) |> map { pendingStatus in
@@ -142,14 +159,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
                     
-                    switch status {
-                    case let .Fetching(_, progress):
-                        strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                    case .Remote:
-                        strongSelf.progressView.state = .Remote
-                    case .Local:
-                        strongSelf.progressView.state = .Play
-                    }
+                   
                 }
             }))
         }

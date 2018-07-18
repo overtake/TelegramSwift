@@ -246,7 +246,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     private let messageId: MessageId?
     private let tagMask: MessageTags?
     private let previousView = Atomic<ChatHistoryView?>(value: nil)
-    
+    private let chatInteraction: ChatInteraction
     public let historyState = ValuePromise<ChatHistoryNodeHistoryState>()
     private var currentHistoryState: ChatHistoryNodeHistoryState?
     private var enqueuedHistoryViewTransition: (ChatHistoryGridViewTransition, () -> Void)?
@@ -285,7 +285,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                 break
             }
             if let index = index {
-                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: historyView.originalView.anchorIndex, count: self.requestCount + self.screenCount)
+                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: historyView.originalView.anchorIndex, count: self.requestCount + self.screenCount, side: scroll.direction == .bottom ? .lower : .upper)
                 
                 self.disableScroll()
                 
@@ -310,12 +310,92 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
         super.viewDidLoad()
         
         
-        
         genericView.grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.bounds.width, type: .fixed(itemSize: itemSize, lineSpacing: 4)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
         
         self._chatHistoryLocation.set(ChatHistoryLocation.Initial(count: screenCount))
-
         
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        
+        enum MultipleSelectionState {
+            case none
+            case select
+            case deselect
+        }
+        
+        var selectionState: MultipleSelectionState = .none
+        
+        window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            let viewPoint = self.genericView.convert(event.locationInWindow, from: nil)
+            
+            if self.chatInteraction.presentation.state == .selecting, viewPoint.y < self.genericView.frame.height - 50 {
+                let point = self.genericView.grid.documentView!.convert(event.locationInWindow, from: nil)
+                let view = self.genericView.grid.itemNodeAtPoint(point) as? GridMessageItemNode
+                if let message = view?.message {
+                    if self.chatInteraction.presentation.isSelectedMessageId(message.id) {
+                        selectionState = .deselect
+                        self.chatInteraction.update({$0.withRemovedSelectedMessage(message.id)})
+                    } else {
+                        selectionState = .select
+                        self.chatInteraction.update({$0.withUpdatedSelectedMessage(message.id)})
+                    }
+                    view?.updateSelectionState(animated: true)
+                    return .invoked
+                } else {
+                    selectionState = .none
+                }
+            } else {
+                selectionState = .none
+            }
+            
+            return .rejected
+        }, with: self, for: .leftMouseDown)
+        
+        window?.set(mouseHandler: { event -> KeyHandlerResult in
+            let _selectionState = selectionState
+            selectionState = .none
+            switch _selectionState {
+            case .select:
+                return .invoked
+            case .deselect:
+                return .invoked
+            case .none:
+                return .rejected
+            }
+        }, with: self, for: .leftMouseUp)
+        
+        window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+
+            
+            let point = self.genericView.grid.documentView!.convert(event.locationInWindow, from: nil)
+            let view = self.genericView.grid.itemNodeAtPoint(point) as? GridMessageItemNode
+            if let message = view?.message {
+                switch selectionState {
+                case .select:
+                    self.chatInteraction.update({$0.withUpdatedSelectedMessage(message.id)})
+                    view?.updateSelectionState(animated: true)
+                    return .invoked
+                case .deselect:
+                    self.chatInteraction.update({$0.withRemovedSelectedMessage(message.id)})
+                    view?.updateSelectionState(animated: true)
+                    return .invoked
+                case .none:
+                    break
+                }
+            }
+           
+            
+            return .rejected
+        }, with: self, for: .leftMouseDragged)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        window?.removeAllHandlers(for: self)
     }
     
     override func viewDidResized(_ size: NSSize) {
@@ -330,7 +410,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
         self.chatLocation = chatLocation
         self.messageId = messageId
         self.tagMask = tagMask
-        
+        self.chatInteraction = chatInteraction
         super.init()
         
         let historyViewUpdate = self.chatHistoryLocation

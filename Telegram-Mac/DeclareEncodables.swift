@@ -22,6 +22,8 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(AutomaticMediaDownloadCategoryPeers.self, f: { AutomaticMediaDownloadCategoryPeers(decoder: $0) })
     declareEncodable(AutomaticMediaDownloadCategories.self, f: { AutomaticMediaDownloadCategories(decoder: $0) })
     declareEncodable(AutomaticMediaDownloadSettings.self, f: { AutomaticMediaDownloadSettings(decoder: $0) })
+    declareEncodable(ReadArticle.self, f: { ReadArticle(decoder: $0) })
+    declareEncodable(ReadArticlesListPreferences.self, f: { ReadArticlesListPreferences(decoder: $0) })
     return
 }()
 

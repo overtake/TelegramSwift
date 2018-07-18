@@ -16,8 +16,15 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
     var entries: [TwoStepVerificationUnlockSettingsEntry] = []
     var sectionId:Int32 = 0
     
+    if state.checking {
+        entries.append(.loading)
+        return entries
+    }
+    
     entries.append(.section(sectionId))
     sectionId += 1
+    
+   
     
     switch data {
     case let .access(configuration):
@@ -38,8 +45,11 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     entries.append(.passwordEntryInfo(sectionId: sectionId, tr(L10n.twoStepAuthEnterPasswordHint(hint)) + "\n\n" + tr(L10n.twoStepAuthEnterPasswordHelp) + "\n\n[" + tr(L10n.twoStepAuthEnterPasswordForgot) + "](forgot)"))
                 }
             }
+        } else {
+            entries.removeAll()
+            entries.append(.loading)
         }
-    case let .manage(_, emailSet, pendingEmailPattern):
+    case let .manage(_, emailSet, pendingEmailPattern, _):
         entries.append(.changePassword(sectionId: sectionId, tr(L10n.twoStepAuthChangePassword)))
         entries.append(.turnPasswordOff(sectionId: sectionId, tr(L10n.twoStepAuthRemovePassword)))
         entries.append(.setupRecoveryEmail(sectionId: sectionId, emailSet ? tr(L10n.twoStepAuthChangeEmail) : tr(L10n.twoStepAuthSetupEmail)))
@@ -102,12 +112,7 @@ class TwoStepVerificationUnlockController: TableViewController {
         
         let dataPromise = Promise<TwoStepVerificationUnlockSettingsControllerData>()
         
-        switch mode {
-        case .access:
-            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: nil)) |> then(twoStepVerificationConfiguration(account: account) |> map { TwoStepVerificationUnlockSettingsControllerData.access(configuration: $0) }))
-        case let .manage(password, email, pendingEmailPattern):
-            dataPromise.set(.single(.manage(password: password, emailSet: !email.isEmpty, pendingEmailPattern: pendingEmailPattern)))
-        }
+       
         
         let arguments = TwoStepVerificationUnlockSettingsControllerArguments(updatePasswordText: { updatedText in
             updateState {
@@ -168,22 +173,24 @@ class TwoStepVerificationUnlockController: TableViewController {
                                     if let pendingEmailPattern = updatedPassword.pendingEmailPattern {
                                         dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVerificationConfiguration.notSet(pendingEmailPattern: pendingEmailPattern))))
                                     } else {
-                                        dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: false, pendingEmailPattern: "")))
+                                        dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: false, pendingEmailPattern: "", hasSecretValues: false)))
                                     }
                                     controller?.dismiss()
+                                    account.context.resetTemporaryPwd()
                                 }
                             }))
                         case .set:
                             break
                         }
                     }
-                case let .manage(password, emailSet, pendingEmailPattern):
+                case let .manage(password, emailSet, pendingEmailPattern, hasSecretValues):
                     let result = Promise<TwoStepVerificationPasswordEntryResult?>()
                     let controller = TwoStepVerificationPasswordEntryController(account: account, mode: .change(current: password), result: result)
                     presentControllerImpl?(controller)
                     setupResultDisposable.set((result.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak controller] updatedPassword in
                         if let updatedPassword = updatedPassword {
-                           dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: emailSet, pendingEmailPattern: pendingEmailPattern)))
+                            account.context.resetTemporaryPwd()
+                            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: emailSet, pendingEmailPattern: pendingEmailPattern, hasSecretValues: hasSecretValues)))
                             controller?.dismiss()
                         }
                     }))
@@ -191,56 +198,79 @@ class TwoStepVerificationUnlockController: TableViewController {
             }))
         }, openDisablePassword: {
             
-            confirm(for: mainWindow, information: tr(L10n.twoStepAuthConfirmDisablePassword), successHandler: { _ in
-                var disablePassword = false
-                updateState { state in
-                    if state.checking {
-                        return state
-                    } else {
-                        disablePassword = true
-                        return state.withUpdatedChecking(true)
-                    }
-                }
-                if disablePassword {
-                    setupDisposable.set((dataPromise.get()
-                        |> take(1)
-                        |> mapError { _ -> UpdateTwoStepVerificationPasswordError in return .generic }
-                        |> mapToSignal { data -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
-                            switch data {
-                            case .access:
-                                return .complete()
-                            case let .manage(password, _, _):
-                                return updateTwoStepVerificationPassword(network: account.network, currentPassword: password, updatedPassword: .none)
-                                    |> mapToSignal { _ -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
-                                        return .complete()
+            
+            setupDisposable.set((dataPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+                |> mapError { _ -> UpdateTwoStepVerificationPasswordError in return .generic }
+                |> mapToSignal { data -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
+                    
+                    switch data {
+                    case .access:
+                        return .complete()
+                    case let .manage(password, _, _, hasSecretValues):
+                        
+                        var text: String = L10n.twoStepAuthConfirmDisablePassword
+                        if hasSecretValues {
+                            text += "\n\n"
+                            text += L10n.secureIdWarningDataLost
+                        }
+                        return confirmSignal(for: mainWindow, information: text) |> mapError {UpdateTwoStepVerificationPasswordError.generic} |> mapToSignal { value -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
+                            
+                            if value {
+                                var disablePassword = false
+                                updateState { state in
+                                    if state.checking {
+                                        return state
+                                    } else {
+                                        disablePassword = true
+                                        return state.withUpdatedChecking(true)
+                                    }
                                 }
+                                account.context.mainViewController.settings.passportPromise.set(.single(false))
+                                
+                                if disablePassword {
+                                    return updateTwoStepVerificationPassword(network: account.network, currentPassword: password, updatedPassword: .none)
+                                        |> mapToSignal { _ -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
+                                            return .complete()
+                                    }
+                                } else {
+                                    return .complete()
+                                }
+
+                            } else {
+                                return .fail(.generic)
                             }
                         }
-                        |> deliverOnMainQueue).start(error: { _ in
-                            updateState {
-                                $0.withUpdatedChecking(false)
-                            }
-                        }, completed: {
-                            updateState {
-                                $0.withUpdatedChecking(false)
-                            }
-                        dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: .notSet(pendingEmailPattern: ""))))
-                        }))
+                    }
+                    
                 }
-            })
+                |> deliverOnMainQueue).start(error: { _ in
+                    updateState {
+                        $0.withUpdatedChecking(false)
+                    }
+                }, completed: {
+                    updateState {
+                        $0.withUpdatedChecking(false)
+                    }
+                    account.context.resetTemporaryPwd()
+                    dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: .notSet(pendingEmailPattern: ""))))
+                }))
+            
+            
  
         }, openSetupEmail: {
             setupDisposable.set((dataPromise.get() |> take(1) |> deliverOnMainQueue).start(next: { data in
                 switch data {
                 case .access:
                     break
-                case let .manage(password, _, _):
+                case let .manage(password, _, _, hasSecretValues):
                     let result = Promise<TwoStepVerificationPasswordEntryResult?>()
                     let controller = TwoStepVerificationPasswordEntryController(account: account, mode: .setupEmail(password: password), result: result)
                     presentControllerImpl?(controller)
                     setupResultDisposable.set((result.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak controller] updatedPassword in
                         if let updatedPassword = updatedPassword {
-                           dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: true, pendingEmailPattern: updatedPassword.pendingEmailPattern ?? "")))
+                            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: true, pendingEmailPattern: updatedPassword.pendingEmailPattern ?? "", hasSecretValues: hasSecretValues)))
                             controller?.dismiss()
                         }
                     }))
@@ -254,13 +284,21 @@ class TwoStepVerificationUnlockController: TableViewController {
                 updateState { state in
                     return state.withUpdatedChecking(false)
                 }
-                dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: .notSet(pendingEmailPattern: ""))))
+            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: .notSet(pendingEmailPattern: ""))))
             }, error: { _ in
                 updateState { state in
                     return state.withUpdatedChecking(false)
                 }
             }))
         })
+        
+        
+        switch mode {
+        case .access:
+            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: nil)) |> then(twoStepVerificationConfiguration(account: account) |> map { TwoStepVerificationUnlockSettingsControllerData.access(configuration: $0) }))
+        case let .manage(password, email, pendingEmailPattern, hasSecretValues):
+            dataPromise.set(.single(.manage(password: password, emailSet: !email.isEmpty, pendingEmailPattern: pendingEmailPattern, hasSecretValues: hasSecretValues)))
+        }
         
         let previous: Atomic<[AppearanceWrapperEntry<TwoStepVerificationUnlockSettingsEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
@@ -272,6 +310,8 @@ class TwoStepVerificationUnlockController: TableViewController {
             (self?.firstResponder() as? NSTextView)?.selectAll(nil)
             NSSound.beep()
         }
+        
+   
         
         let signal = combineLatest(appearanceSignal, statePromise.get(), dataPromise.get() |> deliverOnMainQueue)
             |> map { appearance, state, data -> (TableUpdateTransition, String, TwoStepVerificationUnlockSettingsControllerData) in
@@ -302,11 +342,13 @@ class TwoStepVerificationUnlockController: TableViewController {
                                     }
                                 
                                     if let password = password, !wasChecking {
-                                        checkDisposable.set((requestTwoStepVerifiationSettings(network: account.network, password: password) |> deliverOnMainQueue).start(next: { settings in
+                                        let signal = combineLatest(requestTwoStepVerifiationSettings(network: account.network, password: password) |> deliverOnMainQueue, twoStepAuthData(account.network) |> mapError {_ in return AuthorizationPasswordVerificationError.generic} |> deliverOnMainQueue)
+                                        
+                                        checkDisposable.set(signal.start(next: { settings, data in
                                             updateState {
                                                 $0.withUpdatedChecking(false)
                                             }
-                                            presentControllerImpl?(TwoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: settings.email, pendingEmailPattern: pendingEmailPattern)))
+                                            presentControllerImpl?(TwoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: settings.email, pendingEmailPattern: pendingEmailPattern, hasSecretValues: data.hasSecretValues)))
                                         }, error: { error in
                                             updateState {
                                                 $0.withUpdatedChecking(false)

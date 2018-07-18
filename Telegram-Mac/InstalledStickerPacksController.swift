@@ -341,7 +341,7 @@ class InstalledStickerPacksController: TableViewController {
             confirm(for: mainWindow, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
                 switch result {
                 case .basic:
-                    _ = removeStickerPackInteractively(postbox: account.postbox, id: id).start()
+                    _ = removeStickerPackInteractively(postbox: account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
                 case .thrid:
                     break
                 }

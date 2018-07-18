@@ -138,7 +138,7 @@ class ChatGIFContentView: ChatMediaContentView {
         player.set(path: nil)
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
         let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
         
         

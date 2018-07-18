@@ -41,9 +41,11 @@ class InputDataController: GenericViewController<TableView> {
     private let _removeAfterDisappear: Bool
     private let hasDone: Bool
     private let updateDoneEnabled:([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void
-    private let customRightButton:(()->BarView?)?
+    private let customRightButton:((ViewController)->BarView?)?
+    private let afterTransaction: (InputDataController)->Void
+    private let backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
     let identifier: String
-    init(dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: (()->BarView?)? = nil) {
+    init(dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -54,6 +56,8 @@ class InputDataController: GenericViewController<TableView> {
         self.hasDone = hasDone
         self.updateDoneEnabled = updateDoneEnabled
         self.customRightButton = customRightButton
+        self.afterTransaction = afterTransaction
+        self.backInvocation = backInvocation
         super.init()
         values.set(dataSignal)
     }
@@ -77,7 +81,7 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return customRightButton?() ?? (hasDone ? TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
+        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
     }
     
     private var doneView: TextButtonBarView {
@@ -183,6 +187,8 @@ class InputDataController: GenericViewController<TableView> {
                 self.doneView.isEnabled = enabled
             }
             
+            self.afterTransaction(self)
+            
             self.readyOnce()
         }))
     }
@@ -229,6 +235,18 @@ class InputDataController: GenericViewController<TableView> {
     
     override var enableBack: Bool {
         return true
+    }
+   // private var canInvokeBack: Bool = false
+    override func invokeNavigationBack() -> Bool {
+       return true
+    }
+    
+    override func executeReturn() {
+        backInvocation(fetchData(), { [weak self] result in
+            if result {
+                self?.navigationController?.back()
+            }
+        })
     }
     
     override func getLeftBarViewOnce() -> BarView {

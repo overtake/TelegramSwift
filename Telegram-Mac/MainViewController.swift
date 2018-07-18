@@ -19,7 +19,7 @@ class MainViewController: TelegramViewController {
     private let accountManager:AccountManager
     private var contacts:ContactsController
     private var chatList:ChatListController
-    private var settings:AccountViewController
+    private(set) var settings:AccountViewController
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
     private let badgeCountDisposable: MetaDisposable = MetaDisposable()

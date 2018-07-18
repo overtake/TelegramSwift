@@ -9,7 +9,7 @@
 import Cocoa
 
 
-open class GridItemNode: ImageButton {
+open class GridItemNode: Control {
     
     open var stableId:AnyHashable {
         return 0

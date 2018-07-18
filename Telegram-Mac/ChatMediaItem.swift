@@ -43,8 +43,8 @@ class ChatMediaLayoutParameters : Equatable {
     }
     
     
-    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool) -> ChatMediaLayoutParameters {
-        if media.isInstantVideo {
+    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false) -> ChatMediaLayoutParameters {
+        if media.isInstantVideo && !isFile {
             var duration:Int = 0
             for attr in media.attributes {
                 switch attr {
@@ -56,7 +56,7 @@ class ChatMediaLayoutParameters : Equatable {
             }
             
             return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
-        } else if media.isVoice {
+        } else if media.isVoice && !isFile {
             var waveform:AudioWaveform? = nil
             var duration:Int = 0
             for attr in media.attributes {
@@ -72,7 +72,7 @@ class ChatMediaLayoutParameters : Equatable {
             }
             
             return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration:duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
-        } else if media.isMusic {
+        } else if media.isMusic && !isFile {
             var audioTitle:String?
             var audioPerformer:String?
             
@@ -250,7 +250,7 @@ class ChatMediaItem: ChatRowItem {
         return (media.isInteractiveMedia || isSticker) && isBubbled 
     }
     
-    var positionFlags: GroupLayoutPositionFlags? = nil
+    var positionFlags: LayoutPositionFlags? = nil
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
@@ -321,7 +321,7 @@ class ChatMediaItem: ChatRowItem {
         
         
         if isBubbleFullFilled  {
-            var positionFlags: GroupLayoutPositionFlags = []
+            var positionFlags: LayoutPositionFlags = []
             if captionLayout == nil {
                 positionFlags.insert(.bottom)
                 positionFlags.insert(.left)

@@ -45,8 +45,8 @@ class ChatMapContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: GroupLayoutPositionFlags? = nil) {
-        let mediaUpdated = true
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
+        var mediaUpdated = true
         iconView.image = theme.icons.chatMapPin
         iconView.sizeToFit()
 
@@ -91,8 +91,22 @@ class ChatMapContentView: ChatMediaContentView {
             layer?.mask = nil
         }
         
-        if mediaUpdated, let parameters = parameters as? ChatMediaMapLayoutParameters {
-            imageView.setSignal( chatWebpageSnippetPhoto(account: account, photo: parameters.image, scale: backingScaleFactor, small: parameters.isVenue))
+        
+        
+        if let parameters = parameters as? ChatMediaMapLayoutParameters {
+            
+            imageView.setSignal(signal: cachedMedia(media: media, size: parameters.arguments.imageSize, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
+            mediaUpdated = mediaUpdated && !self.imageView.hasImage
+            
+            if mediaUpdated {
+                imageView.setSignal( chatWebpageSnippetPhoto(account: account, photo: parameters.image, scale: backingScaleFactor, small: parameters.isVenue), animate: mediaUpdated, cacheImage: { [weak self] image in
+                    if let strongSelf = self {
+                        return cacheMedia(signal: image, media: media, size: parameters.arguments.imageSize, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
+                    } else {
+                        return .complete()
+                    }
+                })
+            }
             
             if parameters.isVenue {
                 if textView == nil {

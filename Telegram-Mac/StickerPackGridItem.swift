@@ -31,7 +31,7 @@ final class StickerPackGridItem: GridItem {
         
     }
     
-    func node(layout: GridNodeLayout, gridNode:GridNode) -> GridItemNode {
+    func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
         let node = StickerGridItemView(gridNode)
         node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
             self?.send(file)

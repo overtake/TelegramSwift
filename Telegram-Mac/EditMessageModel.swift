@@ -27,6 +27,9 @@ class EditMessageModel: ChatAccessoryModel {
     override var view: ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
+            view?.customHandler.layout = { [weak self] view in
+                self?.updateImageIfNeeded()
+            }
         }
     }
     
@@ -70,9 +73,7 @@ class EditMessageModel: ChatAccessoryModel {
     func make(with message:Message) -> Void {
         let attr = NSMutableAttributedString()
         _ = attr.append(string: L10n.chatInputAccessoryEditMessage, color: theme.colors.blueUI, font: .medium(.text))
-        if message.media.first is TelegramMediaFile || message.media.first is TelegramMediaImage {
-            _ = attr.append(string: " (\(L10n.chatEditMessageMedia))", color: theme.colors.grayText, font: .normal(.text))
-        }
+
         self.headerAttr = attr
         self.messageAttr = .initialize(string: pullText(from:message) as String, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
         nodeReady.set(.single(true))

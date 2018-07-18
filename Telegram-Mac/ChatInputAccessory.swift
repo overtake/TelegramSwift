@@ -22,7 +22,6 @@ class ChatInputAccessory: Node {
     private let dismiss:ImageButton = ImageButton()
     private var progress: Control?
     let container:ChatAccessoryView = ChatAccessoryView()
-    private let updateMediaDisposable = MetaDisposable()
     
     var dismissForward:(()->Void)!
     var dismissReply:(()->Void)!
@@ -88,39 +87,6 @@ class ChatInputAccessory: Node {
             progress?.set(handler: { [weak self] _ in
                 self?.dismiss.send(event: .Click)
             }, for: .Click)
-            let updateMedia:([String]?, Bool)->Void = { [weak self] exts, asMedia in
-                guard let `self` = self else {return}
-                
-                filePanel(with: exts, allowMultiple: false, for: mainWindow, completion: { [weak self] files in
-                    guard let `self` = self else {return}
-                    if let file = files?.first {
-                        self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: file, isFile: !asMedia), account: account) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
-                            self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
-                        }))
-                    }
-                })
-            }
-            
-            if let media = editState.message.media.first, media is TelegramMediaFile || media is TelegramMediaImage {
-                container.set(handler: { control in
-                    
-                    var items:[SPopoverItem] = []
-                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, {
-                        updateMedia(mediaExts, true)
-                    }, theme.icons.chatAttachPhoto))
-                    
-                    if editState.message.groupingKey == nil {
-                        items.append(SPopoverItem(L10n.inputAttachPopoverFile, {
-                            updateMedia(nil, false)
-                        }, theme.icons.chatAttachFile))
-                    }
-                    
-                    showPopover(for: control, with: SPopoverViewController(items: items), edge: nil, inset: NSMakePoint(-10, 0))
-                    
-        
-                }, for: .Click)
-            }
-            
             
         } else if !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardIds:state.interfaceState.forwardMessageIds,account:account)
@@ -211,7 +177,6 @@ class ChatInputAccessory: Node {
     }
     
     deinit {
-        updateMediaDisposable.dispose()
     }
     
     override func setNeedDisplay() {

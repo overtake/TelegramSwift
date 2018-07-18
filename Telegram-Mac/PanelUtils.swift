@@ -26,7 +26,7 @@ func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, for window:
     
     panel.canCreateDirectories = true
     panel.allowedFileTypes = exts
-    panel.allowsMultipleSelection = true
+    panel.allowsMultipleSelection = allowMultiple
     panel.beginSheetModal(for: window) { (response) in
         if response.rawValue == NSFileHandlingPanelOKButton {
             for url in panel.urls {

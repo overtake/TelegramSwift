@@ -63,7 +63,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private let handleEventContextDisposable = MetaDisposable()
     private let proxyDisposable = MetaDisposable()
     private var activity:Any?
-    
+    private var executeUrlAfterLogin: String? = nil
 
     func applicationWillFinishLaunching(_ notification: Notification) {
        
@@ -186,6 +186,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             if let feedUrl = Bundle.main.infoDictionary?["SUFeedURL"] as? String, let url = URL(string: feedUrl) {
                 updater.feedURL = url
             }
+            updater.automaticallyDownloadsUpdates = false
         #endif
         
         
@@ -231,6 +232,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 switch context {
                 case let .authorized(authorized):
                     postbox = authorized.account.postbox
+                    //showModal(with: UpdateModalController(postbox: authorized.account.postbox, network: authorized.account.network), for: mainWindow)
+                    if let executeUrlAfterLogin = self.executeUrlAfterLogin {
+                        self.executeUrlAfterLogin = nil
+                        execute(inapp: inApp(for: executeUrlAfterLogin.nsstring, account: authorized.account))
+                    }
                 case let .unauthorized(unauthorized):
                     postbox = unauthorized.account.postbox
                 default:
@@ -255,7 +261,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             } else {
                 self.proxyDisposable.set(nil)
             }
-            
+
         }))
         
         saveIntermediateDate()
@@ -324,6 +330,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 }).start()
                             }
                         }
+                        
+                        if url.range(of: legacyPassportUsername) != nil || url.range(of: "tg://passport") != nil {
+                            alert(for: mainWindow, info: L10n.secureIdLoginText)
+                            self.executeUrlAfterLogin = url
+                        }
+                        
                     default:
                         break
                     }

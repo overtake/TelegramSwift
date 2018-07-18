@@ -255,7 +255,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             
         } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-            return  updatePeerPhoto(account: account, peerId: peerId, resource: resource)
+            return  updatePeerPhoto(account: account, peerId: peerId, photo: uploadedPeerPhoto(account: account, resource: resource))
         }
                 
 
