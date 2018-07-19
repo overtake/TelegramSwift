@@ -401,22 +401,20 @@ class ChatListRowItem: TableRowItem {
     let leftInset:CGFloat = 50 + (10 * 2.0);
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        if self.oldWidth == 0 || self.oldWidth != width {
-            
-            if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
-                displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
-            }
-            if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
-                messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, false, .left)
-            }
-            if displaySelectedLayout == nil || !displaySelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-                displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
-            }
-            if messageSelectedLayout == nil || !messageSelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-                messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, true, .left)
-            }
+        let result = super.makeSize(width, oldWidth: oldWidth)
+        if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
+            displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }
-        return super.makeSize(width, oldWidth: oldWidth)
+        if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
+            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, false, .left)
+        }
+        if displaySelectedLayout == nil || !displaySelectedLayout!.0.isPerfectSized || self.oldWidth > width {
+            displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
+        }
+        if messageSelectedLayout == nil || !messageSelectedLayout!.0.isPerfectSized || self.oldWidth > width {
+            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, true, .left)
+        }
+        return result
     }
     
 

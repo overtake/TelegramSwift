@@ -279,7 +279,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func clean() {
         statusDisposable.dispose()
-        fetchDisposable.dispose()
+        //fetchDisposable.dispose()
     }
     
 }

@@ -98,13 +98,13 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        
+        let success = super.makeSize(width, oldWidth: oldWidth)
         nameLayout.measure(width: width - contentInset.left - contentInset.right)
         actionLayout.measure(width: width - contentInset.left - contentInset.right)
         actionLayoutLocal.measure(width: width - contentInset.left - contentInset.right)
         contentSize = NSMakeSize(width, 50)
         
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

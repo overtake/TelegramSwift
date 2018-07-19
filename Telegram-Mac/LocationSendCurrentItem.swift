@@ -40,8 +40,9 @@ class LocationSendCurrentItem: GeneralRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         statusLayout.measure(width: width - inset.left - inset.right - theme.icons.locationPin.backingSize.width - 10)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

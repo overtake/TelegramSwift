@@ -26,8 +26,9 @@ class MediaGroupPreviewRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         layout.measure(NSMakeSize(width - 20, width - 20))
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var height: CGFloat {

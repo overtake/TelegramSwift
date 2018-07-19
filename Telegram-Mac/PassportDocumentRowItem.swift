@@ -74,9 +74,10 @@ class PassportDocumentRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         title.measure(width: width)
         status.measure(width: width)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var height: CGFloat {

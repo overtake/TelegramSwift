@@ -31,8 +31,9 @@ class ContextClueRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         clueLayout.measure(width: width - 50)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var height: CGFloat {

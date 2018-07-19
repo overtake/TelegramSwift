@@ -50,11 +50,12 @@ class ContextCommandRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         title.measure(width: width - 60)
         desc.measure(width: width - 60)
         titleSelected.measure(width: width - 60)
         descSelected.measure(width: width - 60)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     var ctxTitle:TextViewLayout {

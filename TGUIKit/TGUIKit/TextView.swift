@@ -465,6 +465,7 @@ public final class TextViewLayout : Equatable {
                         monospacedRects.append(NSMakeRect(0, lineFrame.minY - lineFrame.height, layoutSize.width, lineFrame.height + preformattedSpace))
                     }
 
+
                     lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length)))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
