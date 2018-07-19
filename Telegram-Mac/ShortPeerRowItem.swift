@@ -191,8 +191,9 @@ class ShortPeerRowItem: GeneralRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let result = super.makeSize(width, oldWidth: oldWidth)
         prepare(self.isSelected)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return result
     }
     
     var textAdditionInset:CGFloat {

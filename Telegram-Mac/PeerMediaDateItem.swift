@@ -44,8 +44,9 @@ class PeerMediaDateItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - 60)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var stableId: AnyHashable {

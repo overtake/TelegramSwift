@@ -127,12 +127,13 @@ class ContextListRowItem: TableRowItem {
 
         self.text = attr.copy() as! NSAttributedString
         super.init(initialSize)
-        prepare(isSelected)
+        _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         prepare(isSelected)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func prepare(_ selected: Bool) {

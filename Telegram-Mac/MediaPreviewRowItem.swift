@@ -35,6 +35,7 @@ class MediaPreviewRowItem: TableRowItem {
     
     private var overSize: CGFloat? = nil
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let result = super.makeSize(width, oldWidth: oldWidth)
         parameters?.makeLabelsForWidth(width - 20)
         
         if let table = table, table.count == 1 {
@@ -45,7 +46,7 @@ class MediaPreviewRowItem: TableRowItem {
             }
         }
         
-        return super.makeSize(width, oldWidth: oldWidth)
+        return result
     }
     
     override var stableId: AnyHashable {

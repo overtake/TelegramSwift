@@ -93,8 +93,9 @@ class GeneralRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         errorLayout?.measure(width: width - inset.left - inset.right)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var instantlyResize: Bool {

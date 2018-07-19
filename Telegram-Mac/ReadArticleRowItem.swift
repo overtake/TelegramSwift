@@ -119,7 +119,7 @@ class ReadArticleRowItem: GeneralRowItem {
     }
 
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        
+        let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout?.measure(width: width - contentInset.left - contentInset.right)
         linkLayout?.measure(width: width - contentInset.left - contentInset.right)
         
@@ -132,7 +132,7 @@ class ReadArticleRowItem: GeneralRowItem {
         }
         contentSize = NSMakeSize(width, max(textSizes + contentInset.top + contentInset.bottom + 2.0, 60))
         
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

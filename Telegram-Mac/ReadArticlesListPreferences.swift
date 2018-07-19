@@ -98,8 +98,7 @@ class ReadArticlesListPreferences: PreferencesEntry, Equatable {
     
     func withAddedArticle(_ article: ReadArticle) -> ReadArticlesListPreferences {
         var list = self.list
-        
-        if let index = list.firstIndex(where: {$0.id == article.id}) {
+        if let index = firstIndex(article) {
             list.remove(at: index)
             list.insert(article, at: 0)
         } else {
@@ -123,10 +122,19 @@ class ReadArticlesListPreferences: PreferencesEntry, Equatable {
     func withUpdatedArticle(_ article: ReadArticle) -> ReadArticlesListPreferences {
         var list = self.list
         
-        if let index = list.firstIndex(where: {$0.id == article.id}) {
+        if let index = firstIndex(article) {
             list[index] = article
         }
         return ReadArticlesListPreferences(list: list)
+    }
+    
+    private func firstIndex(_ article: ReadArticle) -> Int? {
+        for i in 0 ..< list.count {
+            if list[i].id == article.id {
+                return i
+            }
+        }
+        return nil
     }
 
     var unreadList: [ReadArticle] {
@@ -135,7 +143,9 @@ class ReadArticlesListPreferences: PreferencesEntry, Equatable {
     
     func withRemovedArticles(_ article: ReadArticle) -> ReadArticlesListPreferences {
         var list = self.list
-        list.removeAll(where: {$0.id == article.id})
+        if let index = firstIndex(article) {
+           list.remove(at: index)
+        }
         return ReadArticlesListPreferences(list: list)
     }
     

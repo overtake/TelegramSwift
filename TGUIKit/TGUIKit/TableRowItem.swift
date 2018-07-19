@@ -47,11 +47,7 @@ open class TableRowItem: NSObject {
     public var oldWidth:CGFloat = 0
     
     public var width:CGFloat  {
-        if let table = table {
-            return table.frame.width
-        } else {
-            return initialSize.width
-        }
+        return oldWidth
     }
     
     open var stableId:AnyHashable {

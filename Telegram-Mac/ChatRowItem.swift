@@ -1010,9 +1010,11 @@ class ChatRowItem: TableRowItem {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?   presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
                     self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account:account, replyMessage:message.associatedMessages[attribute.messageId], presentation: replyPresentation, makesizeCallback: { [weak self] in
-                        guard let strongSelf = self else {return}
-                        _ = strongSelf.makeSize(strongSelf.width, oldWidth: 0)
-                         strongSelf.redraw()
+                        guard let `self` = self else {return}
+                        _ = self.makeSize(self.oldWidth, oldWidth: 0)
+                        Queue.mainQueue().async { [weak self] in
+                            self?.redraw()
+                        }
                     })
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
@@ -1113,7 +1115,8 @@ class ChatRowItem: TableRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
-
+        let result = super.makeSize(width, oldWidth: oldWidth)
+        
         isForceRightLine = false
         
         if let channelViewsAttributed = channelViewsAttributed {
@@ -1252,7 +1255,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        return super.makeSize(width, oldWidth: oldWidth)
+        return result
     }
     
     deinit {

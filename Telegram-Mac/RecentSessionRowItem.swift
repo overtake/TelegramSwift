@@ -46,10 +46,11 @@ class RecentSessionRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         headerLayout.measure(width: width - 60)
         descLayout.measure(width: width - 60)
         dateLayout.measure(width: .greatestFiniteMagnitude)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var height: CGFloat {

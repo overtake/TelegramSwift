@@ -104,9 +104,10 @@ class StickerSetTableRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         nameLayout.measure(width: width - 50 - insets.left - insets.right)
         countLayout.measure(width: width - 50 - insets.left - insets.right)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

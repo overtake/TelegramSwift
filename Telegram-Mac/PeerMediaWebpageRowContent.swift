@@ -173,6 +173,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
+        let result = super.makeSize(width, oldWidth: oldWidth)
         textLayout?.measure(width: width - contentInset.left - contentInset.right)
         linkLayout?.measure(width: width - contentInset.left - contentInset.right - (hasInstantPage ? 10 : 0))
         
@@ -185,7 +186,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         contentSize = NSMakeSize(width, max(textSizes + contentInset.top + contentInset.bottom + 2.0,60))
         
-        return super.makeSize(width, oldWidth: oldWidth)
+        return result
     }
     
     override func viewClass() -> AnyClass {

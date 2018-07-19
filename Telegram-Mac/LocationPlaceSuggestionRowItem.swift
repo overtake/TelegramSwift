@@ -52,9 +52,9 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
-        
+        let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - inset.left - inset.right - 50 - 10)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

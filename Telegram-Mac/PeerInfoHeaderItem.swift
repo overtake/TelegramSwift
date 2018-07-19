@@ -101,10 +101,11 @@ class PeerInfoHeaderItem: GeneralRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         name = TextNode.layoutText(maybeNode: nil,  result.title, nil, 1, .end, NSMakeSize(size.width - textInset - inset.right - (canCall ? 40 : 0), size.height), nil, false, .left)
         status = TextNode.layoutText(maybeNode: nil,  result.status, nil, 1, .end, NSMakeSize(size.width - textInset - inset.right - (canCall ? 40 : 0), size.height), nil, false, .left)
 
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
 }
 

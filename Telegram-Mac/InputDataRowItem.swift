@@ -69,8 +69,9 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         placeholderLayout.measure(width: 100)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

@@ -73,15 +73,10 @@
 		9FC8ADA8206A77E00094F7B4 /* countries in Resources */ = {isa = PBXBuildFile; fileRef = 9FC8ADA7206A77E00094F7B4 /* countries */; };
 		9FDA713220E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713120E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift */; };
 		9FDA713420E65D49001ED8ED /* PeerMediaPlayerAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713320E65D49001ED8ED /* PeerMediaPlayerAnimationView.swift */; };
-		9FDA713520E6733B001ED8ED /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9FDA713620E6733B001ED8ED /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9FDA713920EA9123001ED8ED /* ReadArticlesListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713820EA9123001ED8ED /* ReadArticlesListController.swift */; };
 		9FDA713B20EA9532001ED8ED /* ReadArticlesListPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713A20EA9532001ED8ED /* ReadArticlesListPreferences.swift */; };
 		9FDA713D20EB9B20001ED8ED /* ReadArticleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713C20EB9B20001ED8ED /* ReadArticleRowItem.swift */; };
 		9FDA713F20EE2D49001ED8ED /* PopularPeersRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713E20EE2D49001ED8ED /* PopularPeersRowItem.swift */; };
-		9FF0A07320E62FA50019D937 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
-		9FF0A07420E62FA50019D937 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		9FF0A07520E62FA50019D937 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
 		9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */; };
 		9FFAE4EE205A8C89000C028E /* FFMpegPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DD205A8C81000C028E /* FFMpegPacket.swift */; };
 		9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */; };
@@ -110,6 +105,11 @@
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
+		C201970F2100A3B500E59EAB /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C20197102100A3B500E59EAB /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C20197112100A3BB00E59EAB /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		C20197122100A3BB00E59EAB /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		C20197132100A3BB00E59EAB /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
@@ -645,8 +645,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9FDA713520E6733B001ED8ED /* Sparkle.framework in Copy Files */,
-				9FDA713620E6733B001ED8ED /* HockeySDK.framework in Copy Files */,
+				C201970F2100A3B500E59EAB /* Sparkle.framework in Copy Files */,
+				C20197102100A3B500E59EAB /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -1527,10 +1527,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C20197112100A3BB00E59EAB /* Sparkle.framework in Frameworks */,
+				C20197122100A3BB00E59EAB /* HockeySDK.framework in Frameworks */,
+				C20197132100A3BB00E59EAB /* DFRFoundation.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
-				9FF0A07320E62FA50019D937 /* Sparkle.framework in Frameworks */,
-				9FF0A07420E62FA50019D937 /* DFRFoundation.framework in Frameworks */,
-				9FF0A07520E62FA50019D937 /* HockeySDK.framework in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
 				9FFAE50B205AA1FB000C028E /* libavcodec.a in Frameworks */,
@@ -3640,6 +3640,7 @@
 			children = (
 				9F21F65C20B5A9C900332C85 /* MapKit.framework */,
 				9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */,
+				C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */,
 				9FFAE513205AB50C000C028E /* libz.tbd */,
 				9FFAE510205AB4AB000C028E /* libbz2.tbd */,
 				9FFAE50E205AB4A3000C028E /* libiconv.tbd */,
@@ -3667,7 +3668,6 @@
 				C2DF47971DE79540003AA6C0 /* libopus.a */,
 				C2203E9F1DDE040F001E6AB6 /* libcommonCrypto.tbd */,
 				C231992D1EE006330011BEBE /* Sparkle.framework */,
-				C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */,
 				C2C738F01DD898DA00CE9D8A /* AVKit.framework */,
 				C2C030CC1DD5097400617711 /* CoreMedia.framework */,
 				C2FBC1DE1DC61B580063A23B /* MtProtoKitMac.framework */,

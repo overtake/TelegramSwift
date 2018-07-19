@@ -47,10 +47,10 @@ class AccountInfoItem: GeneralRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
-        
+        let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - 100)
         activeTextlayout.measure(width: width - 100)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

@@ -504,9 +504,10 @@ class ServiceEventLogItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - (defaultContentInset.left + defaultContentInset.right))
         contentMessageItem?.measure(width - (defaultContentInset.left + defaultContentInset.right))
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
 }
 
@@ -614,6 +615,7 @@ class ChannelEventLogEditedPanelItem : TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         _ = associatedItem?.makeSize(width, oldWidth: oldWidth)
         if let item = associatedItem {
             
@@ -621,7 +623,7 @@ class ChannelEventLogEditedPanelItem : TableRowItem {
             panel.header.measure(width: item.blockWidth - 8)
         }
        
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override var height: CGFloat {

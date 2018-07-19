@@ -33,7 +33,12 @@ class ReplyModel: ChatAccessoryModel {
         } else {
             
             make(with: nil, display: false)
-            var messageViewSignal = account.postbox.messageView(replyMessageId) |> map {$0.message}
+            var messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, Void> in
+                if let message = view.message {
+                    return .single(message)
+                }
+                return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network) |> map {$0.first}
+            }
             if !isPinned {
                 messageViewSignal = account.postbox.messageAtId(replyMessageId)
             }
@@ -223,7 +228,9 @@ class ReplyModel: ChatAccessoryModel {
         
         if !isLoading {
             if let makesizeCallback = makesizeCallback {
-                makesizeCallback()
+                messagesViewQueue.async {
+                    makesizeCallback()
+                }
                 return
             } else {
                 measureSize(width, sizeToFit: sizeToFit)

@@ -33,9 +33,10 @@ class PassportTwoStepVerificationIntroItem: GeneralRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         headerLayout.measure(width: width - inset.left - inset.right)
         descLayout.measure(width: width - inset.left - inset.right)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {

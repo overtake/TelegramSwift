@@ -273,8 +273,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private func showLatestUsers(_ control: Control) {
         if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup {
             let controller = latestGroupUsers(chatInteraction: chatInteraction) { [weak control, weak self] controller in
-                guard let `self` = self, let parent = self.controller else {return}
-                
+                guard let `self` = self, let parent = self.controller, parent.navigationController?.controller == parent else {return}
+
                 controller.view.setFrameSize(300, min(controller.genericView.listHeight, parent.view.frame.height / 3 + 30))
                 self.lastestUsersController = nil
                 if let control = control {

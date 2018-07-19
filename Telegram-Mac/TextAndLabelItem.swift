@@ -96,9 +96,10 @@ class TextAndLabelItem: GeneralRowItem {
 //    }
 //    
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let result = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: textWidth)
         labelLayout = TextNode.layoutText(maybeNode: nil,  label, nil, 1, .end, NSMakeSize(textWidth, .greatestFiniteMagnitude), nil, false, .left)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return result
     }
     
 }
