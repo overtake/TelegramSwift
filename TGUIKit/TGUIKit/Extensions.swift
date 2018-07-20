@@ -90,6 +90,11 @@ public extension String {
     
     public var fullTrimmed: String {
         var copy: String = self
+        
+        if copy.isEmpty {
+            return copy
+        }
+        
         var index: String.Index = copy.index(after: copy.startIndex)
         
         var newLineIndexEnd: String.Index? = nil

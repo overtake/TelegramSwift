@@ -29,7 +29,7 @@ class ETiledLayer : CALayer {
 //    }
 }
 
-private class EmojiSegmentView: NSView, CALayerDelegate {
+private class EmojiSegmentView: View {
     
     fileprivate override var isFlipped: Bool {
         return true
@@ -37,7 +37,7 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
     
     private let item:Atomic<EBlockItem?> = Atomic(value: nil)
     
-    fileprivate func draw(_ layer: CALayer, in ctx: CGContext) {
+    fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         if let item = item.modify({$0}) {
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
@@ -45,6 +45,7 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
             
             for segment in item.lineAttr {
                 for line in segment {
+
                     ctx.textPosition = ts
                     CTLineDraw(CTLineCreateWithAttributedString(line), ctx)
                     ts.x+=xAdd
@@ -62,11 +63,11 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        self.layer?.addSublayer(tiled)
-        tiled.frame = self.bounds
-        tiled.contentsScale = backingScaleFactor
+      //  self.layer?.addSublayer(tiled)
+      //  tiled.frame = self.bounds
+      //  tiled.contentsScale = backingScaleFactor
       //  tiled.levelsOfDetailBias = Int(backingScaleFactor)
-        self.tiled.delegate = self
+      //  self.tiled.delegate = self
         
         //tiled.shouldRasterize
     }
@@ -118,7 +119,7 @@ class EBlockRowView: TableRowView {
    // var tiled:CATiledLayer = CATiledLayer()
     
     var button:Control = Control()
-    private var segmentView:EmojiSegmentView = EmojiSegmentView()
+    private var segmentView:EmojiSegmentView = EmojiSegmentView(frame: NSZeroRect)
     var mouseDown:Bool = false
     private var popover: NSPopover?
     
@@ -298,6 +299,7 @@ class EBlockRowView: TableRowView {
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+        segmentView.frame = bounds
       //  tiled.frame = bounds
       //  tiled.tileSize = bounds.size
     }

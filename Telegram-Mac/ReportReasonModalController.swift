@@ -63,10 +63,21 @@ fileprivate class ReportReasonModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        
+        reload()
+        
+        readyOnce()
+    }
+    
+    private func reload() {
+        
         let updateState:(ReportReason) -> Void = { [weak self] reason in
             self?.current = reason
-            self?.genericView.tableView.reloadData()
+            self?.reload()
         }
+        
+        genericView.tableView.removeAll()
         
         let initialSize = atomicSize.modify {$0}
         _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonSpam), type: .selectable(current == .spam), action: {
@@ -81,16 +92,15 @@ fileprivate class ReportReasonModalController: ModalViewController {
             updateState(.porno)
         }, drawCustomSeparator: false))
 
-        readyOnce()
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
             if let strongSelf = self {
                 self?._complete.set(.single(strongSelf.current))
                 self?.close()
             }
-        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 40)
     }
     
     override init() {
