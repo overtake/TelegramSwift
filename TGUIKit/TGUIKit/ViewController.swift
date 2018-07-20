@@ -138,7 +138,7 @@ open class ViewController : NSObject {
     
     public let isKeyWindow:Promise<Bool> = Promise(false)
     
-    public var view:NSView {
+    open var view:NSView {
         get {
             if(_view == nil) {
                 loadView();

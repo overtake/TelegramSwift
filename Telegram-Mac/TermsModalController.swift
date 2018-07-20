@@ -71,6 +71,10 @@ class TermsModalController: ModalViewController {
             self.modal?.resize(with:NSMakeSize(380, min(contentSize.height - 70, genericView.tableView.listHeight + 70)), animated: animated)
         }
     }
+    override var dynamicSize: Bool {
+        return true
+    }
+    
     
     override var handleAllEvents: Bool {
         return true
@@ -145,10 +149,7 @@ class TermsModalController: ModalViewController {
     deinit {
     }
     
-    override var dynamicSize: Bool {
-        return true
-    }
-    
+
     override var closable: Bool {
         return false
     }

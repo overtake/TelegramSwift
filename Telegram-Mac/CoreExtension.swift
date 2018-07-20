@@ -2206,3 +2206,12 @@ func openFaq(account: Account) {
         }
     })
 }
+
+func isNotEmptyStrings(_ strings: [String?]) -> String {
+    for string in strings {
+        if let string = string, !string.isEmpty {
+            return string
+        }
+    }
+    return ""
+}

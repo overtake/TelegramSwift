@@ -633,6 +633,8 @@ internal final class L10n {
   internal static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
   internal static var chatTitleFeed: String  { return L10n.tr("Localizable", "Chat.TitleFeed") }
+  /// VIEW CONTACT
+  internal static var chatViewContact: String  { return L10n.tr("Localizable", "Chat.ViewContact") }
   /// Forwarded from: [%@]()
   internal static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)
@@ -1059,6 +1061,30 @@ internal final class L10n {
   internal static var connectingStatusUpdating: String  { return L10n.tr("Localizable", "ConnectingStatus.updating") }
   /// waiting for network
   internal static var connectingStatusWaitingNetwork: String  { return L10n.tr("Localizable", "ConnectingStatus.waitingNetwork") }
+  /// birthday
+  internal static var contactInfoBirthdayLabel: String  { return L10n.tr("Localizable", "ContactInfo.BirthdayLabel") }
+  /// Contact Info
+  internal static var contactInfoContactInfo: String  { return L10n.tr("Localizable", "ContactInfo.ContactInfo") }
+  /// job
+  internal static var contactInfoJob: String  { return L10n.tr("Localizable", "ContactInfo.Job") }
+  /// home
+  internal static var contactInfoPhoneLabelHome: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelHome") }
+  /// home fax
+  internal static var contactInfoPhoneLabelHomeFax: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelHomeFax") }
+  /// main
+  internal static var contactInfoPhoneLabelMain: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelMain") }
+  /// mobile
+  internal static var contactInfoPhoneLabelMobile: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelMobile") }
+  /// other
+  internal static var contactInfoPhoneLabelOther: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelOther") }
+  /// pager
+  internal static var contactInfoPhoneLabelPager: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelPager") }
+  /// work
+  internal static var contactInfoPhoneLabelWork: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelWork") }
+  /// work fax
+  internal static var contactInfoPhoneLabelWorkFax: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelWorkFax") }
+  /// homepage
+  internal static var contactInfoURLLabelHomepage: String  { return L10n.tr("Localizable", "ContactInfo.URLLabelHomepage") }
   /// Add Contact
   internal static var contactsAddContact: String  { return L10n.tr("Localizable", "Contacts.AddContact") }
   /// Contacts
