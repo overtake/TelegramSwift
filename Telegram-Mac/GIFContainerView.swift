@@ -24,7 +24,7 @@ class GIFContainerView: View {
     private let fetchDisposable = MetaDisposable()
     private let playerDisposable = MetaDisposable()
     
-    private var resource:TelegramMediaResource?
+    private var reference:MediaResourceReference?
     private var account:Account?
     private var size:NSSize = NSZeroSize
     private weak var tableView:TableView?
@@ -69,15 +69,15 @@ class GIFContainerView: View {
     }
     
     func cancelFetching() {
-        if let resource = resource {
-            account?.postbox.mediaBox.cancelInteractiveResourceFetch(resource)
+        if let reference = reference {
+            account?.postbox.mediaBox.cancelInteractiveResourceFetch(reference.resource)
         }
     }
     
     
     func fetch() {
-        if let account = account, let resource = resource {
-            fetchDisposable.set(account.postbox.mediaBox.fetchedResource(resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file)).start())
+        if let account = account, let reference = reference {
+            fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: reference, statsCategory: .file).start())
         }
     }
     
@@ -151,11 +151,11 @@ class GIFContainerView: View {
         updatePlayerIfNeeded()
     }
     
-    func update(with resource: TelegramMediaResource, size: NSSize, viewSize:NSSize, account: Account, table: TableView?, iconSignal:Signal<(TransformImageArguments)->DrawingContext?,Void>) {
+    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, account: Account, table: TableView?, iconSignal:Signal<(TransformImageArguments)->DrawingContext?,Void>) {
         
         self.tableView = table
         self.account = account
-        self.resource = resource
+        self.reference = reference
         self.size = size
         self.setFrameSize(size)
         
@@ -173,9 +173,9 @@ class GIFContainerView: View {
         let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
         player.set(arguments: arguments)
         
-        let updatedStatusSignal = account.postbox.mediaBox.resourceStatus(resource)
+        let updatedStatusSignal = account.postbox.mediaBox.resourceStatus(reference.resource)
         
-        self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
+        self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(reference.resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
             if let strongSelf = self {
                 if case .Local = status {
                     strongSelf.progressView?.removeFromSuperview()

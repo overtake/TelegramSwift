@@ -102,7 +102,7 @@ private final class LocationPlaceSuggestionRowView : TableRowView {
         textView.update(item.textLayout)
         imageView.isHidden = item.image == nil
         if let image = item.image {
-            imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, photo: image, scale: backingScaleFactor, small: true))
+            imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, small: true))
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(40, 40), boundingSize: NSMakeSize(40, 40), intrinsicInsets: NSEdgeInsetsZero, resizeMode: .imageColor(theme.colors.grayIcon)))
         }
     }

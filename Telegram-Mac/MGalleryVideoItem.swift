@@ -222,7 +222,7 @@ class MGalleryVideoItem: MGalleryItem {
 
         let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: image, scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(entry.message!), media: image), scale: System.backingScale)
         
         
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
@@ -247,7 +247,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     override func fetch() -> Void {
        
-        _ = freeMediaFileInteractiveFetched(account: account, file: media).start()
+        _ = freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.message(message: MessageReference(entry.message!), media: media)).start()
     }
 
 }

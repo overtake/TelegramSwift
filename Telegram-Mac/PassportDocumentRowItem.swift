@@ -203,8 +203,8 @@ final class PassportDocumentRowView : TableRowView {
             item.removeAction(item.documentValue.document)
         })
         
-        imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, photo: item.image, scale: backingScaleFactor, small: true, secureIdAccessContext: item.accessContext))
-        _ = chatMessagePhotoInteractiveFetched(account: item.account, photo: item.documentValue.image).start()
+        imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: item.image), scale: backingScaleFactor, small: true, secureIdAccessContext: item.accessContext))
+        _ = chatMessagePhotoInteractiveFetched(account: item.account, imageReference: ImageMediaReference.standalone(media: item.image)).start()
         imageView.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: NSMakeSize(60, 50), boundingSize: NSMakeSize(60, 50), intrinsicInsets: NSEdgeInsets()))
         removeButton.set(image: theme.icons.stickerPackDelete, for: .Normal)
         _ = removeButton.sizeToFit()

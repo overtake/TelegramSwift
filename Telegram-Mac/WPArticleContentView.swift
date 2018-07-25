@@ -103,7 +103,7 @@ class WPArticleContentView: WPContentView {
     
     func fetch() {
         if let layout = content as? WPArticleLayout, let image = layout.content.image {
-            fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.account, photo: image).start())
+            fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
         }
     }
     
@@ -219,7 +219,7 @@ class WPArticleContentView: WPContentView {
             var updateImageSignal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
             if self.content?.content.image != layout.content.image {
                 if let image = layout.content.image {
-                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, photo: image, scale: backingScaleFactor, small: layout.smallThumb)
+                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
                    
                    
                     

@@ -29,8 +29,8 @@ private struct FetchManagerLocationEntryId: Hashable {
 private final class FetchManagerLocationEntry {
     let id: FetchManagerLocationEntryId
     let episode: Int32
-    let resource: MediaResource
-    let fetchTag: MediaResourceFetchTag?
+    let reference: MediaResourceReference
+    let fetchTag: MediaResourceStatsCategory
     
     var referenceCount: Int32 = 0
     var elevatedPriorityReferenceCount: Int32 = 0
@@ -44,11 +44,11 @@ private final class FetchManagerLocationEntry {
         }
     }
     
-    init(id: FetchManagerLocationEntryId, episode: Int32, resource: MediaResource, fetchTag: MediaResourceFetchTag?) {
+    init(id: FetchManagerLocationEntryId, episode: Int32, reference: MediaResourceReference, fetchTag: MediaResourceStatsCategory?) {
         self.id = id
         self.episode = episode
-        self.resource = resource
-        self.fetchTag = fetchTag
+        self.reference = reference
+        self.fetchTag = fetchTag ?? .generic
     }
 }
 
@@ -95,7 +95,7 @@ private final class FetchManagerCategoryContext {
         self.entryCompleted = entryCompleted
     }
     
-    func withEntry(id: FetchManagerLocationEntryId, takeNew: (() -> (MediaResource, MediaResourceFetchTag?, Int32))?, _ f: (FetchManagerLocationEntry) -> Void) {
+    func withEntry(id: FetchManagerLocationEntryId, takeNew: (() -> (MediaResourceReference, MediaResourceStatsCategory?, Int32))?, _ f: (FetchManagerLocationEntry) -> Void) {
         let entry: FetchManagerLocationEntry
         let previousPriorityKey: FetchManagerPriorityKey?
         
@@ -104,8 +104,8 @@ private final class FetchManagerCategoryContext {
             previousPriorityKey = entry.priorityKey
         } else if let takeNew = takeNew {
             previousPriorityKey = nil
-            let (resource, fetchTag, episode) = takeNew()
-            entry = FetchManagerLocationEntry(id: id, episode: episode, resource: resource, fetchTag: fetchTag)
+            let (reference, fetchTag, episode) = takeNew()
+            entry = FetchManagerLocationEntry(id: id, episode: episode, reference: reference, fetchTag: fetchTag)
             self.entries[id] = entry
         } else {
             return
@@ -155,7 +155,8 @@ private final class FetchManagerCategoryContext {
             if activeContext.disposable == nil {
                 if let entry = self.entries[id] {
                     let entryCompleted = self.entryCompleted
-                    activeContext.disposable = self.postbox.mediaBox.fetchedResource(entry.resource, tag: entry.fetchTag, implNext: true).start(next: { value in
+                    
+                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
                         entryCompleted(id, value)
                     })
                 } else {
@@ -202,7 +203,7 @@ private final class FetchManagerCategoryContext {
                     let activeContext = FetchManagerActiveContext()
                     self.activeContexts[id] = activeContext
                     let entryCompleted = self.entryCompleted
-                    activeContext.disposable = self.postbox.mediaBox.fetchedResource(entry.resource, tag: entry.fetchTag, implNext: true).start(next: { value in
+                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
                         entryCompleted(id, value)
                     })
                 }
@@ -345,7 +346,7 @@ final class FetchManager {
         }
     }
     
-    func interactivelyFetched(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, resource: MediaResource, fetchTag: MediaResourceFetchTag?, elevatedPriority: Bool, userInitiated: Bool) -> Signal<Void, NoError> {
+    func interactivelyFetched(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, reference: MediaResourceReference, fetchTag: MediaResourceStatsCategory?, elevatedPriority: Bool, userInitiated: Bool) -> Signal<Void, NoError> {
         let queue = self.queue
         return Signal { [weak self] subscriber in
             if let strongSelf = self {
@@ -353,7 +354,7 @@ final class FetchManager {
                 var assignedUserInitiatedIndex: Int32?
                 
                 strongSelf.withCategoryContext(category, { context in
-                    context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: resource.id, locationKey: locationKey), takeNew: { return (resource, fetchTag, strongSelf.takeNextEpisodeId()) }, { entry in
+                    context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey), takeNew: { return (reference, fetchTag, strongSelf.takeNextEpisodeId()) }, { entry in
                         assignedEpisode = entry.episode
                         entry.referenceCount += 1
                         if elevatedPriority {
@@ -372,7 +373,7 @@ final class FetchManager {
                     queue.async {
                         if let strongSelf = self {
                             strongSelf.withCategoryContext(category, { context in
-                                context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: resource.id, locationKey: locationKey), takeNew: nil, { entry in
+                                context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey), takeNew: nil, { entry in
                                     if entry.episode == assignedEpisode {
                                         entry.referenceCount -= 1
                                         assert(entry.referenceCount >= 0)
@@ -399,21 +400,21 @@ final class FetchManager {
             } |> runOn(self.queue)
     }
     
-    func cancelInteractiveFetches(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, resource: MediaResource) {
+    func cancelInteractiveFetches(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, reference: MediaResourceReference) {
         self.queue.async {
             self.withCategoryContext(category, { context in
-                context.cancelEntry(FetchManagerLocationEntryId(location: location, resourceId: resource.id, locationKey: locationKey))
+                context.cancelEntry(FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey))
             })
         }
     }
     
-    func fetchStatus(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, resource: MediaResource) -> Signal<MediaResourceStatus, NoError> {
+    func fetchStatus(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, reference: MediaResourceReference) -> Signal<MediaResourceStatus, NoError> {
         let queue = self.queue
         return Signal { [weak self] subscriber in
             if let strongSelf = self {
                 var assignedIndex: Int?
                 
-                let entryId = FetchManagerLocationEntryId(location: location, resourceId: resource.id, locationKey: locationKey)
+                let entryId = FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey)
                 strongSelf.withCategoryContext(category, { context in
                     context.withFetchStatusContext(entryId, { statusContext in
                         assignedIndex = statusContext.subscribers.add({ status in
@@ -429,7 +430,7 @@ final class FetchManager {
                             }
                         }
                         if statusContext.disposable == nil {
-                            statusContext.disposable = strongSelf.postbox.mediaBox.resourceStatus(resource).start(next: { status in
+                            statusContext.disposable = strongSelf.postbox.mediaBox.resourceStatus(reference.resource).start(next: { status in
                                 queue.async {
                                     if let strongSelf = self {
                                         strongSelf.withCategoryContext(category, { context in

@@ -67,7 +67,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
         }
     }
     
@@ -84,7 +84,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func cancelFetching() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
+            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
         }
     }
     
@@ -156,7 +156,8 @@ class ChatFileContentView: ChatMediaContentView {
                 thumbView.setSignal(signal: cachedMedia(messageId: stableId, size: arguments.imageSize, scale: backingScaleFactor))
                 
                 if !thumbView.hasImage {
-                    thumbView.setSignal( chatMessageImageFile(account: account, file: file, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
+                    let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
+                    thumbView.setSignal( chatMessageImageFile(account: account, fileReference: reference, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
                         if let strongSelf = self {
                             return cacheMedia(signal: image, messageId: stableId, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                         } else {

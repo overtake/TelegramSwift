@@ -513,7 +513,6 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
             entries.append(.sectionId(sectionId))
             sectionId += 1
             
-            //TODOLANG
             entries.append(.description(sectionId: sectionId, index: index, text: L10n.secureIdRequestedInformationHeader))
             index += 1
             
@@ -1249,7 +1248,6 @@ private func createPasswordEntries( _ state: PassportState) -> [InputDataEntry] 
     let nonFilter:(String)->String = { value in
         return value
     }
-    //TODOLANG
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: L10n.secureIdCreatePasswordHeader, color: theme.colors.grayText, detectBold: true))
     index += 1

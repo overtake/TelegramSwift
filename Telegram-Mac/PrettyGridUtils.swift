@@ -245,7 +245,7 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
                         image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil)
                     }
-                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), resource: content.resource, previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: content.attributes)))
+                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), reference: nil, resource: content.resource, previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: content.attributes)))
                 } else {
                     removeResultIndexes.append(i)
                 }

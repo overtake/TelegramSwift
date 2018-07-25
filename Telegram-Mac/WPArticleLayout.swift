@@ -41,7 +41,7 @@ class WPArticleLayout: WPLayout {
         if let mediaCount = mediaCount, mediaCount > 1 {
             var instantMedias = Array(instantPageMedias(for: parent.media[0] as! TelegramMediaWebpage).suffix(10))
             if let file = content.file {
-                let page = InstantPageMedia(index: 0, media: file, caption: nil)
+                let page = InstantPageMedia(index: 0, media: file, webpage: parent.media[0] as! TelegramMediaWebpage, caption: nil)
                 for i in 0 ..< instantMedias.count {
                     instantMedias[i] = instantMedias[i].withUpdatedIndex(i + 1)
                 }

@@ -135,11 +135,11 @@ class EStickerPackRowView: HorizontalRowView {
 
         if let item = item as? EStickerPackRowItem, mediaUpdated {
             if let topItem = item.topItem, let dimensions = topItem.file.dimensions {
-                imageView.setSignal( chatMessageSticker(account: item.account, file: topItem.file, type: .thumb, scale: backingScaleFactor))
+                imageView.setSignal( chatMessageSticker(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file), type: .thumb, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:dimensions.aspectFitted(imageSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                 imageView.set(arguments:arguments)
                 imageView.setFrameSize(arguments.imageSize)
-                _ = fileInteractiveFetched(account: item.account, file: topItem.file).start()
+                _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file)).start()
             }
             self.needsLayout = true
         }

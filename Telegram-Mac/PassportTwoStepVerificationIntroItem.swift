@@ -16,13 +16,12 @@ class PassportTwoStepVerificationIntroItem: GeneralRowItem {
     fileprivate let headerLayout:TextViewLayout
     fileprivate let descLayout:TextViewLayout
     init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, action: @escaping()->Void) {
-        //TODOLANG
         let headerAttr = NSMutableAttributedString()
-        _ = headerAttr.append(string: "**\(peer.displayTitle) requests access to your personal data**\nto sign you up for their services", color: theme.colors.grayText, font: .normal(.text))
+        _ = headerAttr.append(string: L10n.secureCreatePasswordIntroHeader(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
         headerAttr.detectBoldColorInString(with: .medium(.text))
         headerLayout = TextViewLayout(headerAttr, alignment: .center)
         
-        descLayout = TextViewLayout(.initialize(string: "Please create a password which will be used to encrypt your personal data.\n\nThis password will also be required whenever you log in to a new device.", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        descLayout = TextViewLayout(.initialize(string: L10n.secureIdCreatePasswordIntro, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         
         super.init(initialSize, stableId: stableId, action: action)
         _ = makeSize(initialSize.width, oldWidth: 0)

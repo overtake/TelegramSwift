@@ -100,17 +100,21 @@ class ContextMediaRowView: TableRowView {
                     let view = GIFContainerView()
                     let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
                     if let thumb = data.thumb {
-                        signal = chatWebpageSnippetPhoto(account: item.account, photo: thumb, scale: backingScaleFactor, small:true)
+                        //TODO
+                        signal = chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: thumb), scale: backingScaleFactor, small:true)
                     } else {
                         signal = .never()
                     }
                     
-                    view.update(with: data.file, size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], account: item.account, table: item.table, iconSignal: signal)
+                   
+                    
+                    view.update(with: MediaResourceReference.standalone(resource: data.file) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], account: item.account, table: item.table, iconSignal: signal)
                     container = view
                 case let .sticker(data):
                     let view = TransformImageView()
-                    view.setSignal(chatMessageSticker(account: item.account, file: data.file, type: .small, scale: backingScaleFactor))
-                    _ = fileInteractiveFetched(account: item.account, file: data.file).start()
+                    //TODO
+                    view.setSignal(chatMessageSticker(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file), type: .small, scale: backingScaleFactor))
+                    _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file)).start()
                     
                     let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
                     view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
@@ -120,8 +124,8 @@ class ContextMediaRowView: TableRowView {
                 case let .photo(data):
                     let view = View()
                     let imageView = TransformImageView()
-                    imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, photo: data, scale: backingScaleFactor, small:false))
-                    _ = chatMessagePhotoInteractiveFetched(account: item.account, photo: data).start()
+                    imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false))
+                    _ = chatMessagePhotoInteractiveFetched(account: item.account, imageReference: ImageMediaReference.standalone(media: data)).start()
                     
                     let imageSize = item.result.sizes[i]
                     imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))

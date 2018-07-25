@@ -25,15 +25,15 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                let resourceData = account.postbox.mediaBox.resourceData(representation.resource)
+                let resourceData = combineLatest(account.postbox.mediaBox.resourceData(representation.resource), account.postbox.loadedPeerWithId(peerId))
                 let imageData = resourceData
                     |> take(1)
-                    |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
+                    |> mapToSignal { maybeData, peer -> Signal<(Data?, Bool), NoError> in
                         if maybeData.complete {
                             return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
                         } else {
                             return Signal { subscriber in
-                                let resourceDataDisposable = resourceData.start(next: { data in
+                                let resourceDataDisposable = resourceData.start(next: { data, _ in
                                     if data.complete {
                                         subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), true))
                                         subscriber.putCompletion()
@@ -43,7 +43,13 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                                 }, completed: {
                                     subscriber.putCompletion()
                                 })
-                                let fetchedDataDisposable = account.postbox.mediaBox.fetchedResource(representation.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .image)).start()
+                                
+                                let fetchedDataDisposable: Disposable
+                                if let reference = PeerReference(peer) {
+                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
+                                } else {
+                                    fetchedDataDisposable = EmptyDisposable
+                                }
                                 return ActionDisposable {
                                     resourceDataDisposable.dispose()
                                     fetchedDataDisposable.dispose()

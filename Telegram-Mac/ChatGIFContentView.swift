@@ -59,7 +59,7 @@ class ChatGIFContentView: ChatMediaContentView {
     }
     
     override func open() {
-        if let parent = parent, let account = account {
+        if let parent = parent {
             if !canPlayForce {
                 canPlayForce = true
                 updatePlayerIfNeeded()
@@ -73,13 +73,13 @@ class ChatGIFContentView: ChatMediaContentView {
     
     override func cancelFetching() {
         if let account = account, let media = media as? TelegramMediaFile {
-            cancelFreeMediaFileInteractiveFetch(account: account, file: media)
+            cancelFreeMediaFileInteractiveFetch(account: account, resource: media.resource)
         }
     }
     
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile {
-            fetchDisposable.set(freeMediaFileInteractiveFetched(account: account, file: media).start())
+            fetchDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media)).start())
         }
     }
     
@@ -178,7 +178,9 @@ class ChatGIFContentView: ChatMediaContentView {
                 let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
-                player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+                let reference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
+                
+                player.setSignal(chatMessagePhoto(account: account, imageReference: reference, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 player.set(arguments: arguments)
                 

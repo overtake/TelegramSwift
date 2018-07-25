@@ -90,6 +90,7 @@ class MGalleryPhotoItem: MGalleryItem {
     override func request(immediately: Bool) {
         
         let account = self.account
+        let entry = self.entry
         let media = self.media
         let secureIdAccessContext = self.secureIdAccessContext
         
@@ -98,10 +99,10 @@ class MGalleryPhotoItem: MGalleryItem {
                 return strongSelf.smallestValue(for: size)
             }
             return .complete()
-        } |> distinctUntilChanged |> mapToSignal { size -> Signal<CGImage?, Void> in
-            return chatGalleryPhoto(account: account, photo: media, scale: System.backingScale, secureIdAccessContext: secureIdAccessContext) |> deliverOn(account.graphicsThreadPool) |> map { transform in
-                return transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
-            }
+            } |> distinctUntilChanged |> mapToSignal { size -> Signal<CGImage?, Void> in
+                return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext) |> deliverOn(account.graphicsThreadPool) |> map { transform in
+                    return transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                }
         }
         
         path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, Void> in
@@ -109,16 +110,17 @@ class MGalleryPhotoItem: MGalleryItem {
                 return .single(link(path:resource.path, ext:kMediaImageExt)!)
             }
             return .never()
-        })
+            })
         
         self.image.set(result |> deliverOnMainQueue)
-
+        
         
         fetch()
+        
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessagePhotoInteractiveFetched(account: account, photo: media).start())
+         fetching.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: entry.imageReference(media)).start())
     }
     
     override func cancel() -> Void {

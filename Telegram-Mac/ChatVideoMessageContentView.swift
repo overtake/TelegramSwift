@@ -228,13 +228,13 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     override func cancelFetching() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
+            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
         }
     }
     
     override func fetch() {
         if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
         }
     }
     
@@ -310,7 +310,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
-                player.setSignal( chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
+                player.setSignal( chatMessagePhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 player.set(arguments: arguments)
                 

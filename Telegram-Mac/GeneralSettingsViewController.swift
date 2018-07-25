@@ -358,7 +358,7 @@ class GeneralSettingsViewController: TableViewController {
                 return selectModalPeers(account: account, title: "Send Logs", limit: 1, confirmation: {_ in return confirmSignal(for: mainWindow, information: "Are you sure you want send logs?")}) |> filter {!$0.isEmpty} |> map {$0.first!} |> mapToSignal { peerId -> Signal<Void, Void> in
                     let messages = logs.map { (name, path) -> EnqueueMessage in
                         let id = arc4random64()
-                        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
+                        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), reference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
                         return .message(text: "", attributes: [], media: file, replyToMessageId: nil, localGroupingKey: nil)
                     }
                     return enqueueMessages(account: account, peerId: peerId, messages: messages) |> map {_ in}

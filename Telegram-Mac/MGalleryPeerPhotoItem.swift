@@ -43,6 +43,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         
         let account = self.account
         let media = self.media
+        let entry = self.entry
         
         let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, Void> in
             if let strongSelf = self {
@@ -50,7 +51,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             }
             return .complete()
         } |> distinctUntilChanged |> mapToSignal { size -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments), Void> in
-                return chatMessagePhoto(account: account, photo: media, scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
+                return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
                     return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                 }
         } |> mapToThrottled { (transform, arguments) -> Signal<CGImage?, Void> in
@@ -75,7 +76,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessagePhotoInteractiveFetched(account: account, photo: media).start())
+        fetching.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: entry.imageReference(media)).start())
     }
     
     override func cancel() -> Void {

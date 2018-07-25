@@ -91,7 +91,8 @@ class ChatInvoiceView : ChatRowView {
                 imageView.setSignal( chatMessageWebFilePhoto(account: item.account, photo: photo, scale: backingScaleFactor))
                 imageView.set(arguments: arguments)
                 imageView.setFrameSize(arguments.boundingSize)
-                _ = item.account.postbox.mediaBox.fetchedResource(photo.resource, tag: nil).start()
+                _ = fetchedMediaResource(postbox: item.account.postbox, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
+              //  _ = item.account.postbox.mediaBox.fetchedResource(photo.resource, tag: nil).start()
 
             } else {
                 imageView.removeFromSuperview()

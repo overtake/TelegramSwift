@@ -88,6 +88,31 @@ enum GalleryEntry : Comparable, Identifiable {
         }
     }
     
+    func imageReference( _ image: TelegramMediaImage) -> ImageMediaReference {
+        switch self {
+        case let .message(entry):
+            return ImageMediaReference.message(message: MessageReference(entry.message!), media: image)
+        case let .instantMedia(media):
+            return ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
+        case  .secureIdDocument:
+            return ImageMediaReference.standalone(media: image)
+        case .photo:
+            return ImageMediaReference.standalone(media: image)
+        }
+    }
+    
+    func fileReference( _ file: TelegramMediaFile) -> FileMediaReference {
+        switch self {
+        case let .message(entry):
+            return FileMediaReference.message(message: MessageReference(entry.message!), media: file)
+        case let .instantMedia(media):
+            return FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)
+        case .secureIdDocument:
+            return FileMediaReference.standalone(media: file)
+        case .photo:
+            return FileMediaReference.standalone(media: file)
+        }
+    }
     
     
     var identifier: String {

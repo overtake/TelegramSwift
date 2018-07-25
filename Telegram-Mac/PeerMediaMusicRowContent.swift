@@ -171,7 +171,9 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             thumbView.layer?.contents = theme.icons.playerMusicPlaceholder
             thumbView.layer?.cornerRadius = .cornerRadius
             
-            thumbView.setSignal(chatMessagePhotoThumbnail(account: item.account, photo: TelegramMediaImage(imageId: MediaId.init(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: item.thumbResource)], reference: nil)))
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: item.thumbResource)], reference: nil)
+            
+            thumbView.setSignal(chatMessagePhotoThumbnail(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
             
             thumbView.set(arguments: arguments)
 
@@ -228,7 +230,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, file: item.file).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file)).start())
         }
         open()
     }
@@ -236,7 +238,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func cancelFetching() {
         if let item = item as? PeerMediaMusicRowItem {
-            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, file: item.file)
+            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file))
         }
     }
     

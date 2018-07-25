@@ -300,11 +300,11 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             
             imageView.setSignal(signal: cachedMedia(media: file, size: dimensions, scale: backingScaleFactor))
             
-            imageView.setSignal(chatMessageSticker(account: account, file: file, type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, Void> in
+            imageView.setSignal(chatMessageSticker(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, Void> in
                 return cacheMedia(signal: image, media: file, size: dimensions, scale: System.backingScale)
             })
 
-            stickerFetchedDisposable.set(fileInteractiveFetched(account: account, file: file).start())
+            stickerFetchedDisposable.set(fileInteractiveFetched(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file)).start())
             
             let imageSize = dimensions.aspectFitted(eStickerSize)
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets()))

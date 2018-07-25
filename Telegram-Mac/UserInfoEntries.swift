@@ -623,9 +623,9 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.updateEditingNames(firstName: firstName, lastName: lastName)
             })
         case let .about(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(L10n.peerInfoAbout), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, _, _ in
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(L10n.peerInfoAbout), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
-                    arguments.peerChat(peerId)
+                    arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }

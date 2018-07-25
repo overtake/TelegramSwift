@@ -2807,6 +2807,10 @@ internal final class L10n {
   internal static var searchFieldSearch: String  { return L10n.tr("Localizable", "SearchField.Search") }
   /// Off
   internal static var secretTimerOff: String  { return L10n.tr("Localizable", "SecretTimer.Off") }
+  /// **%@ requests access to your personal data**\nto sign you up for their services
+  internal static func secureCreatePasswordIntroHeader(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Secure.CreatePassword.Intro.Header", p1)
+  }
   /// Sorry, your Telegram app is out of date and can’t handle this request. Please update Telegram.
   internal static var secureIdAppVersionOutdated: String  { return L10n.tr("Localizable", "SecureId.AppVersionOutdated") }
   /// Please correct errors
@@ -2905,6 +2909,8 @@ internal final class L10n {
   internal static var secureIdCreatePasswordDescription: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Description") }
   /// PASSWORD
   internal static var secureIdCreatePasswordHeader: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Header") }
+  /// Please create a password which will be used to encrypt your personal data.\n\nThis password will also be required whenever you log in to a new device.
+  internal static var secureIdCreatePasswordIntro: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Intro") }
   /// Enter your password
   internal static var secureIdCreatePasswordPasswordInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.PasswordInputPlaceholder") }
   /// Password

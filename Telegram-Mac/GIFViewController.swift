@@ -32,14 +32,14 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
             }, menuItems: { file in
                 return account.postbox.transaction { transaction -> [ContextMenuItem] in
                     if let mediaId = file.id {
-                        let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).flatMap {$0.contents as? RecentMediaItem}
+                        let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
                         if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
                             return [ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                                 let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
                             })]
                         } else {
                             return [ContextMenuItem(L10n.messageContextSaveGif, handler: {
-                                let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                                let _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
                             })]
                         }
                     }
@@ -56,7 +56,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
 
 private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
-        let result = view.items.prefix(70).flatMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(id: "", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
+        let result = view.items.prefix(70).compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
         
         let values = makeMediaEnties(result, initialSize: NSMakeSize(initialSize.width, 100))
         var wrapped:[InputContextEntry] = []

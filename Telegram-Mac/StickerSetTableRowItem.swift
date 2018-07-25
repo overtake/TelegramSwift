@@ -197,10 +197,10 @@ class StickerSetTableRowView : TableRowView {
                 countView.backgroundColor = backdorColor
                 
                 removeControl.set(image: theme.icons.stickerPackDelete, for: .Normal)
-                removeControl.sizeToFit()
-                imageView.setSignal( chatMessageSticker(account: item.account, file: topItem.file, type: .thumb, scale: backingScaleFactor))
+                _ = removeControl.sizeToFit()
+                imageView.setSignal( chatMessageSticker(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file), type: .thumb, scale: backingScaleFactor))
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
-                _ = fileInteractiveFetched(account: item.account, file: topItem.file).start()
+                _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file)).start()
                 nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))
                 countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
                 switch item.control {
