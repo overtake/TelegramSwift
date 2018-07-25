@@ -127,9 +127,9 @@ final class GridMessageItemNode: GridItemNode {
                         if let status = _status {
                             switch status {
                             case .Remote:
-                                fetchingDisposable.set(messageMediaFileInteractiveFetched(account: currentState.0, messageId: message.id, file: file).start())
+                                fetchingDisposable.set(messageMediaFileInteractiveFetched(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start())
                             case .Fetching:
-                                messageMediaFileCancelInteractiveFetch(account: currentState.0, messageId: message.id, file: file)
+                                messageMediaFileCancelInteractiveFetch(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file))
                             default:
                                 break
                             }
@@ -169,12 +169,8 @@ final class GridMessageItemNode: GridItemNode {
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
 
                 if !self.imageView.hasImage {
-                    self.imageView.setSignal( mediaGridMessagePhoto(account: account, photo: media, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
-                        if let strongSelf = self {
-                            return cacheMedia(signal: image, media: media, size: imageSize, scale: backingScaleFactor)
-                        } else {
-                            return .complete()
-                        }
+                    self.imageView.setSignal( mediaGridMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { image in
+                        return cacheMedia(signal: image, media: media, size: imageSize, scale: backingScaleFactor)
                     })
                 }
                 progressView?.removeFromSuperview()
@@ -190,7 +186,7 @@ final class GridMessageItemNode: GridItemNode {
 
 
                 if self.imageView.layer?.contents == nil {
-                    self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, file: file, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                    self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                         if let strongSelf = self {
                             return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
                         } else {

@@ -49,7 +49,10 @@ class MGalleryExternalVideoItem: MGalleryVideoItem {
     
     override func request(immediately: Bool) {
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, photo: _media, scale: System.backingScale)
+        let webpage = entry.message!.media[0] as! TelegramMediaWebpage
+
+        
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(webpage), media: _media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
         let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())

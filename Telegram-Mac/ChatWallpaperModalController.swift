@@ -178,7 +178,7 @@ class ChatWallpaperModalController: ModalViewController {
             case .image(let representations):
                 if let representation = largestImageRepresentation(representations) {
                     
-                    _ = showModalProgress(signal: account.postbox.mediaBox.fetchedResource(representation.resource, tag: nil, implNext: true) |> mapToSignal { source in
+                    _ = showModalProgress(signal: fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: representation.resource), reportResultStatus: true) |> mapToSignal { source in
                         return moveWallpaperToCache(postbox: account.postbox, representation.resource)
                     } |> deliverOnMainQueue, for: mainWindow).start(next: { _ in
                         _ = updateApplicationWallpaper(postbox: account.postbox, wallpaper: wallpaper).start()
@@ -194,7 +194,7 @@ class ChatWallpaperModalController: ModalViewController {
         })
         
 
-        let transition = telegramWallpapers(account: account)
+        let transition = telegramWallpapers(postbox: account.postbox, network: account.network)
             |> map { wallpapers -> (ThemeGridEntryTransition, Bool) in
                 var entries: [ThemeGridControllerEntry] = []
                 var index = 0

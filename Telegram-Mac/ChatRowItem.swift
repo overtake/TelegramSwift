@@ -1497,7 +1497,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                         }))
                     } else {
                         items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
-                            let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                            let _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
                         }))
                     }
                 }

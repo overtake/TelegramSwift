@@ -789,6 +789,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             
         } else {
             [self setFrameSize:layoutSize];
+            [_scrollView setFrameSize:layoutSize];
             future();
         }
         
@@ -927,7 +928,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 -(void)setMax_height:(int)max_height {
     self->_max_height = max_height;
-    [_textView setFrame:NSMakeRect(0, 0, NSWidth(_scrollView.frame), MIN(NSHeight(_textView.frame), (CGFloat)max_height))];
+    [_scrollView setFrame:NSMakeRect(0, 0, NSWidth(_scrollView.frame), MIN(NSHeight(_textView.frame), (CGFloat)max_height))];
 }
     
 -(void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag {

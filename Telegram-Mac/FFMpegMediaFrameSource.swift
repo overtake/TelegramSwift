@@ -68,7 +68,7 @@ private func contextForCurrentThread() -> FFMpegMediaFrameSourceContext? {
 final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
     private let queue: Queue
     private let postbox: Postbox
-    private let resource: MediaResource
+    private let reference: MediaResourceReference
     private let streamable: Bool
     private let video: Bool
     private let preferSoftwareDecoding: Bool
@@ -90,10 +90,10 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
         }
     }
    
-    init(queue: Queue, postbox: Postbox, resource: MediaResource, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool) {
+    init(queue: Queue, postbox: Postbox, reference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool) {
         self.queue = queue
         self.postbox = postbox
-        self.resource = resource
+        self.reference = reference
         self.streamable = streamable
         self.video = video
         self.preferSoftwareDecoding = preferSoftwareDecoding
@@ -143,14 +143,14 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
         self.generatingFrames = true
         
         let postbox = self.postbox
-        let resource = self.resource
+        let reference = self.reference
         let queue = self.queue
         let streamable = self.streamable
         let video = self.video
         let preferSoftwareDecoding = self.preferSoftwareDecoding
         
         self.performWithContext { [weak self] context in
-            context.initializeState(postbox: postbox, resource: resource, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding)
+            context.initializeState(postbox: postbox, reference: reference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding)
             
             let (frames, endOfStream) = context.takeFrames(until: timestamp)
             
@@ -191,13 +191,13 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
             
             let queue = self.queue
             let postbox = self.postbox
-            let resource = self.resource
+            let reference = self.reference
             let streamable = self.streamable
             let video = self.video
             let preferSoftwareDecoding = self.preferSoftwareDecoding
             
             self.performWithContext { [weak self] context in
-                context.initializeState(postbox: postbox, resource: resource, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding)
+                context.initializeState(postbox: postbox, reference: reference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding)
                 
                 context.seek(timestamp: timestamp, completed: { streamDescriptions, timestamp in
                     queue.async {

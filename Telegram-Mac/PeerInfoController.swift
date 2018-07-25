@@ -95,8 +95,8 @@ class PeerInfoArguments {
         }))
     }
     
-    func peerChat(_ peerId:PeerId) {
-        pushViewController(ChatController(account: account, chatLocation: .peer(peerId)))
+    func peerChat(_ peerId:PeerId, postId: MessageId? = nil) {
+        pushViewController(ChatController(account: account, chatLocation: .peer(peerId), messageId: postId))
     }
     
     func toggleNotifications() {

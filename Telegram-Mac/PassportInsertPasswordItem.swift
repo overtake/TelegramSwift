@@ -179,7 +179,6 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         inputContainer.backgroundColor = theme.colors.grayBackground
         
         let attr = NSMutableAttributedString()
-        //TODOLANG
         _ = attr.append(string: L10n.secureIdInsertPasswordPassword, color: theme.colors.grayText, font: .normal(.title))
         input.placeholderAttributedString = attr
         input.font = .normal(.title)
@@ -187,7 +186,6 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         nextButton.set(font: .normal(.title), for: .Normal)
         nextButton.set(color: .white, for: .Normal)
         nextButton.set(background: theme.colors.blueUI, for: .Normal)
-        //TODOLANG
         nextButton.set(text: L10n.secureIdInsertPasswordNext, for: .Normal)
         _ = nextButton.sizeToFit(NSMakeSize(40, 0), NSMakeSize(.greatestFiniteMagnitude, 40))
         nextButton.layer?.cornerRadius = 20

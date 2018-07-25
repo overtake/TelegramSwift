@@ -1136,7 +1136,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let window = self?.window, let account = self?.account, let peerId = self?.chatInteraction.peerId {
                 let signal = searchMessageIdByTimestamp(account: account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970) - Int32(NSTimeZone.local.secondsFromGMT())) |> mapToSignal { messageId -> Signal<Message?, Void> in
                     if let messageId = messageId {
-                        return downloadMessage(account: account, messageId: messageId)
+                        return downloadMessage(postbox: account.postbox, network: account.network, messageId: messageId)
                     }
                     return .single(nil)
                 }
@@ -2172,7 +2172,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
       
         
         genericView.tableView.merge(with: transition)
-        //NSLog("\(transition.description), afterCount: \(genericView.tableView.count), scroll: \(genericView.tableView.scrollPosition().current.rect), visibleRows: \(genericView.tableView.visibleRows())")
+        NSLog("\(transition.description), afterCount: \(genericView.tableView.count), scroll: \(genericView.tableView.scrollPosition().current.rect), visibleRows: \(genericView.tableView.visibleRows())")
 
        // NSLog("4")
         genericView.tableView.notifyScrollHandlers()

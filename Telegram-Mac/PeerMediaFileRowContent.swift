@@ -152,7 +152,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, file: file)
+            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file))
         }
     }
     
@@ -168,7 +168,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func fetch() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, file: file).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file)).start())
         }
     }
     
@@ -254,7 +254,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             let updateIconImageSignal:Signal<(TransformImageArguments) -> DrawingContext?,NoError>
             if let icon = item.icon {
-                updateIconImageSignal = chatWebpageSnippetPhoto(account: item.account, photo: icon, scale: backingScaleFactor, small:true)
+                updateIconImageSignal = chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
                 updateIconImageSignal = .complete()
             }

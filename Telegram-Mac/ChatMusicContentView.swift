@@ -63,7 +63,7 @@ class ChatMusicContentView: ChatAudioContentView {
         
         imageView.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
         
-        imageView.setSignal( chatMessagePhotoThumbnail(account: account, photo: image), animate: true, cacheImage: { [weak self] image in
+        imageView.setSignal( chatMessagePhotoThumbnail(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)), animate: true, cacheImage: { [weak self] image in
             if let strongSelf = self {
                 return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
             } else {

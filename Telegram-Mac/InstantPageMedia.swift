@@ -13,6 +13,7 @@ import TelegramCoreMac
 struct InstantPageMedia: Equatable, Identifiable {
     let index: Int
     let media: Media
+    let webpage:TelegramMediaWebpage
     let caption: String?
     
     var stableId: Int {
@@ -20,7 +21,7 @@ struct InstantPageMedia: Equatable, Identifiable {
     }
     
     func withUpdatedIndex(_ index: Int) -> InstantPageMedia {
-        return InstantPageMedia(index: index, media: self.media, caption: self.caption)
+        return InstantPageMedia(index: index, media: self.media, webpage: webpage, caption: self.caption)
     }
     
     static func ==(lhs: InstantPageMedia, rhs: InstantPageMedia) -> Bool {

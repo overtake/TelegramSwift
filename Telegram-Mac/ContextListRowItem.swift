@@ -86,7 +86,7 @@ class ContextListRowItem: TableRowItem {
         
         if let representation = representation {
             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil)
-            iconSignal = chatWebpageSnippetPhoto(account: account, photo: tmpImage, scale: 2.0, small:true)
+            iconSignal = chatWebpageSnippetPhoto(account: account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
             
             let iconSize = representation.dimensions.aspectFilled(CGSize(width: 50, height: 50))
             
@@ -271,7 +271,7 @@ class ContextListGIFView : ContextListRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
-            player.update(with: resource, size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), account: item.account, table: item.table, iconSignal: item.iconSignal)
+            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), account: item.account, table: item.table, iconSignal: item.iconSignal)
             player.needsLayout = true
         }
     }

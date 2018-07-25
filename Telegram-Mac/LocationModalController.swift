@@ -578,7 +578,7 @@ class LocationModalController: ModalViewController {
                 if let botId = botId, let location = location {
                     let first = Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), Void>.single((cachedData[query] ?? previousResult.modify {$0}, location.location, cachedData[query] == nil, !query.isEmpty))
                     if cachedData[query] == nil {
-                        return first |> then(requestChatContextResults(account: account, botId: botId, peerId: peerId, query: query, offset: "", geopoint: ChatContextGeoPoint(latitude: location.coordinate.latitude, longtitude: location.coordinate.longitude))
+                        return first |> then(requestChatContextResults(account: account, botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
                             |> deliverOnPrepareQueue |> map { result in
                                 var value = result
                                 if let result = result {

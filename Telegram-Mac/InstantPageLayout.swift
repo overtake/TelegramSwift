@@ -35,12 +35,12 @@ final class InstantPageLayout {
     }
 }
 
-func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, horizontalInset: CGFloat, isCover: Bool, fillToWidthAndHeight: Bool, horizontalInsetBetweenMaxWidth: CGFloat, presentation: InstantViewAppearance, media: [MediaId: Media], mediaIndexCounter: inout Int, overlay: Bool, openChannel:@escaping(TelegramChannel)->Void, joinChannel:@escaping(TelegramChannel)->Void) -> InstantPageLayout {
+func layoutInstantPageBlock(_ block: InstantPageBlock, webpage: TelegramMediaWebpage, boundingWidth: CGFloat, horizontalInset: CGFloat, isCover: Bool, fillToWidthAndHeight: Bool, horizontalInsetBetweenMaxWidth: CGFloat, presentation: InstantViewAppearance, media: [MediaId: Media], mediaIndexCounter: inout Int, overlay: Bool, openChannel:@escaping(TelegramChannel)->Void, joinChannel:@escaping(TelegramChannel)->Void) -> InstantPageLayout {
 
     
     switch block {
     case let .cover(block):
-        return layoutInstantPageBlock(block, boundingWidth: boundingWidth, horizontalInset: horizontalInset, isCover: true, fillToWidthAndHeight: fillToWidthAndHeight, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
+        return layoutInstantPageBlock(block, webpage: webpage, boundingWidth: boundingWidth, horizontalInset: horizontalInset, isCover: true, fillToWidthAndHeight: fillToWidthAndHeight, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
     case let .title(text):
         let styleStack = InstantPageTextStyleStack()
         styleStack.push(.fontSize(28.0))
@@ -163,7 +163,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
             
             contentSize.height += filledSize.height
             
-            let mediaItem = InstantPageMediaItem(frame: CGRect(origin: CGPoint(x: floor((boundingWidth - filledSize.width) / 2.0), y: 0.0), size: filledSize), media: InstantPageMedia(index: mediaIndex, media: image, caption: richPlainText(caption)), arguments: InstantPageMediaArguments.image(interactive: true, roundCorners: false, fit: false))
+            let mediaItem = InstantPageMediaItem(frame: CGRect(origin: CGPoint(x: floor((boundingWidth - filledSize.width) / 2.0), y: 0.0), size: filledSize), media: InstantPageMedia(index: mediaIndex, media: image, webpage: webpage, caption: richPlainText(caption)), arguments: InstantPageMediaArguments.image(interactive: true, roundCorners: false, fit: false))
             
             items.append(mediaItem)
             
@@ -222,7 +222,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                 
                 contentSize.height += filledSize.height
                 
-                let mediaItem = InstantPageMediaItem(frame: CGRect(origin: CGPoint(x: floor((boundingWidth - filledSize.width) / 2.0), y: 0.0), size: filledSize), media: InstantPageMedia(index: mediaIndex, media: video, caption: richPlainText(caption)), arguments: InstantPageMediaArguments.video(interactive: true, autoplay: autoplay))
+                let mediaItem = InstantPageMediaItem(frame: CGRect(origin: CGPoint(x: floor((boundingWidth - filledSize.width) / 2.0), y: 0.0), size: filledSize), media: InstantPageMedia(index: mediaIndex, media: video, webpage: webpage, caption: richPlainText(caption)), arguments: InstantPageMediaArguments.video(interactive: true, autoplay: autoplay))
                 
                 items.append(mediaItem)
                 
@@ -292,7 +292,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                 avatar = nil
             }
             if let avatar = avatar {
-                let avatarItem = InstantPageMediaItem(frame: NSMakeRect(horizontalInset + lineInset + 1.0, contentSize.height - 2.0, 50.0, 50.0), media: InstantPageMedia.init(index: -1, media: avatar, caption: richPlainText(caption)), arguments: .image(interactive: false, roundCorners: true, fit: false))
+                let avatarItem = InstantPageMediaItem(frame: NSMakeRect(horizontalInset + lineInset + 1.0, contentSize.height - 2.0, 50.0, 50.0), media: InstantPageMedia(index: -1, media: avatar, webpage: webpage, caption: richPlainText(caption)), arguments: .image(interactive: false, roundCorners: true, fit: false))
                 
                 items.append(avatarItem)
                 avatarInset += 62.0
@@ -341,7 +341,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         
         var previous: InstantPageBlock? = nil
         for sub in blocks {
-            let subLayout = layoutInstantPageBlock(sub, boundingWidth: boundingWidth - horizontalInset * 2 - lineInset, horizontalInset: 0, isCover: false, fillToWidthAndHeight: false, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
+            let subLayout = layoutInstantPageBlock(sub, webpage: webpage, boundingWidth: boundingWidth - horizontalInset * 2 - lineInset, horizontalInset: 0, isCover: false, fillToWidthAndHeight: false, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
             let spacing = spacingBetweenBlocks(upper: previous, lower: sub)
             let subItems = subLayout.flattenedItemsWithOrigin(NSMakePoint(horizontalInset + lineInset, contentSize.height + spacing))
             items.append(contentsOf: subItems)
@@ -386,7 +386,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                 nextItemOrigin.x = 0.0
                 nextItemOrigin.y += itemSize + spacing
             }
-            let subLayout = layoutInstantPageBlock(subBlock, boundingWidth: itemSize, horizontalInset: 0, isCover: false, fillToWidthAndHeight: true, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
+            let subLayout = layoutInstantPageBlock(subBlock, webpage: webpage, boundingWidth: itemSize, horizontalInset: 0, isCover: false, fillToWidthAndHeight: true, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
             items.append(contentsOf: subLayout.flattenedItemsWithOrigin(nextItemOrigin))
             nextItemOrigin.x += itemSize + spacing;
         }
@@ -553,7 +553,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
         if let file = media[id] as? TelegramMediaFile {
             let mediaIndex = mediaIndexCounter
             mediaIndexCounter += 1
-            let item = InstantPageAudioItem(frame: CGRect(origin: CGPoint(x: horizontalInset, y: 0.0), size: CGSize(width: boundingWidth, height: 48.0)), media: InstantPageMedia(index: mediaIndex, media: file, caption: ""))
+            let item = InstantPageAudioItem(frame: CGRect(origin: CGPoint(x: horizontalInset, y: 0.0), size: CGSize(width: boundingWidth, height: 48.0)), media: InstantPageMedia(index: mediaIndex, media: file, webpage: webpage, caption: ""))
             
             contentSize.height += item.frame.size.height
             items.append(item)
@@ -591,7 +591,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                     mediaIndexCounter += 1
                     let filledSize = imageSize.fit(CGSize(width: boundingWidth, height: 600))
                     contentSize.height = min(max(contentSize.height, filledSize.height), boundingWidth)
-                    medias.append(InstantPageMedia(index: mediaIndex, media: photo, caption: richPlainText(caption)))
+                    medias.append(InstantPageMedia(index: mediaIndex, media: photo, webpage: webpage, caption: richPlainText(caption)))
                 }
             case let .video(id, caption, _, _):
                 if let file = media[id] as? TelegramMediaFile, file.videoSize != NSZeroSize {
@@ -599,7 +599,7 @@ func layoutInstantPageBlock(_ block: InstantPageBlock, boundingWidth: CGFloat, h
                     mediaIndexCounter += 1
                     let filledSize = file.videoSize.fit(CGSize(width: boundingWidth, height: 600))
                     contentSize.height = min(max(contentSize.height, filledSize.height), boundingWidth)
-                    medias.append(InstantPageMedia(index: mediaIndex, media: file, caption: richPlainText(caption)))
+                    medias.append(InstantPageMedia(index: mediaIndex, media: file, webpage: webpage, caption: richPlainText(caption)))
                 }
             default:
                 break
@@ -678,7 +678,7 @@ func instantPageLayoutForWebPage(_ webPage: TelegramMediaWebpage, boundingWidth:
         
         let horizontalInsetBetweenMaxWidth = max(0, (boundingWidth - 720)/2)
         
-        let blockLayout = layoutInstantPageBlock(block, boundingWidth: boundingWidth, horizontalInset: 40 + horizontalInsetBetweenMaxWidth, isCover: false, fillToWidthAndHeight: false, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: spacingBetween < -.ulpOfOne, openChannel: openChannel, joinChannel: joinChannel)
+        let blockLayout = layoutInstantPageBlock(block, webpage: webPage, boundingWidth: boundingWidth, horizontalInset: 40 + horizontalInsetBetweenMaxWidth, isCover: false, fillToWidthAndHeight: false, horizontalInsetBetweenMaxWidth: horizontalInsetBetweenMaxWidth, presentation: presentation, media: media, mediaIndexCounter: &mediaIndexCounter, overlay: spacingBetween < -.ulpOfOne, openChannel: openChannel, joinChannel: joinChannel)
         
        let spacing = blockLayout.contentSize.height > .ulpOfOne ? spacingBetween : 0.0
 

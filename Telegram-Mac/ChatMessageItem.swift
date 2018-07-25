@@ -395,7 +395,7 @@ class ChatMessageItem: ChatRowItem {
             }
         }
         
-        if let file = media as? TelegramMediaFile {
+        if let file = media as? TelegramMediaFile, let message = message {
             items = items |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
                 var items = items
                 return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
@@ -421,7 +421,7 @@ class ChatMessageItem: ChatRowItem {
                         }
                     } else if file.isVideo && file.isAnimated {
                         items.append(ContextMenuItem(tr(L10n.messageContextSaveGif), handler: {
-                            let _ = addSavedGif(postbox: account.postbox, file: file).start()
+                            let _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
                         }))
                     }
                     

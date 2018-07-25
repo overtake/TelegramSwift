@@ -44,18 +44,30 @@ func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
     return lhs.priority < rhs.priority
 }
 
+public enum SwipeType{
+    case left,right,none
+}
+
+public enum SwipeState {
+    case start
+    case swiping(delta: CGFloat)
+    case success
+    case failed
+    
+}
+
 public enum SwipeDirection {
-    case left
-    case right
+    case left(SwipeState)
+    case right(SwipeState)
     case none
 }
 
 class SwipeHandler : Comparable {
     let handler:(SwipeDirection)->KeyHandlerResult
-    let object:WeakReference<NSObject>
+    let object:WeakReference<NSView>
     let priority:HandlerPriority
     
-    init(_ handler:@escaping(SwipeDirection)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority) {
+    init(_ handler:@escaping(SwipeDirection)->KeyHandlerResult, _ object:NSView, _ priority:HandlerPriority) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -161,7 +173,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
 
     }
     
-    public func add(swipe handler:@escaping(SwipeDirection) -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low) -> Void {
+    public func add(swipe handler:@escaping(SwipeDirection) -> KeyHandlerResult, with object:NSView, priority:HandlerPriority = .low) -> Void {
         swipeHandlers.append(SwipeHandler(handler, object, priority))
     }
     
@@ -388,11 +400,12 @@ public class Window: NSWindow, NSTouchBarDelegate {
         
     }
     
+    private var twoFingersTouches:[String:NSTouch]?/*temp storage for the twoFingerTouches data*/
+
     public override func sendEvent(_ event: NSEvent) {
         
 //        let testEvent = NSEvent.EventType.init(rawValue: 36)!
 //        
-//        NSLog("\(testEvent)")
         
         let eventType = event.type
         
@@ -444,6 +457,56 @@ public class Window: NSWindow, NSTouchBarDelegate {
                         }
                     }
                 }
+            } else if eventType == .gesture {
+                if #available(OSX 10.12, *) {
+                    let touches = event.allTouches()
+
+                    loop: for handler in swipeHandlers {
+                        if let touch = touches.first, let view = handler.object.value {
+                            switch touch.phase {
+                            case NSTouch.Phase.began:
+                                twoFingersTouches = GestureUtils.twoFingersTouches(view, event)
+                            case NSTouch.Phase.ended:
+                                
+                                
+                                guard let beganTouches = twoFingersTouches else {break}
+                                
+                                let swipeType:SwipeType = GestureUtils.swipe(view, event, beganTouches)
+                                if swipeType == .right {
+                                    NSLog("swipe right")
+                                    twoFingersTouches = nil
+                                    switch handler.handler(.right(.success)) {
+                                    case .invoked:
+                                        return
+                                    case .rejected:
+                                        continue
+                                    case .invokeNext:
+                                        break loop
+                                    }
+                                    
+                                } else if swipeType == .left {
+                                    NSLog("swipe left")
+                                    twoFingersTouches = nil
+                                    switch handler.handler(.left(.success)) {
+                                    case .invoked:
+                                        return
+                                    case .rejected:
+                                        continue
+                                    case .invokeNext:
+                                        break loop
+                                    }
+                                }
+                            default:
+                                break
+                            }
+                        }
+                    }
+                    
+                   
+                } else {
+                    // Fallback on earlier versions
+                }
+                return
             } else if let handlers = mouseHandlers[eventType.rawValue] {
                 let sorted = handlers.sorted(by: >)
                 loop: for handle in sorted {

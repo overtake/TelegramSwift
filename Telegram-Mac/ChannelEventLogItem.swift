@@ -574,7 +574,8 @@ private class ServiceEventLogRowView : TableRowView {
                     imageView?.setFrameSize(NSMakeSize(70, 70))
                     self.addSubview(imageView!)
                 }
-                imageView?.setSignal(chatMessagePhoto(account: item.chatInteraction.account, photo: image, toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
+                
+                imageView?.setSignal(chatMessagePhoto(account: item.chatInteraction.account, imageReference: ImageMediaReference.standalone(media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
             } else {
                 imageView?.removeFromSuperview()
                 imageView = nil

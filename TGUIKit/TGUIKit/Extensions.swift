@@ -1321,3 +1321,72 @@ public extension String {
         self = self.capitalizingFirstLetter()
     }
 }
+
+
+
+class GestureUtils{
+    /**
+     * To avoid duplicate code we could extract the content of this method into an GestureUtils method. Return nil if there isn't 2 touches and set the array only if != nil
+     */
+    static func twoFingersTouches(_ view:NSView, _ event:NSEvent)->[String:NSTouch]?{
+        var twoFingersTouches:[String:NSTouch]? = nil//NSMutualDictionary was used before and didn't require casting id to string, revert if side-effects manifest
+        let touches:Set<NSTouch> = event.touches(matching:NSTouch.Phase.any, in: view)//touchesMatchingPhase:NSTouchPhaseAny inView:self
+        if(touches.count == 2){
+            twoFingersTouches = [String:NSTouch]()
+            for touch in touches {
+                twoFingersTouches!["\((touch).identity)"] = touch/*assigns each touch to the identity of the same touch*///was [ setObject: forKey:];
+            }
+        }
+        return twoFingersTouches
+    }
+    /**
+     * Detects 2 finger (left/right) swipe gesture
+     * NOTE: either of 3 enums is returned: .leftSwipe, .rightSwipe .none
+     * TODO: also make up and down swipe detectors, and do more research into how this could be done easier. Maybe you even have some clues in the notes about gestures etc.
+     * Conceptually:
+     * 1. Record 2 .began touchEvents
+     * 2. Record 2 .ended touchEvents
+     * 3. Measure the distance between .began and .ended and assert if it is within threshold
+     */
+    static func swipe(_ view:NSView, _ event:NSEvent, _ beginningTouches:[String:NSTouch]) -> SwipeType{
+        let endingTouches:Set<NSTouch> = event.touches(matching: NSTouch.Phase.ended, in: view)
+        if endingTouches.count == 2 {
+            var magnitudesX:[CGFloat] = []/*magnitude definition: the great size or extent of something.*/
+            var magnitudesY:[CGFloat] = []/*magnitude definition: the great size or extent of something.*/
+            for endingTouch in endingTouches {
+                guard let beginningTouch:NSTouch = beginningTouches["\(endingTouch.identity)"] else {continue}
+                
+                let magnitudeX:CGFloat = endingTouch.normalizedPosition.x - beginningTouch.normalizedPosition.x
+                magnitudesX.append(magnitudeX)
+                
+                let magnitudeY:CGFloat = endingTouch.normalizedPosition.y - beginningTouch.normalizedPosition.y
+                magnitudesX.append(magnitudeY)
+            }
+            
+            let kSwipeMinimumLength:CGFloat = 0.1
+
+            
+            var sumX:CGFloat = 0
+            for magnitudeX in magnitudesX {
+                sumX += magnitudeX
+            }
+            
+            var sumY:CGFloat = 0
+            for magnitudeY in magnitudesY {
+                sumY += magnitudeY
+            }
+            
+            let absoluteSumY:CGFloat = abs(sumY)
+            if (absoluteSumY > kSwipeMinimumLength) {return .none}
+            
+            let absoluteSumX:CGFloat = abs(sumX)/*force value to be positive*/
+            if (absoluteSumX < kSwipeMinimumLength) {return .none}/*Assert if the absolute sum is long enough to be considered a complete gesture*/
+            if (sumX > 0){
+                return .right
+            }else /*if(sum < 0)*/{
+                return .left
+            }
+        }
+        return .none/*no swipe direction detected*/
+    }
+}

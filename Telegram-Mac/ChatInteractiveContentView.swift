@@ -143,9 +143,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 dimensions = image.representationForDisplayAtSize(size)?.dimensions ?? size
                 
                 if let parent = parent, parent.containsSecretMedia {
-                    updateImageSignal = chatSecretPhoto(account: account, photo: image, scale: backingScaleFactor)
+                    updateImageSignal = chatSecretPhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor)
                 } else {
-                    updateImageSignal = chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor)
+                    updateImageSignal = chatMessagePhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor)
                 }
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -174,9 +174,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
                 
                 if let parent = parent, parent.containsSecretMedia {
-                    updateImageSignal = chatSecretMessageVideo(account: account, video: file, scale: backingScaleFactor)
+                    updateImageSignal = chatSecretMessageVideo(account: account, fileReference: FileMediaReference.message(message: MessageReference(parent), media: file), scale: backingScaleFactor)
                 } else {
-                    updateImageSignal = chatMessageVideo(postbox: account.postbox, file: file, scale: backingScaleFactor)  //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
+                    updateImageSignal = chatMessageVideo(postbox: account.postbox, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file), scale: backingScaleFactor)  //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
                 dimensions = file.dimensions ?? size
@@ -328,7 +328,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     override func cancelFetching() {
         if let account = account, let parent = parent {
             if let media = media as? TelegramMediaFile {
-                messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, file: media)
+                messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
             } else if let media = media as? TelegramMediaImage {
                 chatMessagePhotoCancelInteractiveFetch(account: account, photo: media)
             }
@@ -338,9 +338,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
     override func fetch() {
         if let account = account, let parent = parent {
             if let media = media as? TelegramMediaFile {
-                fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, file: media).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
             } else if let media = media as? TelegramMediaImage {
-                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: account, photo: media).start())
+                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: media)).start())
             }
         }
     }

@@ -99,7 +99,7 @@ class ChatMapContentView: ChatMediaContentView {
             mediaUpdated = mediaUpdated && !self.imageView.hasImage
             
             if mediaUpdated {
-                imageView.setSignal( chatWebpageSnippetPhoto(account: account, photo: parameters.image, scale: backingScaleFactor, small: parameters.isVenue), animate: mediaUpdated, cacheImage: { [weak self] image in
+                imageView.setSignal( chatWebpageSnippetPhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), animate: mediaUpdated, cacheImage: { [weak self] image in
                     if let strongSelf = self {
                         return cacheMedia(signal: image, media: media, size: parameters.arguments.imageSize, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
                     } else {

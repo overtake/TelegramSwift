@@ -235,9 +235,18 @@ class APSongItem : APItem {
     override var stableId: ChatHistoryEntryId {
         return entry.stableId
     }
+    
+    var reference: MediaResourceReference {
+        switch entry {
+        case let .song(message):
+            return FileMediaReference.message(message: MessageReference(message), media: message.media.first as! TelegramMediaFile).resourceReference(resource)
+        default:
+            return MediaResourceReference.standalone(resource: resource)
+        }
+    }
 
     private func fetch() {
-        fetchDisposable.set(account.postbox.mediaBox.fetchedResource(resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
+        fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: reference).start())
     }
 
     private func cancelFetching() {
@@ -772,7 +781,7 @@ class APController : NSResponder {
 
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, resource: item.resource, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true)
+        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true)
         
         player.play()
 

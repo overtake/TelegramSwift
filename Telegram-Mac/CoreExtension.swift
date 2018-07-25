@@ -846,7 +846,7 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
-            return peer.hasAdminRights(.canPostMessages) || peer.hasAdminRights(.canEditMessages)
+            return ((peer.hasAdminRights(.canPostMessages) || peer.hasAdminRights(.canEditMessages)) && (message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970))) || peer.groupAccess.isCreator
         } else if case .group = peer.info {
             if peer.hasAdminRights(.canPinMessages) {
                 return !message.flags.contains(.Incoming)
@@ -2215,3 +2215,4 @@ func isNotEmptyStrings(_ strings: [String?]) -> String {
     }
     return ""
 }
+

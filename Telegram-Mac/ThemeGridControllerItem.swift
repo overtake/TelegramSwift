@@ -76,7 +76,7 @@ final class SettingsThemeWallpaperView: View {
             case let .image(representations):
                 self.label.isHidden = true
                 self.imageView.isHidden = false
-                self.imageView.setSignal(chatAvatarGalleryPhoto(account: account, representations: representations, autoFetchFullSize: true, scale: backingScaleFactor))
+                self.imageView.setSignal(chatWallpaper(account: account, representations: representations, autoFetchFullSize: true, scale: backingScaleFactor))
                 self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
             case .none:
                 self.label.isHidden = false

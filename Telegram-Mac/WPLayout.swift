@@ -59,6 +59,10 @@ class WPLayout: Equatable {
         return nil
     }
     
+    var webPage: TelegramMediaWebpage {
+        return parent.media.first as! TelegramMediaWebpage
+    }
+    
     let presentation: WPLayoutPresentation
     
     init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
