@@ -159,7 +159,7 @@ class UserInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-         let result = selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, Void> in
+        let result = selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, Void> in
             if let peerId = peerIds.first {
                 return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
                     return confirmSignal(for: mainWindow, information: tr(L10n.confirmAddBotToGroup(peer.displayTitle)))
@@ -623,9 +623,9 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.updateEditingNames(firstName: firstName, lastName: lastName)
             })
         case let .about(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(L10n.peerInfoAbout), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, _, _ in
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(L10n.peerInfoAbout), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
-                    arguments.peerChat(peerId)
+                    arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }

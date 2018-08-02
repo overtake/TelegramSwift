@@ -123,6 +123,7 @@ final class ChatInteraction : InterfaceObserver  {
     var startRecording:(Bool)->Void = {_ in}
     var openProxySettings: ()->Void = {}
     var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
+    var clearMentions:()->Void = {}
     
     let loadingMessage: Promise<Bool> = Promise()
     

@@ -29,6 +29,23 @@ class ChatServiceItem: ChatRowItem {
         if let displayTitle = message.author?.displayTitle {
             authorName = displayTitle
         }
+        
+        let isIncoming: Bool = message.isIncoming(account, entry.renderType == .bubble)
+
+        
+        let nameColor:(PeerId) -> NSColor = { peerId in
+            if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
+                if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+                    return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
+                } else if account.peerId != peerId {
+                    let value = abs(Int(peerId.id) % 7)
+                    return theme.chat.peerName(value)
+                }
+            }
+            return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
+        }
+        
+        
         let attributedString:NSMutableAttributedString = NSMutableAttributedString()
         if let media = message.media[0] as? TelegramMediaAction {
            
@@ -41,7 +58,7 @@ class ChatServiceItem: ChatRowItem {
                         
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
-                            attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                            attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     } else {
@@ -57,8 +74,8 @@ class ChatServiceItem: ChatRowItem {
                         for peerId in peerIds {
                             
                             if let peer = message.peers[peerId] {
-                                let range = attributedString.append(string: peer.displayTitle, color: linkColor, font: .medium(theme.fontSize))
-                                attributedString.add(link:inAppLink.peerInfo(peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                                let range = attributedString.append(string: peer.displayTitle, color: nameColor(peer.id), font: .medium(theme.fontSize))
+                                attributedString.add(link:inAppLink.peerInfo(peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
                                 if peerId != peerIds.last {
                                     _ = attributedString.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                                 }
@@ -68,7 +85,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     
@@ -80,8 +97,8 @@ class ChatServiceItem: ChatRowItem {
                         for peerId in peerIds {
                             
                             if let peer = message.peers[peerId] {
-                                let range = attributedString.append(string: peer.displayTitle, color: linkColor, font: .medium(theme.fontSize))
-                                attributedString.add(link:inAppLink.peerInfo(peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                                let range = attributedString.append(string: peer.displayTitle, color: nameColor(peerId), font: .medium(theme.fontSize))
+                                attributedString.add(link:inAppLink.peerInfo(peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
                                 if peerId != peerIds.last {
                                     _ = attributedString.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                                 }
@@ -91,7 +108,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     
@@ -106,7 +123,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     self.image = image
@@ -114,6 +131,13 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .titleUpdated(title):
                     let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle(authorName, title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
                 case .customText(let text, _):
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .pinnedMessageUpdated:
@@ -127,7 +151,7 @@ class ChatServiceItem: ChatRowItem {
                     let _ =  attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     
@@ -135,7 +159,7 @@ class ChatServiceItem: ChatRowItem {
                     let _ =  attributedString.append(string: tr(L10n.chatServiceGroupJoinedByLink(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     
@@ -157,7 +181,7 @@ class ChatServiceItem: ChatRowItem {
                                 let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                             let range = attributedString.string.nsstring.range(of: authorName)
-                            attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                            attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
@@ -165,7 +189,7 @@ class ChatServiceItem: ChatRowItem {
                     let _ =  attributedString.append(string: tr(L10n.chatServiceGroupTookScreenshot(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                 case let .phoneCall(callId: _, discardReason: reason, duration: duration):
@@ -206,7 +230,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     if let authorId = authorId {
                         let range = attributedString.append(string: authorName, color: linkColor, font: NSFont.medium(theme.fontSize))
-                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: linkColor)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         _ = attributedString.append(string: " ")
                     }
                     _ = attributedString.append(string: tr(L10n.chatListServiceGameScored1Countable(Int(score), gameName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))

@@ -758,7 +758,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if case let .MessageEntry(_message, _isRead, _renderType, _itemType, _fwdType, _) = object {
+        if case let .MessageEntry(_message, _, _isRead, _renderType, _itemType, _fwdType, _) = object {
             message = _message
             isRead = _isRead
             itemType = _itemType
@@ -1003,6 +1003,7 @@ class ChatRowItem: TableRowItem {
             formatter.dateStyle = .medium
             formatter.timeStyle = .medium
             formatter.timeZone = NSTimeZone.local
+            //
             var fullDate: String = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - account.context.timeDifference))
             
             for attribute in message.attributes {

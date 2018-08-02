@@ -30,34 +30,6 @@ enum PeerMediaSharedEntryStableId : Hashable {
         }
     }
     
-    static func ==(lhs:PeerMediaSharedEntryStableId, rhs: PeerMediaSharedEntryStableId) -> Bool {
-        switch lhs {
-        case let .messageId(lhsMessageId):
-            if case let .messageId(rhsMessageId) = rhs, lhsMessageId == rhsMessageId {
-                return true
-            } else {
-                return false
-            }
-        case .search:
-            if case .search = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .date(let index):
-            if case .date(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .emptySearch:
-            if case .emptySearch = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 enum PeerMediaSharedEntry : Comparable, Identifiable {
@@ -75,6 +47,15 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
             return .search
         case .emptySearchEntry:
             return .emptySearch
+        }
+    }
+    
+    var message:Message? {
+        switch self {
+        case let .messageEntry(message):
+            return message
+        default:
+            return nil
         }
     }
 }
@@ -149,8 +130,6 @@ func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
         } else {
             return false
         }
-    default :
-        return lhs.stableId == rhs.stableId
     }
 }
 
@@ -212,8 +191,8 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
                 return PeerMediaWebpageRowItem(initialSize,interaction,account, entry.entry)
             } else if tags == .music, message.media.first is TelegramMediaFile {
                 return PeerMediaMusicRowItem(initialSize, interaction, account, entry.entry)
-            } else if !message.text.isEmpty {
-                return PeerMediaWebpageRowItem(initialSize,interaction,account, entry.entry)
+            } else if tags == .voiceOrInstantVideo, message.media.first is TelegramMediaFile {
+                return PeerMediaVoiceRowItem(initialSize,interaction,account, entry.entry)
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
             }
@@ -296,6 +275,7 @@ class PeerMediaListController: GenericViewController<TableView> {
     
     public func load(with tagMask:MessageTags) -> Void {
      
+        
         
         genericView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
 
@@ -430,20 +410,16 @@ class PeerMediaListController: GenericViewController<TableView> {
         
     }
     
+    override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
+        if current == 0 {
+            view.setFrameOrigin(0, 50 + previous)
+        }
+        view._change(pos: NSMakePoint(0, current + 50), animated: animated)//.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
+        return { [weak view] in
+            view?.layer?.removeAllAnimations()
+        }
+    }
+    
     
 }
 
-
-
-
-//                let view = strongSelf.messagesView.modify {$0}
-//                if let view = view {
-//                    let range = strongSelf.genericView.visibleRows()
-//                    let indexRange = (max(view.entries.count - 1 - range.max,0), max(view.entries.count - 1 - range.min,0))
-//
-//                    if indexRange.1 > 0 {
-//                        strongSelf.account.postbox.updateMessageHistoryViewVisibleRange(view.id, earliestVisibleIndex: view.entries[indexRange.0].index, latestVisibleIndex: view.entries[indexRange.1].index)
-//                    }
-//
-//                }
-                

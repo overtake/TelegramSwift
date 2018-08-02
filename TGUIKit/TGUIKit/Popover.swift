@@ -12,6 +12,14 @@ class PopoverBackground: Control {
     fileprivate weak var popover:Popover?
 }
 
+private struct PopoverFrameValue {
+    let inset: NSPoint
+    let edge: NSRectEdge?
+    let contentRect: NSRect
+    weak var control: Control?
+    
+}
+
 open class Popover: NSObject {
     
     private weak var window:Window?
@@ -46,17 +54,73 @@ open class Popover: NSObject {
         background.popover = self
     }
     
+    @objc func windowDidResized(_ notification: NSNotification) {
+        hide()
+    }
+    
+    private var frameValue: PopoverFrameValue!
+    private func updatePopoverFrame() {
+        if let parentView = window?.contentView, let control = frameValue.control, let controller = controller {
+            var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
+
+            
+            if let edge = frameValue.edge {
+                
+                switch edge {
+                case .maxX:
+                    point.x -= controller.frame.width
+                case .maxY:
+                    //  point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
+                    point.y -= controller.frame.height
+                    background.flip = true
+                case .minX:
+                    point.x -= (controller.frame.width - control.frame.width)
+                    point.y -= controller.frame.height
+                    background.flip = true
+                default:
+                    fatalError("Not Implemented")
+                }
+                
+                
+            }
+            
+            if frameValue.inset.x != 0 {
+                point.x += (frameValue.inset.x)
+                
+            }
+            if frameValue.inset.y != 0 {
+                point.y += frameValue.inset.y
+            }
+            
+            
+            controller.viewDidAppear(animates)
+            
+            var rect = controller.bounds
+            if !NSIsEmptyRect(frameValue.contentRect) {
+                rect = frameValue.contentRect
+            }
+            
+            point.x = min(max(5, point.x), (parentView.frame.width - rect.width - 12) - 5)
+            point.y = min(max(5, point.y), (parentView.frame.height - rect.height - 12) - 5)
+            
+            background.frame = NSMakeRect(point.x, point.y, rect.width + 14, rect.height + 14)
+        }
+    }
     
     
     open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, contentRect:NSRect = NSMakeRect(7, 7, 0, 0), delayBeforeShown: Double = 0.2) -> Void {
         
         if let controller = controller, let parentView = control.window?.contentView {
             
+            frameValue = PopoverFrameValue(inset: inset, edge: edge, contentRect: contentRect, control: control)
+            
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
             
             self.window = control.kitWindow
             
+            NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: window)
+
             var signal = controller.ready.get() |> filter {$0} |> take(1)
             if control.controlState == .Hover && delayBeforeShown > 0.0 {
                 signal = signal |> delay(delayBeforeShown, queue: Queue.mainQueue())
@@ -101,53 +165,8 @@ open class Popover: NSObject {
                     
                     strongSelf.control = control
                     strongSelf.background.flip = false
-                    var point:NSPoint = control.convert(NSMakePoint(0, 0), to: parentView)
                     
-                    if let edge = edge {
-                        
-                        switch edge {
-                        case .maxX:
-                            point.x -= controller.frame.width
-                        case .maxY:
-                            //  point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
-                            point.y -= controller.frame.height
-                            strongSelf.background.flip = true
-                        case .minX:
-                            point.x -= (controller.frame.width - control.frame.width)
-                            point.y -= controller.frame.height
-                            strongSelf.background.flip = true
-                        default:
-                            fatalError("Not Implemented")
-                        }
-                        
-                        
-                    }
-                    
-                    
-                    
-                    if inset.x != 0 {
-                        point.x += (inset.x)
-                        
-                    }
-                    if inset.y != 0 {
-                        point.y += inset.y
-                    }
-                    
-                    
-                    controller.viewDidAppear(strongSelf.animates)
-                    
-                    var rect = controller.bounds
-                    if !NSIsEmptyRect(contentRect) {
-                        rect = contentRect
-                    }
-                    
-                    point.x = min(max(5, point.x), (parentView.frame.width - rect.width - 12) - 5)
-                    point.y = min(max(5, point.y), (parentView.frame.height - rect.height - 12) - 5)
-                    
-                    parentView.layer?.isOpaque = true
-                    
-                    //.borderSize * 2
-                    strongSelf.background.frame = NSMakeRect(point.x, point.y, rect.width + 14, rect.height + 14)
+                    strongSelf.updatePopoverFrame()
                     strongSelf.background.backgroundColor = .clear
                     strongSelf.background.layer?.cornerRadius = .cornerRadius
                     
@@ -294,6 +313,7 @@ open class Popover: NSObject {
         self.readyDisposable.dispose()
         window?.remove(object: self, for: .All)
         background.removeFromSuperview()
+        NotificationCenter.default.removeObserver(self)
     }
     
     public func hide(_ removeHandlers:Bool = true) -> Void {

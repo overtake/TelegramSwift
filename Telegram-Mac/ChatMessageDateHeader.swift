@@ -24,10 +24,10 @@ private let granularity: Int32 = 60 * 60 * 24
 
 
 func chatDateId(for timestamp:Int32) -> Int64 {
-    return Int64(Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
+    return Int64(Calendar.autoupdatingCurrent.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
 }
 func mediaDateId(for timestamp:Int32) -> Int64 {
-    return Int64(Calendar.current.component(.month, from: Date(timeIntervalSince1970: TimeInterval(timestamp))))
+    return Int64(Calendar.autoupdatingCurrent.component(.month, from: Date(timeIntervalSince1970: TimeInterval(timestamp))))
 }
 
 class ChatDateStickItem : TableStickItem {
@@ -62,7 +62,8 @@ class ChatDateStickItem : TableStickItem {
             text = tr(L10n.dateToday)
         } else {
             let dateFormatter = DateFormatter()
-            dateFormatter.timeZone = NSTimeZone.local
+            dateFormatter.calendar = Calendar.autoupdatingCurrent
+            //dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";
             if timeinfoNow.tm_year > timeinfo.tm_year && (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2) {
                 dateFormatter.dateFormat = "dd MMMM yyyy";

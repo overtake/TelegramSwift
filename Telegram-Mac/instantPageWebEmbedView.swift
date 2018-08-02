@@ -39,7 +39,7 @@ final class instantPageWebEmbedView: View, InstantPageView {
     
     
     deinit {
-        webView.mainFrame.load(URLRequest(url: URL(string:"file://blank")!))
+        webView.mainFrame.load(URLRequest(url: URL(string:"https://google.com")!))
         webView.mainFrame.stopLoading()
     }
     

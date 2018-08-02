@@ -94,6 +94,7 @@ class ChatListController : PeersListController {
     private let removePeerIdGroupDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     private let scrollDisposable = MetaDisposable()
+    private let reorderDisposable = MetaDisposable()
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -191,10 +192,35 @@ class ChatListController : PeersListController {
             default:
                 break
             }
+            
+            var pinnedCount: Int = 0
+            self.genericView.tableView.enumerateItems { item -> Bool in
+                guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+                pinnedCount += 1
+                return item.pinnedType != .none
+            }
+            self.searchController?.pinnedItems = self.collectPinnedItems
+            self.genericView.tableView.resortController?.resortRange = NSMakeRange(0, pinnedCount)
         }))
         
         
         request.set(.single(.Initial(50, nil)))
+        
+        var pinnedCount: Int = 0
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+            pinnedCount += 1
+            return item.pinnedType != .none
+        }
+        
+        genericView.tableView.resortController = TableResortController(resortRange: NSMakeRange(0, pinnedCount), start: { row in
+            
+        }, resort: { row in
+            
+        }, complete: { [weak self] from, to in
+            self?.resortPinned(from, to)
+        })
+        
         
         genericView.tableView.addScroll(listener: TableScrollListener({ [weak self] scroll in
 
@@ -210,14 +236,13 @@ class ChatListController : PeersListController {
            
         }))
         
+        
+
         genericView.tableView.setScrollHandler({ [weak self] scroll in
             
             let view = previousChatList.modify({$0})
             
             if let strongSelf = self, let view = view {
-                
-               
-                
                 var messageIndex:ChatListIndex?
                 
                 switch scroll.direction {
@@ -244,6 +269,36 @@ class ChatListController : PeersListController {
 //            return (view, totalCount)
 //        }
         
+    }
+    
+    private func resortPinned(_ from: Int, _ to: Int) {
+        
+        var items:[PinnedItemId] = []
+
+        
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+            items.append(item.chatLocation.pinnedItemId)
+            return item.pinnedType != .none
+        }
+        
+         items.move(at: from, to: to)
+        
+        reorderDisposable.set(account.postbox.transaction { transaction -> Void in
+            reorderPinnedItemIds(transaction: transaction, itemIds: items)
+        }.start())
+    }
+    
+    override var collectPinnedItems:[PinnedItemId] {
+        var items:[PinnedItemId] = []
+        
+        
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+            items.append(item.chatLocation.pinnedItemId)
+            return item.pinnedType != .none
+        }
+        return items
     }
 
     private var lastScrolledIndex: ChatListIndex? = nil
@@ -296,11 +351,29 @@ class ChatListController : PeersListController {
             scrollToTop()
         #endif
         
-       
         
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            if event.modifierFlags.contains(.control) {
+                if self.genericView.tableView._mouseInside() {
+                    let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(event.locationInWindow, from: nil))
+                    if row >= 0 {
+                        self.genericView.tableView.item(at: row).view?.mouseDown(with: event)
+                        return .invoked
+                    }
+                }
+            }
+            return .rejected
+        }, with: self, for: .leftMouseDown, priority: .high)
         
-
-        
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
     }
     
     override func update(with state: ViewControllerState) {
@@ -325,6 +398,7 @@ class ChatListController : PeersListController {
         removePeerIdGroupDisposable.dispose()
         disposable.dispose()
         scrollDisposable.dispose()
+        reorderDisposable.dispose()
     }
     
     

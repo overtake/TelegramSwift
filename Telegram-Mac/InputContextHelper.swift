@@ -576,12 +576,10 @@ class InputContextHelper: NSObject {
                 if animated {
                     controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak controller] completed in
                         
-                        if completed {
-                            controller?.removeFromSuperview()
-                            controller?.genericView.removeAll()
-                            controller?.viewDidDisappear(animated)
-                            controller?.genericView.cancelSelection()
-                        } 
+                        controller?.removeFromSuperview()
+                        controller?.genericView.removeAll()
+                        controller?.viewDidDisappear(animated)
+                        controller?.genericView.cancelSelection()
                         
                     })
 

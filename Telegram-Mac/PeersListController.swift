@@ -156,7 +156,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     private let followGlobal:Bool
     private let searchOptions: AppSearchOptions
     let mode:PeerListMode
-    private var searchController:SearchController? {
+    private(set) var searchController:SearchController? {
         didSet {
             if let controller = searchController {
                 genericView.customHandler.size = { [weak controller] size in
@@ -368,6 +368,8 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                     self?.genericView.searchView.cancel(true)
                 }
             }, options: searchOptions, frame:genericView.tableView.frame, groupId: self.mode.groupId)
+            
+            searchController.pinnedItems = collectPinnedItems
            
             self.searchController = searchController
             
@@ -404,6 +406,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         }
     }
    
+    
+    var collectPinnedItems:[PinnedItemId] {
+        return []
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

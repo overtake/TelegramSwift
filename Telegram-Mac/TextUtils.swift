@@ -362,7 +362,7 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
     return true
 }
 
-func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatusStringTheme()) -> PeerStatusStringResult {
+func stringStatus(for peerView:PeerView, account: Account, theme:PeerStatusStringTheme = PeerStatusStringTheme()) -> PeerStatusStringResult {
     if let peer = peerViewMainPeer(peerView) {
     
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
@@ -374,7 +374,7 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
                 return PeerStatusStringResult(title, .initialize(string: L10n.presenceBot,  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                let (string, activity, _) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+                let (string, activity, _) = stringAndActivityForUserPresence(presence, timeDifference: account.context.timeDifference, relativeTo: Int32(timestamp))
                 
                 return PeerStatusStringResult(title, .initialize(string: string, color: activity && theme.highlightIfActivity ? theme.highlightColor : theme.statusColor, font: theme.statusFont), presence: presence)
 
@@ -387,7 +387,7 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 for participant in participants.participants {
                     if let presence = peerView.peerPresences[participant.peerId] as? TelegramUserPresence {
-                        let relativeStatus = relativeUserPresenceStatus(presence, relativeTo: Int32(timestamp))
+                        let relativeStatus = relativeUserPresenceStatus(presence, timeDifference: account.context.timeDifference, relativeTo: Int32(timestamp))
                         switch relativeStatus {
                         case .online:
                             onlineCount += 1
@@ -416,7 +416,7 @@ func stringStatus(for peerView:PeerView, theme:PeerStatusStringTheme = PeerStatu
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     for participant in participants.participants {
                         if let presence = peerView.peerPresences[participant.peerId] as? TelegramUserPresence {
-                            let relativeStatus = relativeUserPresenceStatus(presence, relativeTo: Int32(timestamp))
+                            let relativeStatus = relativeUserPresenceStatus(presence, timeDifference: account.context.timeDifference, relativeTo: Int32(timestamp ))
                             switch relativeStatus {
                             case .online:
                                 onlineCount += 1

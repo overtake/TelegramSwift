@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 
-class PeerMediaDateItem: TableRowItem {
+class PeerMediaDateItem: TableStickItem {
 
     private let _stableId: AnyHashable
     private let messageIndex: MessageIndex
@@ -43,6 +43,14 @@ class PeerMediaDateItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
+    required init(_ initialSize: NSSize) {
+        self._stableId = AnyHashable(0)
+        self.messageIndex = MessageIndex.absoluteLowerBound()
+        self.textLayout = TextViewLayout(.initialize(string: ""))
+        super.init(initialSize)
+    }
+
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - 60)
@@ -62,7 +70,7 @@ class PeerMediaDateItem: TableRowItem {
     }
 }
 
-fileprivate class PeerMediaDateView : TableRowView {
+fileprivate class PeerMediaDateView : TableStickView {
     private let textView: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

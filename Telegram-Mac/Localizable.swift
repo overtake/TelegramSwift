@@ -2293,6 +2293,8 @@ internal final class L10n {
   internal static var peerMediaMedia: String  { return L10n.tr("Localizable", "PeerMedia.Media") }
   /// Shared Media
   internal static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
+  /// Voice
+  internal static var peerMediaVoice: String  { return L10n.tr("Localizable", "PeerMedia.Voice") }
   /// Shared Audio
   internal static var peerMediaPopoverSharedAudio: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedAudio") }
   /// Shared Files
@@ -3295,6 +3297,8 @@ internal final class L10n {
   internal static var storageUsageCalculating: String  { return L10n.tr("Localizable", "StorageUsage.Calculating") }
   /// CHATS
   internal static var storageUsageChatsHeader: String  { return L10n.tr("Localizable", "StorageUsage.ChatsHeader") }
+  /// Clear
+  internal static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
   /// Keep Media
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.

@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
+
 class PeerMediaWebpageRowItem: PeerMediaRowItem {
     
     var textLayout:TextViewLayout?

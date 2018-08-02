@@ -83,7 +83,7 @@ private class ChatUserPopoverView : View {
     func update(with peerView:PeerView, account:Account) {
         if let peer = peerViewMainPeer(peerView) {
             avatar.setPeer(account: account, peer: peer)
-            let result = stringStatus(for: peerView)
+            let result = stringStatus(for: peerView, account: account)
             let statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1)
             let titleLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
             statusLayout.measure(width: frame.width - 80)

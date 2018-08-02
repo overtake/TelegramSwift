@@ -259,7 +259,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
             var string:String = tr(L10n.peerStatusRecently)
             if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+                (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: account.context.timeDifference, relativeTo: Int32(timestamp))
             }
             if peer.isBot {
                 string = L10n.presenceBot.lowercased()

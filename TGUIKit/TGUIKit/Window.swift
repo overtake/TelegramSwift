@@ -453,6 +453,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                     case .rejected:
                         continue
                     case .invokeNext:
+                        
                         break loop
                     }
                 }

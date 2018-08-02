@@ -232,39 +232,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 switch context {
                 case let .authorized(authorized):
                     postbox = authorized.account.postbox
-                    //showModal(with: UpdateModalController(postbox: authorized.account.postbox, network: authorized.account.network), for: mainWindow)
                     if let executeUrlAfterLogin = self.executeUrlAfterLogin {
                         self.executeUrlAfterLogin = nil
                         execute(inapp: inApp(for: executeUrlAfterLogin.nsstring, account: authorized.account))
                     }
                     
                     
-                    if let string = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String, string == "4.2" || string == "4.3", UserDefaults.standard.bool(forKey: "legacy-cleaned") {
-                        
-                        UserDefaults.standard.set(true, forKey: "legacy-cleaned")
-                        
-                        _ = (collectCacheUsageStats(account: authorized.account) |> filter { result in
-                            switch result {
-                            case .result:
-                                return true
-                            default:
-                                return false
-                            }
-                        } |> take(1)).start(next: { result in
-                            switch result {
-                            case let .result(stats):
-                                for path in stats.otherPaths {
-                                    unlink(path)
-                                }
-                            default:
-                                break
-                            }
-                        })
-                    }
-                    
                 case let .unauthorized(unauthorized):
                     postbox = unauthorized.account.postbox
-                    UserDefaults.standard.set(true, forKey: "legacy-cleaned")
                 default:
                     postbox = nil
                     self.proxyDisposable.set(nil)

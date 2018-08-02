@@ -111,6 +111,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return self
     }
     
+    
+    
     open override func mouseDown(with event: NSEvent) {
         if event.modifierFlags.contains(.control) && event.clickCount == 1 {
             showContextMenu(event)
