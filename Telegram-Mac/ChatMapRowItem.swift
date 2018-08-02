@@ -200,7 +200,7 @@ private class LiveLocationRowView : ChatMediaView {
 //        }
 //        let start = difference() / Double(attribute.timeout) * 100.0
         if item.isLiveLocationView {
-            progress.theme = TimableProgressTheme(backgroundColor: backdorColor, foregroundColor: theme.colors.blueUI, seconds: Double(item.liveLocationTimeout), start: item.liveLocationProgress, borderWidth: 2)
+            progress.theme = TimableProgressTheme(backgroundColor: backdorColor, foregroundColor: theme.chat.textColor(item.isIncoming, item.entry.renderType == .bubble), seconds: Double(item.liveLocationTimeout), start: item.liveLocationProgress, borderWidth: 2)
             progress.progress = 0
             progress.isHidden = false
             rightView.isHidden = true

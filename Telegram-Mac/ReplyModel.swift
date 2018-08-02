@@ -39,9 +39,9 @@ class ReplyModel: ChatAccessoryModel {
                 }
                 return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network) |> map {$0.first}
             }
-            if !isPinned {
-                messageViewSignal = account.postbox.messageAtId(replyMessageId)
-            }
+//            if !isPinned {
+//                messageViewSignal = account.postbox.messageAtId(replyMessageId)
+//            }
             nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
                  self?.make(with: message, isLoading: false, display: true)
                  return message != nil

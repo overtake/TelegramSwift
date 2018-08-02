@@ -33,6 +33,8 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
         textView.isSelectable = false
+        textView.userInteractionEnabled = false
+        durationView.userInteractionEnabled = false
         self.addSubview(textView)
         self.addSubview(durationView)
         progressView.fetchControls = fetchControls
@@ -52,6 +54,14 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                     progressView.state = .Play
                 }
             }
+        }
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        if mouseInside(), userInteractionEnabled {
+            progressView.fetchControls?.fetch()
+        } else {
+            super.mouseDown(with: event)
         }
     }
     

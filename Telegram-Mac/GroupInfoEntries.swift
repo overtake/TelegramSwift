@@ -148,7 +148,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             return state.withUpdatedSavingData(false).withUpdatedEditingState(nil)
         }
     }
-
+    
     func updateEditingName(_ name:String) -> Void {
         updateState { state in
             if let editingState = state.editingState {
@@ -180,7 +180,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] enabled in
             if let strongSelf = self {
                 _ = showModalProgress(signal: updateChannelHistoryAvailabilitySettingsInteractively(postbox: strongSelf.account.postbox, network: strongSelf.account.network, peerId: strongSelf.peerId, historyAvailableForNewMembers: enabled), for: mainWindow).start()
-
+                
             }
         })
         pushViewController(setup)
@@ -220,7 +220,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         
         let updateSignal = Signal<String, Void>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-        } |> beforeNext { resource in
+            } |> beforeNext { resource in
                 
                 updateState { (state) -> GroupInfoState in
                     return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
@@ -431,7 +431,7 @@ class GroupInfoState: PeerInfoState {
     let successfullyAddedParticipantIds: Set<PeerId>
     let removingParticipantIds: Set<PeerId>
     let updatingPhotoState:PeerInfoUpdatingPhotoState?
-
+    
     let savingData: Bool
     
     init(editingState: GroupInfoEditingState?, updatingName:String?, temporaryParticipants:[TemporaryParticipant], successfullyAddedParticipantIds:Set<PeerId>, removingParticipantIds:Set<PeerId>, savingData: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?) {
@@ -649,7 +649,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-
+            
         case .inviteLink:
             if case .inviteLink = entry {
                 return true
@@ -671,7 +671,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .notifications(_, lhsSettings):
             switch entry {
             case let .notifications(_, rhsSettings):
-
+                
                 if let lhsSettings = lhsSettings, let rhsSettings = rhsSettings {
                     return lhsSettings.isEqual(to: rhsSettings)
                 } else if (lhsSettings != nil) != (rhsSettings != nil) {
@@ -911,9 +911,9 @@ enum GroupInfoEntry: PeerInfoEntry {
                 arguments.updateEditingName(name)
             })
         case let .about(_, text):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoInfo), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, _, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoInfo), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
-                    arguments.peerChat(peerId)
+                    arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
@@ -937,9 +937,9 @@ enum GroupInfoEntry: PeerInfoEntry {
             })
         case let .notifications(_, settings):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
-               arguments.toggleNotifications()
+                arguments.toggleNotifications()
             })
-
+            
         case .sharedMedia:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSharedMedia), type: .none, action: { () in
                 arguments.sharedMedia()
@@ -954,7 +954,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             })
         case .groupAboutDescription:
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSetAboutDescription))
-
+            
         case let .groupTypeSetup(section: _, isPublic: isPublic):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoGroupType), type: .context(isPublic ? tr(L10n.peerInfoGroupTypePublic) : tr(L10n.peerInfoGroupTypePrivate)), action: { () in
                 arguments.visibilitySetup()
@@ -979,7 +979,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoMembersHeaderCountable(count)))
         case .addMember:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAddMember), nameStyle: blueActionButton, type: .none, action: { () in
-            
+                
                 arguments.addMember()
                 
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 36), inset:NSEdgeInsets(left: 40, right: 30))
@@ -996,13 +996,13 @@ enum GroupInfoEntry: PeerInfoEntry {
             case .member:
                 label = ""
             }
-                        
+            
             var string:String = tr(L10n.peerStatusRecently)
             var color:NSColor = theme.colors.grayText
             
             if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+                (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
             } else if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
                 string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
             }
@@ -1020,7 +1020,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.account, stableId: stableId.hashValue, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset:NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), action:{
                 arguments.peerInfo(peer!.id)
             }, inputActivity: inputActivity)
-
+            
         case .leave(_, let text):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, action: {
                 arguments.delete()
@@ -1045,7 +1045,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
     if let group = peerViewMainPeer(view), let arguments = arguments as? GroupInfoArguments, let state = arguments.state as? GroupInfoState {
         
         var sectionId:Int = 0
-            let access = group.groupAccess
+        let access = group.groupAccess
         var canInviteByLink = access.isCreator
         
         var canEditInfo = state.editingState != nil
@@ -1126,9 +1126,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             
             entries.append(GroupInfoEntry.sharedMedia(section: sectionId))
         }
-
+        
         entries.append(GroupInfoEntry.notifications(section: sectionId, settings: view.notificationSettings))
-
+        
         
         if let cachedGroupData = view.cachedData as? CachedGroupData, let participants = cachedGroupData.participants {
             
@@ -1320,7 +1320,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 entries.append(GroupInfoEntry.leave(section: sectionId, text: channel.addressName != nil ? L10n.peerInfoLeaveGroup : L10n.peerInfoDeleteAndExit))
             }
         }
-
+        
     }
     
     

@@ -446,7 +446,7 @@ var redActionButton:ControlStyle {
 
 
 
-class ActivitiesTheme {
+struct ActivitiesTheme : Equatable {
     let text:[CGImage]
     let uploading:[CGImage]
     let recording:[CGImage]
@@ -458,6 +458,10 @@ class ActivitiesTheme {
         self.recording = recording
         self.textColor = textColor
         self.backgroundColor = backgroundColor
+    }
+    
+    static func ==(lhs: ActivitiesTheme, rhs: ActivitiesTheme) -> Bool {
+        return lhs.textColor.argb == rhs.textColor.argb && lhs.backgroundColor.argb == rhs.backgroundColor.argb
     }
 }
 
@@ -726,6 +730,7 @@ struct TelegramIconsTheme {
     let chatActionMute: CGImage
     let chatActionUnmute: CGImage
     let chatActionClearHistory: CGImage
+    let chatActionDeleteChat: CGImage
     
     let dismissPinned: CGImage
     let chatActionsActive: CGImage
@@ -978,7 +983,7 @@ class TelegramPresentationTheme : PresentationTheme {
     }
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
-        return activityResources.object(key, { () -> AnyObject in
+        return activityResources.object(key, { () -> Any in
             return ActivitiesTheme(text: textActivityAnimation(foregroundColor), uploading: uploadFileActivityAnimation(foregroundColor, backgroundColor), recording: recordVoiceActivityAnimation(foregroundColor), textColor: foregroundColor, backgroundColor: backgroundColor)
         }) as! ActivitiesTheme
     }
@@ -1190,7 +1195,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatActionInfo: #imageLiteral(resourceName: "Icon_ChatActionInfo").precomposed(palette.blueIcon),
                                                chatActionMute: #imageLiteral(resourceName: "Icon_ChatActionMute").precomposed(palette.blueIcon),
                                                chatActionUnmute: #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(palette.blueIcon),
-                                               chatActionClearHistory: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
+                                               chatActionClearHistory: #imageLiteral(resourceName: "Icon_ClearChat").precomposed(palette.blueIcon),
+                                               chatActionDeleteChat: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
                                                dismissPinned: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
                                                chatActionsActive: #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.blueIcon),
                                                chatEntertainmentSticker: #imageLiteral(resourceName: "Icon_ChatEntertainmentSticker").precomposed(palette.grayIcon),

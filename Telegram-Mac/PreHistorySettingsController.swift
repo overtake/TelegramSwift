@@ -36,9 +36,9 @@ fileprivate func preHistoryEntries(cachedData: CachedChannelData?, state: PreHis
     
     let enabled =  state.enabled ?? cachedData?.flags.contains(.preHistoryEnabled) ?? false
     
-    entries.append(.type(sectionId: sectionId, index: index, text: tr(L10n.peerInfoPreHistoryVisible), enabled: true, selected: enabled))
+    entries.append(.type(sectionId: sectionId, index: index, text: tr(L10n.peerInfoPreHistoryVisible), enabled: enabled, selected: true))
     index += 1
-    entries.append(.type(sectionId: sectionId, index: index, text: tr(L10n.peerInfoPreHistoryHidden), enabled: false, selected: !enabled))
+    entries.append(.type(sectionId: sectionId, index: index, text: tr(L10n.peerInfoPreHistoryHidden), enabled: !enabled, selected: false))
     index += 1
     
     entries.append(.text(sectionId: sectionId, index: index, text: enabled ? tr(L10n.preHistorySettingsDescriptionVisible) : tr(L10n.preHistorySettingsDescriptionHidden)))

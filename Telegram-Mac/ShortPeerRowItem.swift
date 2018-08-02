@@ -156,12 +156,12 @@ class ShortPeerRowItem: GeneralRowItem {
         self.statusStyle = statusStyle
         self.isLookSavedMessage = isLookSavedMessage
 
-        let icon = theme.icons.peerSavedMessages
+        let icon = theme.icons.searchSaved
 
         
         let tAttr:NSMutableAttributedString = NSMutableAttributedString()
         if isLookSavedMessage && account.peerId == peer.id {
-            photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 20, photoSize.height - 20)))) |> map {($0, false)}
+            photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 15, photoSize.height - 15)))) |> map {($0, false)}
         }
         let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? tr(L10n.peerSavedMessages) : peer.displayTitle, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
         

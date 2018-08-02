@@ -53,11 +53,12 @@ enum RelativeUserPresenceStatus {
     case lastMonth
 }
 
-func relativeUserPresenceStatus(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> RelativeUserPresenceStatus {
+func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32) -> RelativeUserPresenceStatus {
     switch presence.status {
     case .none:
         return .offline
     case let .present(statusTimestamp):
+        let statusTimestamp = statusTimestamp - Int32(timeDifference)
         if statusTimestamp >= timestamp {
             return .online(at: statusTimestamp)
         } else {
@@ -72,11 +73,12 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, relativeTo tim
     }
 }
 
-func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> (String, Bool, NSColor) {
+func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32) -> (String, Bool, NSColor) {
     switch presence.status {
     case .none:
         return (tr(L10n.peerStatusRecently), false, theme.colors.grayText)
     case let .present(statusTimestamp):
+        let statusTimestamp = statusTimestamp - Int32(timeDifference)
         if statusTimestamp >= timestamp {
             return (tr(L10n.peerStatusOnline), true, theme.colors.blueText)
         } else {

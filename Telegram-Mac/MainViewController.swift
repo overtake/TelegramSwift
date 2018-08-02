@@ -251,6 +251,7 @@ class MainViewController: TelegramViewController {
         if !animated {
             self.tabController.select(index: chatIndex)
         }
+        self.tabController.current?.viewDidAppear(animated)
     }
     
     override func viewWillAppear(_ animated: Bool) {

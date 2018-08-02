@@ -261,6 +261,10 @@ class ChatListRowView: TableRowView {
     }
     
     
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+    }
+    
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         if activeDragging {
             activeDragging = false
@@ -305,6 +309,8 @@ class ChatListRowView: TableRowView {
 
     override func set(item:TableRowItem, animated:Bool = false) {
         
+        let previousItem = self.item as? ChatListRowItem
+        
          super.set(item:item, animated:animated)
                 
          if let item = self.item as? ChatListRowItem {
@@ -318,8 +324,8 @@ class ChatListRowView: TableRowView {
             photo.setState(account: item.account, state: item.photo)
 
             if item.isSavedMessage {
-                let icon = theme.icons.peerSavedMessages
-                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 25, photo.frame.size.height - 25)))) |> map {($0, false)})
+                let icon = theme.icons.searchSaved
+                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)))) |> map {($0, false)})
             } 
             if let badgeNode = item.ctxBadgeNode {
                 if badgeView == nil {
@@ -373,6 +379,7 @@ class ChatListRowView: TableRowView {
             if !(item is ChatListMessageRowItem) {
                 let postbox = item.account.postbox
                 let peerId = item.peerId
+                
                 let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
                 self.peerInputActivitiesDisposable.set((item.account.peerInputActivities(peerId: peerId)
                     |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
@@ -415,6 +422,8 @@ class ChatListRowView: TableRowView {
                 
                 let inputActivities = self.inputActivities
                 self.inputActivities = inputActivities
+                
+                
             }
             
             

@@ -108,14 +108,14 @@ enum ChatHistoryEntryId : Hashable {
 
 enum ChatHistoryEntry: Identifiable, Comparable {
     case HoleEntry(MessageHistoryHole)
-    case MessageEntry(Message, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?)
+    case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?)
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
     case UnreadEntry(MessageIndex, ChatItemRenderType)
     case DateEntry(MessageIndex, ChatItemRenderType)
     case bottom
     var message:Message? {
         switch self {
-        case let .MessageEntry(message,_,_,_,_,_):
+        case let .MessageEntry(message,_, _,_,_,_,_):
             return message
         default:
           return nil
@@ -126,7 +126,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case .HoleEntry:
             return .list
-        case let .MessageEntry(_,_, renderType,_,_,_):
+        case let .MessageEntry(_,_,_, renderType,_,_,_):
             return renderType
         case .groupedPhotos(let entries, _):
             return entries.first!.renderType
@@ -141,7 +141,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var location:MessageHistoryEntryLocation? {
         switch self {
-        case let .MessageEntry(_,_,_,_,_,location):
+        case let .MessageEntry(_,_,_,_,_,_,location):
             return location
         default:
             return nil
@@ -153,7 +153,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .HoleEntry(hole):
             return .hole(hole)
-        case let .MessageEntry(message,_,_,_,_,_):
+        case let .MessageEntry(message,_,_,_,_,_,_):
             return .message(message)
         case .groupedPhotos(_, let info):
             return .groupedPhotos(groupInfo: info)
@@ -170,7 +170,24 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .HoleEntry(hole):
             return hole.maxIndex
-        case let .MessageEntry(message,_,_,_, _,_):
+        case let .MessageEntry(_,index,_,_,_, _,_):
+            return index
+        case let .groupedPhotos(entries, _):
+            return entries.last!.index
+        case let .UnreadEntry(index, _):
+            return index
+        case let .DateEntry(index, _):
+            return index
+        case .bottom:
+            return MessageIndex.absoluteUpperBound()
+        }
+    }
+    
+    var scrollIndex: MessageIndex {
+        switch self {
+        case let .HoleEntry(hole):
+            return hole.maxIndex
+        case let .MessageEntry(message,_,_,_,_, _,_):
             return MessageIndex(message)
         case let .groupedPhotos(entries, _):
             return entries.last!.index
@@ -241,9 +258,9 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
-    case let .MessageEntry(lhsMessage, lhsRenderType, lhsRead, lhsType, lhsFwdType, _):
+    case let .MessageEntry(lhsMessage, lhsIndex, lhsRenderType, lhsRead, lhsType, lhsFwdType, _):
         switch rhs {
-        case let .MessageEntry(rhsMessage, rhsRenderType, rhsRead, rhsType, rhsFwdType, _):
+        case let .MessageEntry(rhsMessage, rhsIndex, rhsRenderType, rhsRead, rhsType, rhsFwdType, _):
             if lhsRead != rhsRead {
                 return false
             }
@@ -251,6 +268,9 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
                 return false
             }
             if lhsFwdType != rhsFwdType {
+                return false
+            }
+            if lhsIndex != rhsIndex {
                 return false
             }
             if lhsRenderType != rhsRenderType {
@@ -506,11 +526,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
             
             
-            
-            
-            let entry: ChatHistoryEntry = .MessageEntry(message, read, renderType,itemType,fwdType, location)
-            
-            
+            let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), read, renderType,itemType,fwdType, location)
+             
             if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
                 
                 if groupInfo == nil {
@@ -544,9 +561,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
             
             if prev == nil && dayGrouping {
-                var time = TimeInterval(message.timestamp)
-                time -= timeDifference
-                let dateId = chatDateId(for: Int32(time))
+                let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
                 let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
                 entries.append(.DateEntry(index, renderType))
             }
@@ -554,6 +569,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             if let next = next, case let .MessageEntry(nextMessage,_, _, _) = next, dayGrouping {
                 let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
                 let nextDateId = chatDateId(for: nextMessage.timestamp - Int32(timeDifference))
+                
+                
                 if dateId != nextDateId {
                     let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: INT_MAX), timestamp: Int32(nextDateId))
                     entries.append(.DateEntry(index, renderType))
@@ -568,7 +585,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     
     var hasUnread = false
     if let maxReadIndex = maxReadIndex {
-        entries.append(.UnreadEntry(maxReadIndex, renderType))
+        entries.append(.UnreadEntry(maxReadIndex.withUpdatedTimestamp(maxReadIndex.timestamp - Int32(timeDifference)), renderType))
         hasUnread = true
     }
     

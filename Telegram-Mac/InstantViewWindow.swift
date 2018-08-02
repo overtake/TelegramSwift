@@ -420,7 +420,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 }
                 if let controls = titleView.subviews.first?.subviews {
                     var xs:[CGFloat] = [18, 58, 38]
-                    for i in 0 ..< 3 {
+                    for i in 0 ..< min(controls.count, xs.count) {
                         let view = controls[i]
                         view.setFrameOrigin(xs[i], floorToScreenPixels(scaleFactor: System.backingScale, (barHeight - view.frame.height)/2))
                     }

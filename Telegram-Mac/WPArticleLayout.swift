@@ -46,6 +46,10 @@ class WPArticleLayout: WPLayout {
                     instantMedias[i] = instantMedias[i].withUpdatedIndex(i + 1)
                 }
                 instantMedias.insert(page, at: 0)
+            } else {
+                for i in 0 ..< instantMedias.count {
+                    instantMedias[i] = instantMedias[i].withUpdatedIndex(i)
+                }
             }
             
             var messages:[Message] = []
@@ -112,12 +116,12 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
-            let maxw = min(320, width - 50)
+            let maxw = max(min(320, width - 50), 260)
             
             var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
             
             if let groupLayout = groupLayout {
-                groupLayout.measure(NSMakeSize(max(contentSize.width, 250), maxw))
+                groupLayout.measure(NSMakeSize(max(contentSize.width, 260), maxw))
                 
                 contentSize.height += groupLayout.dimensions.height + 6
                 contentSize.width = max(groupLayout.dimensions.width, contentSize.width)

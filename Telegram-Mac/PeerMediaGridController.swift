@@ -61,7 +61,7 @@ struct ChatHistoryViewTransitionUpdateEntry {
 private func mappedInsertEntries(account: Account, peerId: PeerId, controllerInteraction: ChatInteraction, entries: [ChatHistoryViewTransitionInsertEntry]) -> [GridNodeInsertItem] {
     return entries.map { entry -> GridNodeInsertItem in
         switch entry.entry {
-        case let .MessageEntry(message, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeInsertItem(index: entry.index, item: GridMessageItem(account: account, message: message, chatInteraction: controllerInteraction), previousIndex: entry.previousIndex)
         case .HoleEntry:
             return GridNodeInsertItem(index: entry.index, item: GridHoleItem(), previousIndex: entry.previousIndex)
@@ -77,7 +77,7 @@ private func mappedInsertEntries(account: Account, peerId: PeerId, controllerInt
 private func mappedUpdateEntries(account: Account, peerId: PeerId, controllerInteraction: ChatInteraction, entries: [ChatHistoryViewTransitionUpdateEntry]) -> [GridNodeUpdateItem] {
     return entries.map { entry -> GridNodeUpdateItem in
         switch entry.entry {
-        case let .MessageEntry(message, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeUpdateItem(index: entry.index, previousIndex: entry.previousIndex, item: GridMessageItem(account: account, message: message, chatInteraction: controllerInteraction))
         case .HoleEntry:
             return GridNodeUpdateItem(index: entry.index, previousIndex: entry.previousIndex, item: GridHoleItem())
@@ -169,7 +169,7 @@ private func mappedChatHistoryViewListTransition(account: Account, peerId: PeerI
 private func mappedInsertEntries(account: Account, chatInteraction: ChatInteraction, entries: [(Int,ChatHistoryEntry,Int?)]) -> [GridNodeInsertItem] {
     return entries.map { entry -> GridNodeInsertItem in
         switch entry.1 {
-        case let .MessageEntry(message, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeInsertItem(index: entry.0, item: GridMessageItem(account: account, message: message, chatInteraction: chatInteraction), previousIndex: entry.2)
         case .HoleEntry:
             return GridNodeInsertItem(index: entry.0, item: GridHoleItem(), previousIndex: entry.2)
@@ -187,7 +187,7 @@ private func mappedInsertEntries(account: Account, chatInteraction: ChatInteract
 private func mappedUpdateEntries(account: Account, chatInteraction: ChatInteraction, entries: [(Int,ChatHistoryEntry,Int)]) -> [GridNodeUpdateItem] {
     return entries.map { entry -> GridNodeUpdateItem in
         switch entry.1 {
-        case let .MessageEntry(message, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeUpdateItem(index: entry.0, previousIndex: entry.2, item: GridMessageItem(account: account, message: message, chatInteraction: chatInteraction))
         case .HoleEntry:
             return GridNodeUpdateItem(index: entry.0, previousIndex: entry.2, item: GridHoleItem())

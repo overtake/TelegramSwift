@@ -1266,7 +1266,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent) {
 BOOL isEnterAccessObjc(NSEvent *theEvent, BOOL byCmdEnter) {
     if(isEnterEventObjc(theEvent)) {
         NSUInteger flags = (theEvent.modifierFlags & NSDeviceIndependentModifierFlagsMask);
-        return !byCmdEnter ? flags == 0 || flags == 65536 : (theEvent.modifierFlags & NSCommandKeyMask) > 0;
+        return !byCmdEnter ? flags == 0 || flags == 65536 || flags == 2097152 : (theEvent.modifierFlags & NSCommandKeyMask) > 0;
     }
     return NO;
 }

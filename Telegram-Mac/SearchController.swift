@@ -220,7 +220,18 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
 }
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry>]?, to:[AppearanceWrapperEntry<ChatListSearchEntry>], arguments:SearchControllerArguments, initialSize:NSSize, animated: Bool) -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry>]?, to:[AppearanceWrapperEntry<ChatListSearchEntry>], arguments:SearchControllerArguments, pinnedItems:[PinnedItemId], initialSize:NSSize, animated: Bool) -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> {
+    
+    let togglePin:(PinnedItemId) -> Void = { pinnedItemId in
+        _ = (toggleItemPinned(postbox: arguments.account.postbox, itemId: pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+            switch result {
+            case .limitExceeded:
+                alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
+            default:
+                break
+            }
+        })
+    }
     
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
@@ -239,9 +250,10 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                     status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
                 }
             }
-            return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right], contextMenuItems: {
-                return []
-            })
+            
+            
+            
+            return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right])
         case let .localPeer(peer, _, secretChat, drawBorder):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.blueUI : theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: false)
         case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder):
@@ -324,6 +336,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let openPeerDisposable:MetaDisposable = MetaDisposable()
     private let statePromise:Promise<(SeparatorBlockState,SeparatorBlockState)> = Promise((SeparatorBlockState.short, SeparatorBlockState.short))
     private let disposable:MetaDisposable = MetaDisposable()
+    private let pinnedPromise: ValuePromise<[PinnedItemId]> = ValuePromise([], ignoreRepeated: true)
+    var pinnedItems:[PinnedItemId] = [] {
+        didSet {
+            pinnedPromise.set(pinnedItems)
+        }
+    }
+    
     let isLoading = Promise<Bool>(false)
     
     
@@ -343,7 +362,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
         let groupId: PeerGroupId? = self.groupId
-        let searchItems = searchQuery.get() |> mapToSignal { (query) -> Signal<([ChatListSearchEntry], Bool, Bool), Void> in
+        let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool), Void> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
                 
@@ -497,7 +516,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                             var isActive:Bool = false
                                             if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
                                                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                                                (_, isActive, _) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+                                                (_, isActive, _) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
                                             }
                                             let isMuted = peerView.isMuted
                                             let unreadCount = values.count(for: .peer(peerView.peerId))
@@ -546,7 +565,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     if peerView.peers[peerView.peerId] is TelegramSecretChat {
                                         wrapper = SearchSecretChatWrapper(peerId: peerView.peerId)
                                     }
-                                    let result = stringStatus(for: peerView, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
+                                    let result = stringStatus(for: peerView, account: account, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
 
                                     entries.append(.recentlySearch(peer, i, wrapper, result, recent.1[peerView.peerId] ?? .none, true))
                                     i += 1
@@ -568,11 +587,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
         
         
-        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, globalPeerHandler.get() |> deliverOnPrepareQueue |> distinctUntilChanged) |> map { value, appearance, location in
-            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2)
+        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, globalPeerHandler.get() |> deliverOnPrepareQueue |> distinctUntilChanged, pinnedPromise.get() |> deliverOnPrepareQueue) |> map { value, appearance, location, pinnedItems in
+            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems)
         }
-        |> map { entries, loading, location, animated -> (TableUpdateTransition, Bool, ChatLocation?) in
-            let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, initialSize: atomicSize.modify { $0 }, animated: animated)
+        |> map { entries, loading, location, animated, pinnedItems -> (TableUpdateTransition, Bool, ChatLocation?) in
+            let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, pinnedItems: pinnedItems, initialSize: atomicSize.modify { $0 }, animated: animated)
             return (transition, loading, location)
         } |> deliverOnMainQueue
         

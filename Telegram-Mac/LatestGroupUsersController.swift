@@ -181,7 +181,7 @@ private func latestGroupEntries(_ view: PeerView, inputActivities: [PeerId : Pee
         
         if let presence = latest.presence as? TelegramUserPresence {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+            (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
         } else if let peer = latest.peer as? TelegramUser, let botInfo = peer.botInfo {
             string = botInfo.flags.contains(.hasAccessToChatHistory) ? L10n.peerInfoBotStatusHasAccess : L10n.peerInfoBotStatusHasNoAccess
         }

@@ -95,8 +95,8 @@ class PeerInfoArguments {
         }))
     }
     
-    func peerChat(_ peerId:PeerId) {
-        pushViewController(ChatController(account: account, chatLocation: .peer(peerId)))
+    func peerChat(_ peerId:PeerId, postId: MessageId? = nil) {
+        pushViewController(ChatController(account: account, chatLocation: .peer(peerId), messageId: postId))
     }
     
     func toggleNotifications() {
@@ -191,7 +191,7 @@ private struct PeerInfoSortableEntry: Identifiable, Comparable {
 
 fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEntry>]?, to:[AppearanceWrapperEntry<PeerInfoSortableEntry>], account:Account, initialSize:NSSize, peerId:PeerId, arguments: PeerInfoArguments, animated:Bool) -> TableUpdateTransition {
     
-
+    
     
     let (deleted,inserted, updated) = proccessEntries(from, right: to, { (peerInfoSortableEntry) -> TableRowItem in
         return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
@@ -237,7 +237,7 @@ class PeerInfoController: EditableViewController<TableView> {
         _channelArguments = ChannelInfoArguments(account: account, peerId: peerId, state: ChannelInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
-
+        
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
@@ -279,14 +279,14 @@ class PeerInfoController: EditableViewController<TableView> {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-        }, with: self, for: .Return, priority: .high)
+            }, with: self, for: .Return, priority: .high)
         
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-        }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
+            }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
     }
     
     
@@ -311,7 +311,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
         return .invokeNext
     }
-
+    
     override func viewDidLoad() -> Void {
         super.viewDidLoad()
         
@@ -355,10 +355,10 @@ class PeerInfoController: EditableViewController<TableView> {
                 
                 return (view, prepareEntries(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil))
                 
-        } |> deliverOnMainQueue
+            } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] (peerView, transition) in
-           
+            
             _ = self?.peerView.swap(peerView)
             
             let editable:Bool
@@ -404,7 +404,7 @@ class PeerInfoController: EditableViewController<TableView> {
         return .rejected
     }
     
-
+    
     
     override func update(with state: ViewControllerState) {
         super.update(with: state)

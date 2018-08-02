@@ -27,7 +27,7 @@ class ChatLayoutUtils: NSObject {
                 size.width = max(200, size.width)
             }
             size.width = max(size.width, 100)
-            //size = NSMakeSize(max(40, size.width), max(40, size.height))
+            size = NSMakeSize(max(46, size.width), max(46, size.height))
         } else if let file = media as? TelegramMediaFile {
             
             var contentSize:NSSize = NSZeroSize

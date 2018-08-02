@@ -806,31 +806,31 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         var dict: [String : Any] = [:]
 
                         
-                        if let row = message.replyMarkup?.rows.first, message.id.peerId.id == 777000, row.buttons.count == 2 && !screenIsLocked {
-                            notification.hasReplyButton = false
-                            notification.hasActionButton = true
-                            notification.actionButtonTitle = row.buttons[0].title
-                            notification.otherButtonTitle = row.buttons[1].title
-                            if let _ = notification.value(forKey: "_showsButtons") {
-                                notification.setValue(true, forKey: "_showsButtons")
-                            }
-                            
-                            switch row.buttons[0].action {
-                            case .callback(let data):
-                                dict["inline.callbackDecline"] = data.makeData()
-                            default:
-                                break
-                            }
-                            
-                            switch row.buttons[1].action {
-                            case .callback(let data):
-                                
-                                dict["inline.callbackConfirm"] = data.makeData()
-                            default:
-                                break
-                            }
-                        }
-                        
+//                        if let row = message.replyMarkup?.rows.first, message.id.peerId.id == 777000, row.buttons.count == 2 && !screenIsLocked {
+//                            notification.hasReplyButton = false
+//                            notification.hasActionButton = true
+//                            notification.actionButtonTitle = row.buttons[0].title
+//                            notification.otherButtonTitle = row.buttons[1].title
+//                            if let _ = notification.value(forKey: "_showsButtons") {
+//                                notification.setValue(true, forKey: "_showsButtons")
+//                            }
+//                            
+//                            switch row.buttons[0].action {
+//                            case .callback(let data):
+//                                dict["inline.callbackDecline"] = data.makeData()
+//                            default:
+//                                break
+//                            }
+//                            
+//                            switch row.buttons[1].action {
+//                            case .callback(let data):
+//                                
+//                                dict["inline.callbackConfirm"] = data.makeData()
+//                            default:
+//                                break
+//                            }
+//                        }
+//                        
                         if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
                             notification.soundName = inAppSettings.tone
                         } else {

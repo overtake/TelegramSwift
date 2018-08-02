@@ -30,18 +30,102 @@ private func mediaForMessage(_ message: Message) -> Media? {
     return nil
 }
 
+
+
+final class GridMessageItemSection: GridSection {
+    let height: CGFloat = 36.0
+    
+    
+    private let roundedTimestamp: Int32
+    private let month: Int32
+    private let year: Int32
+    private let timestamp: Int32
+    var hashValue: Int {
+        return self.roundedTimestamp.hashValue
+    }
+    
+    init(timestamp: Int32) {
+        self.timestamp = timestamp
+        var now = time_t(timestamp)
+        var timeinfoNow: tm = tm()
+        localtime_r(&now, &timeinfoNow)
+        
+        self.roundedTimestamp = timeinfoNow.tm_year * 100 + timeinfoNow.tm_mon
+        self.month = timeinfoNow.tm_mon
+        self.year = timeinfoNow.tm_year
+    }
+    
+    func isEqual(to: GridSection) -> Bool {
+        if let to = to as? GridMessageItemSection {
+            return self.roundedTimestamp == to.roundedTimestamp
+        } else {
+            return false
+        }
+    }
+    
+    func node() -> View {
+        return GridMessageItemSectionNode(timestamp: self.timestamp, month: self.month, year: self.year)
+    }
+}
+
+final class GridMessageItemSectionNode: View {
+  //  let titleNode: ASTextNode
+    private let textView: TextView = TextView()
+    init(timestamp: Int32, month: Int32, year: Int32) {
+      
+        
+    //    self.titleNode = ASTextNode()
+     //   self.titleNode.isLayerBacked = true
+        
+        super.init()
+        
+        addSubview(textView)
+        
+        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM YYYY"
+        
+        let layout = TextViewLayout(.initialize(string: formatter.string(from: date), color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
+        
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        textView.centerY(x: 10, addition: -2)
+        
+      //  let bounds = self.bounds
+        
+  //      let titleSize = self.titleNode.measure(CGSize(width: bounds.size.width - 24.0, height: CGFloat.greatestFiniteMagnitude))
+      //  self.titleNode.frame = CGRect(origin: CGPoint(x: 12.0, y: 8.0), size: titleSize)
+    }
+}
+
 final class GridMessageItem: GridItem {
     private let account: Account
     private let message: Message
     private let chatInteraction: ChatInteraction
     
-    let section: GridSection? = nil
+    let section: GridSection?
     fileprivate weak var grid:GridNode?
     init(account: Account, message: Message, chatInteraction: ChatInteraction) {
+        self.section = GridMessageItemSection(timestamp: message.timestamp)
         self.account = account
         self.message = message
         self.chatInteraction = chatInteraction
     }
+    
     
     func update(node: GridItemNode) {
         guard let node = node as? GridMessageItemNode else {
@@ -170,11 +254,7 @@ final class GridMessageItemNode: GridItemNode {
 
                 if !self.imageView.hasImage {
                     self.imageView.setSignal( mediaGridMessagePhoto(account: account, photo: media, scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
-                        if let strongSelf = self {
-                            return cacheMedia(signal: image, media: media, size: imageSize, scale: backingScaleFactor)
-                        } else {
-                            return .complete()
-                        }
+                         return cacheMedia(signal: image, media: media, size: imageSize, scale: backingScaleFactor)
                     })
                 }
                 progressView?.removeFromSuperview()
