@@ -309,7 +309,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
                 let list = list.filter { path -> Bool in
                     if let size = fs(path) {
                         return size <= 1500 * 1024 * 1024
-                    } 
+                    }
                     return false
                 }
                 if !list.isEmpty {
