@@ -657,7 +657,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
-                                presences[view.peerId] = stringStatus(for: view)
+                                presences[view.peerId] = stringStatus(for: view, account: account)
                             }
                         }
                         
@@ -699,7 +699,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
-                                presences[view.peerId] = stringStatus(for: view)
+                                presences[view.peerId] = stringStatus(for: view, account: account)
                             }
                         }
                         

@@ -255,8 +255,11 @@ class ChatMessageItem: ChatRowItem {
                     
                     return strongSelf.menuItems(in: NSZeroPoint) |> map { basic in
                         var basic = basic
-                        basic.remove(at: 1)
-                        basic.insert(contentsOf: items, at: 1)
+                        if basic.count > 1 {
+                            basic.remove(at: 1)
+                            basic.insert(contentsOf: items, at: 1)
+                        }
+                        
                         return basic
                     }
                 }
@@ -488,7 +491,7 @@ class ChatMessageItem: ChatRowItem {
                         
                         items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                             copyToClipboard(text)
-                        }), at: 1)
+                        }), at: min(1, items.count))
                     } else {
                         if let content = self?.webpageLayout?.content, content.type == "proxy" {
                             items.insert(ContextMenuItem(L10n.chatCopyProxyConfiguration, handler: {

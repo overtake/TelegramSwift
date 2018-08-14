@@ -22,6 +22,11 @@ class EStickView: TableStickView {
         return theme.colors.background
     }
 
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        needsDisplay = true
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         

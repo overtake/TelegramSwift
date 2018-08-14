@@ -19,7 +19,6 @@ private class ShadowView : View {
         
         ctx.clear(NSMakeRect(0, 0, frame.width, frame.height))
         
-        var locations: [CGFloat] = [1.0, 0.2];
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [NSColor.black.withAlphaComponent(0.4).cgColor, NSColor.clear.cgColor]), locations: nil)!
         

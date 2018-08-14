@@ -226,7 +226,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                 var string:String = tr(L10n.peerStatusRecently)
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                    (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+                    (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: account.context.timeDifference, relativeTo: Int32(timestamp))
                 }
                 
                 item = ShortPeerRowItem(initialSize, peer: peer, account:account,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])

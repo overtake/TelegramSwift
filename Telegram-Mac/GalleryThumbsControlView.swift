@@ -60,10 +60,24 @@ class GalleryThumbContainer : Control {
 
 class GalleryThumbsControlView: View {
 
+    private let scrollView: ScrollView = ScrollView()
+    private let documentView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = .clear
+        addSubview(scrollView)
+        scrollView.documentView = documentView
+        scrollView.backgroundColor = .clear
+        scrollView.background = .clear
+        
+        documentView.backgroundColor = .clear
     }
+    
+    override func layout() {
+        super.layout()
+        scrollView.frame = bounds
+    }
+    
     required init?(coder: NSCoder) {
         fatalError()
     }
@@ -79,7 +93,7 @@ class GalleryThumbsControlView: View {
             }
         }, for: .SingleClick)
         
-        var subviews = self.subviews
+        var subviews = documentView.subviews
         
         if animated {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -87,14 +101,14 @@ class GalleryThumbsControlView: View {
         
         let idx = idsExcludeDisabled(at)
         subviews.insert(view, at: idx)
-        self.subviews = subviews
-        self.needsDisplay = true
+        documentView.subviews = subviews
+        documentView.needsDisplay = true
     }
     
     func idsExcludeDisabled(_ at: Int) -> Int {
         var idx = at
-        for i in 0 ..< subviews.count {
-            let subview = subviews[i] as! GalleryThumbContainer
+        for i in 0 ..< documentView.subviews.count {
+            let subview = documentView.subviews[i] as! GalleryThumbContainer
             if !subview.isEnabled {
                 if i <= at {
                     idx += 1
@@ -110,7 +124,7 @@ class GalleryThumbsControlView: View {
         let idx = idsExcludeDisabled(at)
         
 
-        let subview = self.subviews[idx] as! GalleryThumbContainer
+        let subview = documentView.subviews[idx] as! GalleryThumbContainer
         subview.isEnabled = false
         subview.change(opacity: 0, animated: animated, completion: { [weak subview] completed in
             if completed {
@@ -136,12 +150,12 @@ class GalleryThumbsControlView: View {
         let startCenter: CGFloat = focus(difSize).minX
         
         
-        var x:CGFloat = startCenter - index * (minWidth + 4) - 4
+        var x:CGFloat = 0// startCenter - index * (minWidth + 4) - 4
         
         let duration: Double = 0.4
-        
-        for i in 0 ..< subviews.count {
-            let view = subviews[i] as! GalleryThumbContainer
+        var selectedView: GalleryThumbContainer?
+        for i in 0 ..< documentView.subviews.count {
+            let view = documentView.subviews[i] as! GalleryThumbContainer
             var size = idx == i ? difSize : NSMakeSize(minWidth, frame.height)
             if view.isEnabled {
                 view._change(size: size, animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
@@ -150,13 +164,25 @@ class GalleryThumbsControlView: View {
                 view.imageView._change(pos: f.origin, animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
                 
                 view._change(pos: NSMakePoint(x, 0), animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
-
+                
             } else {
                 size.width -= minWidth
             }
             x += size.width + 4
 
+            if idx == i {
+                selectedView = view
+            }
         }
+        
+        documentView.setFrameSize(x, frame.height)
+
+        
+        if let selectedView = selectedView {
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), documentView.frame.width - frame.width), 0), animated: true)
+           // documentView.change(pos: NSMakePoint(selectedView.frame.minX, 0), animated: true)
+        }
+        
     }
     
 }

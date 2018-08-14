@@ -44,6 +44,12 @@ open class BarView: OverlayControl {
         overlayInitEvent()
     }
     
+    open override var isHidden: Bool {
+        didSet {
+            
+        }
+    }
+    
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         set(background: presentation.colors.background, for: .Normal)

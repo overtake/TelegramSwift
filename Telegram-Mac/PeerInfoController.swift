@@ -60,7 +60,6 @@ class PeerInfoArguments {
     
     let pullNavigation:()->NavigationViewController?
     
-    private let peerInfoDisposable = MetaDisposable()
     private let toggleNotificationsDisposable = MetaDisposable()
     private let deleteDisposable = MetaDisposable()
     private let _statePromise = Promise<PeerInfoState>()
@@ -88,11 +87,7 @@ class PeerInfoArguments {
     }
     
     func peerInfo(_ peerId:PeerId) {
-        peerInfoDisposable.set((account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
-            if let strongSelf = self {
-                strongSelf.pushViewController(PeerInfoController(account: strongSelf.account, peer: peer))
-            }
-        }))
+        pushViewController(PeerInfoController(account: account, peerId: peerId))
     }
     
     func peerChat(_ peerId:PeerId, postId: MessageId? = nil) {
@@ -135,7 +130,6 @@ class PeerInfoArguments {
     
     deinit {
         toggleNotificationsDisposable.dispose()
-        peerInfoDisposable.dispose()
         deleteDisposable.dispose()
     }
 }
@@ -191,7 +185,7 @@ private struct PeerInfoSortableEntry: Identifiable, Comparable {
 
 fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEntry>]?, to:[AppearanceWrapperEntry<PeerInfoSortableEntry>], account:Account, initialSize:NSSize, peerId:PeerId, arguments: PeerInfoArguments, animated:Bool) -> TableUpdateTransition {
     
-
+    
     
     let (deleted,inserted, updated) = proccessEntries(from, right: to, { (peerInfoSortableEntry) -> TableRowItem in
         return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
@@ -206,20 +200,21 @@ class PeerInfoController: EditableViewController<TableView> {
     
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
     let peerId:PeerId
-    private let peerViewDisposable:MetaDisposable = MetaDisposable()
-    private let peerAtomic:Atomic<Peer>
+    
+    private let arguments:Promise<PeerInfoArguments> = Promise()
+    
     private let peerView:Atomic<PeerView?> = Atomic(value: nil)
-    private let peerInputActivitiesDisposable = MetaDisposable()
     private var _groupArguments:GroupInfoArguments!
     private var _userArguments:UserInfoArguments!
     private var _channelArguments:ChannelInfoArguments!
+    
+    private let peerInputActivitiesDisposable = MetaDisposable()
+    
+    private var argumentsAction: DisposableSet = DisposableSet()
     var disposable:MetaDisposable = MetaDisposable()
-    init(account:Account, peer:Peer, isAd: Bool = false) {
-        peerAtomic = Atomic(value: peer)
-        self.peerId = peer.id
+    init(account:Account, peerId:PeerId, isAd: Bool = false) {
+        self.peerId = peerId
         super.init(account)
-        
-        
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
             self?.navigationController?.push(controller)
@@ -237,7 +232,7 @@ class PeerInfoController: EditableViewController<TableView> {
         _channelArguments = ChannelInfoArguments(account: account, peerId: peerId, state: ChannelInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
         })
-
+        
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
@@ -258,19 +253,10 @@ class PeerInfoController: EditableViewController<TableView> {
         disposable.dispose()
         updatedChannelParticipants.dispose()
         peerInputActivitiesDisposable.dispose()
+        argumentsAction.dispose()
         window?.removeAllHandlers(for: self)
     }
     
-    private var arguments:PeerInfoArguments {
-        let peer = peerAtomic.modify({$0})
-        if peer.isGroup || peer.isSupergroup {
-            return _groupArguments
-        } else if peer.isChannel {
-            return _channelArguments
-        } else {
-            return _userArguments
-        }
-    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -279,14 +265,14 @@ class PeerInfoController: EditableViewController<TableView> {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-        }, with: self, for: .Return, priority: .high)
+            }, with: self, for: .Return, priority: .high)
         
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-        }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
+            }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
     }
     
     
@@ -311,7 +297,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
         return .invokeNext
     }
-
+    
     override func viewDidLoad() -> Void {
         super.viewDidLoad()
         
@@ -319,8 +305,6 @@ class PeerInfoController: EditableViewController<TableView> {
         let account = self.account
         let peerId = self.peerId
         let initialSize = atomicSize
-        let arguments = self.arguments
-        let peer = peerAtomic.modify({$0})
         
         let inputActivity = self.account.peerInputActivities(peerId: peerId)
             |> map { activities -> [PeerId : PeerInputActivity] in
@@ -333,32 +317,37 @@ class PeerInfoController: EditableViewController<TableView> {
         
         let inputActivityState: Promise<[PeerId : PeerInputActivity]> = Promise([:])
         
-        if peer.isGroup || peer.isSupergroup {
-            inputActivityState.set(inputActivity)
+
+        arguments.set(account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] peer in
+            guard let `self` = self else {return .never()}
+            
+            if peer.isGroup || peer.isSupergroup {
+                inputActivityState.set(inputActivity)
+            }
+            
+            if peer.isGroup || peer.isSupergroup {
+                return .single(self._groupArguments)
+            } else if peer.isChannel {
+                return .single(self._channelArguments)
+            } else {
+                return .single(self._userArguments)
+            }
+        })
+        
+        
+        let transition = arguments.get() |> mapToSignal { arguments in
+            return combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
+                |> map { view, state, appearance, inputActivities -> (PeerView, TableUpdateTransition) in
+                    
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let previous = previousEntries.swap(entries)
+                    return (view, prepareEntries(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil))
+                    
+            } |> deliverOnMainQueue
         }
         
-        
-        let transition = combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
-            |> map { [weak peerAtomic] view, state, appearance, inputActivities -> (PeerView, TableUpdateTransition) in
-                
-                let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-                
-                let previous = previousEntries.swap(entries)
-                
-                _ = peerAtomic?.modify{ (previous) -> Peer in
-                    if let peer = peerViewMainPeer(view) {
-                        return peer
-                    } else {
-                        return previous
-                    }
-                }
-                
-                return (view, prepareEntries(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil))
-                
-        } |> deliverOnMainQueue
-        
         disposable.set(transition.start(next: { [weak self] (peerView, transition) in
-           
+            
             _ = self?.peerView.swap(peerView)
             
             let editable:Bool
@@ -404,19 +393,30 @@ class PeerInfoController: EditableViewController<TableView> {
         return .rejected
     }
     
-
+    func updateArguments(_ f:@escaping(PeerInfoArguments) -> Void) {
+        argumentsAction.add((arguments.get() |> take(1)).start(next: { arguments in
+            f(arguments)
+        }))
+    }
     
     override func update(with state: ViewControllerState) {
         super.update(with: state)
         if let peerView = peerView.modify({$0}) {
-            self.arguments.updateEditable(state == .Edit, peerView: peerView)
+            updateArguments({ arguments in
+                arguments.updateEditable(state == .Edit, peerView: peerView)
+            })
         }
     }
     
+    override var rightSwipeController: ViewController? {
+        return PeerMediaController.init(account: account, peerId: peerId, tagMask: .photoOrVideo)
+    }
     
     override func escapeKeyAction() -> KeyHandlerResult {
         if state == .Edit {
-            arguments.dismissEdition()
+            updateArguments({ arguments in
+                arguments.dismissEdition()
+            })
             state = .Normal
             return .invoked
         }

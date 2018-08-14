@@ -20,6 +20,7 @@
 		9F10CE962061C98E002DD61A /* InputDataRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE952061C98E002DD61A /* InputDataRowItem.swift */; };
 		9F10CE9820626B1B002DD61A /* PassportDocumentRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE9720626B1B002DD61A /* PassportDocumentRowItem.swift */; };
 		9F10CE9A206284F8002DD61A /* InputDataDateRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */; };
+		9F127E15210B1F540080D709 /* PeerMediaVoiceRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F127E14210B1F540080D709 /* PeerMediaVoiceRowItem.swift */; };
 		9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F12D342209251CF0072928B /* EditAccountInfoItem.swift */; };
 		9F13EE172100B05300562E53 /* VCardContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F13EE162100B05300562E53 /* VCardContactController.swift */; };
 		9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
@@ -46,11 +47,6 @@
 		9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F580BE420A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift */; };
 		9F5B6E792011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
 		9F5B6E7A2011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
-		9F5FA66D210217F5008022FA /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
-		9F5FA66E210217F5008022FA /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
-		9F5FA66F210217F5008022FA /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		9F5FA670210217FE008022FA /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F5FA671210217FE008022FA /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9F62AE7E202D85B7007FB557 /* FetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE7D202D85B7007FB557 /* FetchManager.swift */; };
 		9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */; };
 		9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */; };
@@ -64,6 +60,11 @@
 		9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */; };
 		9F9206F020727AF30054E581 /* ChangePhoneNumberContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */; };
 		9F9483B1202AF816006E873D /* CrashHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9483B0202AF816006E873D /* CrashHandler.swift */; };
+		9F9E62F221136EF900287151 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F9E62F321136EF900287151 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F9E62F521136EFE00287151 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		9F9E62F621136EFE00287151 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2A71CD81DDA0FA300C69F73 /* HockeySDK.framework */; };
+		9F9E62F721136EFE00287151 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		9FA0E52A20519E33001E5649 /* MP4Atom.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E52920519E33001E5649 /* MP4Atom.m */; };
 		9FA0E52D20519FCC001E5649 /* LiveUploadingHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E52C20519FCC001E5649 /* LiveUploadingHelper.m */; };
 		9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E5332051A41A001E5649 /* PreUploadManager.swift */; };
@@ -649,8 +650,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9F5FA670210217FE008022FA /* Sparkle.framework in Copy Files */,
-				9F5FA671210217FE008022FA /* HockeySDK.framework in Copy Files */,
+				9F9E62F221136EF900287151 /* Sparkle.framework in Copy Files */,
+				9F9E62F321136EF900287151 /* HockeySDK.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -722,6 +723,7 @@
 		9F10CE952061C98E002DD61A /* InputDataRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataRowItem.swift; sourceTree = "<group>"; };
 		9F10CE9720626B1B002DD61A /* PassportDocumentRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportDocumentRowItem.swift; sourceTree = "<group>"; };
 		9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataDateRowItem.swift; sourceTree = "<group>"; };
+		9F127E14210B1F540080D709 /* PeerMediaVoiceRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaVoiceRowItem.swift; sourceTree = "<group>"; };
 		9F12D342209251CF0072928B /* EditAccountInfoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccountInfoItem.swift; sourceTree = "<group>"; };
 		9F13CCE22006719400ECF301 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9F13CCE3200671AF00ECF301 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -1535,11 +1537,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F5FA66D210217F5008022FA /* Sparkle.framework in Frameworks */,
-				9F5FA66E210217F5008022FA /* HockeySDK.framework in Frameworks */,
-				9F5FA66F210217F5008022FA /* DFRFoundation.framework in Frameworks */,
-				9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */,
+				9F9E62F521136EFE00287151 /* Sparkle.framework in Frameworks */,
+				9F9E62F621136EFE00287151 /* HockeySDK.framework in Frameworks */,
+				9F9E62F721136EFE00287151 /* DFRFoundation.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
+				9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
 				9FFAE50B205AA1FB000C028E /* libavcodec.a in Frameworks */,
@@ -1984,6 +1986,7 @@
 				C2E40A1A1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift */,
 				C23EEC881FCC47C1001371CD /* PeerMediaDateItem.swift */,
 				9FDA713320E65D49001ED8ED /* PeerMediaPlayerAnimationView.swift */,
+				9F127E14210B1F540080D709 /* PeerMediaVoiceRowItem.swift */,
 			);
 			name = content;
 			sourceTree = "<group>";
@@ -4008,6 +4011,7 @@
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				C2A71CD71DD9EEDB00C69F73 /* WebpageModalController.swift in Sources */,
 				9FFAE4FB205A8C89000C028E /* MediaPlayer.swift in Sources */,
+				9F127E15210B1F540080D709 /* PeerMediaVoiceRowItem.swift in Sources */,
 				C230B90F1DD383820057F596 /* ComposeViewController.swift in Sources */,
 				C22EBCB81DFAB36A0034C435 /* ChatMapRowItem.swift in Sources */,
 				C2AC9C151E1E627F0085C7DE /* TabBadgeItem.swift in Sources */,

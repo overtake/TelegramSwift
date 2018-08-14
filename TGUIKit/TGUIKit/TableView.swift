@@ -25,6 +25,44 @@ public enum TableBackgroundMode {
     case tiled(image: NSImage)
 }
 
+public class TableResortController {
+    
+    fileprivate var resortRow: Int?
+    fileprivate var resortView: TableRowView?
+    fileprivate var inResorting: Bool = false
+    fileprivate var startLocation: NSPoint = NSZeroPoint
+    fileprivate var startRowLocation: NSPoint = NSZeroPoint
+    
+    fileprivate var currentHoleIndex: Int?
+    fileprivate var prevHoleIndex: Int?
+    
+    public var resortRange: NSRange
+    fileprivate let start:(Int)->Void
+    fileprivate let resort:(Int)->Void
+    fileprivate let complete:(Int, Int)->Void
+    public init(resortRange: NSRange, start:@escaping(Int)->Void, resort:@escaping(Int)->Void, complete:@escaping(Int, Int)->Void) {
+        self.resortRange = resortRange
+        self.start = start
+        self.resort = resort
+        self.complete = complete
+    }
+    
+    func clear() {
+        resortView = nil
+        resortRow = nil
+        startLocation = NSZeroPoint
+        startRowLocation = NSZeroPoint
+    }
+    
+    var isResorting: Bool {
+        return resortView != nil
+    }
+    
+    func canResort(_ row: Int) -> Bool {
+        return resortRange.indexIn(row)
+    }
+}
+
 
 
 public class UpdateTransition<T> {
@@ -193,7 +231,7 @@ protocol SelectDelegate : class {
 class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     var bottomInset:CGFloat = 0
-    
+    private let longDisposable = MetaDisposable()
     public var flip:Bool = true
     
     public weak var sdelegate:SelectDelegate?
@@ -259,12 +297,22 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
-        let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
-        if range.length > 0 {
-            sdelegate?.selectRow(index: range.location)
-        }
+        let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+        
+        longDisposable.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+            guard let `self` = self, let window = self.window else {return}
+            let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+            if afterRange == beforeRange {
+                self.table?.startResorting()
+            }
+        }))
     }
     
+    
+    deinit {
+        longDisposable.dispose()
+    }
     
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
@@ -296,7 +344,12 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     
     override func mouseUp(with event: NSEvent) {
-        
+        longDisposable.set(nil)
+        let point = self.convert(event.locationInWindow, from: nil)
+        let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
+        if range.length > 0 {
+            sdelegate?.selectRow(index: range.location)
+        }
     }
 
 }
@@ -333,6 +386,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private let mergePromise:Promise<TableUpdateTransition> = Promise()
     private let mergeDisposable:MetaDisposable = MetaDisposable()
+    
+    public var resortController: TableResortController? {
+        didSet {
+            
+        }
+    }
    
     public let selectedhash:Atomic<AnyHashable?> = Atomic(value: nil);
    
@@ -742,9 +801,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     stickItem = currentStick ?? someItem
                     
-
-                    
-                    
                     if let stickView = stickView {
                         if subviews.last != stickView {
                             stickView.removeFromSuperview()
@@ -898,6 +954,172 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
+    fileprivate func startResorting() {
+        guard let window = _window else {return}
+        
+        let point = tableView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        let range = tableView.rows(in: NSMakeRect(point.x, point.y, 1, 1));
+        if range.length > 0, let controller = resortController, controller.canResort(range.location), let view = viewNecessary(at: range.location) {
+            controller.resortRow = range.location
+            controller.currentHoleIndex = range.location
+            controller.resortView = view
+            controller.startLocation = point
+            controller.startRowLocation = view.frame.origin
+            controller.start(range.location)
+            for i in controller.resortRange.location ..< controller.resortRange.max {
+                if let view = viewNecessary(at: i), i != range.location {
+                   // addSubview(view)
+                }
+            }
+            
+            addSubview(view)
+            
+            window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+                guard let controller = self?.resortController, controller.isResorting else {return .rejected}
+                self?.stopResorting()
+                return .invoked
+            }, with: self, for: .leftMouseUp, priority: .modal)
+            
+        }
+    }
+    
+    
+    fileprivate func stopResorting() {
+        if let controller = resortController, let current = controller.currentHoleIndex, let start = controller.resortRow {
+            
+            
+            NSAnimationContext.runAnimationGroup({ ctx in
+                var y: CGFloat = 0
+                
+                for i in controller.resortRange.location ..< controller.resortRange.max  {
+                    if let view = viewNecessary(at: i), let resortView = controller.resortView {
+                        if i == current {
+                            contentView.addSubview(view)
+                            resortView.animator().setFrameOrigin(NSMakePoint(view.frame.minX, y))
+                            y = 0
+                            break
+                        }
+                        y += view.frame.height
+                    }
+                }
+                
+//                if controller.resortRow != controller.currentHoleIndex {
+//                    for i in controller.resortRange.location ..< controller.resortRange.max {
+//                        if let view = viewNecessary(at: i) {
+//                            if controller.currentHoleIndex == i {
+//                                y += view.frame.height
+//                            }
+//                            if i != controller.resortRow {
+//                                contentView.addSubview(view)
+//                                view.animator().setFrameOrigin(NSMakePoint(view.frame.minX, y))
+//                                y += view.frame.height
+//                            }
+//
+//                        }
+//                    }
+//                }
+                
+            }, completionHandler: {
+                
+                if let view = controller.resortView {
+                    self.contentView.addSubview(view)
+                }
+                
+                controller.complete(start, current)
+                controller.clear()
+            })
+            
+            
+            _window?.remove(object: self, for: .leftMouseUp)
+        }
+    }
+    
+    open override func mouseDragged(with event: NSEvent) {
+        if let window = window, let controller = resortController, let view = controller.resortView {
+            let point = tableView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            let difference = (controller.startLocation.y - point.y)
+            
+            var y: CGFloat = 0
+            
+            for i in controller.resortRange.location ..< controller.resortRange.max  {
+                if let view = viewNecessary(at: i) {
+                   y += view.frame.height
+                }
+            }
+            
+            view.setFrameOrigin(view.frame.minX, max(controller.startRowLocation.y - difference, 0))
+            
+            updateMovableItem(point)
+            
+        } else {
+            super.mouseDragged(with: event)
+        }
+    }
+    
+
+    private var maxResortHeight: CGFloat {
+        guard let controller = resortController else {return 0}
+        var height: CGFloat = 0
+        for i in controller.resortRange.location ..< controller.resortRange.max {
+            if let view = viewNecessary(at: i) {
+                height += view.frame.height
+            }
+        }
+        return height
+    }
+    
+    
+    private func moveHole(at fromIndex: Int, to toIndex: Int, animated: Bool) {
+        var y: CGFloat = 0
+        
+        guard let controller = resortController, let resortRow = controller.resortRow else {return}
+        
+        if toIndex > resortRow {
+            
+            y = maxResortHeight
+            
+            for i in stride(from: controller.resortRange.max, to: -1, by: -1) {
+                if let view = viewNecessary(at: i) {
+                    if i == toIndex {
+                        y -= view.frame.height
+                    }
+                    if view != controller.resortView {
+                        view.animator().setFrameOrigin(view.frame.minX, y)
+                        y -= view.frame.height
+                    }
+                }
+            }
+        } else {
+            for i in controller.resortRange.location ..< controller.resortRange.max {
+                if let view = viewNecessary(at: i) {
+                    if i == toIndex {
+                        y += view.frame.height
+                    }
+                    if view != controller.resortView {
+                        view.animator().setFrameOrigin(view.frame.minX, y)
+                        y += view.frame.height
+                    }
+                }
+            }
+        }
+        
+        
+    }
+    
+    private func updateMovableItem(_ point: NSPoint) {
+        
+        guard let controller = resortController else {return}
+        
+        let row = min(max(tableView.row(at: point), 0), controller.resortRange.max - 1)
+        controller.prevHoleIndex = controller.currentHoleIndex
+        controller.currentHoleIndex = row
+        moveHole(at: controller.prevHoleIndex!, to: controller.currentHoleIndex!, animated: true)
+    }
+
+
+    private var _window:Window? {
+        return window as? Window
+    }
     
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Bool {
         
@@ -1211,7 +1433,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if(self.item(stableId:item.stableId) != nil) {
                 if !notify || delegate.selectionWillChange(row: item.index, item: item) {
                     let new = item.stableId != selectedhash.modify({$0})
-                    self.cancelSelection();
+                    if new {
+                        self.cancelSelection();
+                    }
                     let _ = selectedhash.swap(item.stableId)
                     item.prepare(true)
                     self.reloadData(row:item.index)

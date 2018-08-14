@@ -83,6 +83,13 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, t
 
 }
 
+private final class SwipingChatItemController : ViewController {
+    let item: ChatListRowItem
+    init(item: ChatListRowItem) {
+        self.item = item
+        super.init()
+    }
+}
 
 
 class ChatListController : PeersListController {
@@ -94,6 +101,8 @@ class ChatListController : PeersListController {
     private let removePeerIdGroupDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     private let scrollDisposable = MetaDisposable()
+    private let reorderDisposable = MetaDisposable()
+    private let globalPeerDisposable = MetaDisposable()
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -191,10 +200,35 @@ class ChatListController : PeersListController {
             default:
                 break
             }
+            
+            var pinnedCount: Int = 0
+            self.genericView.tableView.enumerateItems { item -> Bool in
+                guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+                pinnedCount += 1
+                return item.pinnedType != .none
+            }
+            self.searchController?.pinnedItems = self.collectPinnedItems
+            self.genericView.tableView.resortController?.resortRange = NSMakeRange(0, pinnedCount)
         }))
         
         
         request.set(.single(.Initial(50, nil)))
+        
+        var pinnedCount: Int = 0
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+            pinnedCount += 1
+            return item.pinnedType != .none
+        }
+        
+        genericView.tableView.resortController = TableResortController(resortRange: NSMakeRange(0, pinnedCount), start: { row in
+            
+        }, resort: { row in
+            
+        }, complete: { [weak self] from, to in
+            self?.resortPinned(from, to)
+        })
+        
         
         genericView.tableView.addScroll(listener: TableScrollListener({ [weak self] scroll in
 
@@ -210,14 +244,13 @@ class ChatListController : PeersListController {
            
         }))
         
+        
+
         genericView.tableView.setScrollHandler({ [weak self] scroll in
             
             let view = previousChatList.modify({$0})
             
             if let strongSelf = self, let view = view {
-                
-               
-                
                 var messageIndex:ChatListIndex?
                 
                 switch scroll.direction {
@@ -235,6 +268,13 @@ class ChatListController : PeersListController {
             }
         })
         
+        let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
+        globalPeerDisposable.set(globalPeerHandler.get().start(next: { [weak self] location in
+            if previousLocation.swap(location) != location {
+                self?.removeSwipingStateIfNeeded(nil)
+            }
+        }))
+        
 //        return account.postbox.unreadMessageCountsView(items: items) |> map { view in
 //            var totalCount:Int32 = 0
 //            if let total = view.count(for: .total(value, .messages)) {
@@ -244,6 +284,36 @@ class ChatListController : PeersListController {
 //            return (view, totalCount)
 //        }
         
+    }
+    
+    private func resortPinned(_ from: Int, _ to: Int) {
+        
+        var items:[PinnedItemId] = []
+
+        
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+            items.append(item.chatLocation.pinnedItemId)
+            return item.pinnedType != .none
+        }
+        
+         items.move(at: from, to: to)
+        
+        reorderDisposable.set(account.postbox.transaction { transaction -> Void in
+            reorderPinnedItemIds(transaction: transaction, itemIds: items)
+        }.start())
+    }
+    
+    override var collectPinnedItems:[PinnedItemId] {
+        var items:[PinnedItemId] = []
+        
+        
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
+            items.append(item.chatLocation.pinnedItemId)
+            return item.pinnedType != .none
+        }
+        return items
     }
 
     private var lastScrolledIndex: ChatListIndex? = nil
@@ -296,11 +366,118 @@ class ChatListController : PeersListController {
             scrollToTop()
         #endif
         
-       
         
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            if event.modifierFlags.contains(.control) {
+                if self.genericView.tableView._mouseInside() {
+                    let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(event.locationInWindow, from: nil))
+                    if row >= 0 {
+                        self.genericView.tableView.item(at: row).view?.mouseDown(with: event)
+                        return .invoked
+                    }
+                }
+            }
+            return .rejected
+        }, with: self, for: .leftMouseDown, priority: .high)
         
+        self.window?.add(swipe: { [weak self] direction -> SwipeHandlerResult in
+            guard let `self` = self, let window = self.window else {return .failed}
+            let swipeState: SwipeState?
+            switch direction {
+            case let .left(_state):
+                swipeState = _state
+            case let .right(_state):
+                swipeState = _state
+            case .none:
+                swipeState = nil
+            }
+            
+            guard let state = swipeState else {return .failed}
+            
+            switch state {
+            case .start:
+                let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+                let item = self.genericView.tableView.item(at: row) as! ChatListRowItem
+                guard item.pinnedType != .ad else {return .failed}
+                self.removeSwipingStateIfNeeded(item.peerId)
+                (item.view as? ChatListRowView)?.initSwipingState()
+                return .success(SwipingChatItemController(item: item))
+            case let .swiping(_delta, controller):
+                
+                let delta:CGFloat
+                switch direction {
+                case .left:
+                    delta = _delta//max(0, _delta)
+                case .right:
+                    delta = -_delta//min(-_delta, 0)
+                default:
+                    delta = _delta
+                }
+                let controller = controller as! SwipingChatItemController
+                (controller.item.view as? ChatListRowView)?.moveSwiping(delta: delta)
+                
+            case let .success(_, controller), let .failed(_, controller):
+                let controller = controller as! SwipingChatItemController
+                guard let view = (controller.item.view as? ChatListRowView) else {return .nothing}
+                
+                
+                var direction = direction
+                
+                switch direction {
+                case let .left(state):
+                  
+                    if view.containerX < 0 && abs(view.containerX) > view.rightSwipingWidth / 2 {
+                        direction = .right(state.withAlwaysSuccess())
+                    } else if abs(view.containerX) < view.rightSwipingWidth / 2 && view.containerX < view.leftSwipingWidth / 2 {
+                       direction = .left(state.withAlwaysFailed())
+                    } else {
+                        direction = .left(state.withAlwaysSuccess())
+                    }
+                case .right:
+                    if view.containerX > 0 && view.containerX > view.leftSwipingWidth / 2 {
+                        direction = .left(state.withAlwaysSuccess())
+                    } else if abs(view.containerX) < view.rightSwipingWidth / 2 && view.containerX < view.leftSwipingWidth / 2 {
+                        direction = .right(state.withAlwaysFailed())
+                    } else {
+                        direction = .right(state.withAlwaysSuccess())
+                    }
+                default:
+                    break
+                }
+                
 
+                
+                view.completeSwiping(direction: direction)
+            }
+            
+          //  return .success()
+            
+            return .nothing
+        }, with: self.genericView.tableView, identifier: "chat-list")
         
+        
+    }
+    
+    
+    
+    private func removeSwipingStateIfNeeded(_ ignoreId: PeerId?) {
+        genericView.tableView.enumerateItems { item -> Bool in
+            if let item = item as? ChatListRowItem, item.peerId != ignoreId {
+                (item.view as? ChatListRowView)?.endSwipingState = nil
+            }
+            return true
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
+        window?.removeAllHandlers(for: genericView.tableView)
     }
     
     override func update(with state: ViewControllerState) {
@@ -325,6 +502,8 @@ class ChatListController : PeersListController {
         removePeerIdGroupDisposable.dispose()
         disposable.dispose()
         scrollDisposable.dispose()
+        reorderDisposable.dispose()
+        globalPeerDisposable.dispose()
     }
     
     

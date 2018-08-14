@@ -136,7 +136,15 @@ class ChatStorageManagmentModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        reloadData()
+        
+        readyOnce()
+    }
+    
+    private func reloadData() {
         let initialSize = atomicSize.modify({$0})
+        
+        genericView.removeAll()
         
         _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: arc4random()))
         
@@ -154,7 +162,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                 for (_, size) in media {
                     categorySize += size
                 }
-                sizeIndex[categoryId] = (true, categorySize)
+                sizeIndex[categoryId] = (sizeIndex[categoryId]?.0 ?? true, categorySize)
                 totalSize += categorySize
                 let index = itemIndex
                 
@@ -167,14 +175,14 @@ class ChatStorageManagmentModalController: ModalViewController {
                         let filteredSize = strongSelf.sizeIndex.values.reduce(0, { $0 + ($1.0 ? $1.1 : 0) })
                         
                         if filteredSize == 0 {
-                            title = "Clear"
+                            title = L10n.storageUsageClear
                         } else {
-                            title = "Clear (\(dataSizeString(Int(filteredSize))))"
+                            title = "\(L10n.storageUsageClear) (\(dataSizeString(Int(filteredSize))))"
                         }
                         strongSelf.modal?.interactions?.updateDone( { button in
                             button.set(text: title, for: .Normal)
                         })
-                        strongSelf.genericView.reloadData()
+                        strongSelf.reloadData()
                     }
                     
                 }
@@ -189,8 +197,6 @@ class ChatStorageManagmentModalController: ModalViewController {
         
         
         _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: arc4random()))
-        
-        readyOnce()
     }
     
     

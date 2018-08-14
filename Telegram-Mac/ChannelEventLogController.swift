@@ -286,14 +286,14 @@ private func eventLogItems(_ result:AdminLogEventsResult, initialSize: NSSize, c
     for event in result.events {
         switch event.action {
         case let .editMessage(prev, new):
-            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), true, .list, .Full(isAdmin: false), nil, nil), with: chatInteraction.account, interaction: chatInteraction)
+            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(isAdmin: false), nil, nil), with: chatInteraction.account, interaction: chatInteraction)
             items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
             items.append(item)
         case let .deleteMessage(message):
-            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), true, .list, .Full(isAdmin: false), nil, nil), with: chatInteraction.account, interaction: chatInteraction))
+            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), MessageIndex(message), true, .list, .Full(isAdmin: false), nil, nil), with: chatInteraction.account, interaction: chatInteraction))
         case let .updatePinned(message):
             if let message = message?.withUpdatedStableId(arc4random()) {
-                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, true, .list, .Full(isAdmin: false), nil, nil), with: chatInteraction.account, interaction: chatInteraction))
+                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(isAdmin: false), nil, nil), with: chatInteraction.account, interaction: chatInteraction))
             }
         default:
             break
@@ -328,7 +328,6 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     private let history:Promise<(AdminLogEventId, ChannelEventFilterState)> = Promise()
     private var state:Atomic<ChannelEventFilterState?> = Atomic(value: nil)
     private let disposable = MetaDisposable()
-    private let openPeerDisposable = MetaDisposable()
     private let searchState:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
     private let filterDisposable = MetaDisposable()
     override func viewClass() -> AnyClass {
@@ -379,7 +378,6 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     
     deinit {
         disposable.dispose()
-        openPeerDisposable.dispose()
         filterDisposable.dispose()
     }
     
@@ -431,11 +429,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
         self.chatInteraction.openInfo = { [weak self] peerId, _, _, _ in
             if let strongSelf = self {
-                strongSelf.openPeerDisposable.set((strongSelf.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak strongSelf] peer in
-                    if let strongSelf = strongSelf {
-                        strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peer: peer))
-                    }
-                }))
+               strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peerId: peerId))
             }
         }
         

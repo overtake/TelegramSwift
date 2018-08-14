@@ -105,6 +105,10 @@ public class TabBarController: ViewController, TabViewDelegate {
         genericView.tabView.setSelectedIndex(index, respondToDelegate: true)
     }
     
+    public var count: Int {
+        return genericView.tabView.count
+    }
+    
     public func add(tab:TabItem) -> Void {
         genericView.tabView.addTab(tab)
     }

@@ -85,7 +85,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     private var selectManager: InstantPageSelectText?
     
     private let joinDisposable = MetaDisposable()
-    private let openPeerInfoDisposable = MetaDisposable()
     private let mediaDisposable = MetaDisposable()
     private var appearance: InstantViewAppearance = InstantViewAppearance.defaultSettings
     private let actualizeDisposable = MetaDisposable()
@@ -237,12 +236,8 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
             closeModal()
         } else {
-            openPeerInfoDisposable.set((account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
-                if let strongSelf = self {
-                    strongSelf.account.context.mainNavigation?.push(PeerInfoController(account: strongSelf.account, peer: peer))
-                    strongSelf.closeModal()
-                }
-            }))
+            account.context.mainNavigation?.push(PeerInfoController(account: account, peerId: peerId))
+            closeModal()
         }
         
     }
@@ -576,7 +571,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         selectManager?.removeHandlers(for: mainWindow)
         joinDisposable.dispose()
         actualizeDisposable.dispose()
-        openPeerInfoDisposable.dispose()
         mediaDisposable.dispose()
         if let window = window {
             selectManager?.removeHandlers(for: window)

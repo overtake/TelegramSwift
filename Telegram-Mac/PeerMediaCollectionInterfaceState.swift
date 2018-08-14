@@ -35,7 +35,7 @@ enum PeerMediaCollectionMode {
     case file
     case music
     case webpage
-    
+    case voice
     var tagsValue:MessageTags {
         switch self {
         case .photoOrVideo:
@@ -46,22 +46,12 @@ enum PeerMediaCollectionMode {
             return .music
         case .webpage:
             return .webPage
+        case .voice:
+            return .voiceOrInstantVideo
         }
     }
 }
 
-func titleForPeerMediaCollectionMode(_ mode: PeerMediaCollectionMode) -> String {
-    switch mode {
-    case .photoOrVideo:
-        return "Shared Media"
-    case .file:
-        return "Shared Files"
-    case .music:
-        return "Shared Music"
-    case .webpage:
-        return "Shared Links"
-    }
-}
 
 struct PeerMediaCollectionInterfaceState: Equatable {
     let peer: Peer?

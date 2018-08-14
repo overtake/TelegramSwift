@@ -16,7 +16,7 @@ import PostboxMac
 class PeerMediaControllerView : View {
     
     private let actionsPanelView:MessageActionsPanelView = MessageActionsPanelView(frame: NSMakeRect(0,0,0, 50))
-    private let typesContainerView: View = View()
+    fileprivate let typesContainerView: View = View()
     fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 28))
     private weak var mainView:NSView?
     private let separator:View = View()
@@ -91,7 +91,6 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let mediaList:PeerMediaListController
     
     private var interactions:ChatInteraction
-    private let openPeerInfoDisposable = MetaDisposable()
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
     private let loadFwdMessagesDisposable = MetaDisposable()
     
@@ -226,11 +225,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 if toChat {
                     strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                 } else {
-                    strongSelf.openPeerInfoDisposable.set((strongSelf.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak strongSelf] peer in
-                        if let strongSelf = strongSelf {
-                            strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peer: peer))
-                        }
-                    }))
+                    strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peerId: peerId))
                 }
             }
         }
@@ -354,7 +349,6 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     
     deinit {
         messagesActionDisposable.dispose()
-        openPeerInfoDisposable.dispose()
         loadFwdMessagesDisposable.dispose()
     }
     
@@ -377,6 +371,10 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaAudio, handler: { [weak self] in
             self?.toggle(with: .music, animated:true)
         }))
+        
+        genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaVoice, handler: { [weak self] in
+            self?.toggle(with: .voice, animated:true)
+        }))
     }
     
     override public func update(with state:ViewControllerState) -> Void {
@@ -384,6 +382,20 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         interactions.update({state == .Normal ? $0.withoutSelectionState() : $0.withSelectionState()})
     }
   
+    override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
+        if mediaList.view.superview != nil {
+            if current == 0 {
+                genericView.typesContainerView.setFrameOrigin(genericView.typesContainerView.frame.minX, 50)
+            }
+            genericView.typesContainerView._change(pos: NSMakePoint(genericView.typesContainerView.frame.minX, current), animated: animated)
+            return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
+        }
+        if mediaGrid.view.superview != nil {
+            return mediaGrid.navigationHeaderDidNoticeAnimation(current, previous, animated)
+        }
+        return {}
+    }
+    
 }
 
 

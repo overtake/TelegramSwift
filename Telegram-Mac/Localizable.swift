@@ -1009,6 +1009,20 @@ internal final class L10n {
   internal static func chatListServiceCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.Call.outgoing", p1)
   }
+  /// Delete
+  internal static var chatListSwipingDelete: String  { return L10n.tr("Localizable", "ChatList.Swiping.Delete") }
+  /// Mute
+  internal static var chatListSwipingMute: String  { return L10n.tr("Localizable", "ChatList.Swiping.Mute") }
+  /// Pin
+  internal static var chatListSwipingPin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Pin") }
+  /// Read
+  internal static var chatListSwipingRead: String  { return L10n.tr("Localizable", "ChatList.Swiping.Read") }
+  /// Unmute
+  internal static var chatListSwipingUnmute: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unmute") }
+  /// Unpin
+  internal static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
+  /// Unread
+  internal static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
   /// views
   internal static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// channel created
@@ -2293,6 +2307,8 @@ internal final class L10n {
   internal static var peerMediaMedia: String  { return L10n.tr("Localizable", "PeerMedia.Media") }
   /// Shared Media
   internal static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
+  /// Voice
+  internal static var peerMediaVoice: String  { return L10n.tr("Localizable", "PeerMedia.Voice") }
   /// Shared Audio
   internal static var peerMediaPopoverSharedAudio: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedAudio") }
   /// Shared Files
@@ -2301,6 +2317,8 @@ internal final class L10n {
   internal static var peerMediaPopoverSharedLinks: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedLinks") }
   /// Shared Media
   internal static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
+  /// Invite to Group via Link
+  internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// CHAT HISTORY FOR NEW MEMBERS
   internal static var preHistorySettingsHeader: String  { return L10n.tr("Localizable", "PreHistorySettings.Header") }
   /// New members won't see earlier messages.
@@ -3301,6 +3319,8 @@ internal final class L10n {
   internal static var storageUsageCalculating: String  { return L10n.tr("Localizable", "StorageUsage.Calculating") }
   /// CHATS
   internal static var storageUsageChatsHeader: String  { return L10n.tr("Localizable", "StorageUsage.ChatsHeader") }
+  /// Clear
+  internal static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
   /// Keep Media
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.

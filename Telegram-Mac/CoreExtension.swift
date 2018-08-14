@@ -603,6 +603,10 @@ public extension Message {
         return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
     }
     
+    public func withUpdatedTimestamp(_ timestamp: Int32) -> Message {
+        return Message(stableId: self.stableId, stableVersion: self.stableVersion, id: self.id, globallyUniqueId: self.globallyUniqueId, groupingKey: self.groupingKey, groupInfo: self.groupInfo, timestamp: timestamp, flags: self.flags, tags: self.tags, globalTags: self.globalTags, localTags: self.localTags, forwardInfo: self.forwardInfo, author: self.author, text: self.text, attributes: self.attributes, media: self.media, peers: self.peers, associatedMessages: self.associatedMessages, associatedMessageIds: self.associatedMessageIds)
+    }
+    
     
     func withUpdatedText(_ text:String) -> Message {
         return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
@@ -774,7 +778,7 @@ func canDeleteForEveryoneMessage(_ message:Message, account:Account) -> Bool {
     if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     } else if message.peers[message.id.peerId] is TelegramUser || message.peers[message.id.peerId] is TelegramGroup {
-        if message.author?.id == account.peerId && edit_limit_time + message.timestamp > Int32(Date().timeIntervalSince1970) {
+        if edit_limit_time + message.timestamp > Int32(Date().timeIntervalSince1970) {
             if account.peerId != messageMainPeer(message)?.id {
                 return !(message.media.first is TelegramMediaAction)
             }
@@ -870,10 +874,11 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
         return false
     }
     
- 
+    
     
     return !message.flags.contains(.Unsent) && !message.flags.contains(.Failed)
 }
+
 
 
 
@@ -2216,3 +2221,23 @@ func isNotEmptyStrings(_ strings: [String?]) -> String {
     return ""
 }
 
+<<<<<<< HEAD
+=======
+
+extension MessageIndex {
+    func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {
+        return MessageIndex(id: self.id, timestamp: timestamp)
+    }
+}
+
+extension MessageHistoryAnchorIndex {
+    func withSubstractedTimestamp(_ timestamp: Int32) -> MessageHistoryAnchorIndex {
+        switch self {
+        case let .message(index):
+            return MessageHistoryAnchorIndex.message(MessageIndex(id: index.id, timestamp: index.timestamp - timestamp))
+        default:
+            return self
+        }
+    }
+}
+>>>>>>> master
