@@ -635,9 +635,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         
-        if let window = kitWindow, self.chatState == .normal {
+        if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
             return !InputPasteboardParser.proccess(pasteboard: pasteboard, account: self.account, chatInteraction:self.chatInteraction, window: window)
         }
+        
         
         return self.chatState == .normal
     }

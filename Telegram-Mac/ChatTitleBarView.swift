@@ -355,6 +355,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         disposable.dispose()
     }
     
+    
     override func layout() {
         super.layout()
         

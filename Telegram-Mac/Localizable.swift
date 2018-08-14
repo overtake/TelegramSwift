@@ -1009,6 +1009,20 @@ internal final class L10n {
   internal static func chatListServiceCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.Call.outgoing", p1)
   }
+  /// Delete
+  internal static var chatListSwipingDelete: String  { return L10n.tr("Localizable", "ChatList.Swiping.Delete") }
+  /// Mute
+  internal static var chatListSwipingMute: String  { return L10n.tr("Localizable", "ChatList.Swiping.Mute") }
+  /// Pin
+  internal static var chatListSwipingPin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Pin") }
+  /// Read
+  internal static var chatListSwipingRead: String  { return L10n.tr("Localizable", "ChatList.Swiping.Read") }
+  /// Unmute
+  internal static var chatListSwipingUnmute: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unmute") }
+  /// Unpin
+  internal static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
+  /// Unread
+  internal static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
   /// views
   internal static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// channel created
@@ -2303,6 +2317,8 @@ internal final class L10n {
   internal static var peerMediaPopoverSharedLinks: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedLinks") }
   /// Shared Media
   internal static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
+  /// Invite to Group via Link
+  internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// CHAT HISTORY FOR NEW MEMBERS
   internal static var preHistorySettingsHeader: String  { return L10n.tr("Localizable", "PreHistorySettings.Header") }
   /// New members won't see earlier messages.

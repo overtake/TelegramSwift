@@ -888,6 +888,15 @@ struct TelegramIconsTheme {
     let searchSaved: CGImage
     
     let hintPeerActive: CGImage
+    
+    
+    let chatSwiping_delete: CGImage
+    let chatSwiping_mute: CGImage
+    let chatSwiping_unmute: CGImage
+    let chatSwiping_read: CGImage
+    let chatSwiping_unread: CGImage
+    let chatSwiping_pin: CGImage
+    let chatSwiping_unpin: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1316,7 +1325,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPlaceholderCap: generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20),
                                                searchArticle: #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white),
                                                searchSaved: #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white),
-                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.blueUI, backgroundColor: palette.background)
+                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.blueUI, backgroundColor: palette.background),
+                                               chatSwiping_delete: #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white),
+                                               chatSwiping_mute: #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white),
+                                               chatSwiping_unmute: #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white),
+                                               chatSwiping_read: #imageLiteral(resourceName: "Icon_ChatSwipingRead").precomposed(.white),
+                                               chatSwiping_unread: #imageLiteral(resourceName: "Icon_ChatSwipingUnread").precomposed(.white),
+                                               chatSwiping_pin: #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white),
+                                               chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white)
     )
 }
 
@@ -1387,14 +1403,15 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
             contentView.addSubview(imageView)
 
             
-            appearanceDisposable.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(completed: { [weak imageView] in
-                if let strongImageView = imageView {
-                    strongImageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak strongImageView] completed in
-                        strongImageView?.removeFromSuperview()
+            let signal = Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
+                if let imageView = imageView {
+                    imageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak imageView] completed in
+                        imageView?.removeFromSuperview()
                     })
                 }
+            }
             
-            }))
+            appearanceDisposable.set(signal.start())
             
         }
         window.contentView?.background = theme.colors.background

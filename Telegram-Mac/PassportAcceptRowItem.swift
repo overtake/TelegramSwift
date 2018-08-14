@@ -54,7 +54,7 @@ final class PassportAcceptRowView : TableRowView {
         
         guard let item = item as? GeneralRowItem else {return}
 
-        button.userInteractionEnabled = item.enabled
+      //  button.userInteractionEnabled = item.enabled
         button.autohighlight = false
         button.set(background: item.enabled ? theme.colors.blueUI : theme.colors.grayForeground, for: .Normal)
         button.set(image: theme.icons.secureIdAuth, for: .Normal)

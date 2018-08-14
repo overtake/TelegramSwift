@@ -44,18 +44,114 @@ func <(lhs: KeyHandler, rhs: KeyHandler) -> Bool {
     return lhs.priority < rhs.priority
 }
 
+public enum SwipeType{
+    case left,right,none
+}
+
+public enum SwipeState {
+    case start(controller: ViewController)
+    case swiping(delta: CGFloat, controller: ViewController)
+    case success(delta: CGFloat, controller: ViewController)
+    case failed(delta: CGFloat, controller: ViewController)
+    
+    public var delta: CGFloat {
+        switch self {
+        case let .swiping(delta, _), let .success(delta, _), let .failed(delta, _):
+            return delta
+        default:
+            return 0
+        }
+    }
+    public func withAlwaysSuccess() -> SwipeState {
+        switch self {
+        case let .failed(delta, controller):
+            return .success(delta: delta, controller: controller)
+        default:
+            return self
+        }
+    }
+    public func withAlwaysFailed() -> SwipeState {
+        switch self {
+        case let .success(delta, controller):
+            return .failed(delta: delta, controller: controller)
+        default:
+            return self
+        }
+    }
+    var controller: ViewController {
+        switch self {
+        case let .start(controller):
+            return controller
+        case let .success(_, controller), let .failed(_, controller), let .swiping(_, controller):
+            return controller
+        }
+    }
+}
+
 public enum SwipeDirection {
-    case left
-    case right
+    case left(SwipeState)
+    case right(SwipeState)
     case none
+    
+    func withAdditionalDelta(_ deltaX: CGFloat, _ force: Bool = false) -> SwipeDirection {
+        switch self {
+        case let .left(state):
+            switch state {
+            case let .swiping(delta, controller):
+                return .left(.swiping(delta: force ? deltaX : delta + deltaX, controller: controller))
+            case let .start(controller):
+                return .left(.swiping(delta: 0, controller: controller))
+            default:
+                return self
+            }
+        case let .right(state):
+            switch state {
+            case let .swiping(delta, controller):
+                return .right(.swiping(delta: force ? deltaX : delta - deltaX, controller: controller))
+            case let .start(controller):
+                return .right(.swiping(delta: 0, controller: controller))
+            default:
+                return self
+            }
+        default:
+            return self
+        }
+    }
+    
+    public var delta: CGFloat {
+        switch self {
+        case let .left(state), let .right(state):
+            return state.delta
+        case .none:
+            return 0
+        }
+    }
+    
+    func withUpdatedSuccessOrFail(_ width: CGFloat) -> SwipeDirection {
+        switch self {
+        case let .left(state):
+            return .left(abs(state.delta) > width / 4 ? .success(delta: state.delta, controller: state.controller) : .failed(delta: state.delta, controller: state.controller))
+        case let .right(state):
+            return .right(abs(state.delta) > width / 4 ? .success(delta: state.delta, controller: state.controller) : .failed(delta: state.delta, controller: state.controller))
+        default:
+            return self
+        }
+    }
+}
+
+public enum SwipeHandlerResult {
+    case success(ViewController)
+    case failed
+    case nothing
+    case deltaUpdated(available: CGFloat)
 }
 
 class SwipeHandler : Comparable {
-    let handler:(SwipeDirection)->KeyHandlerResult
-    let object:WeakReference<NSObject>
+    let handler:(SwipeDirection)->SwipeHandlerResult
+    let object:WeakReference<NSView>
     let priority:HandlerPriority
     
-    init(_ handler:@escaping(SwipeDirection)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority) {
+    init(_ handler:@escaping(SwipeDirection)->SwipeHandlerResult, _ object:NSView, _ priority:HandlerPriority) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -115,6 +211,8 @@ func <(lhs: MouseObserver, rhs: MouseObserver) -> Bool {
     return lhs.priority < rhs.priority
 }
 
+public typealias SwipeIdentifier = String
+
 public enum KeyHandlerResult {
     case invoked // invoke and return
     case rejected // can invoke next priority event
@@ -124,7 +222,9 @@ public enum KeyHandlerResult {
 public class Window: NSWindow, NSTouchBarDelegate {
     public var name: String = "TGUIKit.Window"
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
-    private var swipeHandlers:[SwipeHandler] = []
+    private var swipeHandlers:[SwipeIdentifier: SwipeHandler] = [:]
+    private var swipeState:[SwipeIdentifier: SwipeDirection] = [:]
+
     private var responsders:[ResponderObserver] = []
     private var mouseHandlers:[UInt:[MouseObserver]] = [:]
     private var swipePoints:[NSPoint] = []
@@ -149,7 +249,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
             }
         }
     }
-
+    
     
     public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]
@@ -158,11 +258,11 @@ public class Window: NSWindow, NSTouchBarDelegate {
             keyHandlers[key] = handlers
         }
         keyHandlers[key]?.append(KeyHandler(handler, object, priority, modifierFlags))
-
+        
     }
     
-    public func add(swipe handler:@escaping(SwipeDirection) -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low) -> Void {
-        swipeHandlers.append(SwipeHandler(handler, object, priority))
+    public func add(swipe handler:@escaping(SwipeDirection) -> SwipeHandlerResult, with object:NSView, identifier: SwipeIdentifier, priority:HandlerPriority = .low) -> Void {
+        swipeHandlers[identifier] = SwipeHandler(handler, object, priority)
     }
     
     
@@ -203,18 +303,10 @@ public class Window: NSWindow, NSTouchBarDelegate {
             }
         }
         self.mouseHandlers = newMouseHandlers
-
         
-        var copyGesture:[SwipeHandler] = []
-        for gesture in swipeHandlers {
-            copyGesture.append(gesture)
+        self.swipeHandlers = self.swipeHandlers.filter { key, value in
+            return value.object.value !== object
         }
-        for i in stride(from: swipeHandlers.count - 1, to: -1 , by: -1) {
-            if copyGesture[i].object.value === object {
-                copyGesture.remove(at: i)
-            }
-        }
-        self.swipeHandlers = copyGesture
     }
     
     public func remove(object:NSObject, for key:KeyboardKey) {
@@ -269,16 +361,9 @@ public class Window: NSWindow, NSTouchBarDelegate {
         }
         self.mouseHandlers = newMouseHandlers
         
-        var copyGesture:[SwipeHandler] = []
-        for gesture in swipeHandlers {
-            copyGesture.append(gesture)
+        self.swipeHandlers = self.swipeHandlers.filter { key, value in
+            return value.object.value != nil
         }
-        for i in stride(from: swipeHandlers.count - 1, to: -1 , by: -1) {
-            if copyGesture[i].object.value == nil {
-                copyGesture.remove(at: i)
-            }
-        }
-        self.swipeHandlers = copyGesture
         
     }
     
@@ -305,7 +390,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
             }
         }
     }
-
+    
     
     public func applyResponderIfNeeded() ->Void {
         let sorted = responsders.sorted(by: >)
@@ -356,7 +441,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
             }
         }
     }
-
+    
     public override func close() {
         if let closeInterceptor = closeInterceptor, closeInterceptor() {
             return
@@ -366,6 +451,62 @@ public class Window: NSWindow, NSTouchBarDelegate {
         } else {
             super.close()
         }
+    }
+    
+    
+    private func startSwiping(_ event: NSEvent) {
+        if event.scrollingDeltaY == 0 && event.scrollingDeltaX != 0 {
+            for (key, swipe) in swipeHandlers {
+                if swipeState[key] == nil, let view = swipe.object.value, view._mouseInside() {
+                    if event.scrollingDeltaX > 0 {
+                        let result = swipe.handler(.left(.start(controller: ViewController())))
+                        switch result {
+                        case let .success(controller):
+                            swipeState[key] = .left(.start(controller: controller))
+                        default:
+                            break
+                        }
+                    } else {
+                        let result = swipe.handler(.right(.start(controller: ViewController())))
+                        switch result {
+                        case let .success(controller):
+                            swipeState[key] = .right(.start(controller: controller))
+                        default:
+                            break
+                        }
+                    }
+                }
+                
+            }
+        }
+        
+    }
+    private func stopSwiping(_ event: NSEvent) {
+        for (key, swipe) in swipeState {
+            if let handler = swipeHandlers[key], let view = handler.object.value {
+                _ = handler.handler(swipe.withUpdatedSuccessOrFail(view.frame.width))
+            }
+        }
+        swipeState.removeAll()
+    }
+    
+    private func proccessSwiping(_ event: NSEvent) -> Void {
+        for (key, swipe) in swipeState {
+            if let handler = swipeHandlers[key], let value = handler.object.value, value._mouseInside() {
+                let newState = swipe.withAdditionalDelta(event.scrollingDeltaX)
+                let result = handler.handler(newState)
+                switch result {
+                case let .deltaUpdated(available):
+                    swipeState[key] = swipe.withAdditionalDelta(available, true)
+                default:
+                    swipeState[key] = newState
+                }
+            }
+        }
+    }
+    
+    public var inLiveSwiping: Bool {
+        return !swipeState.isEmpty
     }
     
     @objc public func pasteToFirstResponder(_ sender: Any) {
@@ -388,14 +529,13 @@ public class Window: NSWindow, NSTouchBarDelegate {
         
     }
     
+    
     public override func sendEvent(_ event: NSEvent) {
         
-//        let testEvent = NSEvent.EventType.init(rawValue: 36)!
-//        
-//        NSLog("\(testEvent)")
+        //        let testEvent = NSEvent.EventType.init(rawValue: 36)!
+        //
         
         let eventType = event.type
-        
         if sheets.isEmpty {
             if eventType == .keyDown {
                 
@@ -420,8 +560,8 @@ public class Window: NSWindow, NSTouchBarDelegate {
                                     return
                                 }
                             } else {
-                               // super.sendEvent(event)
-                               // return
+                                // super.sendEvent(event)
+                                // return
                             }
                         }
                     }
@@ -444,6 +584,25 @@ public class Window: NSWindow, NSTouchBarDelegate {
                         }
                     }
                 }
+            } else if eventType == .scrollWheel, !swipeHandlers.isEmpty  {
+                
+                switch event.phase {
+                case NSEvent.Phase.began:
+                    startSwiping(event)
+                case NSEvent.Phase.stationary:
+                    break
+                case NSEvent.Phase.changed:
+                    proccessSwiping(event)
+                case NSEvent.Phase.ended:
+                    stopSwiping(event)
+                case NSEvent.Phase.cancelled:
+                    stopSwiping(event)
+                case NSEvent.Phase.mayBegin:
+                    break
+                default:
+                    break
+                }
+                
             } else if let handlers = mouseHandlers[eventType.rawValue] {
                 let sorted = handlers.sorted(by: >)
                 loop: for handle in sorted {
@@ -453,7 +612,6 @@ public class Window: NSWindow, NSTouchBarDelegate {
                     case .rejected:
                         continue
                     case .invokeNext:
-                        
                         break loop
                     }
                 }
@@ -471,19 +629,19 @@ public class Window: NSWindow, NSTouchBarDelegate {
         super.swipe(with: event)
     }
     
-//    public func set(copy handler:@escaping()->Void) -> (()-> Void,NSEventModifierFlags?)? {
-//        return self.set(handler: handler, for: .C, priority:.low, modifierFlags: [.command])
-//    }
-//    
-//    public func set(paste handler:@escaping()->Void) -> (()-> Void,NSEventModifierFlags?)? {
-//        return self.set(handler: handler, for: .V, modifierFlags: [.command])
-//    }
+    //    public func set(copy handler:@escaping()->Void) -> (()-> Void,NSEventModifierFlags?)? {
+    //        return self.set(handler: handler, for: .C, priority:.low, modifierFlags: [.command])
+    //    }
+    //
+    //    public func set(paste handler:@escaping()->Void) -> (()-> Void,NSEventModifierFlags?)? {
+    //        return self.set(handler: handler, for: .V, modifierFlags: [.command])
+    //    }
     
     public func set(escape handler:@escaping() -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
         set(handler: handler, with: object, for: .Escape, priority:priority, modifierFlags:modifierFlags)
     }
-
-
+    
+    
     
     public override var canBecomeKey: Bool {
         return true
@@ -501,7 +659,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
         saver?.rect = frame
         saver?.save()
     }
-
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -511,22 +669,22 @@ public class Window: NSWindow, NSTouchBarDelegate {
     }
     
     
-
+    
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
-       
+        
         self.acceptsMouseMovedEvents = true
         self.contentView?.wantsLayer = true
-
+        
         
         
         self.contentView?.acceptsTouchEvents = true
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         
-
         
-      //  self.contentView?.canDrawSubviewsIntoLayer = true
+        
+        //  self.contentView?.canDrawSubviewsIntoLayer = true
     }
     
     

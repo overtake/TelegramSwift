@@ -15,6 +15,10 @@ public struct NavigationBarStyle {
         self.height = height
         self.enableBorder = enableBorder
     }
+    
+    public var has: Bool {
+        return height > 0
+    }
 }
 
 public class NavigationBarView: View {
@@ -65,6 +69,9 @@ public class NavigationBarView: View {
     override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         self.bottomBorder.frame = NSMakeRect(0, newSize.height - .borderSize, newSize.width, .borderSize)
+        
+        guard let window = window as? Window, !window.inLiveSwiping else {return}
+
         self.layout(left: leftView, center: centerView, right: rightView)
     }
     
@@ -73,10 +80,12 @@ public class NavigationBarView: View {
     }
     
     
-    func layout(left: BarView, center: BarView, right: BarView) -> Void {
+    func layout(left: BarView, center: BarView, right: BarView, force: Bool = false) -> Void {
+        
+        //
+
         if frame.height > 0 {
             //proportions = 50 / 25 / 25
-            
             
             let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? frame.width / 3 : frame.width / 4))
             let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? frame.width / 3 : frame.width / 4))
@@ -98,31 +107,152 @@ public class NavigationBarView: View {
     // old right -> fade
     
     @objc func viewFrameChanged(_ notification:Notification) {
-       layout(left: leftView, center: centerView, right: rightView)
+        guard let window = window as? Window, !window.inLiveSwiping else {return}
+        layout(left: leftView, center: centerView, right: rightView)
     }
     
-    public func switchViews(left:BarView, center:BarView, right:BarView, controller:ViewController, style:ViewControllerStyle, animationStyle:AnimationStyle) {
+    func startMoveViews(left:BarView, center:BarView, right:BarView, direction: SwipeDirection) {
+        addSubview(left)
+        addSubview(center)
+        addSubview(right)
+        
+        NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: leftView)
+        NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: centerView)
+        NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: rightView)
+        
+        
+        var nLeft_from:CGFloat = 0, nRight_from:CGFloat = 0, nCenter_from:CGFloat = 0
+        
+        switch direction {
+        case .right:
+            
+            nLeft_from = round(frame.width - left.frame.width)/2.0
+            nCenter_from = left.frame.width + right.frame.width
+            nRight_from = right.frame.minX
+            
+        case .left:
+            nLeft_from = 0
+            nCenter_from = 0
+            nRight_from = right.frame.minX
+            
+        case .none:
+            break
+        }
+        
+        left.setFrameOrigin(nLeft_from, left.frame.minY)
+        center.setFrameOrigin(nCenter_from, center.frame.minY)
+        right.setFrameOrigin(nRight_from, right.frame.minY)
+        
+        left.setNeedsDisplay()
+        center.setNeedsDisplay()
+        right.setNeedsDisplay()
+        
+        
+        left.layer?.opacity = 0
+        center.layer?.opacity = 0
+        right.layer?.opacity = 0
         
         layout(left: left, center: center, right: right)
+        
+    }
+    
+    func moveViews(left:BarView, center:BarView, right:BarView, direction: SwipeDirection, percent: CGFloat, animationStyle:AnimationStyle? = nil) {
+        
+        var pLeft_to:CGFloat = 0, pRight_to:CGFloat = 0, pCenter_to:CGFloat = 0
+        var nLeft_to:CGFloat = 0, nRight_to:CGFloat = 0, nCenter_to:CGFloat = 0
+        
+        switch direction {
+        case .right:
+            
+            
+            //center
+            nLeft_to = round(frame.width - left.frame.width)/2.0 - (round(frame.width - left.frame.width)/2.0) * percent
+            nCenter_to = left.frame.maxX + right.frame.width - (right.frame.width * percent)
+            nRight_to = left.frame.width + center.frame.width
+            
+            pLeft_to = self.leftView.frame.minX
+            pCenter_to = self.leftView.frame.width * (1.0 - percent)
+            pRight_to = self.leftView.frame.width + self.centerView.frame.width
+            
+            break
+        case .left:
+            
+            nLeft_to = 0
+            nCenter_to = left.frame.maxX * percent
+            nRight_to = left.frame.width + center.frame.width
+            
+            pLeft_to = self.leftView.frame.minX
+            pCenter_to = self.leftView.frame.width + self.centerView.frame.width * percent
+            pRight_to = self.leftView.frame.width + self.centerView.frame.width
+            break
+        case .none:
+            break
+        }
+        
+        
+        
+        left.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nLeft_to), left.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "", completion: { [weak left] completed in
+            if completed && animationStyle != nil {
+                left?.removeFromSuperview()
+            }
+        })
+        center.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nCenter_to), center.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "", completion: { [weak center] completed in
+            if completed && animationStyle != nil {
+                center?.removeFromSuperview()
+            }
+        })
+        right.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nRight_to), right.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "", completion: { [weak right] completed in
+            if completed && animationStyle != nil {
+                right?.removeFromSuperview()
+            }
+        })
+        
+        
+        self.leftView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pLeft_to), self.leftView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        self.centerView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pCenter_to), self.centerView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        self.rightView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pRight_to), self.rightView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+
+        
+        
+        left.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        center.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        right.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+
+        self.leftView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        self.centerView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        self.rightView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        
+    }
+    
+    public func switchViews(left:BarView, center:BarView, right:BarView, controller:ViewController, style:ViewControllerStyle, animationStyle:AnimationStyle, liveSwiping: Bool) {
+        
+      //  var animationStyle = AnimationStyle.init(duration: 3.0, function: animationStyle.function)
+        
+
+        
+        if !liveSwiping {
+            layout(left: left, center: center, right: right)
+        }
+        
+        
+        NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: leftView)
+        NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: centerView)
+        NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: rightView)
+        
         self.bottomBorder.isHidden = !controller.bar.enableBorder
         if style != .none {
             
             
-            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: leftView)
-            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: centerView)
-            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: rightView)
-            
-            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: left)
-            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: center)
-            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: right)
-
             
             CATransaction.begin()
             
-            self.addSubview(left)
-            self.addSubview(center)
-            self.addSubview(right)
+            if !liveSwiping {
+                self.addSubview(left)
+                self.addSubview(center)
+                self.addSubview(right)
+            }
             self.addSubview(bottomBorder)
+
             
             left.setNeedsDisplay()
             center.setNeedsDisplay()
@@ -131,6 +261,12 @@ public class NavigationBarView: View {
             let pLeft = self.leftView
             let pCenter = self.centerView
             let pRight = self.rightView
+            
+            if !liveSwiping {
+                left.layer?.opacity = 0
+                center.layer?.opacity = 0
+                right.layer?.opacity = 0
+            }
             
             pLeft.updateLocalizationAndTheme()
             pCenter.updateLocalizationAndTheme()
@@ -147,43 +283,44 @@ public class NavigationBarView: View {
             case .push:
                 
                 //left
-                pLeft_from = 0
+                pLeft_from = liveSwiping ? pLeft.frame.minX : 0
                 pLeft_to = 0
-                nLeft_from = round(NSWidth(self.frame) - NSWidth(left.frame))/2.0
+                nLeft_from = liveSwiping ? left.frame.minX : round(frame.width - left.frame.width)/2.0
                 nLeft_to = 0
                 
                 //center
-                pCenter_from = NSMinX(pCenter.frame)
+                pCenter_from = liveSwiping ? pCenter.frame.minX : pLeft.frame.width
                 pCenter_to = 0
-                nCenter_from = NSMinX(right.frame)
-                nCenter_to = NSMaxX(left.frame)
+                
+                nCenter_from = liveSwiping ? center.frame.minX : left.frame.width + center.frame.width
+                nCenter_to = left.frame.width
                 
                 //right
-                pRight_from = NSMinX(right.frame)
-                pRight_to = NSMinX(right.frame)
-                nRight_from = NSMinX(right.frame)
-                nRight_to = NSMinX(right.frame)
+                pRight_from = right.frame.minX
+                pRight_to = right.frame.minX
+                nRight_from = right.frame.minX
+                nRight_to = right.frame.minX
                 
                 break
             case .pop:
                 
                 //left
-                pLeft_from = 0
+                pLeft_from = liveSwiping ? pLeft.frame.minX : 0
                 pLeft_to = 0
-                nLeft_from = 0
+                nLeft_from = liveSwiping ? left.frame.minX : 0
                 nLeft_to = 0
                 
                 //center
-                pCenter_from = NSMinX(center.frame)
-                pCenter_to = NSMinX(right.frame)
-                nCenter_from = 0
-                nCenter_to = NSMaxX(left.frame)
+                pCenter_from = liveSwiping ? pCenter.frame.minX : center.frame.minX
+                pCenter_to = left.frame.width + center.frame.width
+                nCenter_from = liveSwiping ? center.frame.minX : 0
+                nCenter_to = left.frame.maxX
                 
                 //right
-                pRight_from = NSMinX(right.frame)
-                pRight_to = NSMinX(right.frame)
-                nRight_from = NSMinX(right.frame)
-                nRight_to = NSMinX(right.frame)
+                pRight_from = liveSwiping ? pRight.frame.minX : right.frame.minX
+                pRight_to = right.frame.minX
+                nRight_from = right.frame.minX
+                nRight_to = right.frame.minX
 
                 
                 break
@@ -192,43 +329,59 @@ public class NavigationBarView: View {
             }
             
             
+            
+            left.setFrameOrigin(nLeft_from, left.frame.minY)
+            center.setFrameOrigin(nCenter_from, center.frame.minY)
+            right.setFrameOrigin(nRight_from, right.frame.minY)
+            
+            pLeft.setFrameOrigin(pLeft_from, left.frame.minY)
+            pCenter.setFrameOrigin(pCenter_from, pCenter.frame.minY)
+            pRight.setFrameOrigin(pRight_from, pRight.frame.minY)
+            
+                        
+//
             // old
-            pLeft.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: false, completion:{ [weak pLeft] (completed) in
+            pLeft.change(opacity: 0.0, duration: animationStyle.duration, timingFunction: animationStyle.function, completion:{ [weak pLeft] completed in
                 if completed {
                     pLeft?.removeFromSuperview()
                 }
             })
-            pLeft.layer?.animate(from: pLeft_from as NSNumber, to: pLeft_to as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration)
-            
-            pCenter.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration, removeOnCompletion: false, completion:{ [weak pCenter] (completed) in
+            pLeft.change(pos: NSMakePoint(pLeft_to, pLeft.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+
+            pCenter.change(opacity: 0.0, duration: animationStyle.duration, timingFunction: animationStyle.function, completion:{ [weak pCenter] completed in
                 if completed {
                     pCenter?.removeFromSuperview()
                 }
             })
-            pCenter.layer?.animate(from: pCenter_from as NSNumber, to: pCenter_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
+            pCenter.change(pos: NSMakePoint(pCenter_to, pCenter.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+
             
-            pRight.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration, removeOnCompletion: false, completion:{ [weak pRight] (completed) in
+            pRight.change(opacity: 0.0, duration: animationStyle.duration, timingFunction: animationStyle.function, completion:{ [weak pRight] completed in
                 if completed {
                     pRight?.removeFromSuperview()
                 }
             })
-            pRight.layer?.animate(from: pRight_from as NSNumber, to: pRight_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
-            
+            pRight.change(pos: NSMakePoint(pRight_to, pRight.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+
             // new
             if !left.isHidden {
-                left.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration)
+                left.change(opacity: 1.0, duration: animationStyle.duration, timingFunction: animationStyle.function)
             }
-            left.layer?.animate(from: nLeft_from as NSNumber, to: nLeft_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
+            left.change(pos: NSMakePoint(nLeft_to, left.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+           
+            
             if !center.isHidden {
-                center.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration)
+                center.change(opacity: 1.0, duration: animationStyle.duration, timingFunction: animationStyle.function)
             }
-            center.layer?.animate(from: nCenter_from as NSNumber, to: nCenter_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
+            
+            center.change(pos: NSMakePoint(nCenter_to, center.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+
             
             if !right.isHidden {
-                right.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: kCAMediaTimingFunctionSpring, duration: animationStyle.duration)
+                right.change(opacity: 1.0, duration: animationStyle.duration, timingFunction: animationStyle.function)
             }
-            right.layer?.animate(from: nRight_from as NSNumber, to: nRight_to as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
-            
+            right.change(pos: NSMakePoint(nRight_to, right.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+
             
             
             CATransaction.commit()
@@ -246,7 +399,9 @@ public class NavigationBarView: View {
             self.addSubview(bottomBorder)
         }
         
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: left)
+        NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: center)
+        NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: right)
         
     }
     

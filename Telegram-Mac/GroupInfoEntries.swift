@@ -257,7 +257,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         
     }
     
-    func addMember() -> Void {
+    func addMember(_ canInviteByLink: Bool) -> Void {
         let account = self.account
         let peerId = self.peerId
         let updateState:((GroupInfoState)->GroupInfoState)->Void = { [weak self] f in
@@ -272,6 +272,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMembers1Countable(peerIds.count)))
         }
         
+        
         let addMember = account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<Void, Void> in
             
             var excludePeerIds:[PeerId] = []
@@ -281,7 +282,15 @@ final class GroupInfoArguments : PeerInfoArguments {
                 excludePeerIds = Array(cachedData.peerIds)
             }
             
-            return selectModalPeers(account: account, title: tr(L10n.peerInfoAddMember), settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl)
+            var linkInvation: (()->Void)? = nil
+            if canInviteByLink {
+                linkInvation = { [weak self] in
+                    self?.invation()
+                }
+            }
+            
+            
+            return selectModalPeers(account: account, title: tr(L10n.peerInfoAddMember), settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl, linkInvation: linkInvation)
                 |> deliverOnMainQueue
                 |> mapToSignal { memberIds -> Signal<Void, NoError> in
                     return account.postbox.multiplePeersView(memberIds + [peerId])
@@ -554,7 +563,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case sharedMedia(section:Int)
     case notifications(section:Int, settings: PeerNotificationSettings?)
     case usersHeader(section:Int, count:Int)
-    case addMember(section:Int)
+    case addMember(section:Int, inviteViaLink: Bool)
     case inviteLink(section:Int)
     case convertToSuperGroup(section:Int)
     case groupTypeSetup(section:Int, isPublic: Bool)
@@ -856,7 +865,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .inviteLink(sectionId):
             return (sectionId * 1000) + stableIndex
-        case let .addMember(sectionId):
+        case let .addMember(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .notifications(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -903,7 +912,6 @@ enum GroupInfoEntry: PeerInfoEntry {
     
     func item(initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
         let arguments = arguments as! GroupInfoArguments
-        let state = arguments.state as! GroupInfoState
         
         switch self {
         case let .info(_, peerView, editingState, updatingPhotoState):
@@ -977,11 +985,9 @@ enum GroupInfoEntry: PeerInfoEntry {
             })
         case let .usersHeader(section: _, count: count):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoMembersHeaderCountable(count)))
-        case .addMember:
+        case .addMember(_, let inviteViaLink):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAddMember), nameStyle: blueActionButton, type: .none, action: { () in
-                
-                arguments.addMember()
-                
+                arguments.addMember(inviteViaLink)
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 36), inset:NSEdgeInsets(left: 40, right: 30))
         case .inviteLink:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoInviteLink), nameStyle: blueActionButton, type: .none, action: { () in
@@ -1062,7 +1068,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 entries.append(GroupInfoEntry.setGroupPhoto(section: sectionId))
             }
             if canInviteByLink {
-                entries.append(GroupInfoEntry.inviteLink(section: sectionId))
+               // entries.append(GroupInfoEntry.inviteLink(section: sectionId))
             }
             
             entries.append(GroupInfoEntry.section(sectionId))
@@ -1138,7 +1144,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             entries.append(GroupInfoEntry.usersHeader(section: sectionId, count: participants.participants.count))
             
             if access.canManageMembers {
-                entries.append(GroupInfoEntry.addMember(section: sectionId))
+                entries.append(GroupInfoEntry.addMember(section: sectionId, inviteViaLink: canInviteByLink))
             }
             
             
@@ -1250,7 +1256,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
             
             if channel.hasAdminRights(.canInviteUsers) || info.flags.contains(.everyMemberCanInviteMembers) {
-                entries.append(GroupInfoEntry.addMember(section: sectionId))
+                entries.append(GroupInfoEntry.addMember(section: sectionId, inviteViaLink: canInviteByLink))
             }
             
             let sortedParticipants = participants.participants.filter({peers[$0.peerId]?.displayTitle != L10n.peerDeletedUser}).sorted(by: { lhs, rhs in

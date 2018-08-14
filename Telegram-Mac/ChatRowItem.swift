@@ -878,7 +878,8 @@ class ChatRowItem: TableRowItem {
                             let subrange = attr.append(string: " (\(info.author.displayTitle))", color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                             range.length += subrange.length
                         }
-                        attr.add(link: inAppLink.peerInfo(peerId: source.id, action:nil, openChat: true, postId: nil, callback:chatInteraction.openInfo), for: range)
+                        
+                        attr.add(link: inAppLink.peerInfo(peerId: source.id, action: nil, openChat: true, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
                         
                     } else {
                         let range = attr.append(string: info.author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))

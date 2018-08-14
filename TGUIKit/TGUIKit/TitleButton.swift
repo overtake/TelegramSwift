@@ -11,6 +11,7 @@ import Cocoa
 public enum TitleButtonImageDirection {
     case left
     case right
+    case top
 }
 
 class TextLayerExt: CATextLayer {
@@ -108,7 +109,7 @@ public class TitleButton: ImageButton {
         var msize:NSSize = size
         
         if maxSize.width < size.width {
-            if let image = imageView.image {
+            if let image = imageView.image, direction != .top {
                 msize.width += (image.backingSize.width + 12) // max size
             }
         }
@@ -119,7 +120,7 @@ public class TitleButton: ImageButton {
         
         var textSize:CGFloat = maxWidth
         
-        if let image = imageView.image {
+        if let image = imageView.image, direction != .top {
             
             textSize = min(maxWidth,size.width)
             let iwidth:CGFloat = (image.backingSize.width + 12)
@@ -162,6 +163,9 @@ public class TitleButton: ImageButton {
             case .right:
                 self.imageView.frame = NSMakeRect(round(frame.width - imageFocus.width - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
                 self.text.frame = NSMakeRect(0, textFocus.minY, textFocus.width, textFocus.height)
+            case .top:
+                self.imageView.frame = NSMakeRect(imageFocus.minX, imageFocus.minY - textFocus.height / 2 - 2, imageFocus.width, imageFocus.height)
+                self.text.frame = NSMakeRect(textFocus.minX, self.imageView.frame.maxY, textFocus.width, textFocus.height)
             }
             
         } else {

@@ -151,10 +151,9 @@ class MainViewController: TelegramViewController {
         switch passcodeData {
         case .none:
             items.append(SPopoverItem(tr(L10n.fastSettingsSetPasscode), { [weak self] in
-                if let account = self?.account {
-                    self?.tabController.select(index: 3)
-                    account.context.mainNavigation?.push(PasscodeSettingsViewController(account))
-                }
+                guard let `self` = self else {return}
+                self.tabController.select(index: self.tabController.count - 1)
+                self.account.context.mainNavigation?.push(PasscodeSettingsViewController(self.account))
             }, theme.icons.fastSettingsLock))
         default:
             items.append(SPopoverItem(tr(L10n.fastSettingsLockTelegram), {
