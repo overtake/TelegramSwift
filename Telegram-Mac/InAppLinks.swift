@@ -490,7 +490,7 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                             }
                         }
                         if username == legacyPassportUsername {
-                            return inApp(for: external.replacingOccurrences(of: "tg://resolve?", with: "tg://passport?").nsstring, account: account, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
+                            return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, account: account, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
                             //return inapp
                         } else if let account = account {
                             return .followResolvedName(username: username, postId: post, account: account, action: action, callback:openInfo)

@@ -446,7 +446,7 @@ var redActionButton:ControlStyle {
 
 
 
-class ActivitiesTheme {
+struct ActivitiesTheme : Equatable {
     let text:[CGImage]
     let uploading:[CGImage]
     let recording:[CGImage]
@@ -458,6 +458,10 @@ class ActivitiesTheme {
         self.recording = recording
         self.textColor = textColor
         self.backgroundColor = backgroundColor
+    }
+    
+    static func ==(lhs: ActivitiesTheme, rhs: ActivitiesTheme) -> Bool {
+        return lhs.textColor.argb == rhs.textColor.argb && lhs.backgroundColor.argb == rhs.backgroundColor.argb
     }
 }
 
@@ -726,6 +730,7 @@ struct TelegramIconsTheme {
     let chatActionMute: CGImage
     let chatActionUnmute: CGImage
     let chatActionClearHistory: CGImage
+    let chatActionDeleteChat: CGImage
     
     let dismissPinned: CGImage
     let chatActionsActive: CGImage
@@ -883,6 +888,15 @@ struct TelegramIconsTheme {
     let searchSaved: CGImage
     
     let hintPeerActive: CGImage
+    
+    
+    let chatSwiping_delete: CGImage
+    let chatSwiping_mute: CGImage
+    let chatSwiping_unmute: CGImage
+    let chatSwiping_read: CGImage
+    let chatSwiping_unread: CGImage
+    let chatSwiping_pin: CGImage
+    let chatSwiping_unpin: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -978,7 +992,7 @@ class TelegramPresentationTheme : PresentationTheme {
     }
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
-        return activityResources.object(key, { () -> AnyObject in
+        return activityResources.object(key, { () -> Any in
             return ActivitiesTheme(text: textActivityAnimation(foregroundColor), uploading: uploadFileActivityAnimation(foregroundColor, backgroundColor), recording: recordVoiceActivityAnimation(foregroundColor), textColor: foregroundColor, backgroundColor: backgroundColor)
         }) as! ActivitiesTheme
     }
@@ -1190,7 +1204,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatActionInfo: #imageLiteral(resourceName: "Icon_ChatActionInfo").precomposed(palette.blueIcon),
                                                chatActionMute: #imageLiteral(resourceName: "Icon_ChatActionMute").precomposed(palette.blueIcon),
                                                chatActionUnmute: #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(palette.blueIcon),
-                                               chatActionClearHistory: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
+                                               chatActionClearHistory: #imageLiteral(resourceName: "Icon_ClearChat").precomposed(palette.blueIcon),
+                                               chatActionDeleteChat: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
                                                dismissPinned: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
                                                chatActionsActive: #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.blueIcon),
                                                chatEntertainmentSticker: #imageLiteral(resourceName: "Icon_ChatEntertainmentSticker").precomposed(palette.grayIcon),
@@ -1310,7 +1325,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPlaceholderCap: generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20),
                                                searchArticle: #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white),
                                                searchSaved: #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white),
-                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.blueUI, backgroundColor: palette.background)
+                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.blueUI, backgroundColor: palette.background),
+                                               chatSwiping_delete: #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white),
+                                               chatSwiping_mute: #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white),
+                                               chatSwiping_unmute: #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white),
+                                               chatSwiping_read: #imageLiteral(resourceName: "Icon_ChatSwipingRead").precomposed(.white),
+                                               chatSwiping_unread: #imageLiteral(resourceName: "Icon_ChatSwipingUnread").precomposed(.white),
+                                               chatSwiping_pin: #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white),
+                                               chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white)
     )
 }
 
@@ -1381,14 +1403,15 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
             contentView.addSubview(imageView)
 
             
-            appearanceDisposable.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(completed: { [weak imageView] in
-                if let strongImageView = imageView {
-                    strongImageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak strongImageView] completed in
-                        strongImageView?.removeFromSuperview()
+            let signal = Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
+                if let imageView = imageView {
+                    imageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak imageView] completed in
+                        imageView?.removeFromSuperview()
                     })
                 }
+            }
             
-            }))
+            appearanceDisposable.set(signal.start())
             
         }
         window.contentView?.background = theme.colors.background

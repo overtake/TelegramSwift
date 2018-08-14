@@ -32,7 +32,7 @@ class PeerMediaPlayerAnimationView: View {
         let barSize = CGSize(width: 3.0, height: 3)
         let barSpacing: CGFloat = 2.0
         
-        let barsOrigin = CGPoint(x: floor((baseSize.width - (barSize.width * 4.0 + barSpacing * 3.0)) / 2.0), y: 17)
+        let barsOrigin = CGPoint(x: floor((baseSize.width - (barSize.width * 4.0 + barSpacing * 3.0)) / 2.0), y: 18)
         
         var barNodes: [View] = []
         for i in 0 ..< 4 {

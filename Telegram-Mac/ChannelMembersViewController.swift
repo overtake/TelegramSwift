@@ -422,7 +422,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 strongSelf.navigationController?.push(LinkInvationController(account: strongSelf.account, peerId: strongSelf.peerId))
             }
         }, openInfo: { [weak self] peer in
-             self?.navigationController?.push(PeerInfoController(account: account, peer: peer))
+             self?.navigationController?.push(PeerInfoController(account: account, peerId: peerId))
         })
         
         let peerView = account.viewTracker.peerView(peerId)

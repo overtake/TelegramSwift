@@ -43,7 +43,15 @@ class WPLayout: Equatable {
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble {
-            if let block = instantPage.blocks.last {
+            if let block = instantPage.blocks.filter({ value in
+                if case .slideshow = value {
+                    return true
+                } else if case .collage = value {
+                    return true
+                } else {
+                    return false
+                }
+            }).last {
                 switch block {
                 case let .slideshow(items, _), let .collage(items , _):
                     if items.count == 1 {
@@ -141,7 +149,7 @@ class WPLayout: Equatable {
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram") && content.instantPage != nil) || content.text == nil {
             return !content.url.isEmpty
         }
-        return false
+        return content.type == "telegram_album"
     }
     
     func viewClass() -> AnyClass {
@@ -169,7 +177,7 @@ class WPLayout: Equatable {
     
     var hasInstantPage: Bool {
         if let instantPage = content.instantPage {
-            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
+            if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.type == "telegram_album" {
                 return false
             }
             if instantPage.blocks.count == 3 {

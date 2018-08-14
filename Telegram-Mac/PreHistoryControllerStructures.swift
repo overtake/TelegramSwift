@@ -35,28 +35,6 @@ enum PreHistoryEntryId : Hashable {
     }
 }
 
-func ==(lhs: PreHistoryEntryId, rhs: PreHistoryEntryId) -> Bool {
-    switch lhs {
-    case .type(let index):
-        if case .type(index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .text(let index):
-        if case .text(index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .section(let index):
-        if case .section(index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 enum PreHistoryEntry : TableItemListNodeEntry {
     case section(Int32)
@@ -90,8 +68,8 @@ enum PreHistoryEntry : TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case let .type(_, _, text, enabled, selected):
-            return GeneralInteractedRowItem.init(initialSize, stableId: stableId, name: text, type: .selectable(enabled), action: {
-                arguments.preHistory(enabled)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .selectable(enabled), action: {
+                arguments.preHistory(selected)
             })
         case let .text(_, _, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
@@ -104,28 +82,6 @@ func <(lhs: PreHistoryEntry, rhs: PreHistoryEntry) -> Bool {
     return lhs.index < rhs.index
 }
 
-func ==(lhs: PreHistoryEntry, rhs: PreHistoryEntry) -> Bool {
-    switch lhs {
-    case let .type(section, index, text, enabled, selected: Bool):
-        if case .type(section, index, text, enabled, selected: Bool) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .text(section, index, text):
-        if case .text(section, index, text) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .section(index):
-        if case .section(index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 final class PreHistoryControllerState : Equatable {
     let enabled: Bool?

@@ -475,7 +475,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             if inputInteraction.state.inputQueryResult != nil {
                 return .rejected
             }
-            if FastSettings.checkSendingAbility(for: currentEvent) {
+            if FastSettings.checkSendingAbility(for: currentEvent), didSetReady {
                 send()
                 return .invoked
             }

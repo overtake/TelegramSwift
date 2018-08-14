@@ -290,15 +290,15 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         actionsDisposable.dispose()
     }, updateDoneEnabled: { data in
         return { f in
-            updateState { current in
-                if let peerView = peerView {
-                    let updates = valuesRequiringUpdate(state: current, view: peerView)
-                    f(updates.0 != nil || updates.1 != nil)
-                } else {
-                    f(false)
-                }
-                return current
-            }
+//            updateState { current in
+//                if let peerView = peerView {
+//                    let updates = valuesRequiringUpdate(state: current, view: peerView)
+//                    f(updates.0 != nil || updates.1 != nil)
+//                } else {
+//                    f(false)
+//                }
+//                return current
+//            }
         }
     }, removeAfterDisappear: false, identifier: "account"))
 }

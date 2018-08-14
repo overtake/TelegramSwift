@@ -188,7 +188,7 @@ private enum GroupAdminsEntry: Comparable, Identifiable {
             
             if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                (string, _, color) = stringAndActivityForUserPresence(presence, relativeTo: Int32(timestamp))
+                (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
             } else if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
                 string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
             }

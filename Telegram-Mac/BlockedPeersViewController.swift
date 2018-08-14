@@ -252,7 +252,6 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     private let removePeerDisposable:MetaDisposable = MetaDisposable()
     
     private let disposable:MetaDisposable = MetaDisposable()
-    private let openPeerDisposable = MetaDisposable()
     private let defaultPeers:[Peer]?
     private let updated:([Peer]?) -> Void
     init(_ account: Account, _ defaultPeers:[Peer]?, updated: @escaping([Peer]?) -> Void) {
@@ -311,11 +310,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
             }))
         }, openPeer: { [weak self] peerId in
             guard let `self` = self else {return}
-            self.openPeerDisposable.set((self.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
-                if let strongSelf = self {
-                    strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peer: peer))
-                }
-            }))
+            self.navigationController?.push(PeerInfoController(account: self.account, peerId: peerId))
         })
         
         
@@ -347,7 +342,6 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     deinit {
         disposable.dispose()
         removePeerDisposable.dispose()
-        openPeerDisposable.dispose()
     }
     
     override func update(with state: ViewControllerState) {

@@ -49,7 +49,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         navigationBar.frame = NSMakeRect(0, 0, containerView.frame.width, controller.bar.height)
         controller.view.frame = NSMakeRect(0, controller.bar.height , containerView.frame.width, containerView.frame.height - controller.bar.height)
         
-        navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle)
+        navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle, liveSwiping: false)
         
         containerView.addSubview(controller.view)
         Queue.mainQueue().justDispatch {
@@ -180,11 +180,11 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     
     public var doSomethingOnEmptyBack: (()->Void)? = nil
     
-    open override func back(animated:Bool = true) -> Void {
+    open override func back(animated:Bool = true, forceAnimated: Bool = false) -> Void {
         if  !isLocked, let last = stack.last, last.invokeNavigationBack() {
             if stackCount > 1 {
                 let ncontroller = stack[stackCount - 2]
-                let removeAnimateFlag = (ncontroller == defaultEmpty || !animated) && !alwaysAnimate
+                let removeAnimateFlag = ((ncontroller == defaultEmpty || !animated) && !alwaysAnimate) && !forceAnimated
                 last.didRemovedFromStack()
                 stack.removeLast()
                 
@@ -242,29 +242,132 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             return .rejected
         }, with: self, for: .RightArrow, priority:.medium)
         
-        self.window?.add(swipe: { [weak self] direction -> KeyHandlerResult in
-            if let strongSelf = self, let window = strongSelf.window, !hasPopover(window) && !hasModals() && !strongSelf.isLocked {
-                switch direction {
-                case .right:
-                    return strongSelf.backKeyAction()
-                case .left:
-                    return strongSelf.nextKeyAction()
-                case .none:
-                    break
+        self.window?.add(swipe: { [weak self] direction -> SwipeHandlerResult in
+            guard let `self` = self, self.controller.view.layer?.animationKeys() == nil else {return .failed}
+            
+            
+            switch direction {
+            case let .left(state):
+                switch state {
+                case .start:
+                    
+                    guard let previous = self.previousController, self.stackCount > 1 && !self.isLocked, (self.genericView.state == .single || self.stackCount > 2) else {return .failed}
+                
+                    previous.view.frame = NSMakeRect(0, previous.bar.height, self.frame.width, self.frame.height - previous.bar.height)
+                    
+                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
+                    self.addShadowView(.left)
+                    if previous.bar.has {
+                        self.navigationBar.startMoveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction)
+                    }
+                    return .success(previous)
+                case let .swiping(delta, previous):
+                    
+                    
+                    let nPosition = min(max(0, delta), self.containerView.frame.width)
+                    self.controller.view._change(pos: NSMakePoint(nPosition, self.controller.view.frame.minY), animated: false)
+                    let previousStart = -round(NSWidth(self.containerView.frame)/3.0)
+                    previous.view._change(pos: NSMakePoint(min(previousStart + delta / 3.0, 0), previous.view.frame.minY), animated: false)
+
+                    self.shadowView.setFrameOrigin(nPosition - self.shadowView.frame.width, self.shadowView.frame.minY)
+                    self.shadowView.layer?.opacity = min(1.0 - Float(nPosition / self.containerView.frame.width) + 0.2, 1.0)
+                    
+                    if previous.bar.has {
+                        self.navigationBar.moveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction, percent: nPosition / self.containerView.frame.width)
+                    } else {
+                        self.navigationBar.setFrameOrigin(nPosition, self.navigationBar.frame.minY)
+                    }
+                    return .deltaUpdated(available: nPosition)
+                    
+                case .success:
+                    self.back(forceAnimated: true)
+                case let .failed(_, previous):
+                 //   CATransaction.begin()
+                    let animationStyle = previous.animationStyle
+                    self.controller.view._change(pos: NSMakePoint(0, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    self.containerView.subviews[0]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
+                        self?.containerView.subviews[0].removeFromSuperview()
+                    })
+                    self.shadowView.change(pos: NSMakePoint(-self.shadowView.frame.width, self.shadowView.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
+                        self?.shadowView.removeFromSuperview()
+                    })
+                    self.shadowView.change(opacity: 1, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    if previous.bar.has {
+                        self.navigationBar.moveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction, percent: 0, animationStyle: animationStyle)
+                    } else {
+                        self.navigationBar.change(pos: NSMakePoint(0, self.navigationBar.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    }
+                  //  CATransaction.commit()
                 }
+            case let .right(state):
+                
+                switch state {
+                case .start:
+                    guard let new = self.controller.rightSwipeController, !self.isLocked else {return .failed}
+                    new._frameRect = self.containerView.bounds
+                    new.view.setFrameOrigin(NSMakePoint(self.containerView.frame.width, self.controller.frame.minY))
+
+                    self.containerView.addSubview(new.view, positioned: .above, relativeTo: self.controller.view)
+                    self.addShadowView(.right)
+                    self.navigationBar.startMoveViews(left: new.leftBarView, center: new.centerBarView, right: new.rightBarView, direction: direction)
+                    
+                    return .success(new)
+                case let .swiping(delta, new):
+                    let delta = min(max(0, delta), self.containerView.frame.width)
+                    
+                    let nPosition = self.containerView.frame.width - delta
+                   // NSLog("\(nPosition)")
+                    new.view._change(pos: NSMakePoint(nPosition, new.frame.minY), animated: false)
+                    
+                    self.controller.view._change(pos: NSMakePoint(min(-delta / 3.0, 0), self.controller.view.frame.minY), animated: false)
+                    
+                    self.shadowView.setFrameOrigin(nPosition - self.shadowView.frame.width, self.shadowView.frame.minY)
+                    self.shadowView.layer?.opacity = min(1.0 - Float(nPosition / self.containerView.frame.width) + 0.2, 1.0)
+                    
+                    self.navigationBar.moveViews(left: new.leftBarView, center: new.centerBarView, right: new.rightBarView, direction: direction, percent: delta / self.containerView.frame.width)
+
+                    return .deltaUpdated(available: delta)
+                case let .success(_, controller):
+                    self.push(controller, true, style: .push)
+                case let .failed(_, new):
+                   // CATransaction.begin()
+                    let animationStyle = new.animationStyle
+                    var _new:ViewController? = new
+                    new.view._change(pos: NSMakePoint(self.containerView.frame.width, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    self.containerView.subviews[0]._change(pos: NSMakePoint(0, self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new] completed in
+                        new?.view.removeFromSuperview()
+                        _new = nil
+                    })
+                    self.shadowView.change(pos: NSMakePoint(self.containerView.frame.width, self.shadowView.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
+                        self?.shadowView.removeFromSuperview()
+                    })
+                    self.shadowView.change(opacity: 1, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    self.navigationBar.moveViews(left: new.leftBarView, center: new.centerBarView, right: new.rightBarView, direction: direction, percent: 0, animationStyle: animationStyle)
+
+                   // CATransaction.commit()
+                }
+            default:
+                break
             }
             
-            return .invokeNext
-        }, with: self.containerView)
+            return .nothing
+        }, with: self.containerView, identifier: "main-navigation")
         
-        
+    }
+    private var previousController: ViewController? {
+        if stackCount > 1 {
+            return stack[stackCount - 2]
+        }
+        return nil
     }
     
     
     
-    open override func viewDidDisappear(_ animated: Bool) {
+    
+    open override func viewWillDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         self.window?.removeAllHandlers(for: self)
+        self.window?.removeAllHandlers(for: self.containerView)
     }
     
     open override func backKeyAction() -> KeyHandlerResult {

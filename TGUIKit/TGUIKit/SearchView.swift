@@ -205,6 +205,12 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }, for: .Click)
         
         updateLocalizationAndTheme()
+        
+        
+        
+        progressIndicator.set(handler: { [weak self] _ in
+            self?.cancelSearch()
+        }, for: .Click)
        
     }
     

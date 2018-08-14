@@ -271,19 +271,19 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     private func showLatestUsers(_ control: Control) {
-        if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup {
-            let controller = latestGroupUsers(chatInteraction: chatInteraction) { [weak control, weak self] controller in
-                guard let `self` = self, let parent = self.controller, parent.navigationController?.controller == parent else {return}
-
-                controller.view.setFrameSize(300, min(controller.genericView.listHeight, parent.view.frame.height / 3 + 30))
-                self.lastestUsersController = nil
-                if let control = control {
-                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-10, -70), delayBeforeShown: 0.4)
-                }
-            }
-            self.lastestUsersController = controller
-            controller.loadViewIfNeeded()
-        }
+//        if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup {
+//            let controller = latestGroupUsers(chatInteraction: chatInteraction) { [weak control, weak self] controller in
+//                guard let `self` = self, let parent = self.controller, parent.navigationController?.controller == parent else {return}
+//
+//                controller.view.setFrameSize(300, min(controller.genericView.listHeight, parent.view.frame.height / 3 + 30))
+//                self.lastestUsersController = nil
+//                if let control = control {
+//                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-10, -70), delayBeforeShown: 0.4)
+//                }
+//            }
+//            self.lastestUsersController = controller
+//            controller.loadViewIfNeeded()
+//        }
        
     }
     
@@ -355,6 +355,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         disposable.dispose()
     }
     
+    
     override func layout() {
         super.layout()
         
@@ -396,8 +397,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             
             if let peer = peerViewMainPeer(peerView) {
                 if peer.id == chatInteraction.account.peerId {
-                    let icon = theme.icons.peerSavedMessages
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 20, avatarControl.frame.size.height - 20)))) |> map {($0, false)})
+                    let icon = theme.icons.searchSaved
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)))) |> map {($0, false)})
                 } else {
                     avatarControl.setPeer(account: chatInteraction.account, peer: peer)
                 }
@@ -409,7 +410,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 titleImage = nil
             }
             
-            var result = stringStatus(for: peerView, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
+            var result = stringStatus(for: peerView, account: chatInteraction.account, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
             
             if chatInteraction.account.peerId == peerView.peerId  {
                 result = result.withUpdatedTitle(tr(L10n.peerSavedMessages))

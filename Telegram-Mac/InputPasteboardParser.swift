@@ -39,7 +39,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fs(path.path) {
-                    return size <= 1500000000
+                    return size <= 1500 * 1024 * 1024
                 }
                 
                 return false
@@ -88,7 +88,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 1500000000
+                    return size <= 1500 * 1024 * 1024
                 }
                 
                 return false
@@ -143,7 +143,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 1500000000
+                    return size <= 1500 * 1024 * 1024
                 }
                 
                 return false
@@ -161,6 +161,18 @@ class InputPasteboardParser: NSObject {
                     alertForMediaRestriction(peer)
                     return false
                 }
+            }
+            
+            if files.count == 1, chatInteraction.presentation.state == .editing {
+                _ = (Sender.generateMedia(for: MediaSenderContainer(path: files[0].path, isFile: false), account: chatInteraction.account) |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
+                    chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
+                })
+                return false
+            } else if let image = image, chatInteraction.presentation.state == .editing {
+                _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: chatInteraction.account)} |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
+                    chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
+                })
+                return false
             }
             
             if !files.isEmpty {

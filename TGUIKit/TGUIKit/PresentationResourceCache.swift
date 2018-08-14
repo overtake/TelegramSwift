@@ -6,7 +6,7 @@ private final class PresentationsResourceCacheHolder {
 }
 
 private final class PresentationsResourceAnyCacheHolder {
-    var objects: [Int32: AnyObject] = [:]
+    var objects: [Int32: Any] = [:]
 }
 
 public final class PresentationsResourceCache {
@@ -33,8 +33,8 @@ public final class PresentationsResourceCache {
         }
     }
     
-    public func object(_ key: Int32, _ generate: () -> AnyObject) -> AnyObject {
-        let result = self.objectCache.with { holder -> AnyObject? in
+    public func object(_ key: Int32, _ generate: () -> Any) -> Any {
+        let result = self.objectCache.with { holder -> Any? in
             return holder.objects[key]
         }
         if let result = result {
