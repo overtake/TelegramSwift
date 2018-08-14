@@ -647,17 +647,33 @@ public class Window: NSWindow, NSTouchBarDelegate {
         return true
     }
     
+    public var isFullScreen: Bool {
+        return styleMask.contains(.fullScreen)
+    }
+    
     public func initSaver() {
         self.initFromSaver = true
         self.saver = .find(for: self)
         if let saver = saver {
             self.setFrame(saver.rect, display: true)
+            if saver.isFullScreen {
+                toggleFullScreen(self)
+            }
         }
     }
     
+    public override func toggleFullScreen(_ sender: Any?) {
+        super.toggleFullScreen(sender)
+        saver?.isFullScreen = isFullScreen
+    }
+    
     @objc func windowDidNeedSaveState(_ notification: Notification) {
-        saver?.rect = frame
-        saver?.save()
+        guard let saver = saver, !saver.isFullScreen && !isFullScreen else {
+            self.saver?.save()
+            return
+        }
+        saver.rect = frame
+        saver.save()
     }
     
     deinit {
