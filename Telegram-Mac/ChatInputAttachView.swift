@@ -42,7 +42,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         
                         let result = result.filter { path -> Bool in
                             if let size = fs(path) {
-                                return size <= 1500000000
+                                return size <= 1500 * 1024 * 1024
                             }
                             return false
                         }
@@ -68,7 +68,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         
                         let result = result.filter { path -> Bool in
                             if let size = fs(path) {
-                                return size <= 1500000000
+                                return size <= 1500 * 1024 * 1024
                             }
                             return false
                         }

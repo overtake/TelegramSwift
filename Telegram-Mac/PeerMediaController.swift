@@ -91,7 +91,6 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let mediaList:PeerMediaListController
     
     private var interactions:ChatInteraction
-    private let openPeerInfoDisposable = MetaDisposable()
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
     private let loadFwdMessagesDisposable = MetaDisposable()
     
@@ -226,11 +225,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 if toChat {
                     strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                 } else {
-                    strongSelf.openPeerInfoDisposable.set((strongSelf.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak strongSelf] peer in
-                        if let strongSelf = strongSelf {
-                            strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peer: peer))
-                        }
-                    }))
+                    strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peerId: peerId))
                 }
             }
         }
@@ -354,7 +349,6 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     
     deinit {
         messagesActionDisposable.dispose()
-        openPeerInfoDisposable.dispose()
         loadFwdMessagesDisposable.dispose()
     }
     

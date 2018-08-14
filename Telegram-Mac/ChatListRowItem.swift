@@ -417,25 +417,49 @@ class ChatListRowItem: TableRowItem {
         return result
     }
     
+    
+    var markAsUnread: Bool {
+        return !isSecret && !isUnreadMarked && badgeNode == nil && mentionsCount == nil
+    }
+    
 
+    func toggleUnread() {
+         _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()
+    }
+    func toggleMuted() {
+        _ = togglePeerMuted(account: account, peerId: peerId).start()
+    }
+    
+    func togglePinned() {
+        _ = (toggleItemPinned(postbox: account.postbox, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+            switch result {
+            case .limitExceeded:
+                alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
+            default:
+                break
+            }
+        })
+    }
+    
+    func delete() {
+        let signal = removeChatInteractively(account: account, peerId: peerId, userId: peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, Void> in
+            return globalPeerHandler.get() |> take(1)
+            } |> deliverOnMainQueue
+        
+        deleteChatDisposable.set(signal.start(next: { [weak self] location in
+            if location == self?.chatLocation {
+                self?.account.context.mainNavigation?.close()
+            }
+        }))
+    }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
         var items:[ContextMenuItem] = []
 
         if let peer = peer {
             
-            let deleteChat = {[weak self] in
-                if let strongSelf = self {
-                    let signal = removeChatInteractively(account: strongSelf.account, peerId: strongSelf.peerId, userId: strongSelf.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, Void> in
-                        return globalPeerHandler.get() |> take(1)
-                    } |> deliverOnMainQueue
-                    
-                    strongSelf.deleteChatDisposable.set(signal.start(next: { [weak self] location in
-                        if location == self?.chatLocation {
-                            self?.account.context.mainNavigation?.close()
-                        }
-                    }))
-                }
+            let deleteChat:()->Void = { [weak self] in
+                self?.delete()
             }
             
             let clearHistory = { [weak self] in
@@ -454,25 +478,12 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            let togglePin = {[weak self] in
-                if let strongSelf = self {
-                    
-                    _ = (toggleItemPinned(postbox: strongSelf.account.postbox, itemId: strongSelf.chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
-                        
-                        switch result {
-                        case .limitExceeded:
-                            alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
-                        default:
-                            break
-                        }
-                    })
-                }
+            let togglePin:()->Void = { [weak self] in
+               self?.togglePinned()
             }
             
-            let toggleMute = {[weak self] in
-                if let strongSelf = self {
-                    _ = togglePeerMuted(account: strongSelf.account, peerId: strongSelf.peerId).start()
-                }
+            let toggleMute:()->Void = { [weak self] in
+                self?.toggleMuted()
             }
             
             let leaveGroup = { [weak self] in
@@ -506,7 +517,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             if !isSecret {
-                if !isUnreadMarked && badgeNode == nil && mentionsCount == nil {
+                if markAsUnread {
                     items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsUnread), handler: { [weak self] in
                         guard let `self` = self else {return}
                         _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()

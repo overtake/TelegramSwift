@@ -82,6 +82,9 @@ public class TabBarView: View {
     public var isEmpty:Bool {
         return tabs.isEmpty
     }
+    public var count:Int {
+        return tabs.count
+    }
     public func tab(at index:Int) -> TabItem {
         return self.tabs[index]
     }

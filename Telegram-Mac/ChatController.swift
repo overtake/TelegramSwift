@@ -806,7 +806,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private let connectionStatusDisposable:MetaDisposable = MetaDisposable()
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
-    private let openPeerInfoDisposable:MetaDisposable = MetaDisposable()
     private let unblockDisposable:MetaDisposable = MetaDisposable()
     private let updatePinnedDisposable:MetaDisposable = MetaDisposable()
     private let reportPeerDisposable:MetaDisposable = MetaDisposable()
@@ -980,7 +979,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return .complete()
             case let .HistoryView(view, updateType, scrollPosition, initialData):
                 
-                var scrollPosition = scrollPosition
                 
                 if view.isLoading {
                     self.initialDataHandler.set(.single(initialData) |> deliverOnMainQueue)
@@ -1362,11 +1360,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                        strongSelf.navigationController?.push(ChatAdditionController(account: strongSelf.account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                     }
                 } else {
-                    strongSelf.openPeerInfoDisposable.set((strongSelf.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak strongSelf] peer in
-                        if let strongSelf = strongSelf {
-                            strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peer: peer))
-                        }
-                    }))
+                   strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peerId: peerId))
                 }
             }
         }
@@ -2498,7 +2492,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         peerInputActivitiesDisposable.dispose()
         connectionStatusDisposable.dispose()
         messagesActionDisposable.dispose()
-        openPeerInfoDisposable.dispose()
         unblockDisposable.dispose()
         updatePinnedDisposable.dispose()
         reportPeerDisposable.dispose()
@@ -2551,13 +2544,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self, !hasModals() {
-                var result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
+                let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
                 
-                if let event = NSApp.currentEvent, strongSelf.chatInteraction.presentation.state == .editing {
-                    if event.modifierFlags.contains(.command) {
-                       result = .invoked
-                    }
-                }
                 
                 if result == .invoked {
                     let setup = strongSelf.findAndSetEditableMessage()
@@ -2579,13 +2567,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, !hasModals() {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .invoked : .invokeNext
                 
-                if let event = NSApp.currentEvent, strongSelf.chatInteraction.presentation.state == .editing {
-                    if event.modifierFlags.contains(.command) {
-                        if strongSelf.findAndSetEditableMessage(true) {
-                            return result
-                        }
-                    }
-                }
                 
                 if result == .invoked {
                     strongSelf.genericView.tableView.scrollDown()
@@ -2879,6 +2860,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return false
     }
     
+    override var rightSwipeController: ViewController? {
+        return chatInteraction.peerId == account.peerId ? PeerMediaController(account: account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo) : PeerInfoController(account: account, peerId: chatInteraction.peerId)
+    }
     
     
     public override func draggingItems(for pasteboard:NSPasteboard) -> [DragItem] {
@@ -2900,7 +2884,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let list = list.filter { path -> Bool in
                     if let size = fs(path) {
-                        return size <= 1500000000
+                        return size <= 1500 * 1024 * 1024
                     }
 
                     return false

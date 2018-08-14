@@ -57,8 +57,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         if let item = item as? ShortPeerRowItem {
             
-            //ctx.setFillColor(backdorColor.cgColor)
-            //ctx.fill(NSMakeRect(0, 0, layer.bounds.width - .borderSize, layer.bounds.height))
+            if backingScaleFactor == 1.0 {
+                ctx.setFillColor(backdorColor.cgColor)
+                ctx.fill(NSMakeRect(0, 0, layer.bounds.width - .borderSize, layer.bounds.height))
+            }
+            
             if layer == container.layer {
                 
                 let canSeparate: Bool = item.index != item.table!.count - 1
@@ -94,7 +97,6 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 let canSeparate: Bool = item.index != item.table!.count - 1
                 if !item.isSelected && item.drawCustomSeparator && (canSeparate || item.drawLastSeparator) {
                     ctx.setFillColor(theme.colors.border.cgColor)
-                  //  ctx.fill(NSMakeRect(30, container.frame.height - .borderSize, frame.width, .borderSize))
                 }
                
             }

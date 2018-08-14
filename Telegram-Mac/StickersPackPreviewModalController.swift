@@ -115,7 +115,7 @@ private class StickersModalView : View {
                 _ = (arguments.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()
                     if peer.isUser || peer.isBot {
-                        arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peer: peer))
+                        arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peerId: peerId))
                     } else {
                         arguments.account.context.mainNavigation?.push(ChatAdditionController(account: arguments.account, chatLocation: .peer(peer.id)))
                     }

@@ -70,7 +70,6 @@ open class Popover: NSObject {
                 case .maxX:
                     point.x -= controller.frame.width
                 case .maxY:
-                    //  point.x += floorToScreenPixels((control.superview!.frame.width - controller.frame.width) / 2.0)
                     point.y -= controller.frame.height
                     background.flip = true
                 case .minX:
@@ -102,8 +101,8 @@ open class Popover: NSObject {
             
             point.x = min(max(5, point.x), (parentView.frame.width - rect.width - 12) - 5)
             point.y = min(max(5, point.y), (parentView.frame.height - rect.height - 12) - 5)
-            
-            background.frame = NSMakeRect(point.x, point.y, rect.width + 14, rect.height + 14)
+                        
+            background.frame = NSMakeRect(round(point.x), round(point.y), rect.width + 14, rect.height + 14)
         }
     }
     
@@ -125,7 +124,7 @@ open class Popover: NSObject {
             if control.controlState == .Hover && delayBeforeShown > 0.0 {
                 signal = signal |> delay(delayBeforeShown, queue: Queue.mainQueue())
             }
-            self.readyDisposable.set(signal.start(next: {[weak self, weak controller, weak parentView] (ready) in
+            self.readyDisposable.set(signal.start(next: { [weak self, weak controller, weak parentView] ready in
                 
                 if let parentView = parentView {
                     for subview in parentView.subviews {
