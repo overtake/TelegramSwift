@@ -55,7 +55,7 @@ class WPArticleLayout: WPLayout {
             var messages:[Message] = []
             for i in 0 ..< instantMedias.count {
                 let media = instantMedias[i].media
-                let message = parent.withUpdatedMedia([media]).withUpdatedStableId(arc4random()).withUpdatedId(MessageId(peerId: chatInteraction.peerId, namespace: Namespaces.Message.Local, id: MessageId.Id(i)))
+                let message = parent.withUpdatedMedia([media]).withUpdatedStableId(arc4random())//.withUpdatedId(MessageId(peerId: chatInteraction.peerId, namespace: Namespaces.Message.Local, id: MessageId.Id(i)))
                 messages.append(message)
                 
                 weak var weakParameters:ChatMediaGalleryParameters?

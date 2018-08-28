@@ -897,6 +897,10 @@ struct TelegramIconsTheme {
     let chatSwiping_unread: CGImage
     let chatSwiping_pin: CGImage
     let chatSwiping_unpin: CGImage
+    
+    
+    let galleryPrev: CGImage
+    let galleryNext: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1332,7 +1336,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatSwiping_read: #imageLiteral(resourceName: "Icon_ChatSwipingRead").precomposed(.white),
                                                chatSwiping_unread: #imageLiteral(resourceName: "Icon_ChatSwipingUnread").precomposed(.white),
                                                chatSwiping_pin: #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white),
-                                               chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white)
+                                               chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white),
+                                               galleryPrev: #imageLiteral(resourceName: "Icon_GalleryPrev").precomposed(.white),
+                                               galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white)
     )
 }
 

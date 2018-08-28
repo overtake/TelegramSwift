@@ -13,6 +13,7 @@ import SwiftSignalKitMac
 class GalleryThumbContainer : Control {
     
     fileprivate let imageView: TransformImageView = TransformImageView()
+    fileprivate let overlay: View = View()
     init(_ item: MGalleryItem) {
         super.init(frame: NSZeroRect)
         backgroundColor = .clear
@@ -30,17 +31,21 @@ class GalleryThumbContainer : Control {
             size = item.media.videoSize
         } else if let item = item as? MGalleryPeerPhotoItem {
             signal = chatMessagePhotoThumbnail(account: item.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
+            
             size = item.media.representations.first?.dimensions
         }
+        item.fetch()
 
         if let signal = signal, let size = size {
             imageView.setSignal(signal)
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(40, 40)), boundingSize: NSMakeSize(40, 40), intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(70, 70)), boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
             imageView.set(arguments: arguments)
         }
-        imageView.setFrameSize(40, 40)
+        overlay.setFrameSize(70, 70)
+        imageView.setFrameSize(70, 70)
         addSubview(imageView)
-        
+        addSubview(overlay)
+        overlay.backgroundColor = .black
         layer?.cornerRadius = .cornerRadius
     }
     
@@ -62,15 +67,16 @@ class GalleryThumbsControlView: View {
 
     private let scrollView: ScrollView = ScrollView()
     private let documentView: View = View()
+    private var selectedView: View?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = .clear
         addSubview(scrollView)
         scrollView.documentView = documentView
-        scrollView.backgroundColor = .clear
-        scrollView.background = .clear
+        scrollView.backgroundColor = .redUI
+        scrollView.background = .redUI
         
-        documentView.backgroundColor = .clear
+        documentView.backgroundColor = .redUI
     }
     
     override func layout() {
@@ -143,6 +149,9 @@ class GalleryThumbsControlView: View {
         let idx = idsExcludeDisabled(selectedIndex ?? 0)
         let index = CGFloat(selectedIndex ?? 0)
         
+        if documentView.subviews[idx] == self.selectedView {
+            return
+        }
         
         let minWidth: CGFloat = frame.height / 2
         let difSize = NSMakeSize(frame.height, frame.height)
@@ -157,6 +166,7 @@ class GalleryThumbsControlView: View {
         for i in 0 ..< documentView.subviews.count {
             let view = documentView.subviews[i] as! GalleryThumbContainer
             var size = idx == i ? difSize : NSMakeSize(minWidth, frame.height)
+            view.overlay.change(opacity: 0.6)
             if view.isEnabled {
                 view._change(size: size, animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
                 
@@ -172,14 +182,17 @@ class GalleryThumbsControlView: View {
 
             if idx == i {
                 selectedView = view
+                view.overlay.change(opacity: 0.0)
             }
         }
+        
+        self.selectedView = selectedView
         
         documentView.setFrameSize(x, frame.height)
 
         
         if let selectedView = selectedView {
-            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), documentView.frame.width - frame.width), 0), animated: true)
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), documentView.frame.width - frame.width), 0), animated: false)
            // documentView.change(pos: NSMakePoint(selectedView.frame.minX, 0), animated: true)
         }
         

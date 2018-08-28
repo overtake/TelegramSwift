@@ -164,7 +164,8 @@ class GalleryViewer: NSResponder {
     fileprivate var viewCache:[AnyHashable: NSView] = [:]
     
     let window:Window
-    private var controls:GalleryControls!
+  //  private var controls:GalleryControls!
+    private var controls: GalleryModernControls!
     let pager:GalleryPageController
     private let backgroundView: GalleryBackgroundView = GalleryBackgroundView()
     private let ready = Promise<Bool>()
@@ -285,17 +286,19 @@ class GalleryViewer: NSResponder {
             self?.copy(nil)
         }
         
-        switch type {
-        case .secret:
-            self.controls = GallerySecretControls(View(frame:NSMakeRect(0, 10, 200, 75)), interactions:interactions)
-        default:
-             self.controls = GalleryGeneralControls(View(frame:NSMakeRect(0, 10, 460, 75)), interactions:interactions)
-        }
-        self.controls.view?.backgroundColor = NSColor.black.withAlphaComponent(0.8)
+        self.controls = GalleryModernControls(account, interactions: interactions, frame: NSMakeRect(0, -150, window.frame.width, 150), thumbsControl: pager.thumbsControl)
+        
+//        switch type {
+//        case .secret:
+//            self.controls = GallerySecretControls(View(frame:NSMakeRect(0, 10, 200, 75)), interactions:interactions)
+//        default:
+//             self.controls = GalleryGeneralControls(View(frame:NSMakeRect(0, 10, 460, 75)), interactions:interactions)
+//        }
+//        self.controls.view?.backgroundColor = NSColor.black.withAlphaComponent(0.8)
 
         self.pager.view.addSubview(self.backgroundView)
         self.window.contentView?.addSubview(self.pager.view)
-        self.window.contentView?.addSubview(self.controls.view!)
+        self.window.contentView?.addSubview(self.controls.view)
     }
     
     @objc open func windowDidBecomeKey() {
@@ -320,6 +323,7 @@ class GalleryViewer: NSResponder {
         ready.set(account.postbox.transaction { transaction -> Peer? in
             return transaction.getPeer(peerId)
         } |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
+            guard let `self` = self else {return false}
             if let peer = peer {
                 var representations:[TelegramMediaImageRepresentation] = []
                 if let representation = peer.smallProfileImage {
@@ -345,12 +349,11 @@ class GalleryViewer: NSResponder {
                     image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil, partialReference: nil)
                 }
                 
-                _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil), pagerSize))], updated: []))
+                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil), pagerSize))], updated: []))
                 
                 
-                self?.controls.index.set(.single((1,1)))
-                self?.pager.set(index: 0, animated: false)
-                
+                self.pager.set(index: 0, animated: false)
+                self.controls.update(self.pager.selectedItem?.entry)
                 return true
             }
             return false
@@ -397,17 +400,17 @@ class GalleryViewer: NSResponder {
             return (UpdateTransition(deleted: deleted, inserted: inserted, updated: updated), max(0, photos.count), currentIndex)
             
         } |> deliverOnMainQueue).start(next: { [weak self] transition, total, selected in
+            guard let `self` = self else {return}
             totalCount = total
             
-            self?.controls.index.set(.single((selected + 1, max(totalCount, 1))))
-            _ = self?.pager.merge(with: transition)
-            
+           // self?.controls.index.set(.single((selected + 1, max(totalCount, 1))))
+            _ = self.pager.merge(with: transition)
+            self.controls.update(self.pager.selectedItem?.entry)
         }))
         
-        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] (selectedIndex) in
-            if let strongSelf = self {
-                self?.controls.index.set(.single((selectedIndex + 1, strongSelf.pager.count)))
-            }
+        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
+            guard let `self` = self else {return}
+            self.controls.update(self.pager.selectedItem?.entry)
         }))
     }
     
@@ -420,6 +423,8 @@ class GalleryViewer: NSResponder {
 
         
         ready.set(.single(true) |> map { [weak self] _ -> Bool in
+            
+            guard let `self` = self else {return false}
             
             var inserted: [(Int, MGalleryItem)] = []
             for i in 0 ..< instantMedias.count {
@@ -435,17 +440,18 @@ class GalleryViewer: NSResponder {
                 }
             }
             
-            _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
+            _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
             
-            self?.controls.index.set(.single((firstIndex + 1, totalCount)))
-            self?.pager.set(index: firstIndex, animated: false)
-            
+            //self?.controls.index.set(.single((firstIndex + 1, totalCount)))
+            self.pager.set(index: firstIndex, animated: false)
+            self.controls.update(self.pager.selectedItem?.entry)
             return true
             
         })
         
-        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] (selectedIndex) in
-            self?.controls.index.set(.single((selectedIndex + 1,totalCount)))
+        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
+            guard let `self` = self else {return}
+            self.controls.update(self.pager.selectedItem?.entry)
         }))
         
         
@@ -461,7 +467,7 @@ class GalleryViewer: NSResponder {
         
         
         ready.set(.single(true) |> map { [weak self] _ -> Bool in
-            
+            guard let `self` = self else {return false}
             var inserted: [(Int, MGalleryItem)] = []
             for i in 0 ..< secureIdMedias.count {
                 let media = secureIdMedias[i]
@@ -469,17 +475,17 @@ class GalleryViewer: NSResponder {
 
             }
             
-            _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
+            _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
             
-            self?.controls.index.set(.single((firstIndex + 1, totalCount)))
-            self?.pager.set(index: firstIndex, animated: false)
-            
+            self.pager.set(index: firstIndex, animated: false)
+            self.controls.update(self.pager.selectedItem?.entry)
             return true
             
             })
         
-        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] (selectedIndex) in
-            self?.controls.index.set(.single((selectedIndex + 1,totalCount)))
+        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
+            guard let `self` = self else {return}
+            self.controls.update(self.pager.selectedItem?.entry)
         }))
         
         
@@ -642,10 +648,10 @@ class GalleryViewer: NSResponder {
             let current = entries[selectedIndex]
             if let location = current.location {
                 let total = location.count
-                let current = reversed ? total - location.index : location.index + 1
-                self.controls.index.set(.single((current, total)))
+                let current = reversed ? total - location.index : location.index
+                self.controls.update(self.pager.selectedItem?.entry)
             } else  {
-                self.controls.index.set(.single((self.pager.currentIndex + 1, self.pager.count)))
+                 self.controls.update(self.pager.selectedItem?.entry)
             }
             
             

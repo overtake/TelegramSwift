@@ -15,6 +15,8 @@ import TelegramCoreMac
 import PostboxMac
 fileprivate class GMagnifyView : MagnifyView  {
     private let progressView: RadialProgressView = RadialProgressView()
+    private let prev: ImageButton = ImageButton()
+    private let next: ImageButton = ImageButton()
     fileprivate let statusDisposable = MetaDisposable()
     
     var minX:CGFloat {
@@ -43,6 +45,7 @@ fileprivate class GMagnifyView : MagnifyView  {
         }
         
         progressView.userInteractionEnabled = status != .Local
+        hideOrShowControls()
     }
     
     deinit {
@@ -57,11 +60,44 @@ fileprivate class GMagnifyView : MagnifyView  {
         addSubview(progressView)
         progressView.isHidden = true
         progressView.center()
+        prev.animates = true
+        next.animates = true
+        
+        prev.autohighlight = false
+        next.autohighlight = false
+        prev.set(image: theme.icons.galleryPrev, for: .Normal)
+        next.set(image: theme.icons.galleryNext, for: .Normal)
+        
+        prev.set(background: .clear, for: .Normal)
+        next.set(background: .clear, for: .Normal)
+        prev.set(background: NSColor.black.withAlphaComponent(0.4), for: .Hover)
+        next.set(background: NSColor.black.withAlphaComponent(0.4), for: .Hover)
+        prev.set(background: NSColor.black.withAlphaComponent(0.6), for: .Highlight)
+        next.set(background: NSColor.black.withAlphaComponent(0.6), for: .Highlight)
+        contentView.addSubview(prev)
+        contentView.addSubview(next)
+    }
+    
+    func hideOrShowControls() {
+        prev.animator().alphaValue = !mouseInContent ? 0 : 1
+        next.animator().alphaValue = !mouseInContent ? 0 : 1
+    }
+    
+    override func add(magnify: CGFloat, for location: NSPoint, animated: Bool) {
+        super.add(magnify: magnify, for: location, animated: animated)
+        let prev = animated ? self.prev.animator() : self.prev
+        let next = animated ? self.next.animator() : self.next
+        
+        prev.frame = NSMakeRect(0, 0, 60, contentView.frame.height)
+        next.frame = NSMakeRect(contentView.frame.width - 60, 0, 60, contentView.frame.height)
     }
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         progressView.center()
+        prev.frame = NSMakeRect(0, 0, 60, contentView.frame.height)
+        next.frame = NSMakeRect(contentView.frame.width - 60, 0, 60, contentView.frame.height)
+
     }
     
     required init?(coder: NSCoder) {
@@ -127,25 +163,16 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         captionView.isSelectable = false
         captionView.userInteractionEnabled = false
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-            if let view = self?.controller.selectedViewController?.view as? GMagnifyView, let window = view.window {
-                
-                let point = window.mouseLocationOutsideOfEventStream                
-                if point.x < view.minX && !view.mouseInContent && view.magnify == 1.0 {
-                    _ = interactions.previous()
-                } else if view.mouseInContent && view.magnify == 1.0 {
-                    _ = interactions.next()
-                } else {
-                    let hitTestView = window.contentView?.hitTest(point)
-                    if hitTestView is GalleryBackgroundView || view.contentView == hitTestView?.subviews.first {
-                        _ = interactions.dismiss()
-
-                    } else {
-                        return .invokeNext
-                    }
+            guard let `self` = self else {return .rejected}
+            
+            if let view = self.controller.selectedViewController?.view as? GMagnifyView, let window = view.window {
+                let point = window.mouseLocationOutsideOfEventStream
+                if !view.mouseInContent, self.view._mouseInside() {
+                     _ = interactions.dismiss()
+                    return .invoked
                 }
-                
             }
-            return .invoked
+            return .invokeNext
         }, with: self, for: .leftMouseUp)
         
         window.set(responder: { [weak self] () -> NSResponder? in
@@ -169,6 +196,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 self?.captionView.change(opacity: 1.0)
                 self?.configureCaptionAutohide()
             }
+            (self?.controller.selectedViewController?.view as? GMagnifyView)?.hideOrShowControls()
             return .rejected
         }, with: self, for: .mouseMoved)
         

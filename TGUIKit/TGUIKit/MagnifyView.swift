@@ -107,7 +107,7 @@ open class MagnifyView : NSView {
         add(magnify: minFactor, for: location, animated: true)
     }
     
-    public func add(magnify:CGFloat, for location:NSPoint, animated:Bool = false) {
+    open func add(magnify:CGFloat, for location:NSPoint, animated:Bool = false) {
         self.magnify += magnify
         self.magnify = min(max(minMagnify,self.magnify),maxMagnify)
         let point = magnifyOrigin( for: location, from:contentView.frame, factor: magnify)
