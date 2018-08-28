@@ -33,7 +33,7 @@ final class InstantPageMediaView: View, InstantPageView {
     
     @objc private func updatePlayerIfNeeded() {
         
-        var s:Signal<Void, Void> = .single(Void())
+        var s:Signal<Void, NoError> = .single(Void())
         s = s |> delay(0.01, queue: Queue.mainQueue())
         playerDisposable.set(s.start(next: { [weak self] in
             if let strongSelf = self {

@@ -90,7 +90,7 @@ func updateInstantViewAppearanceSettingsInteractively(postbox: Postbox, _ f: @es
     }
 }
 
-func ivAppearance(postbox: Postbox) -> Signal<InstantViewAppearance, Void> {
+func ivAppearance(postbox: Postbox) -> Signal<InstantViewAppearance, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.instantViewAppearance]) |> map { preferences in
         return (preferences.values[ApplicationSpecificPreferencesKeys.instantViewAppearance] as? InstantViewAppearance) ?? InstantViewAppearance.defaultSettings
     }

@@ -242,14 +242,14 @@ class ShareLinkObject : ShareObject {
         for peerId in peerIds {
             
             if let comment = comment?.trimmed, !comment.isEmpty {
-                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], media: nil, replyToMessageId: nil, localGroupingKey: nil), account: account, peerId: peerId).start()
+                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), account: account, peerId: peerId).start()
             }
             
             var attributes:[MessageAttribute] = []
             if FastSettings.isChannelMessagesMuted(peerId) {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, media: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+            _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
         }
     }
 }
@@ -320,7 +320,7 @@ class ShareMessageObject : ShareObject {
     override func perform(to peerIds:[PeerId], comment: String? = nil) {
         for peerId in peerIds {
             if let comment = comment?.trimmed, !comment.isEmpty {
-                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], media: nil, replyToMessageId: nil, localGroupingKey: nil), account: account, peerId: peerId).start()
+                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), account: account, peerId: peerId).start()
             }
             _ = Sender.forwardMessages(messageIds: messageIds, account: account, peerId: peerId).start()
         }
@@ -561,7 +561,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
 
         }))
         
-        let list:Signal<TableUpdateTransition, Void> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue, genericView.searchView.stateValue.get() |> deliverOnPrepareQueue) |> mapToSignal { location, search, state -> Signal<TableUpdateTransition, Void> in
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue, genericView.searchView.stateValue.get() |> deliverOnPrepareQueue) |> mapToSignal { location, search, state -> Signal<TableUpdateTransition, NoError> in
             
             if state == .Focus, search.isEmpty {
                 return combineLatest(account.postbox.loadedPeerWithId(account.peerId), recentPeers(account: account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { user, top, recent -> TableUpdateTransition in
@@ -613,7 +613,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         entries.insert(.separator(tr(L10n.searchSeparatorRecent).uppercased(), chatListIndex()), at: 0)
 
                         for rendered in recent {
-                            if let peer = rendered.chatMainPeer {
+                            if let peer = rendered.peer.chatMainPeer {
                                 if contains[peer.id] == nil {
                                     if share.possibilityPerformTo(peer) {
                                         entries.insert(.plain(peer, chatListIndex(), nil, true), at: 0)
@@ -632,7 +632,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             } else if state == .None {
                 
                 
-                var signal:Signal<(ChatListView,ViewUpdateType),Void>
+                var signal:Signal<(ChatListView,ViewUpdateType), NoError>
                 
                 switch(location) {
                 case let .Initial(count, _):
@@ -641,7 +641,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     signal = account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 30)
                 }
                 
-                return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult]), Void> in
+                return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult]), NoError> in
                     var peerIds:[PeerId] = []
                     for entry in value.0.entries {
                         switch entry {
@@ -651,7 +651,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                             break
                         }
                     }
-                    let keys = peerIds.map {PostboxViewKey.peer(peerId: $0)}
+                    let keys = peerIds.map {PostboxViewKey.peer(peerId: $0, components: .all)}
                     return account.postbox.combinedView(keys: keys) |> map { values -> (ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult]) in
                         
                         var presences:[PeerId: PeerStatusStringResult] = [:]
@@ -692,8 +692,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             } else {
                 return account.postbox.searchPeers(query: search.lowercased(), groupId: nil) |> map {
                     return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
-                } |> mapToSignal { peers -> Signal<([Peer], [PeerId: PeerStatusStringResult]), Void> in
-                    let keys = peers.map {PostboxViewKey.peer(peerId: $0.id)}
+                } |> mapToSignal { peers -> Signal<([Peer], [PeerId: PeerStatusStringResult]), NoError> in
+                    let keys = peers.map {PostboxViewKey.peer(peerId: $0.id, components: .all)}
                     return account.postbox.combinedView(keys: keys) |> map { values -> ([Peer], [PeerId: PeerStatusStringResult]) in
                         
                         var presences:[PeerId: PeerStatusStringResult] = [:]

@@ -345,8 +345,8 @@ class ChatMediaItem: ChatRowItem {
         return ChatLayoutUtils.contentSize(for: media, with: width, hasText: message?.text.isEmpty == false)
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
-        var items:Signal<[ContextMenuItem], Void> = .complete()
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        var items:Signal<[ContextMenuItem], NoError> = .complete()
         if let message = message {
             items = chatMenuItems(for: message, account: account, chatInteraction: chatInteraction)
         }

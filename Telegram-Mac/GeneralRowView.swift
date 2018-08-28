@@ -34,10 +34,11 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
                 if errorTextView == nil {
                     errorTextView = TextView()
                     errorTextView?.isSelectable = false
+                    errorTextView?.setFrameOrigin(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height)
                     addSubview(errorTextView!)
                 }
                 errorTextView!.update(errorLayout)
-                errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorTextView!.frame.height), animated: animated)
+                errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height), animated: animated)
 
             } else {
                 errorTextView?.removeFromSuperview()

@@ -68,6 +68,9 @@ class WPLayout: Equatable {
     }
     
     var webPage: TelegramMediaWebpage {
+        if let game = parent.media.first as? TelegramMediaGame {
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, instantPage: nil)))
+        }
         return parent.media.first as! TelegramMediaWebpage
     }
     

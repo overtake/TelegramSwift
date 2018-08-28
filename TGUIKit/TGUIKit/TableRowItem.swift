@@ -82,7 +82,7 @@ open class TableRowItem: NSObject {
     }
     
     
-    open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         return .single([])
     }
     

@@ -184,7 +184,7 @@ class MGalleryVideoItem: MGalleryItem {
         playAfter = false
     }
     
-    override var status:Signal<MediaResourceStatus, Void> {
+    override var status:Signal<MediaResourceStatus, NoError> {
         return chatMessageFileStatus(account: account, file: media)
     }
     
@@ -220,9 +220,10 @@ class MGalleryVideoItem: MGalleryItem {
     
     override func request(immediately: Bool) {
 
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
+        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
+       
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(entry.message!), media: image), scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: entry.imageReference(image), scale: System.backingScale)
         
         
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
@@ -230,7 +231,7 @@ class MGalleryVideoItem: MGalleryItem {
             return .single(transform(arguments)?.generateImage())
         }
         
-        path.set(account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, Void> in
+        path.set(account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
             if resource.complete {
                 return .single(link(path:resource.path, ext:kMediaVideoExt)!)
             }
@@ -247,7 +248,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     override func fetch() -> Void {
        
-        _ = freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.message(message: MessageReference(entry.message!), media: media)).start()
+        _ = freeMediaFileInteractiveFetched(account: account, fileReference: entry.fileReference(media)).start()
     }
 
 }

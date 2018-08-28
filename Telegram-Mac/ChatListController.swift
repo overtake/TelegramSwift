@@ -27,7 +27,7 @@ extension ChatListEntry: Identifiable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, to:[AppearanceWrapperEntry<ChatListEntry>], adIndex: UInt16?, account:Account, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, onMainQueue: Bool = false, state: ChatListRowState) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, to:[AppearanceWrapperEntry<ChatListEntry>], adIndex: UInt16?, account:Account, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, onMainQueue: Bool = false, state: ChatListRowState) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         
@@ -119,9 +119,9 @@ class ChatListController : PeersListController {
 
         let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
         
-        let list:Signal<TableUpdateTransition,Void> = (request.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<TableUpdateTransition,Void> in
+        let list:Signal<TableUpdateTransition,NoError> = (request.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<TableUpdateTransition, NoError> in
             
-            var signal:Signal<(ChatListView,ViewUpdateType),Void>
+            var signal:Signal<(ChatListView,ViewUpdateType), NoError>
             var scroll:TableScrollState? = nil
             var removeNextAnimation: Bool = false
             switch location {
@@ -135,7 +135,7 @@ class ChatListController : PeersListController {
             }
             
              return combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
-                |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, Void> in
+                |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, NoError> in
                 
                     let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
                         
@@ -345,7 +345,7 @@ class ChatListController : PeersListController {
         }
         let postbox = account.postbox
         
-        let signal:Signal<ChatListIndex?, Void> = account.context.badgeFilter.get() |> mapToSignal { filter -> Signal<ChatListIndex?, Void> in
+        let signal:Signal<ChatListIndex?, NoError> = account.context.badgeFilter.get() |> mapToSignal { filter -> Signal<ChatListIndex?, NoError> in
             return postbox.transaction { transaction -> ChatListIndex? in
                 return transaction.getEarliestUnreadChatListIndex(filtered: filter == .filtered, earlierThan: lastScrolledIndex)
             }
@@ -408,8 +408,11 @@ class ChatListController : PeersListController {
                 (item.view as? ChatListRowView)?.initSwipingState()
                 return .success(SwipingChatItemController(item: item))
             case let .swiping(_delta, controller):
+                let controller = controller as! SwipingChatItemController
+
+                guard let view = controller.item.view as? ChatListRowView else {return .nothing}
                 
-                let delta:CGFloat
+                var delta:CGFloat
                 switch direction {
                 case .left:
                     delta = _delta//max(0, _delta)
@@ -418,9 +421,10 @@ class ChatListController : PeersListController {
                 default:
                     delta = _delta
                 }
-                let controller = controller as! SwipingChatItemController
-                (controller.item.view as? ChatListRowView)?.moveSwiping(delta: delta)
                 
+                
+
+                view.moveSwiping(delta: delta)
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! SwipingChatItemController
                 guard let view = (controller.item.view as? ChatListRowView) else {return .nothing}

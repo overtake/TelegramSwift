@@ -28,7 +28,7 @@
 #import "RingBuffer.h"
 #import "ocr.h"
 #import "TGPassportMRZ.h"
-
+#import "EDSunriseSet.h"
 
 
 

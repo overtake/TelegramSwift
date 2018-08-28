@@ -21,7 +21,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     chatInteraction?.sendInlineResult(collection, result)
                 } else {
                     switch result {
-                    case let .internalReference(_, _, _, _, _, file, _):
+                    case let .internalReference(_, _, _, _, _, _, file, _):
                         if let file = file {
                             chatInteraction?.sendAppFile(file)
                         }
@@ -56,9 +56,9 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
 
 private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
-        let result = view.items.prefix(70).compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
+        let result = view.items.prefix(70).compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
         
-        let values = makeMediaEnties(result, initialSize: NSMakeSize(initialSize.width, 100))
+        let values = makeMediaEnties(result, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100))
         var wrapped:[InputContextEntry] = []
         for value in values {
             wrapped.append(InputContextEntry.contextMediaResult(nil, value, Int64(arc4random()) | ((Int64(wrapped.count) << 40))))
@@ -70,7 +70,7 @@ private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) ->
 
 private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize) -> [InputContextEntry] {
     if let collection = collection {
-        return makeMediaEnties(collection.results, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
+        return makeMediaEnties(collection.results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
     }
     return []
 }
@@ -285,7 +285,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         genericView.searchView.searchInteractions = searchInteractions
         
-        let signal = combineLatest( account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> mapToSignal { view, search -> Signal<TableUpdateTransition?, Void> in
+        let signal = combineLatest( account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> mapToSignal { view, search -> Signal<TableUpdateTransition?, NoError> in
             
             if search.request.isEmpty {
                 let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView

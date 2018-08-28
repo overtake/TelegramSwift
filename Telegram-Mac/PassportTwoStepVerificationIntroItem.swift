@@ -17,7 +17,7 @@ class PassportTwoStepVerificationIntroItem: GeneralRowItem {
     fileprivate let descLayout:TextViewLayout
     init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, action: @escaping()->Void) {
         let headerAttr = NSMutableAttributedString()
-        _ = headerAttr.append(string: L10n.secureCreatePasswordIntroHeader(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
+        _ = headerAttr.append(string: L10n.secureIdCreatePasswordIntroHeader(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
         headerAttr.detectBoldColorInString(with: .medium(.text))
         headerLayout = TextViewLayout(headerAttr, alignment: .center)
         

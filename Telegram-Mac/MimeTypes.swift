@@ -32,13 +32,13 @@ func initializeMimeStore() {
     }
 }
 
-func resourceType(mimeType:String? = nil, orExt:String? = nil) -> Signal<String?,Void> {
+func resourceType(mimeType:String? = nil, orExt:String? = nil) -> Signal<String?, NoError> {
     
     
     assert(mimeType != nil || orExt != nil)
     assert((mimeType != nil && orExt == nil) || (mimeType == nil && orExt != nil))
     
-    return Signal<String?,Void> { (subscriber) -> Disposable in
+    return Signal<String?, NoError> { (subscriber) -> Disposable in
         
         initializeMimeStore()
         

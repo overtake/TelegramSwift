@@ -29,14 +29,14 @@ fileprivate class StickerPreviewModalView : View {
         
     }
     
-    func update(with file:TelegramMediaFile, account:Account) -> Void {
-        imageView.setSignal( chatMessageSticker(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file), type: .full, scale: backingScaleFactor), clearInstantly: true, animate:true)
-        let size = file.dimensions?.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 100)) ?? frame.size
+    func update(with reference: FileMediaReference, account:Account) -> Void {
+        imageView.setSignal( chatMessageSticker(account: account, fileReference: reference, type: .full, scale: backingScaleFactor), clearInstantly: true, animate:true)
+        let size = reference.media.dimensions?.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 100)) ?? frame.size
         imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
         imageView.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
         imageView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
         
-        let layout = TextViewLayout(.initialize(string: file.stickerText?.fixed, color: nil, font: .normal(30.0)))
+        let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
         textView.centerX()
@@ -53,7 +53,7 @@ fileprivate class StickerPreviewModalView : View {
 
 class StickerPreviewModalController: ModalViewController {
     fileprivate let account:Account
-    fileprivate var file:TelegramMediaFile?
+    fileprivate var reference:FileMediaReference?
     init(_ account:Account) {
         self.account = account
         
@@ -70,17 +70,17 @@ class StickerPreviewModalController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let file = file {
-            genericView.update(with: file, account: account)
+        if let reference = reference {
+            genericView.update(with: reference, account: account)
         }
         readyOnce()
     }
     
-    func update(with file:TelegramMediaFile?) {
-        if self.file != file {
-            self.file = file
-            if isLoaded(), let file = file {
-                genericView.update(with: file, account: account)
+    func update(with reference:FileMediaReference?) {
+        if self.reference?.media != reference?.media {
+            self.reference = reference
+            if isLoaded(), let reference = reference {
+                genericView.update(with: reference, account: account)
             }
         }
     }

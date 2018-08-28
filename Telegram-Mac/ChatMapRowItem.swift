@@ -28,7 +28,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         self.defaultImageSize = isVenue ? NSMakeSize(60, 60) : NSMakeSize(320, 120)
         self.url = "https://maps.google.com/maps?q=\(map.latitude),\(map.longitude)"
         let representation = TelegramMediaImageRepresentation(dimensions: defaultImageSize, resource: resource)
-        self.image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil)
+        self.image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil, partialReference: nil)
         
         self.arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: defaultImageSize, boundingSize: defaultImageSize, intrinsicInsets: NSEdgeInsets())
         if let venue = map.venue {

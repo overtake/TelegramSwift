@@ -75,7 +75,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, Bool, TableView
         
         let key = PostboxViewKey.cachedPeerData(peerId: peerId)
         
-        let signal: Signal<(TableUpdateTransition, PreHistoryControllerState), Void> = combineLatest(account.postbox.combinedView(keys: [key]) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue) |> map { view, appearance, state in
+        let signal: Signal<(TableUpdateTransition, PreHistoryControllerState), NoError> = combineLatest(account.postbox.combinedView(keys: [key]) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue) |> map { view, appearance, state in
             
             let cachedData = view.views[key] as? CachedPeerDataView
             let entries = preHistoryEntries(cachedData: cachedData?.cachedPeerData as? CachedChannelData, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}

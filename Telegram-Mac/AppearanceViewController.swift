@@ -19,13 +19,15 @@ private final class AppearanceViewArguments {
     let toggleFontSize:(Int32)->Void
     let selectAccentColor:()->Void
     let selectChatBackground:()->Void
-    init(account:Account, togglePalette: @escaping(ColorPalette, TelegramWallpaper)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void) {
+    let openAutoNightSettings:()->Void
+    init(account:Account, togglePalette: @escaping(ColorPalette, TelegramWallpaper)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void) {
         self.account = account
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
         self.toggleFontSize = toggleFontSize
         self.selectAccentColor = selectAccentColor
         self.selectChatBackground = selectChatBackground
+        self.openAutoNightSettings = openAutoNightSettings
     }
 }
 
@@ -34,6 +36,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     case chatView(Int32, Int32, Bool, Bool)
     case accentColor(Int32, Int32, NSColor)
     case chatBackground(Int32, Int32)
+    case autoNight(Int32, Int32)
     case section(Int32)
     case preview(Int32, Int32, ChatHistoryEntry)
     case font(Int32, Int32, Int32, [Int32])
@@ -48,6 +51,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case .accentColor(_, let index, _):
             return index
         case .chatBackground(_, let index):
+            return index
+        case .autoNight(_, let index):
             return index
         case .section(let section):
             return section + 1000
@@ -69,6 +74,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case let .accentColor(section, index, _):
             return (section * 1000) + index
         case let .chatBackground(section, index):
+            return (section * 1000) + index
+        case let .autoNight(section, index):
             return (section * 1000) + index
         case .section(let section):
             return (section + 1) * 1000 - section
@@ -98,6 +105,10 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         case .chatBackground:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsChatBackground, type: .next, action: {
                 arguments.selectChatBackground()
+            })
+        case .autoNight:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.appearanceSettingsAutoNight, type: .next, action: {
+                arguments.openAutoNightSettings()
             })
         case let .accentColor(_, _, color):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(color), action: {
@@ -140,6 +151,12 @@ private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
         }
     case let .chatBackground(section, index):
         if case .chatBackground(section, index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .autoNight(section, index):
+        if case .autoNight(section, index) = rhs {
             return true
         } else {
             return false
@@ -230,6 +247,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
         index += 1
     }
     
+
     
     if settings.colors == whitePalette {
         
@@ -300,7 +318,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsChatViewHeader)))
+    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsChatViewHeader))
     descIndex += 1
     
     entries.append(.chatView(sectionId, index, !settings.bubbled, false))
@@ -311,10 +329,15 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
 
     entries.append(.section(sectionId))
     sectionId += 1
-
     
+    #if BETA
+    entries.append(.autoNight(sectionId, index))
+    index += 1
     
-    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    #endif
+   
   
 //
     return entries
@@ -364,10 +387,10 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         super.viewDidLoad()
         let account = self.account
         let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, wallpaper in
-            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+            _ = combineLatest(updateThemeInteractivetly(postbox: account.postbox, f: { settings in
                 return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: wallpaper, defaultNightName: palette.isDark ? palette.name : settings.defaultNightName, defaultDayName: !palette.isDark ? palette.name : settings.defaultDayName)
                 
-            }).start()
+            }), updateAutoNightSettingsInteractively(postbox: account.postbox, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
             _ = updateBubbledSettings(postbox: account.postbox, bubbled: enabled).start()
         }, toggleFontSize: { size in
@@ -376,6 +399,8 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             showModal(with: AccentColorModalController(account, current: theme.colors.blueUI), for: mainWindow)
         }, selectChatBackground: {
             showModal(with: ChatWallpaperModalController(account: account), for: mainWindow)
+        }, openAutoNightSettings: { [weak self] in
+            self?.navigationController?.push(autoNightSettingsController(account.postbox))
         })
         
         let initialSize = self.atomicSize
@@ -383,7 +408,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
         
-        let signal:Signal<(TableUpdateTransition, TelegramWallpaper), Void> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, selfPeer in
+        let signal:Signal<(TableUpdateTransition, TelegramWallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, selfPeer in
             let entries = AppearanceViewEntries(settings: appearance.presentation, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
         } |> deliverOnMainQueue

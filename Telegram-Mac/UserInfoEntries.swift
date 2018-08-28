@@ -132,10 +132,10 @@ class UserInfoArguments : PeerInfoArguments {
                 }
             }
             
-            let updateNames: Signal<Void, Void>
+            let updateNames: Signal<Void, NoError>
             
             if let firstName = updateValues.firstName, let lastName = updateValues.lastName {
-                updateNames = showModalProgress(signal: updateContactName(account: account, peerId: peerId, firstName: firstName, lastName: lastName) |> mapError {_ in} |> deliverOnMainQueue, for: mainWindow)
+                updateNames = showModalProgress(signal: updateContactName(account: account, peerId: peerId, firstName: firstName, lastName: lastName) |> `catch` {_ in .complete()} |> deliverOnMainQueue, for: mainWindow)
             } else {
                 updateNames = .complete()
             }
@@ -159,15 +159,15 @@ class UserInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-        let result = selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, Void> in
+        let result = selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
             if let peerId = peerIds.first {
-                return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
+                return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                     return confirmSignal(for: mainWindow, information: tr(L10n.confirmAddBotToGroup(peer.displayTitle)))
                 }
             }
             return .single(false)
         }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { groupId in
-            return showModalProgress(signal: addPeerMember(account: account, peerId: groupId, memberId: peerId), for: mainWindow) |> mapError {_ in} |> map {groupId}
+            return showModalProgress(signal: addPeerMember(account: account, peerId: groupId, memberId: peerId), for: mainWindow) |> `catch` {_ in .complete()} |> map {groupId}
         }
         
         _ = result.start(next: { [weak self] peerId in
@@ -202,11 +202,11 @@ class UserInfoArguments : PeerInfoArguments {
                 return (nil, nil)
             }
             
-            } |> deliverOnMainQueue  |> mapToSignal { peer, account -> Signal<PeerId, Void> in
+            } |> deliverOnMainQueue  |> mapToSignal { peer, account -> Signal<PeerId, NoError> in
                 if let peer = peer, let account = account {
                     let confirm = confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmStartSecretChat(peer.displayTitle)))
-                    return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, Void> in
-                        return showModalProgress(signal: createSecretChat(account: account, peerId: peer.id), for: mainWindow) |> mapError {_ in}
+                    return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
+                        return showModalProgress(signal: createSecretChat(account: account, peerId: peer.id) |> `catch` { _ in return .complete()}, for: mainWindow) 
                     }
                 } else {
                     return .complete()

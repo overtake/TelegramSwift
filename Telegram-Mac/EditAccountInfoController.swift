@@ -208,7 +208,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
                             }
                         }
                     } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                        return  updatePeerPhoto(account: account, peerId: account.peerId, photo: uploadedPeerPhoto(account: account, resource: resource))
+                        return updateAccountPhoto(account: account, resource: resource) //updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
                     } |> deliverOnMainQueue
                 
                 photoDisposable.set(updateSignal.start(next: { status in
@@ -244,7 +244,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         f(PhoneNumberIntroController(account))
     })
     
-    f(InputDataController(dataSignal: state.get() |> map {editInfoEntries(state: $0, arguments: arguments, updateState: updateState)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {editInfoEntries(state: $0.0, arguments: arguments, updateState: updateState)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -265,14 +265,14 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
                     f(.fail(.fields([_id_info : .shake])))
                     return current
                 }
-                var signals:[Signal<Void, Void>] = []
+                var signals:[Signal<Void, NoError>] = []
                 if let peerView = peerView {
                     let updates = valuesRequiringUpdate(state: current, view: peerView)
                     if let names = updates.0 {
                         signals.append(updateAccountPeerName(account: account, firstName: names.fn, lastName: names.ln))
                     }
                     if let about = updates.1 {
-                        signals.append(updateAbout(account: account, about: about) |> mapError {_ in})
+                        signals.append(updateAbout(account: account, about: about) |> `catch` { _ in .complete()})
                     }
                     updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start(completed: {
                         updateState { $0 }

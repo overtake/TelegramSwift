@@ -47,7 +47,7 @@ private class ReportReasonView: View {
 
 fileprivate class ReportReasonModalController: ModalViewController {
 
-    fileprivate var onComplete:Signal<ReportReason, Void> {
+    fileprivate var onComplete:Signal<ReportReason, NoError> {
         return _complete.get() |> take(1)
     }
     private let _complete:Promise<ReportReason> = Promise()
@@ -110,7 +110,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
     
 }
 
-func reportReasonSelector() -> Signal<ReportReason, Void> {
+func reportReasonSelector() -> Signal<ReportReason, NoError> {
     let reportModalView = ReportReasonModalController()
     showModal(with: reportModalView, for: mainWindow)
     

@@ -63,7 +63,7 @@ func updateAdditionalSettingsInteractively(postbox: Postbox, _ f: @escaping (Add
     }
 }
 
-func additionalSettings(postbox: Postbox) -> Signal<AdditionalSettings, Void> {
+func additionalSettings(postbox: Postbox) -> Signal<AdditionalSettings, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.additionalSettings]) |> map { preferences in
         return (preferences.values[ApplicationSpecificPreferencesKeys.additionalSettings] as? AdditionalSettings) ?? AdditionalSettings.defaultSettings
     }

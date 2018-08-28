@@ -33,6 +33,7 @@ class InputDataController: GenericViewController<TableView> {
 
     private let values: Promise<[InputDataEntry]> = Promise()
     private let disposable = MetaDisposable()
+    private let appearanceDisposablet = MetaDisposable()
     private let title: String
     private let validateData:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
     private let afterDisappear: ()->Void
@@ -45,7 +46,7 @@ class InputDataController: GenericViewController<TableView> {
     private let afterTransaction: (InputDataController)->Void
     private let backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
     let identifier: String
-    init(dataSignal:Signal<[InputDataEntry], Void>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }) {
+    init(dataSignal:Signal<[InputDataEntry], NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -63,8 +64,6 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     
-    private let languageDisposable:MetaDisposable = MetaDisposable()
-
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
@@ -115,6 +114,7 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     private func proccessValidation(_ validation: InputDataValidation) {
+        var scrollFirstItem: TableRowItem? = nil
         switch validation {
         case let .fail(fail):
             switch fail {
@@ -124,7 +124,14 @@ class InputDataController: GenericViewController<TableView> {
                 for (identifier, action) in fields {
                     switch action {
                     case .shake:
-                        findItem(for: identifier)?.view?.shakeView()
+                        let item = findItem(for: identifier)
+                        item?.view?.shakeView()
+                        if scrollFirstItem == nil {
+                            scrollFirstItem = item
+                            if let item = item {
+                                genericView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: true, inset: 0), inset: NSEdgeInsets(), true)
+                            }
+                        }
                     }
                 }
             case let .doSomething(next):
@@ -153,6 +160,10 @@ class InputDataController: GenericViewController<TableView> {
         super.viewDidLoad()
         
         
+        appearanceDisposablet.set(appearanceSignal.start(next: { [weak self] _ in
+            self?.updateLocalizationAndTheme()
+        }))
+        
         let arguments = InputDataArguments(select: { [weak self] (identifier, value) in
             guard let `self` = self else {return}
             self.validateInput(data: [identifier : value])
@@ -169,7 +180,7 @@ class InputDataController: GenericViewController<TableView> {
         let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal: Signal<TableUpdateTransition, Void> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, values.get() |> deliverOnPrepareQueue) |> map { appearance, entries in
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, values.get() |> deliverOnPrepareQueue) |> map { appearance, entries in
             let entries = entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> deliverOnMainQueue
@@ -335,8 +346,8 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     deinit {
-        languageDisposable.dispose()
         disposable.dispose()
+        appearanceDisposablet.dispose()
     }
     
 }

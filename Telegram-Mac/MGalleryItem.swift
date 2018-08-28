@@ -58,7 +58,7 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         }
     case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference):
         if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference) = rhs {
-            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(rhsPhoto) && lhsReference == rhsReference
+            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference
         } else {
             return false
         }
@@ -217,11 +217,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         return 8.0
     }
     
-    func smallestValue(for size: NSSize) -> Signal<NSSize, Void> {
+    func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
         return .single(pagerSize)
     }
     
-    var status:Signal<MediaResourceStatus, Void> {
+    var status:Signal<MediaResourceStatus, NoError> {
         return .single(.Local)
     }
     

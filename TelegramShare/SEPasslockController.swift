@@ -151,7 +151,7 @@ class SEPasslockController: ModalViewController {
     private var passcodeValues:[String] = []
     private let _doneValue:Promise<Bool> = Promise()
     
-    var doneValue:Signal<Bool, Void> {
+    var doneValue:Signal<Bool, NoError> {
         return _doneValue.get()
     }
     private let cancelImpl:()->Void

@@ -47,7 +47,7 @@ class PeerMediaRowItem: TableRowItem {
         super.init(initialSize)
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         if message.stableId == UINT32_MAX, let webpage = self.message.media[0] as? TelegramMediaWebpage {
             let account = self.account
             return readArticlesListPreferences(account.postbox) |> map { pref -> [ContextMenuItem] in

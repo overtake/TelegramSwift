@@ -232,7 +232,7 @@ var appAppearance:Appearance {
     return Appearance(language: appCurrentLanguage, presentation: theme)
 }
 
-var appearanceSignal:Signal<Appearance, Void> {
+var appearanceSignal:Signal<Appearance, NoError> {
     return combineLatest(languageSignal, themeSignal) |> map {
         return Appearance(language: $0.0, presentation: $0.1)
     }

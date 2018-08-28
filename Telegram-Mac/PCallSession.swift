@@ -131,7 +131,7 @@ class PCallSession {
             if (startTime < Double.ulpOfOne) {
                 stopAudio()
                 startTime = CFAbsoluteTimeGetCurrent();
-                durationPromise.set((.single(duration) |> deliverOnMainQueue) |> then (Signal<()->TimeInterval, Void>.single({[weak self] in return self?.duration ?? 0}) |> map {$0()} |> delay(1.01, queue: Queue.mainQueue()) |> restart))
+                durationPromise.set((.single(duration) |> deliverOnMainQueue) |> then (Signal<()->TimeInterval, NoError>.single({[weak self] in return self?.duration ?? 0}) |> map {$0()} |> delay(1.01, queue: Queue.mainQueue()) |> restart))
             }
         case .failed:
             playTone(.callToneFailed)
@@ -142,12 +142,12 @@ class PCallSession {
     }
     
     private func startTimeout(_ duration:TimeInterval, discardReason: CallSessionTerminationReason) {
-        timeoutDisposable.set((Signal<Void, Void>.complete() |> delay(duration, queue: Queue.mainQueue())).start(completed: { [weak self] in
+        timeoutDisposable.set((Signal<Void, NoError>.complete() |> delay(duration, queue: Queue.mainQueue())).start(completed: { [weak self] in
             self?.discardCurrentCallWithReason(discardReason)
         }))
     }
     
-    func inputDevices() -> Signal<[AudioDevice], Void> {
+    func inputDevices() -> Signal<[AudioDevice], NoError> {
         return Signal { [weak self] subscriber in
             var cancel = false
             self?.withContext { context in
@@ -162,7 +162,7 @@ class PCallSession {
         }
     }
     
-    func currentInputDeviceId()-> Signal<String, Void> {
+    func currentInputDeviceId()-> Signal<String, NoError> {
         return Signal { [weak self] subscriber in
             var cancel = false
             self?.withContext { context in
@@ -176,7 +176,7 @@ class PCallSession {
             }
         }
     }
-    func currentOutputDeviceId()-> Signal<String, Void> {
+    func currentOutputDeviceId()-> Signal<String, NoError> {
         return Signal { [weak self] subscriber in
             var cancel = false
             self?.withContext { context in
@@ -206,7 +206,7 @@ class PCallSession {
         }
     }
     
-    func outputDevices() -> Signal<[AudioDevice], Void> {
+    func outputDevices() -> Signal<[AudioDevice], NoError> {
         return Signal { [weak self] subscriber in
             var cancel = false
             self?.withContext { context in
@@ -478,7 +478,7 @@ enum PCallResult {
     case samePeer(PCallSession)
 }
 
-func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, Void> {
+func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, NoError> {
     return Signal { subscriber in
         
         assert(callQueue.isCurrent())
@@ -487,9 +487,9 @@ func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Sig
             subscriber.putNext(.samePeer(session))
             subscriber.putCompletion()
         } else {
-            let confirmation:Signal<Bool, Void>
+            let confirmation:Signal<Bool, NoError>
             if let session = callSession {
-                confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), Void> in
+                confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
                     return account.postbox.loadedPeerWithId(session.peerId) |> map {(new:peer, previous:$0)}
                 } |> mapToSignal { value in
                     return confirmSignal(for: mainWindow, header: tr(L10n.callConfirmDiscardCurrentHeader), information: tr(L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
@@ -512,7 +512,7 @@ func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Sig
     } |> runOn(callQueue)
 }
 
-func _callSession() -> Signal<PCallSession?, Void> {
+func _callSession() -> Signal<PCallSession?, NoError> {
     return Signal { subscriber in
         var cancel: Bool = false
         pullCurrentSession({ session in

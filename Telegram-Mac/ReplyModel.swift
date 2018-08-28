@@ -33,7 +33,7 @@ class ReplyModel: ChatAccessoryModel {
         } else {
             
             make(with: nil, display: false)
-            var messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, Void> in
+            var messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
                 if let message = view.message {
                     return .single(message)
                 }
@@ -153,13 +153,13 @@ class ReplyModel: ChatAccessoryModel {
                     var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
                     if mediaUpdated {
                         if let image = updatedMedia as? TelegramMediaImage {
-                            updateImageSignal = chatMessagePhotoThumbnail(account: self.account, photo: image, scale: view.backingScaleFactor)
+                            updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
                         } else if let file = updatedMedia as? TelegramMediaFile {
                             if file.isVideo {
-                                updateImageSignal = chatMessageVideoThumbnail(account: self.account, file: file, scale: view.backingScaleFactor)
+                                updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
                             } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
-                                let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil)
-                                updateImageSignal = chatWebpageSnippetPhoto(account: self.account, photo: tmpImage, scale: view.backingScaleFactor, small: true)
+                                let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil, partialReference: nil)
+                                updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true)
                             }
                         }
                     }
@@ -170,7 +170,7 @@ class ReplyModel: ChatAccessoryModel {
                             return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
                         })
                         if let media = media as? TelegramMediaImage {
-                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, photo: media).start())
+                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                         }
                         
                         view.imageView?.set(arguments: arguments)

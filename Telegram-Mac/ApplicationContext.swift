@@ -5,11 +5,11 @@ import PostboxMac
 import TelegramCoreMac
 import MtProtoKitMac
 import IOKit
-func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool,Void>, accountManager: AccountManager, appGroupPath: String, testingEnvironment: Bool) -> Signal<ApplicationContext?, NoError> {
+func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool, NoError>, accountManager: AccountManager, appGroupPath: String, testingEnvironment: Bool) -> Signal<ApplicationContext?, NoError> {
     
     return migrationData(accountManager: accountManager, appGroupPath: appGroupPath, testingEnvironment: testingEnvironment)
         |> deliverOnMainQueue
-        |> map { migration -> Signal<ApplicationContext?, Void> in
+        |> map { migration -> Signal<ApplicationContext?, NoError> in
             
             switch migration {
             case let .auth(result, ignorepasslock):
@@ -20,13 +20,13 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool,Void>, ac
                             return ApplicationContext.unauthorized(UnauthorizedApplicationContext(window: window, account: account, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings))
                         }
                     case let .authorized(account):
-                        let paslock:Signal<PostboxAccessChallengeData, Void> = !ignorepasslock ? account.postbox.transaction { transaction -> PostboxAccessChallengeData in
+                        let paslock:Signal<PostboxAccessChallengeData, NoError> = !ignorepasslock ? account.postbox.transaction { transaction -> PostboxAccessChallengeData in
                             return transaction.getAccessChallengeData()
                         } |> deliverOnMainQueue : .single(.none)
                             
-                        return paslock |> mapToSignal { access -> Signal<ApplicationContext?, Void> in
+                        return paslock |> mapToSignal { access -> Signal<ApplicationContext?, NoError> in
                             let promise:Promise<Void> = Promise()
-                            let auth: Signal<ApplicationContext?, Void> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, preferences in
+                            let auth: Signal<ApplicationContext?, NoError> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, preferences in
                                 return .authorized(AuthorizedApplicationContext(window: window, shouldOnlineKeeper: shouldOnlineKeeper, account: account, accountManager: accountManager, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: preferences.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                             }
                             switch access {
@@ -55,7 +55,7 @@ enum MigrationData {
 }
 
 
-func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, Void> {
+func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, NoError> {
     return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, rootPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
@@ -255,7 +255,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         lockedScreenPromise.set(.single(_lockedValue))
     }
     
-    init(window: Window, shouldOnlineKeeper:Signal<Bool, Void>, account: Account, accountManager: AccountManager, localization:LocalizationSettings?, themeSettings: ThemePaletteSettings?) {
+    init(window: Window, shouldOnlineKeeper:Signal<Bool, NoError>, account: Account, accountManager: AccountManager, localization:LocalizationSettings?, themeSettings: ThemePaletteSettings?) {
         emptyController = EmptyChatViewController(account)
         
         self.account = account
@@ -386,7 +386,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             }
         }))
         
-        let passlock = Signal<Void, Void>.single(Void()) |> delay(15, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, Void> in
+        let passlock = Signal<Void, NoError>.single(Void()) |> delay(15, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, NoError> in
             return account.postbox.transaction { transaction -> Int32? in
                 return transaction.getAccessChallengeData().timeout
             }
@@ -417,7 +417,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         _passlock.set(showPasslock)
         
-        passlockDisposable.set((_passlock.get() |> deliverOnMainQueue |> mapToSignal { [weak self] show -> Signal<Bool, Void> in
+        passlockDisposable.set((_passlock.get() |> deliverOnMainQueue |> mapToSignal { [weak self] show -> Signal<Bool, NoError> in
             if show {
                 let controller = PasscodeLockController(account, .login(hasTouchId: false), logoutImpl: { [weak self] in
                     self?.logout()
@@ -499,7 +499,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 
         
         
-        suggestedLocalizationDisposable.set(( account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, Void> in
+        suggestedLocalizationDisposable.set(( account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, NoError> in
             
             let preferences = preferences.values[PreferencesKeys.suggestedLocalization] as? SuggestedLocalizationEntry
             if preferences == nil || !preferences!.isSeen, preferences?.languageCode != appCurrentLanguage.languageCode, preferences?.languageCode != "en" {
@@ -516,6 +516,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 showModal(with: SuggestionLocalizationViewController(account, suggestionInfo: suggestionInfo), for: window)
             }
         }))
+        
 
         
         
@@ -546,6 +547,58 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         someActionsDisposable.add(managedUpdatedRecentPeers(postbox: account.postbox, network: account.network).start())
         
         
+        someActionsDisposable.add(combineLatest(autoNightSettings(postbox: account.postbox), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart)).start(next: { preference, _ in
+            if let schedule = preference.schedule {
+                
+                let isDarkTheme: Bool
+                
+                let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                var now: time_t = time_t(nowTimestamp)
+                var timeinfoNow: tm = tm()
+                localtime_r(&now, &timeinfoNow)
+                let t = timeinfoNow.tm_hour * 60 * 60 + timeinfoNow.tm_min * 60 + timeinfoNow.tm_sec
+
+                switch schedule {
+                case let .sunrise(coordinate):
+                    if let sunrise = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: coordinate.latitude, longitude: coordinate.longitude) {
+                        let from = Int32(sunrise.sunset.timeIntervalSince1970 - sunrise.sunset.startOfDay.timeIntervalSince1970)
+                        let to = Int32(sunrise.sunrise.timeIntervalSince1970 - sunrise.sunrise.startOfDay.timeIntervalSince1970)
+                        isDarkTheme = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
+                    } else {
+                        isDarkTheme = false
+                    }
+
+                case let .timeSensitive(from, to):
+                    let from = from * 60 * 60
+                    let to = to * 60 * 60
+                    isDarkTheme = to > from && t >= from && t < to || to < from && (t >= from || t < to)
+                }
+                _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings -> ThemePaletteSettings in
+                    
+                    let palette: ColorPalette
+                    var palettes:[String : ColorPalette] = [:]
+                    palettes[dayClassic.name] = dayClassic
+                    palettes[whitePalette.name] = whitePalette
+                    palettes[darkPalette.name] = darkPalette
+                    palettes[nightBluePalette.name] = nightBluePalette
+                    palettes[mojavePalette.name] = mojavePalette
+                    
+                    if isDarkTheme {
+                        palette = palettes[preference.themeName] ?? nightBluePalette
+                    } else {
+                        palette = palettes[settings.defaultDayName] ?? dayClassic
+                    }
+                    if theme.colors.name != palette.name {
+                        return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName)
+                    } else {
+                        return settings
+                    }
+                    
+                    
+                }).start()
+            }
+        }))
+        
     }
     
     
@@ -572,7 +625,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     
     
     func logout() {
-        self.logoutDisposable.set((confirmSignal(for: window, information: tr(L10n.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
+        self.logoutDisposable.set((confirmSignal(for: window, information: tr(L10n.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
             if let strongSelf = self {
                 return logoutFromAccount(id: strongSelf.account.id, accountManager: strongSelf.accountManager)
             }
@@ -716,8 +769,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         let lockedSreenSignal = lockedScreenPromise.get()
         
-        self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), Void> in
-            return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), Void> in
+        self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), NoError> in
+            return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), NoError> in
                 
                 let inAppSettings: InAppNotificationSettings
                 if let settings = settings.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings {
@@ -734,9 +787,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 
             }
             }
-            |> mapToSignal { messages, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings), Void> in
+            |> mapToSignal { messages, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings), NoError> in
                 
-                var photos:[Signal<(MessageId, CGImage?),Void>] = []
+                var photos:[Signal<(MessageId, CGImage?),NoError>] = []
                 for message in messages {
                     var peer = message.0.author
                     if let mainPeer = messageMainPeer(message.0) {
@@ -758,7 +811,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                     }
                     return (messages, images, inAppSettings)
                 }
-            } |> mapToSignal { messages, images, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings, Bool), Void> in
+            } |> mapToSignal { messages, images, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
                 return lockedSreenSignal |> take(1)
                     |> map { data in return (messages, images, inAppSettings, data.isLocked)}
             }
@@ -904,7 +957,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
                     replyToMessageId = messageId
                 }
-                _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], media: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil)]).start()
+                _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil)]).start()
             } else {
                 self.window.deminiaturize(self)
                 NSApp.activate(ignoringOtherApps: true)

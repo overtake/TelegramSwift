@@ -213,7 +213,7 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
         return false
     }
     for i in 0 ..< lhsMessage.media.count {
-        if !lhsMessage.media[i].isEqual(rhsMessage.media[i]) {
+        if !lhsMessage.media[i].isEqual(to: rhsMessage.media[i]) {
             return false
         }
     }

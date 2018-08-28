@@ -120,7 +120,7 @@ fileprivate func itemFor(entry: ChatHistoryEntry, account: Account, pagerSize: N
     return MGalleryItem(account, .message(entry), pagerSize)
 }
 
-fileprivate func prepareEntries(from:[ChatHistoryEntry]?, to:[ChatHistoryEntry], account:Account, pagerSize:NSSize) -> Signal<UpdateTransition<MGalleryItem>, Void> {
+fileprivate func prepareEntries(from:[ChatHistoryEntry]?, to:[ChatHistoryEntry], account:Account, pagerSize:NSSize) -> Signal<UpdateTransition<MGalleryItem>, NoError> {
     return Signal { subscriber in
         
         let (removed, inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { (entry) -> MGalleryItem in
@@ -342,7 +342,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 if image == nil {
-                     image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil)
+                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil, partialReference: nil)
                 }
                 
                 _ = self?.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil), pagerSize))], updated: []))
@@ -509,7 +509,7 @@ class GalleryViewer: NSResponder {
         
         let signal = request.get()
             |> distinctUntilChanged
-            |> mapToSignal { index -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), Void> in
+            |> mapToSignal { index -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                 
                 var type = type
                 let tags = tagsForMessage(message)
@@ -550,7 +550,7 @@ class GalleryViewer: NSResponder {
                     return .single((UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)) |> deliverOnMainQueue
 
                 case .history:
-                    return view |> mapToQueue { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), Void> in
+                    return view |> mapToQueue { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
@@ -566,7 +566,7 @@ class GalleryViewer: NSResponder {
                         }
                     }
                 case .secret:
-                    return account.postbox.messageView(index.id) |> mapToQueue { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), Void> in
+                    return account.postbox.messageView(index.id) |> mapToQueue { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
                             entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(isAdmin: false), nil, nil))

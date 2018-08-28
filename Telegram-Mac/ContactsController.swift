@@ -202,7 +202,7 @@ private final class ContactsArguments {
     }
 }
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, to:[AppearanceWrapperEntry<ContactsEntry>], account:Account, initialSize:NSSize, arguments: ContactsArguments, animated:Bool) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, to:[AppearanceWrapperEntry<ContactsEntry>], account:Account, initialSize:NSSize, arguments: ContactsArguments, animated:Bool) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
     
@@ -291,7 +291,7 @@ class ContactsController: PeersListController {
         })
         
         let transition = combineLatest(account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true) |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue))
-            |> mapToQueue { view, appearance -> Signal<TableUpdateTransition,Void> in
+            |> mapToQueue { view, appearance -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
                 let entries = entriesForView(view).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
 
@@ -314,6 +314,9 @@ class ContactsController: PeersListController {
         super.viewWillDisappear(animated)
         _ = previousEntries.swap(nil)
         genericView.tableView.removeAll()
+        genericView.tableView = TableView(frame:NSZeroRect, drawBorder: true)
+        genericView.tableView.delegate = self
+        genericView.needsLayout = true
         disposable.set(nil)
     }
 

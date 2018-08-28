@@ -121,7 +121,7 @@ class GIFContainerView: View {
         player.set(path: accept ? path : nil, timebase: timebase)
         
         
-        /*var s:Signal<Void, Void> = .single()
+        /*var s:Signal<Void, NoError> = .single()
         s = s |> delay(0.01, queue: Queue.mainQueue())
         playerDisposable.set(s.start(next: {[weak self] (next) in
             if let strongSelf = self {
@@ -151,7 +151,7 @@ class GIFContainerView: View {
         updatePlayerIfNeeded()
     }
     
-    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, account: Account, table: TableView?, iconSignal:Signal<(TransformImageArguments)->DrawingContext?,Void>) {
+    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, account: Account, table: TableView?, iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>) {
         
         self.tableView = table
         self.account = account
@@ -167,7 +167,7 @@ class GIFContainerView: View {
         player.center()
         progressView?.center()
         
-        player.setSignal( iconSignal)
+        player.setSignal(iconSignal)
         let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height - 8))
 
         let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())

@@ -59,7 +59,7 @@ class ChatMusicContentView: ChatAudioContentView {
         imageView.layer?.contents = theme.icons.chatMusicPlaceholder
 
         
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: resource)], reference: nil)
+        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: resource)], reference: nil, partialReference: nil)
         
         imageView.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
         

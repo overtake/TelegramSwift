@@ -470,7 +470,7 @@ class RestrictedModalViewController: TableModalViewController {
         let previous:Atomic<[RestrictedEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal:Signal<(TableUpdateTransition, PeerView), Void> = combineLatest(statePromise.get(), account.viewTracker.peerView(peerId)) |> deliverOn(prepareQueue) |> map { state, view in
+        let signal:Signal<(TableUpdateTransition, PeerView), NoError> = combineLatest(statePromise.get(), account.viewTracker.peerView(peerId)) |> deliverOn(prepareQueue) |> map { state, view in
             return (RestrictedEntries(state: state, participant: participant, view: view), view)
         } |> map { entries, view in
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), view)

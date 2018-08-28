@@ -24,7 +24,7 @@ fileprivate class GMagnifyView : MagnifyView  {
         return frame.minX
     }
     
-    func updateStatus(_ status: Signal<MediaResourceStatus, Void>) {
+    func updateStatus(_ status: Signal<MediaResourceStatus, NoError>) {
         statusDisposable.set((status |> deliverOnMainQueue).start(next: { [weak self] status in
             self?.updateProgress(status)
         }))
@@ -200,7 +200,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let view = controller.selectedViewController?.view as? MagnifyView
         captionView.removeFromSuperview()
         controller.view.addSubview(captionView)
-        autohideCaptionDisposable.set((Signal<Void, Void>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
+        autohideCaptionDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
             self?.captionView.change(opacity: 0)
         }))
     }

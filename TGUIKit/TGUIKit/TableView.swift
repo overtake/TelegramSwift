@@ -299,7 +299,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         let point = self.convert(event.locationInWindow, from: nil)
         let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
         
-        longDisposable.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+        longDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
             guard let `self` = self, let window = self.window else {return}
             let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
             let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
@@ -851,7 +851,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             }
                         }
 
-                        stickTimeoutDisposable.set((Signal<Void, Void>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
+                        stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
                             
                             if itemRect.height == 0, let stickView = stickView {
                                 stickView.updateIsVisible(false, animated: true)
@@ -1587,7 +1587,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }))
     }
     
-    public func merge(with transition:Signal<TableUpdateTransition, Void>) {
+    public func merge(with transition:Signal<TableUpdateTransition, NoError>) {
         mergePromise.set(transition |> deliverOnMainQueue)
     }
     

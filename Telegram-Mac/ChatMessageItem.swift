@@ -384,7 +384,7 @@ class ChatMessageItem: ChatRowItem {
     
    
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items = super.menuItems(in: location)
         let text = messageText.string
         
@@ -399,7 +399,7 @@ class ChatMessageItem: ChatRowItem {
         }
         
         if let file = media as? TelegramMediaFile, let message = message {
-            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
                 var items = items
                 return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
                     if data.complete {
@@ -432,7 +432,7 @@ class ChatMessageItem: ChatRowItem {
                 }
             }
         } else if let image = media as? TelegramMediaImage {
-            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
                 var items = items
                 if let resource = image.representations.last?.resource {
                     return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in

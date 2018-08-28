@@ -1396,7 +1396,7 @@ class ChatRowItem: TableRowItem {
         return forwardType != nil
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         if chatInteraction.disableSelectAbility {
             return super.menuItems(in: location)
         }
@@ -1407,7 +1407,7 @@ class ChatRowItem: TableRowItem {
     }
 }
 
-func chatMenuItems(for message: Message, account: Account, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], Void> {
+func chatMenuItems(for message: Message, account: Account, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     if chatInteraction.isLogInteraction || chatInteraction.presentation.state == .selecting {
         return .single([])
@@ -1483,11 +1483,11 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
 
     
-    var signal:Signal<[ContextMenuItem], Void> = .single(items)
+    var signal:Signal<[ContextMenuItem], NoError> = .single(items)
     
     
     if let file = message.media.first as? TelegramMediaFile, let mediaId = file.id {
-        signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+        signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
             var items = items
             
             return account.postbox.transaction { transaction -> [ContextMenuItem] in
@@ -1563,7 +1563,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
             
         }
     } else if let image = message.media.first as? TelegramMediaImage {
-        signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], Void> in
+        signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
             var items = items
             if let resource = image.representations.last?.resource {
                 return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in

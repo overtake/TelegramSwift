@@ -220,7 +220,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
     }
     
-    func loadResource() -> Signal <Void,Void> {
+    func loadResource() -> Signal <Void, NoError> {
         return Signal { (subscriber) -> Disposable in
                 _ = emoji
                 subscriber.putNext(Void())
@@ -285,7 +285,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
         let postbox = account.postbox
         
-        let s:Signal = combineLatest(loadResource() |> deliverOnMainQueue, recentUsedEmoji(postbox: account.postbox) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, search.get() |> mapToSignal { state -> Signal<[EmojiClue]?, Void> in
+        let s:Signal = combineLatest(loadResource() |> deliverOnMainQueue, recentUsedEmoji(postbox: account.postbox) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, search.get() |> mapToSignal { state -> Signal<[EmojiClue]?, NoError> in
             if state.request.isEmpty {
                 return .single(nil)
             } else {

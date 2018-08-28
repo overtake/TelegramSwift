@@ -307,6 +307,15 @@ public extension NSView {
         return NSImage(data: dataWithPDF(inside: bounds))!
     }
     
+    public var subviewsSize: NSSize {
+        var size: NSSize = NSZeroSize
+        for subview in subviews {
+            size.width += subview.frame.width
+            size.height += subview.frame.height
+        }
+        return size
+    }
+    
     public func _mouseInside() -> Bool {
         if let window = self.window {
             var location:NSPoint = window.mouseLocationOutsideOfEventStream
@@ -466,18 +475,18 @@ public extension NSView {
     }
     
     
-    public func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) -> Void {
+    public func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
         if animated {
             
             var presentX = NSMinX(self.frame)
             var presentY = NSMinY(self.frame)
             let presentation:CALayer? = self.layer?.presentation()
-            if let presentation = presentation, self.layer?.animation(forKey:"position") != nil {
+            if let presentation = presentation, let _ = self.layer?.animation(forKey:"position") {
                 presentY =  presentation.frame.minY
                 presentX = presentation.frame.minX
             }
             
-            self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+            self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
         } else {
             self.layer?.removeAnimation(forKey: "position")
         }

@@ -417,7 +417,7 @@ class DataAndStorageViewController: TableViewController {
                 return current.withUpdatedAutomaticDownload(enabled)
             }).start()
         }, resetDownloadSettings: {
-            _ = (confirmSignal(for: mainWindow, header: appName, information: L10n.dataAndStorageConfirmResetSettings, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, Void> in
+            _ = (confirmSignal(for: mainWindow, header: appName, information: L10n.dataAndStorageConfirmResetSettings, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, NoError> in
                 return updateMediaDownloadSettingsInteractively(postbox: account.postbox, { _ -> AutomaticMediaDownloadSettings in
                     return AutomaticMediaDownloadSettings.defaultSettings
                 })

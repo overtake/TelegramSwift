@@ -343,7 +343,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 updateState({$0.withAdditionalIgnoringIds(messageIds)})
                 
                 if let strongSelf = self {
-                    strongSelf.againDisposable.set((Signal<()->Void, Void>.single({ [weak strongSelf] in
+                    strongSelf.againDisposable.set((Signal<()->Void, NoError>.single({ [weak strongSelf] in
                         strongSelf?.viewWillAppear(false)
                     }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
                 }
@@ -360,7 +360,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             return account.viewTracker.callListView(type: .all, index: index, count: 200)
         }
         
-        let transition:Signal<TableUpdateTransition, Void> = combineLatest(signal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result in
+        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(signal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result in
             _ = callListView.swap(result.0)
             let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))

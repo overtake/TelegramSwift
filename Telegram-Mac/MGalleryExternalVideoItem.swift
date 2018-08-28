@@ -39,7 +39,7 @@ class MGalleryExternalVideoItem: MGalleryVideoItem {
     
     }
     
-    override var status: Signal<MediaResourceStatus, Void> {
+    override var status: Signal<MediaResourceStatus, NoError> {
         return .single(.Local)
     }
  
@@ -58,7 +58,7 @@ class MGalleryExternalVideoItem: MGalleryVideoItem {
             return .single(transform(arguments)?.generateImage())
         }
         
-        self.path.set(sharedVideoLoader.status(for: content) |> mapToSignal { (status) -> Signal<String, Void> in
+        self.path.set(sharedVideoLoader.status(for: content) |> `catch` {_ in return .complete()} |> mapToSignal { (status) -> Signal<String, NoError> in
             if let status = status, case let .loaded(video) = status {
                 return .single(video.stream)
             }

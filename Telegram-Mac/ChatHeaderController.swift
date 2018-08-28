@@ -147,7 +147,7 @@ struct ChatSearchInteractions {
     let results:(String)->Void
     let calendarAction:(Date)->Void
     let cancel:()->Void
-    let searchRequest:(String, PeerId?) -> Signal<[Message],Void>
+    let searchRequest:(String, PeerId?) -> Signal<[Message], NoError>
 }
 
 private class ChatSponsoredModel: ChatAccessoryModel {
@@ -646,9 +646,9 @@ class ChatSearchHeader : View, Notifable {
         })
  
         
-        let apply = query.get() |> mapToSignal { [weak self] query -> Signal<[Message], Void> in
+        let apply = query.get() |> mapToSignal { [weak self] query -> Signal<[Message], NoError> in
             if let strongSelf = self, let query = query {
-                return .single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> mapToSignal { [weak strongSelf] () -> Signal<[Message], Void> in
+                return .single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> mapToSignal { [weak strongSelf] () -> Signal<[Message], NoError> in
                     if let strongSelf = strongSelf {
                         return strongSelf.interactions.searchRequest(query, strongSelf.inputInteraction.state.peerId)
                     }
@@ -661,12 +661,6 @@ class ChatSearchHeader : View, Notifable {
         
         self.disposable.set(apply.start(next: { [weak self] messages in
             self?.messages = messages
-            self?.currentIndex = -1
-            self?.prevAction()
-            self?.parentInteractions.loadingMessage.set(.single(false))
-            
-        }, error: { [weak self] in
-            self?.messages = []
             self?.currentIndex = -1
             self?.prevAction()
             self?.parentInteractions.loadingMessage.set(.single(false))

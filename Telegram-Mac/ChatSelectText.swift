@@ -274,29 +274,32 @@ class ChatSelectText : NSObject {
         }, with: self, for: .leftMouseUp, priority:.medium)
         
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
-            self?.endInnerLocation = self?.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
+            
+            guard let `self` = self else {return .rejected}
+            
+            self.endInnerLocation = self.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             
 //            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {
 //                 self?.started = overView.userInteractionEnabled == true
 //            }
-            if self?.started == true {
-                self?.started = !hasPopover(window)
+            if self.started {
+                self.started = !hasPopover(window) && self.table._mouseInside()
             }
             
-            if self?.started == true {
-                self?.table.clipView.autoscroll(with: event)
+            if self.started {
+                self.table.clipView.autoscroll(with: event)
                 
                 if chatInteraction.presentation.state != .selecting {
                     if window.firstResponder != selectManager {
                         window.makeFirstResponder(selectManager)
                     }
-                    if self?.inPressedState == false {
-                        self?.runSelector(window: window, chatInteraction: chatInteraction)
+                    if !self.inPressedState {
+                        self.runSelector(window: window, chatInteraction: chatInteraction)
                     }
                     return .invoked
                     
                 } else if chatInteraction.presentation.state == .selecting {
-                    self?.runSelector(false, window: window, chatInteraction:chatInteraction)
+                    self.runSelector(false, window: window, chatInteraction:chatInteraction)
                     return .invokeNext
                 }
             }
@@ -340,7 +343,7 @@ class ChatSelectText : NSObject {
         }
         
         let beginRow = table.row(at: beginInnerLocation)
-        if theme.bubbled, let view = table.item(at: beginRow).view as? ChatRowView, selectingText {
+        if theme.bubbled, let view = table.item(at: beginRow).view as? ChatRowView, selectingText, table._mouseInside() {
             if !NSPointInRect(view.convert(beginInnerLocation, from: table.documentView), view.bubbleFrame) {
                 if startIndex != endIndex {
                     for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
@@ -350,7 +353,6 @@ class ChatSelectText : NSObject {
                         }
                     }
                 }
-                
                 return
             }
         }

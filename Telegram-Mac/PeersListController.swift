@@ -15,7 +15,12 @@ import SwiftSignalKitMac
 
 
 class PeerListContainerView : View {
-    let tableView = TableView(frame:NSZeroRect, drawBorder: true)
+    var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
+        didSet {
+            oldValue.removeFromSuperview()
+            addSubview(tableView)
+        }
+    }
     var searchView:SearchView = SearchView(frame:NSZeroRect)
     var compose:ImageButton = ImageButton()
     fileprivate let proxyButton:ImageButton = ImageButton()
@@ -228,7 +233,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         
         
         
-        actionsDisposable.add(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), Void> in
+        actionsDisposable.add(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
             return account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
             }
@@ -288,7 +293,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                     
                 }, theme.icons.composeNewGroup),SPopoverItem(tr(L10n.composePopoverNewSecretChat), { [weak strongSelf] in
                     if let strongSelf = strongSelf, let account = self?.account {
-                        let confirmationImpl:([PeerId])->Signal<Bool,Void> = { peerIds in
+                        let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
                             if let first = peerIds.first, peerIds.count == 1 {
                                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
                                     return confirmSignal(for: mainWindow, information: tr(L10n.composeConfirmStartSecretChat(peer.displayTitle)))
@@ -299,8 +304,8 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                         let select = selectModalPeers(account: account, title: tr(L10n.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
                         
                         let create = select |> map { $0.first! } |> mapToSignal { peerId in
-                            return createSecretChat(account: account, peerId: peerId) |> mapError {_ in}
-                            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, Void> in
+                            return createSecretChat(account: account, peerId: peerId) |> `catch` {_ in .complete()}
+                            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
                                 return showModalProgress(signal: .single(peerId), for: mainWindow)
                         }
                         

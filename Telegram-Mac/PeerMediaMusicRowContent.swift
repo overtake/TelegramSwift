@@ -171,7 +171,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             thumbView.layer?.contents = theme.icons.playerMusicPlaceholder
             thumbView.layer?.cornerRadius = .cornerRadius
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: item.thumbResource)], reference: nil)
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: item.thumbResource)], reference: nil, partialReference: nil)
             
             thumbView.setSignal(chatMessagePhotoThumbnail(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
             

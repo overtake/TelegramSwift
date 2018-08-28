@@ -59,7 +59,7 @@ final class ChatInteraction : InterfaceObserver  {
         self.presentation = ChatPresentationInterfaceState(chatLocation)
         super.init()
         
-        let signal = mediaPromise.get() |> deliverOnMainQueue |> mapToQueue { [weak self] (media) -> Signal<Void, Void> in
+        let signal = mediaPromise.get() |> deliverOnMainQueue |> mapToQueue { [weak self] (media) -> Signal<Void, NoError> in
             self?.sendMedia(media)
             return .single(Void())
         }
@@ -293,7 +293,7 @@ final class ChatInteraction : InterfaceObserver  {
                     case let .url(url):
                         execute(inapp: inApp(for: url.nsstring, account: strongSelf.account, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
                     case .text:
-                        _ = (enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], media: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil)]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
+                        _ = (enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil)]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
                         })
                     case .requestPhone:
@@ -335,7 +335,7 @@ final class ChatInteraction : InterfaceObserver  {
         let timestamp = Int32(Date().timeIntervalSince1970)
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)
         
-        var s:Signal<Void,Void> = updatePeerChatInterfaceState(account: account, peerId: peerId, state: interfaceState)
+        var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: account, peerId: peerId, state: interfaceState)
         if !force {
             s = s |> delay(10, queue: Queue.mainQueue())
         }

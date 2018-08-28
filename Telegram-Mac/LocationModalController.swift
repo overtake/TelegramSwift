@@ -572,11 +572,11 @@ class LocationModalController: ModalViewController {
         
         var cachedData:[String : ChatContextResultCollection] = [:]
         let previousResult:Atomic<ChatContextResultCollection?> = Atomic(value: nil)
-        let peerSignal: Signal<PeerId?, Void> = .single(nil) |> then(resolvePeerByName(account: chatInteraction.account, name: "foursquare") )
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(resolvePeerByName(account: chatInteraction.account, name: "foursquare") )
         let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
             |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {
-                    let first = Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), Void>.single((cachedData[query] ?? previousResult.modify {$0}, location.location, cachedData[query] == nil, !query.isEmpty))
+                    let first = Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError>.single((cachedData[query] ?? previousResult.modify {$0}, location.location, cachedData[query] == nil, !query.isEmpty))
                     if cachedData[query] == nil {
                         return first |> then(requestChatContextResults(account: account, botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
                             |> deliverOnPrepareQueue |> map { result in
@@ -616,13 +616,13 @@ class LocationModalController: ModalViewController {
             }
         })
         
-        let stateModified = state.get() |> mapToSignal { state -> Signal<LocationViewState, Void> in
+        let stateModified = state.get() |> mapToSignal { state -> Signal<LocationViewState, NoError> in
             switch state {
             case let .normal(pick):
                 switch pick {
                 case let .custom(location, _):
                     if let location = location {
-                        return .single(state) |> then(googleVenueForLatitude(location.coordinate.latitude, longtitude: location.coordinate.longitude) |> map { value in
+                        return .single(state) |> then(googleVenueForLatitude(location.coordinate.latitude, longitude: location.coordinate.longitude) |> map { value in
                             return .normal(.custom(location, named: value))
                         })
                     }
@@ -635,7 +635,7 @@ class LocationModalController: ModalViewController {
             return .single(state)
         } |> distinctUntilChanged
         
-        let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), Void> = combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateModified |> deliverOnPrepareQueue) |> map { data, appearance, state in
+        let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), NoError> = combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateModified |> deliverOnPrepareQueue) |> map { data, appearance, state in
             let results:[ChatContextResult] = data.0?.results ?? []
             let entries = mapEntries(result: results, loading: data.2, location: data.1, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), data.2, state, !results.isEmpty || data.3)
@@ -675,9 +675,9 @@ class LocationModalController: ModalViewController {
 }
 
 
-private func googleVenueForLatitude(_ latitude: Double, longtitude: Double) -> Signal<String?, Void> {
+private func googleVenueForLatitude(_ latitude: Double, longitude: Double) -> Signal<String?, NoError> {
     return Signal { subscriber in
-        let string = "https://maps.googleapis.com/maps/api/geocode/json?latlng=\(latitude),\(longtitude)&sensor=true&language=\(appAppearance.language.languageCode)"
+        let string = "https://maps.googleapis.com/maps/api/geocode/json?latlng=\(latitude),\(longitude)&sensor=true&language=\(appAppearance.language.languageCode)"
         let request = MTHttpRequestOperation.data(forHttpUrl: URL(string: string))
         let disposable = request?.start(next: { value in
             if let data = value as? Data {

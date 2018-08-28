@@ -59,7 +59,7 @@ func ==(lhs: RecentUsedEmoji, rhs: RecentUsedEmoji) -> Bool {
 }
 
 
-func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, Void> {
+func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             var emojies: [String]
@@ -84,7 +84,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, Void> {
     }
 }
 
-func modifySkinEmoji(_ emoji:String, postbox: Postbox) -> Signal<Void, Void> {
+func modifySkinEmoji(_ emoji:String, postbox: Postbox) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             if let settings = (entry as? RecentUsedEmoji) {
@@ -110,7 +110,7 @@ func modifySkinEmoji(_ emoji:String, postbox: Postbox) -> Signal<Void, Void> {
     }
 }
 
-func recentUsedEmoji(postbox: Postbox) -> Signal<RecentUsedEmoji, Void> {
+func recentUsedEmoji(postbox: Postbox) -> Signal<RecentUsedEmoji, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.recentEmoji]) |> map { preferences in
         return (preferences.values[ApplicationSpecificPreferencesKeys.recentEmoji] as? RecentUsedEmoji) ?? RecentUsedEmoji.defaultSettings
     }

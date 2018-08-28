@@ -293,7 +293,7 @@ class PeerMediaListController: GenericViewController<TableView> {
          |> mapToSignal { [weak self] location, searchState -> Signal<PeerMediaUpdate, NoError> in
             if let strongSelf = self {
                 if searchState.request.isEmpty {
-                    return chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> mapToQueue { view -> Signal<PeerMediaUpdate, Void> in
+                    return chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> mapToQueue { view -> Signal<PeerMediaUpdate, NoError> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())

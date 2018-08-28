@@ -67,7 +67,7 @@ fileprivate func ==(lhs:UsernameEntries, rhs:UsernameEntries) ->Bool {
     }
 }
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntries>], to:[AppearanceWrapperEntry<UsernameEntries>], account:Account, initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntries>], to:[AppearanceWrapperEntry<UsernameEntries>], account:Account, initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
     
         let (removed, inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
@@ -161,7 +161,7 @@ class UsernameSettingsViewController: TableViewController {
         
         
 
-        username.set(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue |> mapToSignal { peerView -> Signal<String, Void> in
+        username.set(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue |> mapToSignal { peerView -> Signal<String, NoError> in
             if let peer = peerView.peers[account.peerId] {
                 return .single(peer.username ?? "")
             }
@@ -169,19 +169,19 @@ class UsernameSettingsViewController: TableViewController {
         })
         
         
-        self.genericView.merge(with: combineLatest(entries.get(),username.get() |> distinctUntilChanged |> mapToSignal {username -> Signal<String,Void> in
+        self.genericView.merge(with: combineLatest(entries.get(),username.get() |> distinctUntilChanged |> mapToSignal {username -> Signal<String, NoError> in
             availability.set(username)
             return .single(username)
         }, appearanceSignal)
         |> deliverOnMainQueue
-        |> mapToSignal { items, username, appearance -> Signal<TableUpdateTransition, Void> in
+        |> mapToSignal { items, username, appearance -> Signal<TableUpdateTransition, NoError> in
             let items = items.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareEntries(from: previous.swap(items), to: items, account: account, initialSize: initialSize, animated: true, availability:availability)
         })
 
         let availabilityChecker = combineLatest(availability.get(), username.get()
             |> distinctUntilChanged)
-            |> mapToSignal { (value,username) -> Signal<(AddressNameAvailabilityState,String),Void> in
+            |> mapToSignal { (value,username) -> Signal<(AddressNameAvailabilityState,String), NoError> in
                 if let error = checkAddressNameFormat(value) {
                     return .single((AddressNameAvailabilityState.fail(username: value, formatError: error, availability: .available), username))
                 } else {
@@ -199,7 +199,7 @@ class UsernameSettingsViewController: TableViewController {
                 }
             }
             |> deliverOnMainQueue
-            |> mapToSignal { [weak self] (availability,address) -> Signal<Void, Void> in
+            |> mapToSignal { [weak self] (availability,address) -> Signal<Void, NoError> in
                 mutableItems[1] = .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:availability)
                 
                 switch availability {

@@ -206,7 +206,8 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         if let item = item as? InputDataRowItem {
             let updated = item.filter(string)
             if updated != string {
-                textView.setString(updated)
+                textView.setString(updated, animated: false)
+                NSSound.beep()
             } else {
                 item.currentText = string
             }

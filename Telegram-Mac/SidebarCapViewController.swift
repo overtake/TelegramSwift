@@ -95,7 +95,7 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
         
         let postbox = self.account.postbox
         
-        globalPeerDisposable.set((globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, Void> in
+        globalPeerDisposable.set((globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, NoError> in
             if let value = value {
                 switch value {
                 case .group:

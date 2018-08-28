@@ -161,13 +161,13 @@ class ReadArticlesListPreferences: PreferencesEntry, Equatable {
 }
 
 
-func readArticlesListPreferences(_ postbox: Postbox) -> Signal<ReadArticlesListPreferences, Void> {
+func readArticlesListPreferences(_ postbox: Postbox) -> Signal<ReadArticlesListPreferences, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.readArticles]) |> map { preferences in
         return (preferences.values[ApplicationSpecificPreferencesKeys.readArticles] as? ReadArticlesListPreferences) ?? ReadArticlesListPreferences.defaultSettings
     }
 }
 
-func updateReadArticlesPreferences(postbox: Postbox, _ f:@escaping(ReadArticlesListPreferences)->ReadArticlesListPreferences) -> Signal<Void, Void> {
+func updateReadArticlesPreferences(postbox: Postbox, _ f:@escaping(ReadArticlesListPreferences)->ReadArticlesListPreferences) -> Signal<Void, NoError> {
     
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.readArticles, { entry in

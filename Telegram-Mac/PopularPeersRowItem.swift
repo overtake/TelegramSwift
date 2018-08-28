@@ -69,7 +69,7 @@ private final class PopularPeerItem : TableRowItem {
         return type
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
         switch type {
         case let .peer(peer, _, _):

@@ -1629,7 +1629,7 @@ func ==(lhs: EmojiClue, rhs: EmojiClue) -> Bool {
     return lhs.emoji == rhs.emoji && lhs.label == rhs.label && lhs.replacement == rhs.replacement
 }
 
-func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], Void> {
+func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], NoError> {
     return recentUsedEmoji(postbox: postbox) |> deliverOn(resourcesQueue) |> map { recent in
         
         
@@ -2169,5 +2169,34 @@ extension Window {
             return ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first
         }
         return nil
+    }
+}
+
+func quadraticEaseOut <T: FloatingPoint> (_ x: T) -> T {
+    return -x * (x - 2)
+}
+
+extension Date {
+    var startOfDay: Date {
+        return Calendar.current.startOfDay(for: self)
+    }
+    
+    var endOfDay: Date {
+        var components = DateComponents()
+        components.day = 1
+        components.second = -1
+        return Calendar.current.date(byAdding: components, to: startOfDay)!
+    }
+    
+    var startOfMonth: Date {
+        let components = Calendar.current.dateComponents([.year, .month], from: startOfDay)
+        return Calendar.current.date(from: components)!
+    }
+    
+    var endOfMonth: Date {
+        var components = DateComponents()
+        components.month = 1
+        components.second = -1
+        return Calendar.current.date(byAdding: components, to: startOfMonth)!
     }
 }

@@ -43,7 +43,7 @@ class SPopoverViewController: GenericViewController<TableView> {
             Queue.mainQueue().justDispatch {
                 controller?.popover?.hide()
                 
-                _ = (Signal<Void, Void>.single(Void()) |> delay(0.15, queue: Queue.mainQueue())).start(next: {
+                _ = (Signal<Void, NoError>.single(Void()) |> delay(0.15, queue: Queue.mainQueue())).start(next: {
                     item.handler()
                 })
             }

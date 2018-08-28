@@ -181,11 +181,11 @@ private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat,
 public final class TextViewInteractions {
     public var processURL:(Any)->Void // link, isPresent
     public var copy:(()->Bool)?
-    public var menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)?
+    public var menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)?
     public var isDomainLink:(String)->Bool
     public var makeLinkType:((Any, String))->LinkType
     public var localizeLinkCopy:(LinkType)-> String
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], Void>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems

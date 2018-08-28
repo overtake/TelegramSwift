@@ -183,8 +183,11 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
     
     private let imageView: TransformImageView = TransformImageView()
     
-    func fileAtPoint(_ point: NSPoint) -> TelegramMediaFile? {
-        return currentState?.1
+    func fileAtPoint(_ point: NSPoint) -> FileMediaReference? {
+        if let currentState = currentState {
+            return FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1)
+        }
+        return nil
     }
     
     override func menu(for event: NSEvent) -> NSMenu? {
@@ -300,7 +303,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
             
             imageView.setSignal(signal: cachedMedia(media: file, size: dimensions, scale: backingScaleFactor))
             
-            imageView.setSignal(chatMessageSticker(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, Void> in
+            imageView.setSignal(chatMessageSticker(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, NoError> in
                 return cacheMedia(signal: image, media: file, size: dimensions, scale: System.backingScale)
             })
 

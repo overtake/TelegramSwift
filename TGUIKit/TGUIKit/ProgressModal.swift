@@ -150,16 +150,16 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
     }
 }
 
-public func showModalSuccess(for window: Window, icon: CGImage, delay _delay: Double) -> Signal<Void, Void> {
+public func showModalSuccess(for window: Window, icon: CGImage, delay _delay: Double) -> Signal<Void, NoError> {
     
     let modal = SuccessModalController(icon)
     
-    return Signal<Void, Void>({ _ -> Disposable in
+    return Signal<Void, NoError>({ _ -> Disposable in
         showModal(with: modal, for: window)
         return ActionDisposable {
             modal.close()
         }
-    }) |> timeout(_delay, queue: Queue.mainQueue(), alternate: Signal<Void, Void>({ _ -> Disposable in
+    }) |> timeout(_delay, queue: Queue.mainQueue(), alternate: Signal<Void, NoError>({ _ -> Disposable in
         modal.close()
         return EmptyDisposable
     }))

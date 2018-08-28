@@ -57,7 +57,7 @@ final class SettingsThemeWallpaperView: View {
                 self.label.isHidden = true
                 self.imageView.isHidden = false
 
-                let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], reference: nil)
+                let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], reference: nil, partialReference: nil)
                 self.imageView.setSignal(signal: cachedMedia(media: media, size: size, scale: backingScaleFactor))
                 
                 let scale = backingScaleFactor

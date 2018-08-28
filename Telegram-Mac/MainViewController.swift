@@ -107,7 +107,7 @@ class MainViewController: TelegramViewController {
         
         let items:[UnreadMessageCountsItem] = [.total(.raw, .messages)]
         let postbox = self.account.postbox
-        badgeCountDisposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), Void> in
+        badgeCountDisposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), NoError> in
             return postbox.unreadMessageCountsView(items: items) |> map { view in
                 var totalCount:Int32 = 0
                 if let total = view.count(for: .total(value, .messages)) {

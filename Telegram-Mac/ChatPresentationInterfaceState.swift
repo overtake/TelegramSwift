@@ -156,22 +156,6 @@ enum ChatRecordingStatus : Equatable {
     case recording(duration: Double)
 }
 
-func ==(lhs: ChatRecordingStatus, rhs: ChatRecordingStatus) -> Bool {
-    switch lhs {
-    case .paused:
-        if case .paused = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .recording(let duration):
-        if case .recording(duration) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 class ChatRecordingState : Equatable {
   
@@ -704,7 +688,7 @@ struct ChatPresentationInterfaceState: Equatable {
             if lhsUrlPreview.0 != rhsUrlPreview.0 {
                 return false
             }
-            if !lhsUrlPreview.1.isEqual(rhsUrlPreview.1) {
+            if !lhsUrlPreview.1.isEqual(to: rhsUrlPreview.1) {
                 return false
             }
         } else if (lhs.urlPreview != nil) != (rhs.urlPreview != nil) {

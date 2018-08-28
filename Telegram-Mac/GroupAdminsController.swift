@@ -350,7 +350,7 @@ class GroupAdminsController : TableViewController {
             updateState { state in
                 return state.withUpdatedUpdatingAllAdminsValue(value)
             }
-            toggleAllAdminsDisposable.set((updateGroupManagementType(account: account, peerId: peerId, type: value ? .unrestricted : .restrictedToAdmins) |> deliverOnMainQueue).start(error: {
+            toggleAllAdminsDisposable.set((updateGroupManagementType(account: account, peerId: peerId, type: value ? .unrestricted : .restrictedToAdmins) |> deliverOnMainQueue).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedUpdatingAllAdminsValue(nil)
                 }

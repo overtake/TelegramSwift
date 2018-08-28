@@ -127,12 +127,12 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     
     private let _tokensUpdater:Promise<[SearchToken]> = Promise([])
-    public var tokensUpdater:Signal<[SearchToken], Void> {
+    public var tokensUpdater:Signal<[SearchToken], NoError> {
         return _tokensUpdater.get()
     }
     
     private let _textUpdater:ValuePromise<String> = ValuePromise("", ignoreRepeated: true)
-    public var textUpdater:Signal<String, Void> {
+    public var textUpdater:Signal<String, NoError> {
         return _textUpdater.get()
     }
     

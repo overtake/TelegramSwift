@@ -243,14 +243,14 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     private let account:Account
     private let search:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     private let disposable = MetaDisposable()
-    fileprivate func start(account: Account, recentlyUsed:[PeerId], search:Signal<SearchState, Void>) -> Signal<([QuickSwitcherEntry], Bool), Void> {
+    fileprivate func start(account: Account, recentlyUsed:[PeerId], search:Signal<SearchState, NoError>) -> Signal<([QuickSwitcherEntry], Bool), NoError> {
         
-        return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), Void> in
+        return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), NoError> in
             
             if search.request.isEmpty {
                 return combineLatest(account.postbox.recentPeers(), account.postbox.multiplePeersView(recentlyUsed) |> take(1))
                     |> deliverOn(prepareQueue)
-                    |> mapToSignal { peers, view -> Signal<([QuickSwitcherEntry], Bool), Void> in
+                    |> mapToSignal { peers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
                         
                         var recentl:[Peer] = []
                         for peerId in recentlyUsed {
@@ -266,7 +266,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
             } else  {
                 let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
                 
-                let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
+                let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
                 
                 return combineLatest(foundLocalPeers, foundRemotePeers, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
                     var peers = (values.1 + values.0)

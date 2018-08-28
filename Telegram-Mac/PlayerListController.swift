@@ -112,7 +112,7 @@ class PlayerListController: TableViewController {
                 
                 guard let `self` = self else {return .complete()}
                 
-                return chatHistoryViewForLocation(location, account: self.account, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: []) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), Void> in
+                return chatHistoryViewForLocation(location, account: self.account, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: []) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
                     switch view {
                     case .Loading:
                         return .single((PeerMediaUpdate(), nil))

@@ -81,7 +81,7 @@ struct CreateGroupResult {
     let peerIds:[PeerId]
 }
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>], to:[AppearanceWrapperEntry<CreateGroupEntry>], arguments: CreateGroupArguments, initialSize:NSSize, animated:Bool) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>], to:[AppearanceWrapperEntry<CreateGroupEntry>], arguments: CreateGroupArguments, initialSize:NSSize, animated:Bool) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
@@ -156,7 +156,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
             textValue.set(text)
         })
         
-        let signal:Signal<TableUpdateTransition, Void> = combineLatest(account.postbox.multiplePeersView(result.result) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, pictureValue.get() |> deliverOnPrepareQueue, textValue.get() |> deliverOnPrepareQueue) |> mapToSignal { view, appearance, picture, text in
+        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(account.postbox.multiplePeersView(result.result) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, pictureValue.get() |> deliverOnPrepareQueue, textValue.get() |> deliverOnPrepareQueue) |> mapToSignal { view, appearance, picture, text in
             let list = createGroupEntries(view, picture: picture, text: text, appearance: appearance)
            
             return prepareEntries(from: entries.swap(list), to: list, arguments: arguments, initialSize: initialSize.modify({$0}), animated: true)
