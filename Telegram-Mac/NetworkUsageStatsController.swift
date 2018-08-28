@@ -93,7 +93,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
 func networkUsageStatsController(account: Account, f: @escaping((ViewController)) -> Void) -> Void {
     
     let promise: Promise<NetworkUsageStats> = Promise()
-    promise.set(accountNetworkUsageStats(account: account, reset: []))
+    promise.set(combineLatest(accountNetworkUsageStats(account: account, reset: []) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {$0.0})
     
     f(InputDataController(dataSignal: promise.get() |> deliverOnPrepareQueue |> map {networkUsageStatsControllerEntries(stats: $0)}, title: L10n.networkUsageNetworkUsage, validateData: { data in
         if data[.init("reset")] != nil {

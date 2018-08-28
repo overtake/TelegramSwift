@@ -3,15 +3,10 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "static Api.parseVector&lt;A&gt;(_:elementSignature:elementType:):Api.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "Api.parse(reader, signature: signature)">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "closure #1 in StickersViewController.init(account:):EStickersViewController.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in modernSearchStickers(postbox:query:):TwoStepVerification.swift">
+         contextName = "StickerGridItem.init(account:collectionId:packInfo:index:file:inputNodeInteraction:selected:):EStickerGridItem.swift">
       </ContextState>
       <ContextState
          contextName = "closure #1 in closure #1 in closure #1 in closure #10 in PrivacyAndSecurityViewController.viewDidLoad():PrivacyAndSecurityViewController.swift">
@@ -20,16 +15,13 @@
          contextName = "closure #1 in ChatInteraction.processBotKeyboard(with:):ChatInterfaceInteraction.swift">
       </ContextState>
       <ContextState
-         contextName = "ChatMessageItem.init(_:_:_:_:_:):ChatMessageItem.swift">
+         contextName = "closure #2 in ChatListController.viewDidLoad():ChatListController.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in StickersViewController.init(account:):EStickersViewController.swift">
+         contextName = "closure #1 in modernSearchStickers(postbox:query:):TwoStepVerification.swift">
       </ContextState>
       <ContextState
          contextName = "closure #1 in searchStickerSets(postbox:query:):SearchStickers.swift">
-      </ContextState>
-      <ContextState
-         contextName = "StickerGridItem.init(account:collectionId:packInfo:index:file:inputNodeInteraction:selected:):EStickerGridItem.swift">
       </ContextState>
       <ContextState
          contextName = "ChatAccessoryModel.measureSize(_:sizeToFit:):ChatAccessoryModel.swift">
@@ -40,7 +32,26 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #2 in ChatListController.viewDidLoad():ChatListController.swift">
+         contextName = "identityEntries(_:primary:relative:updateState:):PassportController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static Api.parseVector&lt;A&gt;(_:elementSignature:elementType:):Api.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "Api.parse(reader, signature: signature)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "WPLayout.webPage.getter:WPLayout.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "parent.media">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatMessageItem.init(_:_:_:_:_:):ChatMessageItem.swift">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

@@ -31,7 +31,7 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
     }
     
     override func executeReturn() -> Void {
-        onCancel.set(Signal<Void, Void>.single(Void()))
+        onCancel.set(Signal<Void, NoError>.single(Void()))
         super.executeReturn()
     }
     

@@ -492,7 +492,7 @@ class ChannelAdminController: ModalViewController {
         
         self.arguments = arguments
         
-        let combinedView = account.postbox.combinedView(keys: [.peer(peerId: peerId), .peer(peerId: adminId)])
+        let combinedView = account.postbox.combinedView(keys: [.peer(peerId: peerId, components: .all), .peer(peerId: adminId, components: .all)])
         
         let previous:Atomic<[AppearanceWrapperEntry<ChannelAdminEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
@@ -500,8 +500,8 @@ class ChannelAdminController: ModalViewController {
         let signal = combineLatest(statePromise.get(), combinedView, appearanceSignal)
             |> deliverOn(prepareQueue)
             |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool) in
-                let channelView = combinedView.views[.peer(peerId: peerId)] as! PeerView
-                let adminView = combinedView.views[.peer(peerId: adminId)] as! PeerView
+                let channelView = combinedView.views[.peer(peerId: peerId, components: .all)] as! PeerView
+                let adminView = combinedView.views[.peer(peerId: adminId, components: .all)] as! PeerView
                 let canEdit = canEditAdminRights(accountPeerId: account.peerId, channelView: channelView, initialParticipant: initialParticipant)
                 var canDismiss = false
 

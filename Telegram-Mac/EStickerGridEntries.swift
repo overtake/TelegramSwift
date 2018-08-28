@@ -35,13 +35,13 @@ enum ChatMediaInputGridEntryStableId : Hashable {
             }
         case let .recent(lhsFile):
             if case let .recent(rhsFile) = rhs {
-                return lhsFile.isEqual(rhsFile)
+                return lhsFile.isEqual(to: rhsFile)
             } else {
                 return false
             }
         case let .saved(lhsFile):
             if case let .saved(rhsFile) = rhs {
-                return lhsFile.isEqual(rhsFile)
+                return lhsFile.isEqual(to: rhsFile)
             } else {
                 return false
             }
@@ -266,7 +266,7 @@ struct ChatMediaInputGridEntry: Comparable, Identifiable {
     }
     
     static func ==(lhs: ChatMediaInputGridEntry, rhs: ChatMediaInputGridEntry) -> Bool {
-        return lhs.file.isEqual(rhs.file) && lhs.collectionId == rhs.collectionId
+        return lhs.file.isEqual(to: rhs.file) && lhs.collectionId == rhs.collectionId
     }
     
     static func <(lhs: ChatMediaInputGridEntry, rhs: ChatMediaInputGridEntry) -> Bool {

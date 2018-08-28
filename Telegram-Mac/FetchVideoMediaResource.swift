@@ -24,7 +24,6 @@ func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaR
                     subscriber.putNext(.moveLocalFile(path: path))
                     subscriber.putCompletion()
                 }, errorHandler: {
-                    subscriber.putError(Void())
                     subscriber.putCompletion()
                 }, cancelHandler: { () -> Bool in
                     return cancelled

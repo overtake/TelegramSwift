@@ -21,7 +21,7 @@ private var capHolder:[String : CGImage] = [:]
 
 private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool) -> Signal<(CGImage?, Bool), NoError> {
     if let representation = representation {
-        return cachedPeerPhoto(peerId, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
+        return cachedPeerPhoto(peerId, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
@@ -58,7 +58,7 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                         }
                 }
                 
-                let def = deferred({ () -> Signal<(CGImage?, Bool), Void> in
+                let def = deferred({ () -> Signal<(CGImage?, Bool), NoError> in
                     let key = NSStringFromSize(displayDimensions)
                     if let image = capHolder[key] {
                         return .single((image, false))
@@ -71,7 +71,7 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                 
                 let img = imageData
                     |> deliverOn(account.graphicsThreadPool)
-                    |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), Void> in
+                    |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
                         
                         let image:CGImage?
                         if let data = data {
@@ -113,11 +113,11 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
             return current + letter
         })
         
-        return cachedEmptyPeerPhoto(peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), Void> in
+        return cachedEmptyPeerPhoto(peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), Void> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
                     if let image = image {
                         return cacheEmptyPeerPhoto(image: image, peerId: peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
                             return (image, false)
@@ -184,7 +184,7 @@ enum EmptyAvatartType {
     case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize)
 }
 
-func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> Signal<CGImage?, Void> {
+func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> Signal<CGImage?, NoError> {
     return Signal { subscriber in
         
         let color:(top: NSColor, bottom: NSColor)
@@ -254,7 +254,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
     }
 }
 
-func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:Account, peer:Peer) -> Signal<CGImage?, Void> {
+func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:Account, peer:Peer) -> Signal<CGImage?, NoError> {
     return Signal { subscriber in
         let letters = peer.displayLetters
         

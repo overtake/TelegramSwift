@@ -320,7 +320,7 @@ class WebSessionsController: TableViewController {
         
         let previous: Atomic<[AppearanceWrapperEntry<WebSessionEntry>]> = Atomic(value: [])
         
-        let signal = combineLatest((Signal<([WebAuthorization], [PeerId: Peer])?, Void>.single(defaultValue) |> deliverOnPrepareQueue |> then (webSessions(network: account.network) |> map {Optional($0)} |> deliverOnPrepareQueue)), appearanceSignal |> deliverOnPrepareQueue, stateValue.get() |> deliverOnPrepareQueue) |> map { values, appearance, state -> (TableUpdateTransition, ([WebAuthorization], [PeerId: Peer])?, WebSessionsControllerState) in
+        let signal = combineLatest((Signal<([WebAuthorization], [PeerId: Peer])?, NoError>.single(defaultValue) |> deliverOnPrepareQueue |> then (webSessions(network: account.network) |> map {Optional($0)} |> deliverOnPrepareQueue)), appearanceSignal |> deliverOnPrepareQueue, stateValue.get() |> deliverOnPrepareQueue) |> map { values, appearance, state -> (TableUpdateTransition, ([WebAuthorization], [PeerId: Peer])?, WebSessionsControllerState) in
             let entries = webAuthorizationEntries(authorizations: values?.0, peers: values?.1 ?? [:], state: state).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             return (prepareSessions(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: initialSize.modify{$0}), values, state)
             

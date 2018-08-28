@@ -208,7 +208,7 @@ var appCurrentLanguage:Language {
 }
 let languagePromise:Promise<Language> = Promise(Language(languageCode: "en", strings: [:]))
 
-var languageSignal:Signal<Language, Void> {
+var languageSignal:Signal<Language, NoError> {
     return languagePromise.get() |> distinctUntilChanged |> deliverOnMainQueue
 }
 

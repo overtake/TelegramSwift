@@ -454,11 +454,11 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         let previousState:Atomic<ChannelEventFilterState?> = Atomic(value: nil)
         let previousAppearance:Atomic<Appearance?> = Atomic(value: nil)
         let previousSearchState:Atomic<SearchState> = Atomic(value: SearchState(state: .None, request: nil))
-        disposable.set((combineLatest(searchState.get() |> map {SearchState(state: .None, request: $0.request)} |> distinctUntilChanged, history.get() |> filter {$0.0 != -1}) |> mapToSignal { values -> Signal<EventLogTableTransition?, Void> in
+        disposable.set((combineLatest(searchState.get() |> map {SearchState(state: .None, request: $0.request)} |> distinctUntilChanged, history.get() |> filter {$0.0 != -1}) |> mapToSignal { values -> Signal<EventLogTableTransition?, NoError> in
 
             let state = values.1.1
             let searchState = values.0
-            return .single(nil) |> then (combineLatest(channelAdminLogEvents(postbox: account.postbox, network: account.network, peerId: peerId, maxId: values.1.0, minId: -1, limit: 50, query: searchState.request, filter: state.selectedFlags, admins: state.selectedAdmins) |> mapError { _ in} |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result, appearance -> (EventLogTableTransition, [Peer]) in
+            return .single(nil) |> then (combineLatest(channelAdminLogEvents(postbox: account.postbox, network: account.network, peerId: peerId, maxId: values.1.0, minId: -1, limit: 50, query: searchState.request, filter: state.selectedFlags, admins: state.selectedAdmins) |> `catch` { _ in .complete()} |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result, appearance -> (EventLogTableTransition, [Peer]) in
                 
                 
                 let maxId = result.events.min(by: { (lhs, rhs) -> Bool in

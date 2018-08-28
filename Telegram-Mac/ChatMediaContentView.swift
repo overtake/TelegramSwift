@@ -155,7 +155,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
        
         
-        let updated = self.media == nil || !self.media!.isEqual(media)
+        let updated = self.media == nil || !self.media!.isEqual(to: media)
         self.media = media
         
         if let parameters = parameters {
@@ -252,9 +252,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                 }
                 
                 if let account = account, let resource = mediaResource(from: media), let mimeType = mediaResourceMIMEType(from: media) {
-                    let result = account.postbox.mediaBox.resourceData(resource) |> mapToSignal { [weak media] resource -> Signal<String?, Void> in
+                    let result = account.postbox.mediaBox.resourceData(resource) |> mapToSignal { [weak media] resource -> Signal<String?, NoError> in
                         if resource.complete {
-                            return resourceType( mimeType: mimeType) |> mapToSignal { [weak media] ext -> Signal<String?, Void> in
+                            return resourceType( mimeType: mimeType) |> mapToSignal { [weak media] ext -> Signal<String?, NoError> in
                                 return putFileToTemp(from: resource.path, named:  mediaResourceName(from: media, ext: ext))
                             }
                         } else {

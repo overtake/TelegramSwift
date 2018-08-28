@@ -362,11 +362,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
         let groupId: PeerGroupId? = self.groupId
-        let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool), Void> in
+        let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool), NoError> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
                 
-                let foundLocalPeers: Signal<[ChatListSearchEntry], Void> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(account.postbox.searchPeers(query: query.lowercased(), groupId: groupId), account.postbox.loadedPeerWithId(account.peerId))
+                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(account.postbox.searchPeers(query: query.lowercased(), groupId: groupId), account.postbox.loadedPeerWithId(account.peerId))
                     |> map { peers, accountPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
                         
@@ -481,10 +481,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             } else {
                 //        account.postbox.combinedView(keys: [PostboxViewKey.peer(peerId: <#T##PeerId#>)])
 
-                let recently = recentlySearchedPeers(postbox: account.postbox) |> mapToSignal { recently -> Signal<[PeerView], Void> in
-                    return combineLatest(recently.map {account.postbox.peerView(id: $0.peerId)})
+                let recently = recentlySearchedPeers(postbox: account.postbox) |> mapToSignal { recently -> Signal<[PeerView], NoError> in
+                    return combineLatest(recently.map {account.postbox.peerView(id: $0.peer.peerId)})
                     
-                    } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), Void> in
+                    } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
                         return account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
                             
                             var unread:[PeerId: UnreadSearchBadge] = [:]
@@ -500,12 +500,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     
                 } |> deliverOnPrepareQueue
                 
-                let top: Signal<([Peer], [PeerId : UnreadSearchBadge], [PeerId : Bool]), Void> = recentPeers(account: account) |> mapToSignal { recent in
+                let top: Signal<([Peer], [PeerId : UnreadSearchBadge], [PeerId : Bool]), NoError> = recentPeers(account: account) |> mapToSignal { recent in
                     switch recent {
                     case .disabled:
                         return .single(([], [:], [:]))
                     case let .peers(peers):
-                        return combineLatest(peers.map {account.postbox.peerView(id: $0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), Void> in
+                        return combineLatest(peers.map {account.postbox.peerView(id: $0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
                                 return account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
                                     
                                     var peers:[Peer] = []
@@ -694,7 +694,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             _ = removeRecentlySearchedPeer(postbox: account.postbox, peerId: peerId).start()
         }, clearRecent: {
             _ = (recentlySearchedPeers(postbox: account.postbox) |> take(1) |> mapToSignal {
-                return combineLatest($0.map {removeRecentlySearchedPeer(postbox: account.postbox, peerId: $0.peerId)})
+                return combineLatest($0.map {removeRecentlySearchedPeer(postbox: account.postbox, peerId: $0.peer.peerId)})
             }).start()
         }, openTopPeer: { type in
             switch type {
@@ -767,7 +767,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             return
         }
         
-        let storedPeer: Signal<Void, Void>
+        let storedPeer: Signal<Void, NoError>
         if let peer = peer {
              storedPeer = account.postbox.transaction { transaction -> Void in
                 if transaction.getPeer(peer.id) == nil {
@@ -783,7 +783,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         
         
-        let recently = (searchQuery.get() |> take(1)) |> mapToSignal { [weak self] query -> Signal<Void, Void> in
+        let recently = (searchQuery.get() |> take(1)) |> mapToSignal { [weak self] query -> Signal<Void, NoError> in
             if let _ = query, let account = self?.account, !(item is ChatListMessageRowItem) {
                 return addRecentlySearchedPeer(postbox: account.postbox, peerId: peerId)
             }

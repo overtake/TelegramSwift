@@ -13,23 +13,23 @@ import SwiftSignalKitMac
 
 
 extension GridNode : StickerPreviewProtocol {
-    func stickerAtLocationInWindow(_ point: NSPoint) -> TelegramMediaFile? {
+    func stickerAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
         let point = self.documentView!.convert(point, from: nil)
-        var file:TelegramMediaFile? = nil
+        var reference: FileMediaReference? = nil
         self.forEachItemNode { node in
             if NSPointInRect(point, node.frame) {
                 if let c = node as? StickerPreviewRowViewProtocol {
-                    file = c.fileAtPoint(node.convert(point, from: nil))
+                    reference = c.fileAtPoint(node.convert(point, from: nil))
                     return
                 }
             }
         }
-        return file
+        return reference
     }
 }
 
 extension TableView : StickerPreviewProtocol {
-    func stickerAtLocationInWindow(_ point: NSPoint) -> TelegramMediaFile? {
+    func stickerAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
         let index = self.row(at: documentView!.convert(point, from: nil))
         if index != -1 {
             let item = self.item(at: index)
@@ -43,11 +43,11 @@ extension TableView : StickerPreviewProtocol {
 }
 
 protocol StickerPreviewRowViewProtocol {
-    func fileAtPoint(_ point:NSPoint) -> TelegramMediaFile?
+    func fileAtPoint(_ point:NSPoint) -> FileMediaReference?
 }
 
 protocol StickerPreviewProtocol {
-    func stickerAtLocationInWindow(_ point:NSPoint) -> TelegramMediaFile?
+    func stickerAtLocationInWindow(_ point:NSPoint) -> FileMediaReference?
 }
 
 fileprivate var handler:StickerPreviewHandler?
@@ -75,8 +75,8 @@ class StickerPreviewHandler : NSObject {
         showModal(with: modal, for: window)
         
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-            if let strongSelf = self, let file = strongSelf.global.stickerAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
-                strongSelf.modal.update(with: file)
+            if let strongSelf = self, let reference = strongSelf.global.stickerAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
+                strongSelf.modal.update(with: reference)
             }
             return .invokeNext
             }, with: self, for: .leftMouseDragged, priority: .modal)

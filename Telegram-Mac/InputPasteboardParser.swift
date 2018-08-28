@@ -14,7 +14,7 @@ import TGUIKit
 class InputPasteboardParser: NSObject {
 
     
-     public class func getPasteboardUrls(_ pasteboard: NSPasteboard) -> Signal<[URL], Void> {
+     public class func getPasteboardUrls(_ pasteboard: NSPasteboard) -> Signal<[URL], NoError> {
         let items = pasteboard.pasteboardItems
         
         if let items = items, !items.isEmpty {

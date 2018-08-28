@@ -33,7 +33,12 @@ var globalLinkExecutor:TextViewInteractions {
     get {
         return TextViewInteractions(processURL:{(link) in
             if let link = link as? inAppLink {
-                execute(inapp:link)
+                switch link {
+                case .requestSecureId:
+                    break // never execute from inapp
+                default:
+                    execute(inapp:link)
+                }
             }
         }, isDomainLink: { value in
             if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") && !value.hasPrefix("$") {
@@ -145,7 +150,7 @@ func execute(inapp:inAppLink) {
         }
         callback(peerId, openChat, messageId, action)
     case let .followResolvedName(username, postId, account, action, callback):
-        let _ = showModalProgress(signal: resolvePeerByName(account: account, name: username) |> mapToSignal { peerId -> Signal<Peer?, Void> in
+        let _ = showModalProgress(signal: resolvePeerByName(account: account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
             if let peerId = peerId {
                 return account.postbox.loadedPeerWithId(peerId) |> map {Optional($0)}
             }
@@ -166,22 +171,21 @@ func execute(inapp:inAppLink) {
         })
     case let .inviteBotToGroup(username, account, action, callback):
         
-        let _ = (showModalProgress(signal: resolvePeerByName(account: account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, Void> in
+        let _ = (showModalProgress(signal: resolvePeerByName(account: account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
             
-            return selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, Void> in
+            return selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
-                    return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
+                    return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                         return confirmSignal(for: mainWindow, information: tr(L10n.confirmAddBotToGroup(peer.displayTitle)))
                     }
                 }
                 return .single(false)
-            }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { peerId in
-                return showModalProgress(signal: addPeerMember(account: account, peerId: peerId, memberId: memberId), for: mainWindow) |> mapError {_ in} |> map {peerId}
+            }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { peerId -> Signal<PeerId, NoError> in
+                return showModalProgress(signal: addPeerMember(account: account, peerId: peerId, memberId: memberId) |> map {peerId} |> `catch` {_ in return .complete()}, for: mainWindow)
             }
+            
         }).start(next: { peerId in
             callback(peerId, true, nil, action)
-        }, error: {
-            
         })
     case let .botCommand(command, interaction):
         interaction(command)
@@ -217,15 +221,15 @@ func execute(inapp:inAppLink) {
     case .nothing:
         break
     case let .requestSecureId(account, value):
-        if value.payload.isEmpty {
-            alert(for: mainWindow, info: "payload is empty")
+        if value.nonce.isEmpty {
+            alert(for: mainWindow, info: value.isModern ? "nonce is empty" : "payload is empty")
             return
         }
-        _ = (requestSecureIdForm(postbox: account.postbox, network: account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
+        _ = showModalProgress(signal: (requestSecureIdForm(postbox: account.postbox, network: account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
             return account.postbox.loadedPeerWithId(account.peerId) |> mapError {_ in return .generic} |> map { peer in
                 return (form, peer)
-        }
-        } |> deliverOnMainQueue).start(next: { form, peer in
+            }
+        } |> deliverOnMainQueue), for: mainWindow).start(next: { form, peer in
             let passport = PassportWindowController(account: account, peer: peer, request: value, form: form)
             passport.show()
         }, error: { error in
@@ -321,8 +325,8 @@ struct inAppSecureIdRequest {
     let scope: String
     let callback: String?
     let publicKey: String
-    let payload: Data
-    let errors:Array<[String:String]>?
+    let nonce: Data
+    let isModern: Bool
 }
 
 enum inAppLink {
@@ -530,20 +534,20 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
                     }
                 case known_scheme[7]:
-                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let account = account, let payloadString = vars["payload"] {
+                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let account = account {
                         
-                        let payload = escape(with: payloadString, addPercent: false).data(using: .utf8) ?? Data()
-                        var errors: Array<[String:String]>?
-                        if let maybeErrors = vars["errors"] {
-                            let raw = escape(with: maybeErrors, addPercent: false)
-                            if let data = raw.data(using: .utf8) {
-                                if let json = try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) {
-                                    errors = json as? Array<[String:String]>
-                                }
-                            }
-                        }
+                        
+                        let scope = escape(with: scope, addPercent: false)
+                        
+
+                        let isModern: Bool = scope.hasPrefix("{\"data")
+                        
+                        let nonceString = (isModern ? vars["nonce"] : vars["payload"]) ?? ""
+
+                        let nonce = escape(with: nonceString, addPercent: false).data(using: .utf8) ?? Data()
+                        
                         let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
-                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: escape(with: scope, addPercent: false), callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), payload: payload, errors: errors))
+                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
                     }
                 default:
                     break

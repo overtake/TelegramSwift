@@ -94,7 +94,7 @@ class ShareObject {
     
     func perform(to entries:[PeerId], view: NSView) {
         
-        var signals:[Signal<Float, Void>] = []
+        var signals:[Signal<Float, NoError>] = []
         
        
         
@@ -169,13 +169,13 @@ class ShareObject {
         
     }
     
-    private func sendText(_ text:String, to peerId:PeerId) -> Signal<Float,Void> {
-        return Signal<Float, Void>.single(0) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> mapError {_ in} |> map {_ in return 1})
+    private func sendText(_ text:String, to peerId:PeerId) -> Signal<Float, NoError> {
+        return Signal<Float, NoError>.single(0) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> `catch` {_ in return .complete()} |> map {_ in return 1})
     }
     
     private let queue:Queue = Queue(name: "proccessShareFilesQueue")
     
-    private func prepareMedia(_ path: URL) -> Signal<StandaloneMedia, Void> {
+    private func prepareMedia(_ path: URL) -> Signal<StandaloneMedia, NoError> {
         return Signal { subscriber in
             if let data = try? Data(contentsOf: path) {
                 
@@ -210,9 +210,9 @@ class ShareObject {
     
     
     
-    private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Float,Void> {
-        return Signal<Float, Void>.single(0) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Float, Void> in
-            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> mapError {_ in}
+    private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Float, NoError> {
+        return Signal<Float, NoError>.single(0) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Float, NoError> in
+            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> `catch` {_ in return .complete()}
         })
     }
     
@@ -300,7 +300,7 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 
 
 
-fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], account:Account, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> {
+fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], account:Account, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> {
     
     return Signal {subscriber in
         let (deleted,inserted,updated) = proccessEntries(from, right: to, { (entry) -> TableRowItem in
@@ -376,13 +376,13 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         let selectInteraction = self.selectInteractions
         selectInteraction.add(observer: self)
         
-        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>,Void> in
+        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
             
             if search.state == .None {
-                let signal:Signal<(ChatListView,ViewUpdateType),Void> = account.viewTracker.tailChatListView(groupId: nil, count: 100)
+                let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: nil, count: 100)
                 
                 
-                return signal |> deliverOn(prepareQueue) |> mapToQueue { [weak self] (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
+                return signal |> deliverOn(prepareQueue) |> mapToQueue { [weak self] (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
                     if let strongSelf = self {
                         var entries:[SelectablePeersEntry] = []
                         
@@ -433,7 +433,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         return peers
                     }
                     } : account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
-                        return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, Void> in
+                        return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
                     var entries:[SelectablePeersEntry] = []
                     var i:Int32 = Int32.max
                     for peer in peers {

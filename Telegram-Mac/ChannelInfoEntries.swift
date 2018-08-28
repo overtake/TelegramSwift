@@ -161,18 +161,18 @@ class ChannelInfoArguments : PeerInfoArguments {
             
             
             
-            let updateTitle: Signal<Void, Void>
+            let updateTitle: Signal<Void, NoError>
             if let titleValue = updateValues.title {
                 updateTitle = updatePeerTitle(account: account, peerId: peerId, title: titleValue)
-                    |> mapError { _ in return Void() }
+                    |> `catch` { _ in return .complete() }
             } else {
                 updateTitle = .complete()
             }
             
-            let updateDescription: Signal<Void, Void>
+            let updateDescription: Signal<Void, NoError>
             if let descriptionValue = updateValues.description {
                 updateDescription = updatePeerDescription(account: account, peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
-                    |> mapError { _ in return Void() }
+                    |> `catch` { _ in return .complete() }
             } else {
                 updateDescription = .complete()
             }
@@ -233,7 +233,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         /*
-         filethumb(with: URL(fileURLWithPath: path), account: account, scale: System.backingScale) |> mapToSignal { res -> Signal<String, Void> in
+         filethumb(with: URL(fileURLWithPath: path), account: account, scale: System.backingScale) |> mapToSignal { res -> Signal<String, NoError> in
          guard let image = NSImage(contentsOf: URL(fileURLWithPath: path)) else {
          return .complete()
          }
@@ -244,7 +244,7 @@ class ChannelInfoArguments : PeerInfoArguments {
          return .complete()
          }
  */
-        let updateSignal = Signal<String, Void>.single(path) |> map { path -> TelegramMediaResource in
+        let updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
         } |> beforeNext { resource in
             
@@ -255,7 +255,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             
         } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-            return  updatePeerPhoto(account: account, peerId: peerId, photo: uploadedPeerPhoto(account: account, resource: resource))
+            return  updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
         }
                 
 
@@ -287,7 +287,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-        let report = reportReasonSelector() |> mapToSignal { reason -> Signal<Void, Void> in
+        let report = reportReasonSelector() |> mapToSignal { reason -> Signal<Void, NoError> in
             return showModalProgress(signal: reportPeer(account: account, peerId: peerId, reason: reason), for: mainWindow)
         } |> deliverOnMainQueue
         

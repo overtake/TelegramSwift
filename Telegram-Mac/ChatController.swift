@@ -146,7 +146,7 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
             chatInteraction.jumpToDate(date)
         }, cancel: {
             chatInteraction.update({$0.updatedSearchMode(false)})
-        }, searchRequest: { query, fromId -> Signal<[Message],Void> in
+        }, searchRequest: { query, fromId -> Signal<[Message], NoError> in
             let location: SearchMessagesLocation
             switch chatInteraction.chatLocation {
             case let .group(groupId):
@@ -215,7 +215,7 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
             }
             let size = NSMakeSize(frame.width, frame.height - height - header)
             tableView.change(size: size, animated: animated)
-            inputView.change(pos: NSMakePoint(frame.minX, tableView.frame.maxY), animated: animated)
+            inputView.change(pos: NSMakePoint(0, tableView.frame.maxY), animated: animated)
             if let view = inputContextHelper.accessoryView {
                 view._change(pos: NSMakePoint(0, size.height - view.frame.height), animated: animated)
             }
@@ -402,7 +402,7 @@ class ChatControllerView : ChatBackgroundView, ChatInputDelegate {
 
 
 
-fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHistoryView, account:Account, timeDifference: TimeInterval, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scrollPosition:ChatHistoryViewScrollPosition?, reason:ChatHistoryViewUpdateType, animationInterface:TableAnimationInterface?, side: TableSavingSide?) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHistoryView, account:Account, timeDifference: TimeInterval, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scrollPosition:ChatHistoryViewScrollPosition?, reason:ChatHistoryViewUpdateType, animationInterface:TableAnimationInterface?, side: TableSavingSide?) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
     
         
@@ -942,7 +942,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
 
         let historyViewUpdate = location.get() |> deliverOnMainQueue |> distinctUntilChanged
-            |> mapToSignal { [weak self] location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), Void> in
+            |> mapToSignal { [weak self] location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
                 if let strongSelf = self {
                     return chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: fixedCombinedReadState.with { $0 }, tagMask: nil, additionalData: []) |> beforeNext { viewUpdate in
                         switch viewUpdate {
@@ -1127,9 +1127,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.jumpToDate = { [weak self] date in
             if let window = self?.window, let account = self?.account, let peerId = self?.chatInteraction.peerId {
-                let signal = searchMessageIdByTimestamp(account: account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970) - Int32(NSTimeZone.local.secondsFromGMT())) |> mapToSignal { messageId -> Signal<Message?, Void> in
+                let signal = searchMessageIdByTimestamp(account: account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970) - Int32(NSTimeZone.local.secondsFromGMT())) |> mapToSignal { messageId -> Signal<Message?, NoError> in
                     if let messageId = messageId {
-                        return downloadMessage(account: account, messageId: messageId)
+                        return downloadMessage(postbox: account.postbox, network: account.network, messageId: messageId)
                     }
                     return .single(nil)
                 }
@@ -1264,8 +1264,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.deleteMessages = { [weak self] messageIds in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
-                let channelAdmin:Signal<[ChannelParticipant]?, Void> = peer.isSupergroup ? channelAdmins(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId)
-                    |> mapError {_ in return} |> map { admins -> [ChannelParticipant]? in
+                let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId)
+                    |> `catch` {_ in return .complete()} |> map { admins -> [ChannelParticipant]? in
                     return admins.map({$0.participant})
                 } : .single(nil)
                 
@@ -1591,7 +1591,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage {
                 strongSelf.shareContactDisposable.set((strongSelf.account.viewTracker.peerView(strongSelf.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
                     if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil), replyToMessageId: replyId, localGroupingKey: nil), account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId).start()
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil), account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId).start()
                     }
                 }))
             }
@@ -1611,7 +1611,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     commandText += "@" + (command.peer.username ?? "")
                 }
                 strongSelf.chatInteraction.updateInput(with: "")
-                let _ = enqueueMessages(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId, messages: [EnqueueMessage.message(text: commandText, attributes:[], media: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                let _ = enqueueMessages(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId, messages: [EnqueueMessage.message(text: commandText, attributes:[], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
             }
         }
         
@@ -1682,7 +1682,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
                     let pinnedUpdate: PinnedMessageUpdate = dismiss ? .clear : .pin(id: pinnedId, silent: silent)
                     
-                    strongSelf.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: mainWindow, information: tr(L10n.chatConfirmUnpin)) : Signal<Bool,Void>.single(true)) |> filter {$0} |> mapToSignal { _ in return  showModalProgress(signal: requestUpdatePinnedMessage(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId, update: pinnedUpdate) |> mapError {_ in}, for: mainWindow)}).start())
+                    strongSelf.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: mainWindow, information: tr(L10n.chatConfirmUnpin)) : Signal<Bool, NoError>.single(true)) |> filter {$0} |> mapToSignal { _ in return  showModalProgress(signal: requestUpdatePinnedMessage(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId, update: pinnedUpdate) |> `catch` {_ in .complete()}, for: mainWindow)}).start())
                 } else {
                     strongSelf.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedDismissedPinnedId(pinnedId)})})
                 }
@@ -1711,10 +1711,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 
                 strongSelf.reportPeerDisposable.set((confirmSignal(for: mainWindow, header: appName, information: title, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ in
-                    return reportPeer(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak strongSelf] () -> Signal<Void, Void> in
+                    return reportPeer(account: strongSelf.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak strongSelf] () -> Signal<Void, NoError> in
                         if let strongSelf = strongSelf, let peer = strongSelf.chatInteraction.peer {
                             if peer.id.namespace == Namespaces.Peer.CloudUser {
-                                return requestUpdatePeerIsBlocked(account: strongSelf.account, peerId: peer.id, isBlocked: true) |> deliverOnMainQueue |> mapToSignal { [weak strongSelf] () -> Signal<Void, Void> in
+                                return requestUpdatePeerIsBlocked(account: strongSelf.account, peerId: peer.id, isBlocked: true) |> deliverOnMainQueue |> mapToSignal { [weak strongSelf] () -> Signal<Void, NoError> in
                                     if let strongSelf = strongSelf {
                                         return removePeerChat(postbox: strongSelf.account.postbox, peerId: strongSelf.chatInteraction.peerId, reportChatSpam: false)
                                     }
@@ -1832,7 +1832,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                return (view as? PeerView)?.cachedData != nil
                 
-            } |> take(1) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, Void> in
+            } |> take(1) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
                 if let account = self?.account, let peerId = self?.chatInteraction.peerId {
                     return account.viewTracker.updatedCachedChannelParticipants(peerId, forceImmediateUpdate: true)
                 }
@@ -2347,7 +2347,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             let deleteChat = { [weak self] in
                                 guard let `self` = self else {return}
-                                let signal = removeChatInteractively(account: self.account, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, Void> in
+                                let signal = removeChatInteractively(account: self.account, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
                                     return globalPeerHandler.get() |> take(1)
                                     } |> deliverOnMainQueue
                                 

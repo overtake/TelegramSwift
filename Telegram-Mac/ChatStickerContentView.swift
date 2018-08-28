@@ -42,12 +42,14 @@ class ChatStickerContentView: ChatMediaContentView {
             init(tableView: TableView?) {
                 self.tableView = tableView
             }
-            func stickerAtLocationInWindow(_ point: NSPoint) -> TelegramMediaFile? {
+            func stickerAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
                 if let tableView = tableView, let point = tableView.documentView?.convert(point, from: nil) {
                     let row = tableView.row(at: point)
                     if row >= 0, let view = tableView.item(at: row).view as? ChatMediaView {
                         if view.contentNode is ChatStickerContentView {
-                            return view.contentNode?.media as? TelegramMediaFile
+                            if let file = view.contentNode?.media as? TelegramMediaFile, let parent = view.contentNode?.parent {
+                                return FileMediaReference.message(message: MessageReference(parent), media: file)
+                            }
                         }
                     }
                 }
@@ -72,17 +74,15 @@ class ChatStickerContentView: ChatMediaContentView {
     
     override func update(with media: Media, size: NSSize, account: Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
       
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
 
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
-        if let file = media as? TelegramMediaFile, mediaUpdated {
+        if let file = media as? TelegramMediaFile {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             
-            self.image.animatesAlphaOnFirstTransition = true
-            
+            self.image.animatesAlphaOnFirstTransition = false
            
-            self.image.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor))
+            self.image.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor), clearInstantly: false)
             if self.image.layer?.contents == nil {
                 self.image.setSignal( chatMessageSticker(account: account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file), type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
                     if let strongSelf = self {

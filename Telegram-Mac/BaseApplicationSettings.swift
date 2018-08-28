@@ -82,7 +82,7 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
 }
 
 
-func baseAppSettings(postbox: Postbox) -> Signal<BaseApplicationSettings, Void> {
+func baseAppSettings(postbox: Postbox) -> Signal<BaseApplicationSettings, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> map { prefs in
         return prefs.values[ApplicationSpecificPreferencesKeys.baseAppSettings] as? BaseApplicationSettings ?? BaseApplicationSettings.defaultSettings
     }

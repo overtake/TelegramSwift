@@ -187,7 +187,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if value.urlPreview?.0 != oldValue.urlPreview?.0 {
                 urlPreviewChanged = true
             } else if let valuePreview = value.urlPreview?.1, let oldValuePreview = oldValue.urlPreview?.1 {
-                urlPreviewChanged = !valuePreview.isEqual(oldValuePreview)
+                urlPreviewChanged = !valuePreview.isEqual(to: oldValuePreview)
             } else if (value.urlPreview?.1 == nil) != (oldValue.urlPreview?.1 == nil) {
                 urlPreviewChanged = true
             } else {
@@ -405,7 +405,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     override func layout() {
         super.layout()
-        
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
         bottomView.setFrameOrigin(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight)
         
@@ -418,6 +417,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)
+        if newOrigin.x > 0 {
+            var bp:Int = 0
+            bp += 1
+        }
     }
 
     

@@ -105,7 +105,7 @@ func updateInAppNotificationSettingsInteractively(postbox: Postbox, _ f: @escapi
     }
 }
 
-func appNotificationSettings(postbox: Postbox) -> Signal<InAppNotificationSettings, Void> {
+func appNotificationSettings(postbox: Postbox) -> Signal<InAppNotificationSettings, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> map { preferences in
         return (preferences.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings) ?? InAppNotificationSettings.defaultSettings
     }

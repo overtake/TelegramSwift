@@ -57,7 +57,7 @@ open class TransformImageView: NSView {
         disposable.set(nil)
     }
     
-    public func setSignal(signal: Signal<CGImage?, Void>, clearInstantly: Bool = true) {
+    public func setSignal(signal: Signal<CGImage?, NoError>, clearInstantly: Bool = true) {
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image in
             if clearInstantly {
                 self?.layer?.contents = image
@@ -69,7 +69,7 @@ open class TransformImageView: NSView {
     }
     
     
-    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, cacheImage:(Signal<(CGImage?, Bool), Void>) -> Signal<Void, Void> = { signal in return signal |> map {_ in return}}) {
+    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, cacheImage:(Signal<(CGImage?, Bool), NoError>) -> Signal<Void, NoError> = { signal in return signal |> map {_ in return}}) {
         if clearInstantly {
             self.layer?.contents = nil
         }

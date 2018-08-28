@@ -412,7 +412,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 
             }))
         }, addMembers: {
-            peersPromise.set(selectModalPeers(account: account, title: tr(L10n.channelMembersSelectTitle), settings: [.contacts, .remote, .excludeBots]) |> mapToSignal { peers -> Signal<[RenderedChannelParticipant]?, Void> in
+            peersPromise.set(selectModalPeers(account: account, title: tr(L10n.channelMembersSelectTitle), settings: [.contacts, .remote, .excludeBots]) |> mapToSignal { peers -> Signal<[RenderedChannelParticipant]?, NoError> in
                 return showModalProgress(signal: addChannelMembers(account: account, peerId: peerId, memberIds: peers) |> mapToSignal {
                     return channelMembers(postbox: account.postbox, network: account.network, peerId: peerId)
                 }, for: mainWindow)
@@ -422,7 +422,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 strongSelf.navigationController?.push(LinkInvationController(account: strongSelf.account, peerId: strongSelf.peerId))
             }
         }, openInfo: { [weak self] peer in
-             self?.navigationController?.push(PeerInfoController(account: account, peerId: peerId))
+             self?.navigationController?.push(PeerInfoController(account: account, peerId: peer.id))
         })
         
         let peerView = account.viewTracker.peerView(peerId)

@@ -232,7 +232,7 @@ class EBlockRowView: TableRowView {
         let emoji = selectedEmoji
         let lhs = emoji.emojiUnmodified.glyphCount
         let rhs = ( emoji.emojiUnmodified + "🏻").glyphCount
-        longHandle.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+        longHandle.set((Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
             if let strongSelf = self, lhs == rhs, let item = self?.item as? EBlockItem {
                 strongSelf.useEmoji = false
                 strongSelf.popover?.close()

@@ -79,7 +79,7 @@ class TelegramApplicationContext : NSObject {
             self?.layout = state
         })
         
-        updateDifferenceDisposable.set((Signal<Void, Void>.single(Void())
+        updateDifferenceDisposable.set((Signal<Void, NoError>.single(Void())
             |> delay(5 * 60, queue: Queue.mainQueue()) |> restart).start(next: { [weak self, weak network] in
                 if let network = network, network.globalTime > 0 {
                     self?.timeDifference = network.globalTime - Date().timeIntervalSince1970
@@ -156,7 +156,7 @@ class TelegramApplicationContext : NSObject {
     
     func setTemporaryPwd(_ password: String) -> Void {
         _temporartPassword = password
-        let signal = Signal<Void, Void>.single(Void()) |> delay(30 * 60, queue: Queue.mainQueue())
+        let signal = Signal<Void, NoError>.single(Void()) |> delay(30 * 60, queue: Queue.mainQueue())
         temporaryPwdDisposable.set(signal.start(next: { [weak self] in
             self?._temporartPassword = nil
         }))

@@ -428,9 +428,9 @@ class GroupStickerSetController: TableViewController {
         
         saveGroupStickerSet = { [weak self] in
             if let strongSelf = self {
-                actionsDisposable.add(showModalProgress(signal: updateGroupSpecificStickerset(postbox: account.postbox, network: account.network, peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: mainWindow).start(next: { [weak strongSelf] in
+                actionsDisposable.add(showModalProgress(signal: updateGroupSpecificStickerset(postbox: account.postbox, network: account.network, peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: mainWindow).start(next: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
-                }, error: { [weak strongSelf] in
+                }, error: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
                 }))
                 self?.doneButton?.isEnabled = false
@@ -447,7 +447,7 @@ class GroupStickerSetController: TableViewController {
         let initialSize = self.atomicSize
         genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, peerSpecificStickerPack(postbox: account.postbox, network: account.network, peerId: peerId) |> deliverOnMainQueue, appearanceSignal)
             |> map { state, view, specificPack, appearance -> TableUpdateTransition in
-                let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
             } |> afterDisposed {
                 actionsDisposable.dispose()

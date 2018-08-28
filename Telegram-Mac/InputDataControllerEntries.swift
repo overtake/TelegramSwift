@@ -362,7 +362,7 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
     }
 }
 
-
+let InputDataEmptyIdentifier = InputDataIdentifier("")
 
 struct InputDataIdentifier : Hashable {
     let identifier: String

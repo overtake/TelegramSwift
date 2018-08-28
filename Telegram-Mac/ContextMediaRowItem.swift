@@ -14,9 +14,9 @@ import PostboxMac
 
 final class ContextMediaArguments {
     let sendResult: (ChatContextResult) -> Void
-    let menuItems: (TelegramMediaFile) -> Signal<[ContextMenuItem], Void>
+    let menuItems: (TelegramMediaFile) -> Signal<[ContextMenuItem], NoError>
     
-    init(sendResult: @escaping(ChatContextResult) -> Void, menuItems: @escaping(TelegramMediaFile) -> Signal<[ContextMenuItem], Void> = { _ in return .single([]) }) {
+    init(sendResult: @escaping(ChatContextResult) -> Void, menuItems: @escaping(TelegramMediaFile) -> Signal<[ContextMenuItem], NoError> = { _ in return .single([]) }) {
         self.sendResult = sendResult
         self.menuItems = menuItems
     }
@@ -54,13 +54,13 @@ class ContextMediaRowItem: TableRowItem {
         return ContextMediaRowView.self
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var inset:CGFloat = 0
         var i:Int = 0
         for size in result.sizes {
             if location.x > inset && location.x < inset + size.width {
                 switch result.results[i] {
-                case let .internalReference(_, _, _, _, _, file, _):
+                case let .internalReference(_, _, _, _, _, _, file, _):
                     if let file = file {
                         let items = arguments.menuItems(file)
                         return items
@@ -101,20 +101,21 @@ class ContextMediaRowView: TableRowView {
                     let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
                     if let thumb = data.thumb {
                         //TODO
-                        signal = chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: thumb), scale: backingScaleFactor, small:true)
+                        signal = chatWebpageSnippetPhoto(account: item.account, imageReference: thumb, scale: backingScaleFactor, small:true)
                     } else {
                         signal = .never()
                     }
                     
                    
                     
-                    view.update(with: MediaResourceReference.standalone(resource: data.file) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], account: item.account, table: item.table, iconSignal: signal)
+                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], account: item.account, table: item.table, iconSignal: signal)
                     container = view
                 case let .sticker(data):
                     let view = TransformImageView()
                     //TODO
-                    view.setSignal(chatMessageSticker(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file), type: .small, scale: backingScaleFactor))
-                    _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file)).start()
+                    let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
+                    view.setSignal(chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor))
+                    _ = fileInteractiveFetched(account: item.account, fileReference: reference).start()
                     
                     let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
                     view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))

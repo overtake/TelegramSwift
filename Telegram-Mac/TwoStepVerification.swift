@@ -50,7 +50,7 @@ import MtProtoKitMac
 //
 //
 //
-//public func reportMessages(postbox: Postbox, network: Network, peerId: PeerId, messageIds: [MessageId], reason:ReportReason) -> Signal<Void, Void> {
+//public func reportMessages(postbox: Postbox, network: Network, peerId: PeerId, messageIds: [MessageId], reason:ReportReason) -> Signal<Void, NoError> {
 //    return postbox.modify{ transaction -> Void in
 //        if let peer = transaction.getPeer(peerId), let inputPeer = apiInputPeer(peer) {
 //           // return Api.functions.messages.
@@ -58,7 +58,7 @@ import MtProtoKitMac
 //    }
 //}
 
-//public func getCountryCode(network: Network)->Signal<String, Void> {
+//public func getCountryCode(network: Network)->Signal<String, NoError> {
 //    return network.request(Api.functions.help.getNearestDc()) |> retryRequest |> map { value in
 //        switch value {
 //        case let .nearestDc(country, _, _):

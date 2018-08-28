@@ -202,7 +202,7 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, access
     
 }
 
-func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, accessory: CGImage?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil) -> Signal<Bool, Void> {
+func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, accessory: CGImage?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil) -> Signal<Bool, NoError> {
     let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
@@ -215,7 +215,7 @@ func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, 
     
 }
 
-func confirmSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil) -> Signal<Bool, Void> {
+func confirmSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil) -> Signal<Bool, NoError> {
 //    let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
 //
 //    Queue.mainQueue().async {

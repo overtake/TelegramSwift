@@ -64,7 +64,7 @@ class PeerInfoArguments {
     private let deleteDisposable = MetaDisposable()
     private let _statePromise = Promise<PeerInfoState>()
     
-    var statePromise:Signal<PeerInfoState, Void> {
+    var statePromise:Signal<PeerInfoState, NoError> {
         return _statePromise.get()
     }
     
@@ -102,7 +102,7 @@ class PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-        let signal = account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, Void> in
+        let signal = account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
             return removeChatInteractively(account: account, peerId: peerId, userId: peerViewMainPeer(view)?.id)
         }
         
@@ -378,7 +378,7 @@ class PeerInfoController: EditableViewController<TableView> {
         }))
         
         if peerId.namespace == Namespaces.Peer.CloudChannel {
-            let fetchParticipants = account.viewTracker.peerView(peerId) |> filter {$0.cachedData != nil} |> take(1) |> deliverOnMainQueue |> mapToSignal {_ -> Signal<Void, Void> in
+            let fetchParticipants = account.viewTracker.peerView(peerId) |> filter {$0.cachedData != nil} |> take(1) |> deliverOnMainQueue |> mapToSignal {_ -> Signal<Void, NoError> in
                 return account.viewTracker.updatedCachedChannelParticipants(peerId, forceImmediateUpdate: true)
             }
             updatedChannelParticipants.set(fetchParticipants.start())

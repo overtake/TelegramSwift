@@ -125,7 +125,7 @@ open class ScrollView: NSScrollView{
     
     open override func scrollWheel(with event: NSEvent) {
         guard let window = window as? Window else {return}
-        if !window.inLiveSwiping {
+        if !window.inLiveSwiping, super.responds(to: #selector(scrollWheel(with:))) {
             super.scrollWheel(with: event)
         }
 //

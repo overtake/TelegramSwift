@@ -257,9 +257,9 @@ class APSongItem : APItem {
         fetchDisposable.dispose()
     }
 
-    fileprivate func pullResource()->Signal<APResource,Void> {
+    fileprivate func pullResource()->Signal<APResource, NoError> {
         fetch()
-        return account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue |> mapToSignal { [weak self] status -> Signal<APResource, Void> in
+        return account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue |> mapToSignal { [weak self] status -> Signal<APResource, NoError> in
             if let strongSelf = self {
                 let ext = strongSelf.ext
                 switch status {
@@ -289,7 +289,7 @@ struct APTransition {
     let updated:[(Int,APItem)]
 }
 
-fileprivate func prepareItems(from:[APEntry]?, to:[APEntry], account:Account) -> Signal<APTransition,Void> {
+fileprivate func prepareItems(from:[APEntry]?, to:[APEntry], account:Account) -> Signal<APTransition, NoError> {
     return Signal {(subscriber) in
 
         let (removed, inserted, updated) = proccessEntries(from, right: to, { (entry) -> APItem in
@@ -1014,7 +1014,7 @@ class APChatController : APController {
         let account = self.account
         let peerId = self.peerId
         let index = self.index
-        let apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), Void> in
+        let apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError> in
             switch location {
             case .initial:
 
@@ -1037,7 +1037,7 @@ class APChatController : APController {
             let new = APHistory(original: view.0, filtred: entries)
             return (list.swap(new),new)
         }
-        |> mapToQueue { view -> Signal<APTransition, Void> in
+        |> mapToQueue { view -> Signal<APTransition, NoError> in
             let transition = prepareItems(from: view.0?.filtred, to: view.1.filtred, account: account)
             return transition
         } |> deliverOnMainQueue

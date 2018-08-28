@@ -232,8 +232,8 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
         interactions.deleteMessages = { [weak self] messageIds in
             if let strongSelf = self, let peer = strongSelf.peer {
-                let channelAdmin:Signal<[ChannelParticipant]?, Void> = peer.isSupergroup ? channelAdmins(account: strongSelf.account, peerId: strongSelf.interactions.peerId)
-                    |> mapError {_ in return} |> map { admins -> [ChannelParticipant]? in
+                let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: strongSelf.account, peerId: strongSelf.interactions.peerId)
+                    |> `catch` {_ in .complete()} |> map { admins -> [ChannelParticipant]? in
                         return admins.map({$0.participant})
                     } : .single(nil)
                 

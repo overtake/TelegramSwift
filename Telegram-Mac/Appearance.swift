@@ -1003,7 +1003,7 @@ class TelegramPresentationTheme : PresentationTheme {
 
 let _themeSignal:ValuePromise<TelegramPresentationTheme> = ValuePromise(ignoreRepeated: true)
 
-var themeSignal:Signal<TelegramPresentationTheme, Void> {
+var themeSignal:Signal<TelegramPresentationTheme, NoError> {
     return _themeSignal.get() |> distinctUntilChanged |> deliverOnMainQueue
 }
 
@@ -1403,7 +1403,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
             contentView.addSubview(imageView)
 
             
-            let signal = Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
+            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
                 if let imageView = imageView {
                     imageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak imageView] completed in
                         imageView?.removeFromSuperview()

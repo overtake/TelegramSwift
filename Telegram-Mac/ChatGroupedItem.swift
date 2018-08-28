@@ -236,7 +236,7 @@ class ChatGroupedItem: ChatRowItem {
         return ChatLayoutUtils.contentNode(for: layout.messages[index].media[0])
     }
 
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var message: Message? = nil
         for i in 0 ..< layout.count {
             if NSPointInRect(location, layout.frame(at: i)) {

@@ -259,7 +259,7 @@ class LinkInvationController: TableViewController {
                 let info = peer.isChannel ? tr(L10n.linkInvationChannelConfirmRevoke) : tr(L10n.linkInvationGroupConfirmRevoke)
                 let signal = confirmSignal(for: mainWindow, information: info, okTitle: tr(L10n.linkInvationConfirmOk))
                     |> filter {$0}
-                    |> mapToSignal { _ -> Signal<Void, Void> in
+                    |> mapToSignal { _ -> Signal<Void, NoError> in
                         return ensuredExistingPeerExportedInvitation(account: account, peerId: peer.id, revokeExisted: true)
                     }
                 self?.revokeLinkDisposable.set(signal.start())

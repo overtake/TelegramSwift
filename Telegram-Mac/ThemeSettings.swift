@@ -206,7 +206,7 @@ func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
 }
 
 
-func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void, Void> {
+func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
@@ -215,7 +215,7 @@ func updateThemeSettings(postbox: Postbox, palette: ColorPalette) -> Signal<Void
     }
 }
 
-func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, Void> {
+func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = f(entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme)
@@ -224,7 +224,7 @@ func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettin
     }
 }
 
-func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void> {
+func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
@@ -233,7 +233,7 @@ func updateBubbledSettings(postbox: Postbox, bubbled: Bool) -> Signal<Void, Void
     }
 }
 
-func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Void, Void> {
+func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
@@ -242,7 +242,7 @@ func updateApplicationFontSize(postbox: Postbox, fontSize: CGFloat) -> Signal<Vo
     }
 }
 
-func updateApplicationWallpaper(postbox: Postbox, wallpaper: TelegramWallpaper) -> Signal<Void, Void> {
+func updateApplicationWallpaper(postbox: Postbox, wallpaper: TelegramWallpaper) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
             let current = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme

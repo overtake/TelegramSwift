@@ -244,7 +244,10 @@ private class VCardContactController: NavigationViewController {
         super.viewDidLoad()
         ready.set(input.ready.get())
         let arguments = VCardArguments(account: account)
-        values.set(.single(vCardEntries(vCard: vCard, contact: contact, arguments: arguments)))
+        let vCard = self.vCard
+        let contact = self.contact
+        
+        values.set(appearanceSignal |> deliverOnPrepareQueue |> map { _ in return vCardEntries(vCard: vCard, contact: contact, arguments: arguments)})
     }
     
 //    private var genericView:VCardContactView {

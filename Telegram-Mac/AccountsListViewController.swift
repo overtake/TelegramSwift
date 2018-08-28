@@ -102,7 +102,7 @@ class AccountsListViewController : GenericViewController<TableView> {
         super.viewDidLoad()
         let entries:Atomic<[AccountRecordEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
-        self.genericView.merge(with: accountManager.accountRecords() |> mapToSignal { [weak self] records -> Signal<TableUpdateTransition, Void> in
+        self.genericView.merge(with: accountManager.accountRecords() |> mapToSignal { [weak self] records -> Signal<TableUpdateTransition, NoError> in
             if let strongSelf = self {
                 strongSelf.readyOnce()
                 let converted = strongSelf.entries(from: records)
@@ -131,7 +131,7 @@ class AccountsListViewController : GenericViewController<TableView> {
         return entries
     }
     
-    func prepareEntries(left: [AccountRecordEntry], right:[AccountRecordEntry], initialSize:NSSize) -> Signal<TableUpdateTransition, Void> {
+    func prepareEntries(left: [AccountRecordEntry], right:[AccountRecordEntry], initialSize:NSSize) -> Signal<TableUpdateTransition, NoError> {
         return Signal { subscriber in
             
             let (removed, inserted, updated) = proccessEntries(left, right: right, { (entry) -> TableRowItem in

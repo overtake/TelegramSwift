@@ -187,7 +187,7 @@ class ShortPeerRowItem: GeneralRowItem {
         
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         return .single(contextMenuItems())
     }
     

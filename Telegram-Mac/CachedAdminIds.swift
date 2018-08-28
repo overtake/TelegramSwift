@@ -33,7 +33,7 @@ class CachedAdminIds: NSObject {
     private var idsContexts: [PeerId: CachedAdminIdsContext] = [:]
 
     private var disposableTokens:[PeerId: Disposable] = [:]
-    func ids(postbox: Postbox, network:Network, peerId:PeerId) -> Signal<[PeerId], Void> {
+    func ids(postbox: Postbox, network:Network, peerId:PeerId) -> Signal<[PeerId], NoError> {
         if peerId.namespace != Namespaces.Peer.CloudChannel {
             return .single([])
         }

@@ -124,7 +124,7 @@ class EStickerPackRowView: HorizontalRowView {
         
         var mediaUpdated = true
         if let lhs = (self.item as? EStickerPackRowItem)?.topItem, let rhs = (item as? EStickerPackRowItem)?.topItem {
-            mediaUpdated = !lhs.file.isEqual(rhs.file)
+            mediaUpdated = !lhs.file.isEqual(to: rhs.file)
         }
         
         super.set(item: item, animated: animated)

@@ -314,7 +314,7 @@ class PasscodeLockController: ModalViewController {
     private var passcodeValues:[String] = []
     private let _doneValue:Promise<Bool> = Promise()
     private let laContext = LAContext()
-    var doneValue:Signal<Bool, Void> {
+    var doneValue:Signal<Bool, NoError> {
         return _doneValue.get()
     }
     

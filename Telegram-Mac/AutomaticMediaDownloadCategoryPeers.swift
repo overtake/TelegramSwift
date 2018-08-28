@@ -234,7 +234,7 @@ func updateMediaDownloadSettingsInteractively(postbox: Postbox, _ f: @escaping (
     }
 }
 
-func automaticDownloadSettings(postbox: Postbox) -> Signal<AutomaticMediaDownloadSettings, Void> {
+func automaticDownloadSettings(postbox: Postbox) -> Signal<AutomaticMediaDownloadSettings, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]) |> map { value in
         return value.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings] as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
     }

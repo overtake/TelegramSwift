@@ -562,7 +562,7 @@ class PhoneCallWindowController {
     
     private func updatePeerUI(_ user:TelegramUser) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations, reference: nil)
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations, reference: nil, partialReference: nil)
         
 
         
@@ -612,7 +612,7 @@ func showPhoneCallWindow(_ session:PCallSession) {
 private let closeDisposable = MetaDisposable()
 
 func closeCall(_ timeout:TimeInterval? = nil) {
-    var signal = Signal<Void, Void>.single(Void()) |> deliverOnMainQueue
+    var signal = Signal<Void, NoError>.single(Void()) |> deliverOnMainQueue
     if let timeout = timeout {
         signal = signal |> delay(timeout, queue: Queue.mainQueue())
     }

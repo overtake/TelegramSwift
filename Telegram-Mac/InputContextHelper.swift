@@ -595,7 +595,7 @@ class InputContextHelper: NSObject {
     
     }
     
-    func entries(for result:ChatPresentationInputQueryResult?, initialSize:NSSize, chatInteraction: ChatInteraction) -> Signal<[InputContextEntry],Void> {
+    func entries(for result:ChatPresentationInputQueryResult?, initialSize:NSSize, chatInteraction: ChatInteraction) -> Signal<[InputContextEntry], NoError> {
         if let result = result {
             return Signal {(subscriber) in
                 var entries:[InputContextEntry] = []
@@ -630,7 +630,7 @@ class InputContextHelper: NSObject {
                             }
                         case .media:
                             
-                            let mediaRows = makeMediaEnties(result.results, initialSize:NSMakeSize(initialSize.width, 100))
+                            let mediaRows = makeMediaEnties(result.results, isSavedGifs: false, initialSize:NSMakeSize(initialSize.width, 100))
                             
                             for i in 0 ..< mediaRows.count {
                                 entries.append(.contextMediaResult(result, mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))

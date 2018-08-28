@@ -135,6 +135,10 @@ internal final class L10n {
   internal static var alertUserDoesntExists: String  { return L10n.tr("Localizable", "Alert.UserDoesntExists") }
   /// Update App
   internal static var alertButtonOKUpdateApp: String  { return L10n.tr("Localizable", "Alert.ButtonOK.UpdateApp") }
+  /// Discard
+  internal static var alertConfirmDiscard: String  { return L10n.tr("Localizable", "Alert.Confirm.Discard") }
+  /// Stop
+  internal static var alertConfirmStop: String  { return L10n.tr("Localizable", "Alert.Confirm.Stop") }
   /// Can't forward messages to this conversation.
   internal static var alertForwardError: String  { return L10n.tr("Localizable", "Alert.Forward.Error") }
   /// Delete
@@ -153,6 +157,8 @@ internal final class L10n {
   internal static var appearanceCustomBackground: String  { return L10n.tr("Localizable", "Appearance.CustomBackground") }
   /// The file size must not exceed 10MB and the image dimensions must not exceed 500x500px.
   internal static var appearanceCustomBackgroundFileError: String  { return L10n.tr("Localizable", "Appearance.CustomBackground.FileError") }
+  /// Auto-Night Theme
+  internal static var appearanceSettingsAutoNight: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNight") }
   /// Ah, you kids today with techno music! You should enjoy the classics, like Hasselhoff!
   internal static var appearanceSettingsChatPreviewFirstText: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.FirstText") }
   /// CHAT PREVIEW
@@ -215,6 +221,26 @@ internal final class L10n {
   internal static var audioRecordHelpPlain: String  { return L10n.tr("Localizable", "AudioRecord.Help.Plain") }
   /// Window
   internal static var aufd15bRTitle: String  { return L10n.tr("Localizable", "aUF-d1-5bR.title") }
+  /// Disabled
+  internal static var autoNightSettingsDisabled: String  { return L10n.tr("Localizable", "AutoNight.Settings.Disabled") }
+  /// From
+  internal static var autoNightSettingsFrom: String  { return L10n.tr("Localizable", "AutoNight.Settings.From") }
+  /// Scheduled
+  internal static var autoNightSettingsScheduled: String  { return L10n.tr("Localizable", "AutoNight.Settings.Scheduled") }
+  /// Use Sunset & Sunrise
+  internal static var autoNightSettingsSunsetAndSunrise: String  { return L10n.tr("Localizable", "AutoNight.Settings.SunsetAndSunrise") }
+  /// Auto-Night Theme
+  internal static var autoNightSettingsTitle: String  { return L10n.tr("Localizable", "AutoNight.Settings.Title") }
+  /// To
+  internal static var autoNightSettingsTo: String  { return L10n.tr("Localizable", "AutoNight.Settings.To") }
+  /// Update Location
+  internal static var autoNightSettingsUpdateLocation: String  { return L10n.tr("Localizable", "AutoNight.Settings.UpdateLocation") }
+  /// Calculating sunset & sunrise times required a one-time check of your approximate location. Note that this location is stored locally on your device only.\n\nSunset: %@\nSunrise: %@
+  internal static func autoNightSettingsSunriseDesc(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc", p1, p2)
+  }
+  /// Calculating sunset & sunrise times required a one-time check of your approximate location. Note that this location is stored locally on your device only.\n\nSunset: N/A\nSunrise: N/A
+  internal static var autoNightSettingsSunriseDescNA: String  { return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc.NA") }
   /// Any details such as age, occupation of city. Example: 23 y.o. designer from San Francisco
   internal static var bioDescription: String  { return L10n.tr("Localizable", "Bio.Description") }
   /// A few words about you
@@ -1915,6 +1941,100 @@ internal final class L10n {
   }
   /// If you don't remember your passcode, you can [logout]()
   internal static var passcodeLostDescription: String  { return L10n.tr("Localizable", "Passcode.Lost.Description") }
+  /// Arabic
+  internal static var passportLanguageAr: String  { return L10n.tr("Localizable", "Passport.Language.ar") }
+  /// Azerbaijani
+  internal static var passportLanguageAz: String  { return L10n.tr("Localizable", "Passport.Language.az") }
+  /// Bulgarian
+  internal static var passportLanguageBg: String  { return L10n.tr("Localizable", "Passport.Language.bg") }
+  /// Bangla
+  internal static var passportLanguageBn: String  { return L10n.tr("Localizable", "Passport.Language.bn") }
+  /// Czech
+  internal static var passportLanguageCs: String  { return L10n.tr("Localizable", "Passport.Language.cs") }
+  /// Danish
+  internal static var passportLanguageDa: String  { return L10n.tr("Localizable", "Passport.Language.da") }
+  /// German
+  internal static var passportLanguageDe: String  { return L10n.tr("Localizable", "Passport.Language.de") }
+  /// Divehi
+  internal static var passportLanguageDv: String  { return L10n.tr("Localizable", "Passport.Language.dv") }
+  /// Dzongkha
+  internal static var passportLanguageDz: String  { return L10n.tr("Localizable", "Passport.Language.dz") }
+  /// Greek
+  internal static var passportLanguageEl: String  { return L10n.tr("Localizable", "Passport.Language.el") }
+  /// English
+  internal static var passportLanguageEn: String  { return L10n.tr("Localizable", "Passport.Language.en") }
+  /// Spanish
+  internal static var passportLanguageEs: String  { return L10n.tr("Localizable", "Passport.Language.es") }
+  /// Estonian
+  internal static var passportLanguageEt: String  { return L10n.tr("Localizable", "Passport.Language.et") }
+  /// Persian
+  internal static var passportLanguageFa: String  { return L10n.tr("Localizable", "Passport.Language.fa") }
+  /// French
+  internal static var passportLanguageFr: String  { return L10n.tr("Localizable", "Passport.Language.fr") }
+  /// Hebrew
+  internal static var passportLanguageHe: String  { return L10n.tr("Localizable", "Passport.Language.he") }
+  /// Croatian
+  internal static var passportLanguageHr: String  { return L10n.tr("Localizable", "Passport.Language.hr") }
+  /// Hungarian
+  internal static var passportLanguageHu: String  { return L10n.tr("Localizable", "Passport.Language.hu") }
+  /// Armenian
+  internal static var passportLanguageHy: String  { return L10n.tr("Localizable", "Passport.Language.hy") }
+  /// Indonesian
+  internal static var passportLanguageId: String  { return L10n.tr("Localizable", "Passport.Language.id") }
+  /// Icelandic
+  internal static var passportLanguageIs: String  { return L10n.tr("Localizable", "Passport.Language.is") }
+  /// Italian
+  internal static var passportLanguageIt: String  { return L10n.tr("Localizable", "Passport.Language.it") }
+  /// Japanese
+  internal static var passportLanguageJa: String  { return L10n.tr("Localizable", "Passport.Language.ja") }
+  /// Georgian
+  internal static var passportLanguageKa: String  { return L10n.tr("Localizable", "Passport.Language.ka") }
+  /// Khmer
+  internal static var passportLanguageKm: String  { return L10n.tr("Localizable", "Passport.Language.km") }
+  /// Korean
+  internal static var passportLanguageKo: String  { return L10n.tr("Localizable", "Passport.Language.ko") }
+  /// Lao
+  internal static var passportLanguageLo: String  { return L10n.tr("Localizable", "Passport.Language.lo") }
+  /// Lithuanian
+  internal static var passportLanguageLt: String  { return L10n.tr("Localizable", "Passport.Language.lt") }
+  /// Latvian
+  internal static var passportLanguageLv: String  { return L10n.tr("Localizable", "Passport.Language.lv") }
+  /// Macedonian
+  internal static var passportLanguageMk: String  { return L10n.tr("Localizable", "Passport.Language.mk") }
+  /// Mongolian
+  internal static var passportLanguageMn: String  { return L10n.tr("Localizable", "Passport.Language.mn") }
+  /// Malay
+  internal static var passportLanguageMs: String  { return L10n.tr("Localizable", "Passport.Language.ms") }
+  /// Burmese
+  internal static var passportLanguageMy: String  { return L10n.tr("Localizable", "Passport.Language.my") }
+  /// Nepali
+  internal static var passportLanguageNe: String  { return L10n.tr("Localizable", "Passport.Language.ne") }
+  /// Dutch
+  internal static var passportLanguageNl: String  { return L10n.tr("Localizable", "Passport.Language.nl") }
+  /// Polish
+  internal static var passportLanguagePl: String  { return L10n.tr("Localizable", "Passport.Language.pl") }
+  /// Portuguese
+  internal static var passportLanguagePt: String  { return L10n.tr("Localizable", "Passport.Language.pt") }
+  /// Romanian
+  internal static var passportLanguageRo: String  { return L10n.tr("Localizable", "Passport.Language.ro") }
+  /// Russian
+  internal static var passportLanguageRu: String  { return L10n.tr("Localizable", "Passport.Language.ru") }
+  /// Slovak
+  internal static var passportLanguageSk: String  { return L10n.tr("Localizable", "Passport.Language.sk") }
+  /// Slovenian
+  internal static var passportLanguageSl: String  { return L10n.tr("Localizable", "Passport.Language.sl") }
+  /// Thai
+  internal static var passportLanguageTh: String  { return L10n.tr("Localizable", "Passport.Language.th") }
+  /// Turkmen
+  internal static var passportLanguageTk: String  { return L10n.tr("Localizable", "Passport.Language.tk") }
+  /// Turkish
+  internal static var passportLanguageTr: String  { return L10n.tr("Localizable", "Passport.Language.tr") }
+  /// Ukrainian
+  internal static var passportLanguageUk: String  { return L10n.tr("Localizable", "Passport.Language.uk") }
+  /// Uzbek
+  internal static var passportLanguageUz: String  { return L10n.tr("Localizable", "Passport.Language.uz") }
+  /// Vietnamese
+  internal static var passportLanguageVi: String  { return L10n.tr("Localizable", "Passport.Language.vi") }
   /// Sorry, Telegram Mac doesn't support payments yet. Please use one of our mobile apps to do this.
   internal static var paymentsUnsupported: String  { return L10n.tr("Localizable", "Payments.Unsupported") }
   /// Deleted User
@@ -2825,10 +2945,6 @@ internal final class L10n {
   internal static var searchFieldSearch: String  { return L10n.tr("Localizable", "SearchField.Search") }
   /// Off
   internal static var secretTimerOff: String  { return L10n.tr("Localizable", "SecretTimer.Off") }
-  /// **%@ requests access to your personal data**\nto sign you up for their services
-  internal static func secureCreatePasswordIntroHeader(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Secure.CreatePassword.Intro.Header", p1)
-  }
   /// Sorry, your Telegram app is out of date and can’t handle this request. Please update Telegram.
   internal static var secureIdAppVersionOutdated: String  { return L10n.tr("Localizable", "SecureId.AppVersionOutdated") }
   /// Please correct errors
@@ -2887,16 +3003,44 @@ internal final class L10n {
   internal static var secureIdAddPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Add.PassportRegistration") }
   /// Add Personal Details
   internal static var secureIdAddPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Add.PersonalDetails") }
-  /// Add Rental Agreement
-  internal static var secureIdAddRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Add.RentalAgreement") }
   /// Add Residential Address
   internal static var secureIdAddResidentialAddress: String  { return L10n.tr("Localizable", "SecureId.Add.ResidentialAddress") }
   /// Add Temporary Registration
   internal static var secureIdAddTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.Add.TemporaryRegistration") }
+  /// Add Tenancy Agreement
+  internal static var secureIdAddTenancyAgreement: String  { return L10n.tr("Localizable", "SecureId.Add.TenancyAgreement") }
   /// Add Utility Bill
   internal static var secureIdAddUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Add.UtilityBill") }
   /// ADDRESS
   internal static var secureIdAddressHeader: String  { return L10n.tr("Localizable", "SecureId.Address.Header") }
+  /// %d
+  internal static func secureIdAddressScansCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_countable", p1)
+  }
+  /// %d scans
+  internal static func secureIdAddressScansFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_few", p1)
+  }
+  /// %d scans
+  internal static func secureIdAddressScansMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_many", p1)
+  }
+  /// %d scan
+  internal static func secureIdAddressScansOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_one", p1)
+  }
+  /// %d scans
+  internal static func secureIdAddressScansOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_other", p1)
+  }
+  /// %d scans
+  internal static func secureIdAddressScansTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_two", p1)
+  }
+  /// %d scans
+  internal static func secureIdAddressScansZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SecureId.Address.Scans_zero", p1)
+  }
   /// City
   internal static var secureIdAddressCityInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Address.City.InputPlaceholder") }
   /// City
@@ -2951,6 +3095,10 @@ internal final class L10n {
   internal static var secureIdCreatePasswordHintInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.InputPlaceholder") }
   /// Hint
   internal static var secureIdCreatePasswordHintPlaceholder: String  { return L10n.tr("Localizable", "SecureId.CreatePassword.Hint.Placeholder") }
+  /// **%@ requests access to your personal data**\nto sign you up for their services
+  internal static func secureIdCreatePasswordIntroHeader(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.CreatePassword.Intro.Header", p1)
+  }
   /// Delete Personal Details
   internal static var secureIdDeletePersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Delete.PersonalDetails") }
   /// Are you sure you want to delete personal details?
@@ -2973,12 +3121,12 @@ internal final class L10n {
   internal static var secureIdEditPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Edit.PassportRegistration") }
   /// Edit Personal Details
   internal static var secureIdEditPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Edit.PersonalDetails") }
-  /// Edit Rental Agreement
-  internal static var secureIdEditRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Edit.RentalAgreement") }
   /// Edit Residential Address
   internal static var secureIdEditResidentialAddress: String  { return L10n.tr("Localizable", "SecureId.Edit.ResidentialAddress") }
   /// Edit Temporary Registration
   internal static var secureIdEditTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.Edit.TemporaryRegistration") }
+  /// Edit Tenancy Agreement
+  internal static var secureIdEditTenancyAgreement: String  { return L10n.tr("Localizable", "SecureId.Edit.TenancyAgreement") }
   /// Edit Utility Bill
   internal static var secureIdEditUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Edit.UtilityBill") }
   /// Use %@
@@ -2999,6 +3147,30 @@ internal final class L10n {
   internal static var secureIdEmailActivateCodeInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.EmailActivate.Code.InputPlaceholder") }
   /// Code
   internal static var secureIdEmailActivateCodePlaceholder: String  { return L10n.tr("Localizable", "SecureId.EmailActivate.Code.Placeholder") }
+  /// Provide your address
+  internal static var secureIdEmptyDescriptionAddress: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.Address") }
+  /// Upload a scan of your bank statement
+  internal static var secureIdEmptyDescriptionBankStatement: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.BankStatement") }
+  /// Upload a scan of your driver's license
+  internal static var secureIdEmptyDescriptionDriversLicense: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.DriversLicense") }
+  /// Upload a scan of your identity card
+  internal static var secureIdEmptyDescriptionIdentityCard: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.IdentityCard") }
+  /// Upload a scan of your internal passport
+  internal static var secureIdEmptyDescriptionInternalPassport: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.InternalPassport") }
+  /// Upload a scan of your passport
+  internal static var secureIdEmptyDescriptionPassport: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.Passport") }
+  /// Upload a scan of your passport registration
+  internal static var secureIdEmptyDescriptionPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.PassportRegistration") }
+  /// Fill in your personal details
+  internal static var secureIdEmptyDescriptionPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.PersonalDetails") }
+  /// Upload a scan of your temporary registration
+  internal static var secureIdEmptyDescriptionTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.TemporaryRegistration") }
+  /// Upload a scan of your tenancy agreement
+  internal static var secureIdEmptyDescriptionTenancyAgreement: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.TenancyAgreement") }
+  /// Upload a scan of your utility bill
+  internal static var secureIdEmptyDescriptionUtilityBill: String  { return L10n.tr("Localizable", "SecureId.EmptyDescription.UtilityBill") }
+  /// You can't upload more than 20 files
+  internal static var secureIdErrorScansLimit: String  { return L10n.tr("Localizable", "SecureId.Error.ScansLimit") }
   /// %@% Uploaded
   internal static func secureIdFileUploadProgress(_ p1: String) -> String {
     return L10n.tr("Localizable", "SecureId.FileUpload.Progress", p1)
@@ -3011,18 +3183,18 @@ internal final class L10n {
   internal static var secureIdGenderMale: String  { return L10n.tr("Localizable", "SecureId.Gender.Male") }
   /// Bank Statement
   internal static var secureIdIdentityBankStatement: String  { return L10n.tr("Localizable", "SecureId.Identity.BankStatement") }
-  /// DOCUMENTS DETAILS
+  /// DOCUMENT DETAILS
   internal static var secureIdIdentityDocumentDetailsHeader: String  { return L10n.tr("Localizable", "SecureId.Identity.DocumentDetailsHeader") }
-  /// Driver License
+  /// Driver's License
   internal static var secureIdIdentityDriverLicense: String  { return L10n.tr("Localizable", "SecureId.Identity.DriverLicense") }
   /// Identity Card
   internal static var secureIdIdentityId: String  { return L10n.tr("Localizable", "SecureId.Identity.Id") }
+  /// Enter your name using the Latin alphabet
+  internal static var secureIdIdentityNameInLatine: String  { return L10n.tr("Localizable", "SecureId.Identity.NameInLatine") }
   /// Passport
   internal static var secureIdIdentityPassport: String  { return L10n.tr("Localizable", "SecureId.Identity.Passport") }
   /// Passport Registration
   internal static var secureIdIdentityPassportRegistration: String  { return L10n.tr("Localizable", "SecureId.Identity.PassportRegistration") }
-  /// Rental Agreement
-  internal static var secureIdIdentityRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Identity.RentalAgreement") }
   /// Selfie
   internal static var secureIdIdentitySelfie: String  { return L10n.tr("Localizable", "SecureId.Identity.Selfie") }
   /// Upload a selfie of yourself holding this document. Make sure the ID and your face are clearly visible.
@@ -3033,6 +3205,8 @@ internal final class L10n {
   internal static var secureIdIdentitySelfieUpload: String  { return L10n.tr("Localizable", "SecureId.Identity.SelfieUpload") }
   /// Retake Selfie
   internal static var secureIdIdentitySelfieUploadNew: String  { return L10n.tr("Localizable", "SecureId.Identity.SelfieUploadNew") }
+  /// Tenancy Agreement
+  internal static var secureIdIdentityTenancyAgreement: String  { return L10n.tr("Localizable", "SecureId.Identity.TenancyAgreement") }
   /// Utility Bill
   internal static var secureIdIdentityUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Identity.UtilityBill") }
   /// Card ID
@@ -3043,6 +3217,8 @@ internal final class L10n {
   internal static var secureIdIdentityInputPlaceholderFirstName: String  { return L10n.tr("Localizable", "SecureId.Identity.InputPlaceholder.FirstName") }
   /// Surname
   internal static var secureIdIdentityInputPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.Identity.InputPlaceholder.LastName") }
+  /// Middle Name
+  internal static var secureIdIdentityInputPlaceholderMiddleName: String  { return L10n.tr("Localizable", "SecureId.Identity.InputPlaceholder.MiddleName") }
   /// License ID
   internal static var secureIdIdentityLicenseInputPlaceholder: String  { return L10n.tr("Localizable", "SecureId.Identity.License.InputPlaceholder") }
   /// License ID
@@ -3067,6 +3243,8 @@ internal final class L10n {
   internal static var secureIdIdentityPlaceholderIssuedDate: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.IssuedDate") }
   /// Surname
   internal static var secureIdIdentityPlaceholderLastName: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.LastName") }
+  /// Middle Name
+  internal static var secureIdIdentityPlaceholderMiddleName: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.MiddleName") }
   /// Residence
   internal static var secureIdIdentityPlaceholderResidence: String  { return L10n.tr("Localizable", "SecureId.Identity.Placeholder.Residence") }
   /// The document must contain your first and last name, your residential address, a stamp / barcode / QR code / logo, and issue date, no more than 3 month ago.
@@ -3077,6 +3255,8 @@ internal final class L10n {
   internal static var secureIdInfoMore: String  { return L10n.tr("Localizable", "SecureId.Info.More") }
   /// What is Telegram Passport?
   internal static var secureIdInfoTitle: String  { return L10n.tr("Localizable", "SecureId.Info.Title") }
+  /// Please use latin characters only
+  internal static var secureIdInputErrorLatinOnly: String  { return L10n.tr("Localizable", "SecureId.InputError.LatinOnly") }
   /// Please provide the password for accessing your personal data
   internal static var secureIdInsertPasswordDescription: String  { return L10n.tr("Localizable", "SecureId.InsertPassword.Description") }
   /// Next
@@ -3089,6 +3269,22 @@ internal final class L10n {
   internal static var secureIdInstallEmailTitle: String  { return L10n.tr("Localizable", "SecureId.InstallEmail.Title") }
   /// Phone Number
   internal static var secureIdInstallPhoneTitle: String  { return L10n.tr("Localizable", "SecureId.InstallPhone.Title") }
+  /// YOUR NAME IN %@
+  internal static func secureIdNameNativeHeader(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.NameNative.Header", p1)
+  }
+  /// NAME IN DOCUMENT LANGUAGE
+  internal static var secureIdNameNativeHeaderEmpty: String  { return L10n.tr("Localizable", "SecureId.NameNative.HeaderEmpty") }
+  /// Your name in the language of the country that issued the document
+  internal static var secureIdNameNativeDescEmpty: String  { return L10n.tr("Localizable", "SecureId.NameNative.Desc.Empty") }
+  /// Your name in the language of the country (%@) that issued the document
+  internal static func secureIdNameNativeDescLanguage(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.NameNative.Desc.Language", p1)
+  }
+  /// Invalid password. Please try again
+  internal static var secureIdPasswordErrorInvalid: String  { return L10n.tr("Localizable", "SecureId.Password.Error.Invalid") }
+  /// Limit exceeded. Please try again later
+  internal static var secureIdPasswordErrorLimit: String  { return L10n.tr("Localizable", "SecureId.Password.Error.Limit") }
   /// OR ENTER OTHER PHONE NUMBER
   internal static var secureIdPhoneNumberHeader: String  { return L10n.tr("Localizable", "SecureId.PhoneNumber.Header") }
   /// Note: You will receive a confirmation code on the phone number you provide.
@@ -3119,16 +3315,16 @@ internal final class L10n {
   internal static func secureIdRequestHeader1(_ p1: String) -> String {
     return L10n.tr("Localizable", "SecureId.Request.Header1", p1)
   }
-  /// Address
-  internal static var secureIdRequestPermissionAddress: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Address") }
   /// Bank Statement
   internal static var secureIdRequestPermissionBankStatement: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.BankStatement") }
-  /// Drivers License
+  /// Driver's License
   internal static var secureIdRequestPermissionDriversLicense: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.DriversLicense") }
   /// E-Mail
   internal static var secureIdRequestPermissionEmail: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Email") }
   /// Identity Card
   internal static var secureIdRequestPermissionIDCard: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.IDCard") }
+  /// Identity Document
+  internal static var secureIdRequestPermissionIdentityDocument: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.IdentityDocument") }
   /// Internal Passport
   internal static var secureIdRequestPermissionInternalPassport: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.InternalPassport") }
   /// Passport
@@ -3139,10 +3335,12 @@ internal final class L10n {
   internal static var secureIdRequestPermissionPersonalDetails: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.PersonalDetails") }
   /// Phone Number
   internal static var secureIdRequestPermissionPhone: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone") }
-  /// Rental Agreement
-  internal static var secureIdRequestPermissionRentalAgreement: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.RentalAgreement") }
+  /// Residential Address
+  internal static var secureIdRequestPermissionResidentialAddress: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.ResidentialAddress") }
   /// Temporary Registration
   internal static var secureIdRequestPermissionTemporaryRegistration: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.TemporaryRegistration") }
+  /// Tenancy Agreement
+  internal static var secureIdRequestPermissionTenancyAgreement: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.TenancyAgreement") }
   /// Utility Bill
   internal static var secureIdRequestPermissionUtilityBill: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.UtilityBill") }
   /// Upload proof of your address
@@ -3153,10 +3351,22 @@ internal final class L10n {
   internal static var secureIdRequestPermissionIdentityEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Identity.Empty") }
   /// Provide your contact phone number
   internal static var secureIdRequestPermissionPhoneEmpty: String  { return L10n.tr("Localizable", "SecureId.Request.Permission.Phone.Empty") }
+  /// %@ or %@
+  internal static func secureIdRequestTwoDocumentsTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SecureId.Request.TwoDocuments.Title", p1, p2)
+  }
+  /// Upload a selfie of your document
+  internal static var secureIdRequestUploadSelfie: String  { return L10n.tr("Localizable", "SecureId.Request.Upload.Selfie") }
+  /// Upload a translation of your document
+  internal static var secureIdRequestUploadTranslation: String  { return L10n.tr("Localizable", "SecureId.Request.Upload.Translation") }
   /// REQUESTED INFORMATION
   internal static var secureIdRequestedInformationHeader: String  { return L10n.tr("Localizable", "SecureId.RequestedInformation.Header") }
   /// SCANS
   internal static var secureIdScansHeader: String  { return L10n.tr("Localizable", "SecureId.Scans.Header") }
+  /// Upload scans of verified translation of the document.
+  internal static var secureIdTranslationDesc: String  { return L10n.tr("Localizable", "SecureId.Translation.Desc") }
+  /// TRANSLATION
+  internal static var secureIdTranslationHeader: String  { return L10n.tr("Localizable", "SecureId.Translation.Header") }
   /// Upload a front side photo of document
   internal static var secureIdUploadFront: String  { return L10n.tr("Localizable", "SecureId.Upload.Front") }
   /// Upload main page of the document
@@ -3171,6 +3381,14 @@ internal final class L10n {
   internal static var secureIdUploadTitleMainPage: String  { return L10n.tr("Localizable", "SecureId.Upload.Title.MainPage") }
   /// Reverse Side
   internal static var secureIdUploadTitleReverseSide: String  { return L10n.tr("Localizable", "SecureId.Upload.Title.ReverseSide") }
+  /// Upload a scan of %@ or %@
+  internal static func secureIdUploadScanMulti(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SecureId.UploadScan.Multi", p1, p2)
+  }
+  /// Upload a scan of %@
+  internal static func secureIdUploadScanSingle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SecureId.UploadScan.Single", p1)
+  }
   /// Warning! All data saved in your Telegram passport will be lost!
   internal static var secureIdWarningDataLost: String  { return L10n.tr("Localizable", "SecureId.Warning.DataLost") }
   /// clear

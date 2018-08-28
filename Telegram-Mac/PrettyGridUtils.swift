@@ -25,9 +25,9 @@ let kBotInlineTypeFile:String = "file";
 let kBotInlineTypeVoice:String = "voice";
 
 enum InputMediaContextEntry : Equatable {
-    case gif(thumb:TelegramMediaImage?, file:TelegramMediaResource)
+    case gif(thumb: ImageMediaReference?, file: FileMediaReference)
     case photo(image:TelegramMediaImage)
-    case sticker(thumb: TelegramMediaImage?, file:TelegramMediaFile)
+    case sticker(thumb: TelegramMediaImage?, file: TelegramMediaFile)
 
 }
 
@@ -36,12 +36,12 @@ func ==(lhs:InputMediaContextEntry, rhs:InputMediaContextEntry) -> Bool {
     switch lhs {
     case let .gif(lhsData):
         if case let .gif(rhsData) = rhs {
-            if !lhsData.file.isEqual(to: rhsData.file) {
+            if !lhsData.file.media.isEqual(to: rhsData.file.media) {
                 return false
             }
             if (lhsData.thumb == nil) != (lhsData.thumb == nil) {
                 return false
-            } else if let lhsThumb = lhsData.thumb, let rhsThumb = rhsData.thumb, lhsThumb != rhsThumb {
+            } else if let lhsThumb = lhsData.thumb, let rhsThumb = rhsData.thumb, lhsThumb.media != rhsThumb.media {
                 return false
             }
             
@@ -180,7 +180,7 @@ func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSi
     
     while !stickers.isEmpty {
         let sticker = stickers[0]
-        entries.append(.sticker(thumb: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: sticker.file.previewRepresentations, reference: nil), file: sticker.file))
+        entries.append(.sticker(thumb: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: sticker.file.previewRepresentations, reference: nil, partialReference: nil), file: sticker.file))
         sizes.append(NSMakeSize(s, s))
         items.append(sticker)
         if entries.count == perRow {
@@ -199,7 +199,7 @@ func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSi
     return rows
 }
 
-func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [InputMediaContextRow] {
+func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSize:NSSize) -> [InputMediaContextRow] {
     var entries:[InputMediaContextEntry] = []
     var rows:[InputMediaContextRow] = []
 
@@ -215,11 +215,13 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
             switch data.type {
             case kBotInlineTypeGif:
                 if let content = data.content {
-                    var image:TelegramMediaImage? = nil
+                    var image:ImageMediaReference? = nil
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil)
+                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil, partialReference: nil)
+                        image = isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
                     }
-                    entries.append(.gif(thumb: image, file: content.resource))
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], mimeType: "image/gif", size: content.resource.size, attributes: [TelegramMediaFileAttribute.Animated])
+                    entries.append(.gif(thumb: image, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
                 } else {
                     removeResultIndexes.append(i)
                 }
@@ -232,7 +234,7 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
                         representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource))
                     }
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: content.resource))
-                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil)
+                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil, partialReference: nil)
                 }
                 if let image = image {
                     entries.append(.photo(image: image))
@@ -243,9 +245,9 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
                 if let content = data.content {
                     var image:TelegramMediaImage? = nil
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil)
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], reference: nil, partialReference: nil)
                     }
-                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), reference: nil, resource: content.resource, previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: content.attributes)))
+                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: content.attributes)))
                 } else {
                     removeResultIndexes.append(i)
                 }
@@ -257,13 +259,14 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
             case kBotInlineTypeGif:
                 if let file = data.file {
                     dimension = file.videoSize
-                    var thumb: TelegramMediaImage? = nil
+                    var thumb: ImageMediaReference? = nil
                     if let image = data.image {
-                        thumb = image
+                        thumb = ImageMediaReference.standalone(media: image)
                     } else if !file.previewRepresentations.isEmpty {
-                        thumb = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, reference: nil)
+                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, reference: nil, partialReference: nil)
+                        thumb =  isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
                     }
-                    entries.append(.gif(thumb: thumb, file: file.resource))
+                    entries.append(.gif(thumb: thumb, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
                 } else {
                     removeResultIndexes.append(i)
                 }

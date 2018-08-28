@@ -63,7 +63,7 @@ class GlobalBadgeNode: Node {
         }
         
         
-        self.disposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), Void> in
+        self.disposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), NoError> in
             
             return account.postbox.unreadMessageCountsView(items: items) |> map { view in
                 var totalCount:Int32 = 0

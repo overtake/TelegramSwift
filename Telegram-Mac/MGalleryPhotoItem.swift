@@ -27,7 +27,7 @@ class MGalleryPhotoItem: MGalleryItem {
                     let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
-                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil)
+                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil, partialReference: nil)
                     
                 } else {
                     fatalError("image for webpage not found")
@@ -37,7 +37,7 @@ class MGalleryPhotoItem: MGalleryItem {
                     let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
-                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil)
+                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil, partialReference: nil)
                 } else {
                     self.media = entry.message!.media[0] as! TelegramMediaImage
                 }
@@ -68,7 +68,7 @@ class MGalleryPhotoItem: MGalleryItem {
         return NSZeroSize
     }
     
-    override func smallestValue(for size: NSSize) -> Signal<NSSize, Void> {
+    override func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
         if let largest = media.representations.last {
             if let modifiedSize = modifiedSize {
                 let lhsProportion = modifiedSize.width/modifiedSize.height
@@ -83,7 +83,7 @@ class MGalleryPhotoItem: MGalleryItem {
         return .single(pagerSize)
     }
     
-    override var status:Signal<MediaResourceStatus, Void> {
+    override var status:Signal<MediaResourceStatus, NoError> {
         return chatMessagePhotoStatus(account: account, photo: media)
     }
     
@@ -94,18 +94,18 @@ class MGalleryPhotoItem: MGalleryItem {
         let media = self.media
         let secureIdAccessContext = self.secureIdAccessContext
         
-        let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, Void> in
+        let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, NoError> in
             if let strongSelf = self {
                 return strongSelf.smallestValue(for: size)
             }
             return .complete()
-            } |> distinctUntilChanged |> mapToSignal { size -> Signal<CGImage?, Void> in
+            } |> distinctUntilChanged |> mapToSignal { size -> Signal<CGImage?, NoError> in
                 return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext) |> deliverOn(account.graphicsThreadPool) |> map { transform in
                     return transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                 }
         }
         
-        path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, Void> in
+        path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, NoError> in
             if resource.complete {
                 return .single(link(path:resource.path, ext:kMediaImageExt)!)
             }

@@ -484,7 +484,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                     }
                     
                     return account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> take(1) |> mapToSignal { _ in
-                        return Signal<Void, Void>.complete()
+                        return Signal<Void, NoError>.complete()
                     }
             }
             self?.addAdminDisposable.set(applyAdmin.start())
@@ -520,7 +520,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                                             updatedValue = false
                                         }
                                         if let updatedValue = updatedValue {
-                                            return updateGroupManagementType(account: account, peerId: peerId, type: updatedValue ? .unrestricted : .restrictedToAdmins)
+                                            return updateGroupManagementType(account: account, peerId: peerId, type: updatedValue ? .unrestricted : .restrictedToAdmins) |> `catch` { _ in return .complete()}
                                         } else {
                                             return .complete()
                                         }
@@ -615,7 +615,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                     }
                     
                     return account.context.cachedAdminIds.ids(postbox: account.postbox, network: account.network, peerId: peerId) |> take(1) |> mapToSignal { _ in
-                        return Signal<Void, Void>.complete()
+                        return Signal<Void, NoError>.complete()
                     }
             }
             

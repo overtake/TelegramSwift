@@ -503,7 +503,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                     }
                 }
                 |> take(1)
-                |> mapToSignal { result -> Signal<ItemCollectionId, Void> in
+                |> mapToSignal { result -> Signal<ItemCollectionId, NoError> in
                     switch result {
                     case let .result(info, items, _):
                         return addStickerPackInteractively(postbox: account.postbox, info: info, items: items) |> map { info.id }
@@ -663,7 +663,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                     } else {
                         return searchEmojiClue(query: search.request, postbox: account.postbox) |> mapToSignal { clues in
                             if clues.isEmpty {
-                                return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
+                                return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
                                     let update: StickerPacksCollectionUpdate
                                     if firstTime {
                                         firstTime = remote == nil
@@ -689,7 +689,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                                     return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
                                 }
                             } else {
-                                return combineLatest(combineLatest(clues.map({searchStickers(account: account, query: $0.emoji)})), searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, Void>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
+                                return combineLatest(combineLatest(clues.map({searchStickers(account: account, query: $0.emoji)})), searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
                                     var index:Int32 = randomInt32()
                                    //
                                     var sortedStickers:[String : (Int32, [ItemCollectionViewEntry])] = [:]
@@ -770,8 +770,8 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             
             let update: StickerPacksCollectionUpdate = itemsView.1
             
-            let gridEntries = chatMediaInputGridEntries(view: itemsView.0, orderedItemListViews: itemsView.0.0?.orderedItemListsViews, specificPack: specificData.1)
-            let panelEntries = chatMediaInputPanelEntries(view: itemsView.0, orderedItemListViews: itemsView.0.0?.orderedItemListsViews, specificPack: (specificData.1?.0, specificData.0))
+            let gridEntries = chatMediaInputGridEntries(view: itemsView.0, orderedItemListViews: itemsView.0.0?.orderedItemListsViews, specificPack: specificData.1.packInfo)
+            let panelEntries = chatMediaInputPanelEntries(view: itemsView.0, orderedItemListViews: itemsView.0.0?.orderedItemListsViews, specificPack: (specificData.1.packInfo?.0, specificData.0))
             
             let panelEntriesMapped = panelEntries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let gridEntriesMapped = gridEntries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})

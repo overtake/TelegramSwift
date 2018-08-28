@@ -105,7 +105,7 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaVoiceRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, file: item.file).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file)).start())
         }
         open()
     }
@@ -113,7 +113,7 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     
     func cancelFetching() {
         if let item = item as? PeerMediaVoiceRowItem {
-            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, file: item.file)
+            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file))
         }
     }
     

@@ -45,12 +45,14 @@ class ContextStickerRowItem: TableRowItem {
 class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
 
     
-    func fileAtPoint(_ point:NSPoint) -> TelegramMediaFile? {
+    func fileAtPoint(_ point:NSPoint) -> FileMediaReference? {
         if let item = item as? ContextStickerRowItem {
             var i:Int = 0
             for subview in subviews {
                 if point.x > subview.frame.minX && point.x < subview.frame.maxX {
-                    return item.result.results[i].file
+                    let file = item.result.results[i].file
+                    let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
+                    return reference
                 }
                 i += 1
             }
@@ -62,9 +64,9 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
         let menu = NSMenu()
         if let item = item as? ContextStickerRowItem {
             
-            let file = fileAtPoint(convert(event.locationInWindow, from: nil))
+            let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
             
-            if let reference = file?.stickerReference {
+            if let reference = reference?.media.stickerReference {
                 menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
                     showModal(with: StickersPackPreviewModalController.init(item.account, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
                 }))
@@ -108,7 +110,7 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
                     }, for: .LongMouseDown)
                     
                     let view = TransformImageView()
-                    let reference = FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file)
+                    let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
                     view.setSignal( chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor))
                     _ = fileInteractiveFetched(account: item.account, fileReference: reference).start()
                     

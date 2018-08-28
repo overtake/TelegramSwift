@@ -102,7 +102,7 @@ class ChatGIFContentView: ChatMediaContentView {
         player.set(path: accept ? path : nil)
         progressView?.isHidden = !FastSettings.gifsAutoPlay && canPlayForce
         
-       /* var s:Signal<Void, Void> = .single()
+       /* var s:Signal<Void, NoError> = .single()
         s = s |> delay(0.01, queue: Queue.mainQueue())
         playerDisposable.set(s.start(next: {[weak self] (next) in
             if let strongSelf = self {
@@ -139,7 +139,7 @@ class ChatGIFContentView: ChatMediaContentView {
     }
     
     override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
+        let mediaUpdated = self.media == nil || !self.media!.isEqual(to: media)
         
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
@@ -175,7 +175,7 @@ class ChatGIFContentView: ChatMediaContentView {
                 
                 path = nil
                                 
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
                 let reference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)

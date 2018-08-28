@@ -341,18 +341,18 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             
             return true
         }))
-//        actualizeDisposable.set((actualizedWebpage(postbox: account.postbox, network: account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
-//            switch webpage.content {
-//            case .Loaded(let content):
-//                if content.instantPage != nil {
-//                    self?.webPage = webpage
-//                    self?.reloadData()
-//                }
-//            default:
-//                break
-//            }
-//            
-//        }))
+        actualizeDisposable.set((actualizedWebpage(postbox: account.postbox, network: account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
+            switch webpage.content {
+            case .Loaded(let content):
+                if content.instantPage != nil {
+                    self?.webPage = webpage
+                    self?.reloadData()
+                }
+            default:
+                break
+            }
+            
+        }))
 
     }
 	

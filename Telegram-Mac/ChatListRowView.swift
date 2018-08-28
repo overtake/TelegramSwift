@@ -470,6 +470,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         }
         
         containerView.needsDisplay = true
+        needsDisplay = true
     }
     
     func initSwipingState() {
@@ -530,6 +531,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         swipingRightView.addSubview(mute)
         swipingRightView.addSubview(delete)
         
+
+        
+        swipingLeftView.backgroundColor = item.markAsUnread ? theme.chatList.badgeBackgroundColor : theme.colors.grayForeground
+        swipingRightView.backgroundColor = theme.colors.redUI
+        
         pin.setFrameSize(frame.height, frame.height)
         mute.setFrameSize(frame.height, frame.height)
         delete.setFrameSize(frame.height, frame.height)
@@ -538,11 +544,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         delete.setFrameOrigin(mute.frame.maxX, 0)
         
         
+        swipingRightView.setFrameSize(rightSwipingWidth, frame.height)
+        swipingLeftView.setFrameSize(leftSwipingWidth, frame.height)
+
         unread.set(color: .white, for: .Normal)
         unread.set(font: .normal(.text), for: .Normal)
         unread.set(text: !item.markAsUnread ? L10n.chatListSwipingRead : L10n.chatListSwipingUnread, for: .Normal)
         unread.set(image: !item.markAsUnread ? theme.icons.chatSwiping_read : theme.icons.chatSwiping_unread, for: .Normal)
-        unread.set(background: item.markAsUnread ? theme.chatList.badgeBackgroundColor : theme.chatList.badgeMutedBackgroundColor, for: .Normal)
+        unread.set(background: item.markAsUnread ? theme.chatList.badgeBackgroundColor : theme.colors.grayForeground, for: .Normal)
         _ = unread.sizeToFit(NSZeroSize, NSMakeSize(frame.height, frame.height), thatFit: true)
         
         
@@ -589,9 +598,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         if let state = endSwipingState {
             switch state {
             case .left:
-                additionalDelta = -swipingLeftView.frame.width
+                additionalDelta = -leftSwipingWidth
             case .right:
-                additionalDelta = swipingRightView.frame.width
+                additionalDelta = rightSwipingWidth
             case .none:
                 additionalDelta = 0
             }
@@ -606,34 +615,90 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
     }
 
     var rightSwipingWidth: CGFloat {
-        return swipingRightView.frame.width
+        return swipingRightView.subviewsSize.width
     }
     
     var leftSwipingWidth: CGFloat {
-        return swipingLeftView.frame.width
+        return swipingLeftView.subviewsSize.width
     }
     
+    private var animateOnceAfterDelta: Bool = true
     func moveSwiping(delta: CGFloat) {
+        
+        if swipingLeftView.subviews.isEmpty || swipingRightView.subviews.isEmpty {
+            initSwipingState()
+        }
       
         let delta = delta - additionalSwipingDelta
         
         
         containerView.change(pos: NSMakePoint(delta, containerView.frame.minY), animated: false)
         swipingLeftView.change(pos: NSMakePoint(min(-frame.height + delta, 0), swipingLeftView.frame.minY), animated: false)
-        swipingRightView.change(pos: NSMakePoint(max(frame.width + delta, frame.width - frame.height * 3), swipingRightView.frame.minY), animated: false)
+        swipingRightView.change(pos: NSMakePoint(frame.width + delta, swipingRightView.frame.minY), animated: false)
         
-        var rightPercent: CGFloat = delta / swipingRightView.frame.width
+        
+        swipingLeftView.change(size: NSMakeSize(max(leftSwipingWidth, delta), swipingLeftView.frame.height), animated: false)
+        
+        swipingRightView.change(size: NSMakeSize(max(rightSwipingWidth, abs(delta)), swipingRightView.frame.height), animated: false)
+
+        
+        if delta > 0 {
+            let action = swipingLeftView.subviews[0]
+            if delta > frame.width / 2 {
+                
+                if animateOnceAfterDelta {
+                    animateOnceAfterDelta = false
+                    action.layer?.animatePosition(from: NSMakePoint(-(swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                }
+                action.setFrameOrigin(NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY))
+            } else {
+                if !animateOnceAfterDelta {
+                    animateOnceAfterDelta = true
+                    action.layer?.animatePosition(from: NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                }
+                action.setFrameOrigin(NSMakePoint(0, action.frame.minY))
+                
+            }
+        }
+        
+      
+        
+        
+        var rightPercent: CGFloat = delta / rightSwipingWidth
         if rightPercent < 0 {
             rightPercent = 1 - min(1, abs(rightPercent))
             let subviews = swipingRightView.subviews
             subviews[0].setFrameOrigin(0, 0)
             subviews[1].setFrameOrigin(subviews[0].frame.width - subviews[1].frame.width * rightPercent, 0)
-            subviews[2].setFrameOrigin((subviews[0].frame.width * 2) - (subviews[2].frame.width * 2) * rightPercent, 0)
+            
+            let action = subviews[2]
+            
+            if rightPercent == 0 , delta < 0 {
+                if delta + subviews[1].frame.maxX < -frame.midX {
+                    if animateOnceAfterDelta {
+                        animateOnceAfterDelta = false
+                        action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                    }
+                    action.setFrameOrigin(NSMakePoint(subviews[1].frame.maxX, action.frame.minY))
+                } else {
+                    if !animateOnceAfterDelta {
+                        animateOnceAfterDelta = true
+                        action.layer?.animatePosition(from: NSMakePoint(-(swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                    }
+                    action.setFrameOrigin(NSMakePoint((swipingRightView.frame.width - action.frame.width), action.frame.minY))
+                }
+            } else {
+                subviews[2].setFrameOrigin((subviews[0].frame.width * 2) - (subviews[2].frame.width * 2) * rightPercent, 0)
+            }
         }
     }
     
     func completeSwiping(direction: SwipeDirection) {
         self.endSwipingState = direction
+        
+        if swipingLeftView.subviews.isEmpty || swipingRightView.subviews.isEmpty {
+            initSwipingState()
+        }
         
          CATransaction.begin()
         
@@ -645,11 +710,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
             subviews[2]._change(pos: NSMakePoint(subviews[0].frame.width * 2, 0), animated: animated)
         }
         
-        let failed:()->Void = { [weak self] in
+        let failed:(@escaping(Bool)->Void)->Void = { [weak self] completion in
             guard let `self` = self else {return}
             self.containerView.change(pos: NSMakePoint(0, self.containerView.frame.minY), animated: true)
-            self.swipingLeftView.change(pos: NSMakePoint(-self.swipingLeftView.frame.width, self.swipingLeftView.frame.minY), animated: true)
-            self.swipingRightView.change(pos: NSMakePoint(self.frame.width, self.swipingRightView.frame.minY), animated: true)
+            self.swipingLeftView.change(pos: NSMakePoint(-self.leftSwipingWidth, self.swipingLeftView.frame.minY), animated: true)
+            self.swipingRightView.change(pos: NSMakePoint(self.frame.width, self.swipingRightView.frame.minY), animated: true, completion: completion)
             
            updateRightSubviews(true)
             
@@ -663,30 +728,54 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         case let .left(state):
             switch state {
             case .success:
-                containerView.change(pos: NSMakePoint(swipingLeftView.frame.width, containerView.frame.minY), animated: true)
-                swipingLeftView.change(pos: NSMakePoint(0, swipingLeftView.frame.minY), animated: true)
+                
+                let invokeLeftAction = containerX > frame.midX
+
+                
+                containerView.change(pos: NSMakePoint(leftSwipingWidth, containerView.frame.minY), animated: true)
+                swipingLeftView.change(pos: NSMakePoint(0, swipingLeftView.frame.minY), animated: true, completion: { [weak self] completed in
+                    if completed, invokeLeftAction {
+                        (self?.swipingLeftView.subviews.first as? Control)?.send(event: .Click)
+                    }
+                })
+                swipingLeftView.change(size: NSMakeSize(leftSwipingWidth, swipingLeftView.frame.height), animated: true)
                 swipingRightView.change(pos: NSMakePoint(frame.width, swipingRightView.frame.minY), animated: true)
                 updateRightSubviews(true)
             case .failed:
-                failed()
+                failed({_ in})
             default:
                 break
             }
         case let .right(state):
             switch state {
             case .success:
-                containerView.change(pos: NSMakePoint(-swipingRightView.frame.width, containerView.frame.minY), animated: true)
-                swipingLeftView.change(pos: NSMakePoint(-swipingLeftView.frame.width, swipingLeftView.frame.minY), animated: true)
-                swipingRightView.change(pos: NSMakePoint(frame.width - swipingRightView.frame.width, swipingRightView.frame.minY), animated: true)
+                
+                let invokeRightAction = containerX + swipingRightView.subviews[1].frame.maxX < -frame.midX//delta + subviews[1].frame.maxX < -frame.midX
+                if invokeRightAction {
+                    failed({ [weak self] completed in
+                        if invokeRightAction {
+                            (self?.swipingRightView.subviews.last as? Control)?.send(event: .Click)
+                        }
+                    })
+                } else {
+                    swipingRightView.change(pos: NSMakePoint(frame.width - rightSwipingWidth, swipingRightView.frame.minY), animated: true)
+                    containerView.change(pos: NSMakePoint(-rightSwipingWidth, containerView.frame.minY), animated: true)
+                    swipingLeftView.change(pos: NSMakePoint(-leftSwipingWidth, swipingLeftView.frame.minY), animated: true)
+                    
+                }
+                
+                
+                
+                
                 updateRightSubviews(true)
             case .failed:
-                failed()
+                failed({_ in})
             default:
                 break
             }
         default:
             self.endSwipingState = nil
-            failed()
+            failed({_ in})
         }
         
         CATransaction.commit()
@@ -710,9 +799,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         if let state = endSwipingState {
             switch state {
             case .left:
-                additionalDelta = -swipingLeftView.frame.width
+                additionalDelta = -leftSwipingWidth
             case .right:
-                additionalDelta = swipingRightView.frame.width
+                additionalDelta = rightSwipingWidth
             case .none:
                 additionalDelta = 0
             }
@@ -721,8 +810,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         }
         
         containerView.frame = NSMakeRect(-additionalDelta, 0, frame.width - .borderSize, frame.height)
-        swipingLeftView.frame = NSMakeRect(-frame.height - additionalDelta, 0, frame.height, frame.height)
-        swipingRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, frame.height * 3, frame.height)
+        swipingLeftView.frame = NSMakeRect(-frame.height - additionalDelta, 0, leftSwipingWidth, frame.height)
+        swipingRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightSwipingWidth, frame.height)
 
     }
     

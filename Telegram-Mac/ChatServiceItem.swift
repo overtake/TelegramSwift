@@ -42,7 +42,7 @@ class ChatServiceItem: ChatRowItem {
                     return theme.chat.peerName(value)
                 }
             }
-            return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
+            return theme.chat.linkColor(isIncoming, false)
         }
         
         
@@ -317,7 +317,7 @@ class ChatServiceItem: ChatRowItem {
         return ChatServiceRowView.self
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         
         var items:[ContextMenuItem] = []
         let chatInteraction = self.chatInteraction

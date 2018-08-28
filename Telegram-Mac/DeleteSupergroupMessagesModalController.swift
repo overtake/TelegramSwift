@@ -153,7 +153,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
     }
     
     private func perform() {
-        var signals:[Signal<Void, Void>] = [deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forEveryone)]
+        var signals:[Signal<Void, NoError>] = [deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forEveryone)]
         if options.contains(.banUser) {
             signals.append(removePeerMember(account: account, peerId: peerId, memberId: memberId))
         }

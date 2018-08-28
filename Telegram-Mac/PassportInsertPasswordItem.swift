@@ -35,12 +35,12 @@ class PassportInsertPasswordItem: GeneralRowItem {
     fileprivate let checkPasswordAction:((String, ()->Void))->Void
     fileprivate let forgotPassword: ()->Void
     fileprivate let hasRecoveryEmail: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, checkPasswordAction: @escaping((String, ()->Void))->Void, forgotPassword: @escaping()->Void, hasRecoveryEmail: Bool, isSettings: Bool) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, checkPasswordAction: @escaping((String, ()->Void))->Void, forgotPassword: @escaping()->Void, hasRecoveryEmail: Bool, isSettings: Bool, error: String?) {
         self._stableId = stableId
         self.checkPasswordAction = checkPasswordAction
         self.forgotPassword = forgotPassword
         self.hasRecoveryEmail = hasRecoveryEmail
-        descLayout = TextViewLayout(.initialize(string: isSettings ? L10n.secureIdInsertPasswordSettingsDescription : L10n.secureIdInsertPasswordDescription, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        descLayout = TextViewLayout(.initialize(string: error != nil ? error! : (isSettings ? L10n.secureIdInsertPasswordSettingsDescription : L10n.secureIdInsertPasswordDescription), color: error != nil ? theme.colors.redUI : theme.colors.grayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -65,7 +65,7 @@ class PassportInsertPasswordItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return descLayout.layoutSize.height + 36 + 20 + 30 + 25
+        return 32 + 36 + 20 + 30 + 25
     }
 }
 
@@ -153,7 +153,7 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         input.setFrameSize(NSMakeSize(inputContainer.frame.width - 20 - forgotPassword.frame.width - 10, input.frame.height))
         input.centerY(x: 10)
         descTextView.centerX()
-        inputContainer.centerX(y: descTextView.frame.maxY + 20)
+        inputContainer.centerX(y: 32 + 20)
         nextButton.centerX(y: inputContainer.frame.maxY + 15)
         forgotPassword.centerY(x: inputContainer.frame.width - forgotPassword.frame.width - 10, addition: backingScaleFactor == 2 ? -0.5 : 0)
     }

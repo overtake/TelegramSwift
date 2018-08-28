@@ -113,18 +113,18 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
             }
             
-            let updateTitle: Signal<Void, Void>
+            let updateTitle: Signal<Void, NoError>
             if let titleValue = updateValues.title {
                 updateTitle = updatePeerTitle(account: account, peerId: peerId, title: titleValue)
-                    |> mapError { _ in return Void() } |> `catch` {_ in return .complete()}
+                     |> `catch` {_ in return .complete()}
             } else {
                 updateTitle = .complete()
             }
             
-            let updateDescription: Signal<Void, Void>
+            let updateDescription: Signal<Void, NoError>
             if let descriptionValue = updateValues.description {
                 updateDescription = updatePeerDescription(account: account, peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
-                    |> mapError { _ in return Void() } |> `catch` {_ in return .complete()}
+                     |> `catch` {_ in return .complete()}
             } else {
                 updateDescription = .complete()
             }
@@ -178,10 +178,9 @@ final class GroupInfoArguments : PeerInfoArguments {
     func preHistorySetup() {
         let setup = PreHistorySettingsController(account, peerId: peerId)
         _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] enabled in
-            if let strongSelf = self {
-                _ = showModalProgress(signal: updateChannelHistoryAvailabilitySettingsInteractively(postbox: strongSelf.account.postbox, network: strongSelf.account.network, peerId: strongSelf.peerId, historyAvailableForNewMembers: enabled), for: mainWindow).start()
-                
-            }
+            guard let `self` = self else {return}
+            _ = showModalProgress(signal: updateChannelHistoryAvailabilitySettingsInteractively(postbox: self.account.postbox, network: self.account.network, accountStateManager: self.account.stateManager, peerId: self.peerId, historyAvailableForNewMembers: enabled), for: mainWindow).start()
+
         })
         pushViewController(setup)
     }
@@ -218,7 +217,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
-        let updateSignal = Signal<String, Void>.single(path) |> map { path -> TelegramMediaResource in
+        let updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
             } |> beforeNext { resource in
                 
@@ -229,7 +228,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
                 
             } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                return  updatePeerPhoto(account: account, peerId: peerId, photo: uploadedPeerPhoto(account: account, resource: resource))
+                return  updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
         }
         
         
@@ -263,7 +262,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let updateState:((GroupInfoState)->GroupInfoState)->Void = { [weak self] f in
             self?.updateState(f)
         }
-        let confirmationImpl:([PeerId])->Signal<Bool,Void> = { peerIds in
+        let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
                     return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMember(peer.displayTitle)))
@@ -273,7 +272,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
         
         
-        let addMember = account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<Void, Void> in
+        let addMember = account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<Void, NoError> in
             
             var excludePeerIds:[PeerId] = []
             if let cachedData = view.cachedData as? CachedChannelData {

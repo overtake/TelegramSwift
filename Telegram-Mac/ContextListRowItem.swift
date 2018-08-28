@@ -20,7 +20,7 @@ class ContextListRowItem: TableRowItem {
     let results:ChatContextResultCollection
     private let _index:Int64
     let account:Account
-    let iconSignal:Signal<(TransformImageArguments)->DrawingContext?,Void>
+    let iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>
     let arguments:TransformImageArguments?
     var textLayout:(TextNodeLayout, TextNode)?
     let capImage:CGImage?
@@ -44,7 +44,7 @@ class ContextListRowItem: TableRowItem {
         switch result {
             //    case externalReference(id: String, type: String, title: String?, description: String?, url: String?, content: TelegramMediaWebFile?, thumbnail: TelegramMediaWebFile?, message: ChatContextResultMessage)
 
-        case let .externalReference(_, type, title, description, url, content, thumbnail, _):
+        case let .externalReference(_, _, type, title, description, url, content, thumbnail, _):
             if let thumbnail = thumbnail {
                 representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(50, 50), resource: thumbnail.resource)
             }
@@ -65,7 +65,7 @@ class ContextListRowItem: TableRowItem {
                     iconText = NSAttributedString.initialize(string: host.substring(to: host.index(after: host.startIndex)).uppercased(), color: .white, font: .medium(25.0))
                 }
             }
-        case let .internalReference(_, _, title, description, image, file, _):
+        case let .internalReference(_, _, _, title, description, image, file, _):
             if let file = file {
                 fileResource = file.resource
                 if file.isMusic || file.isVoice {
@@ -85,7 +85,7 @@ class ContextListRowItem: TableRowItem {
         
         
         if let representation = representation {
-            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil)
+            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil, partialReference: nil)
             iconSignal = chatWebpageSnippetPhoto(account: account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
             
             let iconSize = representation.dimensions.aspectFilled(CGSize(width: 50, height: 50))

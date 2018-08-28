@@ -134,7 +134,7 @@ struct NotificationSettingsInteractions {
     let showToneOptions:() -> Void
 }
 
-fileprivate func prepareEntries(from:NotificationsSettingsList?, to:NotificationsSettingsList, account:Account, interactions:NotificationSettingsInteractions, searchInteractions:SearchInteractions, initialSize:NSSize, animated:Bool) -> Signal<TableEntriesTransition<NotificationsSettingsList>,Void> {
+fileprivate func prepareEntries(from:NotificationsSettingsList?, to:NotificationsSettingsList, account:Account, interactions:NotificationSettingsInteractions, searchInteractions:SearchInteractions, initialSize:NSSize, animated:Bool) -> Signal<TableEntriesTransition<NotificationsSettingsList>, NoError> {
     
     return Signal {   subscriber in
         
@@ -262,12 +262,12 @@ class NotificationSettingsViewController: TableViewController {
         
         let first = Atomic(value:true)
 
-        let list:Signal<TableEntriesTransition<NotificationsSettingsList>,Void> = (combineLatest(request.get() |> distinctUntilChanged, search.get() |> distinctUntilChanged) |> mapToSignal { (location, search) -> Signal<TableEntriesTransition<NotificationsSettingsList>,Void> in
+        let list:Signal<TableEntriesTransition<NotificationsSettingsList>, NoError> = (combineLatest(request.get() |> distinctUntilChanged, search.get() |> distinctUntilChanged) |> mapToSignal { (location, search) -> Signal<TableEntriesTransition<NotificationsSettingsList>,NoError> in
             
-            var signal:Signal<ChatListView,Void>
+            var signal:Signal<ChatListView,NoError>
             
             
-            let mappedEntries:Signal<[NotificationSettingsEntry],Void>
+            let mappedEntries:Signal<[NotificationSettingsEntry],NoError>
             
             if search.request.isEmpty || search.state == .None {
                 
@@ -312,9 +312,9 @@ class NotificationSettingsViewController: TableViewController {
                         })
                 }
                 
-                mappedEntries = foundLocalPeers |> mapToSignal { peers -> Signal<[NotificationSettingsEntry], Void> in
+                mappedEntries = foundLocalPeers |> mapToSignal { peers -> Signal<[NotificationSettingsEntry], NoError> in
                     
-                    return combineLatest(peers.map { peer -> Signal<TelegramPeerNotificationSettings?, Void> in
+                    return combineLatest(peers.map { peer -> Signal<TelegramPeerNotificationSettings?, NoError> in
                         
                         return account.postbox.transaction { transaction -> TelegramPeerNotificationSettings? in
                             return transaction.getPeerNotificationSettings(peer.id) as? TelegramPeerNotificationSettings
@@ -339,7 +339,7 @@ class NotificationSettingsViewController: TableViewController {
                     inAppSettings = InAppNotificationSettings.defaultSettings
                 }
                 return NotificationsSettingsList(list: (simpleEntries(inAppSettings, filter: filter) + value).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}.sorted(by: <), settings: inAppSettings)
-            } |> mapToQueue { value -> Signal<TableEntriesTransition<NotificationsSettingsList>, Void> in
+            } |> mapToQueue { value -> Signal<TableEntriesTransition<NotificationsSettingsList>, NoError> in
                 return prepareEntries(from: previous.modify {$0}, to: value, account: account, interactions:interactions, searchInteractions: searchInteractions, initialSize: initialSize.modify({$0}), animated: !first.swap(false))
             }
 

@@ -1546,7 +1546,7 @@ private func imageFromAJpeg(data: Data) -> (CGImage, CGImage)? {
 }
 
 
-public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String,Void> {
+public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, NoError> {
     return Signal { (subscriber) in
 
         
@@ -1570,7 +1570,7 @@ public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String,Voi
 
 
 public func filethumb(with url:URL, account:Account, scale:CGFloat) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
-    return Signal<Data?,Void> { (subscriber) in
+    return Signal<Data?, NoError> { (subscriber) in
         
         let data = try? Data(contentsOf: url)
         

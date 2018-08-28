@@ -85,7 +85,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         if let fileResource = fileResource {
             
            let signal = combineLatest(account.postbox.mediaBox.resourceData(fileResource), resourceType(mimeType: mimeType))
-                |> mapToSignal({ (data) -> Signal<(String?,String?), Void> in
+                |> mapToSignal({ (data) -> Signal<(String?,String?), NoError> in
                 return .single((data.0.path,data.1))
             })
             |> deliverOnMainQueue

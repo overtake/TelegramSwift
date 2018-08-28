@@ -27,14 +27,14 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         return NSZeroSize
     }
     
-    override func smallestValue(for size: NSSize) -> Signal<NSSize, Void> {
+    override func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
         if let largest = media.representations.last {
             return .single(largest.dimensions.fitted(size))
         }
         return .single(pagerSize)
     }
     
-    override var status:Signal<MediaResourceStatus, Void> {
+    override var status:Signal<MediaResourceStatus, NoError> {
         return chatMessagePhotoStatus(account: account, photo: media)
     }
     
@@ -45,22 +45,22 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         let media = self.media
         let entry = self.entry
         
-        let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, Void> in
+        let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, NoError> in
             if let strongSelf = self {
                 return strongSelf.smallestValue(for: size)
             }
             return .complete()
-        } |> distinctUntilChanged |> mapToSignal { size -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments), Void> in
+        } |> distinctUntilChanged |> mapToSignal { size -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments), NoError> in
                 return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
                     return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                 }
-        } |> mapToThrottled { (transform, arguments) -> Signal<CGImage?, Void> in
+        } |> mapToThrottled { (transform, arguments) -> Signal<CGImage?, NoError> in
                 return .single(transform(arguments)?.generateImage())
         }
         
 
         if let representation = media.representations.last {
-            path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, Void> in
+            path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
                 
                 if resource.complete {
                     return .single(link(path:resource.path, ext:kMediaImageExt)!)

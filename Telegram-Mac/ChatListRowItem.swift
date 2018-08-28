@@ -370,9 +370,10 @@ class ChatListRowItem: TableRowItem {
         super.init(initialSize)
         
         if let unreadCount = readState?.count, unreadCount > 0, mentionsCount == nil || (unreadCount > 1 || mentionsCount! != unreadCount)  {
-            
-            badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
-            badgeSelectedNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
+            if account.peerId != peerId {
+                badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
+                badgeSelectedNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
+            }
         } else if isUnreadMarked && mentionsCount == nil {
             badgeNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
             badgeSelectedNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
@@ -442,7 +443,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     func delete() {
-        let signal = removeChatInteractively(account: account, peerId: peerId, userId: peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, Void> in
+        let signal = removeChatInteractively(account: account, peerId: peerId, userId: peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
             return globalPeerHandler.get() |> take(1)
             } |> deliverOnMainQueue
         
@@ -453,7 +454,7 @@ class ChatListRowItem: TableRowItem {
         }))
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], Void> {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
 
         if let peer = peer {

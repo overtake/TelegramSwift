@@ -213,7 +213,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, {$0.withUpdatedUseForCalls(enable)}).start())
         })
         
-        let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)}, title: L10n.proxySettingsTitle, validateData: {
+        let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)}, title: L10n.proxySettingsTitle, validateData: {
             data in
             
             if data[_p_id_add] != nil {
@@ -280,7 +280,7 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
     
     weak var _controller: ViewController?
     
-    let controller = InputDataController(dataSignal: statePromise.get() |> deliverOnPrepareQueue |> map { state in
+    let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
         return addProxySettingsEntries(state: state)
     }, title: title, validateData: { data -> InputDataValidation in
             if data[_id_export] != nil {

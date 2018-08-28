@@ -82,7 +82,7 @@ public class SwitchView: Control {
         
         self.set(handler: { [weak self] control in
             if let strongSelf = self {
-                strongSelf.disposable.set((Signal<Void, Void>.single(Void()) |> delay(0.1, queue: Queue.mainQueue())).start(next: { [weak strongSelf] in
+                strongSelf.disposable.set((Signal<Void, NoError>.single(Void()) |> delay(0.1, queue: Queue.mainQueue())).start(next: { [weak strongSelf] in
                     if let strongSelf = strongSelf, let stateChanged = strongSelf.stateChanged, strongSelf.isEnabled  {
                         stateChanged()
                     }

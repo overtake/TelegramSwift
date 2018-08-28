@@ -203,7 +203,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         
         let previous: Atomic<[ValuesSelectorEntry<T>]> = Atomic(value: [])
         
-        let signal: Signal<TableUpdateTransition, Void> = combineLatest(statePromise.get() |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> map { state, search in
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(statePromise.get() |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> map { state, search in
             
             var entries:[ValuesSelectorEntry<T>] = []
             var index: Int32 = 0

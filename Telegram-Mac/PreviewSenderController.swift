@@ -394,7 +394,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.updateSize(self.frame.width, animated: true)
         }
         
-        let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), Void> in
+        let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), NoError> in
             if let cached = self?.cachedMedia[state], cached.media.count == urls.count {
                 return .single((cached.media, cached.items, state))
             } else if state == .collage {

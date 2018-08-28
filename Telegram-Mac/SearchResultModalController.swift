@@ -107,7 +107,7 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
         super.init(frame: NSMakeRect(0, 0, 300, 360))
     }
     
-    init(_ account:Account, request:Signal<[Message],Void>, query:String, chatInteraction:ChatInteraction) {
+    init(_ account:Account, request:Signal<[Message], NoError>, query:String, chatInteraction:ChatInteraction) {
         self.account = account
         self.query = query
         promise.set(request)

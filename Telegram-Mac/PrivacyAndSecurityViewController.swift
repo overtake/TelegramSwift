@@ -506,7 +506,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         }
         
 
-        let proxySettings:Signal<ProxySettings, Void> = proxySettingsSignal(account.postbox)
+        let proxySettings:Signal<ProxySettings, NoError> = proxySettingsSignal(account.postbox)
 
         let currentInfoDisposable = MetaDisposable()
         actionsDisposable.add(currentInfoDisposable)
@@ -717,7 +717,7 @@ class PrivacyAndSecurityViewController: TableViewController {
 //                pushControllerImpl(controller)
             }
         }, togglePeerSuggestions: { enabled in
-            _ = (updateRecentPeersEnabled(postbox: account.postbox, network: account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(postbox: account.postbox, network: account.network) : Signal<Void, Void>.complete())).start()
+            _ = (updateRecentPeersEnabled(postbox: account.postbox, network: account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(postbox: account.postbox, network: account.network) : Signal<Void, NoError>.complete())).start()
         })
         
         

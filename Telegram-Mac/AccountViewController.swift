@@ -616,18 +616,20 @@ class LayoutAccountController : TableViewController {
         super.viewWillAppear(animated)
         let account = self.account
         
+        
+        
+        settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: account.network) |> map {Optional($0)}), proxySettingsSignal(account.postbox) |> mapToSignal { settings in
+            return account.network.connectionStatus |> map {(settings, $0)}
+        }, passportPromise.get()))
+        
         passportPromise.set(twoStepAuthData(account.network) |> map { value in
             return value.hasSecretValues
-        } |> `catch` { error -> Signal<Bool, NoError> in
-            return .single(false)
+            } |> `catch` { error -> Signal<Bool, NoError> in
+                return .single(false)
         })
         
-        settings.set(combineLatest(Signal<AccountPrivacySettings?, Void>.single(nil) |> then(requestAccountPrivacySettings(account: account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, Void>.single(nil) |> then(webSessions(network: account.network) |> map {Optional($0)}), proxySettingsSignal(account.postbox) |> mapToSignal { settings in
-            return account.network.connectionStatus |> map {(settings, $0)}
-            }, passportPromise.get()))
-        
-        languages.set(Signal<[LocalizationInfo]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
-        blockedPeers.set(Signal<[Peer]?, Void>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))
+        languages.set(Signal<[LocalizationInfo]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
+        blockedPeers.set(Signal<[Peer]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))
     }
     
     override func getLeftBarViewOnce() -> BarView {

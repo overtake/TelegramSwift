@@ -804,7 +804,7 @@ final class MediaPlayer {
     
     private let timebasePromise:Promise<CMTimebase?> = Promise()
     
-    var timebase: Signal<CMTimebase?, Void> {
+    var timebase: Signal<CMTimebase?, NoError> {
         return timebasePromise.get()
     }
     

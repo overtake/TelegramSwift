@@ -284,7 +284,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
+        let mediaUpdated = self.media == nil || !self.media!.isEqual(to: media)
         
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
@@ -306,8 +306,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 
                 player.layer?.cornerRadius = size.height / 2
                 path = nil
-                
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil)
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
                 
                 player.setSignal( chatMessagePhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor))

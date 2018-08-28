@@ -901,7 +901,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func doubleClick(in location: NSPoint) {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
-            if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == replyView {
+            if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {
                         return

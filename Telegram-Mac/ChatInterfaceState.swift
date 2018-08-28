@@ -537,7 +537,7 @@ final class ChatEditState : Equatable {
     }
     
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
-        return ChatEditState(message: self.message.withUpdatedMedia([media]), state: self.inputState, loadingState: loadingState, editMedia: .update(media))
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)))
     }
     
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {

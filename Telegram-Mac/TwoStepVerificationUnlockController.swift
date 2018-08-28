@@ -215,7 +215,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                             text += "\n\n"
                             text += L10n.secureIdWarningDataLost
                         }
-                        return confirmSignal(for: mainWindow, information: text) |> mapError {UpdateTwoStepVerificationPasswordError.generic} |> mapToSignal { value -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
+                        return confirmSignal(for: mainWindow, information: text) |> introduceError(UpdateTwoStepVerificationPasswordError.self) |> mapToSignal { value -> Signal<Void, UpdateTwoStepVerificationPasswordError> in
                             
                             if value {
                                 var disablePassword = false

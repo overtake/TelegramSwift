@@ -487,9 +487,9 @@ class ChannelEventFilterModalController: ModalViewController {
         let previous: Atomic<[ChannelEventFilterEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let adminsSignal = Signal<[RenderedChannelParticipant], Void>.single(admins)
+        let adminsSignal = Signal<[RenderedChannelParticipant], NoError>.single(admins)
         let updatedSize:Atomic<Bool> = Atomic(value: false)
-        let signal:Signal<TableUpdateTransition, Void> = combineLatest(statePromise.get(), account.postbox.loadedPeerWithId(peerId), adminsSignal) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
+        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(statePromise.get(), account.postbox.loadedPeerWithId(peerId), adminsSignal) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
             
             let state = stateValue.swap(state.withUpdatedAllAdmins(Set(admins.map {$0.peer.id})).withUpdatedAllEvents(Set(eventFilters(peer.isChannel))))
             

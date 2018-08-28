@@ -648,7 +648,7 @@ extension ChatLocation {
     var postboxViewKey: PostboxViewKey {
         switch self {
         case let .peer(peerId):
-            return .peer(peerId: peerId)
+            return .peer(peerId: peerId, components: [])
         case let .group(groupId):
             return .chatListTopPeers(groupId: groupId)
         }
@@ -1116,7 +1116,7 @@ extension SentSecureValueType {
         case .passport:
             return L10n.secureIdRequestPermissionPassport
         case .address:
-            return L10n.secureIdRequestPermissionAddress
+            return L10n.secureIdRequestPermissionResidentialAddress
         case .personalDetails:
             return L10n.secureIdRequestPermissionPersonalDetails
         case .driversLicense:
@@ -1124,7 +1124,7 @@ extension SentSecureValueType {
         case .utilityBill:
             return L10n.secureIdRequestPermissionUtilityBill
         case .rentalAgreement:
-            return L10n.secureIdRequestPermissionRentalAgreement
+            return L10n.secureIdRequestPermissionTenancyAgreement
         case .idCard:
             return L10n.secureIdRequestPermissionIDCard
         case .bankStatement:
@@ -1169,8 +1169,66 @@ extension SecureIdGender {
     }
 }
 
+extension SecureIdRequestedFormField {
+    var isIdentityField: Bool {
+        switch self {
+        case let .just(field):
+            switch field {
+            case .idCard, .passport, .driversLicense, .internalPassport:
+                return true
+            default:
+                return false
+            }
+        case let .oneOf(fields):
+            switch fields[0] {
+            case .idCard, .passport, .driversLicense, .internalPassport:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+    
+    var valueKey: SecureIdValueKey? {
+        switch self {
+        case let .just(field):
+            return field.valueKey
+        default:
+            return nil
+        }
+    }
+    
+    var fieldValue: SecureIdRequestedFormFieldValue? {
+        switch self {
+        case let .just(field):
+            return field
+        default:
+            return nil
+        }
+    }
+    
+    var isAddressField: Bool {
+        switch self {
+        case let .just(field):
+            switch field {
+            case .utilityBill, .bankStatement, .rentalAgreement, .passportRegistration, .temporaryRegistration:
+                return true
+            default:
+                return false
+            }
+        case let .oneOf(fields):
+            switch fields[0] {
+            case .utilityBill, .bankStatement, .rentalAgreement, .passportRegistration, .temporaryRegistration:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+}
+
 extension SecureIdForm {
-    func searchContext(for field: SecureIdRequestedFormField) -> SecureIdValueWithContext? {
+    func searchContext(for field: SecureIdRequestedFormFieldValue) -> SecureIdValueWithContext? {
          let index = values.index(where: { context -> Bool in
             switch context.value {
             case .address:
@@ -1429,6 +1487,31 @@ extension SecureIdValue {
         }
     }
     
+    var translations: [SecureIdVerificationDocumentReference]? {
+        switch self {
+        case let .passport(value):
+            return value.translations
+        case let .idCard(value):
+            return value.translations
+        case let .driversLicense(value):
+            return value.translations
+        case let .internalPassport(value):
+            return value.translations
+        case let .utilityBill(value):
+            return value.translations
+        case let .rentalAgreement(value):
+            return value.translations
+        case let .temporaryRegistration(value):
+            return value.translations
+        case let .passportRegistration(value):
+            return value.translations
+        case let .bankStatement(value):
+            return value.translations
+        default:
+            return nil
+        }
+    }
+    
     var frontSideVerificationDocument: SecureIdVerificationDocumentReference? {
         switch self {
         case let .idCard(value):
@@ -1492,7 +1575,7 @@ extension SecureIdValue {
         }
     }
     
-    var requestFieldType: SecureIdRequestedFormField {
+    var requestFieldType: SecureIdRequestedFormFieldValue {
         return key.requestFieldType
     }
     
@@ -1511,40 +1594,40 @@ extension SecureIdValue {
 }
 
 extension SecureIdValueKey {
-    var requestFieldType: SecureIdRequestedFormField {
+    var requestFieldType: SecureIdRequestedFormFieldValue {
         switch self {
         case .address:
             return .address
         case .bankStatement:
-            return .bankStatement
+            return .bankStatement(translation: true)
         case .driversLicense:
-            return .driversLicense(selfie: true)
+            return .driversLicense(selfie: true, translation: true)
         case .email:
             return .email
         case .idCard:
-            return .idCard(selfie: true)
+            return .idCard(selfie: true, translation: true)
         case .internalPassport:
-            return .internalPassport(selfie: true)
+            return .internalPassport(selfie: true, translation: true)
         case .passport:
-            return .passport(selfie: true)
+            return .passport(selfie: true, translation: true)
         case .passportRegistration:
-            return .passportRegistration
+            return .passportRegistration(translation: true)
         case .personalDetails:
-            return .personalDetails
+            return .personalDetails(nativeName: true)
         case .phone:
             return .phone
         case .rentalAgreement:
-            return .rentalAgreement
+            return .rentalAgreement(translation: true)
         case .temporaryRegistration:
-            return .temporaryRegistration
+            return .temporaryRegistration(translation: true)
         case .utilityBill:
-            return .utilityBill
+            return .utilityBill(translation: true)
         }
     }
 }
 
 
-extension SecureIdRequestedFormField {
+extension SecureIdRequestedFormFieldValue {
     var rawValue: String {
         switch self {
         case .email:
@@ -1552,13 +1635,13 @@ extension SecureIdRequestedFormField {
         case .phone:
             return L10n.secureIdRequestPermissionPhone
         case .address:
-            return L10n.secureIdRequestPermissionAddress
+            return L10n.secureIdRequestPermissionResidentialAddress
         case .utilityBill:
             return L10n.secureIdRequestPermissionUtilityBill
         case .bankStatement:
             return L10n.secureIdRequestPermissionBankStatement
         case .rentalAgreement:
-            return L10n.secureIdRequestPermissionRentalAgreement
+            return L10n.secureIdRequestPermissionTenancyAgreement
         case .passport:
             return L10n.secureIdRequestPermissionPassport
         case .idCard:
@@ -1576,6 +1659,89 @@ extension SecureIdRequestedFormField {
         }
     }
     
+    func isKindOf(_ fieldValue: SecureIdRequestedFormFieldValue) -> Bool {
+        switch self {
+        case .email:
+            if case .email = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .phone:
+            if case .phone = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .address:
+            if case .address = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .utilityBill:
+            if case .utilityBill = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .bankStatement:
+            if case .bankStatement = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .rentalAgreement:
+            if case .rentalAgreement = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .passport:
+            if case .passport = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .idCard:
+            if case .idCard = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .driversLicense:
+            if case .driversLicense = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .personalDetails:
+            if case .personalDetails = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .internalPassport:
+            if case .internalPassport = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .passportRegistration:
+            if case .passportRegistration = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        case .temporaryRegistration:
+            if case .temporaryRegistration = fieldValue {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    
     var uploadFrontTitleText: String {
         switch self {
         case .idCard:
@@ -1586,7 +1752,6 @@ extension SecureIdRequestedFormField {
             return L10n.secureIdUploadMain
         }
     }
-    
     var uploadBackTitleText: String {
         switch self {
         case .idCard:
@@ -1611,23 +1776,52 @@ extension SecureIdRequestedFormField {
     
     var hasSelfie: Bool {
         switch self {
-        case let .passport(selfie), let .idCard(selfie), let .driversLicense(selfie), let .internalPassport(selfie):
+        case let .passport(selfie, _), let .idCard(selfie, _), let .driversLicense(selfie, _), let .internalPassport(selfie, _):
             return selfie
         default:
             return false
         }
     }
     
-    var rawDescription: String {
+    var hasTranslation: Bool {
+        switch self {
+        case let .passport(_, translation), let .idCard(_, translation), let .driversLicense(_, translation), let .internalPassport(_, translation):
+            return translation
+        case let .utilityBill(translation), let .rentalAgreement(translation), let .bankStatement(translation), let .passportRegistration(translation), let .temporaryRegistration(translation):
+            return translation
+        default:
+            return false
+        }
+    }
+    
+    var emptyDescription: String {
         switch self {
         case .email:
             return L10n.secureIdRequestPermissionEmailEmpty
         case .phone:
             return L10n.secureIdRequestPermissionPhoneEmpty
+        case .utilityBill:
+            return L10n.secureIdEmptyDescriptionUtilityBill
+        case .bankStatement:
+            return L10n.secureIdEmptyDescriptionBankStatement
+        case .rentalAgreement:
+            return L10n.secureIdEmptyDescriptionTenancyAgreement
+        case .passportRegistration:
+            return L10n.secureIdEmptyDescriptionPassportRegistration
+        case .temporaryRegistration:
+            return L10n.secureIdEmptyDescriptionTemporaryRegistration
+        case .passport:
+            return L10n.secureIdEmptyDescriptionPassport
+        case .driversLicense:
+            return L10n.secureIdEmptyDescriptionDriversLicense
+        case .idCard:
+            return L10n.secureIdEmptyDescriptionIdentityCard
+        case .internalPassport:
+            return L10n.secureIdEmptyDescriptionInternalPassport
+        case .personalDetails:
+            return L10n.secureIdEmptyDescriptionPersonalDetails
         case .address:
-            return L10n.secureIdRequestPermissionAddressEmpty
-        default:
-            return L10n.secureIdRequestPermissionIdentityEmpty
+            return L10n.secureIdEmptyDescriptionAddress
         }
     }
     
@@ -1644,7 +1838,7 @@ extension SecureIdRequestedFormField {
         case .bankStatement:
             return L10n.secureIdAddBankStatement
         case .rentalAgreement:
-            return L10n.secureIdAddRentalAgreement
+            return L10n.secureIdAddTenancyAgreement
         case .passport:
             return L10n.secureIdAddPassport
         case .idCard:
@@ -1675,7 +1869,7 @@ extension SecureIdRequestedFormField {
         case .bankStatement:
             return L10n.secureIdEditBankStatement
         case .rentalAgreement:
-            return L10n.secureIdEditRentalAgreement
+            return L10n.secureIdEditTenancyAgreement
         case .passport:
             return L10n.secureIdEditPassport
         case .idCard:
@@ -1702,7 +1896,7 @@ var dateFormatter: DateFormatter {
     return formatter
 }
 
-extension SecureIdRequestedFormField  {
+extension SecureIdRequestedFormFieldValue  {
     var valueKey: SecureIdValueKey {
         switch self {
         case .address:
@@ -1734,6 +1928,16 @@ extension SecureIdRequestedFormField  {
         }
     }
     
+    var primary: SecureIdRequestedFormFieldValue {
+        if SecureIdRequestedFormField.just(self).isIdentityField {
+            return .personalDetails(nativeName: true)
+        }
+        if SecureIdRequestedFormField.just(self).isAddressField {
+            return .address
+        }
+        return self
+    }
+    
     func isEqualToMRZ(_ mrz: TGPassportMRZ) -> Bool {
         switch mrz.documentType.lowercased() {
         case "p":
@@ -1745,7 +1949,6 @@ extension SecureIdRequestedFormField  {
         default:
             return false
         }
-        return false
     }
     
 }
@@ -1819,8 +2022,8 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 }
 
 
-func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = nil) -> Signal<Bool, Void> {
-    return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, Void> in
+func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = nil) -> Signal<Bool, NoError> {
+    return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
         let text:String
         var okTitle: String? = nil
         var accessory: CGImage? = nil
@@ -1849,7 +2052,7 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
         
         
         
-        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId ?? peerId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, Void> in
+        return modernConfirmSignal(for: mainWindow, account: account, peerId: userId ?? peerId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, NoError> in
             if result {
                 return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
             } else {
@@ -1928,7 +2131,7 @@ extension PostboxAccessChallengeData {
     }
 }
 
-func clearCache(_ path: String) -> Signal<Void, Void> {
+func clearCache(_ path: String) -> Signal<Void, NoError> {
     return Signal { subscriber -> Disposable in
         
         let fileManager = FileManager.default
@@ -1956,7 +2159,7 @@ func clearCache(_ path: String) -> Signal<Void, Void> {
     } |> runOn(resourcesQueue)
 }
 
-func moveWallpaperToCache(postbox: Postbox, _ resource: TelegramMediaResource) -> Signal<String, Void> {
+func moveWallpaperToCache(postbox: Postbox, _ resource: TelegramMediaResource) -> Signal<String, NoError> {
     if let path = postbox.mediaBox.completedResourcePath(resource) {
         return moveWallpaperToCache(postbox: postbox, path)
     } else {
@@ -1964,7 +2167,7 @@ func moveWallpaperToCache(postbox: Postbox, _ resource: TelegramMediaResource) -
     }
 }
 
-func moveWallpaperToCache(postbox: Postbox, _ path: String, randomName: Bool = false) -> Signal<String, Void> {
+func moveWallpaperToCache(postbox: Postbox, _ path: String, randomName: Bool = false) -> Signal<String, NoError> {
     return Signal { subscriber in
         
         let wallpapers = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath
@@ -2083,7 +2286,7 @@ func fileExtenstion(_ file: TelegramMediaFile) -> String {
     return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
 }
 
-func proxySettingsSignal(_ postbox: Postbox) -> Signal<ProxySettings, Void>  {
+func proxySettingsSignal(_ postbox: Postbox) -> Signal<ProxySettings, NoError>  {
     return postbox.preferencesView(keys: [PreferencesKeys.proxySettings]) |> map { view in
         return view.values[PreferencesKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
     }
@@ -2164,28 +2367,7 @@ extension ProxyServerSettings {
     }
 }
 
-extension RequestEditMessageMedia : Equatable {
-    public static func ==(lhs: RequestEditMessageMedia, rhs: RequestEditMessageMedia) -> Bool {
-        switch lhs {
-        case .keep:
-            if case .keep = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .update(lhsMedia):
-            if case let .update(rhsMedia) = rhs {
-                if lhsMedia.isEqual(rhsMedia) {
-                    return true
-                } else {
-                    return false
-                }
-            } else {
-                return false
-            }
-        }
-    }
-}
+
 struct SecureIdDocumentValue {
     let document: SecureIdVerificationDocument
     let stableId: AnyHashable
@@ -2196,7 +2378,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], reference: nil)
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], reference: nil, partialReference: nil)
     }
 }
 
@@ -2221,13 +2403,12 @@ func isNotEmptyStrings(_ strings: [String?]) -> String {
     return ""
 }
 
-<<<<<<< HEAD
-=======
 
 extension MessageIndex {
     func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {
         return MessageIndex(id: self.id, timestamp: timestamp)
     }
+    
 }
 
 extension MessageHistoryAnchorIndex {
@@ -2240,4 +2421,8 @@ extension MessageHistoryAnchorIndex {
         }
     }
 }
->>>>>>> master
+
+//
+//extension RequestEditMessageMedia : Equatable {
+//    
+//}

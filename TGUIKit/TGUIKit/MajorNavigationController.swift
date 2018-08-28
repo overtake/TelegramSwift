@@ -260,6 +260,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     if previous.bar.has {
                         self.navigationBar.startMoveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction)
                     }
+                    self.lock = true
                     return .success(previous)
                 case let .swiping(delta, previous):
                     
@@ -280,6 +281,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     return .deltaUpdated(available: nPosition)
                     
                 case .success:
+                    self.lock = false
                     self.back(forceAnimated: true)
                 case let .failed(_, previous):
                  //   CATransaction.begin()
@@ -297,6 +299,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     } else {
                         self.navigationBar.change(pos: NSMakePoint(0, self.navigationBar.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     }
+                    self.lock = false
                   //  CATransaction.commit()
                 }
             case let .right(state):
@@ -310,7 +313,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     self.containerView.addSubview(new.view, positioned: .above, relativeTo: self.controller.view)
                     self.addShadowView(.right)
                     self.navigationBar.startMoveViews(left: new.leftBarView, center: new.centerBarView, right: new.rightBarView, direction: direction)
-                    
+                    self.lock = true
                     return .success(new)
                 case let .swiping(delta, new):
                     let delta = min(max(0, delta), self.containerView.frame.width)
@@ -328,12 +331,13 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
 
                     return .deltaUpdated(available: delta)
                 case let .success(_, controller):
+                    self.lock = false
                     self.push(controller, true, style: .push)
                 case let .failed(_, new):
                    // CATransaction.begin()
                     let animationStyle = new.animationStyle
                     var _new:ViewController? = new
-                    new.view._change(pos: NSMakePoint(self.containerView.frame.width, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    _new?.view._change(pos: NSMakePoint(self.containerView.frame.width, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     self.containerView.subviews[0]._change(pos: NSMakePoint(0, self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new] completed in
                         new?.view.removeFromSuperview()
                         _new = nil
@@ -343,7 +347,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     })
                     self.shadowView.change(opacity: 1, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     self.navigationBar.moveViews(left: new.leftBarView, center: new.centerBarView, right: new.rightBarView, direction: direction, percent: 0, animationStyle: animationStyle)
-
+                    self.lock = false
                    // CATransaction.commit()
                 }
             default:
@@ -372,7 +376,9 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     
     open override func backKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
-        
+        if isLocked {
+            return .invoked
+        }
         let cInvoke = self.controller.backKeyAction()
         
         if cInvoke == .invokeNext {
@@ -385,13 +391,18 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     }
     
     open override func nextKeyAction() -> KeyHandlerResult {
+        if isLocked {
+            return .invoked
+        }
         return self.controller.nextKeyAction()
     }
     
     
     open override func escapeKeyAction() -> KeyHandlerResult {
         let status:KeyHandlerResult = stackCount > 1 ? .invoked : .rejected
-        
+        if isLocked {
+            return .invoked
+        }
         let cInvoke = self.controller.escapeKeyAction()
         
         if cInvoke == .invokeNext {

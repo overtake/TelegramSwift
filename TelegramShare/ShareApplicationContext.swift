@@ -24,7 +24,7 @@ private let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeer
 
 func applicationContext(accountManager: AccountManager, appGroupPath: String, extensionContext: NSExtensionContext) -> Signal<ShareApplicationContext?, NoError> {
     
-    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos"), supplementary: true, manager: accountManager, rootPath: appGroupPath, testingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, Void> in
+    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos"), supplementary: true, manager: accountManager, rootPath: appGroupPath, testingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, NoError> in
         if let result = result {
             switch result {
             case .unauthorized(let account):
@@ -32,13 +32,13 @@ func applicationContext(accountManager: AccountManager, appGroupPath: String, ex
                     return .unauthorized(UnauthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                 }
             case let .authorized(account):
-                let paslock:Signal<PostboxAccessChallengeData, Void> = account.postbox.transaction { transaction -> PostboxAccessChallengeData in
+                let paslock:Signal<PostboxAccessChallengeData, NoError> = account.postbox.transaction { transaction -> PostboxAccessChallengeData in
                     return transaction.getAccessChallengeData()
                 } |> deliverOnMainQueue
                 
-                return paslock |> mapToSignal { access -> Signal<ShareApplicationContext?, Void> in
+                return paslock |> mapToSignal { access -> Signal<ShareApplicationContext?, NoError> in
                     let promise:Promise<Void> = Promise()
-                    let auth: Signal<ShareApplicationContext?, Void> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, value in
+                    let auth: Signal<ShareApplicationContext?, NoError> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, value in
                         return .authorized(AuthorizedApplicationContext(account: account, context: extensionContext,  localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, theme: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
                     }
                     switch access {
