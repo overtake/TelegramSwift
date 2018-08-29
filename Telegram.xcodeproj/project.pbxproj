@@ -40,11 +40,6 @@
 		9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21F65420B5A72800332C85 /* LocationModalController.swift */; };
 		9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F21F65C20B5A9C900332C85 /* MapKit.framework */; };
 		9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8720610127002DD61A /* PassportController.swift */; };
-		9F388C8721354D5C00830715 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
-		9F388C8821354D5C00830715 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		9F388C8A21354D6800830715 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F388C8C213550C600830715 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
-		9F388C8D213550CF00830715 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */; };
 		9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3E20A5ED2F003FE7E3 /* ocr.mm */; };
 		9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */; };
@@ -58,6 +53,11 @@
 		9F62AE7E202D85B7007FB557 /* FetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE7D202D85B7007FB557 /* FetchManager.swift */; };
 		9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE80202D85E7007FB557 /* FetchManagerLocation.swift */; };
 		9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */; };
+		9F6B54BD2135F8A900748FC1 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F6B54BE2135F8A900748FC1 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9F6B54BF2135F8AD00748FC1 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
+		9F6B54C02135F8AD00748FC1 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		9F6B54C12135F8AD00748FC1 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		9F72973420B878B00067F815 /* MapResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72973320B878B00067F815 /* MapResources.swift */; };
 		9F72974020BD9C6A0067F815 /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72973F20BD9C6A0067F815 /* VideoPlayer.swift */; };
 		9F72974820C597800067F815 /* TermsModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F72974720C597800067F815 /* TermsModalController.swift */; };
@@ -652,8 +652,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9F388C8D213550CF00830715 /* HockeySDK.framework in Copy Files */,
-				9F388C8A21354D6800830715 /* Sparkle.framework in Copy Files */,
+				9F6B54BD2135F8A900748FC1 /* HockeySDK.framework in Copy Files */,
+				9F6B54BE2135F8A900748FC1 /* Sparkle.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
@@ -1541,9 +1541,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F388C8721354D5C00830715 /* Sparkle.framework in Frameworks */,
-				9F388C8C213550C600830715 /* HockeySDK.framework in Frameworks */,
-				9F388C8821354D5C00830715 /* DFRFoundation.framework in Frameworks */,
+				9F6B54BF2135F8AD00748FC1 /* HockeySDK.framework in Frameworks */,
+				9F6B54C02135F8AD00748FC1 /* Sparkle.framework in Frameworks */,
+				9F6B54C12135F8AD00748FC1 /* DFRFoundation.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,

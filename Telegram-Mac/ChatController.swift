@@ -1956,44 +1956,49 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
         
         
-        var currentLocation:MessageIndex? = nil
-        
         
        // var beginHistoryTime:CFAbsoluteTime?
 
         genericView.tableView.setScrollHandler({ [weak self] scroll in
-            if let strongSelf = self {
+            guard let `self` = self else {return}
+            let view = self.previousView.modify({$0})
+            if let view = view {
+                var messageIndex:MessageIndex?
                 
-//                if let beginHistoryTime = beginHistoryTime {
-//                    if CFAbsoluteTimeGetCurrent() - beginHistoryTime < 0.3 {
-//                        return
-//                    }
-//                }
-//                beginHistoryTime = CFAbsoluteTimeGetCurrent()
+                if let entry = view.originalView.entries.last, case .HoleEntry = entry  {
+                    return
+                } else if let entry = view.originalView.entries.first, case .HoleEntry = entry {
+                    return
+                }
+                
+                let visible = self.genericView.tableView.visibleRows()
 
-                let view = strongSelf.previousView.modify({$0})
-                if let view = view {
-                    var messageIndex:MessageIndex?
-                    
-                    if let entry = view.originalView.entries.last, case .HoleEntry = entry  {
-                        return
-                    } else if let entry = view.originalView.entries.first, case .HoleEntry = entry {
-                        return
+                
+                
+                switch scroll.direction {
+                case .top:
+                    if view.originalView.laterId != nil {
+                        for i in visible.min ..< visible.max {
+                            if let item = self.genericView.tableView.item(at: i) as? ChatRowItem {
+                                messageIndex = item.entry.index
+                                break
+                            }
+                        }
                     }
-                    
-                    switch scroll.direction {
-                    case .bottom:
-                        messageIndex = view.originalView.earlierId
-                    case .top:
-                        messageIndex = view.originalView.laterId
-                       
-                    case .none:
-                        break
+                case .bottom:
+                    if view.originalView.earlierId != nil {
+                        for i in stride(from: visible.max - 1, to: -1, by: -1) {
+                            if let item = self.genericView.tableView.item(at: i) as? ChatRowItem {
+                                messageIndex = item.entry.index
+                                break
+                            }
+                        }
                     }
-                    if let messageIndex = messageIndex {
-                        strongSelf.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: strongSelf.requestCount, side: scroll.direction == .bottom ? .lower : .upper))
-                    }
-                    currentLocation = messageIndex
+                case .none:
+                    break
+                }
+                if let messageIndex = messageIndex {
+                    self.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: scroll.direction == .bottom ? .lower : .upper))
                 }
             }
             

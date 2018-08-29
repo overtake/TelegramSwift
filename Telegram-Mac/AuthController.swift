@@ -255,7 +255,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         super.init()
         
         self.disposable.set((account.postbox.stateView() |> deliverOnMainQueue).start(next: { [weak self] view in
-            self?.updateState(state: view.state ?? UnauthorizedAccountState(masterDatacenterId: account.masterDatacenterId, contents: .empty))
+            self?.updateState(state: view.state ?? UnauthorizedAccountState(isTestingEnvironment: false, masterDatacenterId: account.masterDatacenterId, contents: .empty))
         }))
         bar = .init(height: 0)
     }

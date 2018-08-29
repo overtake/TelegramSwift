@@ -56,7 +56,7 @@ enum MigrationData {
 
 
 func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, NoError> {
-    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, rootPath: appGroupPath, testingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
+    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
 

@@ -83,15 +83,13 @@ class ChatStickerContentView: ChatMediaContentView {
             self.image.animatesAlphaOnFirstTransition = false
            
             self.image.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor), clearInstantly: false)
-            if self.image.layer?.contents == nil {
-                self.image.setSignal( chatMessageSticker(account: account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file), type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
-                    if let strongSelf = self {
-                        return cacheMedia(signal: signal, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
-                    } else {
-                        return .complete()
-                    }
-                })
-            }
+            self.image.setSignal( chatMessageSticker(account: account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file), type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                if let strongSelf = self {
+                    return cacheMedia(signal: signal, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                } else {
+                    return .complete()
+                }
+            })
             
             self.image.set(arguments: arguments)
             self.image.setFrameSize(arguments.imageSize)
