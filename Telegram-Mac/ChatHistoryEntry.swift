@@ -183,6 +183,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         }
     }
     
+    
     var scrollIndex: MessageIndex {
         switch self {
         case let .HoleEntry(hole):

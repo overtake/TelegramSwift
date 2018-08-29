@@ -24,7 +24,7 @@ private let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeer
 
 func applicationContext(accountManager: AccountManager, appGroupPath: String, extensionContext: NSExtensionContext) -> Signal<ShareApplicationContext?, NoError> {
     
-    return currentAccount(networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos"), supplementary: true, manager: accountManager, rootPath: appGroupPath, testingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, NoError> in
+    return currentAccount(allocateIfNotExists: false, networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos"), supplementary: true, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, NoError> in
         if let result = result {
             switch result {
             case .unauthorized(let account):

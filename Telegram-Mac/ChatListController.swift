@@ -402,11 +402,16 @@ class ChatListController : PeersListController {
             switch state {
             case .start:
                 let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
-                let item = self.genericView.tableView.item(at: row) as! ChatListRowItem
-                guard item.pinnedType != .ad else {return .failed}
-                self.removeSwipingStateIfNeeded(item.peerId)
-                (item.view as? ChatListRowView)?.initSwipingState()
-                return .success(SwipingChatItemController(item: item))
+                if row != -1 {
+                    let item = self.genericView.tableView.item(at: row) as! ChatListRowItem
+                    guard item.pinnedType != .ad else {return .failed}
+                    self.removeSwipingStateIfNeeded(item.peerId)
+                    (item.view as? ChatListRowView)?.initSwipingState()
+                    return .success(SwipingChatItemController(item: item))
+                } else {
+                    return .failed
+                }
+               
             case let .swiping(_delta, controller):
                 let controller = controller as! SwipingChatItemController
 
