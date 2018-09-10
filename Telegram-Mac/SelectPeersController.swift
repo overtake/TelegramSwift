@@ -878,12 +878,12 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.tableView.listHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, max(genericView.tableView.listHeight, 150))), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, genericView.tableView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, max(genericView.tableView.listHeight, 150))), animated: animated)
         }
     }
     

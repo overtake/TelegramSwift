@@ -540,7 +540,7 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         let scope = escape(with: scope, addPercent: false)
                         
 
-                        let isModern: Bool = scope.hasPrefix("{\"data")
+                        let isModern: Bool = scope.hasPrefix("{")
                         
                         let nonceString = (isModern ? vars["nonce"] : vars["payload"]) ?? ""
 

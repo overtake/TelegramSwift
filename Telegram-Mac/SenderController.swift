@@ -323,7 +323,7 @@ class Sender: NSObject {
         
         
         for msgId in sorted {
-            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: .auto))
+            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: messageIds.count > 1 ? .auto : .none))
         }
         return enqueueMessages(account: account, peerId: peerId, messages: fwdMessages.reversed())
     }

@@ -1429,8 +1429,40 @@ internal final class L10n {
   internal static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
   /// Save As...
   internal static var galleryContextSaveAs: String  { return L10n.tr("Localizable", "Gallery.Context.SaveAs") }
+  /// Shared Media
+  internal static var galleryContextShowGallery: String  { return L10n.tr("Localizable", "Gallery.Context.ShowGallery") }
   /// Show Message
   internal static var galleryContextShowMessage: String  { return L10n.tr("Localizable", "Gallery.Context.ShowMessage") }
+  /// %d
+  internal static func galleryContextShareAllPhotosCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_countable", p1)
+  }
+  /// All %d photos
+  internal static func galleryContextShareAllPhotosFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_few", p1)
+  }
+  /// All %d photos
+  internal static func galleryContextShareAllPhotosMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_many", p1)
+  }
+  /// All %d photo
+  internal static func galleryContextShareAllPhotosOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_one", p1)
+  }
+  /// All %d photos
+  internal static func galleryContextShareAllPhotosOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_other", p1)
+  }
+  /// All %d photos
+  internal static func galleryContextShareAllPhotosTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_two", p1)
+  }
+  /// All %d photos
+  internal static func galleryContextShareAllPhotosZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gallery.Context.Share.AllPhotos_zero", p1)
+  }
+  /// This Photo
+  internal static var galleryContextShareThisPhoto: String  { return L10n.tr("Localizable", "Gallery.Context.Share.ThisPhoto") }
   /// Accent Color
   internal static var generalSettingsAccentColor: String  { return L10n.tr("Localizable", "GeneralSettings.AccentColor") }
   /// APPEARANCE SETTINGS
@@ -2119,6 +2151,8 @@ internal final class L10n {
   internal static var peerMediaSharedMediaEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedMediaEmptyList") }
   /// All music shared in this chat will appear here.
   internal static var peerMediaSharedMusicEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedMusicEmptyList") }
+  /// All voice and video messages shared in this chat will appear here.
+  internal static var peerMediaSharedVoiceEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedVoiceEmptyList") }
   /// channel
   internal static var peerStatusChannel: String  { return L10n.tr("Localizable", "Peer.Status.channel") }
   /// group

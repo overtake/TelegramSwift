@@ -175,7 +175,7 @@ class WPArticleContentView: WPContentView {
                     let positionFlags: LayoutPositionFlags = groupLayout.position(at: i)
 
                     
-                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: groupLayout.messages[i], table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)
+                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: layout.parent, table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)
                     
                     groupedContents[i].change(pos: groupLayout.frame(at: i).origin, animated: false)
                 }
@@ -223,7 +223,7 @@ class WPArticleContentView: WPContentView {
                    
                    
                     
-                    let closestRepresentation = (largestImageRepresentation(image.representations))
+                    let closestRepresentation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280))//(largestImageRepresentation(image.representations))
                     
                     if let closestRepresentation = closestRepresentation {
                         statusDisposable.set((layout.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource) |> deliverOnMainQueue).start(next: { [weak self] status in

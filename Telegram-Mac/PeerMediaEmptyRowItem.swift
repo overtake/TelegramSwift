@@ -22,9 +22,9 @@ class PeerMediaEmptyRowItem: TableRowItem {
         if tags.contains(.file) {
             image = theme.icons.mediaEmptyFiles
             attr = .initialize(string: tr(L10n.peerMediaSharedFilesEmptyList), color: theme.colors.grayText, font: .normal(.header))
-        } else if tags.contains(.music) {
+        } else if tags.contains(.music) || tags.contains(.voiceOrInstantVideo) {
             image = theme.icons.mediaEmptyMusic
-            attr = .initialize(string: tr(L10n.peerMediaSharedMusicEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tags.contains(.voiceOrInstantVideo) ? L10n.peerMediaSharedVoiceEmptyList : L10n.peerMediaSharedMusicEmptyList, color: theme.colors.grayText, font: .normal(.header))
         } else if tags.contains(.webPage) {
             image = theme.icons.mediaEmptyLinks
             attr = .initialize(string: tr(L10n.peerMediaSharedLinksEmptyList), color: theme.colors.grayText, font: .normal(.header))

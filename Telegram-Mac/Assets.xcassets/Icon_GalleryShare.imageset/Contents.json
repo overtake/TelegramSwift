@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "morephoto@1x.png",
+      "filename" : "sharephoto@1x.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "morephoto@2x.png",
+      "filename" : "sharephoto@2x.png",
       "scale" : "2x"
     },
     {

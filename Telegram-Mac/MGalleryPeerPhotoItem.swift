@@ -21,14 +21,14 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override var sizeValue: NSSize {
-        if let largest = media.representations.last {
+        if let largest = media.representationForDisplayAtSize(NSMakeSize(640, 640)) {
             return largest.dimensions.fitted(pagerSize)
         }
         return NSZeroSize
     }
     
     override func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
-        if let largest = media.representations.last {
+        if let largest = media.representationForDisplayAtSize(NSMakeSize(640, 640)) {
             return .single(largest.dimensions.fitted(size))
         }
         return .single(pagerSize)
@@ -51,7 +51,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             }
             return .complete()
         } |> distinctUntilChanged |> mapToSignal { size -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments), NoError> in
-                return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
+            return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
                     return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                 }
         } |> mapToThrottled { (transform, arguments) -> Signal<CGImage?, NoError> in
@@ -76,7 +76,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: entry.imageReference(media)).start())
+        fetching.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640)).start())
     }
     
     override func cancel() -> Void {

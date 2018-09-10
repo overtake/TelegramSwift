@@ -45,7 +45,7 @@ class MGalleryGIFItem: MGalleryItem {
                     fatalError("")
                 }
             }
-        case .instantMedia(let media):
+        case .instantMedia(let media, _):
             return media.media as! TelegramMediaFile
         default:
             fatalError()

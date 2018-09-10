@@ -18,8 +18,10 @@ final class GalleryInteractions {
     var select:(MGalleryItem)->Void = { _ in}
     var previous:()->KeyHandlerResult = { return .rejected}
     var showActions:(Control)->KeyHandlerResult = {_ in return .rejected}
+    var share:(Control)->Void = { _ in }
     var contextMenu:()->NSMenu? = {return nil}
-    
+    var openInfo:(PeerId)->Void = {_ in}
+    var openMessage:()->Void = {}
     var showThumbsControl:(View, Bool)->Void = {_, _ in}
     var hideThumbsControl:(View, Bool)->Void = {_, _ in}
 
@@ -205,7 +207,7 @@ class GalleryViewer: NSResponder {
           
             self.window.backgroundColor = .clear
             self.window.appearance = theme.appearance
-            backgroundView.backgroundColor = .blackTransparent
+            backgroundView.backgroundColor = NSColor.black.withAlphaComponent(0.8)
             backgroundView.frame = bounds
             
             self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window, reversed: reversed)
@@ -250,6 +252,17 @@ class GalleryViewer: NSResponder {
         interactions.showActions = { [weak self] control -> KeyHandlerResult in
             self?.showControlsPopover(control)
             return .invoked
+        }
+        interactions.share = { [weak self] control in
+            self?.share(control)
+        }
+        
+        interactions.openInfo = { [weak self] peerId in
+            self?.openInfo(peerId)
+        }
+        
+        interactions.openMessage = { [weak self] in
+            self?.showMessage()
         }
         
         interactions.contextMenu = {[weak self] in
@@ -349,7 +362,7 @@ class GalleryViewer: NSResponder {
                     image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil, partialReference: nil)
                 }
                 
-                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil), pagerSize))], updated: []))
+                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peerId: peerId, date: 0), pagerSize))], updated: []))
                 
                 
                 self.pager.set(index: 0, animated: false)
@@ -359,21 +372,23 @@ class GalleryViewer: NSResponder {
             return false
         })
 
-        var totalCount:Int = 1
         
         self.disposable.set((requestPeerPhotos(account: account, peerId: peerId) |> map { photos -> (UpdateTransition<MGalleryItem>, Int, Int) in
             
             var inserted:[(Int, MGalleryItem)] = []
             var updated:[(Int, MGalleryItem)] = []
-            let deleted:[Int] = []
+            var deleted:[Int] = []
             
             var currentIndex: Int = 0
 
             
             if !photos.isEmpty {
                 
+                var photosDate:[TimeInterval] = []
+                
                 for i in 0 ..< photos.count {
                     let photo = photos[i]
+                    photosDate.append(TimeInterval(photo.date))
                     if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
                         let action = message.media.first as! TelegramMediaAction
                         switch action.action {
@@ -389,9 +404,10 @@ class GalleryViewer: NSResponder {
                 
                 for i in 0 ..< photos.count {
                     if currentIndex == i {
-                        updated.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference), pagerSize)))
+                        deleted.append(i)
+                        inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
                     } else {
-                        inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference), pagerSize)))
+                        inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
                     }
                 }
             }
@@ -401,11 +417,13 @@ class GalleryViewer: NSResponder {
             
         } |> deliverOnMainQueue).start(next: { [weak self] transition, total, selected in
             guard let `self` = self else {return}
-            totalCount = total
             
            // self?.controls.index.set(.single((selected + 1, max(totalCount, 1))))
-            _ = self.pager.merge(with: transition)
-            self.controls.update(self.pager.selectedItem?.entry)
+            _ = self.pager.merge(with: transition, afterTransaction: { [weak self] in
+                guard let `self` = self else {return}
+                self.controls.update(self.pager.selectedItem?.entry)
+            })
+            
         }))
         
         self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
@@ -414,12 +432,11 @@ class GalleryViewer: NSResponder {
         }))
     }
     
-    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, firstStableId: AnyHashable? = nil, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, reversed:Bool = false) {
+    fileprivate convenience init(account:Account, instantMedias:[InstantPageMedia], firstIndex:Int, firstStableId: AnyHashable? = nil, parent: Message? = nil, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, reversed:Bool = false) {
         self.init(account: account, delegate, contentInteractions, type: .history, reversed: reversed)
         self.firstStableId = firstStableId
         let pagerSize = self.pagerSize
         
-        let totalCount:Int = instantMedias.count
 
         
         ready.set(.single(true) |> map { [weak self] _ -> Bool in
@@ -430,12 +447,12 @@ class GalleryViewer: NSResponder {
             for i in 0 ..< instantMedias.count {
                 let media = instantMedias[i]
                 if media.media is TelegramMediaImage {
-                    inserted.append((media.index, MGalleryPhotoItem(account, .instantMedia(media), pagerSize)))
+                    inserted.append((media.index, MGalleryPhotoItem(account, .instantMedia(media, parent), pagerSize)))
                 } else if let file = media.media as? TelegramMediaFile {
                     if file.isVideo && file.isAnimated {
-                        inserted.append((media.index, MGalleryGIFItem(account, .instantMedia(media), pagerSize)))
+                        inserted.append((media.index, MGalleryGIFItem(account, .instantMedia(media, parent), pagerSize)))
                     } else if file.isVideo {
-                        inserted.append((media.index, MGalleryVideoItem(account, .instantMedia(media), pagerSize)))
+                        inserted.append((media.index, MGalleryVideoItem(account, .instantMedia(media, parent), pagerSize)))
                     }
                 }
             }
@@ -463,7 +480,6 @@ class GalleryViewer: NSResponder {
         
         let pagerSize = self.pagerSize
         
-        let totalCount:Int = secureIdMedias.count
         
         
         ready.set(.single(true) |> map { [weak self] _ -> Bool in
@@ -540,12 +556,12 @@ class GalleryViewer: NSResponder {
                             for i in 1 ..< instantMedias.count {
                                 let media = instantMedias[i]
                                 if media.media is TelegramMediaImage {
-                                    inserted.append((i, MGalleryPhotoItem(account, .instantMedia(media), pagerSize)))
+                                    inserted.append((i, MGalleryPhotoItem(account, .instantMedia(media, message), pagerSize)))
                                 } else if let file = media.media as? TelegramMediaFile {
                                     if file.isVideo && file.isAnimated {
-                                        inserted.append((i, MGalleryGIFItem(account, .instantMedia(media), pagerSize)))
+                                        inserted.append((i, MGalleryGIFItem(account, .instantMedia(media, message), pagerSize)))
                                     } else if file.isVideo {
-                                        inserted.append((i, MGalleryVideoItem(account, .instantMedia(media), pagerSize)))
+                                        inserted.append((i, MGalleryVideoItem(account, .instantMedia(media, message), pagerSize)))
                                     }
                                 }
                             }
@@ -624,7 +640,7 @@ class GalleryViewer: NSResponder {
                             strongSelf.pager.selectedIndex.set(newIndex)
                             strongSelf.pager.set(index: newIndex, animated: false)
                             if !new.isEmpty && newIndex < new.count && newIndex >= 0, let attribute = new[newIndex].message?.autoremoveAttribute {
-                                (self?.controls as? GallerySecretControls)?.update(with: attribute, outgoing: !new[newIndex].message!.flags.contains(.Incoming))
+                               // (self?.controls as? GallerySecretControls)?.update(with: attribute, outgoing: !new[newIndex].message!.flags.contains(.Incoming))
                             }
                         }
                     } else {
@@ -695,6 +711,9 @@ class GalleryViewer: NSResponder {
             items.append(SPopoverItem(tr(L10n.galleryContextShowMessage), {[weak self] in
                 self?.showMessage()
             }))
+            items.append(SPopoverItem(L10n.galleryContextShowGallery, {[weak self] in
+                self?.showSharedMedia()
+            }))
         }
         items.append(SPopoverItem(tr(L10n.galleryContextCopyToClipboard), {[weak self] in
             self?.copy(nil)
@@ -711,7 +730,11 @@ class GalleryViewer: NSResponder {
             break
         }
         
-        showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-125 + 14),0))
+        items.append(SPopoverItem(L10n.navigationClose, { [weak self] in
+            self?.close()
+        }))
+        
+        showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), inset:NSMakePoint((-125 + 14), 0))
     }
     
     private func deletePhoto() {
@@ -725,7 +748,7 @@ class GalleryViewer: NSResponder {
                 
                 pager.selectedIndex.set(index)
                 
-                if case let .photo(_, _, _, reference) = item.entry {
+                if case let .photo(_, _, _, reference, _, _) = item.entry {
                     _ = removeAccountPhoto(network: account.network, reference: index == 0 ? nil : reference).start()
                 }
             }
@@ -776,6 +799,43 @@ class GalleryViewer: NSResponder {
         close()
         if let message = self.pager.selectedItem?.entry.message {
             contentInteractions?.showMessage(message)
+        }
+    }
+    
+    func showSharedMedia() {
+        close()
+        if let message = self.pager.selectedItem?.entry.message {
+            account.context.mainNavigation?.push(PeerMediaController(account: account, peerId: message.id.peerId, tagMask: .photoOrVideo))
+        }
+    }
+    
+    func openInfo(_ peerId: PeerId) {
+        close()
+        account.context.mainNavigation?.push(PeerInfoController(account: account, peerId: peerId))
+    }
+    
+    func share(_ control: Control) -> Void {
+        if let message = self.pager.selectedItem?.entry.message {
+            if message.groupInfo != nil {
+                let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
+                var items:[SPopoverItem] = []
+                items.append(SPopoverItem(L10n.galleryContextShareThisPhoto, { [weak self] in
+                    guard let `self` = self else {return}
+                    self.close()
+                    showModal(with: ShareModalController(ShareMessageObject(self.account, message)), for: self.window)
+                    
+                }))
+                
+                items.append(SPopoverItem(L10n.galleryContextShareAllPhotosCountable(messages.count), { [weak self] in
+                    guard let `self` = self else {return}
+                    showModal(with: ShareModalController(ShareMessageObject(self.account, message, messages)), for: self.window)
+                }))
+                
+                
+                showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-125 + 14),0))
+            } else {
+                showModal(with: ShareModalController(ShareMessageObject(self.account, message)), for: self.window)
+            }
         }
     }
     
@@ -956,10 +1016,10 @@ func showPhotosGallery(account:Account, peerId:PeerId, firstStableId:AnyHashable
   //  }
 }
 
-func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, firstStableId:AnyHashable? = nil, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
+func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, firstStableId:AnyHashable? = nil, parent: Message? = nil, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
     //if viewer == nil {
     viewer?.clean()
-    let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, delegate, contentInteractions)
+    let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
     gallery.show()
    // }
 }

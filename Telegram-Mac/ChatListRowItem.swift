@@ -393,7 +393,7 @@ class ChatListRowItem: TableRowItem {
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
-            return (max(300, size.width) - 50 - margin * 3) - badgeNode.size.width - 5 - (mentionsCount != nil ? 24 : 0)
+            return (max(300, size.width) - 50 - margin * 3) - badgeNode.size.width - 5 - (mentionsCount != nil ? 30 : 0)
         }
         
         return (max(300, size.width) - 50 - margin * 4) - (pinnedType != .none ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (state == .plain ? 0 : 40)

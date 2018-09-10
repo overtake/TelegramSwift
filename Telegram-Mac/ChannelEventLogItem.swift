@@ -388,6 +388,7 @@ class ServiceEventLogItem: TableRowItem {
                             
                             _ = message.append(string: text, color: theme.colors.text)
                             
+                            
                             if !addedRights.contains(.banReadMessages) {
                                 for right in result.banHelp {
                                     if addedRights.contains(right) {

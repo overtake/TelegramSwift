@@ -14,7 +14,7 @@ import SwiftSignalKitMac
 private let pipFrameKey: String = "kPipFrameKey3"
 
 fileprivate class PIPVideoWindow: NSPanel {
-    fileprivate let playerView:AVPlayerView
+    fileprivate let playerView: VideoPlayerView
     private let rect:NSRect
     private let close:ImageButton = ImageButton()
     private let openGallery:ImageButton = ImageButton()
@@ -24,12 +24,12 @@ fileprivate class PIPVideoWindow: NSPanel {
     fileprivate let _contentInteractions:ChatMediaLayoutParameters?
     fileprivate let _type: GalleryAppearType
     fileprivate let viewer: GalleryViewer
-    init(_ player:AVPlayerView, item: MGalleryVideoItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
+    init(_ player: VideoPlayerView, item: MGalleryVideoItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
         self.viewer = viewer
         self._delegate = delegate
         self._contentInteractions = contentInteractions
         self._type = type
-        
+        player.isPip = true
         self.playerView = player
         self.rect = NSMakeRect(origin.x, origin.y, player.frame.width, player.frame.height)
         self.item = item
@@ -76,11 +76,11 @@ fileprivate class PIPVideoWindow: NSPanel {
         
         player.setFrameOrigin(0,0)
         player.controlsStyle = .minimal
-        player.removeFromSuperview()
         self.contentView?.addSubview(player)
         
         self.contentView?.addSubview(close)
         self.contentView?.addSubview(openGallery)
+
 
        
         self.level = .screenSaver
@@ -88,12 +88,12 @@ fileprivate class PIPVideoWindow: NSPanel {
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: self)
 
-
         
     }
 
     
     func hide() {
+        playerView.isPip = false
         orderOut(nil)
         window = nil
     }
@@ -188,7 +188,7 @@ fileprivate class PIPVideoWindow: NSPanel {
 
 private var window: PIPVideoWindow?
 
-func showPipVideo(_ player:AVPlayerView, viewer: GalleryViewer, item: MGalleryVideoItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
+func showPipVideo(_ player: VideoPlayerView, viewer: GalleryViewer, item: MGalleryVideoItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
     closePipVideo()
     window = PIPVideoWindow(player, item: item, viewer: viewer, origin: origin, delegate: delegate, contentInteractions: contentInteractions, type: type)
     window?.makeKeyAndOrderFront(nil)

@@ -901,6 +901,8 @@ struct TelegramIconsTheme {
     
     let galleryPrev: CGImage
     let galleryNext: CGImage
+    let galleryMore: CGImage
+    let galleryShare: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1338,7 +1340,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatSwiping_pin: #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white),
                                                chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white),
                                                galleryPrev: #imageLiteral(resourceName: "Icon_GalleryPrev").precomposed(.white),
-                                               galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white)
+                                               galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white),
+                                               galleryMore: #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white),
+                                               galleryShare: #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white)
     )
 }
 

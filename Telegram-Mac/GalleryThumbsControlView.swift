@@ -38,11 +38,11 @@ class GalleryThumbContainer : Control {
 
         if let signal = signal, let size = size {
             imageView.setSignal(signal)
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(70, 70)), boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(50, 50)), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsets())
             imageView.set(arguments: arguments)
         }
-        overlay.setFrameSize(70, 70)
-        imageView.setFrameSize(70, 70)
+        overlay.setFrameSize(50, 50)
+        imageView.setFrameSize(50, 50)
         addSubview(imageView)
         addSubview(overlay)
         overlay.backgroundColor = .black
@@ -73,10 +73,10 @@ class GalleryThumbsControlView: View {
         backgroundColor = .clear
         addSubview(scrollView)
         scrollView.documentView = documentView
-        scrollView.backgroundColor = .redUI
-        scrollView.background = .redUI
+        scrollView.backgroundColor = .clear
+        scrollView.background = .clear
         
-        documentView.backgroundColor = .redUI
+        documentView.backgroundColor = .clear
     }
     
     override func layout() {
@@ -147,16 +147,12 @@ class GalleryThumbsControlView: View {
     func layoutItems(selectedIndex: Int? = nil, animated: Bool) {
         
         let idx = idsExcludeDisabled(selectedIndex ?? 0)
-        let index = CGFloat(selectedIndex ?? 0)
         
-        if documentView.subviews[idx] == self.selectedView {
-            return
-        }
+
         
         let minWidth: CGFloat = frame.height / 2
         let difSize = NSMakeSize(frame.height, frame.height)
         
-        let startCenter: CGFloat = focus(difSize).minX
         
         
         var x:CGFloat = 0// startCenter - index * (minWidth + 4) - 4
@@ -166,7 +162,7 @@ class GalleryThumbsControlView: View {
         for i in 0 ..< documentView.subviews.count {
             let view = documentView.subviews[i] as! GalleryThumbContainer
             var size = idx == i ? difSize : NSMakeSize(minWidth, frame.height)
-            view.overlay.change(opacity: 0.6)
+            view.overlay.change(opacity: 0.35)
             if view.isEnabled {
                 view._change(size: size, animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
                 
@@ -192,9 +188,10 @@ class GalleryThumbsControlView: View {
 
         
         if let selectedView = selectedView {
-            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), documentView.frame.width - frame.width), 0), animated: false)
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated)
            // documentView.change(pos: NSMakePoint(selectedView.frame.minX, 0), animated: true)
         }
+       // change(size: NSMakeSize(min(500, documentView.frame.width), documentView.frame.height), animated: animated)
         
     }
     

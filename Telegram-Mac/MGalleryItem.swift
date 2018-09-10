@@ -27,14 +27,14 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, _, _, _):
-        if  case let .photo(rhsIndex, _, _, _) = rhs {
+    case let .photo(lhsIndex, _, _, _, _, _):
+        if  case let .photo(rhsIndex, _, _, _, _, _) = rhs {
             return lhsIndex < rhsIndex
         } else {
             return false
         }
-    case let  .instantMedia(lhsMedia):
-        if case let .instantMedia(rhsMedia) = rhs {
+    case let  .instantMedia(lhsMedia, _):
+        if case let .instantMedia(rhsMedia, _) = rhs {
             return lhsMedia.index < rhsMedia.index
         } else {
             return false
@@ -56,14 +56,14 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference):
-        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference) = rhs {
-            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference
+    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeerId, lhsDate):
+        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeerId, rhsDate) = rhs {
+            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeerId == rhsPeerId && lhsDate == rhsDate
         } else {
             return false
         }
-    case let  .instantMedia(lhsMedia):
-        if case let .instantMedia(rhsMedia) = rhs {
+    case let  .instantMedia(lhsMedia, _):
+        if case let .instantMedia(rhsMedia, _) = rhs {
             return lhsMedia == rhsMedia
         } else {
             return false
@@ -72,27 +72,49 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
 }
 enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
-    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?)
-    case instantMedia(InstantPageMedia)
+    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peerId: PeerId, date: TimeInterval)
+    case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
     var stableId: AnyHashable {
         switch self {
         case let .message(entry):
             return entry.stableId
-        case let .photo(_, stableId, _, _):
+        case let .photo(_, stableId, _, _, _, _):
             return stableId
-        case let .instantMedia(media):
+        case let .instantMedia(media, _):
             return media.index
         case let .secureIdDocument(document, _):
             return document.stableId
         }
     }
     
+    var canShare: Bool {
+        return message != nil
+    }
+    
+    var interfaceState:(PeerId, TimeInterval)? {
+        switch self {
+        case let .message(entry):
+            if let peerId = entry.message!.chatPeer?.id {
+                return (peerId, TimeInterval(entry.message!.timestamp))
+            }
+        case let .instantMedia(_, message):
+            if let message = message, let peerId = message.chatPeer?.id {
+                return (peerId, TimeInterval(message.timestamp))
+            }
+        case let .photo(_, _, _, _, peerId, date):
+            return (peerId, date)
+        default:
+            return nil
+        }
+        return nil
+    }
+    
     func imageReference( _ image: TelegramMediaImage) -> ImageMediaReference {
         switch self {
         case let .message(entry):
             return ImageMediaReference.message(message: MessageReference(entry.message!), media: image)
-        case let .instantMedia(media):
+        case let .instantMedia(media, _):
             return ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
         case  .secureIdDocument:
             return ImageMediaReference.standalone(media: image)
@@ -105,7 +127,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return FileMediaReference.message(message: MessageReference(entry.message!), media: file)
-        case let .instantMedia(media):
+        case let .instantMedia(media, _):
             return FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)
         case .secureIdDocument:
             return FileMediaReference.standalone(media: file)
@@ -119,7 +141,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return "\(entry.message?.stableId ?? 0)"
-        case .photo(_, let stableId, _, _):
+        case .photo(_, let stableId, _, _, _, _):
             return "\(stableId)"
         case .instantMedia:
             return "\(stableId)"
@@ -141,6 +163,8 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return entry.message
+        case let .instantMedia(_, message):
+            return message
         default:
             return nil
         }
@@ -149,7 +173,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, photo, _):
+        case let .photo(_, _, photo, _, _, _):
             return photo
         default:
             return nil
@@ -160,7 +184,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, _, reference):
+        case let .photo(_, _, _, reference, _, _):
             return reference
         default:
             return nil
@@ -244,11 +268,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             view.layer?.contents = image
             view.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
 
-            if first, let slf = self, let magnify = view.superview?.superview as? MagnifyView {
-                if let size = image?.size, size.width > 150 && size.height > 150 {
-                    self?.modifiedSize = size
-                    if magnify.contentSize != slf.sizeValue {
-                        magnify.contentSize = slf.sizeValue
+            if first, let `self` = self, let magnify = view.superview?.superview as? MagnifyView {
+                if let size = image?.size, size.width > 150 && size.height > 150, size.width - size.height != self.sizeValue.width - self.sizeValue.height {
+                    self.modifiedSize = size
+                    if magnify.contentSize != self.sizeValue {
+                        magnify.contentSize = self.sizeValue
                     }
                 }
             }
