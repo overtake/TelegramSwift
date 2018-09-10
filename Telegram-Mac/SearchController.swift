@@ -482,7 +482,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 //        account.postbox.combinedView(keys: [PostboxViewKey.peer(peerId: <#T##PeerId#>)])
 
                 let recently = recentlySearchedPeers(postbox: account.postbox) |> mapToSignal { recently -> Signal<[PeerView], NoError> in
-                    return combineLatest(recently.map {account.postbox.peerView(id: $0.peer.peerId)})
+                    return combineLatest(recently.map {account.viewTracker.peerView($0.peer.peerId)})
                     
                     } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
                         return account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
@@ -505,7 +505,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     case .disabled:
                         return .single(([], [:], [:]))
                     case let .peers(peers):
-                        return combineLatest(peers.map {account.postbox.peerView(id: $0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
+                        return combineLatest(peers.map {account.viewTracker.peerView($0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
                                 return account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
                                     
                                     var peers:[Peer] = []

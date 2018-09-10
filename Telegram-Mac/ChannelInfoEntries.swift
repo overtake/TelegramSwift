@@ -753,9 +753,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 entries.append(ChannelInfoEntry.admins(sectionId: sectionId, count: adminsCount))
                 entries.append(ChannelInfoEntry.members(sectionId: sectionId, count: membersCount))
                 
-                if let blockedCount = blockedCount, blockedCount > 0 {
-                    entries.append(ChannelInfoEntry.blocked(sectionId: sectionId, count: blockedCount))
-                }
+                entries.append(ChannelInfoEntry.blocked(sectionId: sectionId, count: blockedCount))
                 
                 entries.append(ChannelInfoEntry.section(sectionId))
                 sectionId += 1

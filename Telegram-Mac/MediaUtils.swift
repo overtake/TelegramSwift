@@ -717,15 +717,15 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage) -> Signal<MediaResourceStatus, NoError> {
-    if let largestRepresentation = largestRepresentationForPhoto(photo) {
+    if let largestRepresentation = photo.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
         return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource)
     } else {
         return .never()
     }
 }
 
-func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference) -> Signal<Void, NoError> {
-    if let largestRepresentation = largestRepresentationForPhoto(imageReference.media) {
+func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) -> Signal<Void, NoError> {
+    if let largestRepresentation = imageReference.media.representationForDisplayAtSize(toRepresentationSize) {
         return fetchedMediaResource(postbox: account.postbox, reference: imageReference.resourceReference(largestRepresentation.resource), statsCategory: .image) |> map {_ in}
     } else {
         return .never()

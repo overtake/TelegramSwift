@@ -15,8 +15,7 @@ import TelegramCoreMac
 import PostboxMac
 fileprivate class GMagnifyView : MagnifyView  {
     private let progressView: RadialProgressView = RadialProgressView()
-    private let prev: ImageButton = ImageButton()
-    private let next: ImageButton = ImageButton()
+
     fileprivate let statusDisposable = MetaDisposable()
     
     var minX:CGFloat {
@@ -45,7 +44,7 @@ fileprivate class GMagnifyView : MagnifyView  {
         }
         
         progressView.userInteractionEnabled = status != .Local
-        hideOrShowControls()
+        hideOrShowControls(hasPrev: false, hasNext: false, animated: false)
     }
     
     deinit {
@@ -53,51 +52,51 @@ fileprivate class GMagnifyView : MagnifyView  {
     }
     
     private let fillFrame:(GMagnifyView)->NSRect
-    
-    init(_ contentView: NSView, contentSize: NSSize, fillFrame:@escaping(GMagnifyView)->NSRect) {
+    private let prevAction:()->Void
+    private let nextAction:()->Void
+    private let prev: Control
+    private let next: Control
+    init(_ contentView: NSView, contentSize: NSSize, prev: Control, next: Control, fillFrame:@escaping(GMagnifyView)->NSRect, prevAction: @escaping()->Void, nextAction:@escaping()->Void) {
         self.fillFrame = fillFrame
+        self.prevAction = prevAction
+        self.nextAction = nextAction
+        self.prev = prev
+        self.next = next
         super.init(contentView, contentSize: contentSize)
         addSubview(progressView)
         progressView.isHidden = true
         progressView.center()
-        prev.animates = true
-        next.animates = true
         
-        prev.autohighlight = false
-        next.autohighlight = false
-        prev.set(image: theme.icons.galleryPrev, for: .Normal)
-        next.set(image: theme.icons.galleryNext, for: .Normal)
-        
-        prev.set(background: .clear, for: .Normal)
-        next.set(background: .clear, for: .Normal)
-        prev.set(background: NSColor.black.withAlphaComponent(0.4), for: .Hover)
-        next.set(background: NSColor.black.withAlphaComponent(0.4), for: .Hover)
-        prev.set(background: NSColor.black.withAlphaComponent(0.6), for: .Highlight)
-        next.set(background: NSColor.black.withAlphaComponent(0.6), for: .Highlight)
-        contentView.addSubview(prev)
-        contentView.addSubview(next)
     }
     
-    func hideOrShowControls() {
-        prev.animator().alphaValue = !mouseInContent ? 0 : 1
-        next.animator().alphaValue = !mouseInContent ? 0 : 1
+    override func mouseUp(with theEvent: NSEvent) {
+        guard let window = window as? Window else {return}
+        let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+
+        if point.x > frame.width - 80 {
+            nextAction()
+        } else if point.x < 80 {
+            prevAction()
+        } else {
+            super.mouseUp(with: theEvent)
+        }
+    }
+    
+    func hideOrShowControls(hasPrev: Bool, hasNext: Bool, animated: Bool) {
+        guard let window = window as? Window else {return}
+        
+        let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        (animated ? prev.animator() : prev).alphaValue = point.x > 80 || !hasPrev ? 0 : 1
+        (animated ? next.animator() : next).alphaValue = point.x < frame.width - 80 || !hasNext ? 0 : 1
     }
     
     override func add(magnify: CGFloat, for location: NSPoint, animated: Bool) {
         super.add(magnify: magnify, for: location, animated: animated)
-        let prev = animated ? self.prev.animator() : self.prev
-        let next = animated ? self.next.animator() : self.next
-        
-        prev.frame = NSMakeRect(0, 0, 60, contentView.frame.height)
-        next.frame = NSMakeRect(contentView.frame.width - 60, 0, 60, contentView.frame.height)
     }
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         progressView.center()
-        prev.frame = NSMakeRect(0, 0, 60, contentView.frame.height)
-        next.frame = NSMakeRect(contentView.frame.width - 60, 0, 60, contentView.frame.height)
-
     }
     
     required init?(coder: NSCoder) {
@@ -145,6 +144,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     private let indexDisposable = MetaDisposable()
     fileprivate let reversed: Bool
     private let navigationDisposable = MetaDisposable()
+    private let _prev: ImageButton = ImageButton()
+    private let _next: ImageButton = ImageButton()
     init(frame:NSRect, contentInset:NSEdgeInsets, interactions:GalleryInteractions, window:Window, reversed: Bool) {
         self.contentInset = contentInset
         self.window = window
@@ -152,6 +153,26 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         thumbsControl = GalleryThumbsControl(interactions: interactions)
 
         super.init()
+        
+        _prev.animates = true
+        _next.animates = true
+        
+        _prev.autohighlight = false
+        _next.autohighlight = false
+        _prev.set(image: theme.icons.galleryPrev, for: .Normal)
+        _next.set(image: theme.icons.galleryNext, for: .Normal)
+        
+        _prev.set(background: .clear, for: .Normal)
+        _next.set(background: .clear, for: .Normal)
+
+       
+        
+        _prev.frame = NSMakeRect(0, 0, 60, frame.height)
+        _next.frame = NSMakeRect(frame.width - 60, 0, 60, frame.height)
+        
+        _next.userInteractionEnabled = false
+        _prev.userInteractionEnabled = false
+
         
         indexDisposable.set((selectedIndex.get()).start(next: { [weak self] index in
             guard let `self` = self else {return}
@@ -162,15 +183,15 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         cache.countLimit = 10
         captionView.isSelectable = false
         captionView.userInteractionEnabled = false
-        window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
+        window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
-            
-            if let view = self.controller.selectedViewController?.view as? GMagnifyView, let window = view.window {
-                let point = window.mouseLocationOutsideOfEventStream
-                if !view.mouseInContent, self.view._mouseInside() {
-                     _ = interactions.dismiss()
+            if let view = self.controller.selectedViewController?.view as? GMagnifyView, let window = view.window, self.controller.view._mouseInside() {
+                guard window.mouseLocationOutsideOfEventStream.x > 80 && window.mouseLocationOutsideOfEventStream.x < window.frame.width - 80 else {
+                    view.mouseUp(with: event)
                     return .invoked
                 }
+                _ = interactions.dismiss()
+                return .invoked
             }
             return .invokeNext
         }, with: self, for: .leftMouseUp)
@@ -191,12 +212,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }, with: self, for: .scrollWheel)
         
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-            self?.autohideCaptionDisposable.set(nil)
-            if self?.lockedTransition == false {
-                self?.captionView.change(opacity: 1.0)
-                self?.configureCaptionAutohide()
+            guard let `self` = self else {return .rejected}
+            self.autohideCaptionDisposable.set(nil)
+            if self.lockedTransition == false {
+                self.captionView.change(opacity: 1.0)
+                self.configureCaptionAutohide()
             }
-            (self?.controller.selectedViewController?.view as? GMagnifyView)?.hideOrShowControls()
+            (self.controller.selectedViewController?.view as? GMagnifyView)?.hideOrShowControls(hasPrev: self.hasPrev, hasNext: self.hasNext, animated: true)
             return .rejected
         }, with: self, for: .mouseMoved)
         
@@ -237,8 +259,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         return controller.arrangedObjects.map {$0 as! MGalleryItem}
     }
     
-    func merge(with transition:UpdateTransition<MGalleryItem>) -> Bool {
+    private var afterTransaction:(()->Void)? = nil
+    
+    func merge(with transition:UpdateTransition<MGalleryItem>, afterTransaction:(()->Void)? = nil) -> Bool {
         queuedTransitions.append(transition)
+        self.afterTransaction = afterTransaction
         return enqueueTransitions()
     }
     
@@ -333,13 +358,21 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     //pageControllerDidEndLiveTransition(controller, force: true)
                 }
                 self.thumbsControl.layoutItems(with: self.items, selectedIndex: controller.selectedIndex, animated: animated)
+                
             }
             
-            
+            afterTransaction?()
 
             return items.isEmpty
         }
         return false
+    }
+    
+    var hasNext: Bool {
+        return controller.selectedIndex < controller.arrangedObjects.count - 1
+    }
+    var hasPrev: Bool {
+        return controller.selectedIndex > 0
     }
     
     func next() {
@@ -451,7 +484,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             
 
             pageController.completeTransition()
-            if  let controllerView = pageController.selectedViewController?.view as? MagnifyView, previousView != controllerView || force {
+            if  let controllerView = pageController.selectedViewController?.view as? GMagnifyView, previousView != controllerView || force {
+                controllerView.hideOrShowControls(hasPrev: hasPrev, hasNext: hasNext, animated: !force)
                 let item = self.item(at: startIndex)
                 item.appear(for: controllerView.contentView)
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
@@ -465,7 +499,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
             captionView.update(caption)
-            captionView.backgroundColor = .blackTransparent
+            captionView.backgroundColor = NSColor.black.withAlphaComponent(0.5)
             captionView.disableBackgroundDrawing = true
             captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
             captionView.layer?.cornerRadius = .cornerRadius
@@ -528,10 +562,14 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let item = identifiers[identifier]!
             let view = item.singleView()
             view.wantsLayer = true
-            let magnify = GMagnifyView(view, contentSize:item.sizeValue, fillFrame: { [weak self] view in
+            let magnify = GMagnifyView(view, contentSize:item.sizeValue, prev: _prev, next: _next, fillFrame: { [weak self] view in
                 guard let `self` = self else {return NSZeroRect}
                 
                 return self.view.focus(self.contentFrame.size, inset: self.contentInset)
+            }, prevAction: { [weak self] in
+                self?.prev()
+            }, nextAction: { [weak self] in
+                self?.next()
             })
             controller.view = magnify
             magnify.updateStatus(item.status)
@@ -584,7 +622,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) ->Void {
         
-        
+        window.contentView?.addSubview(_prev)
+        window.contentView?.addSubview(_next)
         captionView.change(opacity: 0, animated: false)
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
             lockedTransition = true
@@ -617,6 +656,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             } else {
                 ioDisposabe.set((item.image.get() |> take(1)).start(next: { [weak self, weak selectedView] image in
                     if let selectedView = selectedView {
+                        selectedView.isHidden = false
                         selectedView.swapView(selectedView.contentView)
                         self?.lockedTransition = false
                         if let completion = completion {
@@ -686,7 +726,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 copyView.removeFromSuperview()
                 Queue.mainQueue().after(0.3, { [weak strongSelf] in
                     if let view = strongSelf?.controller.selectedViewController?.view as? MagnifyView {
-                        strongSelf?.window.makeFirstResponder(view.contentView)
+                        if view.contentView.window == strongSelf?.window {
+                            strongSelf?.window.makeFirstResponder(view.contentView)
+                        }
                     }
                 })
             }

@@ -95,15 +95,15 @@ class ChatMessageItem: ChatRowItem {
                         }
                         
                         if effectiveRange.min > 0 {
-                            let increment = beforeAndAfter(effectiveRange.min - 1)
+                            let increment = beforeAndAfter(effectiveRange.min)
                             if increment {
-                                effectiveRange = NSMakeRange(effectiveRange.location - 1, effectiveRange.length)
+                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
                             }
                         }
                         if effectiveRange.max < messageAttr.length - 1 {
                             let increment = beforeAndAfter(effectiveRange.max)
                             if increment {
-                                effectiveRange = NSMakeRange(effectiveRange.location + 1, effectiveRange.length)
+                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
                             }
                         }
                     }
@@ -565,10 +565,11 @@ class ChatMessageItem: ChatRowItem {
                     string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     string.addAttribute(NSAttributedStringKey.link, value: inAppLink.peerInfo(peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
                 case .BotCommand:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: textColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
+                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
                     string.addAttribute(NSAttributedStringKey.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
                 case .Code:
                     string.addAttribute(.preformattedCode, value: 4.0, range: range)

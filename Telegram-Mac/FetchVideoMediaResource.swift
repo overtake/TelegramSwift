@@ -11,7 +11,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaResourceDataFetchResult, NoError> {
+func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
     return Signal { subscriber in
         subscriber.putNext(.reset)
         

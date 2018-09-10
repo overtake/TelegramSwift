@@ -238,6 +238,7 @@ extension AdminLogEventsResult {
     var banHelp:[TelegramChannelBannedRightsFlags] {
         var order:[TelegramChannelBannedRightsFlags] = []
         order.append(.banSendMessages)
+        order.append(.banReadMessages)
         order.append(.banSendMedia)
         order.append(.banSendStickers)
         order.append(.banEmbedLinks)

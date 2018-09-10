@@ -3,7 +3,10 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "closure #1 in StickersViewController.init(account:):EStickersViewController.swift">
+         contextName = "identityEntries(_:primary:relative:updateState:):PassportController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "chatMessagePhotoStatus(account:photo:):MediaUtils.swift">
       </ContextState>
       <ContextState
          contextName = "StickerGridItem.init(account:collectionId:packInfo:index:file:inputNodeInteraction:selected:):EStickerGridItem.swift">
@@ -13,6 +16,14 @@
       </ContextState>
       <ContextState
          contextName = "closure #1 in ChatInteraction.processBotKeyboard(with:):ChatInterfaceInteraction.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MagnifyView.contentSize.didset:MagnifyView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentSize">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "closure #2 in ChatListController.viewDidLoad():ChatListController.swift">
@@ -32,7 +43,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "identityEntries(_:primary:relative:updateState:):PassportController.swift">
+         contextName = "ChatMessageItem.init(_:_:_:_:_:):ChatMessageItem.swift">
       </ContextState>
       <ContextState
          contextName = "static Api.parseVector&lt;A&gt;(_:elementSignature:elementType:):Api.swift">
@@ -51,7 +62,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ChatMessageItem.init(_:_:_:_:_:):ChatMessageItem.swift">
+         contextName = "closure #1 in StickersViewController.init(account:):EStickersViewController.swift">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

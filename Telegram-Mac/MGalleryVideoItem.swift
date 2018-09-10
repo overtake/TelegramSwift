@@ -15,8 +15,15 @@ import TGUIKit
 import AVFoundation
 import AVKit
 
-private class VideoPlayerView : AVPlayerView {
+private final class GAVPlayer : AVPlayer {
+    override func pause() {
+        super.pause()
+    }
+}
+
+class VideoPlayerView : AVPlayerView {
     
+    var isPip: Bool = false
     
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
@@ -46,6 +53,7 @@ private class VideoPlayerView : AVPlayerView {
         super.viewDidMoveToSuperview()
         updateLayout()
     }
+    
     
     private func updateLayout() {
         let controls = subviews.last?.subviews.last
@@ -78,7 +86,7 @@ class MGalleryVideoItem: MGalleryItem {
         
         let pathSignal = combineLatest(path.get() |> distinctUntilChanged |> deliverOnMainQueue, view.get() |> distinctUntilChanged) |> map { path, view -> (AVPlayer?,AVPlayerView) in
             let url = URL(string: path) ?? URL(fileURLWithPath: path)
-            let player = AVPlayer(url: url)
+            let player = GAVPlayer(url: url)
             return (player, view as! AVPlayerView)
         } 
         disposable.set(pathSignal.start(next: { [weak self] player, view in
@@ -178,7 +186,7 @@ class MGalleryVideoItem: MGalleryItem {
         if isPausedGlobalPlayer {
             _ = globalAudio?.play()
         }
-        if let view = view as? AVPlayerView {
+        if let view = view as? VideoPlayerView, !view.isPip {
             view.player?.pause()
         }
         playAfter = false
@@ -201,7 +209,7 @@ class MGalleryVideoItem: MGalleryItem {
                     fatalError("")
                 }
             }
-        case .instantMedia(let media):
+        case .instantMedia(let media, _):
             return media.media as! TelegramMediaFile
         default:
             fatalError()

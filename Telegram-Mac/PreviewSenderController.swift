@@ -345,7 +345,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let disposable = MetaDisposable()
     private let emoji: EmojiViewController
     private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
-    
+    private var sent: Bool = false
     private let isFileDisposable = MetaDisposable()
     private let pasteDisposable = MetaDisposable()
     override func viewClass() -> AnyClass {
@@ -353,7 +353,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     private var formatterPopover: InputFormatterPopover?
-
+    private var temporaryInputState: ChatTextInputState?
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
     private let inputInteraction:PreviewContextInteraction = PreviewContextInteraction()
@@ -485,9 +485,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func send() {
+        self.sent = true
         emoji.popover?.hide()
         self.modal?.close(true)
-        
         let attributed = self.genericView.textView.attributedString()
 
         var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
@@ -563,6 +563,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }, with: self, for: .K, priority: .modal, modifierFlags: [.command, .shift])
     }
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.draggingView.controller = self
@@ -571,7 +572,12 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         genericView.sendAsFile.set(sendingState)
         inputInteraction.add(observer: self)
         
+        self.temporaryInputState = chatInteraction.presentation.interfaceState.inputState
+        let text = chatInteraction.presentation.interfaceState.inputState.attributedString
+        
+        genericView.textView.setAttributedString(text, animated: false)
        
+        chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(ChatTextInputState())})})
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
@@ -592,6 +598,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        if !sent, let temp = temporaryInputState {
+             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(temp)})})
+        }
         window?.removeAllHandlers(for: self)
     }
     

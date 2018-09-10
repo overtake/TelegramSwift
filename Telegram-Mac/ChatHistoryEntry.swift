@@ -183,6 +183,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         }
     }
     
+    
     var scrollIndex: MessageIndex {
         switch self {
         case let .HoleEntry(hole):
@@ -258,9 +259,9 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
-    case let .MessageEntry(lhsMessage, lhsIndex, lhsRenderType, lhsRead, lhsType, lhsFwdType, _):
+    case let .MessageEntry(lhsMessage, lhsIndex, lhsRead, lhsRenderType, lhsType, lhsFwdType, _):
         switch rhs {
-        case let .MessageEntry(rhsMessage, rhsIndex, rhsRenderType, rhsRead, rhsType, rhsFwdType, _):
+        case let .MessageEntry(rhsMessage, rhsIndex, rhsRead, rhsRenderType, rhsType, rhsFwdType, _):
             if lhsRead != rhsRead {
                 return false
             }
@@ -347,7 +348,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 entries.append(.HoleEntry(hole))
             }
         case let .MessageEntry(_msg, read, location, _):
-            
             var message = _msg
             //TODO
             if message.media.isEmpty, let server = proxySettings(from: message.text).0 {

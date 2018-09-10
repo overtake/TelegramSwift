@@ -43,7 +43,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 }
             }
             secureIdAccessContext = nil
-        case .instantMedia(let media):
+        case .instantMedia(let media, _):
             self.media = media.media as! TelegramMediaImage
             secureIdAccessContext = nil
         case let .secureIdDocument(document, _):

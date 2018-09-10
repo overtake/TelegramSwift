@@ -55,7 +55,7 @@ class WPArticleLayout: WPLayout {
             var messages:[Message] = []
             for i in 0 ..< instantMedias.count {
                 let media = instantMedias[i].media
-                let message = parent.withUpdatedMedia([media]).withUpdatedStableId(arc4random())//.withUpdatedId(MessageId(peerId: chatInteraction.peerId, namespace: Namespaces.Message.Local, id: MessageId.Id(i)))
+                let message = parent.withUpdatedMedia([media]).withUpdatedStableId(arc4random()).withUpdatedId(MessageId(peerId: chatInteraction.peerId, namespace: Namespaces.Message.Local, id: MessageId.Id(i)))
                 messages.append(message)
                 
                 weak var weakParameters:ChatMediaGalleryParameters?
@@ -63,7 +63,7 @@ class WPArticleLayout: WPLayout {
                 let parameters = ChatMediaGalleryParameters(showMedia: { [weak self] _ in
                     guard let `self` = self else {return}
 //
-                    showInstantViewGallery(account: account, medias: instantMedias, firstIndex: i, firstStableId: ChatHistoryEntryId.message(parent), self.table, weakParameters)
+                    showInstantViewGallery(account: account, medias: instantMedias, firstIndex: i, firstStableId: ChatHistoryEntryId.message(parent), parent: parent, self.table, weakParameters)
                     
                 }, showMessage: { [weak chatInteraction] _ in
                     chatInteraction?.focusMessageId(nil, parent.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))

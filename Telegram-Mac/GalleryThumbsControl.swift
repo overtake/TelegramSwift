@@ -15,10 +15,10 @@ class GalleryThumbsControl: ViewController {
     private let interactions: GalleryInteractions
     init(interactions: GalleryInteractions) {
         self.interactions = interactions
-        super.init(frame: NSMakeRect(0, 0, 300, 60))
+        super.init(frame: NSMakeRect(0, 0, 400, 50))
     }
     
-    private var items:[MGalleryItem] = []
+    private(set) var items:[MGalleryItem] = []
     
     
     func layoutItems(with items: [MGalleryItem], selectedIndex selected: Int, animated: Bool) {
@@ -74,6 +74,7 @@ class GalleryThumbsControl: ViewController {
                         }
                     }
                 }
+                
             case .instantMedia:
                 newItems = items
             case .photo:
@@ -83,6 +84,10 @@ class GalleryThumbsControl: ViewController {
             }
         }
 
+        if newItems.count == 1 {
+            newItems = []
+        }
+        
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: newItems)
         
         

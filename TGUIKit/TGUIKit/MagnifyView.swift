@@ -35,6 +35,7 @@ open class MagnifyView : NSView {
     }
     
     public func swapView(_ newView: NSView) {
+        NSLog("swaped = \(newView)")
         self.contentView.removeFromSuperview()
         newView.removeFromSuperview()
         self.contentView = newView

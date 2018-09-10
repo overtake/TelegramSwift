@@ -3750,7 +3750,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                     }
                     
-                    return grantSecureIdAccess(network: account.network, peerId: inAppRequest.peerId, publicKey: inAppRequest.publicKey, scope: inAppRequest.scope, opaquePayload: inAppRequest.nonce, values: values, requestedFields: encryptedForm.requestedFields)
+                    return grantSecureIdAccess(network: account.network, peerId: inAppRequest.peerId, publicKey: inAppRequest.publicKey, scope: inAppRequest.scope, opaquePayload: inAppRequest.isModern ? Data() : inAppRequest.nonce, opaqueNonce: inAppRequest.isModern ? inAppRequest.nonce : Data(), values: values, requestedFields: encryptedForm.requestedFields)
                 } |> deliverOnMainQueue, for: mainWindow).start(error: { error in
                         alert(for: mainWindow, info: "\(error)")
                 }, completed: {
