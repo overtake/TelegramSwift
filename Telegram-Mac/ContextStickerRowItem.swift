@@ -109,13 +109,22 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
                         }
                     }, for: .LongMouseDown)
                     
+                    let imageSize = data.file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
+                    let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+                    
                     let view = TransformImageView()
                     let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
-                    view.setSignal( chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor))
+                    view.setSignal(signal: cachedMedia(media: data.file, size: arguments.imageSize, scale: backingScaleFactor), clearInstantly: false)
+                    view.setSignal( chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                        if let strongSelf = self {
+                            return cacheMedia(signal: signal, media: data.file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                        } else {
+                            return .complete()
+                        }
+                    })
                     _ = fileInteractiveFetched(account: item.account, fileReference: reference).start()
                     
-                    let imageSize = data.file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
-                    view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
+                    view.set(arguments: arguments)
                     
                     view.setFrameSize(imageSize)
                     container.addSubview(view)

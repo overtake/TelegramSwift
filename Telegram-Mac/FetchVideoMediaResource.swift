@@ -36,3 +36,34 @@ func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaR
         }
     }
 }
+
+func fetchArchiveMediaResource(account: Account, resource: LocalFileArchiveMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
+    return Signal { subscriber in
+        subscriber.putNext(.reset)
+        let source: ArchiveSource = .resource(resource)
+        let disposable = account.context.archiver.archive(source, startIfNeeded: true).start(next: { status in
+            switch status {
+            case let .done(url):
+                if resource.path.contains("tg_temp_archive_") {
+                    try? FileManager.default.removeItem(atPath: resource.path)
+                }
+                subscriber.putNext(.moveLocalFile(path: url.path))
+                subscriber.putCompletion()
+                account.context.archiver.remove(source)
+            case .fail:
+                subscriber.putError(.generic)
+                subscriber.putCompletion()
+            default:
+                break
+            }
+        }, error: { error in
+            subscriber.putError(.generic)
+        }, completed: {
+            subscriber.putCompletion()
+        })
+        
+        return ActionDisposable {
+            disposable.dispose()
+        }
+    }
+}

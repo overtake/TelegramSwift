@@ -55,8 +55,8 @@ class FastSettings {
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
+    private static let kPlayingRate = "kPlayingRate"
 
-    private static let kBadgeFilter = "kBadgeFilter"
 
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -90,6 +90,14 @@ class FastSettings {
     
     static func toggleChannelMessagesMuted(_ peerId: PeerId) -> Void {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
+    }
+    
+    static var playingRate: Double {
+        return max(UserDefaults.standard.double(forKey: kPlayingRate), 1)
+    }
+    
+    static func setPlayingRate(_ rate: Double) {
+        UserDefaults.standard.set(rate, forKey: kPlayingRate)
     }
     
     static var isMinimisize: Bool {
@@ -189,15 +197,6 @@ class FastSettings {
 		UserDefaults.standard.set(enable, forKey: kInstantViewScrollBySpace)
         UserDefaults.standard.synchronize()
 	}
-    
-    static func toggleBadgeFilter(_ enable: Bool)  {
-        UserDefaults.standard.set(!enable, forKey: kBadgeFilter)
-        UserDefaults.standard.synchronize()
-    }
-    
-    static var isFiltredBadge: Bool {
-        return !UserDefaults.standard.bool(forKey: kBadgeFilter)
-    }
     
     static func toggleAutomaticReplaceEmojies(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kAutomaticConvertEmojiesType)

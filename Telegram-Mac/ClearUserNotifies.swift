@@ -32,3 +32,25 @@ func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
         }
     }
 }
+
+
+func clearNotifies(by msgIds: [MessageId]) {
+    queue.async {
+        let deliveredNotifications = NSUserNotificationCenter.default.deliveredNotifications
+        
+        for notification in deliveredNotifications {
+            if let msgId = notification.userInfo?["message.id"] as? Int32, let msgNamespace = notification.userInfo?["message.namespace"] as? Int32, let namespace = notification.userInfo?["peer.namespace"] as? Int32, let id = notification.userInfo?["peer.id"] as? Int32 {
+                
+                let notificationPeerId = PeerId(namespace: namespace, id: id)
+                
+                let notificationMessageId = MessageId(peerId: notificationPeerId, namespace: msgNamespace, id: msgId)
+                
+                for msgId in msgIds {
+                    if notificationMessageId == msgId {
+                        NSUserNotificationCenter.default.removeDeliveredNotification(notification)
+                    }
+                }
+            }
+        }
+    }
+}

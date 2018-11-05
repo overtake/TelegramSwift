@@ -163,15 +163,15 @@ class TermsModalController: ModalViewController {
         for entity in terms.entities {
             switch entity.type {
             case .Bold:
-                attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.bold(.text), range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.bold(.text), range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
             case .Italic:
-                attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.italic(.text), range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
             case let .TextUrl(url):
-                attributedString.addAttribute(NSAttributedStringKey.link, value: url, range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
-                attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                attributedString.addAttribute(NSAttributedString.Key.link, value: url, range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value: theme.colors.link, range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
             case .Mention:
-                attributedString.addAttribute(NSAttributedStringKey.link, value: terms.text.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)), range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
-                attributedString.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                attributedString.addAttribute(NSAttributedString.Key.link, value: terms.text.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)), range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                attributedString.addAttribute(NSAttributedString.Key.foregroundColor, value: theme.colors.link, range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
             default:
                 break
             }

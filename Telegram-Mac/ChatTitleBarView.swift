@@ -82,7 +82,7 @@ private class ConnectionStatusView : View {
         backgroundColor = theme.colors.background
         textView.backgroundColor = theme.colors.background
         disableProxyButton?.set(background: theme.colors.background, for: .Normal)
-     //   indicator.color = theme.colors.indicatorColor
+        indicator.progressColor = theme.colors.indicatorColor
         let status = self.status
         self.status = status
     }

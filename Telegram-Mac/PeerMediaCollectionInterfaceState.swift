@@ -30,12 +30,12 @@ final class PeerMediaCollectionInteraction : InterfaceObserver {
     }
 }
 
-enum PeerMediaCollectionMode {
-    case photoOrVideo
-    case file
-    case music
-    case webpage
-    case voice
+enum PeerMediaCollectionMode : Int {
+    case photoOrVideo = 0
+    case file = 1
+    case webpage = 2
+    case music = 3
+    case voice = 4
     var tagsValue:MessageTags {
         switch self {
         case .photoOrVideo:

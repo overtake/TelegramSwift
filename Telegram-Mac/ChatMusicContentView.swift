@@ -38,6 +38,14 @@ class ChatMusicContentView: ChatAudioContentView {
         }
     }
     
+    override func viewDidMoveToWindow() {
+        if window != nil {
+            playAnimationView?.animateToPlaying()
+        } else {
+            playAnimationView?.animateToPaused()
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

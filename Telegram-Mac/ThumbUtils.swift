@@ -215,10 +215,16 @@ public struct PreviewOptions: OptionSet {
 func takeSenderOptions(for urls:[URL]) -> [PreviewOptions] {
     var options:[PreviewOptions] = []
     for url in urls {
-        let mime = MIMEType(url.path.nsstring.pathExtension)
+        let mime = MIMEType(url.path)
         
-        if mime.hasPrefix("image"), let image = NSImage(contentsOf: url) {
-            if image.size.width / 10 > image.size.height || image.size.height < 40 {
+        if mime.hasPrefix("image") {
+            if let image = NSImage(contentsOf: url) {
+                if image.size.width / 10 > image.size.height || image.size.height < 40 {
+                    continue
+                } else if image.size.height / 10 > image.size.width || image.size.width < 40 {
+                    continue
+                }
+            } else {
                 continue
             }
         }

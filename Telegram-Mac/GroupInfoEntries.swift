@@ -348,7 +348,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                     }
                                     
                                 } else if peer.isSupergroup {
-                                    return addChannelMembers(account: account, peerId: peerId, memberIds: memberIds)
+                                    return addChannelMembers(account: account, peerId: peerId, memberIds: memberIds) |> `catch` { _ in return .complete()}
                                 }
                             }
                             
@@ -1005,11 +1005,11 @@ enum GroupInfoEntry: PeerInfoEntry {
             var string:String = tr(L10n.peerStatusRecently)
             var color:NSColor = theme.colors.grayText
             
-            if let presence = presence as? TelegramUserPresence {
+            if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
+                string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
+            } else if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
-            } else if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
-                string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
             }
             
             let interactionType:ShortPeerItemInteractionType

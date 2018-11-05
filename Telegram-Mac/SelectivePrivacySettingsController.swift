@@ -41,12 +41,13 @@ private final class SelectivePrivacySettingsControllerArguments {
     let updateType: (SelectivePrivacySettingType) -> Void
     let openEnableFor: () -> Void
     let openDisableFor: () -> Void
-    
-    init(account: Account, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping () -> Void, openDisableFor: @escaping () -> Void) {
+    let p2pMode: (VoiceCallP2PMode) -> Void
+    init(account: Account, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping () -> Void, openDisableFor: @escaping () -> Void, p2pMode: @escaping(VoiceCallP2PMode) -> Void) {
         self.account = account
         self.updateType = updateType
         self.openEnableFor = openEnableFor
         self.openDisableFor = openDisableFor
+        self.p2pMode = p2pMode
     }
 }
 
@@ -68,6 +69,11 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     case everybody(Int32, Bool)
     case contacts(Int32, Bool)
     case nobody(Int32, Bool)
+    case p2pAlways(Int32, Bool)
+    case p2pContacts(Int32, Bool)
+    case p2pNever(Int32, Bool)
+    case p2pHeader(Int32, String)
+    case p2pDesc(Int32, String)
     case settingInfo(Int32, String)
     case disableFor(Int32, String, Int)
     case enableFor(Int32, String, Int)
@@ -76,108 +82,42 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     
     var stableId: Int32 {
         switch self {
-        case .settingHeader:
-            return 0
-        case .everybody:
-            return 1
-        case .contacts:
-            return 2
-        case .nobody:
-            return 3
-        case .settingInfo:
-            return 4
-        case .disableFor:
-            return 5
-        case .enableFor:
-            return 6
-        case .peersInfo:
-            return 7
-        case .section(let sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+        case .settingHeader: return 0
+        case .everybody: return 1
+        case .contacts: return 2
+        case .nobody: return 3
+        case .settingInfo: return 4
+        case .disableFor: return 5
+        case .enableFor: return 6
+        case .peersInfo: return 7
+        case .p2pHeader: return 8
+        case .p2pAlways: return 9
+        case .p2pContacts: return 10
+        case .p2pNever: return 11
+        case .p2pDesc: return 12
+        case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
     
     var index:Int32 {
         switch self {
-        case .settingHeader(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .everybody(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .contacts(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .nobody(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .settingInfo(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .disableFor(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .enableFor(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .peersInfo(let sectionId):
-            return (sectionId * 1000) + stableId
-        case .section(let sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+        case .settingHeader(let sectionId, _): return (sectionId * 1000) + stableId
+        case .everybody(let sectionId, _): return (sectionId * 1000) + stableId
+        case .contacts(let sectionId, _): return (sectionId * 1000) + stableId
+        case .nobody(let sectionId, _): return (sectionId * 1000) + stableId
+        case .settingInfo(let sectionId, _): return (sectionId * 1000) + stableId
+        case .disableFor(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .enableFor(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .peersInfo(let sectionId):  return (sectionId * 1000) + stableId
+        case .p2pAlways(let sectionId, _): return (sectionId * 1000) + stableId
+        case .p2pContacts(let sectionId, _): return (sectionId * 1000) + stableId
+        case .p2pNever(let sectionId, _): return (sectionId * 1000) + stableId
+        case .p2pHeader(let sectionId, _): return (sectionId * 1000) + stableId
+        case .p2pDesc(let sectionId, _): return (sectionId * 1000) + stableId
+        case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
     
-    static func ==(lhs: SelectivePrivacySettingsEntry, rhs: SelectivePrivacySettingsEntry) -> Bool {
-        switch lhs {
-        case let .settingHeader(sectionId, text):
-            if case .settingHeader(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .everybody(sectionId, value):
-            if case .everybody(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .contacts(sectionId, value):
-            if case .contacts(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .nobody(sectionId, value):
-            if case .nobody(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .settingInfo(sectionId, text):
-            if case .settingInfo(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .disableFor(sectionId, title, count):
-            if case .disableFor(sectionId, title, count) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .enableFor(sectionId, title, count):
-            if case .enableFor(sectionId, title, count) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .peersInfo(let sectionId):
-            if case .peersInfo(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .section(let sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
     
     static func <(lhs: SelectivePrivacySettingsEntry, rhs: SelectivePrivacySettingsEntry) -> Bool {
         return lhs.index < rhs.index
@@ -200,6 +140,22 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerNobody), type: .selectable(value), action: {
                 arguments.updateType(.nobody)
             })
+        case let .p2pHeader(_, text):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+        case let .p2pAlways(_, value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerP2pAlways), type: .selectable(value), action: {
+                arguments.p2pMode(.always)
+            })
+        case let .p2pContacts(_, value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerP2pContacts), type: .selectable(value), action: {
+                arguments.p2pMode(.contacts)
+            })
+        case let .p2pNever(_, value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.privacySettingsControllerP2pNever), type: .selectable(value), action: {
+                arguments.p2pMode(.never)
+            })
+        case let .p2pDesc(_, text):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .settingInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .disableFor(_, title, count):
@@ -268,7 +224,7 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
     }
 }
 
-private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySettingsKind, state: SelectivePrivacySettingsControllerState) -> [SelectivePrivacySettingsEntry] {
+private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySettingsKind, state: SelectivePrivacySettingsControllerState, p2pMode: VoiceCallP2PMode?) -> [SelectivePrivacySettingsEntry] {
     var entries: [SelectivePrivacySettingsEntry] = []
     
     var sectionId:Int32 = 1
@@ -322,6 +278,23 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         entries.append(.enableFor(sectionId, enableForText, state.enableFor.count))
     }
     entries.append(.peersInfo(sectionId))
+    
+    if let p2pMode = p2pMode {
+        switch kind {
+        case .voiceCalls:
+            entries.append(.section(sectionId))
+            sectionId += 1
+            entries.append(.p2pHeader(sectionId, L10n.privacySettingsControllerP2pHeader))
+            entries.append(.p2pAlways(sectionId, p2pMode == .always))
+            entries.append(.p2pContacts(sectionId, p2pMode == .contacts))
+            entries.append(.p2pNever(sectionId, p2pMode == .never))
+            entries.append(.p2pDesc(sectionId, L10n.privacySettingsControllerP2pDesc))
+            
+        default:
+            break
+        }
+    }
+    
     
     return entries
 }
@@ -393,6 +366,8 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
         let updateSettingsDisposable = MetaDisposable()
         actionsDisposable.add(updateSettingsDisposable)
         
+        let p2pModePromise: Promise<VoiceCallP2PMode?> = Promise()
+        
         let arguments = SelectivePrivacySettingsControllerArguments(account: account, updateType: { type in
             updateState {
                 $0.withUpdatedSetting(type)
@@ -439,10 +414,28 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
                     return state.withUpdatedDisableFor(Set(updatedPeerIds)).withUpdatedEnableFor(state.enableFor.subtracting(Set(updatedPeerIds)))
                 }
             }))
+        }, p2pMode: { mode in
+            _ = updateVoiceCallSettingsSettingsInteractively(postbox: account.postbox, { settings -> VoiceCallSettings in
+                return settings.withUpdatedP2pCallMode(mode)
+            }).start(completed: {
+                p2pModePromise.set(account.postbox.transaction {  transaction in
+                    return p2pCallMode(transaction: transaction)
+                })
+            })
         })
         
-        let signal = statePromise.get() |> deliverOnMainQueue
-            |> map { [weak self] state -> TableUpdateTransition in
+        let configuration: Signal<VoiceCallP2PMode?, NoError>
+        switch kind {
+        case .voiceCalls:
+            p2pModePromise.set(account.postbox.transaction {  transaction in
+                return p2pCallMode(transaction: transaction)
+            })
+        default:
+            p2pModePromise.set(.single(nil))
+        }
+        
+        let signal = combineLatest(statePromise.get() |> deliverOnMainQueue, p2pModePromise.get() |> deliverOnMainQueue)
+            |> map { [weak self] state, p2pMode -> TableUpdateTransition in
                 
                 if state.saving {
                     self?.state = .Edit
@@ -499,7 +492,7 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
                 
                 self?.setCenterTitle(title)
                 
-                let entries = selectivePrivacySettingsControllerEntries(kind: kind, state: state)
+                let entries = selectivePrivacySettingsControllerEntries(kind: kind, state: state, p2pMode: p2pMode)
                 return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
             } |> afterDisposed {
                 actionsDisposable.dispose()

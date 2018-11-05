@@ -42,6 +42,7 @@ open class Control: View {
     }
     open var hideAnimated:Bool = false
     
+    
 
     public var isSelected:Bool {
         didSet {
@@ -51,11 +52,10 @@ open class Control: View {
         }
     }
     
-    open var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:kCAMediaTimingFunctionSpring)
+    open var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:CAMediaTimingFunctionName.spring)
     
     var trackingArea:NSTrackingArea?
     
-    public var interactionStateForRestore:Bool? = nil
     
     
     private var handlers:[(ControlEvent,(Control) -> Void)] = []

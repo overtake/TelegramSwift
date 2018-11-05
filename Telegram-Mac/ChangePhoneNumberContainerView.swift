@@ -122,6 +122,8 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
             text = "undefined error"
         case .phoneBanned:
             text = "PHONE BANNED"
+        case .timeout:
+            text = "timeout"
         }
         errorLabel.state.set(.single(.error(text)))
     }
@@ -185,7 +187,7 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         
         if let field = obj.object as? NSTextField {
             let code = codeText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()

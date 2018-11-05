@@ -72,7 +72,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     }
     
     
-    public override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+    public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         return true
     }
     

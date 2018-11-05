@@ -180,7 +180,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
 }
 
 //
--(void)startTransmissionIfNeeded:(bool)outgoing connection:(TGCallConnection *)connection {
+-(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p connection:(TGCallConnection *)connection {
     
     tgvoip::VoIPController::Config config = tgvoip::VoIPController::Config();
     config.initTimeout = TGCallConnectTimeout;
@@ -218,7 +218,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     }
     
     _controller.controller->SetEncryptionKey((char *)connection.key.bytes, outgoing);
-    _controller.controller->SetRemoteEndpoints(endpoints, true, connection.maxLayer);
+    _controller.controller->SetRemoteEndpoints(endpoints, allowP2p, connection.maxLayer);
     
     
     _controller.controller->Start();

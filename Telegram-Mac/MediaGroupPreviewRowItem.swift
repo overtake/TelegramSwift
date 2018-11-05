@@ -17,8 +17,16 @@ class MediaGroupPreviewRowItem: TableRowItem {
     private let _stableId: UInt32 = arc4random()
     fileprivate let layout: GroupedLayout
     fileprivate let reorder:(Int, Int)->Void
-    init(_ initialSize: NSSize, messages: [Message], account: Account, reorder:@escaping(Int, Int)->Void) {
+    fileprivate let urls: [URL]
+    fileprivate let hasEditedData: [URL: EditedImageData]
+    fileprivate let edit:(URL)->Void
+    fileprivate let delete:(URL)->Void
+    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], edit: @escaping(URL)->Void, delete:@escaping(URL)->Void, account: Account, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
+        self.hasEditedData = editedData
+        self.edit = edit
+        self.delete = delete
+        self.urls = urls
         self.reorder = reorder
         self.account = account
         super.init(initialSize)
@@ -38,6 +46,8 @@ class MediaGroupPreviewRowItem: TableRowItem {
     override var stableId: AnyHashable {
         return _stableId
     }
+
+    
     
     override func viewClass() -> AnyClass {
         return MediaGroupPreviewRowView.self
@@ -45,10 +55,10 @@ class MediaGroupPreviewRowItem: TableRowItem {
     
 }
 
-private class MediaGroupPreviewRowView : TableRowView {
+class MediaGroupPreviewRowView : TableRowView {
     private var contents: [ChatMediaContentView] = []
     private var startPoint: NSPoint = NSZeroPoint
-    private var draggingIndex: Int? = nil
+    private(set) var draggingIndex: Int? = nil
 
     override func draw(_ dirtyRect: NSRect) {
         
@@ -86,8 +96,28 @@ private class MediaGroupPreviewRowView : TableRowView {
             }
         }
         
-        for content in contents {
+        
+        
+        for i in 0 ..< contents.count {
+            let content = contents[i]
             addSubview(content)
+            let control: MediaPreviewEditControl
+            if let editControl = content.subviews.last as? MediaPreviewEditControl {
+                control = editControl
+            } else {
+                let editControl = MediaPreviewEditControl()
+                content.addSubview(editControl)
+                control = editControl
+            }
+            control.canEdit = item.layout.messages[i].media[0] is TelegramMediaImage
+            control.set(edit: { [weak item] in
+                guard let item = item else {return}
+                item.edit(item.urls[i])
+            }, delete: { [weak item] in
+                    guard let item = item else {return}
+                    item.delete(item.urls[i])
+            }, hasEditedData: item.hasEditedData[item.urls[i]] != nil)
+            
         }
         
         assert(contents.count == item.layout.count)
@@ -98,6 +128,40 @@ private class MediaGroupPreviewRowView : TableRowView {
         super.set(item: item, animated: animated)
         
         needsLayout = true
+        
+        updateMouse()
+    }
+    
+    override func updateMouse() {
+        guard let window = window, let table = item?.table else {
+            for node in self.contents {
+                if let control = node.subviews.last as? MediaPreviewEditControl {
+                    control.isHidden = true
+                }
+            }
+            return
+        }
+        
+        let row = table.row(at: table.documentView!.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+        
+        if row == item?.index {
+            let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            for node in self.contents {
+                if let control = node.subviews.last as? MediaPreviewEditControl {
+                    if NSPointInRect(point, node.frame) {
+                        control.isHidden = false
+                    } else {
+                        control.isHidden = true
+                    }
+                }
+            }
+        } else {
+            for node in self.contents {
+                if let control = node.subviews.last as? MediaPreviewEditControl {
+                    control.isHidden = true
+                }
+            }
+        }
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -114,15 +178,15 @@ private class MediaGroupPreviewRowView : TableRowView {
                 break
             }
         }
-        
+        super.mouseDown(with: event)
     }
     
     override func mouseUp(with event: NSEvent) {
         
         guard let item = item as? MediaGroupPreviewRowItem else {return}
 
-        let point = convert(event.locationInWindow, from: nil)
-        
+        var point = convert(event.locationInWindow, from: nil)
+        point = NSMakePoint(min(max(0, point.x), frame.width - 10), min(max(0, point.y), frame.height - 10))
         if let index = draggingIndex, let newIndex = item.layout.moveItemIfNeeded(at: index, point: point) {
             
             let current = contents[index]
@@ -250,6 +314,9 @@ private class MediaGroupPreviewRowView : TableRowView {
         
         for i in 0 ..< item.layout.count {
             contents[i].setFrameOrigin(item.layout.frame(at: i).origin.offsetBy(dx: offset.x, dy: offset.y))
+            if let control = contents[i].subviews.last {
+                control.setFrameOrigin(NSMakePoint(contents[i].frame.width - control.frame.width - 10, contents[i].frame.height - control.frame.height - 10))
+            }
         }
         
     }

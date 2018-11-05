@@ -280,7 +280,7 @@ public final class TextViewLayout : Equatable {
         
         let font: CTFont
         if attributedString.length != 0 {
-            if let stringFont = attributedString.attribute(NSAttributedStringKey(kCTFontAttributeName as String), at: 0, effectiveRange: nil) {
+            if let stringFont = attributedString.attribute(NSAttributedString.Key(kCTFontAttributeName as String), at: 0, effectiveRange: nil) {
                 font = stringFont as! CTFont
             } else {
                 font = defaultFont
@@ -419,9 +419,9 @@ public final class TextViewLayout : Equatable {
                 if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedWidth) {
                     coreTextLine = originalLine
                 } else {
-                    var truncationTokenAttributes: [NSAttributedStringKey : Any] = [:]
-                    truncationTokenAttributes[NSAttributedStringKey(kCTFontAttributeName as String)] = font
-                    truncationTokenAttributes[NSAttributedStringKey(kCTForegroundColorFromContextAttributeName as String)] = true as NSNumber
+                    var truncationTokenAttributes: [NSAttributedString.Key : Any] = [:]
+                    truncationTokenAttributes[NSAttributedString.Key(kCTFontAttributeName as String)] = font
+                    truncationTokenAttributes[NSAttributedString.Key(kCTForegroundColorFromContextAttributeName as String)] = true as NSNumber
                     let tokenString = "\u{2026}"
                     let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
@@ -597,7 +597,7 @@ public final class TextViewLayout : Equatable {
 
         strokeRects.removeAll()
         if strokeLinks {
-            attributedString.enumerateAttribute(NSAttributedStringKey.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
+            attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
                 if let _ = value, self.interactions.isDomainLink(attributedString.string.nsstring.substring(with: range)) {
                     
                     for line in self.lines {
@@ -610,7 +610,7 @@ public final class TextViewLayout : Equatable {
                             let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
                             
                             
-                            let color: NSColor = self.attributedString.attribute(NSAttributedStringKey.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
+                            let color: NSColor = self.attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
                             let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
                             
                             self.strokeRects.append((rect, color))
@@ -742,7 +742,7 @@ public final class TextViewLayout : Equatable {
             var range:NSRange = NSMakeRange(NSNotFound, 0)
             let attrs = attributedString.attributes(at: pos, effectiveRange: &range)
             
-            let link:Any? = attrs[NSAttributedStringKey.link]
+            let link:Any? = attrs[NSAttributedString.Key.link]
             if let link = link {
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
@@ -801,7 +801,7 @@ public final class TextViewLayout : Equatable {
         var range = NSMakeRange(startIndex, 1)
         let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        let check = attributedString.attribute(NSAttributedStringKey.link, at: range.location, effectiveRange: &effectiveRange)
+        let check = attributedString.attribute(NSAttributedString.Key.link, at: range.location, effectiveRange: &effectiveRange)
         if check != nil && effectiveRange.location != NSNotFound {
             self.selectedRange = TextSelectedRange(range: effectiveRange, color: selectText, def: true)
             return
@@ -1234,7 +1234,6 @@ public class TextView: Control {
     
     
     public override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
         
         if let layout = layout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
@@ -1247,6 +1246,8 @@ public class TextView: Control {
             } else if !layout.selectedRange.hasSelectText || !isSelectable && event.clickCount == 1 {
                 if let (link, _, _, _) = layout.link(at: point) {
                     layout.interactions.processURL(link)
+                } else {
+                    super.mouseUp(with: event)
                 }
             } else if layout.selectedRange.hasSelectText && event.clickCount == 1 && event.modifierFlags.contains(.shift) {
                 var range = layout.selectedRange.range
@@ -1258,8 +1259,12 @@ public class TextView: Control {
                     range.length = (index - range.location)
                 }
                 layout.selectedRange.range = range
+            } else {
+                super.mouseUp(with: event)
             }
             setNeedsDisplay()
+        } else {
+            super.mouseUp(with: event)
         }
     }
     
@@ -1268,7 +1273,7 @@ public class TextView: Control {
     func checkCursor(_ event:NSEvent) -> Void {
         let location = self.convert(event.locationInWindow, from: nil)
         
-        if self.mouse(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
+        if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
             
             if let layout = layout, let (_, _, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand.set()

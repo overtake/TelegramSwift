@@ -376,7 +376,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
                 filter = .all
             }
             
-            let participantsSignal:Signal<[RenderedChannelParticipant]?, NoError> = channelMembers(postbox: account.postbox, network: account.network, peerId: peerId, category: .recent(filter)) |> map {_ = _renderedResult.swap(($0 ?? []).reduce([:], { current, participant in
+            let participantsSignal:Signal<[RenderedChannelParticipant]?, NoError> = channelMembers(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, category: .recent(filter)) |> map {_ = _renderedResult.swap(($0 ?? []).reduce([:], { current, participant in
                 var current = current
                 current[participant.peer.id] = participant
                 return current
@@ -390,7 +390,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
             let contactsSearch: Signal<([TemporaryPeer], [TemporaryPeer], Bool), NoError>
             
             if settings.contains(.remote) {
-                contactsSearch = combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
+                contactsSearch = combineLatest(foundLocalPeers |> map {$0.0}, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
                     return (values.0 + values.1.0, values.1.1, values.1.2 && search.request.length >= 5)
                     }
                     |> mapToSignal { values -> Signal<([Peer], [Peer], MultiplePeersView, Bool), NoError> in
@@ -579,7 +579,7 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                 
                 let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
                 
-                return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
+                return combineLatest(foundLocalPeers |> map {$0.0}, foundRemotePeers) |> map { values -> ([Peer], Bool) in
                     return (uniquePeers(from: (values.0 + values.1.0 + values.1.1)), values.1.2 && search.request.length >= 5)
                 }
                     |> runOn(prepareQueue)

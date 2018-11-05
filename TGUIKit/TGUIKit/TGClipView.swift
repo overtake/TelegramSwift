@@ -95,8 +95,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
        // ctx.clear(bounds)
 
         
-            ctx.setFillColor(NSColor.clear.cgColor)
-            ctx.fill(bounds)
+           // ctx.setFillColor(NSColor.clear.cgColor)
+           // ctx.fill(bounds)
         
 
         if let border = border {

@@ -114,7 +114,7 @@ public class SwitchView: Control {
         
         CATransaction.begin()
         if animates {
-            buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring)
+            buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring)
         }
         backgroundLayer.backgroundColor = isEnabled ? ( isOn ? presentation.stateOnColor.cgColor : presentation.stateOffColor.cgColor ) : presentation.disabledColor.cgColor
         backgroundLayer.borderWidth = isOn ? 0.0 : 1.0

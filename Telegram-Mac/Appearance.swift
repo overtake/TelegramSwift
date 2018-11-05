@@ -903,6 +903,22 @@ struct TelegramIconsTheme {
     let galleryNext: CGImage
     let galleryMore: CGImage
     let galleryShare: CGImage
+    
+    let playingVoice1x: CGImage
+    let playingVoice2x: CGImage
+    
+    
+    let galleryRotate: CGImage
+    let galleryZoomIn: CGImage
+    let galleryZoomOut: CGImage
+    
+    let previewSenderCrop: CGImage
+    let previewSenderDelete: CGImage
+    
+    let editMessageCurrentPhoto: CGImage
+    
+    let previewSenderDeleteFile: CGImage
+    let previewSenderArchive: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -964,7 +980,11 @@ final class TelegramChatListTheme {
 
 extension TelegramPresentationTheme {
     var appearance: NSAppearance? {
-        return colors.isDark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
+        if #available(OSX 10.14, *), followSystemAppearance {
+            return nil
+        } else {
+            return colors.isDark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
+        }
     }
 }
 
@@ -980,7 +1000,8 @@ class TelegramPresentationTheme : PresentationTheme {
     let bubbled: Bool
     let wallpaper: TelegramWallpaper
     let fontSize: CGFloat
-    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: TelegramWallpaper) {
+    let followSystemAppearance: Bool
+    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: TelegramWallpaper, followSystemAppearance: Bool) {
         self.chatList = chatList
         #if !SHARE
             self.chat = TelegramChatColors(colors, bubbled)
@@ -990,6 +1011,7 @@ class TelegramPresentationTheme : PresentationTheme {
         self.wallpaper = wallpaper
         self.bubbled = bubbled
         self.fontSize = fontSize
+        self.followSystemAppearance = followSystemAppearance
         super.init(colors: colors, search: search)
     }
     
@@ -1342,12 +1364,22 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                galleryPrev: #imageLiteral(resourceName: "Icon_GalleryPrev").precomposed(.white),
                                                galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white),
                                                galleryMore: #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white),
-                                               galleryShare: #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white)
+                                               galleryShare: #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white),
+                                               playingVoice1x: #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.grayIcon),
+                                               playingVoice2x: #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.blueIcon),
+                                               galleryRotate: NSImage(named: "Icon_GalleryRotate")!.precomposed(.white),
+                                               galleryZoomIn: NSImage(named: "Icon_GalleryZoomIn")!.precomposed(.white),
+                                               galleryZoomOut: NSImage(named: "Icon_GalleryZoomOut")!.precomposed(.white),
+                                               previewSenderCrop: NSImage(named: "Icon_PreviewSenderCrop")!.precomposed(.white),
+                                               previewSenderDelete: NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(.white),
+                                               editMessageCurrentPhoto: NSImage(named: "Icon_EditMessageCurrentPhoto")!.precomposed(palette.blueIcon),
+                                               previewSenderDeleteFile: NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(palette.blueIcon),
+                                               previewSenderArchive: NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon)
     )
 }
 
 
-private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, wallpaper: TelegramWallpaper) -> TelegramPresentationTheme {
+private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: TelegramWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
@@ -1370,7 +1402,7 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.blueIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), {tr(L10n.searchFieldSearch)}, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper)
+    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), {tr(L10n.searchFieldSearch)}, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, followSystemAppearance: followSystemAppearance)
 }
 
 
@@ -1384,17 +1416,33 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
             palette = settings.palette
         }
     case darkPalette.name:
-        palette = darkPalette
+        if settings.palette.blueFill.hexString == darkPalette.blueFill.hexString {
+            palette = darkPalette
+        } else {
+            palette = settings.palette
+        }
     case dayClassic.name:
-        palette = dayClassic
+        if settings.palette.blueFill.hexString == dayClassic.blueFill.hexString {
+            palette = dayClassic
+        } else {
+            palette = settings.palette
+        }
     case nightBluePalette.name:
-        palette = nightBluePalette
+        if settings.palette.blueFill.hexString == nightBluePalette.blueFill.hexString {
+            palette = nightBluePalette
+        } else {
+            palette = settings.palette
+        }
     case mojavePalette.name:
-        palette = mojavePalette
+        if settings.palette.blueFill.hexString == mojavePalette.blueFill.hexString {
+            palette = mojavePalette
+        } else {
+            palette = settings.palette
+        }
     default:
         palette = settings.palette
     }
-    telegramUpdateTheme(generateTheme(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.wallpaper), window: window, animated: animated)
+    telegramUpdateTheme(generateTheme(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, followSystemAppearance: settings.followSystemAppearance, wallpaper: settings.wallpaper), window: window, animated: animated)
 }
 
 private let appearanceDisposable = MetaDisposable()
@@ -1434,7 +1482,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 }
 
 func setDefaultTheme(for window: Window? = nil) {
-    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: false, fontSize: 13.0, wallpaper: .none), window: window, animated: false)
+    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: false, fontSize: 13.0, followSystemAppearance: true, wallpaper: .none), window: window, animated: false)
 }
 
 

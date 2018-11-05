@@ -204,6 +204,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     let view:Promise<NSView> = Promise()
     let size:Promise<NSSize> = Promise()
     let magnify:Promise<CGFloat> = Promise()
+    let rotate: ValuePromise<ImageOrientation?> = ValuePromise(nil, ignoreRepeated: true)
     
     let disposable:MetaDisposable = MetaDisposable()
     let fetching:MetaDisposable = MetaDisposable()
@@ -226,7 +227,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     var identifier:NSPageController.ObjectIdentifier {
-        return NSPageController.ObjectIdentifier(rawValue: entry.identifier)
+        return entry.identifier
     }
     
     var sizeValue:NSSize {
@@ -254,7 +255,18 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self.account = account
         self._pagerSize = pagerSize
         if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
-            self.caption = TextViewLayout(.initialize(string: caption, color: .white, font: .normal(.text)), alignment: .center)
+            let attr = NSMutableAttributedString()
+            _ = attr.append(string: caption, color: .white, font: .normal(.text))
+            
+            attr.detectLinks(type: [.Links, .Mentions], account: account, color: .linkColor, openInfo: { peerId, _, _, _ in
+                account.context.mainNavigation?.push(PeerInfoController.init(account: account, peerId: peerId))
+                viewer?.close()
+            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
+            
+            self.caption = TextViewLayout(attr, alignment: .center)
+            self.caption?.interactions = globalLinkExecutor
+
+            
             self.caption?.measure(width: pagerSize.width - 200)
         } else {
             self.caption = nil
@@ -268,7 +280,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             view.layer?.contents = image
             view.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
 
-            if first, let `self` = self, let magnify = view.superview?.superview as? MagnifyView {
+            if let `self` = self, let magnify = view.superview?.superview as? MagnifyView {
                 if let size = image?.size, size.width > 150 && size.height > 150, size.width - size.height != self.sizeValue.width - self.sizeValue.height {
                     self.modifiedSize = size
                     if magnify.contentSize != self.sizeValue {
@@ -278,7 +290,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             }
             
             if !first {
-                view.layer?.animateContents()
+               // view.layer?.animateContents()
             }
             first = false
         }

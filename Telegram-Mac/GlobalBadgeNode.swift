@@ -57,37 +57,58 @@ class GlobalBadgeNode: Node {
         self.layoutChanged = layoutChanged
         super.init(View())
         
-        var items:[UnreadMessageCountsItem] = [.total(.raw, .messages)]
+        var items:[UnreadMessageCountsItem] = []
+        let peerSignal: Signal<(Peer, Bool)?, NoError>
         if let peerId = excludePeerId {
             items.append(.peer(peerId))
+            let notificationKeyView: PostboxViewKey = .peerNotificationSettings(peerIds: Set([peerId]))
+            peerSignal = combineLatest(account.postbox.loadedPeerWithId(peerId), account.postbox.combinedView(keys: [notificationKeyView]) |> map { view in
+                return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount ?? false
+            }) |> map {Optional($0)}
+        } else {
+            peerSignal = .single(nil)
         }
         
         
-        self.disposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), NoError> in
-            
-            return account.postbox.unreadMessageCountsView(items: items) |> map { view in
-                var totalCount:Int32 = 0
-                if let total = view.count(for: .total(value, .chats)) {
-                    totalCount = total
-                }
-                
-                return (view, totalCount)
-            }
-            
-        } |> deliverOnMainQueue).start(next: { [weak self] view, totalValue in
+        
+        
+        self.disposable.set((combineLatest(renderedTotalUnreadCount(postbox: account.postbox), account.postbox.unreadMessageCountsView(items: items), appNotificationSettings(postbox: account.postbox), peerSignal) |> deliverOnMainQueue).start(next: { [weak self] (count, view, inAppSettings, peerSettings) in
             if let strongSelf = self {
                 
-                var excludeTotal = totalValue
-                if let excludePeerId = excludePeerId, let peerCount = view.count(for: .peer(excludePeerId)) {
-                    excludeTotal -= peerCount
-                }
+                var excludeTotal: Int32 = 0
                 
-                let totalValue = max(0, totalValue)
-                excludeTotal = max(0, excludeTotal)
-                var dockTile:String? = nil
+                var dockTile: String?
+                let totalValue = max(0, count.0)
                 if totalValue > 0 {
                      dockTile = "\(totalValue)"
                 }
+                
+                excludeTotal = totalValue
+ 
+                
+                if items.count == 1, let peerSettings = peerSettings {
+                    if let count = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), count > 0 {
+                        var removable = false
+                        switch inAppSettings.totalUnreadCountDisplayStyle {
+                        case .raw:
+                            removable = true
+                        case .filtered:
+                            if !peerSettings.1 {
+                                removable = true
+                            }
+                        }
+                        if removable {
+                            switch inAppSettings.totalUnreadCountDisplayCategory {
+                            case .chats:
+                                excludeTotal -= 1
+                            case .messages:
+                                excludeTotal -= count
+                            }
+                        }
+                    }
+                }
+                
+                
                 if excludeTotal == 0 {
                     strongSelf.attributedString = nil
                 } else {

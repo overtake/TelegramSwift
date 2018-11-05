@@ -137,15 +137,15 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         }
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
   
     }
     
-    override func controlTextDidBeginEditing(_ obj: Notification) {
+    func controlTextDidBeginEditing(_ obj: Notification) {
         input.textView?.insertionPointColor = theme.colors.text
     }
     
-    override func controlTextDidEndEditing(_ obj: Notification) {
+    func controlTextDidEndEditing(_ obj: Notification) {
         
     }
     

@@ -84,7 +84,7 @@ class DragView : OverlayControl {
 
 public class DraggingView: SplitView {
     
-    var container:View = View()
+    var container:Control = Control()
     
     public weak var controller:ViewController?
     
@@ -126,7 +126,7 @@ public class DraggingView: SplitView {
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         
-        if let items = controller?.draggingItems(for: sender.draggingPasteboard()), items.count > 0, !sender.draggingSourceOperationMask().isEmpty {
+        if let items = controller?.draggingItems(for: sender.draggingPasteboard), items.count > 0, !sender.draggingSourceOperationMask.isEmpty {
             
             container.frame = bounds
             
@@ -136,14 +136,18 @@ public class DraggingView: SplitView {
             }
             container.layer?.removeAllAnimations()
             container.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25)
+            
+            controller?.draggingEntered()
         }
         
-        
        
-        return sender.draggingSourceOperationMask()
+        return .copy
     }
     
     override public func draggingExited(_ sender: NSDraggingInfo?) {
+        
+        controller?.draggingExited()
+        
         container.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion:false, completion:{[weak self] (completed) in
             if completed {
                 self?.container.removeFromSuperview()

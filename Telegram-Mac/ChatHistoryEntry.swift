@@ -238,7 +238,7 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     } else {
         for (lhsPeerId, lhsPeer) in lhsMessage.peers {
             if let rhsPeer = rhsMessage.peers[lhsPeerId] {
-                if !lhsPeer.isEqual(rhsPeer) {
+                if rhsPeer.displayTitle != lhsPeer.displayTitle {
                     return false
                 }
             } else {

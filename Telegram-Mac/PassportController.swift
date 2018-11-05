@@ -478,7 +478,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                         entries.append(.description(sectionId: sectionId, index: index, text: emailText))
                         index += 1
                     }
-                case let .set(_, hasRecoveryEmail, _):
+                case let .set(_, hasRecoveryEmail, _, _):
                     
                     if state.tmpPwd == nil {
                         if let peer = peer, let form = encryptedForm {
@@ -1880,7 +1880,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         index += 1
         
         entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, placeholder: L10n.secureIdAddressPostcodePlaceholder, inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { text in
-            return latinFilter(text, .address, _id_postcode, false, updateState)
+            return latinFilter(text, .address, _id_postcode, true, updateState)
         }, limit: 10))
         index += 1
         
@@ -3606,13 +3606,13 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                 let updatePassword: (String, String?) -> Void = { password, email in
                     updateState { current in
-                        return current.withUpdatedPassword(.password(password: password, pendingEmailPattern: email))
+                        return current.withUpdatedPassword(.password(password: password, pendingEmail: nil))
                     }
                     let configuration: TwoStepVerificationConfiguration
                     if let email = email {
                         configuration = .notSet(pendingEmailPattern: email)
                     } else {
-                        configuration = .set(hint: hint, hasRecoveryEmail: false, pendingEmailPattern: email ?? "")
+                        configuration = .set(hint: hint, hasRecoveryEmail: false, pendingEmailPattern: email ?? "", hasSecureValues: false)
                     }
                     passwordVerificationData.set(.single(nil) |> then(updateTwoStepVerificationPassword(network: account.network, currentPassword: nil, updatedPassword: .password(password: password, hint: hint, email: email))
                         |> `catch` {_ in return .complete()}
@@ -3692,7 +3692,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         default:
                             break
                         }
-                        if scrollItem == nil, let item = item as? GeneralInteractedRowItem, let color = item.descLayout?.attributedString.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? NSColor {
+                        if scrollItem == nil, let item = item as? GeneralInteractedRowItem, let color = item.descLayout?.attributedString.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor {
                             if color.argb == theme.colors.redUI.argb {
                                 scrollItem = item
                             }

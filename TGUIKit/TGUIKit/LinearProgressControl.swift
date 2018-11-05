@@ -90,6 +90,7 @@ public class LinearProgressControl: Control {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
         let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width * progress), progressHeight)
+
         progressView.change(size: size, animated: animated, duration: duration)
         progressView.setFrameOrigin(NSMakePoint(0, frame.height - progressHeight))
     }

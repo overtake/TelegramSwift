@@ -260,25 +260,22 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         }
         
         return .fail(.doSomething { f in
-            updateState { current in
-                if current.firstName.isEmpty {
-                    f(.fail(.fields([_id_info : .shake])))
-                    return current
+            let current = stateValue.modify {$0}
+            if current.firstName.isEmpty {
+                f(.fail(.fields([_id_info : .shake])))
+            }
+            var signals:[Signal<Void, NoError>] = []
+            if let peerView = peerView {
+                let updates = valuesRequiringUpdate(state: current, view: peerView)
+                if let names = updates.0 {
+                    signals.append(updateAccountPeerName(account: account, firstName: names.fn, lastName: names.ln))
                 }
-                var signals:[Signal<Void, NoError>] = []
-                if let peerView = peerView {
-                    let updates = valuesRequiringUpdate(state: current, view: peerView)
-                    if let names = updates.0 {
-                        signals.append(updateAccountPeerName(account: account, firstName: names.fn, lastName: names.ln))
-                    }
-                    if let about = updates.1 {
-                        signals.append(updateAbout(account: account, about: about) |> `catch` { _ in .complete()})
-                    }
-                    updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start(completed: {
-                        updateState { $0 }
-                    }))
+                if let about = updates.1 {
+                    signals.append(updateAbout(account: account, about: about) |> `catch` { _ in .complete()})
                 }
-                return current
+                updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start(completed: {
+                    updateState { $0 }
+                }))
             }
         })
     }, updateDatas: { data in
@@ -290,15 +287,13 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         actionsDisposable.dispose()
     }, updateDoneEnabled: { data in
         return { f in
-//            updateState { current in
-//                if let peerView = peerView {
-//                    let updates = valuesRequiringUpdate(state: current, view: peerView)
-//                    f(updates.0 != nil || updates.1 != nil)
-//                } else {
-//                    f(false)
-//                }
-//                return current
-//            }
+            let current = stateValue.modify {$0}
+            if let peerView = peerView {
+                let updates = valuesRequiringUpdate(state: current, view: peerView)
+                f(updates.0 != nil || updates.1 != nil)
+            } else {
+                f(false)
+            }
         }
     }, removeAfterDisappear: false, identifier: "account"))
 }

@@ -69,7 +69,7 @@ class PeerListContainerView : View {
         proxyConnecting.isEventLess = true
         proxyConnecting.userInteractionEnabled = false
         _ = proxyButton.sizeToFit()
-        proxyConnecting.centerX()
+        proxyConnecting.centerX(addition: backingScaleFactor == 2.0 ? -1.0 : 0)
         proxyConnecting.centerY(addition: -1)
         needsLayout = true
     }
@@ -213,7 +213,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 self.genericView.tableView.changeSelection(stableId: location)
                 if location == nil {
                     if !self.genericView.searchView.isEmpty {
-                        self.window?.makeFirstResponder(self.genericView.searchView.input)
+                        _ = self.window?.makeFirstResponder(self.genericView.searchView.input)
                     }
                 }
             }))
@@ -287,37 +287,14 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             if let strongSelf = self, !control.isSelected {
                 
                 let items = [SPopoverItem(tr(L10n.composePopoverNewGroup), { [weak strongSelf] in
-                    if let strongSelf = strongSelf, let navigation = strongSelf.navigationController {
-                        createGroup(with: strongSelf.account, for: navigation)
-                    }
-                    
+                    guard let strongSelf = strongSelf else {return}
+                    strongSelf.account.context.composeCreateGroup(strongSelf.account)
                 }, theme.icons.composeNewGroup),SPopoverItem(tr(L10n.composePopoverNewSecretChat), { [weak strongSelf] in
-                    if let strongSelf = strongSelf, let account = self?.account {
-                        let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
-                            if let first = peerIds.first, peerIds.count == 1 {
-                                return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                                    return confirmSignal(for: mainWindow, information: tr(L10n.composeConfirmStartSecretChat(peer.displayTitle)))
-                                }
-                            }
-                            return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMembers1Countable(peerIds.count)))
-                        }
-                        let select = selectModalPeers(account: account, title: tr(L10n.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
-                        
-                        let create = select |> map { $0.first! } |> mapToSignal { peerId in
-                            return createSecretChat(account: account, peerId: peerId) |> `catch` {_ in .complete()}
-                            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
-                                return showModalProgress(signal: .single(peerId), for: mainWindow)
-                        }
-                        
-                        strongSelf.createSecretChatDisposable.set(create.start(next: { [weak self] peerId in
-                            self?.navigationController?.push(ChatController(account: account, chatLocation: .peer(peerId)))
-                        }))
-                        
-                    }
+                    guard let strongSelf = strongSelf else {return}
+                    strongSelf.account.context.composeCreateSecretChat(strongSelf.account)
                 }, theme.icons.composeNewSecretChat),SPopoverItem(tr(L10n.composePopoverNewChannel), { [weak strongSelf] in
-                    if let strongSelf = strongSelf, let navigation = strongSelf.navigationController {
-                        createChannel(with: strongSelf.account, for: navigation)
-                    }
+                    guard let strongSelf = strongSelf else {return}
+                    strongSelf.account.context.composeCreateChannel(strongSelf.account)
                 }, theme.icons.composeNewChannel)];
                 
                 showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(-138,  -(strongSelf.genericView.compose.frame.maxY + 10)))
@@ -401,7 +378,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         if let searchController = self.searchController {
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0
-            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self] completed in
               // if completed {
                     self?.searchController?.viewDidDisappear(true)
                     self?.searchController?.removeFromSuperview()
@@ -472,6 +449,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         guard account.context.layout != .minimisize else {
             return .invoked
         }
+        if genericView.tableView.highlightedItem() != nil {
+            genericView.tableView.cancelHighlight()
+            return .invoked
+        }
         if genericView.searchView.state == .None {
             return genericView.searchView.changeResponder() ? .invoked : .rejected
         } else if genericView.searchView.state == .Focus && genericView.searchView.query.length > 0 {
@@ -482,6 +463,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     }
     
     public override func returnKeyAction() -> KeyHandlerResult {
+        if let highlighted = genericView.tableView.highlightedItem() {
+            _ = genericView.tableView.select(item: highlighted)
+            return .invoked
+        }
         return .rejected
     }
     
@@ -540,6 +525,12 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 return .invokeNext
             }, with: self, for: .Escape, priority:.low)
             
+            self.window?.set(handler: { [weak self] in
+                if let strongSelf = self {
+                    return strongSelf.returnKeyAction()
+                }
+                return .invokeNext
+            }, with: self, for: .Return, priority:.low)
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
                 if let item = self?.effectiveTableView.selectedItem(), item.index > 0 {
@@ -554,21 +545,15 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.effectiveTableView.selectNext()
+                self?.effectiveTableView.selectNext(turnDirection: false)
                 return .invoked
             }, with: self, for: .Tab, priority: .low, modifierFlags: [.control])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.effectiveTableView.selectPrev()
+                self?.effectiveTableView.selectPrev(turnDirection: false)
                 return .invoked
-            }, with: self, for: .Tab, priority:.medium, modifierFlags: [.control, .shift])
+            }, with: self, for: .Tab, priority: .medium, modifierFlags: [.control, .shift])
             
-            #if DEBUG
-                self.window?.set(handler: { () -> KeyHandlerResult in
-                    _ = updateBubbledSettings(postbox: self.account.postbox, bubbled: !theme.bubbled).start()
-                    return .invoked
-                }, with: self, for: .T, priority:.medium, modifierFlags: [.control])
-            #endif
         default:
             break
         }

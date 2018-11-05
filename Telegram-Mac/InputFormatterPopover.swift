@@ -212,7 +212,7 @@ class InputFormatterPopover: NSPopover {
                     
                     var url:String? = nil
                     
-                    attr.enumerateAttribute(NSAttributedStringKey.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+                    attr.enumerateAttribute(NSAttributedString.Key.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                         
                         if let value = value as? inAppLink {
                             switch value {

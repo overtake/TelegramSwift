@@ -308,7 +308,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                         
                         let range = message.nsstring.range(of: content.url)
                         if range.location != NSNotFound {
-                            if let link = attr.attribute(NSAttributedStringKey.link, at: range.location, effectiveRange: nil) as? inAppLink {
+                            if let link = attr.attribute(NSAttributedString.Key.link, at: range.location, effectiveRange: nil) as? inAppLink {
                                 switch link {
                                 case let .external(url, _):
                                     let anchorRange = url.nsstring.range(of: "#")

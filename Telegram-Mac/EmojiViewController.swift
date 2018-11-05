@@ -13,20 +13,6 @@ import TelegramCoreMac
 
 
 
-var segmentNames:(Int)->String = { value in
-    var list:[String] = []
-    list.append(tr(L10n.emojiRecent))
-    list.append(tr(L10n.emojiSmilesAndPeople))
-    list.append(tr(L10n.emojiAnimalsAndNature))
-    list.append(tr(L10n.emojiFoodAndDrink))
-    list.append(tr(L10n.emojiActivityAndSport))
-    list.append(tr(L10n.emojiTravelAndPlaces))
-    list.append(tr(L10n.emojiObjects))
-    list.append(tr(L10n.emojiSymbols))
-    list.append(tr(L10n.emojiFlags))
-    return list[value]
-}
-
 enum EmojiSegment : Int64, Comparable  {
     case Recent = 0
     case People = 1
@@ -38,6 +24,19 @@ enum EmojiSegment : Int64, Comparable  {
     case Symbols = 7
     case Flags = 8
     
+    var localizedString: String {
+        switch self {
+        case .Recent: return L10n.emojiRecent
+        case .People: return L10n.emojiSmilesAndPeople
+        case .AnimalsAndNature: return L10n.emojiAnimalsAndNature
+        case .FoodAndDrink: return L10n.emojiFoodAndDrink
+        case .ActivityAndSport: return L10n.emojiActivityAndSport
+        case .TravelAndPlaces: return L10n.emojiTravelAndPlaces
+        case .Objects: return L10n.emojiObjects
+        case .Symbols: return L10n.emojiSymbols
+        case .Flags: return L10n.emojiFlags
+        }
+    }
     
     var hashValue:Int {
         return Int(self.rawValue)
@@ -52,7 +51,7 @@ func <(lhs:EmojiSegment, rhs:EmojiSegment) -> Bool {
     return lhs.rawValue < rhs.rawValue
 }
 
-private let emoji:[EmojiSegment:[String]] = {
+let emojiesInstance:[EmojiSegment:[String]] = {
     assertNotOnMainThread()
     var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
     
@@ -91,7 +90,7 @@ private let emoji:[EmojiSegment:[String]] = {
     
 }()
 
-private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [String]) -> [EmojiSegment:[[NSAttributedString]]] {
+private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiSkinModifier]) -> [EmojiSegment:[[NSAttributedString]]] {
     var segments:[EmojiSegment:[[NSAttributedString]]] = [:]
     for (key,list) in emoji {
         
@@ -103,8 +102,8 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [String
             
             var e:String = emoji
             for modifier in skinModifiers {
-                if emoji.emojiUnmodified == modifier.emojiUnmodified {
-                    e = modifier
+                if emoji.emojiUnmodified == modifier.emoji {
+                    e = emoji + modifier.modifier
                 }
             }
             
@@ -222,7 +221,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     
     func loadResource() -> Signal <Void, NoError> {
         return Signal { (subscriber) -> Disposable in
-                _ = emoji
+                _ = emojiesInstance
                 subscriber.putNext(Void())
                 subscriber.putCompletion()
             return ActionDisposable(action: {
@@ -333,7 +332,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             }
 
         } else {
-            var e = emoji
+            var e = emojiesInstance
             e[EmojiSegment.Recent] = recent.emojies
             let seg = segments(e, skinModifiers: recent.skinModifiers)
             let seglist = seg.map { (key,_) -> EmojiSegment in
@@ -367,7 +366,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             tabIconsSelected.append(theme.icons.emojiFlagsTabActive)
             for key in seglist {
                 if key != .Recent {
-                    let _ = genericView.tableView.addItem(item: EStickItem(initialSize, segment:key, segmentName:segmentNames(key.hashValue)))
+                    let _ = genericView.tableView.addItem(item: EStickItem(initialSize, segment:key, segmentName:key.localizedString))
                 }
                 let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: seg[key]!, segment: key, account: account, selectHandler: { [weak self] emoji in
                     self?.interactions?.sendEmoji(emoji)

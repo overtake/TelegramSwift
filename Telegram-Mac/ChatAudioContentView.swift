@@ -58,12 +58,14 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     }
     
     override func mouseDown(with event: NSEvent) {
-        if mouseInside(), userInteractionEnabled {
-            progressView.fetchControls?.fetch()
-        } else {
-            super.mouseDown(with: event)
-        }
+//        if mouseInside(), userInteractionEnabled {
+//            progressView.fetchControls?.fetch()
+//        } else {
+//            super.mouseDown(with: event)
+//        }
     }
+    
+ 
     
     override func layout() {
         super.layout()

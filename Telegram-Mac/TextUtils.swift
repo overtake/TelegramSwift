@@ -307,6 +307,8 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
         case let .botSentSecureValues(types):
             let permissions = types.map({$0.rawValue}).joined(separator: ", ")
             return L10n.chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
+        case .peerJoined:
+            return L10n.chatServicePeerJoinedTelegram(authorName)
         }
     }
     

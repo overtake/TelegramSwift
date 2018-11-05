@@ -120,8 +120,10 @@ class ChatWallpaperModalController: ModalViewController {
                         let size = fs(path)
                         if let size = size, size < 10 * 1024 * 1024, let image = NSImage(contentsOf: URL(fileURLWithPath: path)), image.size.width > 500 && image.size.height > 500 {
                             _ = (moveWallpaperToCache(postbox: postbox, path, randomName: true) |> mapToSignal { path in
-                                return updateApplicationWallpaper(postbox: postbox, wallpaper: .custom(path))
-                                }).start()
+                                return updateThemeInteractivetly(postbox: postbox, f: { settings in
+                                    return settings.withUpdatedWallpaper(.custom(path))
+                                })
+                            }).start()
                             strongSelf?.close()
                         } else {
                             alert(for: mainWindow, header: appName, info: L10n.appearanceCustomBackgroundFileError)
@@ -180,14 +182,19 @@ class ChatWallpaperModalController: ModalViewController {
                     
                     _ = showModalProgress(signal: fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: representation.resource), reportResultStatus: true) |> mapToSignal { source in
                         return moveWallpaperToCache(postbox: account.postbox, representation.resource)
+                    } |> mapToSignal { _ in
+                            return updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                                return settings.withUpdatedWallpaper(wallpaper)
+                            })
                     } |> deliverOnMainQueue, for: mainWindow).start(next: { _ in
-                        _ = updateApplicationWallpaper(postbox: account.postbox, wallpaper: wallpaper).start()
                         close()
                     })
                 }
                 break
             default:
-                _ = updateApplicationWallpaper(postbox: account.postbox, wallpaper: wallpaper).start()
+                _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                    return settings.withUpdatedWallpaper(wallpaper)
+                }).start()
                 close()
             }
             

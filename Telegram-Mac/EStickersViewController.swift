@@ -397,7 +397,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     private var chatInteraction:ChatInteraction?
     private var account:Account
 
-    private let peerIdPromise: ValuePromise<PeerId> = ValuePromise(ignoreRepeated: true)
+    private let peerIdPromise: Promise<PeerId> = Promise()
     
     private let itemCollectionsViewPosition = Promise<StickerPacksCollectionPosition>()
     private var currentStickerPacksCollectionPosition: StickerPacksCollectionPosition?
@@ -423,7 +423,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         self.interactions = interactions
         self.chatInteraction?.remove(observer: self)
         self.chatInteraction = chatInteraction
-        self.peerIdPromise.set(chatInteraction.peerId)
+        self.peerIdPromise.set(.single(chatInteraction.peerId))
         chatInteraction.add(observer: self)
         if isLoaded() {
             genericView.updateRestricion(chatInteraction.presentation.peer)
@@ -549,7 +549,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         chatInteraction?.remove(observer: self)
     }
     
-    private var requestCount: Int = 150
+    private var requestCount: Int = 0
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
@@ -867,7 +867,6 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        genericView.packsTable.clipView.scroll(to: NSZeroPoint)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -880,7 +879,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func scrollup() {
         let clipView = genericView.gridView.clipView
-        clipView._changeBounds(from: clipView.bounds, to: NSMakeRect(0, 0, clipView.bounds.width, clipView.bounds.height), animated: true, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring)
+        clipView._changeBounds(from: clipView.bounds, to: NSMakeRect(0, 0, clipView.bounds.width, clipView.bounds.height), animated: true, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring)
     }
     
     private func enqueueGridTransition(_ transition: ChatMediaInputGridTransition, firstTime: Bool) {

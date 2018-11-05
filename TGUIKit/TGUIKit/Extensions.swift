@@ -135,15 +135,15 @@ public extension String {
 
 }
 
-public extension NSAttributedStringKey {
-    public static var preformattedCode: NSAttributedStringKey {
-        return NSAttributedStringKey(rawValue: "TGPreformattedCodeAttributeName")
+public extension NSAttributedString.Key {
+    public static var preformattedCode: NSAttributedString.Key {
+        return NSAttributedString.Key(rawValue: "TGPreformattedCodeAttributeName")
     }
-    public static var preformattedPre: NSAttributedStringKey {
-        return NSAttributedStringKey(rawValue: "TGPreformattedPreAttributeName")
+    public static var preformattedPre: NSAttributedString.Key {
+        return NSAttributedString.Key(rawValue: "TGPreformattedPreAttributeName")
     }
-    public static var selectedColor: NSAttributedStringKey {
-        return NSAttributedStringKey(rawValue: "KSelectedColorAttributeName")
+    public static var selectedColor: NSAttributedString.Key {
+        return NSAttributedString.Key(rawValue: "KSelectedColorAttributeName")
     }
 }
 
@@ -216,7 +216,7 @@ public extension NSMutableAttributedString {
         range = NSMakeRange(self.length - nlength, nlength)
         
         if let c = color {
-            self.addAttribute(NSAttributedStringKey.foregroundColor, value: c, range:range )
+            self.addAttribute(NSAttributedString.Key.foregroundColor, value: c, range:range )
         }
         
         if let f = font {
@@ -232,12 +232,12 @@ public extension NSMutableAttributedString {
     }
     
     public func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
-        self.addAttribute(NSAttributedStringKey.link, value: link, range: range)
-        self.addAttribute(NSAttributedStringKey.foregroundColor, value: color, range: range)
+        self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+        self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
     }
     
     public func setCTFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(NSAttributedStringKey(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
+        self.addAttribute(NSAttributedString.Key(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
     }
     
     public func setSelected(color:NSColor,range:NSRange) -> Void {
@@ -246,7 +246,7 @@ public extension NSMutableAttributedString {
 
     
     public func setFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(NSAttributedStringKey.font, value: font, range: range)
+        self.addAttribute(NSAttributedString.Key.font, value: font, range: range)
     }
     
 }
@@ -259,7 +259,6 @@ public extension CALayer {
         self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(), "background":NSNull(), "position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]
         removeAllAnimations()
     }
-    
     
     
     public func animateBackground() ->Void {
@@ -315,6 +314,7 @@ public extension NSView {
         }
         return size
     }
+    
     
     public func _mouseInside() -> Bool {
         if let window = self.window {
@@ -475,7 +475,7 @@ public extension NSView {
     }
     
     
-    public func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
+    public func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
         if animated {
             
             var presentX = NSMinX(self.frame)
@@ -507,7 +507,7 @@ public extension NSView {
         NSSound.beep()
     }
     
-    public func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    public func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()
@@ -526,7 +526,7 @@ public extension NSView {
         }
     }
     
-    public func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    public func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         
         if save {
             self.bounds = to
@@ -544,7 +544,7 @@ public extension NSView {
         }
     }
     
-    public func _change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    public func _change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         if animated {
             if let layer = self.layer {
                 var opacity:CGFloat = CGFloat(layer.opacity)
@@ -569,23 +569,44 @@ public extension NSView {
     
     public func disableHierarchyInteraction() -> Void {
         for sub in self.subviews {
-            if let sub = sub as? Control, sub.interactionStateForRestore == nil {
+            if let sub = sub as? View, sub.interactionStateForRestore == nil {
                 sub.interactionStateForRestore = sub.userInteractionEnabled
                 sub.userInteractionEnabled = false
             }
             sub.disableHierarchyInteraction()
         }
     }
-    
     public func restoreHierarchyInteraction() -> Void {
         for sub in self.subviews {
-            if let sub = sub as? Control, let resporeState = sub.interactionStateForRestore {
+            if let sub = sub as? View, let resporeState = sub.interactionStateForRestore {
                 sub.userInteractionEnabled = resporeState
                 sub.interactionStateForRestore = nil
             }
             sub.restoreHierarchyInteraction()
         }
     }
+    
+    public func restoreHierarchyDynamicContent() -> Void {
+        for sub in self.subviews {
+            if let sub = sub as? View, let resporeState = sub.dynamicContentStateForRestore {
+                sub.isDynamicContentLocked = resporeState
+                sub.dynamicContentStateForRestore = nil
+            }
+            sub.restoreHierarchyDynamicContent()
+        }
+    }
+    
+    public func disableHierarchyDynamicContent() -> Void {
+        for sub in self.subviews {
+            if let sub = sub as? View, sub.interactionStateForRestore == nil {
+                sub.dynamicContentStateForRestore = sub.isDynamicContentLocked
+                sub.isDynamicContentLocked = true
+            }
+            sub.disableHierarchyDynamicContent()
+        }
+    }
+    
+    
 
 }
 
@@ -639,17 +660,17 @@ public extension CGSize {
         let aspect = self.width / self.height
         let height = sqrt(area / aspect)
         let width = aspect * height
-        return CGSize(width: floor(width), height: floor(height))
+        return CGSize(width: ceil(width), height: ceil(height))
     }
     
     public func aspectFilled(_ size: CGSize) -> CGSize {
         let scale = max(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
-        return CGSize(width: floor(self.width * scale), height: floor(self.height * scale))
+        return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
     }
     
     public func aspectFitted(_ size: CGSize) -> CGSize {
         let scale = min(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
-        return CGSize(width: floor(self.width * scale), height: floor(self.height * scale))
+        return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
     }
     
     public func multipliedByScreenScale() -> CGSize {
@@ -740,6 +761,19 @@ public extension CGPoint {
     }
 }
 
+
+public enum ImageOrientation {
+    case up
+    case down
+    case left
+    case right
+    case upMirrored
+    case downMirrored
+    case leftMirrored
+    case rightMirrored
+}
+
+
 public extension CGImage {
     
     var backingSize:NSSize {
@@ -758,6 +792,99 @@ public extension CGImage {
         return 2.0
     }
     
+    var _NSImage: NSImage {
+        return NSImage(cgImage: self, size: backingSize)
+    }
+
+    
+    public func createMatchingBackingDataWithImage(orienation: ImageOrientation) -> CGImage?
+    {
+        var orientedImage: CGImage?
+        let imageRef = self
+        let originalWidth = imageRef.width
+        let originalHeight = imageRef.height
+        
+        
+        
+        
+        var degreesToRotate: Double
+        var swapWidthHeight: Bool
+        var mirrored: Bool
+        switch orienation {
+        case .up:
+            degreesToRotate = 0.0
+            swapWidthHeight = false
+            mirrored = false
+            break
+        case .upMirrored:
+            degreesToRotate = 0.0
+            swapWidthHeight = false
+            mirrored = true
+            break
+        case .right:
+            degreesToRotate = 90.0
+            swapWidthHeight = true
+            mirrored = false
+            break
+        case .rightMirrored:
+            degreesToRotate = 90.0
+            swapWidthHeight = true
+            mirrored = true
+            break
+        case .down:
+            degreesToRotate = 180.0
+            swapWidthHeight = false
+            mirrored = false
+            break
+        case .downMirrored:
+            degreesToRotate = 180.0
+            swapWidthHeight = false
+            mirrored = true
+            break
+        case .left:
+            degreesToRotate = -90.0
+            swapWidthHeight = true
+            mirrored = false
+            break
+        case .leftMirrored:
+            degreesToRotate = -90.0
+            swapWidthHeight = true
+            mirrored = true
+            break
+        }
+        let radians = degreesToRotate * Double.pi / 180.0
+        
+        var width: Int
+        var height: Int
+        if swapWidthHeight {
+            width = originalHeight
+            height = originalWidth
+        } else {
+            width = originalWidth
+            height = originalHeight
+        }
+        
+        let bytesPerRow = (4 * Int(swapWidthHeight ? imageRef.height : imageRef.width) + 15) & (~15)
+        let bitsPerComponent = 8
+        let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
+
+        
+        let contextRef = CGContext(data: nil, width: width, height: height, bitsPerComponent: bitsPerComponent, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo.rawValue)
+        contextRef?.translateBy(x: CGFloat(width) / 2.0, y: CGFloat(height) / 2.0)
+        if mirrored {
+            contextRef?.scaleBy(x: -1.0, y: 1.0)
+        }
+        contextRef?.rotate(by: CGFloat(radians))
+        if swapWidthHeight {
+            contextRef?.translateBy(x: -CGFloat(height) / 2.0, y: -CGFloat(width) / 2.0)
+        } else {
+            contextRef?.translateBy(x: -CGFloat(width) / 2.0, y: -CGFloat(height) / 2.0)
+        }
+        contextRef?.draw(imageRef, in: CGRect(x: 0.0, y: 0.0, width: CGFloat(originalWidth), height: CGFloat(originalHeight)))
+        orientedImage = contextRef?.makeImage()
+        
+        return orientedImage
+    }
 }
 
 extension Array {
@@ -909,15 +1036,15 @@ public extension NSBezierPath {
             var points = [NSPoint](repeating: NSZeroPoint, count: 3)
             
             switch self.element(at: i, associatedPoints: &points) {
-            case .moveToBezierPathElement:
+            case .moveTo:
                 path.move(to: points[0])
-            case .lineToBezierPathElement:
+            case .lineTo:
                 path.addLine(to: points[0])
                 didClosePath = false
-            case .curveToBezierPathElement:
+            case .curveTo:
                 path.addCurve(to: points[0], control1: points[1], control2: points[2])
                 didClosePath = false
-            case .closePathBezierPathElement:
+            case .closePath:
                 path.closeSubpath()
                 didClosePath = true;
             }
@@ -932,6 +1059,60 @@ public extension NSBezierPath {
 }
 
 
+public extension NSRect {
+    
+    public func apply(multiplier: NSSize) -> NSRect {
+        return NSMakeRect(round(minX * multiplier.width), round(minY * multiplier.height), round(width * multiplier.width), round(height * multiplier.height))
+    }
+    
+    public func rotate90Degress(parentSize: NSSize) -> NSRect {
+
+       
+        
+        let width: CGFloat = parentSize.width
+        let height: CGFloat = parentSize.height
+        
+        
+        let transform = NSAffineTransform()
+        
+     //   transform.translateX(by: 0, yBy: height)
+        
+        transform.rotate(byDegrees: 90)
+        transform.translateX(by: 0, yBy: -height)
+
+        
+        //transform.scaleX(by: 1, yBy: -1)
+
+        let path = NSBezierPath()
+        path.appendRect(NSMakeRect(0, 0, width, height))
+        path.appendRect(self)
+        
+        let newPath = transform.transform(path)
+        
+        var rect = NSMakeRect(0, 0, self.height, self.width)
+        for i in 5 ..< newPath.elementCount - 2 {
+            var points = [NSPoint](repeating: NSZeroPoint, count: 1)
+            
+            switch newPath.element(at: i, associatedPoints: &points) {
+            case .moveTo:
+                let point = points[0]
+                rect.origin.x = (height - point.x)
+                rect.origin.y = (width - point.y - self.width)
+            case .lineTo:
+                break
+            case .curveTo:
+                break
+            case .closePath:
+                break
+            }
+        }
+        
+        
+        
+        return rect
+    }
+}
+
 public extension NSEdgeInsets {
 
     public init(left:CGFloat = 0, right:CGFloat = 0, top:CGFloat = 0, bottom:CGFloat = 0) {
@@ -944,7 +1125,11 @@ public extension NSEdgeInsets {
 
 public extension NSColor {
     public convenience init(_ rgbValue:UInt32, _ alpha:CGFloat = 1.0) {
-        self.init(deviceRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha: alpha)
+        let r: CGFloat = ((CGFloat)((rgbValue & 0xFF0000) >> 16))
+        let g: CGFloat = ((CGFloat)((rgbValue & 0xFF00) >> 8))
+        let b: CGFloat = ((CGFloat)(rgbValue & 0xFF))
+        self.init(srgbRed: r/255.0, green: g/255.0, blue: b/255.0, alpha: alpha)
+       // self.init(deviceRed: r/255.0, green: g/255.0, blue: b/255.0, alpha: alpha)
     }
     
     var hexString: String {
@@ -1182,7 +1367,23 @@ public extension String {
         if self.isEmpty {
             return ""
         }
-        return nsstring.substring(to: min(nsstring.length, 2))
+        if nsstring.length <= 2 {
+            return self
+        } else if nsstring.length == 4 {
+            return nsstring.substring(to: nsstring.length - 2)
+        } else if nsstring.length == 5 {
+            return self
+        }
+        return nsstring.substring(to: min(nsstring.length - 2, 2))
+    }
+    
+    public func emojiWithSkinModifier(_ modifier: String) -> String {
+        switch nsstring.length {
+        case 5:
+            return nsstring.substring(to: 2) + modifier + nsstring.substring(from: 2)
+        default:
+            return self + modifier
+        }
     }
     
     public var emojiSkin: String {
@@ -1190,9 +1391,12 @@ public extension String {
             return ""
         }
         
-        
-        let range = Range<String.Index>(uncheckedBounds: (self.index(after: self.startIndex), self.endIndex))
-        return String(self[range])
+        for modifier in emojiSkinToneModifiers {
+            if let range = self.range(of: modifier) {
+                return String(self[range])
+            }
+        }
+        return ""
     }
     
     public var canHaveSkinToneModifier: Bool {
@@ -1298,12 +1502,7 @@ extension UnicodeScalar {
 }
 
 
-extension NSResponder {
-    @available(OSX 10.12.2, *)
-    var touchBar: NSTouchBar? {
-        return nil
-    }
-}
+
 
 public extension Sequence where Iterator.Element: Hashable {
     var uniqueElements: [Iterator.Element] {
@@ -1399,3 +1598,40 @@ class GestureUtils{
         return .none/*no swipe direction detected*/
     }
 }
+public extension NSView {
+    
+    public func widthConstraint(relation: NSLayoutConstraint.Relation,
+                         size: CGFloat) -> NSLayoutConstraint {
+        return NSLayoutConstraint(item: self,
+                                  attribute: .width,
+                                  relatedBy: relation,
+                                  toItem: nil,
+                                  attribute: .width,
+                                  multiplier: 1.0,
+                                  constant: size)
+    }
+    
+    public func addWidthConstraint(relation: NSLayoutConstraint.Relation = .equal,
+                            size: CGFloat) {
+        addConstraint(widthConstraint(relation: relation,
+                                      size: size))
+    }
+    
+}
+
+public extension NSWindow {
+    public var bounds: NSRect {
+        return NSMakeRect(0, 0, frame.width, frame.height)
+    }
+}
+
+
+
+public extension String {
+    var isDirectory: Bool {
+        var isDir: ObjCBool = false
+        _ = FileManager.default.fileExists(atPath: self, isDirectory: &isDir)
+        return isDir.boolValue
+    }
+}
+

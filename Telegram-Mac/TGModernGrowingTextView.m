@@ -9,7 +9,7 @@
 #import "TGModernGrowingTextView.h"
 #import <QuartzCore/QuartzCore.h>
 #import "DateUtils.h"
-
+#import "ObjcUtils.h"
 @interface MarkdownUndoItem : NSObject
     @property (nonatomic, strong) NSAttributedString *was;
     @property (nonatomic, strong) NSAttributedString *be;
@@ -87,6 +87,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(instancetype)initWithFrame:(NSRect)frameRect {
     if(self = [super initWithFrame:frameRect]) {
         self.markdownItems = [NSMutableArray array];
+        #ifdef __MAC_10_12_2
+          //  self.allowsCharacterPickerTouchBarItem = false;
+        #endif
     }
     return self;
 }
@@ -118,6 +121,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [super drawRect:dirtyRect];
 
 }
+
 
 -(void)paste:(id)sender {
     if (![self.weakd textViewDidPaste:[NSPasteboard generalPasteboard]]) {
@@ -415,7 +419,11 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     return isEnter;
 }
 
+-(void)insertNewline:(id)sender {
+    [super insertNewline:sender];
+}
 
+    
 
 - (void) keyDown:(NSEvent *)theEvent {
     
@@ -425,11 +433,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             
             BOOL result = [_weakd textViewEnterPressed:theEvent];
             
-            if(!result) {
-                [self insertNewline:self];
-            }
-            return;
-        }   else if(theEvent.keyCode == 53 && [_weakd respondsToSelector:@selector(textViewNeedClose:)]) {
+        } else if(theEvent.keyCode == 53 && [_weakd respondsToSelector:@selector(textViewNeedClose:)]) {
             [_weakd textViewNeedClose:self];
             return;
         }
@@ -575,6 +579,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     _textView.font = textFont;
 }
 
+
 -(void)selectionDidChanged:(NSNotification *)notification {
     if (!_notify_next) {
         _notify_next = YES;
@@ -641,6 +646,11 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         if ([textView.string isEqualToString:_defaultText]) {
             return true;
         }
+    } else if (commandSelector == @selector(insertNewline:)) {
+        NSString *sendingType = [[NSUserDefaults standardUserDefaults] stringForKey:@"kSendingType"];
+        if (isEnterEvent([NSApp currentEvent]) && isEnterAccessObjc([NSApp currentEvent], [sendingType isEqualToString:@"cmdEnter"])) {
+            return true;
+        }
     }
     return false;
 }
@@ -669,11 +679,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 
-
+-(NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers {
+    if ([self.delegate respondsToSelector:@selector(textView:shouldUpdateTouchBarItemIdentifiers:)]) {
+        return [self.delegate textView: textView shouldUpdateTouchBarItemIdentifiers: identifiers];
+    }
+    return identifiers;
+}
 
 - (void)textDidChange:(NSNotification *)notification {
-    
-    
     int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit: self];
     
     if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
@@ -995,7 +1008,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 
 - (void)refreshAttributes {
-    
     @try {
         NSAttributedString *string = _textView.attributedString;
         if (string.length == 0) {
@@ -1151,6 +1163,8 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     } @catch (NSException *exception) {
         
     }
+    
+    [self.inputView setSelectedRange:self.selectedRange];
 }
 
 -(void)boldWord {

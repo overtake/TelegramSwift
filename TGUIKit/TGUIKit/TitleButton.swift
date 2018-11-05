@@ -203,8 +203,8 @@ public class TitleButton: ImageButton {
     
     override func prepare() {
         super.prepare()
-        text.truncationMode = "end";
-        text.alignmentMode = "center";
+        text.truncationMode = .end;
+        text.alignmentMode = .center;
         self.layer?.addSublayer(text)
         
         text.actions = ["bounds":NSNull(),"position":NSNull()]

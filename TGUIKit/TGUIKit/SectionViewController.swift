@@ -82,7 +82,7 @@ public class SectionControllerView : View {
         if animated {
             CATransaction.begin()
             let container = header.subviews[index]
-            selector.change(pos: NSMakePoint(container.frame.minX, selector.frame.minY), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
+            selector.change(pos: NSMakePoint(container.frame.minX, selector.frame.minY), animated: animated, timingFunction: CAMediaTimingFunctionName.spring)
             
             
             let pto: NSPoint
@@ -97,14 +97,14 @@ public class SectionControllerView : View {
                 nfrom = NSMakePoint(-container.frame.width, 0)
             }
             
-            previous?.view._change(pos: pto, animated: animated, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak previous, weak controller] complete in
+            previous?.view._change(pos: pto, animated: animated, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak previous, weak controller] complete in
                 if complete {
                     previous?.view.removeFromSuperview()
                     previous?.viewDidDisappear(animated)
                     controller?.viewDidAppear(animated)
                 }
             })
-            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, timingFunction: kCAMediaTimingFunctionSpring)
+            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, timingFunction: CAMediaTimingFunctionName.spring)
             CATransaction.commit()
         } else {
             container.removeAllSubviews()

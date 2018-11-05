@@ -43,7 +43,7 @@ private enum PlayerListEntry: TableItemListNodeEntry {
     func item(_ arguments: PlayerListArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .message(_, message):
-            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, arguments.chatInteraction.account, .messageEntry(message))
+            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, arguments.chatInteraction.account, .messageEntry(message),  isCompactPlayer: true)
         }
     }
     

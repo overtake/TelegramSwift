@@ -87,7 +87,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
         
         let crashed = isCrashedLastTime(containerUrl.path)
-        
+        deinitCrashHandler(containerUrl.path)
         
         if crashed {
             let alert: NSAlert = NSAlert()
@@ -101,7 +101,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }
         }
         
-        
+        saveIntermediateDate()
+
         uiLocalizationFunc = { key in
             return _NSLocalizedString(key)
         }
@@ -129,8 +130,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         Timer.scheduledTimer(timeInterval: 60 * 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
         
+        Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
 
-        
+                
         for argument in CommandLine.arguments {
             switch argument {
             case "DEBUG_SESSION":
@@ -188,9 +190,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }
             updater.automaticallyDownloadsUpdates = false
         #endif
-        
-        
-       
+                
         let bundleId = Bundle.main.bundleIdentifier
         if let bundleId = bundleId {
             LSSetDefaultHandlerForURLScheme("tg" as CFString, bundleId as CFString)
@@ -201,11 +201,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
     }
     
+    
     private func launchInterface() {
         
         self.accountManagerPromise.set(accountManager(basePath: containerUrl + "/accounts-metadata"))
         let _ = (accountManagerPromise.get() |> mapToSignal { manager in
-                return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+            return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: ""), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
         }).start()
         
         
@@ -274,16 +275,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
 
-    
-    @available(OSX 10.12.2, *)
-    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
-        return nil
-    }
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        return NSTouchBar()
-    }
     
     
     @objc func checkUpdates() {

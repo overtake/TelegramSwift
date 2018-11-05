@@ -26,6 +26,14 @@ public struct System {
     public static var drawAsync:Bool {
         return false
     }
+    
+    public static var isScrollInverted: Bool {
+        if UserDefaults.standard.value(forKey: "com.apple.swipescrolldirection") != nil {
+            return UserDefaults.standard.bool(forKey: "com.apple.swipescrolldirection")
+        } else {
+            return true
+        }
+    }
  
 }
 

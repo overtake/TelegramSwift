@@ -43,7 +43,7 @@ class NativeCallSettingsViewController: NSViewController {
         self.currentOutputDeviceId = currentOutputDeviceId
         self.onSave = onSave
         self.onCancel = onCancel
-        super.init(nibName: NSNib.Name(rawValue: "NativeCallSettingsViewController"), bundle: nil)
+        super.init(nibName: "NativeCallSettingsViewController", bundle: nil)
     }
     
     required init?(coder: NSCoder) {

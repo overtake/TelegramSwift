@@ -90,31 +90,42 @@ struct APResource {
 
 class APItem : Equatable {
     
-    fileprivate var status: MediaPlayerStatus = MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, seekId: 0, status: .paused) {
-        didSet {
-            var progress:TimeInterval = (status.timestamp / status.duration)
-            if progress.isNaN {
-                progress = 1
-            }
-            switch status.status {
-            case .playing:
-                self.state = .playing(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
-            case .paused:
-                self.state = .paused(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
-            default:
-                self.state = .paused(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
-            }
+    private(set) var status: MediaPlayerStatus = MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, baseRate: 1.0, seekId: 0, status: .paused)
+    
+    func setStatus(_ status: MediaPlayerStatus, rate: Double) {
+        var progress:TimeInterval = (status.timestamp / status.duration)
+        if progress.isNaN {
+            progress = 0
+        } 
+        
+
+        switch status.status {
+        case .playing:
+            self.state = .playing(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
+        case .paused:
+            self.state = .paused(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
+        default:
+            self.state = .paused(current: status.timestamp, duration: status.duration, progress: progress, animated: true)
+        }
+        self.status = status
+    }
+    
+    private var _state: APState = .waiting
+    fileprivate(set) var state:APState {
+        get {
+            return _state
+        }
+        set {
+            _state = newValue
+            _stateValue.set(.single(newValue))
         }
     }
 
-    fileprivate(set) var state:APState = .waiting {
-        didSet {
-            _state.set(.single(state))
-        }
+    private let _stateValue:Promise<APState> = Promise()
+    var stateValue: Signal<APState, NoError> {
+        return _stateValue.get()
     }
-
-    fileprivate let _state:Promise<APState> = Promise()
-
+    
     let entry:APEntry
     let account:Account
     init(_ entry:APEntry, _ account:Account) {
@@ -473,7 +484,7 @@ class APController : NSResponder {
             self.stop()
             _song = newValue
             if let song = newValue {
-                songStateDisposable.set((song._state.get() |> distinctUntilChanged).start(next: {[weak self] (state) in
+                songStateDisposable.set((song.stateValue |> distinctUntilChanged).start(next: {[weak self] (state) in
                     if let strongSelf = self {
                         strongSelf.notifyStateChanged(item: song)
                     }
@@ -584,10 +595,15 @@ class APController : NSResponder {
     }
 
     private let streamable: Bool
-    
-    init(account:Account, streamable: Bool) {
+    var baseRate: Double {
+        didSet {
+            mediaPlayer?.setBaseRate(baseRate)
+        }
+    }
+    init(account:Account, streamable: Bool, baseRate: Double) {
         self.account = account
         self.streamable = streamable
+        self.baseRate = baseRate
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: mainWindow)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: mainWindow)
@@ -781,7 +797,7 @@ class APController : NSResponder {
 
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true)
+        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false)
         
         player.play()
 
@@ -804,16 +820,17 @@ class APController : NSResponder {
         }))
 
         self.statusDisposable.set((player.status |> deliverOnMainQueue).start(next: { [weak self] status in
-            item.status = status
+            guard let `self` = self else {return}
+            item.setStatus(status, rate: self.baseRate)
             switch status.status {
             case .paused:
-                self?.stopTimer()
+                self.stopTimer()
             case .playing:
-                self?.startTimer()
+                self.startTimer()
             default:
-                self?.stopTimer()
+                self.stopTimer()
             }
-            self?.updateUIAfterTick(status)
+            self.updateUIAfterTick(status)
         }))
 
 //
@@ -949,13 +966,13 @@ class APController : NSResponder {
         var additional: Double = 0.2
         let duration: TimeInterval = 0.2
         timer = SwiftSignalKitMac.Timer(timeout: duration, repeat: true, completion: { [weak self] in
-            if let strongSelf = self, let item = strongSelf.song {
-                let new = item.status.timestamp + additional
-                item.state = .playing(current: new, duration: item.status.duration, progress: new / item.status.duration, animated: true)
-                additional += duration
-                strongSelf.updateUIAfterTick(item.status)
+            if let `self` = self, let item = self.song {
+                let new = item.status.timestamp + additional * item.status.baseRate
+                item.state = .playing(current: new, duration: item.status.duration, progress: new / max((item.status.duration), 0.2), animated: true)
+                additional += duration 
+                self.updateUIAfterTick(item.status)
             }
-            }, queue: Queue.mainQueue())
+        }, queue: Queue.mainQueue())
         timer?.start()
     }
     private func stopTimer() {
@@ -996,10 +1013,10 @@ class APChatController : APController {
     private let peerId:PeerId
     private let index:MessageIndex?
 
-    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool) {
+    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0) {
         self.peerId = peerId
         self.index = index
-        super.init(account: account, streamable: streamable)
+        super.init(account: account, streamable: streamable, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1076,8 +1093,8 @@ class APChatController : APController {
 
 class APChatMusicController : APChatController {
 
-    init(account: Account, peerId: PeerId, index: MessageIndex?) {
-        super.init(account: account, peerId: peerId, index: index, streamable: true)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(account: account, peerId: peerId, index: index, streamable: true, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1091,8 +1108,8 @@ class APChatMusicController : APChatController {
 
 class APChatVoiceController : APChatController {
     private let markAsConsumedDisposable = MetaDisposable()
-    init(account: Account, peerId: PeerId, index: MessageIndex?) {
-        super.init(account: account, peerId: peerId, index:index, streamable: false)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(account: account, peerId: peerId, index:index, streamable: false, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1128,9 +1145,9 @@ class APChatVoiceController : APChatController {
 
 class APSingleResourceController : APController {
     let wrapper:APSingleWrapper
-    init(account: Account, wrapper:APSingleWrapper, streamable: Bool) {
+    init(account: Account, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0) {
         self.wrapper = wrapper
-        super.init(account: account, streamable: streamable)
+        super.init(account: account, streamable: streamable, baseRate: baseRate)
         merge(with: APTransition(inserted: [(0,APSongItem(.single(wrapper), account))], removed: [], updated: []))
     }
 

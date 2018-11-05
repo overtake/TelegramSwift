@@ -58,10 +58,10 @@ func parseMarkdownIntoAttributedString(_ string: String, attributes: MarkdownAtt
     let result = NSMutableAttributedString()
     var remainingRange = NSMakeRange(0, nsString.length)
     
-    var bodyAttributes: [NSAttributedStringKey: Any] = [NSAttributedStringKey.font: attributes.body.font, NSAttributedStringKey.foregroundColor: attributes.body.textColor, NSAttributedStringKey.paragraphStyle: paragraphStyleWithAlignment(textAlignment)]
+    var bodyAttributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: attributes.body.font, NSAttributedString.Key.foregroundColor: attributes.body.textColor, NSAttributedString.Key.paragraphStyle: paragraphStyleWithAlignment(textAlignment)]
     if !attributes.body.additionalAttributes.isEmpty {
         for (key, value) in attributes.body.additionalAttributes {
-            bodyAttributes[NSAttributedStringKey(rawValue: key)] = value
+            bodyAttributes[NSAttributedString.Key(rawValue: key)] = value
         }
     }
     
@@ -77,14 +77,14 @@ func parseMarkdownIntoAttributedString(_ string: String, attributes: MarkdownAtt
             if character == UInt16(("[" as UnicodeScalar).value) {
                 remainingRange = NSMakeRange(range.location + range.length, remainingRange.location + remainingRange.length - (range.location + range.length))
                 if let (parsedLinkText, parsedLinkContents) = parseLink(string: nsString, remainingRange: &remainingRange) {
-                    var linkAttributes: [NSAttributedStringKey: Any] = [NSAttributedStringKey.font: attributes.link.font, NSAttributedStringKey.foregroundColor: attributes.link.textColor, NSAttributedStringKey.paragraphStyle: paragraphStyleWithAlignment(textAlignment)]
+                    var linkAttributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: attributes.link.font, NSAttributedString.Key.foregroundColor: attributes.link.textColor, NSAttributedString.Key.paragraphStyle: paragraphStyleWithAlignment(textAlignment)]
                     if !attributes.body.additionalAttributes.isEmpty {
                         for (key, value) in attributes.link.additionalAttributes {
-                            linkAttributes[NSAttributedStringKey(rawValue: key)] = value
+                            linkAttributes[NSAttributedString.Key(rawValue: key)] = value
                         }
                     }
                     if let (attributeName, attributeValue) = attributes.linkAttribute(parsedLinkContents) {
-                        linkAttributes[NSAttributedStringKey(rawValue: attributeName)] = attributeValue
+                        linkAttributes[NSAttributedString.Key(rawValue: attributeName)] = attributeValue
                     }
                     result.append(NSAttributedString(string: parsedLinkText, attributes: linkAttributes))
                 }
@@ -95,10 +95,10 @@ func parseMarkdownIntoAttributedString(_ string: String, attributes: MarkdownAtt
                         remainingRange = NSMakeRange(range.location + range.length + 1, remainingRange.location + remainingRange.length - (range.location + range.length + 1))
                         
                         if let bold = parseBold(string: nsString, remainingRange: &remainingRange) {
-                            var boldAttributes: [NSAttributedStringKey: Any] = [NSAttributedStringKey.font: attributes.bold.font, NSAttributedStringKey.foregroundColor: attributes.bold.textColor, NSAttributedStringKey.paragraphStyle: paragraphStyleWithAlignment(textAlignment)]
+                            var boldAttributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: attributes.bold.font, NSAttributedString.Key.foregroundColor: attributes.bold.textColor, NSAttributedString.Key.paragraphStyle: paragraphStyleWithAlignment(textAlignment)]
                             if !attributes.body.additionalAttributes.isEmpty {
                                 for (key, value) in attributes.bold.additionalAttributes {
-                                    boldAttributes[NSAttributedStringKey(rawValue: key)] = value
+                                    boldAttributes[NSAttributedString.Key(rawValue: key)] = value
                                 }
                             }
                             result.append(NSAttributedString(string: bold, attributes: boldAttributes))

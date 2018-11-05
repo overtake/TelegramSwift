@@ -154,7 +154,7 @@ class EBlockRowView: TableRowView {
     
     func update(with location:NSPoint) -> Bool {
         
-        if self.mouse(location, in: self.visibleRect) {
+        if self.isMousePoint(location, in: self.visibleRect) {
             if let item = item as? EBlockItem {
                 
                 var point:NSPoint = location
@@ -191,7 +191,7 @@ class EBlockRowView: TableRowView {
                 
                 if point != button.frame.origin {
                     if self.button.isSelected {
-                        button.layer?.animatePosition(from: button.frame.origin, to: point, duration: 0.1, timingFunction: kCAMediaTimingFunctionLinear)
+                        button.layer?.animatePosition(from: button.frame.origin, to: point, duration: 0.1, timingFunction: CAMediaTimingFunctionName.linear)
                     }
                     button.frame = NSMakeRect(point.x, point.y, button.frame.width, button.frame.height)
                     
@@ -231,7 +231,7 @@ class EBlockRowView: TableRowView {
         self.button.isSelected = self.update(with: segmentView.convert(event.locationInWindow, from: nil))
         let emoji = selectedEmoji
         let lhs = emoji.emojiUnmodified.glyphCount
-        let rhs = ( emoji.emojiUnmodified + "🏻").glyphCount
+        let rhs = emoji.emojiUnmodified.emojiWithSkinModifier("🏻").glyphCount
         longHandle.set((Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
             if let strongSelf = self, lhs == rhs, let item = self?.item as? EBlockItem {
                 strongSelf.useEmoji = false

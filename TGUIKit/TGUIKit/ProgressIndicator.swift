@@ -266,15 +266,15 @@ private class ProgressLayer : CALayer {
                 fromValue = from
             }
             let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
-            basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
             basicAnimation.duration = 0.8
             basicAnimation.fromValue = fromValue
+            
             basicAnimation.toValue = Double.pi * 2.0
             basicAnimation.repeatCount = Float.infinity
-            basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+            basicAnimation.timingFunction = CAMediaTimingFunction(name: .linear)
             add(basicAnimation, forKey: "progressRotation")
         } else {
-            removeAllAnimations()
+            removeAnimation(forKey: "progressRotation")
         }
     }
     
@@ -326,8 +326,9 @@ public class ProgressIndicator : Control {
     public override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         indicator.frame = bounds
-        indicator.setNeedsDisplay()
+        updateWantsAnimation()
     }
+    
     
     public override init() {
         super.init(frame: NSMakeRect(0, 0, 20, 20))
@@ -354,13 +355,13 @@ public class ProgressIndicator : Control {
     }
 
     private func updateWantsAnimation() {
-        indicator.update(window != nil)
+        indicator.update(window != nil && !isHidden && !inLiveResize)
         indicator.setNeedsDisplay()
     }
     
 
     override public func draw(_ layer: CALayer, in ctx: CGContext) {
-        //super.draw(layer, in: ctx)
+        super.draw(layer, in: ctx)
 
     }
 

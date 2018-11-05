@@ -16,7 +16,7 @@ import SwiftSignalKitMac
 class ShareViewController: NSViewController {
 
     override var nibName: NSNib.Name? {
-        return NSNib.Name(rawValue: "ShareViewController")
+        return "ShareViewController"
     }
     private let accountManagerPromise = Promise<AccountManager>()
     private var contextValue: ShareApplicationContext?

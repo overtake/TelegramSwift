@@ -103,6 +103,15 @@ func execute(inapp:inAppLink) {
     switch inapp {
     case let .external(link,needConfirm):
         var url:String = link.trimmed
+        
+        var reversedUrl = String(url.reversed())
+        while reversedUrl.components(separatedBy: "#").count > 2 {
+            if let index = reversedUrl.range(of: "#") {
+                reversedUrl.replaceSubrange(index, with: "32%")
+            }
+        }
+        url = String(reversedUrl.reversed())
+        
         if !url.hasPrefix("http") && !url.hasPrefix("ftp"), url.range(of: "://") == nil {
             if isValidEmail(link) {
                 url = "mailto:" + url

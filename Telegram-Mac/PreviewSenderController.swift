@@ -26,10 +26,12 @@ private enum PreviewSenderType {
     case media
 }
 
+
 fileprivate enum PreviewSendingState : Int32 {
     case media = 0
     case file = 1
     case collage = 2
+    case archive = 3
 }
 
 private final class PreviewContextState : Equatable {
@@ -57,11 +59,34 @@ private final class PreviewContextInteraction : InterfaceObserver {
         }
     }
 }
+//
+//fileprivate class PreviewArchivingContainer : Control {
+//    private let progress: RadialProgressView = RadialProgressView()
+//    private var state: PreviewSenderViewState = .archiving(0)
+//    required init(frame frameRect: NSRect) {
+//        super.init(frame: frameRect)
+//        backgroundColor = theme.colors.background
+//        addSubview(progress)
+//    }
+//    
+//    fileprivate func updateState(_ state: PreviewSenderViewState) {
+//        switch state {
+//        case let .archiving(progress):
+//            progress.state = .Fetching(progress: progress, force: false)
+//        case .normal:
+//            progress.state = .Success
+//        }
+//    }
+//    
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//}
 
 
 fileprivate class PreviewSenderView : Control {
     fileprivate let tableView:TableView = TableView()
-    fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
+    fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 280, 34))
     fileprivate let sendButton = ImageButton()
     fileprivate let emojiButton = ImageButton()
     fileprivate let actionsContainerView: View = View()
@@ -69,20 +94,19 @@ fileprivate class PreviewSenderView : Control {
     fileprivate let draggingView = DraggingView(frame: NSZeroRect)
     fileprivate let closeButton = ImageButton()
     fileprivate let title: TextView = TextView()
-    
     fileprivate let photoButton = ImageButton()
     fileprivate let fileButton = ImageButton()
     fileprivate let collageButton = ImageButton()
-    
+    fileprivate let archiveButton = ImageButton()
     fileprivate let textContainerView: View = View()
     fileprivate let separator: View = View()
     fileprivate weak var controller: PreviewSenderController? {
         didSet {
             let count = controller?.urls.count ?? 0
-            textView.setPlaceholderAttributedString(.initialize(string: count > 1 ? tr(L10n.previewSenderCommentPlaceholder) : tr(L10n.previewSenderCaptionPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
+            textView.setPlaceholderAttributedString(.initialize(string: count > 1 ? L10n.previewSenderCommentPlaceholder : L10n.previewSenderCaptionPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
         }
     }
-    let sendAsFile: ValuePromise<PreviewSendingState> = ValuePromise(ignoreRepeated: true)
+    let state: ValuePromise<PreviewSendingState> = ValuePromise(ignoreRepeated: true)
     private let disposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -95,33 +119,40 @@ fileprivate class PreviewSenderView : Control {
         _ = closeButton.sizeToFit()
         
         
-        photoButton.toolTip = tr(L10n.previewSenderMediaTooltip)
-        fileButton.toolTip = tr(L10n.previewSenderFileTooltip)
-        collageButton.toolTip = tr(L10n.previewSenderCollageTooltip)
-        
+        photoButton.toolTip = L10n.previewSenderMediaTooltip
+        fileButton.toolTip = L10n.previewSenderFileTooltip
+        collageButton.toolTip = L10n.previewSenderCollageTooltip
+        archiveButton.toolTip = L10n.previewSenderArchiveTooltip
+
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachPhoto), for: .Normal)
         _ = photoButton.sizeToFit()
         
-        disposable.set(sendAsFile.get().start(next: { [weak self] value in
+        disposable.set(state.get().start(next: { [weak self] value in
             self?.fileButton.isSelected = value == .file
             self?.photoButton.isSelected = value == .media
             self?.collageButton.isSelected = value == .collage
+            self?.archiveButton.isSelected = value == .archive
         }))
         
         photoButton.isSelected = true
         
         photoButton.set(handler: { [weak self] _ in
-            self?.sendAsFile.set(.media)
+            self?.state.set(.media)
             FastSettings.toggleIsNeedCollage(false)
         }, for: .Click)
         
+        
+        archiveButton.set(handler: { [weak self] _ in
+            self?.state.set(.archive)
+        }, for: .Click)
+        
         collageButton.set(handler: { [weak self] _ in
-            self?.sendAsFile.set(.collage)
+            self?.state.set(.collage)
             FastSettings.toggleIsNeedCollage(true)
         }, for: .Click)
         
         fileButton.set(handler: { [weak self] _ in
-            self?.sendAsFile.set(.file)
+            self?.state.set(.file)
         }, for: .Click)
         
         closeButton.set(handler: { [weak self] _ in
@@ -134,14 +165,18 @@ fileprivate class PreviewSenderView : Control {
         collageButton.set(image: theme.icons.previewCollage, for: .Normal)
         _ = collageButton.sizeToFit()
         
+        archiveButton.set(image: theme.icons.previewSenderArchive, for: .Normal)
+        _ = archiveButton.sizeToFit()
+
         title.backgroundColor = theme.colors.background
+        
         
         headerView.addSubview(closeButton)
         headerView.addSubview(title)
         headerView.addSubview(fileButton)
         headerView.addSubview(photoButton)
         headerView.addSubview(collageButton)
-        
+        headerView.addSubview(archiveButton)
         title.isSelectable = false
         title.userInteractionEnabled = false
         
@@ -165,7 +200,7 @@ fileprivate class PreviewSenderView : Control {
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
         textView.linkColor = theme.colors.link
-        textView.max_height = 120
+        textView.max_height = 180
         
         emojiButton.set(handler: { [weak self] control in
             self?.controller?.showEmoji(for: control)
@@ -175,7 +210,7 @@ fileprivate class PreviewSenderView : Control {
             self?.controller?.send()
         }, for: .SingleClick)
         
-        textView.setFrameSize(NSMakeSize(0, 34))
+        textView.setFrameSize(NSMakeSize(280, 34))
 
         addSubview(tableView)
 
@@ -188,6 +223,8 @@ fileprivate class PreviewSenderView : Control {
         
         addSubview(separator)
         addSubview(draggingView)
+        
+        layout()
     }
     
     deinit {
@@ -223,7 +260,7 @@ fileprivate class PreviewSenderView : Control {
                     return false
                 }
                 if let ext = file.fileName?.nsstring.pathExtension.lowercased() {
-                    let mime = MIMEType(ext)
+                    let mime = MIMEType(ext, isExt: true)
                     if let resource = file.resource as? LocalFileReferenceMediaResource {
                         if mime.hasPrefix("image"), let image = NSImage(contentsOf: URL(fileURLWithPath: resource.localFilePath)) {
                             if image.size.width / 10 > image.size.height || image.size.height < 40 {
@@ -252,21 +289,24 @@ fileprivate class PreviewSenderView : Control {
         }
         
         self.collageButton.isHidden = (!isPhotos && !isMedia) || medias.count > 10 || medias.count < 2
+        let visibleCount = (photoButton.isHidden ? 0 : 1) + (fileButton.isHidden ? 0 : 1) + (archiveButton.isHidden ? 0 : 1) + (collageButton.isHidden ? 0 : 1)
+
+        title.isHidden = visibleCount > 0
         
         let text:String
         switch type {
         case .files:
-            text = tr(L10n.previewSenderSendFileCountable(count))
+            text = L10n.previewSenderSendFileCountable(count)
         case .photo:
-            text = tr(L10n.previewSenderSendPhotoCountable(count))
+            text = L10n.previewSenderSendPhotoCountable(count)
         case .video:
-            text = tr(L10n.previewSenderSendVideoCountable(count))
+            text = L10n.previewSenderSendVideoCountable(count)
         case .gif:
-            text = tr(L10n.previewSenderSendGifCountable(count))
+            text = L10n.previewSenderSendGifCountable(count)
         case .audio:
-            text = tr(L10n.previewSenderSendAudioCountable(count))
+            text = L10n.previewSenderSendAudioCountable(count)
         case .media:
-            text = tr(L10n.previewSenderSendMediaCountable(count))
+            text = L10n.previewSenderSendMediaCountable(count)
         }
         
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
@@ -290,9 +330,10 @@ fileprivate class PreviewSenderView : Control {
         needsLayout = true
     }
     
-    func applyOptions(_ options:[PreviewOptions]) {
-        fileButton.isHidden = !options.contains(.media)
+    func applyOptions(_ options:[PreviewOptions], count: Int) {
+        fileButton.isHidden = false//!options.contains(.media)
         photoButton.isHidden = !options.contains(.media)
+        archiveButton.isHidden = count < 2
     }
     
     override func layout() {
@@ -306,18 +347,20 @@ fileprivate class PreviewSenderView : Control {
         draggingView.frame = tableView.frame
 
         
-        title.layout?.measure(width: frame.width - (collageButton.isHidden ? 100 : 160))
+        let visibleCount = (photoButton.isHidden ? 0 : 1) + (fileButton.isHidden ? 0 : 1) + (archiveButton.isHidden ? 0 : 1) + (collageButton.isHidden ? 0 : 1)
+        
+        title.layout?.measure(width: frame.width - CGFloat(visibleCount) * 40 + 20)
         title.update(title.layout)
-        title.centerX()
-        title.centerY()
+        title.center()
         
         closeButton.centerY(x: headerView.frame.width - closeButton.frame.width - 10)
         collageButton.centerY(x: closeButton.frame.minX - 10 - collageButton.frame.width)
 
         
         photoButton.centerY(x: 10)
-        fileButton.centerY(x: photoButton.frame.maxX + 10)
+        fileButton.centerY(x: photoButton.isHidden ? (10) : (photoButton.frame.maxX + 10))
         
+        archiveButton.centerY(x: !fileButton.isHidden ? fileButton.frame.maxX + 10 : (photoButton.isHidden ? 10 : photoButton.frame.maxX + 10))
         
         textContainerView.setFrameSize(frame.width, textView.frame.height + 16)
         textContainerView.setFrameOrigin(0, frame.height - textContainerView.frame.height)
@@ -358,6 +401,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let inputContextHelper: InputContextHelper
     private let inputInteraction:PreviewContextInteraction = PreviewContextInteraction()
     private let contextChatInteraction: ChatInteraction
+    private let editorDisposable = MetaDisposable()
+    private let archiverStatusesDisposable = MetaDisposable()
+    private var editedData: [URL : EditedImageData] = [:]
+    private var archiveStatuses: [ArchiveSource : ArchiveStatus] = [:]
     private var genericView:PreviewSenderView {
         return self.view as! PreviewSenderView
     }
@@ -375,67 +422,138 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             return
         }
         
+        
         let initialSize = NSMakeSize(320, 320)
         let account = self.account
         
         let options = takeSenderOptions(for: urls)
-        genericView.applyOptions(options)
+        genericView.applyOptions(options, count: urls.count)
         let animated = self.animated
+        
+        let edit:(URL) -> Void = { [weak self] url in
+            self?.runEditor(for: url)
+        }
+        let delete:(URL) -> Void = { [weak self] url in
+            self?.deleteUrl(url)
+        }
+        
+        let editedData = self.editedData
         
         let reorder: (Int, Int) -> Void = { [weak self] from, to in
             guard let `self` = self else {return}
             let medias:[PreviewSendingState] = [.media, .file, .collage]
             for type in medias {
                 self.cachedMedia[type]?.media.move(at: from, to: to)
-                if type != .collage {
-                    self.cachedMedia[type]?.items.move(at: from, to: to)
-                }
+                self.urls.move(at: from, to: to)
             }
             self.updateSize(self.frame.width, animated: true)
         }
         
-        let signal = genericView.sendAsFile.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), NoError> in
+        let signal = genericView.state.get() |> mapToSignal { [weak self] state -> Signal<([Media], [TableRowItem], PreviewSendingState), NoError> in
             if let cached = self?.cachedMedia[state], cached.media.count == urls.count {
                 return .single((cached.media, cached.items, state))
             } else if state == .collage {
-                
-                return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
-                    |> map { $0.map({$0.0})}
-                    |> map { media in
-                        var id:Int32 = 0
-                        let groups = media.map({ media -> Message in
-                            id += 1
-                            return Message(media, stableId: UInt32(id), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: id))
-                        }).chunks(10)
-                        
-                        return (media, groups.map({MediaGroupPreviewRowItem(initialSize, messages: $0, account: account, reorder: reorder)}), state)
-                    }
+                return combineLatest(urls.map({ value in
+                    return Sender.generateMedia(for: MediaSenderContainer(path: value.path, caption: "", isFile: false), account: account) |> map { ($0.0, value)}
+                }))
+                |> map { datas in
+                    var id:Int32 = 0
+                    let groups = datas.map({ media, _ -> Message in
+                        id += 1
+                        return Message(media, stableId: UInt32(id), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: id))
+                    }).chunks(10)
+                    
+                    return (datas.map {$0.0}, groups.map({MediaGroupPreviewRowItem(initialSize, messages: $0, urls: datas.map {$0.1}, editedData: editedData, edit: { url in
+                        edit(url)
+                    }, delete: { url in
+                        delete(url)
+                    }, account: account, reorder: reorder)}), state)
+                }
+            } else if state == .archive {
+                let dir = NSTemporaryDirectory() + "tg_temp_archive_\(arc4random())"
+                try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: nil)
+                for url in urls {
+                    try? FileManager.default.copyItem(atPath: url.path, toPath: dir + "/" + url.path.nsstring.lastPathComponent)
+                }
+                return Sender.generateMedia(for: MediaSenderContainer(path: dir, caption: "", isFile: true), account: account) |> map {
+                    return [($0.0, URL(fileURLWithPath: dir))]
+                } |> map { ($0.map({$0.0}), $0.map{ value -> MediaPreviewRowItem in
+                        return MediaPreviewRowItem(initialSize, media: value.0, account: account, hasEditedData: false)
+                }, state) }
             } else {
-                return combineLatest(urls.map({Sender.generateMedia(for: MediaSenderContainer(path: $0.path, caption: "", isFile: state == .file), account: account)}))
-                    |> map { $0.map({$0.0})}
-                    |> map { ($0, $0.map{MediaPreviewRowItem(initialSize, media: $0, account: account)}, state) }
+                return combineLatest(urls.map({ value in
+                    return Sender.generateMedia(for: MediaSenderContainer(path: value.path, caption: "", isFile: state == .file), account: account) |> map { ($0.0, value)}
+                }))
+                    |> map { ($0.map({$0.0}), $0.map{ value -> MediaPreviewRowItem in
+                        return MediaPreviewRowItem(initialSize, media: value.0, account: account, hasEditedData: editedData[value.1] != nil, edit: {
+                            edit(value.1)
+                        }, delete: {
+                            delete(value.1)
+                        })
+                    }, state) }
             }
         } |> deliverOnMainQueue
         
         
         disposable.set(signal.start(next: { [weak self] medias, items, state in
-            if let strongSelf = self {
-                strongSelf.sendingState = state
-                
-                let animated = animated.swap(true)
-                
-                strongSelf.cachedMedia[state] = (media: medias, items: items)
-                strongSelf.genericView.updateTitle(medias, state: state)
-                strongSelf.genericView.tableView.removeAll(animation: .effectFade)
-                strongSelf.genericView.tableView.insert(items: items, animation: .effectFade)
-                strongSelf.genericView.layout()
-                
-                let maxWidth: CGFloat = 320
-                strongSelf.updateSize(maxWidth, animated: animated)
+            guard let `self` = self else {return}
+            self.sendingState = state
+            
+            let animated = animated.swap(true)
+            
+            let sources:[ArchiveSource] = medias.filter { media in
+                if let media = media as? TelegramMediaFile {
+                    return media.resource is LocalFileArchiveMediaResource
+                } else {
+                    return false
+                }
+            }.map { ($0 as! TelegramMediaFile).resource as! LocalFileArchiveMediaResource}.map {.resource($0)}
+            
+            self.archiverStatusesDisposable.set(combineLatest(sources.map {account.context.archiver.archive($0)}).start(next: { [weak self] statuses in
+                guard let `self` = self else {return}
+                self.archiveStatuses.removeAll()
+                for i in 0 ..< sources.count {
+                    self.archiveStatuses[sources[i]] = statuses[i]
+                }
+            }))
 
+            
+            self.cachedMedia[state] = (media: medias, items: items)
+            
+            if state == .archive {
+                self.genericView.updateTitle(self.cachedMedia[.media]?.media ?? self.cachedMedia[.file]?.media ?? self.cachedMedia[.collage]?.media ?? medias, state: state)
                 
-                strongSelf.readyOnce()
+            } else {
+                self.genericView.updateTitle(medias, state: state)
             }
+            
+            self.genericView.tableView.removeAll(animation: .effectFade)
+            self.genericView.tableView.insert(items: items, animation: .effectFade)
+            self.genericView.layout()
+            
+            if items.count > 1 {
+                self.genericView.tableView.resortController = TableResortController(resortRange: NSMakeRange(0, items.count), startTimeout: 0.0, start: { index in
+                    
+                }, resort: { index in
+                    
+                }, complete: { [weak self] previous, current in
+                    guard let `self` = self else {return}
+                    
+                    self.urls.move(at: previous, to: current)
+                    self.genericView.tableView.moveItem(from: previous, to: current)
+                    self.cachedMedia[state]?.items.move(at: previous, to: current)
+                    self.cachedMedia[state]?.media.move(at: previous, to: current)
+                })
+            } else {
+                self.genericView.tableView.resortController = nil
+            }
+            
+            
+            let maxWidth: CGFloat = 320
+            self.updateSize(maxWidth, animated: animated)
+            
+            
+            self.readyOnce()
         }))
     }
     
@@ -467,7 +585,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let canCollage: Bool = canCollagesFromUrl(self.urls)
         self.disposable.set(nil)
-        self.genericView.sendAsFile.set(self.sendingState == .collage ? canCollage ? .collage : .media : self.sendingState)
+        self.genericView.state.set(self.sendingState == .collage ? canCollage ? .collage : .media : self.sendingState)
         self.makeItems(self.urls)
     }
     override func returnKeyAction() -> KeyHandlerResult {
@@ -485,23 +603,44 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func send() {
-        self.sent = true
-        emoji.popover?.hide()
-        self.modal?.close(true)
-        let attributed = self.genericView.textView.attributedString()
-
-        var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
-        
-        if input.attributes.isEmpty {
-            input = ChatTextInputState(inputText: input.inputText.trimmed)
-        }
-        
         if let cached = cachedMedia[sendingState] {
-            if cached.media.count > 1 && !input.inputText.isEmpty {
+            let media = cached.media
+            
+            for i in 0 ..< media.count {
+                if let media = media[i] as? TelegramMediaFile, let resource = media.resource as? LocalFileArchiveMediaResource {
+                    if let status = archiveStatuses[.resource(resource)] {
+                        switch status {
+                        case .waiting, .fail, .none:
+                            genericView.tableView.item(at: i).view?.shakeView()
+                     //       NSSound.beep()
+                            return
+                        default:
+                            break
+                        }
+                    } else {
+                        genericView.tableView.item(at: i).view?.shakeView()
+                      //  NSSound.beep()
+                        return
+                    }
+                }
+            }
+            
+            self.sent = true
+            emoji.popover?.hide()
+            self.modal?.close(true)
+            let attributed = self.genericView.textView.attributedString()
+            
+            var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
+            
+            if input.attributes.isEmpty {
+                input = ChatTextInputState(inputText: input.inputText.trimmed)
+            }
+            
+            if media.count > 1 && !input.inputText.isEmpty {
                 chatInteraction.forceSendMessage(input)
                 input = ChatTextInputState()
             }
-            chatInteraction.sendMedias(cached.media, input, sendingState == .collage)
+            chatInteraction.sendMedias(media, input, sendingState == .collage)
         }
     }
     
@@ -514,8 +653,54 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return true
     }
     
+    private func deleteUrl(_ url: URL) {
+        if let index = self.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {
+            self.urls.remove(at: index)
+            if urls.isEmpty {
+                self.close()
+            } else {
+                if let file = self.cachedMedia[sendingState]?.media[index] as? TelegramMediaFile, let resource = file.resource as? LocalFileArchiveMediaResource {
+                    account.context.archiver.remove(.resource(resource))
+                }
+                self.cachedMedia.removeAll()
+                self.disposable.set(nil)
+                self.genericView.state.set(self.sendingState == .collage ? canCollagesFromUrl(urls) ? .collage : .media : self.sendingState)
+                self.makeItems(self.urls)
+            }
+        }
+    }
+    
+    private func runEditor(for url: URL) {
+        let data = editedData[url]
+        let editor = EditImageModalController(data?.originalUrl ?? url, defaultData: data)
+        showModal(with: editor, for: mainWindow)
+        editorDisposable.set((editor.result |> deliverOnMainQueue).start(next: { [weak self] (new, editedData) in
+            guard let `self` = self else {return}
+            if let index = self.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {
+                self.urls[index] = new
+                if let editedData = editedData {
+                    self.editedData[new] = editedData
+                } else {
+                    self.editedData.removeValue(forKey: new)
+                }
+                self.cachedMedia.removeAll()
+                self.makeItems(self.urls)
+            }
+        }))
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            if self.sendingState == .media && self.urls.count == 1, self.cachedMedia[self.sendingState]?.media.first is TelegramMediaImage {
+                self.runEditor(for: self.urls[0])
+            }
+            return .invoked
+        }, with: self, for: .E, priority: .high, modifierFlags: [.command])
+        
         
         
         window?.set(handler: { () -> KeyHandlerResult in
@@ -561,6 +746,34 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self?.genericView.textView.codeWord()
             return .invoked
         }, with: self, for: .K, priority: .modal, modifierFlags: [.command, .shift])
+        
+        
+        window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+
+            if !self.genericView.tableView.isEmpty, let view = self.genericView.tableView.item(at: 0).view as? MediaGroupPreviewRowView {
+                if view.draggingIndex != nil {
+                    view.mouseUp(with: event)
+                    return .invoked
+                }
+            }
+            
+            return .rejected
+        }, with: self, for: .leftMouseUp, priority: .high)
+        
+        window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            
+            self.genericView.tableView.enumerateViews(with: { view -> Bool in
+                view.updateMouse()
+                return true
+            })
+            
+            
+            return .invokeNext
+        }, with: self, for: .mouseMoved, priority: .high)
+        
+        genericView.tableView.needUpdateVisibleAfterScroll = true
     }
     
     
@@ -569,14 +782,13 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         genericView.draggingView.controller = self
         genericView.controller = self
         genericView.textView.delegate = self
-        genericView.sendAsFile.set(sendingState)
+        genericView.state.set(sendingState)
         inputInteraction.add(observer: self)
         
         self.temporaryInputState = chatInteraction.presentation.interfaceState.inputState
         let text = chatInteraction.presentation.interfaceState.inputState.attributedString
         
         genericView.textView.setAttributedString(text, animated: false)
-       
         chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(ChatTextInputState())})})
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
@@ -594,12 +806,23 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         inputInteraction.remove(observer: self)
         disposable.dispose()
         isFileDisposable.dispose()
+        editorDisposable.dispose()
+        archiverStatusesDisposable.dispose()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if !sent, let temp = temporaryInputState {
              chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(temp)})})
+        }
+        if !sent {
+            for (_, cached) in cachedMedia {
+                for media in cached.media {
+                    if let media = media as? TelegramMediaFile, let resource = media.resource as? LocalFileArchiveMediaResource {
+                        account.context.archiver.remove(.resource(resource))
+                    }
+                }
+            }
         }
         window?.removeAllHandlers(for: self)
     }
@@ -612,20 +835,28 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     init(urls:[URL], account:Account, chatInteraction:ChatInteraction, asMedia:Bool = true) {
-        self.urls = urls
+        
+        let filtred = urls.filter { url in
+            return FileManager.default.fileExists(atPath: url.path)
+        }
+
+        
+        self.urls = filtred
         self.account = account
         self.emoji = EmojiViewController(account)
         
         let canCollage: Bool = canCollagesFromUrl(urls)
-        
+        let options = takeSenderOptions(for: urls)
+
         self.contextChatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: account)
         
         inputContextHelper = InputContextHelper(account: account, chatInteraction: contextChatInteraction)
-        self.sendingState = asMedia ? FastSettings.isNeedCollage && canCollage ? .collage : .media : .file
+        self.sendingState = asMedia ? FastSettings.isNeedCollage && canCollage ? .collage : (options == [.file] ? .file : .media) : .file
         self.chatInteraction = chatInteraction
         super.init(frame:NSMakeRect(0, 0, 320, mainWindow.frame.height - 80))
         bar = .init(height: 0)
         
+
         contextChatInteraction.movePeerToInput = { [weak self] peer in
             if let strongSelf = self {
                 let string = strongSelf.genericView.textView.string()
@@ -813,7 +1044,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 200
+        return 1024
     }
     
 }

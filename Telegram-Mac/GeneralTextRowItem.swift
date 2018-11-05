@@ -40,7 +40,7 @@ class GeneralTextRowItem: GeneralRowItem {
             attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(11.5)).mutableCopy() as! NSMutableAttributedString
         case let .markdown(text, handler):
             attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(11.5), textColor: textColor), link: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.link), linkAttribute: { contents in
-                return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, handler))
+                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, handler))
             })).mutableCopy() as! NSMutableAttributedString
         }
         attributedText.detectBoldColorInString(with: .bold(11.5))

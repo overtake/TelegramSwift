@@ -41,11 +41,11 @@ extension NSMutableAttributedString {
                 if range.location != NSNotFound {
                     let sublink = (self.string as NSString).substring(with: range)
                     if let account = account {
-                        self.addAttribute(NSAttributedStringKey.link, value: inApp(for: sublink as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
+                        self.addAttribute(NSAttributedString.Key.link, value: inApp(for: sublink as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
                     } else {
-                        self.addAttribute(NSAttributedStringKey.link, value: inAppLink.external(link: sublink, false), range: range)
+                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
                     }
-                    self.addAttribute(NSAttributedStringKey.foregroundColor, value: color, range: range)
+                    self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                     self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
                 }
                 
@@ -2007,26 +2007,6 @@ func drawStretchedImageInRect(_ image: CGImage, context: CGContext, rect: NSRect
 
 
 
-extension NSView {
-    
-    func widthConstraint(relation: NSLayoutConstraint.Relation,
-                         size: CGFloat) -> NSLayoutConstraint {
-        return NSLayoutConstraint(item: self,
-                                  attribute: .width,
-                                  relatedBy: relation,
-                                  toItem: nil,
-                                  attribute: .width,
-                                  multiplier: 1.0,
-                                  constant: size)
-    }
-    
-    func addWidthConstraint(relation: NSLayoutConstraint.Relation = .equal,
-                            size: CGFloat) {
-        addConstraint(widthConstraint(relation: relation,
-                                      size: size))
-    }
-    
-}
 
 extension NSControl.ImagePosition {
     
@@ -2065,21 +2045,21 @@ extension NSImage {
     // MARK: Project drawables
     
     
-    static let defaultBg    = NSImage(named: NSImage.Name(rawValue: "DefaultBackground"))!
+    static let defaultBg    = NSImage(named: "DefaultBackground")!
     
     static let shuffling    = #imageLiteral(resourceName: "Icon_DFRShuffle").forUI()
     static let repeating    = #imageLiteral(resourceName: "Icon_DFRRepeat").forUI()
     
-    static let previous     = NSImage(named: NSImage.Name.touchBarRewindTemplate)!
-    static let next         = NSImage(named: NSImage.Name.touchBarFastForwardTemplate)!
-    static let play         = NSImage(named: NSImage.Name.touchBarPlayTemplate)!
-    static let pause        = NSImage(named: NSImage.Name.touchBarPauseTemplate)!
+    static let previous     = NSImage(named: NSImage.touchBarRewindTemplateName)!
+    static let next         = NSImage(named: NSImage.touchBarFastForwardTemplateName)!
+    static let play         = NSImage(named: NSImage.touchBarPlayTemplateName)!
+    static let pause        = NSImage(named: NSImage.touchBarPauseTemplateName)!
     
-    static let volumeLow    = NSImage(named: NSImage.Name.touchBarAudioOutputVolumeLowTemplate)
-    static let volumeMedium = NSImage(named: NSImage.Name.touchBarAudioOutputVolumeMediumTemplate)
-    static let volumeHigh   = NSImage(named: NSImage.Name.touchBarAudioOutputVolumeHighTemplate)
+    static let volumeLow    = NSImage(named: NSImage.touchBarAudioOutputVolumeLowTemplateName)
+    static let volumeMedium = NSImage(named: NSImage.touchBarAudioOutputVolumeMediumTemplateName)
+    static let volumeHigh   = NSImage(named: NSImage.touchBarAudioOutputVolumeHighTemplateName)
     
-    static let playhead     = NSImage(named: NSImage.Name.touchBarPlayheadTemplate)
+    static let playhead     = NSImage(named: NSImage.touchBarPlayheadTemplateName)
     static let playbar      = #imageLiteral(resourceName: "Icon_Playbar")
     
 }
@@ -2200,3 +2180,5 @@ extension Date {
         return Calendar.current.date(byAdding: components, to: startOfMonth)!
     }
 }
+
+

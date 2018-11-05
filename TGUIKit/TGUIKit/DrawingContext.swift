@@ -135,7 +135,7 @@ public class DrawingContext {
     }
     
     public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
-        self.size = size
+        self.size = NSMakeSize(max(size.width, 1), max(size.height, 1))
         self.scale = scale
         self.scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
         

@@ -20,6 +20,11 @@ import AVKit
 class MGalleryExternalVideoItem: MGalleryVideoItem {
     let content:TelegramMediaWebpageLoadedContent
     private let _media:TelegramMediaImage
+    
+    var mediaImage: TelegramMediaImage {
+        return _media
+    }
+    
     override init(_ account: Account, _ entry:GalleryEntry, _ pagerSize: NSSize) {
         let webpage = entry.message!.media[0] as! TelegramMediaWebpage
         

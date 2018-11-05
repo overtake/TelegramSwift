@@ -149,7 +149,8 @@ class WPLayout: Equatable {
     }
     
     var isGalleryAssemble: Bool {
-        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram") && content.instantPage != nil) || content.text == nil {
+        // && content.instantPage != nil
+        if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
             return !content.url.isEmpty
         }
         return content.type == "telegram_album"

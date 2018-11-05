@@ -36,16 +36,21 @@ class SPopoverViewController: GenericViewController<TableView> {
         readyOnce()
     }
     
-    init(items:[SPopoverItem], visibility:Int = 4) {
+    init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15) {
         weak var controller:SPopoverViewController?
         let alignAsImage = !items.filter({$0.image != nil}).isEmpty
         self.items = items.map({ item in SPopoverRowItem(NSZeroSize, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
             Queue.mainQueue().justDispatch {
                 controller?.popover?.hide()
-                
-                _ = (Signal<Void, NoError>.single(Void()) |> delay(0.15, queue: Queue.mainQueue())).start(next: {
-                    item.handler()
-                })
+
+                if handlerDelay == 0 {
+                     item.handler()
+                } else {
+                    _ = (Signal<Void, NoError>.single(Void()) |> delay(handlerDelay, queue: Queue.mainQueue())).start(next: {
+                        item.handler()
+                    })
+                }
+               
             }
         })})
         let width: CGFloat = self.items.max(by: {$0.title.layoutSize.width < $1.title.layoutSize.width})!.title.layoutSize.width

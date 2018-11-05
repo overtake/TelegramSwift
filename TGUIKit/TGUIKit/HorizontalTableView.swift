@@ -23,7 +23,7 @@ public class HorizontalTableView: TableView {
     public override func scrollWheel(with event: NSEvent) {
                 
         var scrollPoint = contentView.bounds.origin
-        let isInverted: Bool = UserDefaults.standard.bool(forKey: "com.apple.swipescrolldirection")
+        let isInverted: Bool = System.isScrollInverted
         if event.scrollingDeltaY != 0 {
             if isInverted {
                 scrollPoint.y += -event.scrollingDeltaY

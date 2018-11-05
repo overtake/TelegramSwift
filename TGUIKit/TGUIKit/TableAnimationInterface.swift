@@ -77,11 +77,11 @@ open class TableAnimationInterface: NSObject {
                     if let presentLayer = layer.presentation(), presentLayer.animation(forKey: "position") != nil {
                         inset = presentLayer.position.y
                     }
-                    layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+                    layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: CAMediaTimingFunctionName.easeOut)
                     
                     for item in added {
                         if item.index == idx {
-                            layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            //layer.animateAlpha(from: 0, to: 1, duration: 0.2)
                         }
                     }
                     
@@ -99,7 +99,7 @@ open class TableAnimationInterface: NSObject {
     }
     
     public func scroll(table:TableView, from:NSRect, to:NSRect) -> Void {
-        table.contentView.layer?.animateBounds(from: from, to: to, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseOut)
+        table.contentView.layer?.animateBounds(from: from, to: to, duration: 0.2, timingFunction: CAMediaTimingFunctionName.easeOut)
     }
 
     

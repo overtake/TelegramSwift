@@ -64,7 +64,7 @@ class PeerMediaPlayerAnimationView: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    private func animateToPlaying() {
+    func animateToPlaying() {
         for barNode in self.barNodes {
             let randValueMul = Float(4 % arc4random())
             let randDurationMul = Double(arc4random()) / Double(UInt32.max)
@@ -74,14 +74,14 @@ class PeerMediaPlayerAnimationView: View {
             animation.autoreverses = true
             animation.duration = 0.25 + 0.25 * randDurationMul
             animation.repeatCount = Float.greatestFiniteMagnitude;
-            animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseIn)
+            animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeIn)
             
             barNode.layer?.removeAnimation(forKey: "transform.scale.y")
             barNode.layer?.add(animation, forKey: "transform.scale.y")
         }
     }
     
-    private func animateToPaused() {
+    func animateToPaused() {
         for barNode in self.barNodes {
             if let presentationLayer = barNode.layer?.presentation() {
                 let animation = CABasicAnimation(keyPath: "transform.scale.y")

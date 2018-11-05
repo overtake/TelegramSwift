@@ -58,25 +58,31 @@ func resourceType(mimeType:String? = nil, orExt:String? = nil) -> Signal<String?
     } |> runOn(Queue.mainQueue())
 }
 
-func MIMEType(_ fileExtension: String) -> String {
-    if let ext = extensionstore[fileExtension] {
-        return ext
-    } else {
-        if !fileExtension.isEmpty {
-            let UTIRef = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, fileExtension as CFString, nil)
-            let UTI = UTIRef?.takeRetainedValue()
-            if let UTI = UTI {
-                let MIMETypeRef = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType)
-                if MIMETypeRef != nil
-                {
-                    let MIMEType = MIMETypeRef?.takeRetainedValue()
-                    return MIMEType as String? ?? "application/octet-stream"
+func MIMEType(_ path: String, isExt: Bool = false) -> String {
+    let fileExtension = isExt ? path.lowercased() : path.nsstring.pathExtension.lowercased()
+    if !fileExtension.isEmpty {
+        if let ext = extensionstore[fileExtension] {
+            return ext
+        } else {
+            if !fileExtension.isEmpty {
+                let UTIRef = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, fileExtension as CFString, nil)
+                let UTI = UTIRef?.takeRetainedValue()
+                if let UTI = UTI {
+                    let MIMETypeRef = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType)
+                    if MIMETypeRef != nil
+                    {
+                        let MIMEType = MIMETypeRef?.takeRetainedValue()
+                        return MIMEType as String? ?? "application/octet-stream"
+                    }
                 }
+                
             }
-            
+            return "application/octet-stream"
         }
-        return "application/octet-stream"
+    } else {
+        return !isExt && path.isDirectory ? "application/zip" : "application/octet-stream"
     }
+    
 }
 
 func fileExt(_ mimeType: String) -> String? {

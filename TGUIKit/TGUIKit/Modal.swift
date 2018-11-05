@@ -229,7 +229,7 @@ public class Modal: NSObject {
         background.layer?.disableActions()
         self.interactions = controller.modalInteractions
         super.init()
-
+        controller.modal = self
         if let interactions = interactions {
             interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
             interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
@@ -327,6 +327,13 @@ public class Modal: NSObject {
         window.removeAllHandlers(for: self)
         controller?.viewWillDisappear(true)
         
+        for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
+            if activeModals[i].value == self {
+                activeModals.remove(at: i)
+                break
+            }
+        }
+        
         if callAcceptInteraction, let interactionsView = interactionsView {
             interactionsView.interactions.accept?()
         }
@@ -351,6 +358,15 @@ public class Modal: NSObject {
             }
         }
 
+    }
+    
+    static func topModalController(_ window: Window) -> ModalViewController? {
+        for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
+            if let modal = activeModals[i].value, modal.window === window {
+                return modal.controller
+            }
+        }
+        return nil
     }
     
     func show() -> Void {
@@ -412,6 +428,18 @@ public func hasModals() -> Bool {
     return !activeModals.isEmpty
 }
 
+public func hasModals(_ window: Window) -> Bool {
+    
+    for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
+        if activeModals[i].value == nil {
+            activeModals.remove(at: i)
+        }
+    }
+    
+    return !activeModals.filter { $0.value?.window === window}.isEmpty
+}
+
+
 public func closeAllModals() {
     for modal in activeModals {
         modal.value?.close()
@@ -427,13 +455,18 @@ public func showModal(with controller:ModalViewController, for window:Window, is
     }
     
     controller.modal = Modal(controller: controller, for: window, isOverlay: isOverlay)
+    if #available(OSX 10.12.2, *) {
+        window.touchBar = nil
+    }
     controller.modal?.show()
 }
 
 public func closeModal(_ type: ModalViewController.Type) -> Void {
-    for weakModal in activeModals {
+    for i in stride(from: activeModals.count - 1, to: -1 , by: -1) {
+        let weakModal = activeModals[i]
         if let controller = weakModal.value?.controller, controller.isKind(of: type) {
             weakModal.value?.close()
+            activeModals.remove(at: i)
         }
     }
 }

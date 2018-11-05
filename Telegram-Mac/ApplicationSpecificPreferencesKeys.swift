@@ -18,7 +18,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case voiceCallSettings
     case themeSettings = 22
     case readArticles = 25
-    case recentEmoji = 14
+    case recentEmoji = 28
     case instantViewAppearance = 11
     case additionalSettings = 15
     case autoNight = 26

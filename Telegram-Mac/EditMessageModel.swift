@@ -27,9 +27,12 @@ class EditMessageModel: ChatAccessoryModel {
     override var view: ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
-            view?.customHandler.layout = { [weak self] view in
-                self?.updateImageIfNeeded()
-            }
+        }
+    }
+    
+    override var size:NSSize {
+        didSet {
+            updateImageIfNeeded()
         }
     }
     
@@ -81,93 +84,92 @@ class EditMessageModel: ChatAccessoryModel {
         self.setNeedDisplay()
     }
     private func updateImageIfNeeded() {
-        Queue.mainQueue().async {
-            if let view = self.view, view.frame != NSZeroRect {
-                let message = self.state.message
-                var updatedMedia: Media?
-                var imageDimensions: CGSize?
-                var hasRoundImage = false
-                if !message.containsSecretMedia {
-                    for media in message.media {
-                        if let image = media as? TelegramMediaImage {
-                            updatedMedia = image
-                            if let representation = largestRepresentationForPhoto(image) {
-                                imageDimensions = representation.dimensions
-                            }
-                            break
-                        } else if let file = media as? TelegramMediaFile, file.isVideo {
-                            updatedMedia = file
-                            
-                            if let dimensions = file.dimensions {
-                                imageDimensions = dimensions
-                            } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
-                                imageDimensions = representation.dimensions
-                            }
-                            if file.isInstantVideo {
-                                hasRoundImage = true
-                            }
-                            break
+        if let view = self.view, view.frame != NSZeroRect {
+            let message = self.state.message
+            var updatedMedia: Media?
+            var imageDimensions: CGSize?
+            var hasRoundImage = false
+            if !message.containsSecretMedia {
+                for media in message.media {
+                    if let image = media as? TelegramMediaImage {
+                        updatedMedia = image
+                        if let representation = largestRepresentationForPhoto(image) {
+                            imageDimensions = representation.dimensions
                         }
-                    }
-                }
-                
-                
-                if let imageDimensions = imageDimensions {
-                    let boundingSize = CGSize(width: 30.0, height: 30.0)
-                    let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: imageDimensions.aspectFilled(boundingSize), boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
-                    
-                    if view.imageView == nil {
-                        view.imageView = TransformImageView()
-                    }
-                    view.imageView?.setFrameSize(boundingSize)
-                    view.addSubview(view.imageView!)
-                    
-                    view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(scaleFactor: System.backingScale, self.topOffset + (self.size.height - self.topOffset - boundingSize.height)/2))
-                    
-                    
-                    let mediaUpdated = true
-                    
-                    
-                    var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
-                    if mediaUpdated {
-                        if let image = updatedMedia as? TelegramMediaImage {
-                            updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
-                        } else if let file = updatedMedia as? TelegramMediaFile {
-                            if file.isVideo {
-                                updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
-                            } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
-                                let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil, partialReference: nil)
-                                updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true)
-                            }
-                        }
-                    }
-                    
-                    if let updateImageSignal = updateImageSignal, let media = updatedMedia {
-                        view.imageView?.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
-                        view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
-                            return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
-                        })
-                        if let media = media as? TelegramMediaImage {
-                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
-                        }
+                        break
+                    } else if let file = media as? TelegramMediaFile, file.isVideo {
+                        updatedMedia = file
                         
-                        view.imageView?.set(arguments: arguments)
-                        if hasRoundImage {
-                            view.imageView!.layer?.cornerRadius = 15
-                        } else {
-                            view.imageView?.layer?.cornerRadius = 0
+                        if let dimensions = file.dimensions {
+                            imageDimensions = dimensions
+                        } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isSticker {
+                            imageDimensions = representation.dimensions
+                        }
+                        if file.isInstantVideo {
+                            hasRoundImage = true
+                        }
+                        break
+                    }
+                }
+            }
+            
+            
+            if let imageDimensions = imageDimensions {
+                let boundingSize = CGSize(width: 30.0, height: 30.0)
+                let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: imageDimensions.aspectFilled(boundingSize), boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
+                
+                if view.imageView == nil {
+                    view.imageView = TransformImageView()
+                }
+                view.imageView?.setFrameSize(boundingSize)
+                if view.imageView?.superview == nil {
+                    view.addSubview(view.imageView!)
+                }
+                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(scaleFactor: System.backingScale, self.topOffset + (self.size.height - self.topOffset - boundingSize.height)/2))
+                
+                
+                let mediaUpdated = true
+                
+                
+                var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
+                if mediaUpdated {
+                    if let image = updatedMedia as? TelegramMediaImage {
+                        updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
+                    } else if let file = updatedMedia as? TelegramMediaFile {
+                        if file.isVideo {
+                            updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
+                        } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
+                            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil, partialReference: nil)
+                            updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true)
                         }
                     }
-                } else {
-                    view.imageView?.removeFromSuperview()
-                    view.imageView = nil
                 }
                 
-                self.previousMedia = updatedMedia
+                if let updateImageSignal = updateImageSignal, let media = updatedMedia {
+                    view.imageView?.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
+                    view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
+                        return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
+                    })
+                    if let media = media as? TelegramMediaImage {
+                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
+                    }
+                    
+                    view.imageView?.set(arguments: arguments)
+                    if hasRoundImage {
+                        view.imageView!.layer?.cornerRadius = 15
+                    } else {
+                        view.imageView?.layer?.cornerRadius = 0
+                    }
+                }
             } else {
-                self.view?.imageView?.removeFromSuperview()
-                self.view?.imageView = nil
+                view.imageView?.removeFromSuperview()
+                view.imageView = nil
             }
+            
+            self.previousMedia = updatedMedia
+        } else {
+            self.view?.imageView?.removeFromSuperview()
+            self.view?.imageView = nil
         }
     }
     

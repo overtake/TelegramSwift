@@ -26,6 +26,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private let containerView:Control
     private let separator:View = View()
     private var chatInteraction: ChatInteraction!
+    private let playingSpeed: ImageButton = ImageButton()
     private var controller:APController? {
         didSet {
             if let controller = controller {
@@ -35,10 +36,11 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                             self?.updateStatus(status.0, status.1)
                         }
                     }))
+                controller.baseRate = (controller is APChatVoiceController) ? FastSettings.playingRate : 1.0
             } else {
                 self.bufferingStatusDisposable.set(nil)
             }
-            
+            self.playingSpeed.isHidden = !(controller is APChatVoiceController)
         }
     }
     private var message:Message?
@@ -106,6 +108,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         containerView.addSubview(dismiss)
         containerView.addSubview(repeatControl)
         containerView.addSubview(textView)
+        containerView.addSubview(playingSpeed)
         addSubview(containerView)
         addSubview(separator)
         addSubview(progressView)
@@ -123,6 +126,12 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             self?.gotoMessage()
         }, for: .SingleClick)
         
+        playingSpeed.set(handler: { [weak self] control in
+            FastSettings.setPlayingRate(FastSettings.playingRate == 2.0 ? 1.0 : 2.0)
+            self?.controller?.baseRate = FastSettings.playingRate
+            (control as! ImageButton).set(image: FastSettings.playingRate == 2.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
+
+        }, for: .Click)
     }
     
     private func showAudioPlayerList() {
@@ -166,6 +175,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
+        playingSpeed.set(image: FastSettings.playingRate == 2.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
         previous.set(image: theme.icons.audioPlayerPrev, for: .Normal)
         next.set(image: theme.icons.audioPlayerNext, for: .Normal)
         playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
@@ -188,12 +198,12 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         _ = playOrPause.sizeToFit()
         _ = dismiss.sizeToFit()
         _ = repeatControl.sizeToFit()
-        
+        _ = playingSpeed.sizeToFit()
+
         
         previous.centerY(x: 20)
         playOrPause.centerY(x: previous.frame.maxX + 5)
         next.centerY(x: playOrPause.frame.maxX + 5)
-
         
         backgroundColor = theme.colors.background
         containerView.backgroundColor = theme.colors.background
@@ -265,7 +275,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             progressView.set(progress: 0, animated:true)
         case let .playing(data):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(data.progress), animated: data.animated)
+            progressView.set(progress: CGFloat(data.progress == .nan ? 0 : data.progress), animated: data.animated, duration: 0.2)
             playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
             break
         case let .fetching(progress, animated):
@@ -300,6 +310,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
         textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20))
         textView.update(textView.layout)
+        
+        playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 20)
+
         
         let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
         

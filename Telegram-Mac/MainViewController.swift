@@ -104,26 +104,6 @@ class MainViewController: TelegramViewController {
                 }
             }
         }))
-        
-        let items:[UnreadMessageCountsItem] = [.total(.raw, .messages)]
-        let postbox = self.account.postbox
-        badgeCountDisposable.set((account.context.badgeFilter.get() |> mapToSignal { value -> Signal<(UnreadMessageCountsView, Int32), NoError> in
-            return postbox.unreadMessageCountsView(items: items) |> map { view in
-                var totalCount:Int32 = 0
-                if let total = view.count(for: .total(value, .messages)) {
-                    totalCount = total
-                }
-                
-                return (view, totalCount)
-            }
-            
-        } |> deliverOnMainQueue).start(next: { [weak self] _, totalValue in
-            #if !STABLE && !APP_STORE
-            self?.hasScollThumb = totalValue > 0
-            #else
-            self?.hasScollThumb = false
-            #endif
-        }))
     }
     
     private let settingsDisposable = MetaDisposable()
@@ -162,28 +142,30 @@ class MainViewController: TelegramViewController {
                 }
             }, theme.icons.fastSettingsLock))
         }
-        
-        items.append(SPopoverItem(theme.colors.isDark ? tr(L10n.fastSettingsDisableDarkMode) : tr(L10n.fastSettingsEnableDarkMode), { [weak self] in
-            if let strongSelf = self {
-               _ = updateThemeInteractivetly(postbox: strongSelf.account.postbox, f: { settings -> ThemePaletteSettings in
-                let palette: ColorPalette
-                var palettes:[String : ColorPalette] = [:]
-                palettes[dayClassic.name] = dayClassic
-                palettes[whitePalette.name] = whitePalette
-                palettes[darkPalette.name] = darkPalette
-                palettes[nightBluePalette.name] = nightBluePalette
-                palettes[mojavePalette.name] = mojavePalette
-
-                if !theme.colors.isDark {
-                    palette = palettes[settings.defaultNightName] ?? nightBluePalette
-                } else {
-                    palette = palettes[settings.defaultDayName] ?? dayClassic
+        if #available(OSX 10.14, *), theme.followSystemAppearance {} else {
+            items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, { [weak self] in
+                if let strongSelf = self {
+                    _ = updateThemeInteractivetly(postbox: strongSelf.account.postbox, f: { settings -> ThemePaletteSettings in
+                        let palette: ColorPalette
+                        var palettes:[String : ColorPalette] = [:]
+                        palettes[dayClassic.name] = dayClassic
+                        palettes[whitePalette.name] = whitePalette
+                        palettes[darkPalette.name] = darkPalette
+                        palettes[nightBluePalette.name] = nightBluePalette
+                        palettes[mojavePalette.name] = mojavePalette
+                        
+                        if !theme.colors.isDark {
+                            palette = palettes[settings.defaultNightName] ?? nightBluePalette
+                        } else {
+                            palette = palettes[settings.defaultDayName] ?? dayClassic
+                        }
+                        return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName, followSystemAppearance: settings.followSystemAppearance)
+                    }).start()
+                    _ = updateAutoNightSettingsInteractively(postbox: strongSelf.account.postbox, { $0.withUpdatedSchedule(nil)}).start()
                 }
-                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName)
-            }).start()
-               // _ = updateThemeSettings(postbox: strongSelf.account.postbox, palette: !theme.colors.isDark ? darkPalette : dayClassic).start()
-            }
-        }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
+            }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
+        }
+       
         
         let time = Int32(Date().timeIntervalSince1970)
         let unmuted = notifications.muteUntil < time

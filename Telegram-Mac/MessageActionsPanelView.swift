@@ -19,9 +19,7 @@ class MessageActionsPanelView: Control, Notifable {
     private var deleteButton:TitleButton = TitleButton()
     private var forwardButton:TitleButton = TitleButton()
     private var countTitle:TitleButton = TitleButton()
-    
-    private let loadMessagesDisposable:MetaDisposable = MetaDisposable()
-    
+        
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -94,28 +92,12 @@ class MessageActionsPanelView: Control, Notifable {
     }
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {
-        if let selectingState = (value as? ChatPresentationInterfaceState)?.selectionState, let account = chatInteraction?.account {
-            let ids = Array(selectingState.selectedIds)
-            loadMessagesDisposable.set((account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
-                var canDelete:Bool = !ids.isEmpty
-                var canForward:Bool = !ids.isEmpty
-                for message in messages {
-                    if !canDeleteMessage(message, account: account) {
-                        canDelete = false
-                    }
-                    if !canForwardMessage(message, account: account) {
-                        canForward = false
-                    }
-                }
-                self?.updateUI(canDelete, canForward, ids.count)
-                
-            }))
-           
+        if let value = value as? ChatPresentationInterfaceState, let selectionState = value.selectionState {
+            updateUI(value.canInvokeBasicActions.delete, value.canInvokeBasicActions.forward, selectionState.selectedIds.count)
         }
     }
     
     deinit {
-        loadMessagesDisposable.dispose()
     }
     
     func isEqual(to other: Notifable) -> Bool {

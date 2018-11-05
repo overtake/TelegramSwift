@@ -37,7 +37,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
             
             let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
-            attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/finder", range: range)
+            attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/finder", range: range)
         }
         finderLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
 
@@ -47,7 +47,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         if !(file.resource is LocalFileReferenceMediaResource) {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
             let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
-            attr.addAttribute(NSAttributedStringKey.link, value: "chat://file/download", range: range)
+            attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/download", range: range)
         }
         downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
         

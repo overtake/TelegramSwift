@@ -226,7 +226,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
             
             if let letters = letters, let font = font {
                 let string = letters.count == 0 ? "" : (letters[0] + (letters.count == 1 ? "" : letters[1]))
-                let attributedString = NSAttributedString(string: string, attributes: [NSAttributedStringKey.font: font, NSAttributedStringKey.foregroundColor: NSColor.white])
+                let attributedString = NSAttributedString(string: string, attributes: [NSAttributedString.Key.font: font, NSAttributedString.Key.foregroundColor: NSColor.white])
                 
                 let line = CTLineCreateWithAttributedString(attributedString)
                 let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
@@ -273,7 +273,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
             
             let letters = letters
             let string = letters.count == 0 ? "" : (letters[0] + (letters.count == 1 ? "" : letters[1]))
-            let attributedString = NSAttributedString(string: string, attributes: [NSAttributedStringKey.font: font, NSAttributedStringKey.foregroundColor: NSColor.white])
+            let attributedString = NSAttributedString(string: string, attributes: [NSAttributedString.Key.font: font, NSAttributedString.Key.foregroundColor: NSColor.white])
             
             let line = CTLineCreateWithAttributedString(attributedString)
             let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)

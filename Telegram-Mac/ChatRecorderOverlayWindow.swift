@@ -151,6 +151,7 @@ class ChatRecorderOverlayWindowController : NSObject {
         startMouseLocation = window.mouseLocationOutsideOfEventStream
         super.init()
         self.view.updateState(state)
+        window.setFrameOrigin(NSMakePoint(minX, window.frame.minY))
     }
     
     private var view: ChatRecorderOverlayView {
@@ -185,10 +186,17 @@ class ChatRecorderOverlayWindowController : NSObject {
         }
     }
     
+    var minX: CGFloat {
+        if let navigation = account.context.mainNavigation as? MajorNavigationController, navigation.genericView.state == .dual, let sidebar = navigation.sidebar {
+            return parent.frame.maxX - window.frame.width - sidebar.frame.width + 35
+        }
+        return parent.frame.maxX - window.frame.width + 25
+    }
+    
     private func moveWindow() -> Void {
         let location = window.mouseLocationOutsideOfEventStream
         let defaultY = parent.frame.minY - 35
-        window.setFrameOrigin(NSMakePoint(window.frame.minX, max(window.frame.minY - (startMouseLocation.y - location.y), defaultY)))
+        window.setFrameOrigin(NSMakePoint(minX, max(window.frame.minY - (startMouseLocation.y - location.y), defaultY)))
         let dif = window.frame.minY - defaultY
         let maxDif: CGFloat = 100
         if dif > maxDif {

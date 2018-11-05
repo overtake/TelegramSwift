@@ -192,9 +192,6 @@ private class RadialProgressOverlayLayer: CALayer {
         
     }
     
-    override func removeAnimation(forKey key: String) {
-        super.removeAnimation(forKey: key)
-    }
     
     override func removeAllAnimations() {
         super.removeAllAnimations()
@@ -234,14 +231,14 @@ private class RadialProgressOverlayLayer: CALayer {
             CATransaction.begin()
             
             let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
-            basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+            basicAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
             basicAnimation.duration = 2.0
             basicAnimation.fromValue = NSNumber(value: fromValue)
             basicAnimation.toValue = NSNumber(value: Float.pi * 2.0)
             basicAnimation.repeatCount = .infinity
             basicAnimation.isRemovedOnCompletion = false
 
-            basicAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+            basicAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
             self.add(basicAnimation, forKey: "progressRotation")
             CATransaction.commit()
         } else {

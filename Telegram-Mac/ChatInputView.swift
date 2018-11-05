@@ -119,7 +119,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     public override var responder:NSResponder? {
-        return textView
+        return textView.inputView
     }
     
     func updateInterface(with interaction:ChatInteraction, account:Account) -> Void {
@@ -171,6 +171,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
         replyMarkupModel?.layout()
+        accessory.update(with: chatInteraction.presentation, account: chatInteraction.account, animated: false)
         accessoryView.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
     }
@@ -634,6 +635,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         return chatInteraction.presentation.maxInputCharacters
+    }
+    
+    @available(OSX 10.12.2, *)
+    func textView(_ textView: NSTextView!, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItem.Identifier]!) -> [NSTouchBarItem.Identifier]! {
+        return inputChatTouchBarItems(presentation: chatInteraction.presentation)
     }
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {

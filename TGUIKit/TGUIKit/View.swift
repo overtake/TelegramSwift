@@ -91,7 +91,27 @@ public var viewEnableTouchBar: Bool = true
 
 open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
-    public var userInteractionEnabled:Bool = true
+    public static let chagedEffectiveAppearance: NSNotification.Name = NSNotification.Name(rawValue: "ViewChagedEffectiveAppearanceNotification")
+    
+    public var userInteractionEnabled:Bool = true {
+        didSet {
+            if userInteractionEnabled != oldValue {
+                viewDidUpdatedInteractivity()
+            }
+        }
+    }
+    var dynamicContentStateForRestore:Bool? = nil
+    var interactionStateForRestore:Bool? = nil
+    
+    public var isDynamicContentLocked:Bool = false {
+        didSet {
+            if isDynamicContentLocked != oldValue {
+                viewDidUpdatedDynamicContent()
+            }
+        }
+    }
+    
+    public var borderColor: NSColor?
     
     public var animates:Bool = false
     
@@ -100,6 +120,13 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     public weak var displayDelegate:ViewDisplayDelegate?
     
     public let customHandler:CustomViewHandlers = CustomViewHandlers()
+    public var viewDidChangedEffectiveAppearance:(()->Void)? = nil
+
+    
+    
+    open override func viewDidChangeEffectiveAppearance() {
+        self.viewDidChangedEffectiveAppearance?()
+    }
     
     open var backgroundColor:NSColor = .clear {
         didSet {
@@ -109,7 +136,19 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
             }
         }
     }
-
+//
+//    @available(OSX 10.14, *)
+//    open override func viewDidChangeEffectiveAppearance() {
+//        super.viewDidChangeEffectiveAppearance()
+//        NotificationCenter.default.post(name: View.chagedEffectiveAppearance, object: self)
+//    }
+    
+    open func viewDidUpdatedInteractivity() {
+        
+    }
+    open func viewDidUpdatedDynamicContent() {
+        
+    }
     
     @available(OSX 10.12.2, *)
     open override func makeTouchBar() -> NSTouchBar? {
@@ -143,7 +182,11 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
            // ctx.fill(layer.bounds)
             
             if let border = border {
-                ctx.setFillColor(presentation.colors.border.cgColor)
+                if let borderColor = borderColor {
+                    ctx.setFillColor(borderColor.cgColor)
+                } else {
+                    ctx.setFillColor(presentation.colors.border.cgColor)
+                }
                 
                 if border.contains(.Top) {
                     ctx.fill(NSMakeRect(0, !self.isFlipped ? NSHeight(self.frame) - .borderSize : 0, NSWidth(self.frame), .borderSize))
@@ -218,14 +261,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return super._mouseInside()
     }
     
-    open func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) -> Void  {
+    open func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) -> Void  {
         super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     }
         
-    open func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    open func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     }
-    open func change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion:((Bool)->Void)? = nil) {
+    open func change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         super._change(opacity: to, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
         
     }

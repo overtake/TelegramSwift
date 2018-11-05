@@ -103,13 +103,13 @@ private class HeaderView : View {
         view.setFrameOrigin(view.frame.minX, view.frame.minY - 1)
         if animated {
             addSubview(view)
-            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self, weak view] completed in
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self, weak view] completed in
                 if completed {
                     self?.titleView?.removeFromSuperview()
                     self?.titleView = view
                 }
             })
-            titleView?.change(opacity: 0, timingFunction: kCAMediaTimingFunctionSpring)
+            titleView?.change(opacity: 0, timingFunction: CAMediaTimingFunctionName.spring)
         } else {
             titleView?.removeFromSuperview()
             titleView = view
@@ -294,6 +294,8 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             if let window = self?._window, !window.styleMask.contains(.fullScreen) {
                 self?._window.orderOut(nil)
                 instantController = nil
+            } else {
+                self?._window.toggleFullScreen(nil)
             }
             return true
         }
@@ -303,6 +305,8 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 if !window.styleMask.contains(.fullScreen) {
                     self?._window.orderOut(nil)
                     instantController = nil
+                } else {
+                    window.toggleFullScreen(nil)
                 }
             }
 			

@@ -41,7 +41,7 @@ class SImageView: NSView {
                     contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
                     contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
                 }
-                self.layer?.contentsGravity = kCAGravityResize;
+                self.layer?.contentsGravity = .resize;
                 self.layer?.contentsCenter = contentsCenter;
                 self.layer?.contents = image.0
             } else {

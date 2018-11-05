@@ -62,10 +62,10 @@ private final class LocationPinView : View {
         switch state {
         case .user:
             dotView.change(opacity: 0, animated: animated)
-            locationPin.change(pos: NSMakePoint(locationPin.frame.minX, frame.height - dotView.frame.height - locationPin.frame.height - 6), animated: animated, duration: 0.3, timingFunction: kCAMediaTimingFunctionSpring)
+            locationPin.change(pos: NSMakePoint(locationPin.frame.minX, frame.height - dotView.frame.height - locationPin.frame.height - 6), animated: animated, duration: 0.3, timingFunction: CAMediaTimingFunctionName.spring)
         case let .custom(location, _):
             dotView.change(opacity: 1, animated: animated)
-            locationPin.change(pos: NSMakePoint(locationPin.frame.minX, location == nil ? 0 : frame.height - dotView.frame.height - locationPin.frame.height - 6), animated: animated, duration: 0.3, timingFunction: kCAMediaTimingFunctionSpring)
+            locationPin.change(pos: NSMakePoint(locationPin.frame.minX, location == nil ? 0 : frame.height - dotView.frame.height - locationPin.frame.height - 6), animated: animated, duration: 0.3, timingFunction: CAMediaTimingFunctionName.spring)
         }
     }
     
@@ -150,7 +150,7 @@ private final class LocationMapView : View {
         self.state = state
         
         let duration: Double = 0.3
-        let timingFunction: String = kCAMediaTimingFunctionSpring
+        let timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.spring
         
         CATransaction.begin()
         let mapY: CGFloat
@@ -168,7 +168,7 @@ private final class LocationMapView : View {
             locationPinView.updateState(pickState, animated: animated)
             expandButton.set(text: L10n.locationSendShowNearby, for: .Normal)
             //NSMakeRect(0, frame.height - 50 - expandContainer.frame.height, frame.width, 50)
-            tableView.change(size: NSMakeSize(frame.width, 60), animated: animated, timingFunction: kCAMediaTimingFunctionSpring)
+            tableView.change(size: NSMakeSize(frame.width, 60), animated: animated, timingFunction: CAMediaTimingFunctionName.spring)
             tableView.change(pos: NSMakePoint(0, frame.height - 60 - (hasExpand ? expandContainer.frame.height : 0)), animated: animated, duration: duration, timingFunction: timingFunction)
             mapY = header.frame.height
             locateButton.userInteractionEnabled = true
@@ -189,7 +189,7 @@ private final class LocationMapView : View {
         mapView._change(pos: NSMakePoint(0, mapY), animated: animated, duration: duration, timingFunction: timingFunction)
         //pinPoint.midY - locationPinView.frame.height
         let pinPoint = mapView.focus(NSMakeSize(locationPinView.frame.width, 4))
-        locationPinView.change(pos: NSMakePoint(pinPoint.minX, pinPoint.midY - locationPinView.frame.height), animated: animated, duration: 0.2, timingFunction: kCAMediaTimingFunctionLinear)
+        locationPinView.change(pos: NSMakePoint(pinPoint.minX, pinPoint.midY - locationPinView.frame.height), animated: animated, duration: 0.2, timingFunction: CAMediaTimingFunctionName.linear)
 
 
         CATransaction.commit()

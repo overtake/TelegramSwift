@@ -604,6 +604,13 @@ class LayoutAccountController : TableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         (navigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
+        
+        passportPromise.set(twoStepAuthData(account.network) |> map { value in
+            return value.hasSecretValues
+        } |> `catch` { error -> Signal<Bool, NoError> in
+                return .single(false)
+        })
+        
         updateLocalizationAndTheme()
     }
     
@@ -622,11 +629,7 @@ class LayoutAccountController : TableViewController {
             return account.network.connectionStatus |> map {(settings, $0)}
         }, passportPromise.get()))
         
-        passportPromise.set(twoStepAuthData(account.network) |> map { value in
-            return value.hasSecretValues
-            } |> `catch` { error -> Signal<Bool, NoError> in
-                return .single(false)
-        })
+        
         
         languages.set(Signal<[LocalizationInfo]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
         blockedPeers.set(Signal<[Peer]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))

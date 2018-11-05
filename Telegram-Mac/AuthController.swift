@@ -84,7 +84,6 @@ class AuthHeaderView : View {
         
         switchLanguage.disableActions()
         switchLanguage.set(font: .medium(.title), for: .Normal)
-        switchLanguage.set(color: .blueUI, for: .Normal)
         switchLanguage.set(text: "Continue on English", for: .Normal)
         _ = switchLanguage.sizeToFit()
         
@@ -162,18 +161,28 @@ class AuthHeaderView : View {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        let headerLayout = TextViewLayout(NSAttributedString.initialize(string: appName, color: NSColor.text, font: NSFont.normal(30.0)), maximumNumberOfLines: 1)
-        headerLayout.measure(width: CGFloat.greatestFiniteMagnitude)
+        
+        switchLanguage.set(color: theme.colors.blueUI, for: .Normal)
+        
+        let headerLayout = TextViewLayout(.initialize(string: appName, color: theme.colors.text, font: NSFont.normal(30.0)), maximumNumberOfLines: 1)
+        headerLayout.measure(width: .greatestFiniteMagnitude)
         header.update(headerLayout)
         
+        header.backgroundColor = theme.colors.background
+        desc.backgroundColor = theme.colors.background
+        textHeaderView.backgroundColor = theme.colors.background
         
-        let descLayout = TextViewLayout(NSAttributedString.initialize(string: tr(L10n.loginWelcomeDescription), color: .grayText, font: .normal(16.0)), maximumNumberOfLines: 1)
-        descLayout.measure(width: CGFloat.greatestFiniteMagnitude)
+        let descLayout = TextViewLayout(.initialize(string: tr(L10n.loginWelcomeDescription), color: theme.colors.grayText, font: .normal(16.0)), maximumNumberOfLines: 1)
+        descLayout.measure(width: .greatestFiniteMagnitude)
         desc.update(descLayout)
         
-        nextButton.set(text: tr(L10n.loginNext), for: .Normal)
+        nextButton.set(text: L10n.loginNext, for: .Normal)
+        nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: .white, backgroundColor: theme.colors.blueUI)
         proxyConnecting.progressColor = theme.colors.blueIcon
         proxyConnecting.lineWidth = 1.0
+        
+        
+        updateState(self.state, animated: false)
         needsLayout = true
     }
     
@@ -195,7 +204,7 @@ class AuthHeaderView : View {
             switchLanguage.isHidden = !needShowSuggestedButton
         case .confirmationCodeEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: tr(L10n.loginHeaderCode), color: .text, font: .normal(30.0)))
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderCode, color: theme.colors.text, font: .normal(30.0)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
@@ -208,7 +217,7 @@ class AuthHeaderView : View {
             break
         case .passwordEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: tr(L10n.loginHeaderPassword), color: .text, font: .normal(30.0)))
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderPassword, color: theme.colors.text, font: .normal(30.0)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX(y: 90)
@@ -220,7 +229,7 @@ class AuthHeaderView : View {
             break
         case .signUp:
             nextButton.change(opacity: 0, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: tr(L10n.loginHeaderSignUp), color: .text, font: .normal(30.0)))
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderSignUp, color: theme.colors.text, font: .normal(30.0)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
@@ -254,7 +263,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         self.account = account
         super.init()
         
-        self.disposable.set((account.postbox.stateView() |> deliverOnMainQueue).start(next: { [weak self] view in
+        self.disposable.set(combineLatest(account.postbox.stateView() |> deliverOnMainQueue, appearanceSignal).start(next: { [weak self] view, _ in
             self?.updateState(state: view.state ?? UnauthorizedAccountState(isTestingEnvironment: false, masterDatacenterId: account.masterDatacenterId, contents: .empty))
         }))
         bar = .init(height: 0)
@@ -401,7 +410,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             }
         }, checkCode: { [weak self] code in
             if let strongSelf = self {
-                _ = (authorizeWithCode(account: strongSelf.account, code: code) |> deliverOnMainQueue ).start(error: { [weak self] error in
+                _ = (authorizeWithCode(account: strongSelf.account, code: code, termsOfService: nil) |> deliverOnMainQueue ).start(error: { [weak self] error in
                     self?.genericView.loginView.updateCodeError(error)
                 })
             }

@@ -248,9 +248,19 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), NoError> in
             
             if search.request.isEmpty {
-                return combineLatest(account.postbox.recentPeers(), account.postbox.multiplePeersView(recentlyUsed) |> take(1))
+                return combineLatest(recentPeers(account: account), account.postbox.multiplePeersView(recentlyUsed) |> take(1))
                     |> deliverOn(prepareQueue)
-                    |> mapToSignal { peers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
+                    |> mapToSignal { recentPeers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
+                        
+                        
+                        var peers:[Peer] = []
+                        
+                        switch recentPeers {
+                        case let .peers(list):
+                            peers = list
+                        default:
+                            break
+                        }
                         
                         var recentl:[Peer] = []
                         for peerId in recentlyUsed {
@@ -268,7 +278,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 
                 let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
                 
-                return combineLatest(foundLocalPeers, foundRemotePeers, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
+                return combineLatest(foundLocalPeers |> map {$0.0}, foundRemotePeers, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
                     var peers = (values.1 + values.0)
                     if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) {
                         peers.insert(values.2, at: 0)
@@ -369,7 +379,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
             account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(selectedItem.peer.id)))
             close()
         }
-        return .rejected
+        return .invoked
     }
     
     override func viewDidAppear(_ animated: Bool) {

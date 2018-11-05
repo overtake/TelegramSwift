@@ -912,8 +912,8 @@ class ChatRowItem: TableRowItem {
                     
                     if renderType == .bubble {
                         let newAttr = parseMarkdownIntoAttributedString(L10n.chatBubblesForwardedFrom(attr.string), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor:forwardNameColor), link: MarkdownAttributeSet(font: hasBubble ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { contents in
-                            if let link = attr.attribute(NSAttributedStringKey.link, at: 0, effectiveRange: nil) {
-                                return (NSAttributedStringKey.link.rawValue, link)
+                            if let link = attr.attribute(NSAttributedString.Key.link, at: 0, effectiveRange: nil) {
+                                return (NSAttributedString.Key.link.rawValue, link)
                             }
                             return nil
                         }))
@@ -958,7 +958,7 @@ class ChatRowItem: TableRowItem {
                     }
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
-                        attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.peerInfo(peerId:peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), range: range)
+                        attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(peerId:peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), range: range)
                     }
                     
                     
@@ -968,7 +968,7 @@ class ChatRowItem: TableRowItem {
                         }
                         _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
                         let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font:.medium(.text))
-                        attr.addAttribute(NSAttributedStringKey.link, value: inAppLink.callback("@" + address, { (parameter) in
+                        attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback("@" + address, { (parameter) in
                             chatInteraction.updateInput(with: parameter + " ")
                         }), range: range)
                     }
@@ -1625,6 +1625,11 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                 _ = reportReasonSelector().start(next: { reason in
                     _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
                 })
+            }))
+        }
+        if account.peerId.id == 835030 {
+            items.append(ContextMenuItem.init("get message id", handler: {
+                alert(for: mainWindow, info: "\(message.id)")
             }))
         }
         return items

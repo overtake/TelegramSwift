@@ -66,8 +66,12 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+        if let account = account, let media = media as? TelegramMediaFile {
+            if let parent = parent {
+                fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+            } else {
+                fetchDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.standalone(media: media)).start())
+            }
         }
     }
     
@@ -83,8 +87,11 @@ class ChatFileContentView: ChatMediaContentView {
 
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
+        if let account = account, let media = media as? TelegramMediaFile {
+            cancelFreeMediaFileInteractiveFetch(account: account, resource: media.resource)
+            if let resource = media.resource as? LocalFileArchiveMediaResource {
+                account.context.archiver.remove(.resource(resource))
+            }
         }
     }
     
@@ -92,9 +99,62 @@ class ChatFileContentView: ChatMediaContentView {
         return NSPointInRect(convert(event.locationInWindow, from: nil), progressView.frame)
     }
     
-    func actionLayout(status:MediaResourceStatus, file:TelegramMediaFile, presentation: ChatMediaPresentation, paremeters: ChatFileLayoutParameters?) -> TextViewLayout? {
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
+    func actionLayout(status:MediaResourceStatus, archiveStatus: ArchiveStatus?, file:TelegramMediaFile, presentation: ChatMediaPresentation, paremeters: ChatFileLayoutParameters?) -> TextViewLayout? {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        
+        if let archiveStatus = archiveStatus {
+            switch archiveStatus {
+            case let .progress(progress):
+                switch status {
+                case .Fetching:
+                    if parent != nil {
+                        _ = attr.append(string: progress == 0 ? L10n.messageStatusArchivePreparing : L10n.messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
+                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                        layout.measure()
+                        return layout
+                    } else {
+                        _ = attr.append(string: L10n.messageStatusArchived, color: presentation.grayText, font: .normal(.text))
+                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                        layout.measure()
+                        return layout
+                    }
+                   
+                default:
+                    break
+                }
+            case .none, .waiting:
+                _ = attr.append(string: L10n.messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
+                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                layout.measure()
+                return layout
+            case .done:
+                if parent == nil {
+                    _ = attr.append(string: L10n.messageStatusArchived, color: presentation.grayText, font: .normal(.text))
+                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                    layout.measure()
+                    return layout
+                }
+            case let .fail(error):
+                if parent == nil {
+                    let errorText: String
+                    switch error {
+                    case .sizeLimit:
+                        errorText = L10n.messageStatusArchiveFailedSizeLimit
+                    default:
+                        errorText = L10n.messageStatusArchiveFailed
+                    }
+                    _ = attr.append(string: errorText, color: theme.colors.redUI, font: .normal(.text))
+                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                    layout.measure()
+                    return layout
+                }
+            }
+           
+        }
         switch status {
         case let .Fetching(_, progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -109,6 +169,13 @@ class ChatFileContentView: ChatMediaContentView {
             return layout
             
         case .Local:
+            if let _ = archiveStatus {
+                let size = L10n.messageStatusArchived
+                let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
+                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                layout.measure()
+                return layout
+            }
             return paremeters?.finderLayout
         case .Remote:
             return paremeters?.downloadLayout
@@ -124,22 +191,44 @@ class ChatFileContentView: ChatMediaContentView {
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
-        var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
+        var updatedStatusSignal: Signal<(MediaResourceStatus, ArchiveStatus?), NoError>?
         let parameters = parameters as? ChatFileLayoutParameters
         actionText.backgroundColor = theme.colors.background
         
         if mediaUpdated {
+            var archiveSignal:Signal<ArchiveStatus?, NoError> = .single(nil)
+            if let resource = file.resource as? LocalFileArchiveMediaResource {
+                archiveSignal = account.context.archiver.archive(.resource(resource)) |> map {Optional($0)}
+            }
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id))
-                    |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
+                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
+                    |> map { resourceStatus, pendingStatus, archiveStatus in
+                        if let archiveStatus = archiveStatus {
+                            switch archiveStatus {
+                            case let .progress(progress):
+                                return (.Fetching(isActive: true, progress: Float(progress)), archiveStatus)
+                            default:
+                                break
+                            }
+                        }
                         if let pendingStatus = pendingStatus {
-                            return .Fetching(isActive: true, progress: pendingStatus.progress)
+                            return (.Fetching(isActive: true, progress: pendingStatus.progress), archiveStatus)
                         } else {
-                            return resourceStatus
+                            return (resourceStatus, archiveStatus)
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue
+                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), archiveSignal) |> map { resourceStatus, archiveStatus in
+                    if let archiveStatus = archiveStatus {
+                        switch archiveStatus {
+                        case let .progress(progress):
+                            return (.Fetching(isActive: true, progress: Float(progress)), archiveStatus)
+                        default:
+                            break
+                        }
+                    }
+                    return (resourceStatus, archiveStatus)
+                } |> deliverOnMainQueue
             }
             
             let stableId:Int64
@@ -157,7 +246,7 @@ class ChatFileContentView: ChatMediaContentView {
                 
                 if !thumbView.hasImage {
                     let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-                    thumbView.setSignal( chatMessageImageFile(account: account, fileReference: reference, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
+                    thumbView.setSignal(chatMessageImageFile(account: account, fileReference: reference, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
                         if let strongSelf = self {
                             return cacheMedia(signal: image, messageId: stableId, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
                         } else {
@@ -175,36 +264,45 @@ class ChatFileContentView: ChatMediaContentView {
             self.setNeedsDisplay()
         }
         
-        progressView.isHidden = true
+        progressView.isHidden = !file.previewRepresentations.isEmpty
         
         if let updatedStatusSignal = updatedStatusSignal {
-            self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
-                if let strongSelf = self {
-                    strongSelf.fetchStatus = status
-                    
-                    let layout = strongSelf.actionLayout(status: status, file: file, presentation: presentation, paremeters: parameters)
-                    if !strongSelf.actionText.isEqual(to :layout) {
-                        layout?.interactions = strongSelf.actionInteractions
-                        
-                        strongSelf.actionText.update(layout)
-
-                    }
-                    strongSelf.progressView.isHidden = false
-                    switch status {
-                    case let .Fetching(_, progress):
-                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
-                        strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                    case .Local:
-                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: file.previewRepresentations.isEmpty ? presentation.fileThumb : nil)
-                        strongSelf.progressView.state = .Play
-                        strongSelf.progressView.isHidden = !file.previewRepresentations.isEmpty
-                   case .Remote:
-                        strongSelf.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
-                        strongSelf.progressView.state = .Remote
-                    }
-                    
-                    strongSelf.progressView.userInteractionEnabled = status != .Local
+            self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status, archiveStatus in
+                guard let `self` = self else {return}
+                self.fetchStatus = status
+                
+                let layout = self.actionLayout(status: status, archiveStatus: archiveStatus, file: file, presentation: presentation, paremeters: parameters)
+                if !self.actionText.isEqual(to: layout) {
+                    layout?.interactions = self.actionInteractions
+                    self.actionText.update(layout)
                 }
+                self.progressView.isHidden = false
+                switch status {
+                case let .Fetching(_, progress):
+                    var progress = progress
+                    if let archiveStatus = archiveStatus {
+                        switch archiveStatus {
+                        case .progress:
+                            if parent != nil {
+                                progress = 0.1
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    progress = max(progress, 0.1)
+                    self.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: file.previewRepresentations.isEmpty ? presentation.fileThumb : nil)
+                    self.progressView.state = archiveStatus != nil && self.parent == nil ? .Play : .Fetching(progress: progress, force: false)
+                case .Local:
+                    self.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: file.previewRepresentations.isEmpty ? presentation.fileThumb : nil)
+                    self.progressView.state = .Play
+                    self.progressView.isHidden = !file.previewRepresentations.isEmpty
+                case .Remote:
+                    self.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: file.previewRepresentations.isEmpty ? presentation.fileThumb : nil)
+                    self.progressView.state = archiveStatus != nil && self.parent == nil ? .Play : .Remote
+                }
+                
+                self.progressView.userInteractionEnabled = status != .Local
             }))
         }
         
@@ -280,7 +378,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func clean() {
         statusDisposable.dispose()
-        //fetchDisposable.dispose()
+        fetchDisposable.dispose()
     }
     
 }

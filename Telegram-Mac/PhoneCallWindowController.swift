@@ -339,7 +339,7 @@ class PhoneCallWindowController {
         let size = NSMakeSize(300, 460)
         if let screen = NSScreen.main {
             self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
-            self.window.level = .screenSaver
+            self.window.level = .modalPanel
             self.window.backgroundColor = .clear
         } else {
             fatalError("screen not found")
@@ -627,7 +627,6 @@ func closeCall(_ timeout:TimeInterval? = nil) {
 
 func applyUIPCallResult(_ account:Account, _ result:PCallResult) {
     assertOnMainThread()
-    
     switch result {
     case let .success(session):
         showPhoneCallWindow(session)

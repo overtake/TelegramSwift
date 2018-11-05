@@ -548,7 +548,7 @@ class InputContextHelper: NSObject {
             return (prepareEntries(left: previous, right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction:chatInteraction),!entries.isEmpty, previousIsEmpty)
         } |> deliverOnMainQueue
         
-        disposable.set(makeSignal.start(next: { [weak self, weak view, weak relativeView] transition, show, previousIsEmpty in
+        disposable.set((makeSignal |> map { [weak self, weak view, weak relativeView] transition, show, previousIsEmpty in
         
             if show, let controller = self?.controller, let relativeView = relativeView {
                 if previousIsEmpty {
@@ -567,14 +567,14 @@ class InputContextHelper: NSObject {
                     controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)
                     let y = position == .above ? relativeView.frame.minY - controller.frame.height : relativeView.frame.maxY
-                    controller.genericView.change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring)
+                    controller.genericView.change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring)
 
                 }
                 
             } else if let controller = self?.controller, let relativeView = relativeView {
                 controller.viewWillDisappear(animated)
                 if animated {
-                    controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak controller] completed in
+                    controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak controller] completed in
                         
                         controller?.removeFromSuperview()
                         controller?.genericView.removeAll()
@@ -591,7 +591,7 @@ class InputContextHelper: NSObject {
                 }
             }
     
-        }))
+        }).start())
     
     }
     

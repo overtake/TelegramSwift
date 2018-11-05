@@ -96,16 +96,16 @@ extension ChatTextInputAttribute {
     var attribute:(String, Any, NSRange) {
         switch self {
         case let .bold(range):
-            return (NSAttributedStringKey.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .italic(range):
-            return (NSAttributedStringKey.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .pre(range), let .code(range):
-            return (NSAttributedStringKey.font.rawValue, NSFont.code(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFont.code(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .uid(range, uid):
-            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
+            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .url(range, url):
-            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
+            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
@@ -150,7 +150,7 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
     
     var inputAttributes:[ChatTextInputAttribute] = []
     
-    attributed.enumerateAttribute(NSAttributedStringKey.font, in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { font, range, _ in
+    attributed.enumerateAttribute(NSAttributedString.Key.font, in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { font, range, _ in
         if let font = font as? NSFont {
             let descriptor = font.fontDescriptor
             let symTraits = descriptor.symbolicTraits
@@ -169,7 +169,7 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
         }
     }
     
-    attributed.enumerateAttribute(NSAttributedStringKey(rawValue: TGCustomLinkAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
+    attributed.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
         if let tag = tag as? TGInputTextTag {
             if let uid = tag.attachment as? NSNumber {
                 inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
@@ -231,7 +231,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(.text), coreText: false)
         for attribute in attributes {
             let attr = attribute.attribute
-            string.addAttribute(NSAttributedStringKey(rawValue: attr.0), value: attr.1, range: attr.2)
+            string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
         }
         return string.copy() as! NSAttributedString
     }
@@ -355,7 +355,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         let attr = NSMutableAttributedString(string: inputText)
         attr.detectLinks(type: .Hashtags)
         
-        attr.enumerateAttribute(NSAttributedStringKey.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+        attr.enumerateAttribute(NSAttributedString.Key.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
             if let value = value as? inAppLink {
                 switch value {
                 case let .external(link, _):
@@ -512,11 +512,19 @@ enum EditStateLoading : Equatable {
 
 final class ChatEditState : Equatable {
     let inputState:ChatTextInputState
+    let originalMedia: Media?
     let message:Message
     let editMedia: RequestEditMessageMedia
     let loadingState: EditStateLoading
-    init(message:Message, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep) {
+    let editedData: EditedImageData?
+
+    init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil) {
         self.message = message
+        if originalMedia == nil {
+            self.originalMedia = message.media.first
+        } else {
+            self.originalMedia = originalMedia
+        }
         if let state = state {
             self.inputState = state
         } else {
@@ -534,22 +542,28 @@ final class ChatEditState : Equatable {
         }
         self.loadingState = loadingState
         self.editMedia = editMedia
+        self.editedData = editedData
     }
     
+    var canEditMedia: Bool {
+        return !message.media.isEmpty && (message.media[0] is TelegramMediaImage || message.media[0] is TelegramMediaFile)
+    }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
-        return ChatEditState(message: self.message.withUpdatedMedia([media]), state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)))
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.media.first, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
     }
-    
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
-        return ChatEditState(message: self.message, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia)
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)
     }
     func withUpdated(state:ChatTextInputState) -> ChatEditState {
-        return ChatEditState(message: self.message, state: state, loadingState: loadingState, editMedia: self.editMedia)
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: state, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)
+    }
+    
+    func withUpdatedEditedData(_ editedData: EditedImageData?) -> ChatEditState {
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: self.loadingState, editMedia: self.editMedia, editedData: editedData)
     }
     
     static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
-        
-        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia
+        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia && lhs.editedData == rhs.editedData
     }
 }
 

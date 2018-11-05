@@ -302,7 +302,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
 
-        super.draw(layer, in: ctx)
+      //  super.draw(layer, in: ctx)
 
         if let item = self.item as? ChatRowItem {
             
@@ -808,7 +808,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         animation.toValue = 0.5
         animation.autoreverses = true
         animation.isRemovedOnCompletion = true
-        animation.fillMode = kCAFillModeForwards
+        animation.fillMode = CAMediaTimingFillMode.forwards
         
         animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
             if completed {
@@ -822,9 +822,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         
         
-//        animatedView?.change(opacity: 0.5, animated: true, false, removeOnCompletion: false, duration: 0.5, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+//        animatedView?.change(opacity: 0.5, animated: true, false, removeOnCompletion: false, duration: 0.5, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self] completed in
 //            if completed {
-//                self?.animatedView?.change(opacity: 0, animated: true, false, removeOnCompletion: true, duration: 1.5, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self] completed in
+//                self?.animatedView?.change(opacity: 0, animated: true, false, removeOnCompletion: true, duration: 1.5, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self] completed in
 //                    if completed {
 //                        self?.animatedView?.removeFromSuperview()
 //                        self?.animatedView = nil
@@ -948,6 +948,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             if result {
                 focusAnimation(nil)
+            } else {
+                NSSound.beep()
             }
         }
         

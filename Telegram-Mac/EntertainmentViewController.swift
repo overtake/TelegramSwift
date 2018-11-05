@@ -121,6 +121,7 @@ class EntertainmentViewController: NavigationViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         section.viewWillAppear(animated)
+        updateLocalizationAndTheme()
     }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

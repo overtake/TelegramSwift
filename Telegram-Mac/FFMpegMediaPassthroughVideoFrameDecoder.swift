@@ -15,7 +15,7 @@ final class FFMpegMediaPassthroughVideoFrameDecoder: MediaTrackFrameDecoder {
         
         let bytes = malloc(Int(frame.packet.packet.size))!
         memcpy(bytes, frame.packet.packet.data, Int(frame.packet.packet.size))
-        guard CMBlockBufferCreateWithMemoryBlock(nil, bytes, Int(frame.packet.packet.size), nil, nil, 0, Int(frame.packet.packet.size), 0, &blockBuffer) == noErr else {
+        guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: bytes, blockLength: Int(frame.packet.packet.size), blockAllocator: nil, customBlockSource: nil, offsetToData: 0, dataLength: Int(frame.packet.packet.size), flags: 0, blockBufferOut: &blockBuffer) == noErr else {
             free(bytes)
             return nil
         }
@@ -23,19 +23,17 @@ final class FFMpegMediaPassthroughVideoFrameDecoder: MediaTrackFrameDecoder {
         var timingInfo = CMSampleTimingInfo(duration: frame.duration, presentationTimeStamp: frame.pts, decodeTimeStamp: frame.dts)
         var sampleBuffer: CMSampleBuffer?
         var sampleSize = Int(frame.packet.packet.size)
-        guard CMSampleBufferCreate(nil, blockBuffer, true, nil, nil, self.videoFormat, 1, 1, &timingInfo, 1, &sampleSize, &sampleBuffer) == noErr else {
+        guard CMSampleBufferCreate(allocator: nil, dataBuffer: blockBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: self.videoFormat, sampleCount: 1, sampleTimingEntryCount: 1, sampleTimingArray: &timingInfo, sampleSizeEntryCount: 1, sampleSizeArray: &sampleSize, sampleBufferOut: &sampleBuffer) == noErr else {
             return nil
         }
         
         let resetDecoder = self.resetDecoderOnNextFrame
         if self.resetDecoderOnNextFrame {
             self.resetDecoderOnNextFrame = false
-            let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer!, true)! as NSArray
+            let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer!, createIfNecessary: true)! as NSArray
             let dict = attachments[0] as! NSMutableDictionary
             
             dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleBufferAttachmentKey_ResetDecoderBeforeDecoding as NSString as String)
-       //     dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleBufferAttachmentKey_SpeedMultiplier as NSString as String)
-
         }
         
         return MediaTrackFrame(type: .video, sampleBuffer: sampleBuffer!, resetDecoder: resetDecoder, decoded: false, rotationAngle: self.rotationAngle)

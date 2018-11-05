@@ -47,7 +47,7 @@ final class FFMpegAudioFrameDecoder: MediaTrackFrameDecoder {
         
         let bytes = malloc(data.count)!
         data.copyBytes(to: bytes.assumingMemoryBound(to: UInt8.self), count: data.count)
-        let status = CMBlockBufferCreateWithMemoryBlock(nil, bytes, data.count, nil, nil, 0, data.count, 0, &blockBuffer)
+        let status = CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: bytes, blockLength: data.count, blockAllocator: nil, customBlockSource: nil, offsetToData: 0, dataLength: data.count, flags: 0, blockBufferOut: &blockBuffer)
         if status != noErr {
             return nil
         }
@@ -55,7 +55,7 @@ final class FFMpegAudioFrameDecoder: MediaTrackFrameDecoder {
         var timingInfo = CMSampleTimingInfo(duration: duration, presentationTimeStamp: pts, decodeTimeStamp: pts)
         var sampleBuffer: CMSampleBuffer?
         var sampleSize = data.count
-        guard CMSampleBufferCreate(nil, blockBuffer, true, nil, nil, nil, 1, 1, &timingInfo, 1, &sampleSize, &sampleBuffer) == noErr else {
+        guard CMSampleBufferCreate(allocator: nil, dataBuffer: blockBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: nil, sampleCount: 1, sampleTimingEntryCount: 1, sampleTimingArray: &timingInfo, sampleSizeEntryCount: 1, sampleSizeArray: &sampleSize, sampleBufferOut: &sampleBuffer) == noErr else {
             return nil
         }
         

@@ -1826,7 +1826,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
                 
                 if let fullSizeImage = fullSizeImage {
                     c.interpolationQuality = .medium
-                   //
+                    c.setFillColor(theme.colors.transparentBackground.cgColor)
                     c.fill(fittedRect)
                     c.draw(fullSizeImage, in: fittedRect)
                 }

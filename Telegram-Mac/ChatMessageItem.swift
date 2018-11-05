@@ -213,7 +213,7 @@ class ChatMessageItem: ChatRowItem {
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
                                 
-                                let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedStringKey.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
                                 let text = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange).string
     
                                 
@@ -524,7 +524,7 @@ class ChatMessageItem: ChatRowItem {
         }
         
         
-        let string = NSMutableAttributedString(string: text, attributes: [NSAttributedStringKey.font: NSFont.normal(fontSize), NSAttributedStringKey.foregroundColor: textColor])
+        let string = NSMutableAttributedString(string: text, attributes: [NSAttributedString.Key.font: NSFont.normal(fontSize), NSAttributedString.Key.foregroundColor: textColor])
         if let entities = entities {
             var nsString: NSString?
             for entity in entities.entities {
@@ -532,59 +532,59 @@ class ChatMessageItem: ChatRowItem {
 
                 switch entity.type {
                 case .Url:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     let link = inApp(for:nsString!.substring(with: range) as NSString, account:account, openInfo:openInfo, applyProxy: applyProxy)
-                    string.addAttribute(NSAttributedStringKey.link, value: link, range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: link, range: range)
                 case .Email:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
-                    string.addAttribute(NSAttributedStringKey.link, value: inAppLink.external(link: "mailto:\(nsString!.substring(with: range))", false), range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: "mailto:\(nsString!.substring(with: range))", false), range: range)
                 case let .TextUrl(url):
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
                     
-                    string.addAttribute(NSAttributedStringKey.link, value: inApp(for: url as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
                 case .Bold:
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.bold(fontSize), range: range)
+                    string.addAttribute(NSAttributedString.Key.font, value: NSFont.bold(fontSize), range: range)
                 case .Italic:
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFontManager.shared.convert(.normal(fontSize), toHaveTrait: .italicFontMask), range: range)
+                    string.addAttribute(NSAttributedString.Key.font, value: NSFontManager.shared.convert(.normal(fontSize), toHaveTrait: .italicFontMask), range: range)
                 case .Mention:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
-                    string.addAttribute(NSAttributedStringKey.link, value: inAppLink.followResolvedName(username:nsString!.substring(with: range), postId:nil, account:account, action:nil, callback: openInfo), range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(username:nsString!.substring(with: range), postId:nil, account:account, action:nil, callback: openInfo), range: range)
                 case let .TextMention(peerId):
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
-                    string.addAttribute(NSAttributedStringKey.link, value: inAppLink.peerInfo(peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
                 case .BotCommand:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: textColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
-                    string.addAttribute(NSAttributedStringKey.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
                 case .Code:
                     string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.code(fontSize), range: range)
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: monospacedCode, range: range)
+                    string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                 case  .Pre:
                     string.addAttribute(.preformattedPre, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedStringKey.font, value: NSFont.code(fontSize), range: range)
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: monospacedPre, range: range)
+                    string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
                 case .Hashtag:
-                    string.addAttribute(NSAttributedStringKey.foregroundColor, value: linkColor, range: range)
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
                         nsString = text as NSString
                     }
-                    string.addAttribute(NSAttributedStringKey.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
                     break
                 default:
                     break

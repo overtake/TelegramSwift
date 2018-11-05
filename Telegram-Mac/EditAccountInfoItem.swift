@@ -243,7 +243,7 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
 //        }
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         
     }
     

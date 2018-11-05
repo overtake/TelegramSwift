@@ -58,7 +58,7 @@ class InterfaceObserver : NSObject  {
     }
     
     func notifyObservers(value:Any, oldValue:Any, animated:Bool) {
-        for observer in observers {
+        for observer in observers.reversed() {
             if let observer = observer.value {
                 observer.notify(with: value, oldValue: oldValue, animated: animated)
             }

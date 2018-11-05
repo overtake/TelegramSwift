@@ -17,7 +17,6 @@ class ChatInputAttachView: ImageButton, Notifable {
         
     private var chatInteraction:ChatInteraction
     private var controller:SPopoverViewController?
-    private let updateMediaDisposable = MetaDisposable()
     private let editMediaAccessory: ImageView = ImageView()
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
@@ -33,57 +32,7 @@ class ChatInputAttachView: ImageButton, Notifable {
             
         }, for: .Click)
         
-        let attachFile = { [weak self] in
-            if let strongSelf = self, let window = strongSelf.kitWindow {
-                filePanel(for: window, completion:{ result in
-                    if let result = result {
-                        
-                        let previous = result.count
-                        
-                        let result = result.filter { path -> Bool in
-                            if let size = fs(path) {
-                                return size <= 1500 * 1024 * 1024
-                            }
-                            return false
-                        }
-                        
-                        let afterSizeCheck = result.count
-                        
-                        if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, info: tr(L10n.appMaxFileSize))
-                        } else {
-                            strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, false)
-                        }
-                        
-                    }
-                })
-            }
-        }
         
-        let attachPhotoOrVideo = { [weak self] in
-            if let strongSelf = self, let window = strongSelf.kitWindow {
-                filePanel(with:mediaExts, for: window, completion:{(result) in
-                    if let result = result {
-                        let previous = result.count
-                        
-                        let result = result.filter { path -> Bool in
-                            if let size = fs(path) {
-                                return size <= 1500 * 1024 * 1024
-                            }
-                            return false
-                        }
-                        
-                        let afterSizeCheck = result.count
-                        
-                        if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, info: tr(L10n.appMaxFileSize))
-                        } else {
-                            strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true)
-                        }
-                    }
-                })
-            }
-        }
         
         set(handler: { [weak self] control in
             
@@ -97,52 +46,43 @@ class ChatInputAttachView: ImageButton, Notifable {
                 }
                 var items:[SPopoverItem] = []
 
-                let updateMedia:([String]?, Bool)->Void = { [weak self] exts, asMedia in
-                    guard let `self` = self else {return}
-                    
-                    filePanel(with: exts, allowMultiple: false, for: mainWindow, completion: { [weak self] files in
-                        guard let `self` = self else {return}
-                        if let file = files?.first {
-                            self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: file, isFile: !asMedia), account: self.chatInteraction.account) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
-                                self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
-                            }))
-                        }
-                    })
-                }
                 
-                if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.message.media.first, media is TelegramMediaFile || media is TelegramMediaImage {
+                
+                if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     
-                        items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, {
-                            updateMedia(mediaExts, true)
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
                         }, theme.icons.chatAttachPhoto))
-                        
-                        if editState.message.groupingKey == nil {
-                            items.append(SPopoverItem(L10n.inputAttachPopoverFile, {
-                                updateMedia(nil, false)
-                            }, theme.icons.chatAttachFile))
-                        }
+                    
+                    if editState.message.groupingKey == nil {
+                        items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                            self?.chatInteraction.updateEditingMessageMedia(nil, false)
+                        }, theme.icons.chatAttachFile))
+                    }
+                    
+                    if media is TelegramMediaImage {
+                        items.append(SPopoverItem(L10n.editMessageEditCurrentPhoto, { [weak self] in
+                            self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
+                        }, theme.icons.editMessageCurrentPhoto))
+                    }
+                    
+                    
                 } else if chatInteraction.presentation.interfaceState.editState == nil {
-                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, {
-                        attachPhotoOrVideo()
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        self?.chatInteraction.attachPhotoOrVideo()
                     }, theme.icons.chatAttachPhoto))
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverPicture, { [weak self] in
                         guard let `self` = self else {return}
-                        if let window = self.kitWindow {
-                            pickImage(for: window, completion: { (image) in
-                                if let image = image {
-                                    self.chatInteraction.mediaPromise.set(putToTemp(image: image) |> map({[MediaSenderContainer(path:$0)]}))
-                                }
-                            })
-                        }
-                        }, theme.icons.chatAttachCamera))
+                        self.chatInteraction.attachPicture()
+                    }, theme.icons.chatAttachCamera))
                     
-                    items.append(SPopoverItem(L10n.inputAttachPopoverFile, {
-                        attachFile()
+                    items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                        self?.chatInteraction.attachFile()
                     }, theme.icons.chatAttachFile))
                     
-                    items.append(SPopoverItem(L10n.inputAttachPopoverLocation, {
-                        showModal(with: LocationModalController(chatInteraction), for: mainWindow)
+                    items.append(SPopoverItem(L10n.inputAttachPopoverLocation, { [weak self] in
+                        self?.chatInteraction.attachLocation()
                     }, theme.icons.chatAttachLocation))
                 }
                 
@@ -164,7 +104,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 }
                 self.controller?.popover?.hide()
                 Queue.mainQueue().justDispatch {
-                    attachFile()
+                    self.chatInteraction.attachFile()
                 }
             }
         }, for: .Click)
@@ -207,7 +147,6 @@ class ChatInputAttachView: ImageButton, Notifable {
     }
     
     deinit {
-        updateMediaDisposable.dispose()
         chatInteraction.remove(observer: self)
     }
 

@@ -99,6 +99,13 @@ open class TableRowItem: NSObject {
             return false
         }
     }
+    public var isHighlighted: Bool {
+        if let table = table {
+            return table.isHighlighted(self)
+        } else {
+            return false
+        }
+    }
     
     open var isLast: Bool {
         return table?.lastItem == self

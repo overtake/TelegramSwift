@@ -37,7 +37,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                 } else {
                     entries.append(.pendingEmailInfo(sectionId: sectionId, tr(L10n.twoStepAuthConfirmationText) + "\n\n\(pendingEmailPattern)\n\n[" + tr(L10n.twoStepAuthConfirmationAbort) + "]()"))
                 }
-            case let .set(hint, _, _):
+            case let .set(hint, _, _, _):
                 entries.append(.passwordEntry(sectionId: sectionId, tr(L10n.twoStepAuthEnterPasswordPassword), state.passwordText))
                 if hint.isEmpty {
                     entries.append(.passwordEntryInfo(sectionId: sectionId, tr(L10n.twoStepAuthEnterPasswordHelp) + "\n\n[" + tr(L10n.twoStepAuthEnterPasswordForgot) + "](forgot)"))
@@ -124,7 +124,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                 case let .access(configuration):
                     if let configuration = configuration {
                         switch configuration {
-                        case let .set(_, hasRecoveryEmail, _):
+                        case let .set(_, hasRecoveryEmail, _, _):
                             if hasRecoveryEmail {
                                 updateState {
                                     $0.withUpdatedChecking(true)
@@ -171,7 +171,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                             setupResultDisposable.set((result.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak controller] updatedPassword in
                                 if let updatedPassword = updatedPassword {
                                     if let pendingEmailPattern = updatedPassword.pendingEmailPattern {
-                                        dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVerificationConfiguration.notSet(pendingEmailPattern: pendingEmailPattern))))
+                                        dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVerificationConfiguration.notSet(pendingEmailPattern: pendingEmailPattern.pattern))))
                                     } else {
                                         dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: false, pendingEmailPattern: "", hasSecretValues: false)))
                                     }
@@ -270,7 +270,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                     presentControllerImpl?(controller)
                     setupResultDisposable.set((result.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak controller] updatedPassword in
                         if let updatedPassword = updatedPassword {
-                            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: true, pendingEmailPattern: updatedPassword.pendingEmailPattern ?? "", hasSecretValues: hasSecretValues)))
+                            dataPromise.set(.single(TwoStepVerificationUnlockSettingsControllerData.manage(password: updatedPassword.password, emailSet: true, pendingEmailPattern: updatedPassword.pendingEmailPattern?.pattern ?? "", hasSecretValues: hasSecretValues)))
                             controller?.dismiss()
                         }
                     }))
@@ -329,7 +329,7 @@ class TwoStepVerificationUnlockController: TableViewController {
                             switch configuration {
                             case .notSet:
                                 title = tr(L10n.telegramTwoStepVerificationUnlockController)
-                            case let .set(_, _, pendingEmailPattern):
+                            case let .set(_, _, pendingEmailPattern, _):
                                 title = tr(L10n.twoStepAuthPasswordTitle)
                                 nextAction = {
                                     
