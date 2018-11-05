@@ -174,7 +174,7 @@ class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegat
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 200
+        return 1024
     }
 
     override func viewDidAppear(_ animated: Bool) {

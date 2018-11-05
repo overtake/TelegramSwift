@@ -141,7 +141,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         }
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         if let item = item as? GeneralInputRowItem {
             let string = secureField.stringValue
             let updated = item.textFilter(string)

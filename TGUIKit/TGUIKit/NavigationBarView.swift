@@ -191,36 +191,36 @@ public class NavigationBarView: View {
         
         
         
-        left.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nLeft_to), left.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "", completion: { [weak left] completed in
+        left.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nLeft_to), left.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear, completion: { [weak left] completed in
             if completed && animationStyle != nil {
                 left?.removeFromSuperview()
             }
         })
-        center.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nCenter_to), center.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "", completion: { [weak center] completed in
+        center.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nCenter_to), center.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear, completion: { [weak center] completed in
             if completed && animationStyle != nil {
                 center?.removeFromSuperview()
             }
         })
-        right.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nRight_to), right.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "", completion: { [weak right] completed in
+        right.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, nRight_to), right.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear, completion: { [weak right] completed in
             if completed && animationStyle != nil {
                 right?.removeFromSuperview()
             }
         })
         
         
-        self.leftView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pLeft_to), self.leftView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
-        self.centerView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pCenter_to), self.centerView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
-        self.rightView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pRight_to), self.rightView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        self.leftView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pLeft_to), self.leftView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
+        self.centerView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pCenter_to), self.centerView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
+        self.rightView.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, pRight_to), self.rightView.frame.minY), animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
 
         
         
-        left.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
-        center.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
-        right.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        left.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
+        center.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
+        right.change(opacity: percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
 
-        self.leftView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
-        self.centerView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
-        self.rightView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? "")
+        self.leftView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function  ?? .linear)
+        self.centerView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
+        self.rightView.change(opacity: 1.0 - percent, animated: animationStyle != nil, duration: animationStyle?.duration ?? 0, timingFunction: animationStyle?.function ?? .linear)
         
     }
     

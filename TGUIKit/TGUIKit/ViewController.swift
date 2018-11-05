@@ -119,7 +119,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:kCAMediaTimingFunctionSpring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!
@@ -234,8 +234,18 @@ open class ViewController : NSObject {
     
     @available(OSX 10.12.2, *)
     open func makeTouchBar() -> NSTouchBar? {
-        return window?.firstResponder?.makeTouchBar()
+        return nil//window?.firstResponder?.makeTouchBar()
     }
+    
+    @available(OSX 10.12.2, *)
+    @objc public var touchBar: NSTouchBar? {
+        return window?.touchBar
+    }
+    @available(OSX 10.12.2, *)
+    open func layoutTouchBar() {
+        
+    }
+    
     
     open func requestUpdateBackBar() {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
@@ -266,6 +276,13 @@ open class ViewController : NSObject {
     
     open func viewDidResized(_ size:NSSize) {
         _ = atomicSize.swap(size)
+    }
+    
+    open func draggingExited() {
+        
+    }
+    open func draggingEntered() {
+        
     }
     
     open func invokeNavigationBack() -> Bool {
@@ -330,6 +347,10 @@ open class ViewController : NSObject {
     }
     
     open func viewWillDisappear(_ animated:Bool) -> Void {
+        if #available(OSX 10.12.2, *) {
+            window?.touchBar = nil
+            window?.makeFirstResponder(nil)
+        }
         //assert(self.window != nil)
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
@@ -348,12 +369,14 @@ open class ViewController : NSObject {
     
     open func viewDidAppear(_ animated:Bool) -> Void {
         //assert(self.window != nil)
-        
+        if #available(OSX 10.12.2, *) {
+            window?.touchBar = window?.makeTouchBar()
+        }
         if haveNextResponder {
             self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
                 guard let `self` = self else {return .rejected}
                 
-                self.window?.makeFirstResponder(self.nextResponder())
+                _ = self.window?.makeFirstResponder(self.nextResponder())
                 
                 return .invoked
             }, with: self, for: .Tab, priority: responderPriority)
@@ -367,7 +390,7 @@ open class ViewController : NSObject {
             if let become = becomeFirstResponder(), become == true {
                 self.window?.applyResponderIfNeeded()
             } else {
-                self.window?.makeFirstResponder(self.window?.firstResponder)
+                _ = self.window?.makeFirstResponder(self.window?.firstResponder)
             }
         }
         
@@ -382,10 +405,16 @@ open class ViewController : NSObject {
     
     @objc open func windowDidBecomeKey() {
         isKeyWindow.set(.single(true))
+        if #available(OSX 10.12.2, *) {
+            window?.touchBar = window?.makeTouchBar()
+        }
     }
     
     @objc open func windowDidResignKey() {
         isKeyWindow.set(.single(false))
+        if #available(OSX 10.12.2, *) {
+            window?.touchBar = nil
+        }
     }
     
     open var canBecomeResponder: Bool {
@@ -567,9 +596,21 @@ open class ModalViewController : ViewController {
         return true
     }
     
+    private var temporaryTouchBar: Any?
     
-    
-    
+    @available(OSX 10.12.2, *)
+    open override func makeTouchBar() -> NSTouchBar? {
+        guard let modal = modal, let interactions = modal.interactions else {
+            if temporaryTouchBar == nil {
+                temporaryTouchBar = NSTouchBar()
+            }
+            return temporaryTouchBar as? NSTouchBar
+        }
+        if temporaryTouchBar == nil {
+            temporaryTouchBar = ModalTouchBar(interactions, modal: modal)
+        }
+        return temporaryTouchBar as? NSTouchBar
+    }
     
     open var background:NSColor {
         return NSColor(0x000000, 0.27)
@@ -588,7 +629,9 @@ open class ModalViewController : ViewController {
         return false
     }
     
-    
+    open override func becomeFirstResponder() -> Bool? {
+        return true
+    }
     
     open func measure(size:NSSize) {
         

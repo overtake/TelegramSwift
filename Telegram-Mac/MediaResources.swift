@@ -154,6 +154,59 @@ public final class LocalFileGifMediaResource: TelegramMediaResource {
 
 
 
+public struct LocalFileArchiveMediaResourceId: MediaResourceId {
+    public let randomId: Int64
+    
+    public var uniqueId: String {
+        return "larchive-\(self.randomId)"
+    }
+    
+    public var hashValue: Int {
+        return self.randomId.hashValue
+    }
+    
+    public func isEqual(to: MediaResourceId) -> Bool {
+        if let to = to as? LocalFileArchiveMediaResourceId {
+            return self.randomId == to.randomId
+        } else {
+            return false
+        }
+    }
+}
+
+public final class LocalFileArchiveMediaResource: TelegramMediaResource {
+    public let randomId: Int64
+    public let path: String
+    
+    public init(randomId: Int64, path: String) {
+        self.randomId = randomId
+        self.path = path
+    }
+    
+    public required init(decoder: PostboxDecoder) {
+        self.randomId = decoder.decodeInt64ForKey("i", orElse: 0)
+        self.path = decoder.decodeStringForKey("p", orElse: "")
+    }
+    
+    public func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt64(self.randomId, forKey: "i")
+        encoder.encodeString(self.path, forKey: "p")
+    }
+    
+    public var id: MediaResourceId {
+        return LocalFileArchiveMediaResourceId(randomId: self.randomId)
+    }
+    
+    public func isEqual(to: TelegramMediaResource) -> Bool {
+        if let to = to as? LocalFileArchiveMediaResource {
+            return self.randomId == to.randomId && self.path == to.path
+        } else {
+            return false
+        }
+    }
+}
+
+
 public struct ExternalMusicAlbumArtResourceId: MediaResourceId {
     public let title: String
     public let performer: String

@@ -506,6 +506,11 @@ class ChatSearchHeader : View, Notifable {
             self?.inputInteraction.update({$0.updatedPeerId(peer.id)})
         }
         
+//        searchView.shouldUpdateTouchBarItemIdentifiers = {
+//            if #available(OSX 10.12.2, *) {
+//            return []
+//        }
+        
         initialize()
         
         parentInteractions.loadingMessage.set(.single(false))

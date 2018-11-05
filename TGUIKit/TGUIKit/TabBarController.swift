@@ -76,7 +76,7 @@ public class TabBarController: ViewController, TabViewDelegate {
         
         if current != item.controller {
             if let current = current {
-                current.window?.makeFirstResponder(nil)
+                _ = current.window?.makeFirstResponder(nil)
                 current.viewWillDisappear(false)
                 current.view.removeFromSuperview()
                 current.viewDidDisappear(false)

@@ -17,6 +17,11 @@ let sharedVideoLoader:ExternalVideoLoader = {
 }()
 
 
+enum ExternalVideoServiceType {
+    case youtube
+    case vimeo
+    case none
+}
 
 final class ExternalVideo : Equatable {
     let dimensions:NSSize
@@ -92,6 +97,15 @@ class ExternalVideoLoader {
         return nil
     }
     
+    
+    static func serviceType(_ content:TelegramMediaWebpageLoadedContent) -> ExternalVideoServiceType {
+        if content.websiteName == vimeoName  {
+            return .vimeo
+        } else if content.websiteName == youtubeName {
+            return .youtube
+        }
+        return .none
+    }
     
     func status(for content:TelegramMediaWebpageLoadedContent) -> Signal<ExternalVideoStatus?, Void> {
         return Signal { subscriber in
@@ -265,11 +279,15 @@ class ExternalVideoLoader {
                                 if let video = video {
                                     
                                     let quality:NSSize = NSMakeSize(1280, 720)
-                                    let stream:String = video.highestQualityStreamURL().absoluteString
+                                    let stream:String? = video.highestQualityStreamURL()?.absoluteString
+                                    if let stream = stream {
+                                        externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality, date: Date().timeIntervalSince1970)
+                                        self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
+                                        status = .loaded(externalVideo!)
+                                    } else {
+                                        status = .fail
+                                    }
                                    
-                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality, date: Date().timeIntervalSince1970)
-                                    self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
-                                    status = .loaded(externalVideo!)
                                 } else {
                                     status = .fail
                                 }

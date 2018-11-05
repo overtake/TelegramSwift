@@ -961,12 +961,12 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             }
             
             if let offset = offset {
-                let timingFunction: String
+                let timingFunction: CAMediaTimingFunctionName
                 switch curve {
                 case .easeInOut:
-                    timingFunction = kCAMediaTimingFunctionEaseInEaseOut
+                    timingFunction = CAMediaTimingFunctionName.easeInEaseOut
                 case .spring:
-                    timingFunction = kCAMediaTimingFunctionSpring
+                    timingFunction = CAMediaTimingFunctionName.spring
                 }
                 
                 for (index, itemNode) in self.itemNodes where existingItemIndices.contains(index) {
@@ -1034,12 +1034,12 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                 }
             }
         } else if let previousItemFrames = previousItemFrames, case let .animated(duration, curve) = itemTransition {
-            let timingFunction: String
+            let timingFunction: CAMediaTimingFunctionName
             switch curve {
             case .easeInOut:
-                timingFunction = kCAMediaTimingFunctionEaseInEaseOut
+                timingFunction = CAMediaTimingFunctionName.easeInEaseOut
             case .spring:
-                timingFunction = kCAMediaTimingFunctionSpring
+                timingFunction = CAMediaTimingFunctionName.spring
             }
             
             for index in self.itemNodes.keys {
@@ -1047,8 +1047,8 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                 if !existingItemIndices.contains(index) {
                     if let _ = previousItemFrames[WrappedGridItemNode(node: itemNode)] {
                         self.removeItemNodeWithIndex(index, removeNode: false)
-                        itemNode.layer!.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseIn, removeOnCompletion: false)
-                        itemNode.layer!.animateScale(from: 1.0, to: 0.1, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseIn, removeOnCompletion: false, completion: { [weak itemNode] _ in
+                        itemNode.layer!.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, timingFunction: CAMediaTimingFunctionName.easeIn, removeOnCompletion: false)
+                        itemNode.layer!.animateScale(from: 1.0, to: 0.1, duration: 0.2, timingFunction: CAMediaTimingFunctionName.easeIn, removeOnCompletion: false, completion: { [weak itemNode] _ in
                             itemNode?.removeFromSuperview()
                         })
                     } else {
@@ -1057,15 +1057,15 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                 } else if let previousFrame = previousItemFrames[WrappedGridItemNode(node: itemNode)] {
                     itemNode.layer!.animatePosition(from: CGPoint(x: previousFrame.midX, y: previousFrame.midY), to: itemNode.layer!.position, duration: duration, timingFunction: timingFunction)
                 } else {
-                    itemNode.layer!.animateAlpha(from: 0.0, to: 1.0, duration: 0.12, timingFunction: kCAMediaTimingFunctionEaseIn)
+                    itemNode.layer!.animateAlpha(from: 0.0, to: 1.0, duration: 0.12, timingFunction: CAMediaTimingFunctionName.easeIn)
                     itemNode.layer!.animateSpring(from: 0.1 as NSNumber, to: 1.0 as NSNumber, keyPath: "transform.scale", duration: 0.5)
                 }
             }
             
             for itemNode in removedNodes {
                 if let _ = previousItemFrames[WrappedGridItemNode(node: itemNode)] {
-                    itemNode.layer!.animateAlpha(from: 1.0, to: 0.0, duration: 0.18, timingFunction: kCAMediaTimingFunctionEaseIn, removeOnCompletion: false)
-                    itemNode.layer!.animateScale(from: 1.0, to: 0.1, duration: 0.18, timingFunction: kCAMediaTimingFunctionEaseIn, removeOnCompletion: false, completion: { [weak itemNode] _ in
+                    itemNode.layer!.animateAlpha(from: 1.0, to: 0.0, duration: 0.18, timingFunction: CAMediaTimingFunctionName.easeIn, removeOnCompletion: false)
+                    itemNode.layer!.animateScale(from: 1.0, to: 0.1, duration: 0.18, timingFunction: CAMediaTimingFunctionName.easeIn, removeOnCompletion: false, completion: { [weak itemNode] _ in
                         itemNode?.removeFromSuperview()
                     })
                 } else {
@@ -1088,7 +1088,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                 } else if let previousFrame = previousItemFrames[WrappedGridItemNode(node: sectionNode)] {
                     sectionNode.layer!.animatePosition(from: CGPoint(x: previousFrame.midX, y: previousFrame.midY), to: sectionNode.layer!.position, duration: duration, timingFunction: timingFunction)
                 } else {
-                    sectionNode.layer!.animateAlpha(from: 0.0, to: 1.0, duration: 0.2, timingFunction: kCAMediaTimingFunctionEaseIn)
+                    sectionNode.layer!.animateAlpha(from: 0.0, to: 1.0, duration: 0.2, timingFunction: CAMediaTimingFunctionName.easeIn)
                 }
             }
         } else {

@@ -23,6 +23,8 @@ struct TemporaryPasswordContainer {
 
 public var isDebug = false
 
+
+
 class TelegramApplicationContext : NSObject {
     var layout:SplitViewState = .none
     let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
@@ -31,9 +33,8 @@ class TelegramApplicationContext : NSObject {
     private var _recentlyPeerUsed:[PeerId] = []
     let cachedAdminIds: CachedAdminIds = CachedAdminIds()
     let mainViewController: MainViewController
-    let badgeFilter: ValuePromise<UnreadMessageCountsTotalItem> = ValuePromise(ignoreRepeated: true)
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
-    
+    let archiver: ArchiverContext = ArchiverContext()
 
     private(set) var timeDifference:TimeInterval  = 0
     private(set) var recentlyPeerUsed:[PeerId] {
@@ -58,6 +59,7 @@ class TelegramApplicationContext : NSObject {
     weak var mainNavigation:NavigationViewController?
     private let updateDifferenceDisposable = MetaDisposable()
     private let temporaryPwdDisposable = MetaDisposable()
+    private let createSecretChatDisposable = MetaDisposable()
     let fetchManager: FetchManager
     
     init(_ mainNavigation:NavigationViewController?, _ entertainment:EntertainmentViewController, _ mainViewController: MainViewController, network: Network, postbox: Postbox) {
@@ -65,7 +67,6 @@ class TelegramApplicationContext : NSObject {
         self.entertainment = entertainment
         self.fetchManager = FetchManager(postbox: postbox)
         self.mainViewController = mainViewController
-        badgeFilter.set(FastSettings.isFiltredBadge ? .filtered : .raw)
         
         globalPeerHandler.set(.single(nil))
         
@@ -114,6 +115,7 @@ class TelegramApplicationContext : NSObject {
     deinit {
         updateDifferenceDisposable.dispose()
         temporaryPwdDisposable.dispose()
+        createSecretChatDisposable.dispose()
     }
     
     
@@ -159,6 +161,36 @@ class TelegramApplicationContext : NSObject {
         let signal = Signal<Void, NoError>.single(Void()) |> delay(30 * 60, queue: Queue.mainQueue())
         temporaryPwdDisposable.set(signal.start(next: { [weak self] in
             self?._temporartPassword = nil
+        }))
+    }
+    
+    func composeCreateGroup(_ account: Account) {
+        guard let navigation = mainNavigation else {return}
+        createGroup(with: account, for: navigation)
+    }
+    func composeCreateChannel(_ account: Account) {
+        guard let navigation = mainNavigation else {return}
+        createChannel(with: account, for: navigation)
+    }
+    func composeCreateSecretChat(_ account: Account) {
+        let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
+            if let first = peerIds.first, peerIds.count == 1 {
+                return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
+                    return confirmSignal(for: mainWindow, information: tr(L10n.composeConfirmStartSecretChat(peer.displayTitle)))
+                }
+            }
+            return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMembers1Countable(peerIds.count)))
+        }
+        let select = selectModalPeers(account: account, title: tr(L10n.composeSelectSecretChat), limit: 1, confirmation: confirmationImpl)
+        
+        let create = select |> map { $0.first! } |> mapToSignal { peerId in
+            return createSecretChat(account: account, peerId: peerId) |> `catch` {_ in .complete()}
+            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
+                return showModalProgress(signal: .single(peerId), for: mainWindow)
+        }
+        
+        createSecretChatDisposable.set(create.start(next: { [weak self] peerId in
+            self?.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(peerId)))
         }))
     }
     

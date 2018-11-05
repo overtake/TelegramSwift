@@ -98,6 +98,7 @@ class ChatListRowItem: TableRowItem {
     let groupId: PeerGroupId?
     let groupUnreadCounters: GroupReferenceUnreadCounters?
     let peers:[Peer]
+    let chatListIndex:ChatListIndex?
     var peerId:PeerId {
         return renderedPeer.peerId
     }
@@ -117,6 +118,10 @@ class ChatListRowItem: TableRowItem {
     var chatLocation: ChatLocation {
         if let groupId = groupId {
             return ChatLocation.group(groupId)
+        }
+        
+        if let index = chatListIndex {
+            return ChatLocation.peer(index.messageIndex.id.peerId)
         }
         return ChatLocation.peer(renderedPeer.peerId)
     }
@@ -245,6 +250,7 @@ class ChatListRowItem: TableRowItem {
         self.peers = peers
         self.peer = nil
         self.message = message
+        self.chatListIndex = nil
         self.state = state
         self.account = account
         self.groupUnreadCounters = unreadCounters
@@ -301,8 +307,8 @@ class ChatListRowItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
 
-    init(_ initialSize:NSSize,  account:Account,  message: Message?,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), state: ChatListRowState = .plain) {
-        
+    init(_ initialSize:NSSize,  account:Account,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), state: ChatListRowState = .plain) {
+        self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.account = account
         self.message = message

@@ -780,7 +780,7 @@ private class ChatGroupedView : ChatRowView {
                     animation.toValue = 1.0
                     animation.autoreverses = true
                     animation.isRemovedOnCompletion = true
-                    animation.fillMode = kCAFillModeForwards
+                    animation.fillMode = .forwards
                     
                     animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
                         if completed {

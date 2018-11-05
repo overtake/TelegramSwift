@@ -187,7 +187,7 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
         case .messageEntry(let message):
             if tags == .file, message.media.first is TelegramMediaFile {
                 return PeerMediaFileRowItem(initialSize, interaction, account, entry.entry)
-            } else if tags == .webPage, message.media.first is TelegramMediaWebpage {
+            } else if tags == .webPage {
                 return PeerMediaWebpageRowItem(initialSize,interaction,account, entry.entry)
             } else if tags == .music, message.media.first is TelegramMediaFile {
                 return PeerMediaMusicRowItem(initialSize, interaction, account, entry.entry)
@@ -330,7 +330,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                         searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask)
                     }
                     
-                    let signal = searchMessages(account: strongSelf.account, location: searchMessagesLocation, query: searchState.request) |> deliverOnMainQueue |> map { messages -> PeerMediaUpdate in
+                    let signal = searchMessages(account: strongSelf.account, location: searchMessagesLocation, query: searchState.request) |> deliverOnMainQueue |> map {$0.0} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
                     }
                     

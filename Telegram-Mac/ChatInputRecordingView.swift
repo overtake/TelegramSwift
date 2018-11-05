@@ -84,7 +84,7 @@ class ChatInputRecordingView: View {
             animate.repeatCount = 10000
             animate.duration = 1.5
             
-            animate.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+            animate.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
             recView.layer?.add(animate, forKey: "opacity")
         } else {
             (window as? Window)?.removeAllHandlers(for: self)

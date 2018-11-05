@@ -18,11 +18,11 @@ let photoExts:[String] = ["png","jpg","jpeg","tiff"]
 let videoExts:[String] = ["mp4","mov","avi"]
 
 
-func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, for window:Window, completion:@escaping ([String]?)->Void) {
+func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDirectories: Bool = false, for window:Window, completion:@escaping ([String]?)->Void) {
     var result:[String] = []
     let panel:NSOpenPanel = NSOpenPanel()
     panel.canChooseFiles = true
-
+    panel.canChooseDirectories = canChooseDirectories
     
     panel.canCreateDirectories = true
     panel.allowedFileTypes = exts
@@ -33,7 +33,7 @@ func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, for window:
                 let path:String = url.path
                 if let exts = exts {
                     let ext:String = path.nsstring.pathExtension.lowercased()
-                    if exts.contains(ext) {
+                    if exts.contains(ext) || (canChooseDirectories && path.isDirectory) {
                         result.append(path)
                     }
                 } else {

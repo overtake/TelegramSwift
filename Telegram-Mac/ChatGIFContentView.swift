@@ -94,10 +94,14 @@ class ChatGIFContentView: ChatMediaContentView {
         NotificationCenter.default.removeObserver(self)
     }
     
+    override func viewDidUpdatedDynamicContent() {
+        super.viewDidUpdatedDynamicContent()
+        updatePlayerIfNeeded()
+    }
 
     @objc func updatePlayerIfNeeded() {
         
-        let accept = canPlayForce && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        let accept = canPlayForce && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         player.setFrameSize(frame.size)
         player.set(path: accept ? path : nil)
         progressView?.isHidden = !FastSettings.gifsAutoPlay && canPlayForce

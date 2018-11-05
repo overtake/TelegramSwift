@@ -140,6 +140,14 @@ class RecentPeerRowView : ShortPeerRowView {
         needsLayout = true
     }
     
+    override var backdorColor: NSColor {
+        if let item = item {
+            return item.isHighlighted && !item.isSelected ? presentation.colors.grayForeground : super.backdorColor
+        } else {
+            return super.backdorColor
+        }
+    }
+    
     override func layout() {
         super.layout()
         removeControl.centerY(x: frame.width - removeControl.frame.width - 13)

@@ -29,6 +29,8 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 - (BOOL) canTransformInputText;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
+- (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
+//func textView(_ textView: NSTextView, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItemIdentifier]) -> [NSTouchBarItemIdentifier] {
 @end
 
 

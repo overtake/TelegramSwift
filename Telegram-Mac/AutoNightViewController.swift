@@ -70,7 +70,7 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
                 formatter.timeStyle = .short
                 formatter.timeZone = NSTimeZone.local
                 formatter.dateStyle = .none
-                entries.append(.desc(sectionId: sectionId, index: index, text: L10n.autoNightSettingsSunriseDesc(formatter.string(from: sunriseSet.sunset), formatter.string(from: sunriseSet.sunrise)), color: theme.colors.grayText, detectBold: true))
+                entries.append(.desc(sectionId: sectionId, index: index, text: L10n.autoNightSettingsSunriseDesc(latitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunset), longitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunrise)), color: theme.colors.grayText, detectBold: true))
                 index += 1
             } else {
                 entries.append(.desc(sectionId: sectionId, index: index, text: L10n.autoNightSettingsSunriseDescNA, color: theme.colors.grayText, detectBold: true))

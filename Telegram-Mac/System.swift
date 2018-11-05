@@ -37,6 +37,8 @@ var mainWindow:Window {
 }
 
 
+
+
 public func deliverOnPrepareQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
     return signal |> deliverOn(prepareQueue)
 }

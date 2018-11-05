@@ -247,7 +247,7 @@ class GIFPlayerView: TransformImageView {
         if let timebase = sampleLayer.controlTimebase, let timer = _timer.modify({$0}) {
             _ = _timer.swap(nil)
             _ = _reader.swap(nil)
-            CMTimebaseRemoveTimer(timebase, timer)
+            CMTimebaseRemoveTimer(timebase, timer: timer)
         }
         
     }
@@ -263,7 +263,7 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
     
     if let timebase = layer.controlTimebase, let timer = _timer.modify({$0}) {
         _ = _timer.swap(nil)
-        CMTimebaseRemoveTimer(timebase, timer)
+        CMTimebaseRemoveTimer(timebase, timer: timer)
     }
     
     if let asset = _asset.modify({$0}), let track = _track.modify({$0}) {
@@ -285,12 +285,13 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                         timebase = tb
                         _ = _timebase.swap(nil)
                     } else {
-                        CMTimebaseCreateWithMasterClock( kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase )
+                        CMTimebaseCreateWithMasterClock( allocator: kCFAllocatorDefault, masterClock: CMClockGetHostTimeClock(), timebaseOut: &timebase )
+                        CMTimebaseSetRate(timebase!, rate: 1.0)
                     }
                     
          
                     if let timebase = timebase {
-                        reader.timeRange = CMTimeRangeMake(CMTimebaseGetTime(timebase), asset.duration)
+                        reader.timeRange = CMTimeRangeMake(start: CMTimebaseGetTime(timebase), duration: asset.duration)
 
                         let runLoop = CFRunLoopGetMain()
                         var context = CFRunLoopTimerContext()
@@ -306,10 +307,10 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                         
                         if let timer = timer, let runLoop = runLoop {
                             _ = _timer.swap(timer)
-                            CMTimebaseSetRate(timebase, 1.0);
-                            CMTimebaseAddTimer(timebase, timer, runLoop)
+                           //
+                            CMTimebaseAddTimer(timebase, timer: timer, runloop: runLoop)
                             CFRunLoopAddTimer(runLoop, timer, CFRunLoopMode.defaultMode);
-                            CMTimebaseSetTimerNextFireTime(timebase, timer, asset.duration, 0)
+                            CMTimebaseSetTimerNextFireTime(timebase, timer: timer, fireTime: asset.duration, flags: 0)
                         }
                         layer.controlTimebase = timebase
                         

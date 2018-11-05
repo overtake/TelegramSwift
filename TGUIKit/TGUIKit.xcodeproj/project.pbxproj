@@ -99,6 +99,8 @@
 		C2E8694F1F44481400BDD0A2 /* GridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E8694E1F44481400BDD0A2 /* GridItem.swift */; };
 		C2E869511F4449A700BDD0A2 /* GridItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E869501F4449A700BDD0A2 /* GridItemNode.swift */; };
 		C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */; };
+		D0558D8221528DF5006B403D /* ModalTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D8121528DF5006B403D /* ModalTouchBar.swift */; };
+		D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9912163C1F00055B718 /* SelectionRectView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -200,6 +202,8 @@
 		C2E8694E1F44481400BDD0A2 /* GridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItem.swift; sourceTree = "<group>"; };
 		C2E869501F4449A700BDD0A2 /* GridItemNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItemNode.swift; sourceTree = "<group>"; };
 		C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressContainerView.swift; sourceTree = "<group>"; };
+		D0558D8121528DF5006B403D /* ModalTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalTouchBar.swift; sourceTree = "<group>"; };
+		D0BEB9912163C1F00055B718 /* SelectionRectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionRectView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -239,6 +243,7 @@
 		C219E1E91D8AD1330042F0C8 /* navigation */ = {
 			isa = PBXGroup;
 			children = (
+				D0558D8021528DA0006B403D /* touchbar */,
 				C24A37181F3383DF004ADE5C /* SectionController */,
 				C219E1F41D8BEA1F0042F0C8 /* bar */,
 				C219E1EA1D8AD1470042F0C8 /* NavigationViewController.swift */,
@@ -486,8 +491,17 @@
 				C24A37151F324A36004ADE5C /* ShadowView.swift */,
 				C28CFC7C1F387A7F00C55596 /* TokenizedView.swift */,
 				9F6281282037389200B2D3C9 /* CheckBox.swift */,
+				D0BEB9912163C1F00055B718 /* SelectionRectView.swift */,
 			);
 			name = view;
+			sourceTree = "<group>";
+		};
+		D0558D8021528DA0006B403D /* touchbar */ = {
+			isa = PBXGroup;
+			children = (
+				D0558D8121528DF5006B403D /* ModalTouchBar.swift */,
+			);
+			name = touchbar;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -596,6 +610,7 @@
 				C234CA971D981F00003023F7 /* Control.swift in Sources */,
 				C2303E6F1D9950E000098E12 /* Button.swift in Sources */,
 				C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */,
+				D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */,
 				9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */,
 				C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */,
 				C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */,
@@ -629,6 +644,7 @@
 				C2E8694F1F44481400BDD0A2 /* GridItem.swift in Sources */,
 				C2B9BE871EFC373D00D6B96F /* PresentationResourceCache.swift in Sources */,
 				C2271F451DB4EE3C0045E719 /* TableStickView.swift in Sources */,
+				D0558D8221528DF5006B403D /* ModalTouchBar.swift in Sources */,
 				C2E869511F4449A700BDD0A2 /* GridItemNode.swift in Sources */,
 				C25FC7F71D86DC370041E303 /* TGClipView.swift in Sources */,
 				C2CBCAC31D81595900142EC0 /* Extensions.swift in Sources */,
@@ -720,7 +736,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -736,7 +752,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = "Release Hockeyapp";
 		};
@@ -797,7 +813,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -813,7 +829,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = "Release AppStore";
 		};
@@ -935,7 +951,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -953,7 +969,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = "Debug Hockeyapp";
 		};
@@ -978,9 +994,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TGUIKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = "Debug AppStore";
 		};

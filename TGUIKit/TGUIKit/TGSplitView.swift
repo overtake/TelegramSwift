@@ -184,6 +184,7 @@ public class SplitView : View {
             container.backgroundColor = backgroundColor
         }
     }
+
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

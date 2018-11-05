@@ -64,6 +64,7 @@ open class NavigationHeader {
         if isShown {
             return
         }
+        
         isShown = true
         if let navigation = navigation {
             let view = self.view
@@ -73,6 +74,7 @@ open class NavigationHeader {
             disposable.set((view.ready.get() |> filter {$0} |> take(1)).start(next: { [weak navigation, weak self, weak view] (ready) in
                 if let navigation = navigation, let view = view {
                     let contentInset = navigation.controller.bar.height + height
+                    
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     
                     var inset:CGFloat = navigation.controller.bar.height
@@ -108,10 +110,12 @@ open class NavigationHeader {
             CATransaction.begin()
             let completion = navigation.controller.navigationHeaderDidNoticeAnimation(0, height, animated)
             if animated {
-                view.change(pos: NSMakePoint(0, 0), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
-                    self?._view?.removeFromSuperview()
-                    self?._view = nil
-                    completion()
+                view.change(pos: NSMakePoint(0, 0), animated: animated, removeOnCompletion: true, completion: { [weak self] completed in
+                    if completed {
+                        self?._view?.removeFromSuperview()
+                        self?._view = nil
+                        completion()
+                    }
                 })
             } else {
                 view.removeFromSuperview()
@@ -177,8 +181,10 @@ public class CallNavigationHeader : NavigationHeader {
         if let navigation = navigation {
             if animated {
                 view.change(pos: NSMakePoint(0, -height), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
-                    self?._view?.removeFromSuperview()
-                    self?._view = nil
+                    if completed {
+                        self?._view?.removeFromSuperview()
+                        self?._view = nil
+                    }
                 })
             } else {
                 view.removeFromSuperview()
@@ -269,7 +275,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     header.view.removeFromSuperview()
                     containerView.addSubview(header.view)
                 }
-
             }
             
             empty.view.frame = NSMakeRect(0, controllerInset, self.bounds.width, self.bounds.height - controllerInset - bar.height)
@@ -294,8 +299,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     private(set) public var navigationBar:NavigationBarView = NavigationBarView()
     
-    private(set) var pushDisposable:MetaDisposable = MetaDisposable()
-    private(set) var popDisposable:MetaDisposable = MetaDisposable()
+    let pushDisposable:MetaDisposable = MetaDisposable()
+    let popDisposable:MetaDisposable = MetaDisposable()
     
     private(set) public var header:NavigationHeader?
     private(set) public var callHeader:CallNavigationHeader?
@@ -351,7 +356,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
     }
     
-    
+    public func cancelCurrentController() {
+        pushDisposable.set(nil)
+    }
     
     open override var canBecomeResponder: Bool {
         return false
@@ -404,7 +411,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         controller.loadViewIfNeeded(self.bounds)
         self.pushDisposable.set((controller.ready.get() |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
-                strongSelf.lock = true
                 controller.navigationController = strongSelf
                 
                 if let index = strongSelf.stack.index(of: controller) {
@@ -427,12 +433,14 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     
     func show(_ controller:ViewController,_ style:ViewControllerStyle) -> Void {
-        
+        lock = true
         let previous:ViewController = self.controller;
         self.controller = controller
         controller.navigationController = self
 
         guard let window = self.window else {return}
+        
+        
         
         if(previous === controller && stackCount > 1) {
             previous.viewWillDisappear(false)
@@ -443,6 +451,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             _ = controller.becomeFirstResponder()
             return;
         }
+        
+        controller.view.disableHierarchyDynamicContent()
         
         var contentInset = controller.bar.height
 
@@ -523,6 +533,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationBar.removeFromSuperview()
             containerView.addSubview(navigationBar)
             
+            controller.view.restoreHierarchyDynamicContent()
 
             
             reloadHeaders()
@@ -544,6 +555,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         previous.viewWillDisappear(true);
         controller.viewWillAppear(true);
         
+       
+        
         
         CATransaction.begin()
         
@@ -558,17 +571,18 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: style, animationStyle: controller.animationStyle, liveSwiping: window.inLiveSwiping)
 
         
-         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak self] completed in
+         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak self] completed in
             if completed {
                 previous.view.removeFromSuperview()
                 previous.viewDidDisappear(true);
             }
+            controller.view.restoreHierarchyDynamicContent()
         
             self?.lock = false
         });
         
 
-        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: kCAMediaTimingFunctionSpring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { completed in
+        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: {  completed in
             if completed {
                 controller.viewDidAppear(true);
                 _ = controller.becomeFirstResponder()

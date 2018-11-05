@@ -130,7 +130,6 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
             signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocation, count: count, clipHoles: true, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         }
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            
             let (cachedData, cachedDataMessages, readStateData) = extractAdditionalData(view: view, chatLocation: chatLocation)
             let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData)
 
@@ -327,7 +326,7 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                 case let .peer(peerId):
                     if let combinedReadStates = view.combinedReadStates {
                         if case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId] {
-                            readStateData[peerId] = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: unreadState.absoluteCounters.messageCount, notificationSettings: notificationSettings)
+                            readStateData[peerId] = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: 0, notificationSettings: notificationSettings)
                         }
                     }
                 case .group:

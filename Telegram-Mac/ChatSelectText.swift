@@ -69,9 +69,12 @@ class SelectManager : NSResponder {
             }
         }
         
-        let pb = NSPasteboard.general
-        pb.declareTypes([.string], owner: self)
-        pb.setString(string, forType: .string)
+        if !string.isEmpty {
+            let pb = NSPasteboard.general
+            pb.declareTypes([.string], owner: self)
+            pb.setString(string, forType: .string)
+        }
+        
         
     }
     
@@ -199,7 +202,7 @@ class ChatSelectText : NSObject {
                 view.updateMouse()
             })
             
-            return .invokeNext
+            return .rejected
         }, with: self, for: .mouseMoved, priority:.medium)
         
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
@@ -276,22 +279,23 @@ class ChatSelectText : NSObject {
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             
             guard let `self` = self else {return .rejected}
-            
+
             self.endInnerLocation = self.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             
 //            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {
 //                 self?.started = overView.userInteractionEnabled == true
 //            }
             if self.started {
-                self.started = !hasPopover(window) && self.table._mouseInside()
+                self.started = !hasPopover(window)
             }
+            
+           // NSLog("\(!NSPointInRect(event.locationInWindow, window.bounds))")
             
             if self.started {
                 self.table.clipView.autoscroll(with: event)
-                
                 if chatInteraction.presentation.state != .selecting {
                     if window.firstResponder != selectManager {
-                        window.makeFirstResponder(selectManager)
+                        _ = window.makeFirstResponder(selectManager)
                     }
                     if !self.inPressedState {
                         self.runSelector(window: window, chatInteraction: chatInteraction)

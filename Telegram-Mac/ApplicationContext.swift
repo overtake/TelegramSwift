@@ -16,8 +16,8 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool, NoError>
                 if let result = result {
                     switch result {
                     case let .unauthorized(account):
-                        return account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings]) |> take(1) |> deliverOnMainQueue |> map { preferences in
-                            return ApplicationContext.unauthorized(UnauthorizedApplicationContext(window: window, account: account, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings))
+                        return combineLatest(account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings]) |> take(1), themeSettingsView(postbox: account.postbox) |> take(1)) |> deliverOnMainQueue |> map { preferences, themeSettings in
+                            return ApplicationContext.unauthorized(UnauthorizedApplicationContext(window: window, account: account, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: themeSettings))
                         }
                     case let .authorized(account):
                         let paslock:Signal<PostboxAccessChallengeData, NoError> = !ignorepasslock ? account.postbox.transaction { transaction -> PostboxAccessChallengeData in
@@ -26,16 +26,16 @@ func applicationContext(window: Window, shouldOnlineKeeper:Signal<Bool, NoError>
                             
                         return paslock |> mapToSignal { access -> Signal<ApplicationContext?, NoError> in
                             let promise:Promise<Void> = Promise()
-                            let auth: Signal<ApplicationContext?, NoError> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings, ApplicationSpecificPreferencesKeys.themeSettings]) |> take(1)) |> deliverOnMainQueue |> map { _, preferences in
-                                return .authorized(AuthorizedApplicationContext(window: window, shouldOnlineKeeper: shouldOnlineKeeper, account: account, accountManager: accountManager, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: preferences.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
+                            let auth: Signal<ApplicationContext?, NoError> = combineLatest(promise.get(), account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings]) |> take(1), themeSettingsView(postbox: account.postbox) |> take(1)) |> deliverOnMainQueue |> map { _, preferences, themeSettings in
+                                return .authorized(AuthorizedApplicationContext(window: window, shouldOnlineKeeper: shouldOnlineKeeper, account: account, accountManager: accountManager, localization: preferences.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: themeSettings))
                             }
                             switch access {
                             case .none:
                                 promise.set(.single(Void()))
                                 return auth
                             default:
-                                return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings, PreferencesKeys.localizationSettings]) |> take(1) |> deliverOnMainQueue |> map { value in
-                                    return ApplicationContext.postboxAccess(PasscodeAccessContext(window, promise: promise, account: account, accountManager: accountManager, localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: value.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings))
+                                return combineLatest(account.postbox.preferencesView(keys: [PreferencesKeys.localizationSettings]) |> take(1), themeSettingsView(postbox: account.postbox) |> take(1)) |> deliverOnMainQueue |> map { value, themeSettings in
+                                    return ApplicationContext.postboxAccess(PasscodeAccessContext(window, promise: promise, account: account, accountManager: accountManager, localization: value.values[PreferencesKeys.localizationSettings] as? LocalizationSettings, themeSettings: themeSettings))
                                 } |> then(auth)
                             }
                         }
@@ -56,7 +56,7 @@ enum MigrationData {
 
 
 func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, NoError> {
-    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory), supplementary: false, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
+    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: ""), supplementary: false, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
 
@@ -103,21 +103,18 @@ enum ApplicationContext {
 final class PasscodeAccessContext {
     let rootController:PasscodeLockController
     private let logoutDisposable = MetaDisposable()
-    init(_ window:Window, promise:Promise<Void>, account:Account, accountManager:AccountManager, localization: LocalizationSettings?, themeSettings: ThemePaletteSettings?) {
+    private let appearanceDisposable = MetaDisposable()
+    init(_ window:Window, promise:Promise<Void>, account:Account, accountManager:AccountManager, localization: LocalizationSettings?, themeSettings: ThemePaletteSettings) {
         
         dropLocalization()
         if let localization = localization {
             applyUILocalization(localization)
         }
         
-        if let theme = themeSettings {
-            updateTheme(with: theme, for: window)
-        } else {
-            setDefaultTheme(for: window)
-        }
+        updateTheme(with: themeSettings, for: window)
         
         rootController = PasscodeLockController(account, .login(hasTouchId: false), logoutImpl: {
-            _ = (confirmSignal(for: window, information: tr(L10n.accountConfirmLogoutText)) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
+            _ = (confirmSignal(for: window, information: L10n.accountConfirmLogoutText) |> filter {$0} |> mapToSignal {_ in return logoutFromAccount(id: account.id, accountManager: accountManager)}).start()
         })
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
         
@@ -127,10 +124,26 @@ final class PasscodeAccessContext {
         promise.set(rootController.doneValue |> filter {$0} |> map {_ in})
     
         
+        
+        let basic = Atomic<ThemePaletteSettings?>(value: themeSettings)
+        let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
+        appearanceDisposable.set((viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(postbox: account.postbox) } |> deliverOnMainQueue).start(next: { settings in
+            if basic.swap(settings) != settings {
+                updateTheme(with: settings, for: window, animated: true)
+            }
+        }))
+        
+        if #available(OSX 10.14, *) {
+            (rootController.view as! View).viewDidChangedEffectiveAppearance = {
+                viewDidChangedAppearance.set(true)
+            }
+        }
+        
     }
     
     deinit {
         logoutDisposable.dispose()
+        appearanceDisposable.dispose()
     }
 }
 
@@ -138,16 +151,18 @@ final class PasscodeAccessContext {
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     let localizationDisposable:MetaDisposable = MetaDisposable()
+    let appearanceDisposable = MetaDisposable()
     let rootController: MajorNavigationController
     let window:Window
-    init(window:Window, account: UnauthorizedAccount, localization: LocalizationSettings?) {
+    init(window:Window, account: UnauthorizedAccount, localization: LocalizationSettings?, themeSettings: ThemePaletteSettings) {
         self.account = account
         self.window = window
         self.rootController = MajorNavigationController(AuthController.self, AuthController(account))
         rootController.alwaysAnimate = true
         let authSize = NSMakeSize(650, 600)
         
-        setDefaultTheme(for: window)
+        
+        updateTheme(with: themeSettings, for: window)
         
         account.shouldBeServiceTaskMaster.set(.single(.now))
         
@@ -174,11 +189,29 @@ final class UnauthorizedApplicationContext {
             }
         }))
         
+        let basic = Atomic<ThemePaletteSettings?>(value: themeSettings)
+        let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
+        appearanceDisposable.set((viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(postbox: account.postbox) } |> deliverOnMainQueue).start(next: { settings in
+            if basic.swap(settings) != settings {
+                updateTheme(with: settings, for: window, animated: true)
+            }
+        }))
+        
+        if #available(OSX 10.14, *) {
+            rootController.genericView.viewDidChangedEffectiveAppearance = {
+                viewDidChangedAppearance.set(true)
+            }
+        } else {
+            // Fallback on earlier versions
+        }
+        
     }
     
     deinit {
         account.shouldBeServiceTaskMaster.set(.single(.never))
         NSWorkspace.shared.notificationCenter.removeObserver(self)
+        appearanceDisposable.dispose()
+        localizationDisposable.dispose()
     }
     
     @objc func receiveWakeNote(_ notificaiton:Notification) {
@@ -250,12 +283,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     private let audioDisposable = MetaDisposable()
     private let termDisposable = MetaDisposable()
     private let someActionsDisposable = DisposableSet()
+    private let clearReadNotifiesDisposable = MetaDisposable()
+    private let masterClientDisposable = MetaDisposable()
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
         lockedScreenPromise.set(.single(_lockedValue))
     }
     
-    init(window: Window, shouldOnlineKeeper:Signal<Bool, NoError>, account: Account, accountManager: AccountManager, localization:LocalizationSettings?, themeSettings: ThemePaletteSettings?) {
+    init(window: Window, shouldOnlineKeeper:Signal<Bool, NoError>, account: Account, accountManager: AccountManager, localization:LocalizationSettings?, themeSettings: ThemePaletteSettings) {
         emptyController = EmptyChatViewController(account)
         
         self.account = account
@@ -270,11 +305,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             applyUILocalization(localization)
         }
         
-        if let themeSettings = themeSettings {
-            updateTheme(with: themeSettings, for: window)
-        } else {
-            setDefaultTheme(for: window)
-        }
+        updateTheme(with: themeSettings, for: window)
         
         
         if !window.initFromSaver {
@@ -284,16 +315,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         
         
-        setupAccount(account, fetchCachedResourceRepresentation: fetchCachedResourceRepresentation, transformOutgoingMessageMedia: transformOutgoingMessageMedia)
         
-        account.stateManager.reset()
+        account.resetStateManagement()
+        account.importableContacts.set(.single([:]))
         account.shouldBeServiceTaskMaster.set(.single(.now))
         account.shouldKeepOnlinePresence.set(.single(true))
         account.shouldKeepOnlinePresence.set(shouldOnlineKeeper)
         
         self.splitView = SplitView(frame:mainWindow.contentView!.bounds)
         
-        
+      
         
         splitView.setProportion(proportion: SplitProportion(min:380, max:300+350), state: .single);
         splitView.setProportion(proportion: SplitProportion(min:300+350, max:300+350+600), state: .dual)
@@ -311,11 +342,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             return view
         }))
 
-        window.navigationController = rightController
+        window.rootViewController = rightController
         
         leftController = MainViewController(account, accountManager: accountManager);
 
-        
         applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), leftController, network: account.network, postbox: account.postbox)
         
        
@@ -326,10 +356,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         leftController.navigationController = rightController
         
-        
-       
-        
+        setupAccount(account, fetchCachedResourceRepresentation: fetchCachedResourceRepresentation, transformOutgoingMessageMedia: transformOutgoingMessageMedia)
+
         super.init()
+        
+
         
         termDisposable.set((account.stateManager.termsOfServiceUpdate |> deliverOnMainQueue).start(next: { terms in
             if let terms = terms {
@@ -359,7 +390,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 }
                 
                 if baseSettings.handleInAppKeys {
-                    self?.applicationContext.initMediaKeyTap()
+                    if #available(OSX 10.14, *) {
+                        self?.applicationContext.deinitMediaKeyTap()
+                    } else {
+                        self?.applicationContext.initMediaKeyTap()
+                    }
+                    
                 } else {
                     self?.applicationContext.deinitMediaKeyTap()
                 }
@@ -529,22 +565,29 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         rightController.backgroundColor = theme.colors.background
         splitView.backgroundColor = theme.colors.background
         let basic = Atomic<ThemePaletteSettings?>(value: themeSettings)
-        appearanceDisposable.set((account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings]) |> deliverOnMainQueue).start(next: { [weak self] view in
-            if let settings = view.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings {
-                if basic.swap(settings) != settings {
-                    updateTheme(with: settings, for: window, animated: true)
-                    self?.rightController.backgroundColor = theme.colors.background
-                    self?.splitView.backgroundColor = theme.colors.background
-                }
+        let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
+        appearanceDisposable.set((viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(postbox: account.postbox) } |> deliverOnMainQueue).start(next: { [weak self] settings in
+            if basic.swap(settings) != settings {
+                updateTheme(with: settings, for: window, animated: true)
+                self?.rightController.backgroundColor = theme.colors.background
+                self?.splitView.backgroundColor = theme.colors.background
             }
         }))
+        
+        if #available(OSX 10.14, *) {
+            splitView.viewDidChangedEffectiveAppearance = {
+                viewDidChangedAppearance.set(true)
+            }
+        } else {
+            // Fallback on earlier versions
+        }
         
         
         audioDisposable.set(globalAudioPromise.get().start(next: { [weak self] controller in
             self?.prepareTouchBarAccessability(controller)
         }))
         
-        someActionsDisposable.add(managedUpdatedRecentPeers(postbox: account.postbox, network: account.network).start())
+        someActionsDisposable.add(managedUpdatedRecentPeers(accountPeerId: account.peerId, postbox: account.postbox, network: account.network).start())
         
         
         someActionsDisposable.add(combineLatest(autoNightSettings(postbox: account.postbox), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart)).start(next: { preference, _ in
@@ -560,13 +603,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 
                 switch schedule {
                 case let .sunrise(coordinate):
-                    if let sunrise = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: coordinate.latitude, longitude: coordinate.longitude) {
-                        let from = Int32(sunrise.sunset.timeIntervalSince1970 - sunrise.sunset.startOfDay.timeIntervalSince1970)
-                        let to = Int32(sunrise.sunrise.timeIntervalSince1970 - sunrise.sunrise.startOfDay.timeIntervalSince1970)
-                        isDarkTheme = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
+                    if coordinate.latitude == 0 || coordinate.longitude == 0 {
+                        isDarkTheme = theme.colors.isDark
                     } else {
-                        isDarkTheme = false
+                        if let sunrise = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: coordinate.latitude, longitude: coordinate.longitude) {
+                            let from = Int32(sunrise.sunset.timeIntervalSince1970 - sunrise.sunset.startOfDay.timeIntervalSince1970)
+                            let to = Int32(sunrise.sunrise.timeIntervalSince1970 - sunrise.sunrise.startOfDay.timeIntervalSince1970)
+                            isDarkTheme = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
+                        } else {
+                            isDarkTheme = false
+                        }
                     }
+                    
 
                 case let .timeSensitive(from, to):
                     let from = from * 60 * 60
@@ -589,7 +637,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         palette = palettes[settings.defaultDayName] ?? dayClassic
                     }
                     if theme.colors.name != palette.name {
-                        return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName)
+                        return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName, followSystemAppearance: settings.followSystemAppearance)
                     } else {
                         return settings
                     }
@@ -599,7 +647,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             }
         }))
         
+        clearReadNotifiesDisposable.set(account.stateManager.appliedIncomingReadMessages.start(next: { msgIds in
+            clearNotifies(by: msgIds)
+        }))
+        
+//        masterClientDisposable.set((account.isMasterClient |> deliverOnMainQueue).start(next: { master in
+//            if !master {
+//                NSApp.terminate(nil)
+//            }
+//        }))
+//        
+        
     }
+    
+    
     
     
     private func prepareTouchBarAccessability(_ controller: APController?) {
@@ -656,6 +717,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     
     
     func splitViewDidNeedSwapToLayout(state: SplitViewState) {
+        let previousState = splitView.state
         splitView.removeAllControllers();
         let w:CGFloat = 300;
         FastSettings.isMinimisize = false
@@ -668,7 +730,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                     rightController.push(ForwardChatListController(account), false)
                 }
             }
+            if rightController.stackCount == 1, previousState != .none {
+                leftController.viewWillAppear(false)
+            }
             splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
+            if rightController.stackCount == 1, previousState != .none {
+                leftController.viewDidAppear(false)
+            }
         case .dual:
             rightController.empty = emptyController
             if rightController.controller is ForwardChatListController {
@@ -687,6 +755,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         account.context.layoutHandler.set(state)
         splitView.layout()
+        
     }
     
     @objc func screenIsLocked() {
@@ -734,6 +803,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     }
     
     deinit {
+        masterClientDisposable.dispose()
         self.account.shouldKeepOnlinePresence.set(.single(false))
         self.account.shouldBeServiceTaskMaster.set(.single(.never))
         nofityDisposable.dispose()
@@ -756,6 +826,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         termDisposable.dispose()
         viewer?.close()
         someActionsDisposable.dispose()
+        clearReadNotifiesDisposable.dispose()
         
         for window in NSApp.windows {
             if window != self.window {
@@ -769,8 +840,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         let lockedSreenSignal = lockedScreenPromise.get()
         
-        self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), NoError> in
-            return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([(Message, PeerGroupId?)], InAppNotificationSettings), NoError> in
+        self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([([Message], PeerGroupId?)], InAppNotificationSettings), NoError> in
+            return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([([Message], PeerGroupId?)], InAppNotificationSettings), NoError> in
                 
                 let inAppSettings: InAppNotificationSettings
                 if let settings = settings.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings {
@@ -780,25 +851,25 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 }
                 
                 if inAppSettings.enabled && inAppSettings.muteUntil < Int32(Date().timeIntervalSince1970) {
-                    return .single((messages, inAppSettings))
+                    return .single((messages.filter({$0.2}).map {($0.0, $0.1)}, inAppSettings))
                 } else {
                     return .complete()
                 }
                 
             }
             }
-            |> mapToSignal { messages, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings), NoError> in
+            |> mapToSignal { messages, inAppSettings -> Signal<([([Message], PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings), NoError> in
                 
                 var photos:[Signal<(MessageId, CGImage?),NoError>] = []
-                for message in messages {
-                    var peer = message.0.author
-                    if let mainPeer = messageMainPeer(message.0) {
+                for message in messages.reduce([], { current, value in return current + value.0}) {
+                    var peer = message.author
+                    if let mainPeer = messageMainPeer(message) {
                         if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
                             peer = mainPeer
                         }
                     }
                     if let peer = peer {
-                        photos.append(peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters), genCap: false) |> map { data in return (message.0.id, data.0)})
+                        photos.append(peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters), genCap: false) |> map { data in return (message.id, data.0)})
                     }
                 }
                 
@@ -811,7 +882,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                     }
                     return (messages, images, inAppSettings)
                 }
-            } |> mapToSignal { messages, images, inAppSettings -> Signal<([(Message, PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
+            } |> mapToSignal { messages, images, inAppSettings -> Signal<([([Message], PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
                 return lockedSreenSignal |> take(1)
                     |> map { data in return (messages, images, inAppSettings, data.isLocked)}
             }
@@ -820,94 +891,96 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                     return (values.0, values.1, values.2, values.3, s != nil)
                 }
             } |> deliverOnMainQueue).start(next: { messages, images, inAppSettings, screenIsLocked, inCall in
-                for (message, groupId) in messages {
-                    if message.author?.id != account.peerId {
-                        var title:String = message.author?.displayTitle ?? ""
-                        var hasReplyButton:Bool = !screenIsLocked
-                        if let peer = message.peers[message.id.peerId] {
-                            if peer.isSupergroup || peer.isGroup {
-                                title = peer.displayTitle
-                                hasReplyButton = peer.canSendMessage
-                            } else if peer.isChannel {
-                                hasReplyButton = false
+                for (messages, groupId) in messages {
+                    for message in messages {
+                        if message.author?.id != account.peerId {
+                            var title:String = message.author?.displayTitle ?? ""
+                            var hasReplyButton:Bool = !screenIsLocked
+                            if let peer = message.peers[message.id.peerId] {
+                                if peer.isSupergroup || peer.isGroup {
+                                    title = peer.displayTitle
+                                    hasReplyButton = peer.canSendMessage
+                                } else if peer.isChannel {
+                                    hasReplyButton = false
+                                }
                             }
+                            if screenIsLocked {
+                                title = appName
+                            }
+                            var text = chatListText(account: account, location: .peer(message.id.peerId), for: message).string.nsstring
+                            var subText:String?
+                            if text.contains("\n") {
+                                let parts = text.components(separatedBy: "\n")
+                                text = parts[1] as NSString
+                                subText = parts[0]
+                            }
+                            
+                            if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
+                                text = tr(L10n.notificationLockedPreview).nsstring
+                                subText = nil
+                            }
+                            
+                            let notification = NSUserNotification()
+                            notification.title = title
+                            notification.informativeText = text as String
+                            notification.subtitle = subText
+                            notification.contentImage = screenIsLocked ? nil : images[message.id]
+                            notification.hasReplyButton = hasReplyButton
+                            
+                            
+                            var dict: [String : Any] = [:]
+                            
+                            
+                            //                        if let row = message.replyMarkup?.rows.first, message.id.peerId.id == 777000, row.buttons.count == 2 && !screenIsLocked {
+                            //                            notification.hasReplyButton = false
+                            //                            notification.hasActionButton = true
+                            //                            notification.actionButtonTitle = row.buttons[0].title
+                            //                            notification.otherButtonTitle = row.buttons[1].title
+                            //                            if let _ = notification.value(forKey: "_showsButtons") {
+                            //                                notification.setValue(true, forKey: "_showsButtons")
+                            //                            }
+                            //                            
+                            //                            switch row.buttons[0].action {
+                            //                            case .callback(let data):
+                            //                                dict["inline.callbackDecline"] = data.makeData()
+                            //                            default:
+                            //                                break
+                            //                            }
+                            //                            
+                            //                            switch row.buttons[1].action {
+                            //                            case .callback(let data):
+                            //                                
+                            //                                dict["inline.callbackConfirm"] = data.makeData()
+                            //                            default:
+                            //                                break
+                            //                            }
+                            //                        }
+                            //                        
+                            if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
+                                notification.soundName = inAppSettings.tone
+                            } else {
+                                notification.soundName = nil
+                            }
+                            
+                            if message.muted || inCall {
+                                notification.soundName = nil
+                            }
+                            
+                            
+                            
+                            dict["message.id"] =  message.id.id
+                            dict["message.namespace"] =  message.id.namespace
+                            dict["peer.id"] =  message.id.peerId.id
+                            dict["peer.namespace"] =  message.id.peerId.namespace
+                            dict["groupId"] = groupId?.rawValue
+                            
+                            if screenIsLocked {
+                                dict = [:]
+                            }
+                            
+                            notification.userInfo = dict
+                            NSUserNotificationCenter.default.deliver(notification)
                         }
-                        if screenIsLocked {
-                            title = appName
-                        }
-                        var text = chatListText(account: account, location: .peer(message.id.peerId), for: message).string.nsstring
-                        var subText:String?
-                        if text.contains("\n") {
-                            let parts = text.components(separatedBy: "\n")
-                            text = parts[1] as NSString
-                            subText = parts[0]
-                        }
-                        
-                        if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
-                            text = tr(L10n.notificationLockedPreview).nsstring
-                            subText = nil
-                        }
-                        
-                        let notification = NSUserNotification()
-                        notification.title = title
-                        notification.informativeText = text as String
-                        notification.subtitle = subText
-                        notification.contentImage = screenIsLocked ? nil : images[message.id]
-                        notification.hasReplyButton = hasReplyButton
-
-
-                        var dict: [String : Any] = [:]
-
-                        
-//                        if let row = message.replyMarkup?.rows.first, message.id.peerId.id == 777000, row.buttons.count == 2 && !screenIsLocked {
-//                            notification.hasReplyButton = false
-//                            notification.hasActionButton = true
-//                            notification.actionButtonTitle = row.buttons[0].title
-//                            notification.otherButtonTitle = row.buttons[1].title
-//                            if let _ = notification.value(forKey: "_showsButtons") {
-//                                notification.setValue(true, forKey: "_showsButtons")
-//                            }
-//                            
-//                            switch row.buttons[0].action {
-//                            case .callback(let data):
-//                                dict["inline.callbackDecline"] = data.makeData()
-//                            default:
-//                                break
-//                            }
-//                            
-//                            switch row.buttons[1].action {
-//                            case .callback(let data):
-//                                
-//                                dict["inline.callbackConfirm"] = data.makeData()
-//                            default:
-//                                break
-//                            }
-//                        }
-//                        
-                        if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
-                            notification.soundName = inAppSettings.tone
-                        } else {
-                            notification.soundName = nil
-                        }
-                        
-                        if message.muted || inCall {
-                            notification.soundName = nil
-                        }
-                        
-                        
-                        
-                        dict["message.id"] =  message.id.id
-                        dict["message.namespace"] =  message.id.namespace
-                        dict["peer.id"] =  message.id.peerId.id
-                        dict["peer.namespace"] =  message.id.peerId.namespace
-                        dict["groupId"] = groupId?.rawValue
-                        
-                        if screenIsLocked {
-                            dict = [:]
-                        }
-                        
-                        notification.userInfo = dict
-                        NSUserNotificationCenter.default.deliver(notification)
                     }
                 }
             }))
@@ -969,145 +1042,4 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 }
 
 
-
-
-
-
-
-
-
-private class LegacyPasscodeHeaderView : View {
-    
-    private let logo:ImageView = ImageView()
-    private let header:TextView = TextView()
-    private let desc1:TextView = TextView()
-    
-    private let desc2:TextView = TextView()
-
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        
-        let logoImage = #imageLiteral(resourceName: "Icon_LegacyIntro").precomposed()
-        self.logo.image = logoImage
-        self.logo.sizeToFit()
-        let headerLayout = TextViewLayout(NSAttributedString.initialize(string: appName, color: NSColor.text, font: .normal(28.0)), maximumNumberOfLines: 1)
-        headerLayout.measure(width: CGFloat.greatestFiniteMagnitude)
-        header.update(headerLayout)
-        
-        
-        let descLayout1 = TextViewLayout(NSAttributedString.initialize(string: tr(L10n.legacyIntroDescription1), color: .grayText, font: .normal(FontSize.text)), alignment: .center)
-        descLayout1.measure(width: frameRect.width - 200)
-        desc1.update(descLayout1)
-        
-        let descLayout2 = TextViewLayout(NSAttributedString.initialize(string: tr(L10n.legacyIntroDescription2), color: .grayText, font: NSFont.normal(FontSize.text)), alignment: .center)
-        descLayout2.measure(width: frameRect.width - 200)
-        desc2.update(descLayout2)
-        
-        addSubview(logo)
-        addSubview(header)
-        addSubview(desc1)
-        addSubview(desc2)
-        
-        logo.centerX()
-        header.centerX(y: logo.frame.maxY + 10)
-        desc1.centerX(y: header.frame.maxY + 10)
-        desc2.centerX(y: desc1.frame.maxY + 10)
-        
-        self.setFrameSize(frame.width, desc2.frame.maxY)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-
-class LegacyIntroView : View, NSTextFieldDelegate {
-    fileprivate let input:NSSecureTextField
-    fileprivate let logoutTextView:TextView = TextView()
-    fileprivate let doneButton:TitleButton = TitleButton()
-    fileprivate let legacyIntro: LegacyPasscodeHeaderView
-    fileprivate var layoutWithPasscode: Bool = false {
-        didSet {
-            
-            self.input.isHidden = !layoutWithPasscode
-            self.logoutTextView.isHidden = !layoutWithPasscode
-            self.needsLayout = true
-            self.needsDisplay = true
-        }
-    }
-    required init(frame frameRect: NSRect) {
-        input = NSSecureTextField(frame: NSZeroRect)
-        input.stringValue = ""
-        legacyIntro = LegacyPasscodeHeaderView(frame: NSMakeRect(0,0, frameRect.width, 300))
-        super.init(frame: frameRect)
-        backgroundColor = .white
-        
-        doneButton.set(font: .medium(.header), for: .Normal)
-        doneButton.set(text: tr(L10n.legacyIntroNext), for: .Normal)
-        
-        doneButton.set(color: .blueUI, for: .Normal)
-        
-        _ = doneButton.sizeToFit()
-        addSubview(doneButton)
-        
-        addSubview(input)
-        addSubview(logoutTextView)
-        
-        input.isBordered = false
-        input.isBezeled = false
-        input.focusRingType = .none
-        input.alignment = .center
-        input.delegate = self
-        
-        let attr = NSMutableAttributedString()//Passcode.EnterPasscodePlaceholder
-        _ = attr.append(string: tr(L10n.passcodeEnterPasscodePlaceholder), color: .grayText, font: NSFont.normal(FontSize.text))
-        attr.setAlignment(.center, range: attr.range)
-        input.placeholderAttributedString = attr
-        input.font = NSFont.normal(FontSize.text)
-        input.textColor = .text
-        input.sizeToFit()
-        
-        let logoutAttr = parseMarkdownIntoAttributedString(tr(L10n.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents, {_ in}))
-        }))
-        
-        logoutTextView.isSelectable = false
-        
-        logoutTextView.set(layout: TextViewLayout(logoutAttr))
-        
-        addSubview(legacyIntro)
-    }
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        if !input.isHidden {
-            ctx.setFillColor(theme.colors.border.cgColor)
-            ctx.fill(NSMakeRect(input.frame.minX, input.frame.maxY + 10, input.frame.width, .borderSize))
-        }
-    }
-    
-    override func layout() {
-        super.layout()
-        
-        legacyIntro.centerX(y: 80)
-        
-        logoutTextView.layout?.measure(width: frame.width - 40)
-        logoutTextView.update(logoutTextView.layout)
-        
-        input.setFrameSize(200, input.frame.height)
-        input.centerX(y: legacyIntro.frame.maxY + 30)
-        logoutTextView.centerX(y:frame.height - logoutTextView.frame.height - 20)
-        
-        doneButton.centerX(y : (input.isHidden ? legacyIntro.frame.maxY : input.frame.maxY) + 30)
-        
-        setNeedsDisplayLayer()
-        
-    }
-    
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
 

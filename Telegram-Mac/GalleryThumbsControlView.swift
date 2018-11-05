@@ -164,12 +164,12 @@ class GalleryThumbsControlView: View {
             var size = idx == i ? difSize : NSMakeSize(minWidth, frame.height)
             view.overlay.change(opacity: 0.35)
             if view.isEnabled {
-                view._change(size: size, animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
+                view._change(size: size, animated: animated, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
                 
                 let f = view.focus(view.imageView.frame.size)
-                view.imageView._change(pos: f.origin, animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
+                view.imageView._change(pos: f.origin, animated: animated, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
                 
-                view._change(pos: NSMakePoint(x, 0), animated: animated, duration: duration, timingFunction: kCAMediaTimingFunctionSpring)
+                view._change(pos: NSMakePoint(x, 0), animated: animated, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
                 
             } else {
                 size.width -= minWidth

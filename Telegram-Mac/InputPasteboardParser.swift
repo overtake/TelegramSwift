@@ -163,12 +163,12 @@ class InputPasteboardParser: NSObject {
                 }
             }
             
-            if files.count == 1, chatInteraction.presentation.state == .editing {
+            if files.count == 1, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
                 _ = (Sender.generateMedia(for: MediaSenderContainer(path: files[0].path, isFile: false), account: chatInteraction.account) |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
                     chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                 })
                 return false
-            } else if let image = image, chatInteraction.presentation.state == .editing {
+            } else if let image = image, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
                 _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: chatInteraction.account)} |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
                     chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                 })

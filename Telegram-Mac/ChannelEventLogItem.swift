@@ -333,7 +333,7 @@ class ServiceEventLogItem: TableRowItem {
                             }
                             
                             
-                            message.addAttribute(NSAttributedStringKey.font, value: NSFont.italic(.text), range: message.range)
+                            message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                             message.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
                             message.add(link: inAppLink.peerInfo(peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
@@ -407,7 +407,7 @@ class ServiceEventLogItem: TableRowItem {
                             
                             
                             
-                            message.addAttribute(NSAttributedStringKey.font, value: NSFont.italic(.text), range: message.range)
+                            message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                             message.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
                             message.add(link: inAppLink.peerInfo(peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
@@ -465,11 +465,11 @@ class ServiceEventLogItem: TableRowItem {
                 
                 let range = attributedString.string.nsstring.range(of: serviceInfo.firstLink.range)
                 attributedString.add(link: serviceInfo.firstLink.link, for: range)
-                attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(.text), range: range)
+                attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(.text), range: range)
                 if let second = serviceInfo.secondLink {
                     let range = attributedString.string.nsstring.range(of: second.range)
                     attributedString.add(link: second.link, for: range)
-                    attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(.text), range: range)
+                    attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(.text), range: range)
                 }
                 
             }

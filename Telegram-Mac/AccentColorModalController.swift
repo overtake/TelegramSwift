@@ -93,11 +93,13 @@ class AccentColorModalController: ModalViewController {
         let postbox = self.account.postbox
         
         genericView.update(colorList, selected: current, callback: { [weak self] color in
-            if color == whitePalette.blueUI {
-                _ = updateThemeSettings(postbox: postbox, palette: whitePalette).start()
-            } else {
-                _ = updateThemeSettings(postbox: postbox, palette: whitePalette.withAccentColor(color)).start()    
-            }
+            _ = updateThemeInteractivetly(postbox: postbox, f: { settings in
+                if color == whitePalette.blueUI {
+                    return settings.withUpdatedPalette(whitePalette)
+                } else {
+                    return settings.withUpdatedPalette(whitePalette.withAccentColor(color))
+                }
+            }).start()
             delay(0.3, closure: {
                 self?.close()
             })

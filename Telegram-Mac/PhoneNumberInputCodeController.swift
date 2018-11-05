@@ -70,7 +70,7 @@ class PhoneNumberInputCodeView : View, NSTextFieldDelegate {
         return false
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         let code = codeText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().prefix(Int(codeLength))
         codeText.stringValue = code
         codeText.sizeToFit()

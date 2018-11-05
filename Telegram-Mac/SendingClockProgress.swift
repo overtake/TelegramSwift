@@ -76,7 +76,7 @@ class SendingClockProgress: View {
     
     private func animateHour() -> Void {
         let animation = CABasicAnimation(keyPath: "transform.rotation.z")
-        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
         animation.duration = (minute_duration * 4.0) + 0.6
         animation.repeatCount = .greatestFiniteMagnitude
         animation.toValue = (Double.pi * 2.0) as NSNumber
@@ -87,7 +87,7 @@ class SendingClockProgress: View {
 
     private func animateMin() -> Void {
         let animation = CABasicAnimation(keyPath: "transform.rotation.z")
-        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
         animation.duration = minute_duration
         animation.repeatCount = .greatestFiniteMagnitude
         animation.toValue = (Double.pi * 2.0) as NSNumber

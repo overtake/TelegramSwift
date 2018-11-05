@@ -55,7 +55,7 @@ class SecretChatKeyView : View {
         style.lineSpacing = 3.0
         style.lineBreakMode = .byWordWrapping
         style.alignment = .center
-        let attributedString = NSAttributedString(string: text, attributes: [.paragraphStyle: style, NSAttributedStringKey.font: NSFont.code(.title), .foregroundColor: theme.colors.text])
+        let attributedString = NSAttributedString(string: text, attributes: [.paragraphStyle: style, NSAttributedString.Key.font: NSFont.code(.title), .foregroundColor: theme.colors.text])
         
         let layout = TextViewLayout(attributedString, maximumNumberOfLines: 4, alignment: .center)
          

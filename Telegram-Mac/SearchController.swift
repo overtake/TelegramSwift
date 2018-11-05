@@ -257,7 +257,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
         case let .localPeer(peer, _, secretChat, drawBorder):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.blueUI : theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: false)
         case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder):
-            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.blueUI : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: true, removeAction: {
+            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.blueUI : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: true, removeAction: {
                 arguments.removeRecentPeerId(peer.id)
             }, unreadBadge: badge)
         case let .savedMessages(peer):
@@ -445,7 +445,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         var entries: [ChatListSearchEntry] = []
                         var index = 20001
-                        for message in messages {
+                        for message in messages.0 {
                             entries.append(.message(message, index))
                             index += 1
                         }
@@ -657,13 +657,64 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
-            if self.account.context.mainNavigation?.stackCount == 1 {
+            if let highlighted = self.genericView.highlightedItem() {
+                _ = self.genericView.select(item: highlighted)
+                self.closeNext = true
+
+            } else if self.account.context.mainNavigation?.stackCount == 1 {
                 self.genericView.selectNext()
                 self.closeNext = true
             }
             
             return .rejected
         }, with: self, for: .Return, priority: .low)
+        
+        
+        setHighlightEvents()
+        
+    }
+    
+    func updateHighlightEvents(_ hasChat: Bool) {
+        if !hasChat {
+            setHighlightEvents()
+        } else {
+            removeHighlightEvents()
+        }
+    }
+    
+    private func setHighlightEvents() {
+        
+        removeHighlightEvents()
+        
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if let item = self?.genericView.highlightedItem(), item.index > 0 {
+                self?.genericView.highlitedPrev(turnDirection: false)
+                while self?.genericView.highlightedItem() is PopularPeersRowItem || self?.genericView.highlightedItem() is SeparatorRowItem {
+                    self?.genericView.highlightNext(turnDirection: false)
+                }
+            }
+            return .invoked
+        }, with: self, for: .UpArrow, priority: .modal)
+        
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.highlightNext(turnDirection: false)
+            
+            while self?.genericView.highlightedItem() is PopularPeersRowItem || self?.genericView.highlightedItem() is SeparatorRowItem {
+                self?.genericView.highlightNext(turnDirection: false)
+            }
+            
+            return .invoked
+        }, with: self, for: .DownArrow, priority: .modal)
+        
+        
+    }
+    
+    private func removeHighlightEvents() {
+        genericView.cancelHighlight()
+        self.window?.remove(object: self, for: .DownArrow, forceCheckFlags: true)
+        self.window?.remove(object: self, for: .UpArrow, forceCheckFlags: true)
     }
     
 
@@ -723,6 +774,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     func request(with query:String?) -> Void {
+         setHighlightEvents()
         if let query = query, !query.isEmpty {
             searchQuery.set(.single(query))
         } else {
@@ -790,6 +842,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             return .complete()
         }
         
+        removeHighlightEvents()
+
         openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( completed: { [weak self] in
             //!(item is ChatListMessageRowItem) && byClick
             self?.open(peerId, message, self?.closeNext ?? false)

@@ -271,7 +271,9 @@ class DeveloperViewController: TableViewController {
                         try? FileManager.default.createDirectory(atPath: palettesDir, withIntermediateDirectories: true, attributes: nil)
                         try? FileManager.default.removeItem(atPath: palettesDir + "/" + path.nsstring.lastPathComponent)
                         try? FileManager.default.copyItem(atPath: path, toPath: palettesDir + "/" + path.nsstring.lastPathComponent)
-                        _ = updateThemeSettings(postbox: account.postbox, palette: theme).start()
+                        _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                            return settings.withUpdatedPalette(theme)
+                        }).start()
                     } else {
                         alert(for: mainWindow, info: "Parsing Error")
                     }

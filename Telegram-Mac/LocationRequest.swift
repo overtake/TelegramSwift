@@ -9,7 +9,7 @@
 import Cocoa
 import CoreLocation
 import SwiftSignalKitMac
-
+import AVKit
 enum UserLocationResult : Equatable {
     case success(CLLocation)
 }
@@ -20,19 +20,30 @@ enum UserLocationError : Equatable {
     case wifiRequired
     case disabled
 }
+private let manager: CLLocationManager = CLLocationManager()
 
 private class UserLocationRequest : NSObject, CLLocationManagerDelegate {
-    private let locationManager: CLLocationManager = CLLocationManager()
     fileprivate let result: ValuePromise<UserLocationResult> = ValuePromise(ignoreRepeated: true)
     fileprivate let error: ValuePromise<UserLocationError> = ValuePromise(ignoreRepeated: true)
 
     override init() {
         super.init()
-        locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
-        locationManager.delegate = self
-
+        
+        manager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+        
+        manager.delegate = self
+        
         if CLLocationManager.locationServicesEnabled() {
-            locationManager.startUpdatingLocation()
+            switch CLLocationManager.authorizationStatus() {
+            case .authorizedAlways:
+                manager.startUpdatingLocation()
+            case .denied:
+                error.set(.denied)
+            case .restricted:
+                error.set(.restricted)
+            case .notDetermined:
+                manager.startUpdatingLocation()
+            }
         } else {
             error.set(.disabled)
         }
@@ -41,15 +52,15 @@ private class UserLocationRequest : NSObject, CLLocationManagerDelegate {
     @objc func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedAlways:
-            locationManager.startUpdatingLocation()
+            manager.startUpdatingLocation()
         case .denied:
             error.set(.denied)
         case .notDetermined:
-            locationManager.startUpdatingLocation()
+            manager.startUpdatingLocation()
         case .restricted:
             error.set(.restricted)
         case .authorizedWhenInUse:
-             locationManager.startUpdatingLocation()
+             manager.startUpdatingLocation()
         }
     }
 
@@ -62,8 +73,8 @@ private class UserLocationRequest : NSObject, CLLocationManagerDelegate {
     @objc func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
 
         if let location = locations.last {
-            locationManager.stopUpdatingLocation()
-            locationManager.delegate = nil;
+            manager.stopUpdatingLocation()
+            manager.delegate = nil;
             result.set(.success(location))
         }
     }
@@ -75,8 +86,8 @@ private class UserLocationRequest : NSObject, CLLocationManagerDelegate {
 
 
     func stop() {
-        locationManager.stopUpdatingLocation()
-        locationManager.delegate = nil;
+        manager.stopUpdatingLocation()
+        manager.delegate = nil;
     }
 }
 

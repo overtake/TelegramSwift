@@ -37,7 +37,7 @@ open class Popover: NSObject {
     public var overlay:OverlayControl!
     private var background:PopoverBackground = PopoverBackground(frame: NSZeroRect)
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.2, function:kCAMediaTimingFunctionSpring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.2, function:CAMediaTimingFunctionName.spring)
     
     var readyDisposable:MetaDisposable = MetaDisposable()
     

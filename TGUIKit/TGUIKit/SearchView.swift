@@ -91,6 +91,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public var searchInteractions:SearchInteractions?
 
     
+    public var shouldUpdateTouchBarItemIdentifiers: (()->[Any])?
+    
+    
     private let inputContainer = View()
     
     public var isLoading:Bool = false {
@@ -139,7 +142,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
         self.layer?.cornerRadius = .cornerRadius
-
+        if #available(OSX 10.12.2, *) {
+            input.allowsCharacterPickerTouchBarItem = false
+        } 
         progressIndicator.isHidden = true
 //        progressIndicator.numberOfLines = 8
 //        progressIndicator.innerMargin = 3;
@@ -212,6 +217,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             self?.cancelSearch()
         }, for: .Click)
        
+    }
+    
+    @available(OSX 10.12.2, *)
+    public func textView(_ textView: NSTextView, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItem.Identifier]) -> [NSTouchBarItem.Identifier] {
+        return self.shouldUpdateTouchBarItemIdentifiers?() as? [NSTouchBarItem.Identifier] ?? identifiers
     }
     
     open func cancelSearch() {
@@ -519,7 +529,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         return self.input.string
     }
     
-    open override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion: ((Bool) -> Void)? = nil) {
+    open override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
         super.change(size: size, animated: animated, save, duration: duration, timingFunction: timingFunction)
         clear.change(pos: NSMakePoint(frame.width - inset - clear.frame.width, clear.frame.minY), animated: animated)
     }

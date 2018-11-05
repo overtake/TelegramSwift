@@ -75,7 +75,7 @@ private class AddContactControllerView : View, NSTextFieldDelegate {
     }
     
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         firstName.stringValue = firstName.stringValue.nsstring.substring(with: NSMakeRange(0, min(firstName.stringValue.length, 20)))
         lastName.stringValue = lastName.stringValue.nsstring.substring(with: NSMakeRange(0, min(lastName.stringValue.length, 20)))
         phoneNumber.stringValue = formatPhoneNumber(phoneNumber.stringValue)

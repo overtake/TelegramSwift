@@ -62,6 +62,11 @@ private class ChatUnreadRowView: TableRowView {
     }
     
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        needsDisplay = true
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         

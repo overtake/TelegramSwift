@@ -59,7 +59,7 @@ class GalleryControls: Node {
             view.centerX(y: 10.0)
             view.layer?.opacity = 1.0
             view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25)
-            view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, -view.frame.height), to: NSMakePoint(view.frame.minX, 10), duration: 0.25, timingFunction: kCAMediaTimingFunctionSpring)
+            view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, -view.frame.height), to: NSMakePoint(view.frame.minX, 10), duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring)
         }
         
     }
@@ -71,7 +71,7 @@ class GalleryControls: Node {
             
             
             view.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25)
-            view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, -view.frame.height), duration: 0.25, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion:false)
+            view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, -view.frame.height), duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion:false)
         }
         
     }

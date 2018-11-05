@@ -19,9 +19,15 @@ class MediaPreviewRowItem: TableRowItem {
     private let _stableId = arc4random()
     fileprivate let parameters: ChatMediaLayoutParameters?
     fileprivate let chatInteraction: ChatInteraction
-    init(_ initialSize: NSSize, media: Media, account: Account) {
+    fileprivate let edit:()->Void
+    fileprivate let delete: (()->Void)?
+    fileprivate let hasEditedData: Bool
+    init(_ initialSize: NSSize, media: Media, account: Account, hasEditedData: Bool = false, edit:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+        self.edit = edit
+        self.delete = delete
         self.media = media
         self.account = account
+        self.hasEditedData = hasEditedData
         self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), account: account)
         if let media = media as? TelegramMediaFile {
             parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false)
@@ -36,7 +42,7 @@ class MediaPreviewRowItem: TableRowItem {
     private var overSize: CGFloat? = nil
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
-        parameters?.makeLabelsForWidth(width - 20)
+        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 60))
         
         if let table = table, table.count == 1 {
             if contentSize.height > table.frame.height && table.frame.height > 0 {
@@ -63,11 +69,11 @@ class MediaPreviewRowItem: TableRowItem {
     
     var contentSize: NSSize {
         let contentSize = layoutSize
-        return NSMakeSize(width - 20, overSize ?? contentSize.height)
+        return NSMakeSize(width - (media.isInteractiveMedia ? 20 : 60), overSize ?? contentSize.height)
     }
     
     override var layoutSize: NSSize {
-        return ChatLayoutUtils.contentSize(for: media, with: initialSize.width - 20)
+        return ChatLayoutUtils.contentSize(for: media, with: initialSize.width - (media.isInteractiveMedia ? 20 : 60))
     }
     
     public func contentNode() -> ChatMediaContentView.Type {
@@ -81,8 +87,9 @@ class MediaPreviewRowItem: TableRowItem {
 
 fileprivate class MediaPreviewRowView : TableRowView {
     
-    var contentNode:ChatMediaContentView?
     
+    var contentNode:ChatMediaContentView?
+    let editControl: MediaPreviewEditControl = MediaPreviewEditControl()
     override var needsDisplay: Bool {
         get {
             return super.needsDisplay
@@ -97,6 +104,25 @@ fileprivate class MediaPreviewRowView : TableRowView {
         
     }
     
+    override func updateMouse() {
+        guard let window = window, let table = item?.table else {
+            editControl.isHidden = true
+            return
+        }
+        
+        let row = table.row(at: table.documentView!.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+
+        if row == item?.index {
+            editControl.isHidden = false
+        } else {
+            editControl.isHidden = true
+        }
+    }
+    
+    override func shakeView() {
+        contentNode?.shake()
+    }
+    
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
         guard let item = item as? MediaPreviewRowItem else { return }
@@ -106,14 +132,33 @@ fileprivate class MediaPreviewRowView : TableRowView {
             let node = item.contentNode()
             self.contentNode = node.init(frame:NSZeroRect)
             self.addSubview(self.contentNode!)
+            addSubview(editControl)
+            updateMouse()
         }
         
+        
+        editControl.canEdit = (item.media is TelegramMediaImage)
+        editControl.isInteractiveMedia = item.media.isInteractiveMedia
+        editControl.canDelete = item.delete != nil
+        editControl.set(edit: { [weak item] in
+            item?.edit()
+        }, delete: { [weak item] in
+            item?.delete?()
+        }, hasEditedData: item.hasEditedData)
+        
         self.contentNode?.update(with: item.media, size: item.contentSize, account: item.account, parent: nil, table: item.table, parameters: item.parameters, animated: animated)
+        
     }
     
     override func layout() {
         super.layout()
-        self.contentNode?.setFrameOrigin(12, 6)
+        guard let contentNode = contentNode else {return}
+        contentNode.setFrameOrigin(12, 6)
+        if editControl.isInteractiveMedia {
+            editControl.setFrameOrigin(NSMakePoint(frame.width - editControl.frame.width - 20, frame.height - editControl.frame.height - 20))
+        } else {
+            editControl.centerY(x: frame.width - editControl.frame.width - 10)
+        }
     }
     
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {

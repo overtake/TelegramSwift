@@ -6,7 +6,7 @@ import TelegramCoreMac
 
 private enum AudioPlayerRendererState {
     case paused
-    case playing(didSetRate: Bool)
+    case playing(rate: Double, didSetRate: Bool)
 }
 
 private final class AudioPlayerRendererBufferContext {
@@ -82,67 +82,62 @@ private func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: U
     withPlayerRendererBuffer(Int32(intptr_t(bitPattern: refCon)), { context in
         context.with { context in
             switch context.state {
-                case let .playing(didSetRate):
-                    if context.buffer.availableBytes != 0 {
-                        let sampleIndex = context.bufferMaxChannelSampleIndex - Int64(context.buffer.availableBytes / (2 *
-                            2))
-                        
-                        if !didSetRate {
-                            context.state = .playing(didSetRate: true)
-                            let masterClock: CMClockOrTimebase
-                            if #available(iOS 9.0, *) {
-                                masterClock = CMTimebaseCopyMaster(context.timebase)!
-                            } else {
-                                masterClock = CMTimebaseGetMaster(context.timebase)!
-                            }
-                            CMTimebaseSetRateAndAnchorTime(context.timebase, 1.0, CMTimeMake(sampleIndex, 44100), CMSyncGetTime(masterClock))
-                            updatedRate = context.updatedRate
-                        } else {
-                            context.renderTimestampTick += 1
-                            if context.renderTimestampTick % 1000 == 0 {
-                                let delta = (Double(sampleIndex) / 44100.0) - CMTimeGetSeconds(CMTimebaseGetTime(context.timebase))
-                                if delta > 0.01 {
-                                    CMTimebaseSetTime(context.timebase, CMTimeMake(sampleIndex, 44100))
-                                    updatedRate = context.updatedRate
-                                }
+            case let .playing(rate, didSetRate):
+                if context.buffer.availableBytes != 0 {
+                    let sampleIndex = context.bufferMaxChannelSampleIndex - Int64(context.buffer.availableBytes / (2 *
+                        2))
+                    
+                    if !didSetRate {
+                        context.state = .playing(rate: rate, didSetRate: true)
+                        let masterClock: CMClockOrTimebase = CMTimebaseGetMaster(context.timebase)!
+                        CMTimebaseSetRateAndAnchorTime(context.timebase, rate: rate, anchorTime: CMTimeMake(value: sampleIndex, timescale: 44100), immediateMasterTime: CMSyncGetTime(masterClock))
+                        updatedRate = context.updatedRate
+                    } else {
+                        context.renderTimestampTick += 1
+                        if context.renderTimestampTick % 1000 == 0 {
+                            let delta = (Double(sampleIndex) / 44100.0) - CMTimeGetSeconds(CMTimebaseGetTime(context.timebase))
+                            if delta > 0.01 {
+                                CMTimebaseSetTime(context.timebase, time: CMTimeMake(value: sampleIndex, timescale: 44100))
+                                updatedRate = context.updatedRate
                             }
                         }
-                        
-                        let rendererBuffer = context.buffer
-                        
-                        while rendererFillOffset.0 < bufferList.count {
-                            if let bufferData = bufferList[rendererFillOffset.0].mData {
-                                let bufferDataSize = Int(bufferList[rendererFillOffset.0].mDataByteSize)
-                                
-                                let dataOffset = rendererFillOffset.1
-                                if dataOffset == bufferDataSize {
-                                    rendererFillOffset = (rendererFillOffset.0 + 1, 0)
-                                    continue
-                                }
-                                
-                                let consumeCount = bufferDataSize - dataOffset
-                                
-                                let actualConsumedCount = rendererBuffer.dequeue(bufferData.advanced(by: dataOffset), count: consumeCount)
-                                rendererFillOffset.1 += actualConsumedCount
-                                
-                                if actualConsumedCount == 0 {
-                                    break
-                                }
-                            } else {
+                    }
+                    
+                    let rendererBuffer = context.buffer
+                    
+                    while rendererFillOffset.0 < bufferList.count {
+                        if let bufferData = bufferList[rendererFillOffset.0].mData {
+                            let bufferDataSize = Int(bufferList[rendererFillOffset.0].mDataByteSize)
+                            
+                            let dataOffset = rendererFillOffset.1
+                            if dataOffset == bufferDataSize {
+                                rendererFillOffset = (rendererFillOffset.0 + 1, 0)
+                                continue
+                            }
+                            
+                            let consumeCount = bufferDataSize - dataOffset
+                            
+                            let actualConsumedCount = rendererBuffer.dequeue(bufferData.advanced(by: dataOffset), count: consumeCount)
+                            rendererFillOffset.1 += actualConsumedCount
+                            
+                            if actualConsumedCount == 0 {
                                 break
                             }
+                        } else {
+                            break
                         }
                     }
+                }
                 
-                    if !context.notifiedLowWater {
-                        let availableBytes = context.buffer.availableBytes
-                        if availableBytes <= context.lowWaterSize {
-                            context.notifiedLowWater = true
-                            notifyLowWater = context.notifyLowWater
-                        }
+                if !context.notifiedLowWater {
+                    let availableBytes = context.buffer.availableBytes
+                    if availableBytes <= context.lowWaterSize {
+                        context.notifiedLowWater = true
+                        notifyLowWater = context.notifyLowWater
                     }
-                case .paused:
-                    break
+                }
+            case .paused:
+                break
             }
         }
     })
@@ -183,7 +178,11 @@ private final class AudioPlayerRendererContext {
     let audioPaused: () -> Void
     
     var paused = true
-    var audioUnit: AudioComponentInstance?
+    var baseRate: Double
+    
+    var audioGraph: AUGraph?
+    var timePitchAudioUnit: AudioComponentInstance?
+    var outputAudioUnit: AudioComponentInstance?
     
     var bufferContextId: Int32!
     let bufferContext: Atomic<AudioPlayerRendererBufferContext>
@@ -191,18 +190,23 @@ private final class AudioPlayerRendererContext {
     var requestingFramesContext: RequestingFramesContext?
     
     let audioSessionDisposable = MetaDisposable()
+    var audioSessionControl: ManagedAudioSessionControl?
     let playAndRecord: Bool
     var forceAudioToSpeaker: Bool {
         didSet {
             if self.forceAudioToSpeaker != oldValue {
+                if let audioSessionControl = self.audioSessionControl {
+                    audioSessionControl.setOutputMode(self.forceAudioToSpeaker ? .speakerIfNoHeadphones : .system)
+                }
             }
         }
     }
     
-    init(controlTimebase: CMTimebase, playAndRecord: Bool, forceAudioToSpeaker: Bool, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+    init(controlTimebase: CMTimebase, playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
         assert(audioPlayerRendererQueue.isCurrent())
         
         self.forceAudioToSpeaker = forceAudioToSpeaker
+        self.baseRate = baseRate
         
         self.controlTimebase = controlTimebase
         self.updatedRate = updatedRate
@@ -236,28 +240,43 @@ private final class AudioPlayerRendererContext {
     deinit {
         assert(audioPlayerRendererQueue.isCurrent())
         
+        self.audioSessionDisposable.dispose()
         
         unregisterPlayerRendererBufferContext(self.bufferContextId)
         
         self.closeAudioUnit()
     }
     
-    fileprivate func setPlaying(_ playing: Bool) {
+    fileprivate func setBaseRate(_ baseRate: Double) {
+        if let timePitchAudioUnit = self.timePitchAudioUnit, !self.baseRate.isEqual(to: baseRate) {
+            self.baseRate = baseRate
+            AudioUnitSetParameter(timePitchAudioUnit, kTimePitchParam_Rate, kAudioUnitScope_Global, 0, Float32(baseRate), 0)
+            self.bufferContext.with { context in
+                if case .playing = context.state {
+                    context.state = .playing(rate: baseRate, didSetRate: false)
+                }
+            }
+        }
+    }
+    
+    fileprivate func setRate(_ rate: Double) {
         assert(audioPlayerRendererQueue.isCurrent())
         
-        if playing && self.paused {
+        if !rate.isZero && self.paused {
             self.start()
         }
         
+        let baseRate = self.baseRate
+        
         self.bufferContext.with { context in
-            if playing {
+            if !rate.isZero {
                 if case .playing = context.state {
                 } else {
-                    context.state = .playing(didSetRate: false)
+                    context.state = .playing(rate: baseRate, didSetRate: false)
                 }
             } else {
                 context.state = .paused
-                CMTimebaseSetRate(context.timebase, 0.0)
+                CMTimebaseSetRate(context.timebase, rate: 0.0)
             }
         }
     }
@@ -271,13 +290,13 @@ private final class AudioPlayerRendererContext {
             context.notifiedLowWater = false
             context.overflowData = Data()
             context.overflowDataMaxChannelSampleIndex = 0
-            CMTimebaseSetTime(context.timebase, timestamp)
+            CMTimebaseSetTime(context.timebase, time: timestamp)
             
             switch context.state {
-                case .playing:
-                    context.state = .playing(didSetRate: false)
-                case .paused:
-                    break
+            case let .playing(rate, _):
+                context.state = .playing(rate: rate, didSetRate: false)
+            case .paused:
+                break
             }
         }
         
@@ -298,7 +317,7 @@ private final class AudioPlayerRendererContext {
         
         if !self.paused {
             self.paused = true
-            self.setPlaying(false)
+            self.setRate(0.0)
             self.closeAudioUnit()
         }
     }
@@ -306,63 +325,112 @@ private final class AudioPlayerRendererContext {
     private func startAudioUnit() {
         assert(audioPlayerRendererQueue.isCurrent())
         
-        if self.audioUnit == nil {
-            var desc = AudioComponentDescription()
-            desc.componentType = kAudioUnitType_Output
-            desc.componentSubType = kAudioUnitSubType_HALOutput
-            desc.componentFlags = 0
-            desc.componentFlagsMask = 0
-            desc.componentManufacturer = kAudioUnitManufacturer_Apple
-            guard let inputComponent = AudioComponentFindNext(nil, &desc) else {
+        if self.audioGraph == nil {
+            var maybeAudioGraph: AUGraph?
+            guard NewAUGraph(&maybeAudioGraph) == noErr, let audioGraph = maybeAudioGraph else {
                 return
             }
             
-            var maybeAudioUnit: AudioComponentInstance?
-            
-            guard AudioComponentInstanceNew(inputComponent, &maybeAudioUnit) == noErr else {
+            var converterNode: AUNode = 0
+            var converterDescription = AudioComponentDescription()
+            converterDescription.componentType = kAudioUnitType_FormatConverter
+            converterDescription.componentSubType = kAudioUnitSubType_AUConverter
+            converterDescription.componentManufacturer = kAudioUnitManufacturer_Apple
+            guard AUGraphAddNode(audioGraph, &converterDescription, &converterNode) == noErr else {
                 return
             }
             
-            guard let audioUnit = maybeAudioUnit else {
+            var timePitchNode: AUNode = 0
+            var timePitchDescription = AudioComponentDescription()
+            timePitchDescription.componentType = kAudioUnitType_FormatConverter
+            timePitchDescription.componentSubType = kAudioUnitSubType_AUiPodTimeOther
+            timePitchDescription.componentManufacturer = kAudioUnitManufacturer_Apple
+            guard AUGraphAddNode(audioGraph, &timePitchDescription, &timePitchNode) == noErr else {
                 return
             }
             
-            var one: UInt32 = 1
-            guard AudioUnitSetProperty(audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, kOutputBus, &one, 4) == noErr else {
-                AudioComponentInstanceDispose(audioUnit)
+            var outputNode: AUNode = 0
+            var outputDesc = AudioComponentDescription()
+            outputDesc.componentType = kAudioUnitType_Output
+            outputDesc.componentSubType = kAudioUnitSubType_HALOutput
+            outputDesc.componentFlags = 0
+            outputDesc.componentFlagsMask = 0
+            outputDesc.componentManufacturer = kAudioUnitManufacturer_Apple
+            guard AUGraphAddNode(audioGraph, &outputDesc, &outputNode) == noErr else {
                 return
             }
             
-            var audioStreamDescription = self.audioStreamDescription
-            guard AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, kOutputBus, &audioStreamDescription, UInt32(MemoryLayout<AudioStreamBasicDescription>.size)) == noErr else {
-                AudioComponentInstanceDispose(audioUnit)
+            guard AUGraphOpen(audioGraph) == noErr else {
                 return
             }
+            
+            guard AUGraphConnectNodeInput(audioGraph, converterNode, 0, timePitchNode, 0) == noErr else {
+                return
+            }
+            
+            guard AUGraphConnectNodeInput(audioGraph, timePitchNode, 0, outputNode, 0) == noErr else {
+                return
+            }
+            
+            var maybeConverterAudioUnit: AudioComponentInstance?
+            guard AUGraphNodeInfo(audioGraph, converterNode, &converterDescription, &maybeConverterAudioUnit) == noErr, let converterAudioUnit = maybeConverterAudioUnit else {
+                return
+            }
+            
+            var maybeTimePitchAudioUnit: AudioComponentInstance?
+            guard AUGraphNodeInfo(audioGraph, timePitchNode, &timePitchDescription, &maybeTimePitchAudioUnit) == noErr, let timePitchAudioUnit = maybeTimePitchAudioUnit else {
+                return
+            }
+            AudioUnitSetParameter(timePitchAudioUnit, kTimePitchParam_Rate, kAudioUnitScope_Global, 0, Float32(self.baseRate), 0)
+            
+            var maybeOutputAudioUnit: AudioComponentInstance?
+            guard AUGraphNodeInfo(audioGraph, outputNode, &outputDesc, &maybeOutputAudioUnit) == noErr, let outputAudioUnit = maybeOutputAudioUnit else {
+                return
+            }
+            
+            var outputAudioFormat = audioRendererNativeStreamDescription()
+            
+            AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &outputAudioFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size))
+            
+            var streamFormat = AudioStreamBasicDescription()
+            AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &streamFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size))
+            AudioUnitSetProperty(timePitchAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &streamFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size))
+            AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &streamFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size))
             
             var callbackStruct = AURenderCallbackStruct()
             callbackStruct.inputProc = rendererInputProc
             callbackStruct.inputProcRefCon = UnsafeMutableRawPointer(bitPattern: intptr_t(self.bufferContextId))
-            guard AudioUnitSetProperty(audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, kOutputBus, &callbackStruct, UInt32(MemoryLayout<AURenderCallbackStruct>.size)) == noErr else {
-                AudioComponentInstanceDispose(audioUnit)
+            
+            guard AUGraphSetNodeInputCallback(audioGraph, converterNode, 0, &callbackStruct) == noErr else {
                 return
             }
             
-            guard AudioUnitInitialize(audioUnit) == noErr else {
-                AudioComponentInstanceDispose(audioUnit)
+            var one: UInt32 = 1
+            guard AudioUnitSetProperty(outputAudioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, kOutputBus, &one, 4) == noErr else {
                 return
             }
             
-            self.audioUnit = audioUnit
+            var maximumFramesPerSlice: UInt32 = 4096
+            AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maximumFramesPerSlice, 4)
+            AudioUnitSetProperty(timePitchAudioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maximumFramesPerSlice, 4)
+            AudioUnitSetProperty(outputAudioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maximumFramesPerSlice, 4)
+            
+            guard AUGraphInitialize(audioGraph) == noErr else {
+                return
+            }
+            
+            self.audioGraph = audioGraph
+            self.timePitchAudioUnit = timePitchAudioUnit
+            self.outputAudioUnit = outputAudioUnit
         }
-        
         audioSessionAcquired()
     }
     
     private func audioSessionAcquired() {
         assert(audioPlayerRendererQueue.isCurrent())
         
-        if let audioUnit = self.audioUnit {
-            guard AudioOutputUnitStart(audioUnit) == noErr else {
+        if let audioGraph = self.audioGraph {
+            guard AUGraphStart(audioGraph) == noErr else {
                 self.closeAudioUnit()
                 return
             }
@@ -372,23 +440,36 @@ private final class AudioPlayerRendererContext {
     private func closeAudioUnit() {
         assert(audioPlayerRendererQueue.isCurrent())
         
-        if let audioUnit = self.audioUnit {
+        if let audioGraph = self.audioGraph {
             var status = noErr
             
             self.bufferContext.with { context in
                 context.buffer.clear()
             }
             
-            status = AudioOutputUnitStop(audioUnit)
+            status = AUGraphStop(audioGraph)
             if status != noErr {
-                Logger.shared.log("AudioPlayerRenderer", "AudioOutputUnitStop error \(status)")
+                Logger.shared.log("AudioPlayerRenderer", "AUGraphStop error \(status)")
             }
             
-            status = AudioComponentInstanceDispose(audioUnit);
+            status = AUGraphUninitialize(audioGraph)
             if status != noErr {
-                Logger.shared.log("AudioPlayerRenderer", "AudioComponentInstanceDispose error \(status)")
+                Logger.shared.log("AudioPlayerRenderer", "AUGraphUninitialize error \(status)")
             }
-            self.audioUnit = nil
+            
+            status = AUGraphClose(audioGraph)
+            if status != noErr {
+                Logger.shared.log("AudioPlayerRenderer", "AUGraphClose error \(status)")
+            }
+            
+            status = DisposeAUGraph(audioGraph)
+            if status != noErr {
+                Logger.shared.log("AudioPlayerRenderer", "DisposeAUGraph error \(status)")
+            }
+            
+            self.audioGraph = nil
+            self.outputAudioUnit = nil
+            self.timePitchAudioUnit = nil
         }
     }
     
@@ -437,37 +518,37 @@ private final class AudioPlayerRendererContext {
                     let takenFrame = requestingFramesContext.takeFrame()
                     audioPlayerRendererQueue.async {
                         switch takenFrame {
-                            case let .frame(frame):
-                                if let dataBuffer = CMSampleBufferGetDataBuffer(frame.sampleBuffer) {
-                                    let dataLength = CMBlockBufferGetDataLength(dataBuffer)
-                                    let takeLength = min(dataLength, bytesToRequest)
-                                    
-                                    let pts = CMSampleBufferGetPresentationTimeStamp(frame.sampleBuffer)
-                                    let bufferSampleIndex = CMTimeConvertScale(pts, 44100, .roundAwayFromZero).value
-                                    
-                                    let bytes = malloc(takeLength)!
-                                    CMBlockBufferCopyDataBytes(dataBuffer, 0, takeLength, bytes)
-                                    self.enqueueSamples(Data(bytesNoCopy: bytes.assumingMemoryBound(to: UInt8.self), count: takeLength, deallocator: .free), sampleIndex: bufferSampleIndex)
-                                    
-                                    if takeLength < dataLength {
-                                        self.bufferContext.with { context in
-                                            let copyOffset = context.overflowData.count
-                                            context.overflowData.count += dataLength - takeLength
-                                            context.overflowData.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
-                                                CMBlockBufferCopyDataBytes(dataBuffer, takeLength, dataLength - takeLength, bytes.advanced(by: copyOffset))
-                                            }
+                        case let .frame(frame):
+                            if let dataBuffer = CMSampleBufferGetDataBuffer(frame.sampleBuffer) {
+                                let dataLength = CMBlockBufferGetDataLength(dataBuffer)
+                                let takeLength = min(dataLength, bytesToRequest)
+                                
+                                let pts = CMSampleBufferGetPresentationTimeStamp(frame.sampleBuffer)
+                                let bufferSampleIndex = CMTimeConvertScale(pts, timescale: 44100, method: .roundAwayFromZero).value
+                                
+                                let bytes = malloc(takeLength)!
+                                CMBlockBufferCopyDataBytes(dataBuffer, atOffset: 0, dataLength: takeLength, destination: bytes)
+                                self.enqueueSamples(Data(bytesNoCopy: bytes.assumingMemoryBound(to: UInt8.self), count: takeLength, deallocator: .free), sampleIndex: bufferSampleIndex)
+                                
+                                if takeLength < dataLength {
+                                    self.bufferContext.with { context in
+                                        let copyOffset = context.overflowData.count
+                                        context.overflowData.count += dataLength - takeLength
+                                        context.overflowData.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
+                                            CMBlockBufferCopyDataBytes(dataBuffer, atOffset: takeLength, dataLength: dataLength - takeLength, destination: bytes.advanced(by: copyOffset))
                                         }
                                     }
-                                    
-                                    self.checkBuffer()
-                                } else {
-                                    assertionFailure()
                                 }
-                            case .skipFrame:
+                                
                                 self.checkBuffer()
-                                break
-                            case .noFrames, .finished:
-                                self.requestingFramesContext = nil
+                            } else {
+                                assertionFailure()
+                            }
+                        case .skipFrame:
+                            self.checkBuffer()
+                            break
+                        case .noFrames, .finished:
+                            self.requestingFramesContext = nil
                         }
                     }
                 }
@@ -540,13 +621,14 @@ enum MediaPlayerAudioSessionControl {
     case custom((MediaPlayerAudioSessionCustomControl) -> Disposable)
 }
 
+
 final class MediaPlayerAudioRenderer {
     private var contextRef: Unmanaged<AudioPlayerRendererContext>?
     
     private let audioClock: CMClock
     let audioTimebase: CMTimebase
     
-    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()
@@ -555,17 +637,17 @@ final class MediaPlayerAudioRenderer {
         
          _ = AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &deviceIdRequest, 0, nil, &deviceIdSize, &deviceId)
         
-        CMAudioDeviceClockCreateFromAudioDeviceID(kCFAllocatorDefault, deviceId, &audioClock)
+        CMAudioDeviceClockCreateFromAudioDeviceID(allocator: kCFAllocatorDefault, deviceID: deviceId, clockOut: &audioClock)
 
         self.audioClock = audioClock!
         
         var audioTimebase: CMTimebase?
         
-        CMTimebaseCreateWithMasterClock(nil, audioClock!, &audioTimebase)
+        CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: audioClock!, timebaseOut: &audioTimebase)
         self.audioTimebase = audioTimebase!
-        
+        CMTimebaseSetRate(self.audioTimebase, rate: baseRate)
         audioPlayerRendererQueue.async {
-            let context = AudioPlayerRendererContext(controlTimebase: audioTimebase!, playAndRecord: playAndRecord, forceAudioToSpeaker: forceAudioToSpeaker, updatedRate: updatedRate, audioPaused: audioPaused)
+            let context = AudioPlayerRendererContext(controlTimebase: audioTimebase!, playAndRecord: playAndRecord, forceAudioToSpeaker: forceAudioToSpeaker, baseRate: baseRate, updatedRate: updatedRate, audioPaused: audioPaused)
             self.contextRef = Unmanaged.passRetained(context)
         }
     }
@@ -599,7 +681,16 @@ final class MediaPlayerAudioRenderer {
         audioPlayerRendererQueue.async {
             if let contextRef = self.contextRef {
                 let context = contextRef.takeUnretainedValue()
-                context.setPlaying(rate.isEqual(to: 1.0))
+                context.setRate(rate)
+            }
+        }
+    }
+    
+    func setBaseRate(_ baseRate: Double) {
+        audioPlayerRendererQueue.async {
+            if let contextRef = self.contextRef {
+                let context = contextRef.takeUnretainedValue()
+                context.setBaseRate(baseRate)
             }
         }
     }

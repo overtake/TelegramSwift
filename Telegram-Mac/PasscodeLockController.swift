@@ -138,7 +138,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.sizeToFit()
         
         let logoutAttr = parseMarkdownIntoAttributedString(tr(L10n.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedStringKey.link.rawValue, inAppLink.callback(contents,  {_ in}))
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
         }))
         
         logoutTextView.isSelectable = false
@@ -177,17 +177,17 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         change(state: fieldState, animated: true)
     }
     
 
     
-    override func controlTextDidBeginEditing(_ obj: Notification) {
+    func controlTextDidBeginEditing(_ obj: Notification) {
         change(state: .Focus, animated: true)
     }
     
-    override func controlTextDidEndEditing(_ obj: Notification) {
+    func controlTextDidEndEditing(_ obj: Notification) {
         window?.makeFirstResponder(input)
     }
     

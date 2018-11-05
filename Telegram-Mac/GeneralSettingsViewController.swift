@@ -118,8 +118,9 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             })
         case let .darkMode(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(enabled), action: {
-                _ = updateThemeSettings(postbox: arguments.account.postbox, palette: !enabled ? darkPalette : whitePalette).start()
-
+                _ = updateThemeInteractivetly(postbox: arguments.account.postbox, f: { settings in
+                    return settings.withUpdatedPalette(!enabled ? darkPalette : whitePalette)
+                }).start()
             })
         case let .handleInAppKeys(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsMediaKeysForInAppPlayer), type: .switchable(enabled), action: {
@@ -239,7 +240,9 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     //entries.append(.largeFonts(sectionId: sectionId, enabled: baseSettings.fontSize > 13))
     #if !APP_STORE
+    if #available(OSX 10.14, *) {} else {
         entries.append(.handleInAppKeys(sectionId: sectionId, enabled: baseSettings.handleInAppKeys))
+    }
     #endif
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled))
     entries.append(.autoplayGifs(sectionId: sectionId, enabled: FastSettings.gifsAutoPlay))

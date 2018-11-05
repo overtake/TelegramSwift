@@ -219,7 +219,8 @@ public enum KeyHandlerResult {
     case invokeNext // invoke and send global event
 }
 
-public class Window: NSWindow, NSTouchBarDelegate {
+
+public class Window: NSWindow {
     public var name: String = "TGUIKit.Window"
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeIdentifier: SwipeHandler] = [:]
@@ -233,7 +234,9 @@ public class Window: NSWindow, NSTouchBarDelegate {
     public  var copyhandler:(()->Void)? = nil
     public var closeInterceptor:(()->Bool)? = nil
     public var orderOutHandler:(()->Void)? = nil
-    public weak var navigationController: NavigationViewController?
+    public weak var rootViewController: ViewController?
+    public var firstResponderFilter:(NSResponder?)->NSResponder? = { $0 }
+    
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
         responsders.append(ResponderObserver(responder, object, priority))
     }
@@ -309,7 +312,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
         }
     }
     
-    public func remove(object:NSObject, for key:KeyboardKey) {
+    public func remove(object:NSObject, for key:KeyboardKey, modifierFlags: NSEvent.ModifierFlags? = nil, forceCheckFlags: Bool = false) {
         let handlers = keyHandlers[key]
         if let handlers = handlers {
             var copy:[KeyHandler] = []
@@ -317,7 +320,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                 copy.append(handle)
             }
             for i in stride(from: copy.count - 1, to: -1, by: -1) {
-                if copy[i].object.value == object || copy[i].object.value == nil  {
+                if (copy[i].object.value == object || copy[i].object.value == nil) && ((forceCheckFlags || modifierFlags == nil) && modifierFlags == copy[i].modifierFlags) {
                     keyHandlers[key]?.remove(at: i)
                 }
             }
@@ -405,7 +408,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                             continue
                         }
                     }
-                    self.makeFirstResponder(responder)
+                    _ = self.makeFirstResponder(responder)
                     if let responder = responder as? NSTextField {
                         responder.setCursorToEnd()
                     }
@@ -417,7 +420,31 @@ public class Window: NSWindow, NSTouchBarDelegate {
     
     @available(OSX 10.12.2, *)
     public override func makeTouchBar() -> NSTouchBar? {
-        return self.navigationController?.makeTouchBar() ?? super.makeTouchBar()
+        if !sheets.isEmpty {
+            for sheet in sheets.reversed() {
+                if let sheet = sheet as? Window {
+                    if hasModals(sheet) {
+                        return Modal.topModalController(self)?.makeTouchBar() ?? sheet.makeTouchBar()
+                    }
+                }
+                return sheet.makeTouchBar()
+            }
+        }
+        if hasModals(self) {
+            return Modal.topModalController(self)?.makeTouchBar() ?? super.makeTouchBar()
+        }
+        return self.rootViewController?.makeTouchBar() ?? super.makeTouchBar()
+    }
+    
+    public override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+        return super.makeFirstResponder(self.firstResponderFilter(responder))
+    }
+    
+
+    public func sendKeyEvent(_ key: KeyboardKey, modifierFlags: NSEvent.ModifierFlags) {
+        guard let event = NSEvent.keyEvent(with: .keyDown, location: mouseLocationOutsideOfEventStream, modifierFlags: modifierFlags, timestamp: Date().timeIntervalSince1970, windowNumber: windowNumber, context: graphicsContext, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: key.rawValue) else {return}
+        
+        sendEvent(event)
     }
     
     public override func makeKeyAndOrderFront(_ sender: Any?) {
@@ -453,12 +480,24 @@ public class Window: NSWindow, NSTouchBarDelegate {
         }
     }
     
+    private func scrollDeltaXAfterInvertion(_ value: CGFloat) -> CGFloat {
+        var deltaX: CGFloat = 0
+        let isInverted: Bool = System.isScrollInverted
+        
+        if !isInverted {
+            deltaX = -value
+        } else {
+            deltaX = value
+        }
+        return deltaX
+    }
     
     private func startSwiping(_ event: NSEvent) {
         if event.scrollingDeltaY == 0 && event.scrollingDeltaX != 0 {
+            CATransaction.begin()
             for (key, swipe) in swipeHandlers {
                 if swipeState[key] == nil, let view = swipe.object.value, view._mouseInside() {
-                    if event.scrollingDeltaX > 0 {
+                    if scrollDeltaXAfterInvertion(event.scrollingDeltaX) > 0 {
                         let result = swipe.handler(.left(.start(controller: ViewController())))
                         switch result {
                         case let .success(controller):
@@ -478,6 +517,7 @@ public class Window: NSWindow, NSTouchBarDelegate {
                 }
                 
             }
+            CATransaction.commit()
         }
         
     }
@@ -490,10 +530,13 @@ public class Window: NSWindow, NSTouchBarDelegate {
         swipeState.removeAll()
     }
     
+    
     private func proccessSwiping(_ event: NSEvent) -> Void {
         for (key, swipe) in swipeState {
             if let handler = swipeHandlers[key], let value = handler.object.value, value._mouseInside() {
-                let newState = swipe.withAdditionalDelta(event.scrollingDeltaX)
+                let deltaX: CGFloat = scrollDeltaXAfterInvertion(event.scrollingDeltaX)
+                
+                let newState = swipe.withAdditionalDelta(deltaX)
                 let result = handler.handler(newState)
                 switch result {
                 case let .deltaUpdated(available):
@@ -663,7 +706,9 @@ public class Window: NSWindow, NSTouchBarDelegate {
     }
     
     public override func toggleFullScreen(_ sender: Any?) {
+        CATransaction.begin()
         super.toggleFullScreen(sender)
+        CATransaction.commit()
         saver?.isFullScreen = isFullScreen
     }
     
@@ -698,10 +743,6 @@ public class Window: NSWindow, NSTouchBarDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         
-        
-        
-        //  self.contentView?.canDrawSubviewsIntoLayer = true
     }
-    
-    
+
 }

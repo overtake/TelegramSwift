@@ -124,7 +124,13 @@ final class ChatInteraction : InterfaceObserver  {
     var openProxySettings: ()->Void = {}
     var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
     var clearMentions:()->Void = {}
-    
+    var attachFile:()->Void = {}
+    var attachPhotoOrVideo:()->Void = {}
+    var attachPicture:()->Void = {}
+    var attachLocation:()->Void = {}
+    var updateEditingMessageMedia:([String]?, Bool) -> Void = { _, _ in}
+    var editEditingMessagePhoto:(TelegramMediaImage) -> Void = { _ in}
+
     let loadingMessage: Promise<Bool> = Promise()
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
@@ -353,6 +359,7 @@ final class ChatInteraction : InterfaceObserver  {
         disableProxyDisposable.dispose()
         enableProxyDisposable.dispose()
     }
+    
     
     
     

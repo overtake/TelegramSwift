@@ -11,6 +11,6 @@ import Cocoa
 public struct AnimationStyle {
 
     public let duration:CFTimeInterval
-    public let function:String
+    public let function:CAMediaTimingFunctionName
     
 }

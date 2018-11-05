@@ -60,7 +60,7 @@ class CachedAdminIds: NSObject {
                 
                 
                 let signal = channelAdminIds(postbox: postbox, network: network, peerId: peerId, hash: idsContexts.hash) |> deliverOn(self.statusQueue) |> then( deferred {
-                    return channelAdminIds(postbox: postbox, network: network, peerId: peerId, hash: idsContexts.hash) |> delay(60, queue: self.statusQueue)
+                    return channelAdminIds(postbox: postbox, network: network, peerId: peerId, hash: idsContexts.hash) |> delay(60 * 5, queue: self.statusQueue)
                 } |> restart)
                 
                 self.disposableTokens[peerId] = signal.start(next: { ids in

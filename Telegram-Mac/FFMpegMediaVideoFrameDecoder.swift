@@ -1,5 +1,4 @@
 import CoreMedia
-import Accelerate
 
 private let bufferCount = 32
 
@@ -59,7 +58,7 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
         if status == 0 {
             status = avcodec_receive_frame(self.codecContext, self.videoFrame)
             if status == 0 {
-                var pts = CMTimeMake(self.videoFrame.pointee.pts, frame.pts.timescale)
+                var pts = CMTimeMake(value: self.videoFrame.pointee.pts, timescale: frame.pts.timescale)
                 if let ptsOffset = ptsOffset {
                     pts = CMTimeAdd(pts, ptsOffset)
                 }
@@ -104,9 +103,12 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
             }
         } else {
             let ioSurfaceProperties = NSMutableDictionary()
+            ioSurfaceProperties["IOSurfaceIsGlobal"] = true as NSNumber
             
             var options: [String: Any] = [kCVPixelBufferBytesPerRowAlignmentKey as String: frame.pointee.linesize.0 as NSNumber]
-
+            /*if #available(iOSApplicationExtension 9.0, *) {
+                options[kCVPixelBufferOpenGLESTextureCacheCompatibilityKey as String] = true as NSNumber
+            }*/
             options[kCVPixelBufferIOSurfacePropertiesKey as String] = ioSurfaceProperties
             
             CVPixelBufferCreate(kCFAllocatorDefault,
@@ -134,22 +136,47 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
             dstPlane[2 * i + 1] = frame.pointee.data.2![i]
         }
         
-        CVPixelBufferLockBaseAddress(pixelBuffer, [])
+        let status = CVPixelBufferLockBaseAddress(pixelBuffer, [])
+        if status != kCVReturnSuccess {
+            return nil
+        }
         
         let bytePerRowY = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 0)
         
         let bytesPerRowUV = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 1)
         
-        var base = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0)
-        memcpy(base, frame.pointee.data.0!, bytePerRowY * Int(frame.pointee.height))
+        var base = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0)!
+        if bytePerRowY == frame.pointee.linesize.0 {
+            memcpy(base, frame.pointee.data.0!, bytePerRowY * Int(frame.pointee.height))
+        } else {
+            var dest = base
+            var src = frame.pointee.data.0!
+            let linesize = Int(frame.pointee.linesize.0)
+            for _ in 0 ..< Int(frame.pointee.height) {
+                memcpy(dest, src, linesize)
+                dest = dest.advanced(by: bytePerRowY)
+                src = src.advanced(by: linesize)
+            }
+        }
         
-        base = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 1)
-        memcpy(base, dstPlane, bytesPerRowUV * Int(frame.pointee.height) / 2)
+        base = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 1)!
+        if bytesPerRowUV == frame.pointee.linesize.1 * 2 {
+            memcpy(base, dstPlane, bytesPerRowUV * Int(frame.pointee.height) / 2)
+        } else {
+            var dest = base
+            var src = dstPlane
+            let linesize = Int(frame.pointee.linesize.1) * 2
+            for _ in 0 ..< Int(frame.pointee.height) / 2 {
+                memcpy(dest, src, linesize)
+                dest = dest.advanced(by: bytesPerRowUV)
+                src = src.advanced(by: linesize)
+            }
+        }
         
         CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
         
         var formatRef: CMVideoFormatDescription?
-        let formatStatus = CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault, pixelBuffer, &formatRef)
+        let formatStatus = CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, formatDescriptionOut: &formatRef)
         
         guard let format = formatRef, formatStatus == 0 else {
             return nil
@@ -158,11 +185,11 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
         var timingInfo = CMSampleTimingInfo(duration: duration, presentationTimeStamp: pts, decodeTimeStamp: pts)
         var sampleBuffer: CMSampleBuffer?
         
-        guard CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault, pixelBuffer, format, &timingInfo, &sampleBuffer) == noErr else {
+        guard CMSampleBufferCreateReadyWithImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, formatDescription: format, sampleTiming: &timingInfo, sampleBufferOut: &sampleBuffer) == noErr else {
             return nil
         }
         
-        let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer!, true)! as NSArray
+        let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer!, createIfNecessary: true)! as NSArray
         let dict = attachments[0] as! NSMutableDictionary
         
         let resetDecoder = self.resetDecoderOnNextFrame

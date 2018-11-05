@@ -162,7 +162,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             interactive = true
         }
         
-
+        
         self.container.change(size: NSMakeSize(frame.width - (interactive ? 30 : 0), frame.height), animated: false)
         self.container.change(pos: NSMakePoint((interactive ? 30 : 0), 0), animated: animated)
         

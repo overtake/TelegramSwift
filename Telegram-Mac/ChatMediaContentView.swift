@@ -34,7 +34,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) {
                     view.background = newValue
                 }
             }
@@ -99,9 +99,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     func delete() -> Void {
-        if let parent = parent {
+        cancel()
+        if let parentId = parent?.id {
             _ = account?.postbox.transaction({ transaction -> Void in
-                transaction.deleteMessages([parent.id])
+                transaction.deleteMessages([parentId])
             }).start()
         }
     }

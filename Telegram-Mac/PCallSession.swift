@@ -66,6 +66,7 @@ class PCallSession {
     let durationPromise:Promise<TimeInterval> = Promise()
     private var callSessionValue:CallSession? = nil
     private let proxyDisposable = MetaDisposable()
+    private let requestMicroAccessDisposable = MetaDisposable()
     init(account:Account, peerId:PeerId, id: CallSessionInternalId) {
         
         Queue.mainQueue().async {
@@ -78,11 +79,15 @@ class PCallSession {
         self.peerId = peerId
         self.id = id
 
-        let signal = account.callSessionManager.callState(internalId: id) |> deliverOnMainQueue |> beforeNext { [weak self] session in
-            self?.proccessState(session)
+        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(VoiceCallP2PMode, Bool, CallSession), NoError> in
+            return account.postbox.transaction { transaction in
+                return (p2pCallMode(transaction: transaction), transaction.isPeerContact(peerId: peerId), session)
+            }
+        } |> deliverOnMainQueue |> beforeNext { [weak self] config, isContact, session in
+            self?.proccessState(session, isContact, config)
         }
         
-        state.set(signal |> map {$0.state})
+        state.set(signal |> map {$2.state})
         
         proxyDisposable.set((proxySettingsSignal(account.postbox) |> deliverOn(callQueue) |> take(1)).start(next: { [weak self] settings in
             guard let `self` = self else {return}
@@ -264,10 +269,27 @@ class PCallSession {
     func drop(_ reason:DropCallReason) {
         account.callSessionManager.drop(internalId: id, reason: reason)
     }
-    
-    func acceptCallSession() {
+    private func acceptAfterAccess() {
         callAcceptedTime = CFAbsoluteTimeGetCurrent()
         account.callSessionManager.accept(internalId: id)
+    }
+    
+    func acceptCallSession() {
+        requestMicroAccessDisposable.set((requestAudioPermission() |> deliverOnMainQueue).start(next: { [weak self] access in
+            if access {
+                self?.acceptAfterAccess()
+            } else {
+                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        openSystemSettings(.microphone)
+                    default:
+                        break
+                    }
+                })
+            }
+        }))
+        
     }
     
     func mute() {
@@ -295,7 +317,7 @@ class PCallSession {
         }
     }
     
-    private func proccessState(_ session: CallSession) {
+    private func proccessState(_ session: CallSession, _ isContact: Bool, _ p2pMode: VoiceCallP2PMode) {
         self.callSessionValue = session
         
         switch session.state {
@@ -305,7 +327,16 @@ class PCallSession {
             let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)}, maxLayer: maxLayer)
             
             withContext { context in
-                context.startTransmissionIfNeeded(session.isOutgoing, connection: cdata)
+                let allowP2p: Bool
+                switch p2pMode {
+                case .always:
+                    allowP2p = true
+                case .contacts:
+                    allowP2p = isContact
+                case .never:
+                    allowP2p = false
+                }
+                context.startTransmissionIfNeeded(session.isOutgoing, allowP2p: allowP2p, connection: cdata)
             }
             invalidateTimeout()
         case .ringing:
@@ -479,37 +510,53 @@ enum PCallResult {
 }
 
 func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, NoError> {
-    return Signal { subscriber in
-        
-        assert(callQueue.isCurrent())
-        
-        if let session = callSession, session.peerId == peerId, !ignoreSame {
-            subscriber.putNext(.samePeer(session))
-            subscriber.putCompletion()
-        } else {
-            let confirmation:Signal<Bool, NoError>
-            if let session = callSession {
-                confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
-                    return account.postbox.loadedPeerWithId(session.peerId) |> map {(new:peer, previous:$0)}
-                } |> mapToSignal { value in
-                    return confirmSignal(for: mainWindow, header: tr(L10n.callConfirmDiscardCurrentHeader), information: tr(L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
+    return requestAudioPermission() |> deliverOnMainQueue |> mapToSignal { hasAccess -> Signal<PCallResult, NoError> in
+        if hasAccess {
+            return Signal { subscriber in
+                
+                assert(callQueue.isCurrent())
+                
+                if let session = callSession, session.peerId == peerId, !ignoreSame {
+                    subscriber.putNext(.samePeer(session))
+                    subscriber.putCompletion()
+                } else {
+                    let confirmation:Signal<Bool, NoError>
+                    if let session = callSession {
+                        confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
+                            return account.postbox.loadedPeerWithId(session.peerId) |> map {(new:peer, previous:$0)}
+                            } |> mapToSignal { value in
+                                return confirmSignal(for: mainWindow, header: tr(L10n.callConfirmDiscardCurrentHeader), information: tr(L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
+                        }
+                        
+                    } else {
+                        confirmation = .single(true)
+                    }
+                    
+                    return (confirmation |> filter {$0} |> map { _ in
+                        callSession?.hangUpCurrentCall()
+                        } |> mapToSignal { _ in return account.callSessionManager.request(peerId: peerId) } |> deliverOn(callQueue) ).start(next: { id in
+                            subscriber.putNext(.success(PCallSession(account: account, peerId: peerId, id: id)))
+                            subscriber.putCompletion()
+                        })
                 }
-
-            } else {
-                confirmation = .single(true)
-            }
-            
-            return (confirmation |> filter {$0} |> map { _ in
-                callSession?.hangUpCurrentCall()
-            } |> mapToSignal { _ in return account.callSessionManager.request(peerId: peerId) } |> deliverOn(callQueue) ).start(next: { id in
-                subscriber.putNext(.success(PCallSession(account: account, peerId: peerId, id: id)))
-                subscriber.putCompletion()
+                
+                return EmptyDisposable
+                
+            } |> runOn(callQueue)
+        } else {
+            confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                switch result {
+                case .thrid:
+                    openSystemSettings(.microphone)
+                default:
+                    break
+                }
+                //[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"]];
             })
+            return .complete()
         }
-        
-        return EmptyDisposable
-        
-    } |> runOn(callQueue)
+    }
+    
 }
 
 func _callSession() -> Signal<PCallSession?, NoError> {

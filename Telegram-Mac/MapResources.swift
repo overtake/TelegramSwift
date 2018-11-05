@@ -88,9 +88,9 @@ func fetchMapSnapshotResource(resource: MapSnapshotMediaResource) -> Signal<Medi
         let disposable = MetaDisposable()
         
         Queue.concurrentDefaultQueue().async {
-            let options = MKMapSnapshotOptions()
+            let options = MKMapSnapshotter.Options()
             let latitude = adjustGMapLatitude(resource.latitude, offset: -10, zoom: 15)
-            options.region = MKCoordinateRegionMake(CLLocationCoordinate2DMake(latitude, resource.longitude), MKCoordinateSpanMake(0.003, 0.003))
+            options.region = MKCoordinateRegion(center: CLLocationCoordinate2DMake(latitude, resource.longitude), span: MKCoordinateSpan(latitudeDelta: 0.003, longitudeDelta: 0.003))
             options.mapType = .standard
             options.showsPointsOfInterest = false
             options.showsBuildings = true

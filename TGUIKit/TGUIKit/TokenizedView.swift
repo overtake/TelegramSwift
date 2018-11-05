@@ -63,7 +63,7 @@ private class TokenView : Control {
         return nameView.layout?.isPerfectSized ?? false
     }
     
-    override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: String = kCAMediaTimingFunctionEaseOut, completion: ((Bool) -> Void)? = nil) {
+    override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
         nameView.layout?.measure(width: size.width - 30)
         
         let size = NSMakeSize(min(((nameView.layout?.layoutSize.width ?? 0) + 30), size.width), size.height)

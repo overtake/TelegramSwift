@@ -10,10 +10,28 @@ import Cocoa
 import PostboxMac
 import SwiftSignalKitMac
 
+struct EmojiSkinModifier : PostboxCoding, Equatable {
+    let emoji: String
+    let modifier: String
+    init(emoji: String, modifier: String) {
+        self.emoji = emoji
+        self.modifier = modifier
+    }
+    func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeString(emoji, forKey: "e")
+        encoder.encodeString(modifier, forKey: "m")
+    }
+    
+    init(decoder: PostboxDecoder) {
+         self.emoji = decoder.decodeStringForKey("e", orElse: "")
+         self.modifier = decoder.decodeStringForKey("m", orElse: "")
+    }
+}
+
 class RecentUsedEmoji: PreferencesEntry, Equatable {
     let emojies:[String]
-    let skinModifiers:[String]
-    init(emojies:[String], skinModifiers: [String]) {
+    let skinModifiers:[EmojiSkinModifier]
+    init(emojies:[String], skinModifiers: [EmojiSkinModifier]) {
         self.emojies = emojies
         self.skinModifiers = skinModifiers
     }
@@ -28,14 +46,15 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
         var isset:[String: String] = [:]
         var list:[String] = []
         for emoji in emojies {
-            if isset[emoji] == nil {
+            if isset[emoji] == nil, emoji != "�" {
                 list.append(emoji)
                 isset[emoji] = emoji
             }
         }
         self.emojies = list
         
-        self.skinModifiers = decoder.decodeStringArrayForKey("sm")
+        self.skinModifiers = decoder.decodeObjectForKey("sm_new", decoder: {EmojiSkinModifier(decoder: $0)}) as? [EmojiSkinModifier] ?? []
+        
     }
     
     
@@ -50,7 +69,7 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
     
     public func encode(_ encoder: PostboxEncoder) {
         encoder.encodeStringArray(emojies, forKey: "e")
-        encoder.encodeStringArray(skinModifiers, forKey: "sm")
+        encoder.encodeObjectArray(skinModifiers, forKey: "sm_new")
     }
 }
 
@@ -70,7 +89,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
             }
             
             for emoji in list.reversed() {
-                let emoji = emoji.emojiString
+                let emoji = emoji.emojiString.emojiUnmodified
                 if !emoji.isEmpty {
                     if let index = emojies.index(of: emoji) {
                         emojies.remove(at: index)
@@ -87,25 +106,17 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
 func modifySkinEmoji(_ emoji:String, postbox: Postbox) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
-            if let settings = (entry as? RecentUsedEmoji) {
-                var skinModifiers = settings.skinModifiers
-                var index:Int? = nil
-                for i in 0 ..< skinModifiers.count {
-                    let local = skinModifiers[i]
-                    if emoji.emojiUnmodified == local.emojiUnmodified {
-                        index = i
-                    }
-                }
-                
-                if let index = index {
-                    skinModifiers[index] = emoji
-                } else {
-                    skinModifiers.append(emoji)
-                }
-                return RecentUsedEmoji(emojies: settings.emojies, skinModifiers: skinModifiers)
-            }
+            let settings = (entry as? RecentUsedEmoji) ?? RecentUsedEmoji.defaultSettings
+            var skinModifiers = settings.skinModifiers
+            let index:Int? = skinModifiers.firstIndex(where: {$0.emoji == emoji.emojiUnmodified})
             
-            return entry
+            if let index = index {
+                skinModifiers[index] = EmojiSkinModifier(emoji: emoji.emojiUnmodified, modifier: emoji.emojiSkin)
+            } else {
+                skinModifiers.append(EmojiSkinModifier(emoji: emoji.emojiUnmodified, modifier: emoji.emojiSkin))
+            }
+            return RecentUsedEmoji(emojies: settings.emojies, skinModifiers: skinModifiers)
+            
         })
     }
 }

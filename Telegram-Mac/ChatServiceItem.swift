@@ -109,7 +109,7 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                        attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
+                        attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     
                 case let .photoUpdated(image):
@@ -124,7 +124,7 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                        attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
+                        attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     self.image = image
                     
@@ -152,7 +152,7 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                        attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
+                        attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                     
                 case .joinedByLink:
@@ -182,7 +182,7 @@ class ChatServiceItem: ChatRowItem {
                             }
                             let range = attributedString.string.nsstring.range(of: authorName)
                             attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                            attributedString.addAttribute(NSAttributedStringKey.font, value: NSFont.medium(theme.fontSize), range: range)
+                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
                 case .historyScreenshot:
@@ -283,7 +283,7 @@ class ChatServiceItem: ChatRowItem {
         
         
         text = TextViewLayout(attributedString, truncationType: .end, cutout: nil, alignment: .center)
-        
+        text.mayItems = false
         text.interactions = globalLinkExecutor
         super.init(initialSize, chatInteraction, entry, downloadSettings)
         self.account = account

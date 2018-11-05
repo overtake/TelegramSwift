@@ -38,7 +38,7 @@ final class InstantPageTextLine {
     func linkAt(point: NSPoint) -> RichText? {
         let index: CFIndex = CTLineGetStringIndexForPosition(line, point)
         if index >= 0 && index < attributedString.length {
-            return attributedString.attribute(NSAttributedStringKey.link, at: index, effectiveRange: nil) as? RichText
+            return attributedString.attribute(NSAttributedString.Key.link, at: index, effectiveRange: nil) as? RichText
         }
         return nil
     }
@@ -77,7 +77,7 @@ final class InstantPageTextLine {
         var range = NSMakeRange(startIndex, 1)
         let char:NSString = attributedString.string.nsstring.substring(with: range) as NSString
         var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        let check = attributedString.attribute(NSAttributedStringKey.link, at: range.location, effectiveRange: &effectiveRange)
+        let check = attributedString.attribute(NSAttributedString.Key.link, at: range.location, effectiveRange: &effectiveRange)
         if check != nil && effectiveRange.location != NSNotFound {
             return attributedString.attributedSubstring(from: effectiveRange)
         }
@@ -305,7 +305,7 @@ func layoutTextItemWithString(_ string: NSAttributedString, boundingWidth: CGFlo
     }
     
     var lines: [InstantPageTextLine] = []
-    guard let font = string.attribute(NSAttributedStringKey.font, at: 0, effectiveRange: nil) as? NSFont else {
+    guard let font = string.attribute(NSAttributedString.Key.font, at: 0, effectiveRange: nil) as? NSFont else {
         return InstantPageTextItem(frame: CGRect(), lines: [])
     }
     

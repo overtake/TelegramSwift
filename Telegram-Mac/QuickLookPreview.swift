@@ -109,7 +109,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
                         return
                     }
                     strongSelf.item = item
-                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: nil, repeats: false), forMode: RunLoopMode.modalPanelRunLoopMode)
+                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: nil, repeats: false), forMode: RunLoop.Mode.modalPanel)
                 }
             }
         }))

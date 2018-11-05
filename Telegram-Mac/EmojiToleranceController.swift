@@ -39,7 +39,7 @@ private class EmojiTolerance : View {
         add(emoji)
         
         for modifier in modifiers {
-           add("\(emoji)\(modifier)")
+           add(emoji.emojiWithSkinModifier(modifier))
         }
         
     }

@@ -168,6 +168,7 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 - (BOOL) canTransformInputText;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
+- (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
 @end
 
 
@@ -378,9 +379,9 @@ typedef NS_ENUM(NSUInteger, YTVimeoVideoQuality) {
 
 @property (nonatomic, readonly) NSDictionary *metaData;
 
--(NSURL *)highestQualityStreamURL;
+-(NSURL * __nullable)highestQualityStreamURL;
 
--(NSURL *)lowestQualityStreamURL;
+-(NSURL * __nullable)lowestQualityStreamURL;
 
 @property (nonatomic, readonly, nullable) NSURL *HTTPLiveStreamURL;
 
@@ -564,7 +565,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 
 -(id)initWithProxy:(CProxy * _Nullable)proxy;
 
--(void)startTransmissionIfNeeded:(bool)outgoing connection:(TGCallConnection *)connection;
+-(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p connection:(TGCallConnection *)connection;
 
 -(void)mute;
 -(void)unmute;

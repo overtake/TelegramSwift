@@ -16,7 +16,9 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate private(set) var textLayout:TextViewLayout?
     fileprivate private(set) var file:TelegramMediaFile!
     fileprivate private(set) var thumbResource: ExternalMusicAlbumArtResource!
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
+    fileprivate let isCompactPlayer: Bool
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false) {
+        self.isCompactPlayer = isCompactPlayer
         super.init(initialSize,interface,account,object)
         
         file = message.media[0] as! TelegramMediaFile
@@ -38,6 +40,14 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     
     override func viewClass() -> AnyClass {
         return PeerMediaMusicRowView.self
+    }
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        if isCompactPlayer {
+            return .single([])
+        } else {
+            return super.menuItems(in: location)
+        }
     }
     
 }
@@ -198,7 +208,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                 }))
                 checkState()
             }
-
+            needsLayout = true
         }
     }
     

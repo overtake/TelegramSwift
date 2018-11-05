@@ -14,15 +14,35 @@
 			<key>orderHint</key>
 			<integer>12</integer>
 		</dict>
+		<key>Hockeyapp.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>23</integer>
+		</dict>
 		<key>Release.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>13</integer>
 		</dict>
+		<key>Release.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>24</integer>
+		</dict>
 		<key>Telegram.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
+		</dict>
+		<key>Telegram.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>21</integer>
+		</dict>
+		<key>TelegramShare 2.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>22</integer>
 		</dict>
 		<key>TelegramShare.xcscheme</key>
 		<dict>
@@ -35,22 +55,22 @@
 		<key>C232EA561E1D041A00C4D38C</key>
 		<dict>
 			<key>primary</key>
-			<true />
+			<true/>
 		</dict>
 		<key>C232EA741E1D058700C4D38C</key>
 		<dict>
 			<key>primary</key>
-			<true />
+			<true/>
 		</dict>
 		<key>C232EA901E1D07E700C4D38C</key>
 		<dict>
 			<key>primary</key>
-			<true />
+			<true/>
 		</dict>
 		<key>D098C7141D7E175A007784E4</key>
 		<dict>
 			<key>primary</key>
-			<true />
+			<true/>
 		</dict>
 	</dict>
 </dict>

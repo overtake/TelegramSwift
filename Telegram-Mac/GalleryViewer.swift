@@ -24,7 +24,10 @@ final class GalleryInteractions {
     var openMessage:()->Void = {}
     var showThumbsControl:(View, Bool)->Void = {_, _ in}
     var hideThumbsControl:(View, Bool)->Void = {_, _ in}
-
+    
+    var zoomIn:()->Void = {}
+    var zoomOut:()->Void = {}
+    var rotateLeft:()->Void = {}
 }
 private(set) var viewer:GalleryViewer?
 
@@ -161,6 +164,30 @@ final class GalleryBackgroundView : View {
 }
 
 
+
+private final class GalleryTouchBarController : ViewController {
+    
+    private let interactions: GalleryInteractions
+    private let selectedItemChanged: (@escaping(MGalleryItem) -> Void)->Void
+    private let transition: (@escaping(UpdateTransition<MGalleryItem>, MGalleryItem?) -> Void) -> Void
+    init(interactions: GalleryInteractions, selectedItemChanged: @escaping(@escaping(MGalleryItem) -> Void) ->Void, transition: @escaping(@escaping(UpdateTransition<MGalleryItem>, MGalleryItem?) -> Void) ->Void) {
+        self.interactions = interactions
+        self.selectedItemChanged = selectedItemChanged
+        self.transition = transition
+        super.init()
+    }
+    private var temporaryTouchBar: Any?
+    
+    @available(OSX 10.12.2, *)
+    override func makeTouchBar() -> NSTouchBar? {
+        if temporaryTouchBar == nil {
+            temporaryTouchBar = GalleryTouchBar(interactions: interactions, selectedItemChanged: selectedItemChanged, transition: transition)
+        }
+        return temporaryTouchBar as? NSTouchBar
+    }
+}
+
+
 class GalleryViewer: NSResponder {
     
     fileprivate var viewCache:[AnyHashable: NSView] = [:]
@@ -178,7 +205,7 @@ class GalleryViewer: NSResponder {
     private let operationDisposable = MetaDisposable()
     private(set) weak var delegate:InteractionContentViewProtocol?
     private let account:Account
-    
+    private let touchbarController: GalleryTouchBarController
     private let indexDisposable:MetaDisposable = MetaDisposable()
     
     
@@ -195,22 +222,25 @@ class GalleryViewer: NSResponder {
         self.delegate = delegate
         self.type = type
         self.reversed = reversed
-        
         self.contentInteractions = contentInteractions
         if let screen = NSScreen.main {
             let bounds = NSMakeRect(0, 0, screen.frame.width, screen.frame.height)
             self.window = Window(contentRect: bounds, styleMask: [.borderless], backing: .buffered, defer: false, screen: screen)
             self.window.contentView?.wantsLayer = true
             
-            self.window.level = .screenSaver
+
+            self.window.level = .popUpMenu
             self.window.isOpaque = false
-          
             self.window.backgroundColor = .clear
             self.window.appearance = theme.appearance
             backgroundView.backgroundColor = NSColor.black.withAlphaComponent(0.8)
             backgroundView.frame = bounds
             
             self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window, reversed: reversed)
+            //, selectedItemChanged: selectedItemChanged, transition: transition
+            self.touchbarController = GalleryTouchBarController(interactions: interactions, selectedItemChanged: pager.selectedItemChanged, transition: pager.transition)
+            self.window.rootViewController = touchbarController
+
         } else {
             fatalError("main screen not found for MediaViewer")
         }
@@ -269,6 +299,15 @@ class GalleryViewer: NSResponder {
             return self?.contextMenu
         }
         
+        interactions.zoomIn = { [weak self] in
+            self?.pager.zoomIn()
+        }
+        interactions.zoomOut = { [weak self] in
+            self?.pager.zoomOut()
+        }
+        interactions.rotateLeft = { [weak self] in
+            self?.pager.rotateLeft()
+        }
         window.set(handler: interactions.dismiss, with:self, for: .Space)
         window.set(handler: interactions.dismiss, with:self, for: .Escape)
         
@@ -291,12 +330,21 @@ class GalleryViewer: NSResponder {
         }, with: self, for: .Equal)
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.pager.rotateLeft()
+            return .invoked
+        }, with: self, for: .R, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.saveAs()
             return .invoked
         }, with: self, for: .S, priority: .high, modifierFlags: [.command])
         
         window.copyhandler = { [weak self] in
             self?.copy(nil)
+        }
+        
+        window.firstResponderFilter = { responder in
+            return nil
         }
         
         self.controls = GalleryModernControls(account, interactions: interactions, frame: NSMakeRect(0, -150, window.frame.width, 150), thumbsControl: pager.thumbsControl)
@@ -312,6 +360,10 @@ class GalleryViewer: NSResponder {
         self.pager.view.addSubview(self.backgroundView)
         self.window.contentView?.addSubview(self.pager.view)
         self.window.contentView?.addSubview(self.controls.view)
+        
+        if #available(OSX 10.12.2, *) {
+            window.touchBar = window.makeTouchBar()
+        }
     }
     
     @objc open func windowDidBecomeKey() {
@@ -380,7 +432,7 @@ class GalleryViewer: NSResponder {
             var deleted:[Int] = []
             
             var currentIndex: Int = 0
-
+            var foundIndex: Bool = peerId.namespace == Namespaces.Peer.CloudUser
             
             if !photos.isEmpty {
                 
@@ -395,20 +447,22 @@ class GalleryViewer: NSResponder {
                         case let .photoUpdated(updated):
                             if photo.image.id == updated?.id {
                                 currentIndex = i
+                                foundIndex = true
                             }
-                        default:
+                        default: 
                             break
                         }
                     }
                 }
-                
+                var index: Int = foundIndex ? 0 : 1
                 for i in 0 ..< photos.count {
-                    if currentIndex == i {
+                    if currentIndex == i && foundIndex {
                         deleted.append(i)
                         inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
                     } else {
-                        inserted.append((i, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
+                        inserted.append((index, MGalleryPeerPhotoItem(account, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
                     }
+                    index += 1
                 }
             }
             
@@ -572,7 +626,7 @@ class GalleryViewer: NSResponder {
                     return .single((UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)) |> deliverOnMainQueue
 
                 case .history:
-                    return view |> mapToQueue { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
+                    return view |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
@@ -581,30 +635,32 @@ class GalleryViewer: NSResponder {
                                 return true
                             }
                         }
-                        let previous = previous.swap(entries)
+                        let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, account: account, pagerSize: pagerSize) |> deliverOnMainQueue |> map { transition in
                             _ = indexes.swap((view.earlierId, view.laterId))
                             return (transition,previous, entries)
                         }
                     }
                 case .secret:
-                    return account.postbox.messageView(index.id) |> mapToQueue { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
+                    return account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
                             entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(isAdmin: false), nil, nil))
                         }
-                        let previous = previous.swap(entries)
+                        let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, account: account, pagerSize: pagerSize) |> map { transition in
                             return (transition,previous, entries)
-                        } |> deliverOnMainQueue
+                        }
                     }
                 case .profile:
                     return .complete()
                 }
               
-            }
-            |> map { [weak self] transition, previous, new in
+            }  |> deliverOnMainQueue
+            |> map { [weak self] transition, prev, new in
                 if let strongSelf = self {
+                    
+                    _ = previous.swap(new)
                     
                     let new = reversed ? new.reversed() : new
                     
@@ -613,7 +669,7 @@ class GalleryViewer: NSResponder {
                     var id:MessageId = message.id
                     let index = currentIndex.modify({$0})
                     if let index = index {
-                        id = previous[index].message!.id
+                        id = prev[index].message!.id
                     }
 
                     
@@ -648,7 +704,6 @@ class GalleryViewer: NSResponder {
                     }
                     strongSelf.ready.set(.single(true))
                 }
-                
             }
         
         
@@ -731,7 +786,7 @@ class GalleryViewer: NSResponder {
         }
         
         items.append(SPopoverItem(L10n.navigationClose, { [weak self] in
-            self?.close()
+            _ = self?.interactions.dismiss()
         }))
         
         showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), inset:NSMakePoint((-125 + 14), 0))
@@ -896,7 +951,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView.change(opacity: 0, duration: 0.15, timingFunction: kCAMediaTimingFunctionSpring)
+            backgroundView.change(opacity: 0, duration: 0.15, timingFunction: CAMediaTimingFunctionName.spring)
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {
@@ -937,57 +992,8 @@ class GalleryViewer: NSResponder {
         readyDispose.dispose()
     }
     
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        
-        let touchBar = NSTouchBar()
-        touchBar.delegate = self
-        touchBar.customizationIdentifier = NSTouchBar.CustomizationIdentifier(rawValue: "Gallery")
-        touchBar.defaultItemIdentifiers = [.slide]
-        touchBar.customizationAllowedItemIdentifiers = [.slide]
-        
-        return touchBar
-    }
-    
 }
 
-@available(OSX 10.12.2, *)
-fileprivate extension NSTouchBarItem.Identifier {
-    static let slide = NSTouchBarItem.Identifier("org.telegram.TouchBar.Gallery")
-}
-
-@available(OSX 10.12.2, *)
-extension GalleryViewer : NSTouchBarDelegate {
-    
-    @available(OSX 10.12.2, *)
-    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
-        
-        switch identifier {
-            
-        case .slide:
-            
-            let popoverItem = NSPopoverTouchBarItem(identifier: identifier)
-            popoverItem.customizationLabel = "Font Size"
-            popoverItem.collapsedRepresentationLabel = "Font Size"
-            
-            let secondaryTouchBar = NSTouchBar()
-            secondaryTouchBar.delegate = self
-            secondaryTouchBar.defaultItemIdentifiers = [.flexibleSpace];
-            
-            // We can setup a different NSTouchBar instance for popoverTouchBar and pressAndHoldTouchBar property
-            // Here we just use the same instance.
-            //
-            popoverItem.pressAndHoldTouchBar = secondaryTouchBar
-            popoverItem.popoverTouchBar = secondaryTouchBar
-            
-            return nil
-            
-            
-        default:
-            return nil
-        }
-    }
-}
 
 func closeGalleryViewer(_ animated: Bool) {
     viewer?.close(animated)

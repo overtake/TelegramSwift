@@ -356,7 +356,7 @@ class ChatMediaItem: ChatRowItem {
                 let text = captionLayout.attributedString.string
                 items.insert(ContextMenuItem(tr(L10n.textCopy), handler: {
                     copyToClipboard(text)
-                }), at: 1)
+                }), at: min(items.count, 1))
                 
                 if let view = self?.view as? ChatRowView, let textView = view.captionView, let window = textView.window {
                     let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -431,6 +431,10 @@ class ChatMediaView: ChatRowView {
             
             contentNode?.backgroundColor = contentColor
         }
+    }
+    
+    override func shakeView() {
+        contentNode?.shake()
     }
     
     

@@ -51,6 +51,8 @@ class PeerMediaControllerView : View {
         needsLayout = true
     }
     
+
+    
     func changeState(selectState:Bool, animated:Bool) {
         assert(mainView != nil)
         
@@ -93,9 +95,8 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private var interactions:ChatInteraction
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
     private let loadFwdMessagesDisposable = MetaDisposable()
-    
-    
-    
+    private let loadSelectionMessagesDisposable = MetaDisposable()
+    private let currentModeValue:ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
     init(account:Account, peerId:PeerId, tagMask:MessageTags) {
         self.peerId = peerId
         self.tagMask = tagMask
@@ -108,6 +109,19 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
         
         super.init(account)
+    }
+    
+    private var temporaryTouchBar: Any?
+    
+    @available(OSX 10.12.2, *)
+    override func makeTouchBar() -> NSTouchBar? {
+        if temporaryTouchBar == nil {
+            temporaryTouchBar = PeerMediaTouchBar(chatInteraction: interactions, currentMode: currentModeValue.get(), toggleMode: { [weak self] value in
+                self?.toggle(with: value, animated: false)
+                self?.genericView.segmentControl.set(selected: value.rawValue)
+            })
+        }
+        return temporaryTouchBar as? NSTouchBar
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -150,6 +164,29 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
+            
+            let account = self.account
+            if value.selectionState != oldValue.selectionState {
+                if let selectionState = value.selectionState {
+                    let ids = Array(selectionState.selectedIds)
+                    loadSelectionMessagesDisposable.set((account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
+                        var canDelete:Bool = !ids.isEmpty
+                        var canForward:Bool = !ids.isEmpty
+                        for message in messages {
+                            if !canDeleteMessage(message, account: account) {
+                                canDelete = false
+                            }
+                            if !canForwardMessage(message, account: account) {
+                                canForward = false
+                            }
+                        }
+                        self?.interactions.update({$0.withUpdatedBasicActions((canDelete, canForward))})
+                    }))
+                } else {
+                    interactions.update({$0.withUpdatedBasicActions((false, false))})
+                }
+            }
+            
             if (value.state == .selecting) != (oldValue.state == .selecting) {
                 self.state = value.state == .selecting ? .Edit : .Normal
                 genericView.changeState(selectState: value.state == .selecting, animated: animated)
@@ -318,7 +355,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     }
     
     private func toggle(with mode:PeerMediaCollectionMode, animated:Bool = false) {
-        
+        currentModeValue.set(mode)
         if self.mode != mode {
             self.mode = mode
             if mode == .photoOrVideo {
@@ -350,6 +387,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     deinit {
         messagesActionDisposable.dispose()
         loadFwdMessagesDisposable.dispose()
+        loadSelectionMessagesDisposable.dispose()
     }
     
     override func updateLocalizationAndTheme() {

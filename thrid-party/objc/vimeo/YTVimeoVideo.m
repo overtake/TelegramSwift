@@ -115,22 +115,20 @@ NSString *const YTVimeoVideoErrorDomain = @"YTVimeoVideoErrorDomain";
     });
 }
 
-#pragma mark -
--(NSURL *)highestQualityStreamURL{
+-(NSURL * __nullable)highestQualityStreamURL{
     
     NSURL *url = self.streamURLs[@(YTVimeoVideoQualityHD1080)] ?: self.streamURLs[@(YTVimeoVideoQualityHD720)]?: self.streamURLs[@(YTVimeoVideoQualityMedium540)]?: self.streamURLs [@(YTVimeoVideoQualityMedium480)]?: self.streamURLs[@(YTVimeoVideoQualityMedium360)]?:self.streamURLs[@(YTVimeoVideoQualityLow270)];
     
     return url;
 }
 
--(NSURL *)lowestQualityStreamURL{
+-(NSURL * __nullable)lowestQualityStreamURL{
     
     NSURL *url = self.streamURLs[@(YTVimeoVideoQualityLow270)] ?: self.streamURLs[@(YTVimeoVideoQualityMedium360)] ?: self.streamURLs [@(YTVimeoVideoQualityMedium480)]?: self.streamURLs[@(YTVimeoVideoQualityMedium540)]?: self.streamURLs[@(YTVimeoVideoQualityHD720)]?:self.streamURLs[@(YTVimeoVideoQualityHD1080)];
     
     return url;
 }
 
-#pragma mark - NSObject
 
 - (BOOL) isEqual:(id)object
 {

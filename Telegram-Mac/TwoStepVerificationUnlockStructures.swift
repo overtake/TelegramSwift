@@ -438,7 +438,7 @@ enum TwoStepVerificationPasswordEntryMode {
 
 struct TwoStepVerificationPasswordEntryResult {
     let password: String
-    let pendingEmailPattern: String?
+    let pendingEmailPattern: TwoStepVerificationPendingEmail?
 }
 
 

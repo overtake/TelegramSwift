@@ -12,6 +12,72 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
+private class ChatListDraggingContainerView : View {
+    fileprivate var item: ChatListRowItem?
+    fileprivate var activeDragging:Bool = false
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if activeDragging {
+            activeDragging = false
+            needsDisplay = true
+            if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
+                _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak item] path in
+                    guard let item = item else {return}
+                    item.account.context.mainNavigation?.push(ChatController(account: item.account, chatLocation: .peer(item.peerId), initialAction: .files(list: [path], behavior: .automatic)))
+                })
+            } else {
+                let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
+                if let item = item, let context = item.account.applicationContext as? TelegramApplicationContext, let list = list {
+                    let list = list.filter { path -> Bool in
+                        if let size = fs(path) {
+                            return size <= 1500 * 1024 * 1024
+                        }
+                        return false
+                    }
+                    if !list.isEmpty {
+                        context.mainNavigation?.push(ChatController(account: item.account, chatLocation: .peer(item.peerId), initialAction: .files(list: list, behavior: .automatic)))
+                    }
+                }
+            }
+            
+            
+            return true
+        }
+        return false
+    }
+    
+    override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if let item = item, let peer = item.peer, peer.canSendMessage, mouseInside() {
+            activeDragging = true
+            needsDisplay = true
+        }
+        superview?.draggingEntered(sender)
+        return .generic
+        
+    }
+    
+    override public func draggingExited(_ sender: NSDraggingInfo?) {
+        activeDragging = false
+        needsDisplay = true
+        superview?.draggingExited(sender)
+    }
+    
+    public override func draggingEnded(_ sender: NSDraggingInfo) {
+        activeDragging = false
+        needsDisplay = true
+        superview?.draggingEnded(sender)
+    }
+}
+
 class ChatListRowView: TableRowView, ViewDisplayDelegate {
     
     private let swipingLeftView: View = View()
@@ -22,12 +88,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
     private var badgeView:View?
     private var activitiesModel:ChatActivitiesModel?
     private var photo:AvatarControl = AvatarControl(font: .avatar(22))
-    private var activeDragging:Bool = false
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
     private var animatedView: ChatRowAnimateView?
-    private let containerView: View = View()
+    private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
     var endSwipingState: SwipeDirection? {
         didSet {
             if let oldValue = oldValue, endSwipingState == nil  {
@@ -134,7 +199,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         animation.toValue = 0.5
         animation.autoreverses = true
         animation.isRemovedOnCompletion = true
-        animation.fillMode = kCAFillModeForwards
+        animation.fillMode = CAMediaTimingFillMode.forwards
         
         animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
             if completed {
@@ -150,10 +215,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
     
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
+            if item.isHighlighted && !item.isSelected {
+                return theme.colors.grayForeground
+            }
             if item.account.context.layout == .single, item.isSelected {
                 return theme.chatList.singleLayoutSelectedBackgroundColor
             }
-            if !item.isSelected && activeDragging {
+            if !item.isSelected && containerView.activeDragging {
                 return theme.chatList.activeDraggingBackgroundColor
             }
             if item.pinnedType != .none && !item.isSelected {
@@ -279,16 +347,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         photo.frame = NSMakeRect(10, 8, 50, 50)
         containerView.addSubview(photo)
         addSubview(containerView)
-        registerForDraggedTypes([.tiff, .string, .kUrl, .kFilenames])
         
         containerView.displayDelegate = self
         containerView.frame = bounds
         
         
-       
-        
-
-
     }
     
     required init?(coder: NSCoder) {
@@ -300,44 +363,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         super.mouseDown(with: event)
     }
     
-    override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        if activeDragging {
-            activeDragging = false
-            needsDisplay = true
-            let list = sender.draggingPasteboard().propertyList(forType: .kFilenames) as? [String]
-            if let item = item as? ChatListRowItem, let context = item.account.applicationContext as? TelegramApplicationContext, let list = list {
-                let list = list.filter { path -> Bool in
-                    if let size = fs(path) {
-                        return size <= 1500 * 1024 * 1024
-                    }
-                    return false
-                }
-                if !list.isEmpty {
-                    context.mainNavigation?.push(ChatController(account: item.account, chatLocation: .peer(item.peerId), initialAction: .files(list: list, behavior: .automatic)))
-                }
-            }
-            return true
-        }
-        return false
-    }
-    
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if let item = item as? ChatListRowItem, let peer = item.peer, peer.canSendMessage {
-            activeDragging = true
-            needsDisplay = true
-        }
+        needsDisplay = true
+        updateColors()
         return .generic
-
+        
     }
     
     override public func draggingExited(_ sender: NSDraggingInfo?) {
-        activeDragging = false
         needsDisplay = true
+        updateColors()
     }
     
-    public override func draggingEnded(_ sender: NSDraggingInfo?) {
-        activeDragging = false
+    public override func draggingEnded(_ sender: NSDraggingInfo) {
         needsDisplay = true
+        updateColors()
     }
 
     override func updateColors() {
@@ -350,7 +390,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
          super.set(item:item, animated:animated)
                 
          if let item = self.item as? ChatListRowItem {
-            
+            containerView.item = item
             if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
                 self.animatedView?.removeFromSuperview()
                 self.animatedView = nil
@@ -648,13 +688,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
                 
                 if animateOnceAfterDelta {
                     animateOnceAfterDelta = false
-                    action.layer?.animatePosition(from: NSMakePoint(-(swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                    action.layer?.animatePosition(from: NSMakePoint(-(swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
                 }
                 action.setFrameOrigin(NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY))
             } else {
                 if !animateOnceAfterDelta {
                     animateOnceAfterDelta = true
-                    action.layer?.animatePosition(from: NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                    action.layer?.animatePosition(from: NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
                 }
                 action.setFrameOrigin(NSMakePoint(0, action.frame.minY))
                 
@@ -677,13 +717,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
                 if delta + subviews[1].frame.maxX < -frame.midX {
                     if animateOnceAfterDelta {
                         animateOnceAfterDelta = false
-                        action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                        action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
                     }
                     action.setFrameOrigin(NSMakePoint(subviews[1].frame.maxX, action.frame.minY))
                 } else {
                     if !animateOnceAfterDelta {
                         animateOnceAfterDelta = true
-                        action.layer?.animatePosition(from: NSMakePoint(-(swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, removeOnCompletion: true, additive: true)
+                        action.layer?.animatePosition(from: NSMakePoint(-(swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
                     }
                     action.setFrameOrigin(NSMakePoint((swipingRightView.frame.width - action.frame.width), action.frame.minY))
                 }

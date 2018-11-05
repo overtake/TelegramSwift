@@ -133,6 +133,8 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
             text = "undefined error"
         case .phoneBanned:
             text = "PHONE BANNED"
+        case .timeout:
+            text = "timeout"
         }
         errorLabel.state.set(.single(.error(text)))
     }
@@ -193,18 +195,18 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func controlTextDidBeginEditing(_ obj: Notification) {
+    func controlTextDidBeginEditing(_ obj: Notification) {
         codeText.textView?.backgroundColor = theme.colors.background
         numberText.textView?.backgroundColor = theme.colors.background
         codeText.textView?.insertionPointColor = theme.colors.indicatorColor
         numberText.textView?.insertionPointColor = theme.colors.indicatorColor
     }
     
-    override func controlTextDidEndEditing(_ obj: Notification) {
+    func controlTextDidEndEditing(_ obj: Notification) {
         
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         
         
         if let field = obj.object as? NSTextField {

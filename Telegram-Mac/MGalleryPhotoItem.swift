@@ -94,14 +94,28 @@ class MGalleryPhotoItem: MGalleryItem {
         let media = self.media
         let secureIdAccessContext = self.secureIdAccessContext
         
-        let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, NoError> in
-            if let strongSelf = self {
-                return strongSelf.smallestValue(for: size)
+        let result = combineLatest(size.get(), rotate.get()) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
+            guard let `self` = self else {return .complete()}
+            
+            return self.smallestValue(for: size) |> map { size in
+                var newSize = size
+                if let orientation = orientation {
+                    if orientation == .right || orientation == .left {
+                        newSize = NSMakeSize(newSize.height, newSize.width)
+                    }
+                }
+                return (newSize, orientation)
             }
-            return .complete()
-            } |> distinctUntilChanged |> mapToSignal { size -> Signal<CGImage?, NoError> in
-                return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext) |> deliverOn(account.graphicsThreadPool) |> map { transform in
-                    return transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            
+        } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
+                return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext)
+                |> deliverOn(account.graphicsThreadPool)
+                |> map { transform in
+                    let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                    if let orientation = orientation {
+                        return image?.createMatchingBackingDataWithImage(orienation: orientation)
+                    }
+                    return image
                 }
         }
         
@@ -110,7 +124,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 return .single(link(path:resource.path, ext:kMediaImageExt)!)
             }
             return .never()
-            })
+        })
         
         self.image.set(result |> deliverOnMainQueue)
         

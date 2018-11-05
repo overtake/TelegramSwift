@@ -345,10 +345,12 @@ class PeerInfoController: EditableViewController<TableView> {
                     
             } |> deliverOnMainQueue
         }
-        
+                
         disposable.set(transition.start(next: { [weak self] (peerView, transition) in
             
             _ = self?.peerView.swap(peerView)
+            
+            
             
             let editable:Bool
             if let peer = peerViewMainPeer(peerView) {
@@ -375,6 +377,7 @@ class PeerInfoController: EditableViewController<TableView> {
             
             self?.readyOnce()
             self?.genericView.merge(with:transition)
+            
         }))
         
         if peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -383,6 +386,8 @@ class PeerInfoController: EditableViewController<TableView> {
             }
             updatedChannelParticipants.set(fetchParticipants.start())
         }
+        
+       
         
     }
     

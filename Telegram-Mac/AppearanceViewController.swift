@@ -20,7 +20,8 @@ private final class AppearanceViewArguments {
     let selectAccentColor:()->Void
     let selectChatBackground:()->Void
     let openAutoNightSettings:()->Void
-    init(account:Account, togglePalette: @escaping(ColorPalette, TelegramWallpaper)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void) {
+    let toggleFollowSystemAppearance:(Bool)->Void
+    init(account:Account, togglePalette: @escaping(ColorPalette, TelegramWallpaper)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void) {
         self.account = account
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -28,6 +29,7 @@ private final class AppearanceViewArguments {
         self.selectAccentColor = selectAccentColor
         self.selectChatBackground = selectChatBackground
         self.openAutoNightSettings = openAutoNightSettings
+        self.toggleFollowSystemAppearance = toggleFollowSystemAppearance
     }
 }
 
@@ -37,10 +39,11 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     case accentColor(Int32, Int32, NSColor)
     case chatBackground(Int32, Int32)
     case autoNight(Int32, Int32)
+    case followSystemAppearance(Int32, Int32, Bool)
     case section(Int32)
     case preview(Int32, Int32, ChatHistoryEntry)
     case font(Int32, Int32, Int32, [Int32])
-    case description(Int32, Int32, String)
+    case description(Int32, Int32, String, Bool)
     
     var stableId: Int32 {
         switch self {
@@ -54,13 +57,15 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return index
         case .autoNight(_, let index):
             return index
+        case .followSystemAppearance(_, let index, _):
+            return index
         case .section(let section):
             return section + 1000
         case .font(_, let index, _, _):
             return index
         case let .preview(_, index, _):
             return index
-        case let .description(section, index, _):
+        case let .description(section, index, _, _):
             return (section * 1000) + (index + 1) * 1000
         }
     }
@@ -77,13 +82,15 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return (section * 1000) + index
         case let .autoNight(section, index):
             return (section * 1000) + index
+        case let .followSystemAppearance(section, index, _):
+            return (section * 1000) + index
         case .section(let section):
             return (section + 1) * 1000 - section
         case let .font(section, index, _, _):
             return (section * 1000) + index
         case let .preview(section, id, _):
             return (section * 1000) + id
-        case let .description(section, index, _):
+        case let .description(section, index, _, _):
             return (section * 1000) + index + 2
         }
     }
@@ -110,12 +117,16 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.appearanceSettingsAutoNight, type: .next, action: {
                 arguments.openAutoNightSettings()
             })
+        case let .followSystemAppearance(_, _, value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.appearanceSettingsFollowSystemAppearance, type: .switchable(value), action: {
+                arguments.toggleFollowSystemAppearance(!value)
+            })
         case let .accentColor(_, _, color):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(color), action: {
                 arguments.selectAccentColor()
             })
-        case .description(_, _, let text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+        case .description(_, _, let text, let haveSeparator):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: haveSeparator, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, backgroundColor: theme.colors.background)
         case let .font(_, _, current, sizes):
@@ -129,69 +140,12 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         }
     }
 }
-private func ==(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
-    switch lhs {
-    case let .colorPalette(lhsSection, lhsIndex, lhsSelected, lhsPalette, lhsWallpaper):
-        if case let .colorPalette(rhsSection, rhsIndex, rhsSelected, rhsPalette, rhsWallpaper) = rhs {
-            return lhsSection == rhsSection && lhsIndex == rhsIndex && lhsSelected == rhsSelected && lhsPalette == rhsPalette && lhsWallpaper == rhsWallpaper
-        } else {
-            return false
-        }
-    case let .chatView(section, index, selected, value):
-        if case .chatView(section, index, selected, value) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .accentColor(section, index, color):
-        if case .accentColor(section, index, color) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .chatBackground(section, index):
-        if case .chatBackground(section, index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .autoNight(section, index):
-        if case .autoNight(section, index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .section(let section):
-        if case .section(section) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .preview(section, index, entry):
-        if case .preview(section, index, entry) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .font(section, index, current, _):
-        if case .font(section, index, current, _) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .description(section, index, description):
-        if case .description(section, index, description) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
+
 private func <(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
     return lhs.index < rhs.index
 }
 
-private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer: Peer) -> [AppearanceViewEntry] {
+private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSettings: ThemePaletteSettings, selfPeer: Peer) -> [AppearanceViewEntry] {
     var entries:[AppearanceViewEntry] = []
     
     var sectionId:Int32 = 1
@@ -201,7 +155,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     
     var index: Int32 = 0
     
-    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsTextSizeHeader)))
+    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsTextSizeHeader, true))
     descIndex += 1
     
     let sizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
@@ -214,7 +168,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     sectionId += 1
     
     
-    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsChatPreviewHeader)))
+    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsChatPreviewHeader, true))
     descIndex += 1
     
     let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
@@ -247,78 +201,95 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
         index += 1
     }
     
-
+    if #available(OSX 10.14, *) {
+        if !settings.bubbled {
+            entries.append(.section(sectionId))
+            sectionId += 1
+        }
+        entries.append(.followSystemAppearance(sectionId, index, settings.followSystemAppearance))
+        index += 1
+    }
     
-    if settings.colors == whitePalette {
+    if !settings.followSystemAppearance {
+        if settings.colors == whitePalette {
+            
+            entries.append(.section(sectionId))
+            sectionId += 1
+            
+            entries.append(.accentColor(sectionId, index, theme.colors.blueUI))
+            index += 1
+        }
+        
+        
+        
         
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.accentColor(sectionId, index, theme.colors.blueUI))
+        entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsColorThemeHeader, true))
+        descIndex += 1
+        
+        
+        var installed:[String: ColorPalette] = [:]
+        
+        installed[whitePalette.name] = whitePalette
+        installed[nightBluePalette.name] = nightBluePalette
+        installed[dayClassic.name] = dayClassic
+        installed[darkPalette.name] = darkPalette
+        installed[mojavePalette.name] = darkPalette
+        
+        
+        entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .color(Int32(dayClassic.background.rgb))))
         index += 1
-    }
-    
-   
-    
-    
-    entries.append(.section(sectionId))
-    sectionId += 1
-    
-    entries.append(.description(sectionId, descIndex, tr(L10n.appearanceSettingsColorThemeHeader)))
-    descIndex += 1
-    
-    
-    var installed:[String: ColorPalette] = [:]
-
-    installed[whitePalette.name] = whitePalette
-    installed[nightBluePalette.name] = nightBluePalette
-    installed[dayClassic.name] = dayClassic
-    installed[darkPalette.name] = darkPalette
-    installed[mojavePalette.name] = darkPalette
-
-
-    entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .color(Int32(dayClassic.background.rgb))))
-    index += 1
-    
-    entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .color(Int32(whitePalette.background.rgb))))
-    index += 1
-    
-    entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
-    index += 1
-    
-//    entries.append(.colorPalette(sectionId, index, settings.colors == darkPalette, darkPalette, .color(Int32(darkPalette.background.rgb))))
-//    index += 1
-
-    
-    entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, .color(Int32(mojavePalette.background.rgb))))
-    index += 1
-
-    
-    var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")
-    let globalPalettes = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Palettes/".nsstring.expandingTildeInPath + "/"
-    paths += ((try? FileManager.default.contentsOfDirectory(atPath: globalPalettes)) ?? []).map({globalPalettes + $0})
-    
-    let palettes = paths.map{importPalette($0)}.filter{$0 != nil}.map{$0!}
-    
-    for palette in palettes {
-        if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
-            installed[palette.name] = palette
-            entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name, palette, .none))
+        
+        entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .color(Int32(whitePalette.background.rgb))))
+        index += 1
+        
+        entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
+        index += 1
+        
+        
+        entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, .color(Int32(mojavePalette.background.rgb))))
+        index += 1
+        
+        
+        var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")
+        let globalPalettes = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Palettes/".nsstring.expandingTildeInPath + "/"
+        paths += ((try? FileManager.default.contentsOfDirectory(atPath: globalPalettes)) ?? []).map({globalPalettes + $0})
+        
+        let palettes = paths.map{importPalette($0)}.filter{$0 != nil}.map{$0!}
+        
+        for palette in palettes {
+            if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
+                installed[palette.name] = palette
+                entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name, palette, .none))
+                index += 1
+            }
+        }
+        
+        if installed[settings.colors.name] == nil {
+            installed[settings.colors.name] = settings.colors
+            entries.append(.colorPalette(sectionId, index, true, settings.colors, settings.wallpaper))
             index += 1
         }
+    } else {
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == nightBluePalette.name, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
+        index += 1
+        
+        
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == mojavePalette.name, mojavePalette, .color(Int32(mojavePalette.background.rgb))))
+        index += 1
+        
+        entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDark, false))
+        descIndex += 1
     }
     
-    if installed[settings.colors.name] == nil {
-        installed[settings.colors.name] = settings.colors
-        entries.append(.colorPalette(sectionId, index, true, settings.colors, settings.wallpaper))
-        index += 1
-    }
     
     
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsChatViewHeader))
+    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsChatViewHeader, true))
     descIndex += 1
     
     entries.append(.chatView(sectionId, index, !settings.bubbled, false))
@@ -330,13 +301,18 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, selfPeer
     entries.append(.section(sectionId))
     sectionId += 1
     
-    #if BETA
-    entries.append(.autoNight(sectionId, index))
-    index += 1
+   // #if BETA
+    if !settings.followSystemAppearance {
+        entries.append(.autoNight(sectionId, index))
+        index += 1
+    }
+   
+
+    
     
     entries.append(.section(sectionId))
     sectionId += 1
-    #endif
+  //  #endif
    
   
 //
@@ -388,19 +364,27 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         let account = self.account
         let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, wallpaper in
             _ = combineLatest(updateThemeInteractivetly(postbox: account.postbox, f: { settings in
-                return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: wallpaper, defaultNightName: palette.isDark ? palette.name : settings.defaultNightName, defaultDayName: !palette.isDark ? palette.name : settings.defaultDayName)
+                return settings.withUpdatedPalette(palette).withUpdatedWallpaper(wallpaper).withUpdatedDefaultDayName(palette.isDark ? palette.name : settings.defaultNightName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
                 
             }), updateAutoNightSettingsInteractively(postbox: account.postbox, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
-            _ = updateBubbledSettings(postbox: account.postbox, bubbled: enabled).start()
+            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                return settings.withUpdatedBubbled(enabled).withUpdatedWallpaper(enabled ? settings.wallpaper : .none)
+            }).start()
         }, toggleFontSize: { size in
-            _ = updateApplicationFontSize(postbox: account.postbox, fontSize: CGFloat(size)).start()
+            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                return settings.withUpdatedFontSize(CGFloat(size))
+            }).start()
         }, selectAccentColor: {
             showModal(with: AccentColorModalController(account, current: theme.colors.blueUI), for: mainWindow)
         }, selectChatBackground: {
             showModal(with: ChatWallpaperModalController(account: account), for: mainWindow)
         }, openAutoNightSettings: { [weak self] in
             self?.navigationController?.push(autoNightSettingsController(account.postbox))
+        }, toggleFollowSystemAppearance: { value in
+            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+                return settings.withUpdatedFollowSystemAppearance(value).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none)
+            }).start()
         })
         
         let initialSize = self.atomicSize
@@ -408,8 +392,8 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
         
-        let signal:Signal<(TableUpdateTransition, TelegramWallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, selfPeer in
-            let entries = AppearanceViewEntries(settings: appearance.presentation, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let signal:Signal<(TableUpdateTransition, TelegramWallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(postbox: account.postbox), account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, themeSettings, selfPeer in
+            let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
         } |> deliverOnMainQueue
         

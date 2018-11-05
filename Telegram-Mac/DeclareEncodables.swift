@@ -15,6 +15,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(BaseApplicationSettings.self, f: { BaseApplicationSettings(decoder: $0) })
     declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
     declareEncodable(LocalFileGifMediaResource.self, f: { LocalFileGifMediaResource(decoder: $0) })
+    declareEncodable(LocalFileArchiveMediaResource.self, f: { LocalFileArchiveMediaResource(decoder: $0) })
     declareEncodable(RecentUsedEmoji.self, f: { RecentUsedEmoji(decoder: $0) })
     declareEncodable(InstantViewAppearance.self, f: { InstantViewAppearance(decoder: $0) })
     declareEncodable(IVReadState.self, f: { IVReadState(decoder: $0) })
@@ -25,6 +26,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(ReadArticle.self, f: { ReadArticle(decoder: $0) })
     declareEncodable(ReadArticlesListPreferences.self, f: { ReadArticlesListPreferences(decoder: $0) })
     declareEncodable(AutoNightThemePreferences.self, f: { AutoNightThemePreferences(decoder: $0) })
+    declareEncodable(EmojiSkinModifier.self, f: { AutoNightThemePreferences(decoder: $0) })
     return
 }()
 

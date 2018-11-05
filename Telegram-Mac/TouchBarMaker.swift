@@ -44,14 +44,14 @@ import Cocoa
     weak var songProgressSlider: Slider?
     weak var controlsSegmentedView: NSSegmentedControl?
     
-    let controlStripItem = NSControlStripTouchBarItem(identifier: .controlStripButton)
+   // let controlStripItem = NSControlStripTouchBarItem(identifier: .controlStripButton)
     
     weak var controlStripButton: NSCustomizableButton? {
         set {
-            controlStripItem.view = newValue!
+          //  controlStripItem.view = newValue!
         }
         get {
-            return controlStripItem.view as? NSCustomizableButton
+            return nil//controlStripItem.view as? NSCustomizableButton
         }
     }
     
@@ -236,7 +236,7 @@ import Cocoa
         if hasRoundedLeadingImage { frame.origin.x += xOriginShiftDelta }
         
         let string = NSMutableAttributedString(attributedString: title)
-        string.addAttribute(NSAttributedStringKey.foregroundColor,
+        string.addAttribute(NSAttributedString.Key.foregroundColor,
                             value: textColor,
                             range: NSMakeRange(0, string.length))
         
@@ -813,14 +813,14 @@ import Cocoa
     /**
      Font attributes for the info text
      */
-    func infoFontAttributes(for rect: NSRect) -> [NSAttributedStringKey: Any] {
+    func infoFontAttributes(for rect: NSRect) -> [NSAttributedString.Key: Any] {
         let isLeftOfKnob = shouldInfoBeLeft(of: rect)
         
         paraghraphStyle.alignment = isLeftOfKnob ? .left : .right
         
-        return [NSAttributedStringKey.font: NSFont.systemFont(ofSize: infoFontSize),
-                NSAttributedStringKey.foregroundColor: isLeftOfKnob ? infoFontLeftColor : infoFontRightColor,
-                NSAttributedStringKey.paragraphStyle: paraghraphStyle]
+        return [NSAttributedString.Key.font: NSFont.systemFont(ofSize: infoFontSize),
+                NSAttributedString.Key.foregroundColor: isLeftOfKnob ? infoFontLeftColor : infoFontRightColor,
+                NSAttributedString.Key.paragraphStyle: paraghraphStyle]
     }
     
     deinit {
@@ -912,13 +912,13 @@ import Cocoa
 
         let invoke = { 
             self.touchBarViews.controlStripButton?.animator().isHidden  = !shouldShow
-            self.touchBarViews.controlStripItem.isPresentInControlStrip = shouldShow
+           // self.touchBarViews.controlStripItem.isPresentInControlStrip = shouldShow
         }
         
         if shouldShow || force {
-            invoke()
+          //  invoke()
         } else {
-            delay(0.2, closure: invoke)
+           // delay(0.2, closure: invoke)
         }
     }
     
@@ -926,10 +926,10 @@ import Cocoa
         #if DEBUG || STABLE
             touchBarViews.prepareControlStripButton(self)
             
-            DFRSystemModalShowsCloseBoxWhenFrontMost(true)
+          //  DFRSystemModalShowsCloseBoxWhenFrontMost(true)
             
             if shouldShowControlStripItem {
-                touchBarViews.controlStripItem.isPresentInControlStrip = !mainWindow.isKeyWindow
+       //         touchBarViews.controlStripItem.isPresentInControlStrip = !mainWindow.isKeyWindow
             }
         #endif
         
@@ -937,7 +937,7 @@ import Cocoa
     
     @objc func presentModalTouchBar() {
          #if DEBUG || STABLE
-            touchBar?.presentAsSystemModal(for: touchBarViews.controlStripItem)
+        //    touchBar?.presentAsSystemModal(for: touchBarViews.controlStripItem)
             touchBarViews.didPresentAsSystemModal = true
         #endif
     }
@@ -945,7 +945,7 @@ import Cocoa
     func reloadTouchBarIfNeeded() {
         if touchBarViews.didPresentAsSystemModal {
             #if DEBUG || STABLE
-                touchBar?.dismissSystemModal()
+             //   touchBar?.dismissSystemModal()
                 touchBar = nil
             #endif
            

@@ -12,6 +12,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
+
 extension Peer {
     
     var mediaRestricted:Bool {
@@ -50,6 +51,18 @@ extension Peer {
         return false
     }
     
+    var peerSummaryTags: PeerSummaryCounterTags {
+        if let peer = self as? TelegramChannel, let addressName = peer.addressName, !addressName.isEmpty {
+            switch peer.info {
+            case .group:
+                return [.publicGroups]
+            case .broadcast:
+                return [.channels]
+            }
+        } else {
+            return [.regularChatsAndPrivateGroups]
+        }
+    }
     
     var canSendMessage: Bool {
         if let channel = self as? TelegramChannel {
@@ -915,7 +928,7 @@ func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Acco
 extension Media {
     var isGraphicFile:Bool {
         if let media = self as? TelegramMediaFile {
-            return media.mimeType.hasPrefix("image")
+            return media.mimeType.hasPrefix("image") && (media.mimeType.contains("png") || media.mimeType.contains("jpg") || media.mimeType.contains("jpeg") || media.mimeType.contains("tiff"))
         }
         return false
     }
@@ -1138,6 +1151,13 @@ extension SentSecureValueType {
         }
     }
 }
+extension TwoStepVerificationPendingEmail : Equatable {
+    public static func == (lhs: TwoStepVerificationPendingEmail, rhs: TwoStepVerificationPendingEmail) -> Bool {
+        return lhs.codeLength == rhs.codeLength && lhs.pattern == rhs.pattern
+    }
+    
+    
+}
 
 extension UpdateTwoStepVerificationPasswordResult : Equatable {
     public static func ==(lhs: UpdateTwoStepVerificationPasswordResult, rhs: UpdateTwoStepVerificationPasswordResult) -> Bool {
@@ -1157,6 +1177,8 @@ extension UpdateTwoStepVerificationPasswordResult : Equatable {
         }
     }
 }
+
+
 
 extension SecureIdGender {
     static func gender(from mrz: TGPassportMRZ) -> SecureIdGender {
@@ -2188,7 +2210,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     var canCollage: Bool = urls.count > 1 && urls.count <= 10
     if canCollage {
         for url in urls {
-            let mime = MIMEType(url.path.nsstring.pathExtension)
+            let mime = MIMEType(url.path)
             let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true)
             let isGif = attrs.contains(where: { attr -> Bool in
                 switch attr {
@@ -2411,6 +2433,48 @@ extension MessageIndex {
     
 }
 
+func requestAudioPermission() -> Signal<Bool, NoError> {
+    if #available(OSX 10.14, *) {
+        return Signal { subscriber in
+            let status = AVCaptureDevice.authorizationStatus(for: .audio)
+            var cancelled: Bool = false
+            switch status {
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .audio, completionHandler: { completed in
+                    if !cancelled {
+                        subscriber.putNext(completed)
+                        subscriber.putCompletion()
+                    }
+                })
+            case .authorized:
+                subscriber.putNext(true)
+                subscriber.putCompletion()
+            case .denied:
+                subscriber.putNext(false)
+                subscriber.putCompletion()
+            case .restricted:
+                subscriber.putNext(false)
+                subscriber.putCompletion()
+            }
+            return ActionDisposable {
+                cancelled = true
+            }
+        }
+    } else {
+        return .single(true)
+    }
+}
+
+enum SystemSettingsCategory : String {
+    case microphone = "Privacy_Microphone"
+}
+
+func openSystemSettings(_ category: SystemSettingsCategory) {
+    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(category.rawValue)") {
+        NSWorkspace.shared.open(url)
+    }
+}
+
 extension MessageHistoryAnchorIndex {
     func withSubstractedTimestamp(_ timestamp: Int32) -> MessageHistoryAnchorIndex {
         switch self {
@@ -2421,8 +2485,3 @@ extension MessageHistoryAnchorIndex {
         }
     }
 }
-
-//
-//extension RequestEditMessageMedia : Equatable {
-//    
-//}

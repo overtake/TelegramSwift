@@ -389,6 +389,8 @@ public final class ColorPalette : Equatable {
     
     public func withAccentColor(_ color: NSColor) -> ColorPalette {
         
+        let color = color.usingColorSpace(NSColorSpace.deviceRGB)!
+        
         var hue: CGFloat = 0.0
         var saturation: CGFloat = 0.0
         var brightness: CGFloat = 0.0
@@ -972,7 +974,7 @@ chatDateText : NSColor(0x8699a3)
 
 public let mojavePalette = ColorPalette(isDark: true,
                                         name: "Mojave",
-background: NSColor(0x292A2F),
+background: NSColor(0x292a2f),
 text: NSColor(0xffffff),
 grayText: NSColor(0xb1c3d5),
 link: NSColor(0x2ea6ff),
@@ -980,16 +982,16 @@ blueUI: NSColor(0x2ea6ff),
 redUI: NSColor(0xef5b5b),
 greenUI: NSColor(0x49ad51),
 blackTransparent: NSColor(0x000000, 0.6),
-grayTransparent: NSColor(0x2f313d, 0.5),
+grayTransparent: NSColor(0x3e464c, 0.5),
 grayUI: NSColor(0x292A2F),
 darkGrayText: NSColor(0xb1c3d5),
 blueText: NSColor(0x2ea6ff),
 blueSelect: NSColor(0x3d6a97),
 selectText: NSColor(0x3e6b9b),
 blueFill: NSColor(0x2ea6ff),
-border: NSColor(0x3C3D3F),
-grayBackground: NSColor(0x3D3E40),
-grayForeground: NSColor(0x3D3E40),
+border: NSColor(0x3d474f),
+grayBackground: NSColor(0x3e464c),
+grayForeground: NSColor(0x3e464c),
 grayIcon: NSColor(0xb1c3d5),
 blueIcon: NSColor(0x2ea6ff),
 badgeMuted: NSColor(0xb1c3d5),

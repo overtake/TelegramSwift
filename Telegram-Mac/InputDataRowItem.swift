@@ -216,7 +216,7 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
     
     
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         if let item = item as? InputDataRowItem {
             let string = secureField.stringValue
             let updated = item.filter(string)

@@ -433,7 +433,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         switch entry {
         case let .plain(peer, _, presence, drawSeparator):
             //
-            let color = presence?.status.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+            let color = presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
             return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? nil : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), interactionType:.selectable(selectInteraction))
         case let .separator(text, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: text)
@@ -545,7 +545,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         genericView.sendButton.set(handler: { [weak self] _ in
             if let strongSelf = self, !selectInteraction.presentation.selected.isEmpty {
-                _ = strongSelf.returnKeyAction()
+                _ = strongSelf.invoke()
             }
         }, for: .SingleClick)
         
@@ -757,6 +757,13 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
+        if let event = NSApp.currentEvent, !FastSettings.checkSendingAbility(for: event) {
+            return .rejected
+        }
+        return invoke()
+    }
+    
+    private func invoke() -> KeyHandlerResult {
         if !genericView.searchView.query.isEmpty {
             if genericView.tableView.count == 1, let item = genericView.tableView.item(at: 0) as? ShortPeerRowItem {
                 selectInteractions.update({$0.withToggledSelected(item.peer.id, peer: item.peer)})
@@ -775,7 +782,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     override func escapeKeyAction() -> KeyHandlerResult {
         
         if genericView.searchView.state == .Focus {
-            window?.makeFirstResponder(nil)
+            _ = window?.makeFirstResponder(nil)
             return .invoked
         }
         
@@ -836,7 +843,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 200
+        return 1024
     }
     
     private func updateSize(_ width: CGFloat, animated: Bool) {

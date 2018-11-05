@@ -68,10 +68,11 @@ private func contextForCurrentThread() -> FFMpegMediaFrameSourceContext? {
 final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
     private let queue: Queue
     private let postbox: Postbox
-    private let reference: MediaResourceReference
+    private let resourceReference: MediaResourceReference
     private let streamable: Bool
     private let video: Bool
     private let preferSoftwareDecoding: Bool
+    private let fetchAutomatically: Bool
     
     private let taskQueue: ThreadTaskQueue
     private let thread: Thread
@@ -90,13 +91,14 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
         }
     }
    
-    init(queue: Queue, postbox: Postbox, reference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool) {
+    init(queue: Queue, postbox: Postbox, resourceReference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, fetchAutomatically: Bool) {
         self.queue = queue
         self.postbox = postbox
-        self.reference = reference
+        self.resourceReference = resourceReference
         self.streamable = streamable
         self.video = video
         self.preferSoftwareDecoding = preferSoftwareDecoding
+        self.fetchAutomatically = fetchAutomatically
         
         self.taskQueue = ThreadTaskQueue()
         
@@ -143,14 +145,15 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
         self.generatingFrames = true
         
         let postbox = self.postbox
-        let reference = self.reference
+        let resourceReference = self.resourceReference
         let queue = self.queue
         let streamable = self.streamable
         let video = self.video
         let preferSoftwareDecoding = self.preferSoftwareDecoding
+        let fetchAutomatically = self.fetchAutomatically
         
         self.performWithContext { [weak self] context in
-            context.initializeState(postbox: postbox, reference: reference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding)
+            context.initializeState(postbox: postbox, resourceReference: resourceReference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding, fetchAutomatically: fetchAutomatically)
             
             let (frames, endOfStream) = context.takeFrames(until: timestamp)
             
@@ -191,13 +194,14 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
             
             let queue = self.queue
             let postbox = self.postbox
-            let reference = self.reference
+            let resourceReference = self.resourceReference
             let streamable = self.streamable
             let video = self.video
             let preferSoftwareDecoding = self.preferSoftwareDecoding
+            let fetchAutomatically = self.fetchAutomatically
             
             self.performWithContext { [weak self] context in
-                context.initializeState(postbox: postbox, reference: reference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding)
+                context.initializeState(postbox: postbox, resourceReference: resourceReference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding, fetchAutomatically: fetchAutomatically)
                 
                 context.seek(timestamp: timestamp, completed: { streamDescriptions, timestamp in
                     queue.async {

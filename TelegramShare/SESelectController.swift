@@ -179,7 +179,7 @@ class ShareObject {
         return Signal { subscriber in
             if let data = try? Data(contentsOf: path) {
                 
-                let mimeType = MIMEType(path.absoluteString.nsstring.pathExtension.lowercased())
+                let mimeType = MIMEType(path.absoluteString)
                 if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif") {
                     
                     let options = NSMutableDictionary()

@@ -141,8 +141,8 @@ class SuggestionLocalizationViewController: ModalViewController {
                 self?.reloadItems(1, swap)
             }, reversed: true), at: swap ? 0 : 1)
         }
-        
-        let otherInfo = LocalizationInfo(languageCode: "", title: NativeLocalization("Suggest.Localization.Other"), localizedTitle: suggestionInfo.localizedKey("Suggest.Localization.Other") )
+
+        let otherInfo = LocalizationInfo(languageCode: "", baseLanguageCode: nil, title: NativeLocalization("Suggest.Localization.Other"), localizedTitle: suggestionInfo.localizedKey("Suggest.Localization.Other"), isOfficial: true, totalStringCount: 0, translatedStringCount: 0 )
 
         _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, value: otherInfo, action: { [weak self] in
             if let strongSelf = self {

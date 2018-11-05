@@ -201,7 +201,7 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         }
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         
     }
     
