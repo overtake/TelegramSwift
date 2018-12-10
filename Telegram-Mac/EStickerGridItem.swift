@@ -177,7 +177,7 @@ let eStickerSize:NSSize = NSMakeSize(60, 60)
 
 
 
-final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
+final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
     private var currentState: (Account, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?, ChatMediaGridPackHeaderInfo?)?
     
     
@@ -185,7 +185,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
     
     func fileAtPoint(_ point: NSPoint) -> FileMediaReference? {
         if let currentState = currentState {
-            return FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1)
+            return currentState.1.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1) : FileMediaReference.standalone(media: currentState.1)
         }
         return nil
     }
@@ -245,7 +245,7 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
         
         set(handler: { [weak self] (control) in
             if let window = self?.window as? Window, let currentState = self?.currentState, let grid = self?.grid {
-                _ = startStickerPreviewHandle(grid, window: window, account: currentState.0)
+                _ = startModalPreviewHandle(grid, viewType: StickerPreviewModalView.self, window: window, account: currentState.0)
             }
         }, for: .LongMouseDown)
         set(handler: { [weak self] _ in
@@ -301,16 +301,18 @@ final class StickerGridItemView: GridItemNode, StickerPreviewRowViewProtocol {
 //            set(background: .random, for: .Normal)
 //            set(background: .random, for: .Hover)
             
-            imageView.setSignal(signal: cachedMedia(media: file, size: dimensions, scale: backingScaleFactor))
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets())
+            imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
             
             imageView.setSignal(chatMessageSticker(account: account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, NoError> in
-                return cacheMedia(signal: image, media: file, size: dimensions, scale: System.backingScale)
+                return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
             })
 
             stickerFetchedDisposable.set(fileInteractiveFetched(account: account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)).start())
             
             let imageSize = dimensions.aspectFitted(eStickerSize)
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets()))
+            imageView.set(arguments: arguments)
 
             imageView.setFrameSize(imageSize)
             currentState = (account, file, dimensions, collectionId, packInfo)

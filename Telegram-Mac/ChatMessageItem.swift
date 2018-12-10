@@ -266,7 +266,7 @@ class ChatMessageItem: ChatRowItem {
                 return .complete()
                 
             }, isDomainLink: { value in
-                if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") {
+                if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") && URL(string: value) != nil {
                     return true
                 }
                 return false
@@ -370,7 +370,11 @@ class ChatMessageItem: ChatRowItem {
         
         return contentSize
     }
-
+    
+    
+    override var instantlyResize: Bool {
+        return true
+    }
     
     override var bubbleFrame: NSRect {
         var frame = super.bubbleFrame
@@ -575,6 +579,10 @@ class ChatMessageItem: ChatRowItem {
                     string.addAttribute(.preformattedCode, value: 4.0, range: range)
                     string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), { [weak account] link in
+                        copyToClipboard(link)
+                        account?.context.mainNavigation?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                    }), range: range)
                 case  .Pre:
                     string.addAttribute(.preformattedPre, value: 4.0, range: range)
                     string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)

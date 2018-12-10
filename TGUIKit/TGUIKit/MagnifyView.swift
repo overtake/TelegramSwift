@@ -25,9 +25,11 @@ open class MagnifyView : NSView {
     
     public private(set) var contentView:NSView
     let containerView:NSView = NSView()
-    public var contentSize:NSSize = NSZeroSize {
+    open var contentSize:NSSize = NSZeroSize {
         didSet {
-            contentView.frame = focus(magnifiedSize)
+            if oldValue != contentSize {
+                contentView.frame = focus(magnifiedSize)
+            }
         }
     }
     private var magnifiedSize:NSSize {
@@ -35,7 +37,6 @@ open class MagnifyView : NSView {
     }
     
     public func swapView(_ newView: NSView) {
-        NSLog("swaped = \(newView)")
         self.contentView.removeFromSuperview()
         newView.removeFromSuperview()
         self.contentView = newView
@@ -53,6 +54,7 @@ open class MagnifyView : NSView {
         containerView.wantsLayer = true
         addSubview(containerView)
         containerView.addSubview(contentView)
+        containerView.autoresizesSubviews = false
         contentView.background = .clear
         background = .clear
         smartUpdater.set(.single(contentSize))
@@ -222,6 +224,11 @@ open class MagnifyView : NSView {
     deinit {
         var bp:Int = 0
         bp += 1
+    }
+    
+    
+    open func mouseInside() -> Bool {
+        return super._mouseInside()
     }
     
     

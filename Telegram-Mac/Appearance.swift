@@ -26,6 +26,31 @@ private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColo
     })!
 }
 
+private func generateVideoMessageChatCap(backgroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(200, 200), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+        
+        ctx.setFillColor(.clear)
+        ctx.setBlendMode(.clear)
+        
+        let radius = size.width / 2
+        
+        let center = NSMakePoint(100, 100)
+
+        ctx.addArc(center: center, radius: radius - 0.54, startAngle: 0, endAngle: 2 * CGFloat.pi, clockwise: false)
+        ctx.drawPath(using: .fill)
+        ctx.setBlendMode(.normal)
+//        CGContextAddArc(context, center.x, center.y, radius - 0.54, 0, 2 * M_PI, 0);
+//        CGContextDrawPath(context, kCGPathFill);
+//        CGContextSetBlendMode(context, kCGBlendModeNormal);
+
+        
+    })!
+}
+
 private func generateEditMessageMediaIcon(_ icon: CGImage, background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(icon.backingSize.width + 1, icon.backingSize.height + 1), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -903,6 +928,7 @@ struct TelegramIconsTheme {
     let galleryNext: CGImage
     let galleryMore: CGImage
     let galleryShare: CGImage
+    let galleryFastSave: CGImage
     
     let playingVoice1x: CGImage
     let playingVoice2x: CGImage
@@ -919,6 +945,32 @@ struct TelegramIconsTheme {
     
     let previewSenderDeleteFile: CGImage
     let previewSenderArchive: CGImage
+    
+    let chatSwipeReply: CGImage
+    let chatSwipeReplyWallpaper: CGImage
+    
+    let videoPlayerPlay: CGImage
+    let videoPlayerPause: CGImage
+    let videoPlayerEnterFullScreen: CGImage
+    let videoPlayerExitFullScreen: CGImage
+    let videoPlayerPIPIn: CGImage
+    let videoPlayerPIPOut: CGImage
+    let videoPlayerRewind15Forward: CGImage
+    let videoPlayerRewind15Backward: CGImage
+    let videoPlayerVolume: CGImage
+    let videoPlayerVolumeOff: CGImage
+    let videoPlayerClose: CGImage
+    
+    let videoPlayerSliderInteractor: CGImage
+    
+    let streamingVideoDownload: CGImage
+    
+    let videoCompactFetching: CGImage
+    let compactStreamingFetchingCancel : CGImage
+    
+    
+   // let videoMessageChatCap: CGImage
+
 }
 
 final class TelegramChatListTheme {
@@ -1017,6 +1069,10 @@ class TelegramPresentationTheme : PresentationTheme {
     
     var dark: Bool {
         return colors.isDark
+    }
+    
+    deinit {
+       
     }
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
@@ -1244,7 +1300,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                modalClose: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
                                                ivChannelJoined: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white),
                                                chatListMention: generateBadgeMention(backgroundColor: palette.blueUI, foregroundColor: palette.background),
-                                               chatListMentionActive: generateBadgeMention(backgroundColor: palette.background, foregroundColor: palette.blueUI),
+                                               chatListMentionActive: generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect),
                                                chatMention: generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon),
                                                chatMentionActive: generateChatMention(backgroundColor: palette.background, border: palette.blueIcon, foregroundColor: palette.blueIcon),
                                                sliderControl: #imageLiteral(resourceName: "Icon_SliderNormal").precomposed(),
@@ -1365,6 +1421,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white),
                                                galleryMore: #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white),
                                                galleryShare: #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white),
+                                               galleryFastSave: NSImage(named: "Icon_Gallery_FastSave")!.precomposed(.white),
                                                playingVoice1x: #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.grayIcon),
                                                playingVoice2x: #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.blueIcon),
                                                galleryRotate: NSImage(named: "Icon_GalleryRotate")!.precomposed(.white),
@@ -1374,7 +1431,25 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                previewSenderDelete: NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(.white),
                                                editMessageCurrentPhoto: NSImage(named: "Icon_EditMessageCurrentPhoto")!.precomposed(palette.blueIcon),
                                                previewSenderDeleteFile: NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(palette.blueIcon),
-                                               previewSenderArchive: NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon)
+                                               previewSenderArchive: NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon),
+                                               chatSwipeReply: #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.blueIcon, flipHorizontal: true),
+                                               chatSwipeReplyWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon, flipHorizontal: true),
+                                               videoPlayerPlay:  NSImage(named: "Icon_VideoPlayer_Play")!.precomposed(.white),
+                                               videoPlayerPause: NSImage(named: "Icon_VideoPlayer_Pause")!.precomposed(.white),
+                                               videoPlayerEnterFullScreen: NSImage(named: "Icon_VideoPlayer_EnterFullScreen")!.precomposed(.white),
+                                               videoPlayerExitFullScreen: NSImage(named: "Icon_VideoPlayer_ExitFullScreen")!.precomposed(.white),
+                                               videoPlayerPIPIn: NSImage(named: "Icon_VideoPlayer_PIPIN")!.precomposed(.white),
+                                               videoPlayerPIPOut: NSImage(named: "Icon_VideoPlayer_PIPOUT")!.precomposed(.white),
+                                               videoPlayerRewind15Forward: NSImage(named: "Icon_VideoPlayer_Rewind15Forward")!.precomposed(.white),
+                                               videoPlayerRewind15Backward: NSImage(named: "Icon_VideoPlayer_Rewind15Backward")!.precomposed(.white),
+                                               videoPlayerVolume: NSImage(named: "Icon_VideoPlayer_Volume")!.precomposed(.white),
+                                               videoPlayerVolumeOff: NSImage(named: "Icon_VideoPlayer_VolumeOff")!.precomposed(.white),
+                                               videoPlayerClose: NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white),
+                                               videoPlayerSliderInteractor: NSImage(named: "Icon_Slider")!.precomposed(),
+                                               streamingVideoDownload: NSImage(named: "Icon_StreamingDownload")!.precomposed(.white),
+                                               videoCompactFetching: NSImage(named: "Icon_VideoCompactFetching")!.precomposed(.white),
+                                               compactStreamingFetchingCancel: NSImage(named: "Icon_CompactStreamingFetchingCancel")!.precomposed(.white)
+                                               ///videoMessageChatCap: generateVideoMessageChatCap(backgroundColor: palette.background)
     )
 }
 

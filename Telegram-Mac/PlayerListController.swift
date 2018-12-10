@@ -43,7 +43,7 @@ private enum PlayerListEntry: TableItemListNodeEntry {
     func item(_ arguments: PlayerListArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .message(_, message):
-            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, arguments.chatInteraction.account, .messageEntry(message),  isCompactPlayer: true)
+            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, arguments.chatInteraction.account, .messageEntry(message, .defaultSettings),  isCompactPlayer: true)
         }
     }
     
@@ -89,13 +89,20 @@ fileprivate func preparedAudioListTransition(from fromView:[PlayerListEntry], to
 
 
 class PlayerListController: TableViewController {
+    private let audioPlayer: InlineAudioPlayerView
     private let chatInteraction: ChatInteraction
     private let disposable = MetaDisposable()
     private let messageIndex: MessageIndex
-    init(chatInteraction: ChatInteraction, messageIndex: MessageIndex) {
-        self.chatInteraction = chatInteraction
+    init(audioPlayer: InlineAudioPlayerView, account: Account, messageIndex: MessageIndex) {
+        self.chatInteraction = ChatInteraction(chatLocation: .peer(messageIndex.id.peerId), account: account)
         self.messageIndex = messageIndex
-        super.init(chatInteraction.account)
+        self.audioPlayer = audioPlayer
+        super.init(account)
+        
+        
+        chatInteraction.inlineAudioPlayer = { [weak self] controller in
+            self?.audioPlayer.update(with: controller, tableView: self?.genericView)
+        }
     }
     
     deinit {

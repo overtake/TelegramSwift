@@ -7,16 +7,26 @@ private final class VideoPlayerProxyContext {
     
     var updateVideoInHierarchy: ((Bool) -> Void)?
     
+    var node: MediaPlayerView? {
+        didSet {
+            self.node?.takeFrameAndQueue = self.takeFrameAndQueue
+            self.node?.state = state
+            self.updateVideoInHierarchy?(node?.videoInHierarchy ?? false)
+            self.node?.updateVideoInHierarchy = { [weak self] value in
+                self?.updateVideoInHierarchy?(value)
+            }
+        }
+    }
     
     var takeFrameAndQueue: (Queue, () -> MediaTrackFrameResult)? {
         didSet {
-            //self.node?.takeFrameAndQueue = self.takeFrameAndQueue
+            self.node?.takeFrameAndQueue = self.takeFrameAndQueue
         }
     }
     
     var state: (timebase: CMTimebase, requestFrames: Bool, rotationAngle: Double, aspect: Double)? {
         didSet {
-            //self.node?.state = self.state
+            self.node?.state = self.state
         }
     }
     
@@ -96,12 +106,12 @@ final class VideoPlayerProxy {
         }
     }
     
-//    func attachNodeAndRelease(_ nodeRef: Unmanaged<MediaPlayerNode>) {
-//        self.withContext { context in
-//            if let context = context {
-//                context.node = nodeRef.takeUnretainedValue()
-//            }
-//            nodeRef.release()
-//        }
-//    }
+    func attachNodeAndRelease(_ nodeRef: Unmanaged<MediaPlayerView>) {
+        self.withContext { context in
+            if let context = context {
+                context.node = nodeRef.takeUnretainedValue()
+            }
+            nodeRef.release()
+        }
+    }
 }

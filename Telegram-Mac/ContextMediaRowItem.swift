@@ -80,11 +80,28 @@ class ContextMediaRowItem: TableRowItem {
 
 private var dif:CGFloat = 0
 
-class ContextMediaRowView: TableRowView {
+class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
+   
+    
     private let stickerFetchedDisposable:MetaDisposable = MetaDisposable()
     
     deinit {
         stickerFetchedDisposable.dispose()
+    }
+    
+    func fileAtPoint(_ point: NSPoint) -> FileMediaReference? {
+        guard let item = item as? ContextMediaRowItem else {return nil}
+        for i in 0 ..< self.subviews.count {
+            if NSPointInRect(point, self.subviews[i].frame) {
+                switch item.result.entries[i] {
+                case let .gif(data):
+                    return data.file
+                default:
+                    break
+                }
+            }
+        }
+        return nil
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -98,17 +115,13 @@ class ContextMediaRowView: TableRowView {
                 switch item.result.entries[i] {
                 case let .gif(data):
                     let view = GIFContainerView()
-                    let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
-                    if let thumb = data.thumb {
-                        //TODO
-                        signal = chatWebpageSnippetPhoto(account: item.account, imageReference: thumb, scale: backingScaleFactor, small:true)
-                    } else {
-                        signal = .never()
-                    }
+                    let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError> =  chatMessageVideo(postbox: item.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     
-                   
+                    view.set(handler: { _ in
+                        item.arguments.sendResult(item.result.results[i])
+                    }, for: .Click)
                     
-                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], account: item.account, table: item.table, iconSignal: signal)
+                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], file: data.file.media, account: item.account, table: item.table, iconSignal: signal)
                     container = view
                 case let .sticker(data):
                     let view = TransformImageView()

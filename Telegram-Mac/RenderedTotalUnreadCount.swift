@@ -32,24 +32,23 @@ func renderedTotalUnreadCount(inAppSettings: InAppNotificationSettings, totalUnr
 }
 
 func renderedTotalUnreadCount(postbox: Postbox) -> Signal<(Int32, RenderedTotalUnreadCountType), NoError> {
-    let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(ApplicationSpecificPreferencesKeys.inAppNotificationSettings)])
-    return postbox.combinedView(keys: [unreadCountsKey])
+    let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(nil)])
+    let inAppSettingsKey = PostboxViewKey.preferences(keys: Set([ApplicationSpecificPreferencesKeys.inAppNotificationSettings]))
+    return postbox.combinedView(keys: [unreadCountsKey, inAppSettingsKey])
     |> map { view -> (Int32, RenderedTotalUnreadCountType) in
         let totalUnreadState: ChatListTotalUnreadState
-        let inAppSettings: InAppNotificationSettings
         if let value = view.views[unreadCountsKey] as? UnreadMessageCountsView, let total = value.total() {
             totalUnreadState = total.1
-            if let preferences = total.0 as? InAppNotificationSettings {
-                inAppSettings = preferences
-            } else {
-                inAppSettings = .defaultSettings
-            }
-                
         } else {
             totalUnreadState = ChatListTotalUnreadState(absoluteCounters: [:], filteredCounters: [:])
-            inAppSettings = .defaultSettings
         }
         
+        let inAppSettings: InAppNotificationSettings
+        if let preferences = view.views[inAppSettingsKey] as? PreferencesView, let value = preferences.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings {
+            inAppSettings = value
+        } else {
+            inAppSettings = .defaultSettings
+        }
         let type: RenderedTotalUnreadCountType
         switch inAppSettings.totalUnreadCountDisplayStyle {
             case .raw:

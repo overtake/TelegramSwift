@@ -88,7 +88,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
             
             switch entry.entry {
             case let .info(photo, currentText):
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.account, placeholder:tr(L10n.createGroupNameHolder), photo: photo, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
+                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.account, placeholder: L10n.createGroupNameHolder, photo: photo, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
             case let .peer(peer, _, presence):
                 
                 var color:NSColor = theme.colors.grayText

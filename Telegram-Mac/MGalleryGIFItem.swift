@@ -17,13 +17,15 @@ class MGalleryGIFItem: MGalleryItem {
         super.init(account, entry, pagerSize)
         
         let view = self.view
-        let pathSignal = path.get() |> distinctUntilChanged |> deliverOnMainQueue |> mapToSignal { path -> Signal<(String?,GIFPlayerView), NoError> in
+        let pathSignal = path.get() |> map { path in
+           return AVGifData.dataFrom(path)
+        } |> distinctUntilChanged |> deliverOnMainQueue |> mapToSignal { data -> Signal<(AVGifData?,GIFPlayerView), NoError> in
             return view.get() |> distinctUntilChanged |> map { view in
-                return (path,view as! GIFPlayerView)
+                return (data, view as! GIFPlayerView)
             }
         }
-        disposable.set(pathSignal.start(next: { (path, view) in
-            view.set(path: path)
+        disposable.set(pathSignal.start(next: { (data, view) in
+            view.set(data: data)
         }))
         
     }
@@ -60,7 +62,6 @@ class MGalleryGIFItem: MGalleryItem {
 
     override func singleView() -> NSView {
         let player = GIFPlayerView()
-        player.followWindow = false
         return player
     }
     
@@ -72,9 +73,8 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override func request(immediately: Bool) {
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: entry.imageReference(image), scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
         let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())

@@ -380,6 +380,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     disableEntry = true
                 case .groupMigratedToChannel:
                     disableEntry = true
+                case .peerJoined:
+                    disableEntry = true
                 default:
                     break
                 }

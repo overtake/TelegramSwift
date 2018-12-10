@@ -74,19 +74,24 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         var mimeType:String = "image/jpeg"
         var fileResource:TelegramMediaResource?
         var fileName:String? = nil
+        var forceExtension: String? = nil
         if let file = media as? TelegramMediaFile {
             fileResource = file.resource
             mimeType = file.mimeType
             fileName = file.fileName
+            if let ext = fileName?.nsstring.pathExtension, !ext.isEmpty {
+                forceExtension = ext
+            }
         } else if let image = media as? TelegramMediaImage {
             fileResource = largestImageRepresentation(image.representations)?.resource
         }
+        
         
         if let fileResource = fileResource {
             
            let signal = combineLatest(account.postbox.mediaBox.resourceData(fileResource), resourceType(mimeType: mimeType))
                 |> mapToSignal({ (data) -> Signal<(String?,String?), NoError> in
-                return .single((data.0.path,data.1))
+                return .single((data.0.path, forceExtension ?? data.1))
             })
             |> deliverOnMainQueue
             

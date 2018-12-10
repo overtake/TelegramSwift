@@ -439,7 +439,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 if let header = navigation.header, let strongSelf = self {
                     header.show(true)
                     if let view = header.view as? InlineAudioPlayerView {
-                        view.update(with: controller, chatInteraction: strongSelf.chatInteraction, tableView: strongSelf.genericView.tableView)
+                        view.update(with: controller, tableView: strongSelf.genericView.tableView)
                     }
                 }
             }

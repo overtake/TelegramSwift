@@ -7,7 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9F0AE6762190750C00A8B53A /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9F0AE6872191D29D00A8B53A /* ContextSearchMessageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0AE6862191D29D00A8B53A /* ContextSearchMessageItem.swift */; };
+		9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9F0AE6B42199904400A8B53A /* sound_a.caf */; };
+		9F0AE6BC2199BBB900A8B53A /* MediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0AE6BB2199BBB900A8B53A /* MediaPlayerView.swift */; };
+		9F0AE6BE2199BEBE00A8B53A /* SVideoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0AE6BD2199BEBE00A8B53A /* SVideoController.swift */; };
+		9F0AE6C02199CDB500A8B53A /* SVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0AE6BF2199CDB500A8B53A /* SVideoView.swift */; };
 		9F0B8F171FFB7F1A00073D3F /* AccentColorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */; };
 		9F0B8F191FFB9DFC00073D3F /* AccentColorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0B8F181FFB9DFC00073D3F /* AccentColorModalController.swift */; };
 		9F0E6F72203EBB6F0086699C /* TouchBarMaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0E6F71203EBB6F0086699C /* TouchBarMaker.swift */; };
@@ -87,6 +91,12 @@
 		9FDA713B20EA9532001ED8ED /* ReadArticlesListPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713A20EA9532001ED8ED /* ReadArticlesListPreferences.swift */; };
 		9FDA713D20EB9B20001ED8ED /* ReadArticleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713C20EB9B20001ED8ED /* ReadArticleRowItem.swift */; };
 		9FDA713F20EE2D49001ED8ED /* PopularPeersRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDA713E20EE2D49001ED8ED /* PopularPeersRowItem.swift */; };
+		9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */ = {isa = PBXBuildFile; fileRef = 9FDE0A8E21AD41C2001546D7 /* emoji1014-1.txt */; };
+		9FF32C7721B67E4B00BF58B6 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
+		9FF32C7821B67E4B00BF58B6 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		9FF32C7921B67E5000BF58B6 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9FF32C7A21B67E5000BF58B6 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9FF32C7C21B7DF4800BF58B6 /* StickerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF32C7B21B7DF4800BF58B6 /* StickerSettings.swift */; };
 		9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */; };
 		9FFAE4EE205A8C89000C028E /* FFMpegPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DD205A8C81000C028E /* FFMpegPacket.swift */; };
 		9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */; };
@@ -483,7 +493,7 @@
 		C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */; };
 		C29C3E5B1E421F1700193A7E /* ChatAccessoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E5A1E421F1700193A7E /* ChatAccessoryModel.swift */; };
 		C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E6E1E4352C100193A7E /* ContextStickerRowItem.swift */; };
-		C29C3E711E43881500193A7E /* StickerPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E701E43881500193A7E /* StickerPreviewModalController.swift */; };
+		C29C3E711E43881500193A7E /* ModalPreviewViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E701E43881500193A7E /* ModalPreviewViews.swift */; };
 		C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */; };
 		C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */; };
 		C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EE11F4EFB5100C0C7A8 /* GroupStickerSetController.swift */; };
@@ -661,16 +671,6 @@
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		9F0AE6742190750700A8B53A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
-			remoteInfo = TelegramShare;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -678,6 +678,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				9FF32C7921B67E5000BF58B6 /* HockeySDK.framework in Copy Files */,
+				9FF32C7A21B67E5000BF58B6 /* Sparkle.framework in Copy Files */,
 				D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
 				C224F2951E43CDD8002FF0B2 /* MtProtoKitMac.framework in Copy Files */,
@@ -694,7 +696,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				9F0AE6762190750C00A8B53A /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -733,6 +734,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9F0AE6862191D29D00A8B53A /* ContextSearchMessageItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSearchMessageItem.swift; sourceTree = "<group>"; };
+		9F0AE6B42199904400A8B53A /* sound_a.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sound_a.caf; sourceTree = "<group>"; };
+		9F0AE6B62199A52600A8B53A /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		9F0AE6BB2199BBB900A8B53A /* MediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerView.swift; sourceTree = "<group>"; };
+		9F0AE6BD2199BEBE00A8B53A /* SVideoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVideoController.swift; sourceTree = "<group>"; };
+		9F0AE6BF2199CDB500A8B53A /* SVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVideoView.swift; sourceTree = "<group>"; };
 		9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentColorRowItem.swift; sourceTree = "<group>"; };
 		9F0B8F181FFB9DFC00073D3F /* AccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentColorModalController.swift; sourceTree = "<group>"; };
 		9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -925,6 +932,8 @@
 		9FDA713A20EA9532001ED8ED /* ReadArticlesListPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadArticlesListPreferences.swift; sourceTree = "<group>"; };
 		9FDA713C20EB9B20001ED8ED /* ReadArticleRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadArticleRowItem.swift; sourceTree = "<group>"; };
 		9FDA713E20EE2D49001ED8ED /* PopularPeersRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopularPeersRowItem.swift; sourceTree = "<group>"; };
+		9FDE0A8E21AD41C2001546D7 /* emoji1014-1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "emoji1014-1.txt"; sourceTree = "<group>"; };
+		9FF32C7B21B7DF4800BF58B6 /* StickerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerSettings.swift; sourceTree = "<group>"; };
 		9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaPassthroughVideoFrameDecoder.swift; sourceTree = "<group>"; };
 		9FFAE4DD205A8C81000C028E /* FFMpegPacket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegPacket.swift; sourceTree = "<group>"; };
 		9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaFrameSource.swift; sourceTree = "<group>"; };
@@ -1354,7 +1363,7 @@
 		C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWDNavigationAction.swift; sourceTree = "<group>"; };
 		C29C3E5A1E421F1700193A7E /* ChatAccessoryModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatAccessoryModel.swift; sourceTree = "<group>"; };
 		C29C3E6E1E4352C100193A7E /* ContextStickerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextStickerRowItem.swift; sourceTree = "<group>"; };
-		C29C3E701E43881500193A7E /* StickerPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPreviewModalController.swift; sourceTree = "<group>"; };
+		C29C3E701E43881500193A7E /* ModalPreviewViews.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModalPreviewViews.swift; sourceTree = "<group>"; };
 		C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPreviewHandler.swift; sourceTree = "<group>"; };
 		C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewAppearance.swift; sourceTree = "<group>"; };
 		C29E0EE11F4EFB5100C0C7A8 /* GroupStickerSetController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupStickerSetController.swift; sourceTree = "<group>"; };
@@ -1586,6 +1595,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FF32C7721B67E4B00BF58B6 /* HockeySDK.framework in Frameworks */,
+				9FF32C7821B67E4B00BF58B6 /* Sparkle.framework in Frameworks */,
 				D0675D6B217E20B9004900A7 /* Zip.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */,
@@ -1624,6 +1635,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9F0AE6BA2199BBA400A8B53A /* media-player */ = {
+			isa = PBXGroup;
+			children = (
+				9F0AE6C12199CDB800A8B53A /* player */,
+				9F0AE6BB2199BBB900A8B53A /* MediaPlayerView.swift */,
+				9F0AE6BD2199BEBE00A8B53A /* SVideoController.swift */,
+			);
+			name = "media-player";
+			sourceTree = "<group>";
+		};
+		9F0AE6C12199CDB800A8B53A /* player */ = {
+			isa = PBXGroup;
+			children = (
+				9F0AE6BF2199CDB500A8B53A /* SVideoView.swift */,
+			);
+			name = player;
+			sourceTree = "<group>";
+		};
 		9F0E6F73203EC7090086699C /* DFRPrivate */ = {
 			isa = PBXGroup;
 			children = (
@@ -2321,6 +2350,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				9F0AE6BA2199BBA400A8B53A /* media-player */,
 				D071E89F21496D77001B6024 /* touchbar */,
 				9F72973E20BD9C580067F815 /* video-player */,
 				C2A7592E1FB1C19E009FCF07 /* alert */,
@@ -2788,6 +2818,7 @@
 		C252532B1DF043D800ADBC98 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				9F0AE6B42199904400A8B53A /* sound_a.caf */,
 				9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */,
 				9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */,
 				C2786FF21FEBF088001FB044 /* palettes */,
@@ -2809,6 +2840,7 @@
 				C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */,
 				C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */,
 				9FC8ADA7206A77E00094F7B4 /* countries */,
+				9FDE0A8E21AD41C2001546D7 /* emoji1014-1.txt */,
 			);
 			name = resources;
 			sourceTree = "<group>";
@@ -2919,6 +2951,7 @@
 				C256A9151FB9E1490043D497 /* AdditionalSettings.swift */,
 				9FDA713A20EA9532001ED8ED /* ReadArticlesListPreferences.swift */,
 				9F17E5BA212F191F00C25A65 /* AutoNightThemePreferences.swift */,
+				9FF32C7B21B7DF4800BF58B6 /* StickerSettings.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -3123,6 +3156,7 @@
 				C29C3E6E1E4352C100193A7E /* ContextStickerRowItem.swift */,
 				C24FD40D1F20EE8B00A97196 /* ContextClueRowItem.swift */,
 				C2E6F3CE1F9F85260023653D /* ContextHashtagRowItem.swift */,
+				9F0AE6862191D29D00A8B53A /* ContextSearchMessageItem.swift */,
 			);
 			name = context;
 			sourceTree = "<group>";
@@ -3648,7 +3682,7 @@
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
 				C29A65061E098B610071BCEF /* ShareModalController.swift */,
 				C232E9F51E1437B100C4D38C /* SearchResultModalController.swift */,
-				C29C3E701E43881500193A7E /* StickerPreviewModalController.swift */,
+				C29C3E701E43881500193A7E /* ModalPreviewViews.swift */,
 				C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */,
 				C22EE6181E66ECB200334C38 /* ReportReasonModalController.swift */,
 				C24BA3BC1E9D30F800E8970B /* DeleteSupergroupMessagesModalController.swift */,
@@ -3775,6 +3809,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9F0AE6B62199A52600A8B53A /* UserNotifications.framework */,
 				D0675D6A217E20B9004900A7 /* Zip.framework */,
 				9F388C8B213550C500830715 /* HockeySDK.framework */,
 				9F13EE182100B6DA00562E53 /* Contacts.framework */,
@@ -3877,7 +3912,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				9F0AE6752190750700A8B53A /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -3983,6 +4017,8 @@
 				C2057FA61EBBCEA7000423DC /* voip_end.caf in Resources */,
 				C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */,
 				C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */,
+				9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */,
+				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				C2E064651ECCB24000387BB8 /* NativeCallSettingsViewController.xib in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
@@ -4102,6 +4138,7 @@
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
 				9F7943B020854E2F00FEDB81 /* ProxyListRowItem.swift in Sources */,
+				9FF32C7C21B7DF4800BF58B6 /* StickerSettings.swift in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2EA177F1E2FD50000887153 /* TransformImageView.swift in Sources */,
 				C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */,
@@ -4227,6 +4264,7 @@
 				C2DE5D341F3CA94A0081EC1E /* InstantPageMediaView.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
 				C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */,
+				9F0AE6C02199CDB500A8B53A /* SVideoView.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
 				C20320FF1F9769BA00143395 /* TwoStepVerificationResetController.swift in Sources */,
 				C24102651FD5877E00DB8625 /* NSImage+RHResizableImageAdditions.m in Sources */,
@@ -4276,6 +4314,7 @@
 				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
 				9FC8ADA22062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift in Sources */,
 				9F0E6F7A203EFE870086699C /* Preferences.swift in Sources */,
+				9F0AE6BE2199BEBE00A8B53A /* SVideoController.swift in Sources */,
 				9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */,
 				9F0E6F72203EBB6F0086699C /* TouchBarMaker.swift in Sources */,
 				C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */,
@@ -4312,6 +4351,8 @@
 				9F3EAB4B20A5F90B003FE7E3 /* TGPassportMRZ.m in Sources */,
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
+				9F0AE6872191D29D00A8B53A /* ContextSearchMessageItem.swift in Sources */,
+				9F0AE6BC2199BBB900A8B53A /* MediaPlayerView.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				9F6B54C821369B4000748FC1 /* GalleryModernControls.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
@@ -4596,7 +4637,7 @@
 				C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */,
 				C2FF14601E532C0A007B7B14 /* SearchEmptyRowItem.swift in Sources */,
 				C2167E5F1DC25C6900F98E03 /* InterfaceObserver.swift in Sources */,
-				C29C3E711E43881500193A7E /* StickerPreviewModalController.swift in Sources */,
+				C29C3E711E43881500193A7E /* ModalPreviewViews.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,
 				9F18DD93206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift in Sources */,
@@ -4627,14 +4668,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		9F0AE6752190750700A8B53A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = 9F0AE6742190750700A8B53A /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {
@@ -4774,6 +4807,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -4955,6 +4989,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5131,6 +5166,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5187,6 +5223,7 @@
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
 					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";

@@ -23,14 +23,15 @@ class GalleryModernControlsView: View {
     private let zoomInControl: ImageButton = ImageButton()
     private let zoomOutControl: ImageButton = ImageButton()
     private let rotateControl: ImageButton = ImageButton()
-
+    private let fastSaveControl: ImageButton = ImageButton()
+    
     fileprivate var interactions: GalleryInteractions?
-    fileprivate var thumbs: NSView? {
+    fileprivate var thumbs: GalleryThumbsControlView? {
         didSet {
             oldValue?.removeFromSuperview()
             if let thumbs = thumbs {
                 addSubview(thumbs)
-                thumbs.center()
+                thumbs.setFrameOrigin(NSMakePoint((self.frame.width - thumbs.frame.width) / 2 + (thumbs.frame.width - thumbs.documentSize.width) / 2, (self.frame.height - thumbs.frame.height) / 2))
             }
             needsLayout = true
         }
@@ -54,19 +55,24 @@ class GalleryModernControlsView: View {
         
         let shareIcon = NSImage(cgImage: theme.icons.galleryShare, size: theme.icons.galleryShare.backingSize).precomposed(NSColor.white.withAlphaComponent(0.7))
         let moreIcon = NSImage(cgImage: theme.icons.galleryMore, size: theme.icons.galleryMore.backingSize).precomposed(NSColor.white.withAlphaComponent(0.7))
+        let fastSaveIcon = NSImage(cgImage: theme.icons.galleryFastSave, size: theme.icons.galleryFastSave.backingSize).precomposed(NSColor.white.withAlphaComponent(0.7))
 
+        
         shareControl.set(image: shareIcon, for: .Normal)
         moreControl.set(image: moreIcon, for: .Normal)
+        fastSaveControl.set(image: fastSaveIcon, for: .Normal)
+
         
         shareControl.set(image: theme.icons.galleryShare, for: .Hover)
         moreControl.set(image: theme.icons.galleryMore, for: .Hover)
         shareControl.set(image: theme.icons.galleryShare, for: .Highlight)
         moreControl.set(image: theme.icons.galleryMore, for: .Highlight)
+        fastSaveControl.set(image: theme.icons.galleryFastSave, for: .Highlight)
         
         _ = moreControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
         _ = shareControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
         
-        
+        addSubview(fastSaveControl)
         addSubview(zoomInControl)
         addSubview(zoomOutControl)
         addSubview(rotateControl)
@@ -92,6 +98,7 @@ class GalleryModernControlsView: View {
         _ = zoomInControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
         _ = zoomOutControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
         _ = rotateControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
+        _ = fastSaveControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
 
         shareControl.set(handler: { [weak self] control in
             _ = self?.interactions?.share(control)
@@ -111,6 +118,10 @@ class GalleryModernControlsView: View {
         
         zoomOutControl.set(handler: { [weak self] _ in
             self?.interactions?.zoomOut()
+        }, for: .Click)
+        
+        fastSaveControl.set(handler: { [weak self] _ in
+            self?.interactions?.fastSave()
         }, for: .Click)
     }
     
@@ -159,19 +170,13 @@ class GalleryModernControlsView: View {
                 zoomInControl.isHidden = false
                 zoomOutControl.isHidden = false
                 rotateControl.isHidden = false
+                fastSaveControl.isHidden = false
             } else if let file = media.media as? TelegramMediaFile {
-                if file.isVideo, !file.isAnimated {
-                    zoomInControl.isHidden = false
-                    zoomOutControl.isHidden = false
-                    rotateControl.isHidden = true
-                } else if file.isAnimated {
+                if file.isVideo {
                     zoomInControl.isHidden = true
                     zoomOutControl.isHidden = true
                     rotateControl.isHidden = true
-                } else {
-                    zoomInControl.isHidden = false
-                    zoomOutControl.isHidden = false
-                    rotateControl.isHidden = false
+                    fastSaveControl.isHidden = false
                 }
             }
         case let .message(message):
@@ -179,19 +184,13 @@ class GalleryModernControlsView: View {
                 zoomInControl.isHidden = false
                 zoomOutControl.isHidden = false
                 rotateControl.isHidden = false
+                fastSaveControl.isHidden = false
             } else if let file = message.message?.media.first as? TelegramMediaFile {
-                if file.isVideo, !file.isAnimated {
-                    zoomInControl.isHidden = false
-                    zoomOutControl.isHidden = false
-                    rotateControl.isHidden = true
-                } else if file.isAnimated {
+                if file.isVideo {
                     zoomInControl.isHidden = true
                     zoomOutControl.isHidden = true
                     rotateControl.isHidden = true
-                } else {
-                    zoomInControl.isHidden = false
-                    zoomOutControl.isHidden = false
-                    rotateControl.isHidden = false
+                    fastSaveControl.isHidden = false
                 }
             } else if let webpage = message.message?.media.first as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content {
@@ -199,23 +198,27 @@ class GalleryModernControlsView: View {
                         zoomInControl.isHidden = false
                         zoomOutControl.isHidden = false
                         rotateControl.isHidden = true
+                        fastSaveControl.isHidden = true
                     }
                 }
             } else {
                 zoomInControl.isHidden = true
                 zoomOutControl.isHidden = true
                 rotateControl.isHidden = true
+                fastSaveControl.isHidden = true
             }
         default:
             zoomInControl.isHidden = false
             zoomOutControl.isHidden = false
             rotateControl.isHidden = false
+            fastSaveControl.isHidden = false
         }
     }
     
     func updatePeer(_ peer: Peer?, timestamp: TimeInterval, account: Account, canShare: Bool) {
         currentState = (peer, timestamp, account)
         shareControl.isHidden = !canShare
+        needsLayout = true
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {
@@ -271,8 +274,8 @@ class GalleryModernControlsView: View {
         shareControl.centerY(x: moreControl.frame.minX - shareControl.frame.width)
         
         let alignControl = shareControl.isHidden ? moreControl : shareControl
-        
-        rotateControl.centerY(x: alignControl.frame.minX - rotateControl.frame.width - 60)
+        fastSaveControl.centerY(x: alignControl.frame.minX - fastSaveControl.frame.width)
+        rotateControl.centerY(x: (fastSaveControl.isHidden ? alignControl.frame.minX : fastSaveControl.frame.minX) - rotateControl.frame.width - 60)
         zoomInControl.centerY(x: (rotateControl.isHidden ? alignControl.frame.minX - 60 : rotateControl.frame.minX) - zoomInControl.frame.width)
         zoomOutControl.centerY(x: zoomInControl.frame.minX - zoomOutControl.frame.width)
         
@@ -300,8 +303,13 @@ class GalleryModernControls: GenericViewController<GalleryModernControlsView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.thumbs = thumbs.view
+        genericView.thumbs = thumbs.genericView
         genericView.interactions = interactions
+        
+        thumbs.afterLayoutTransition = { [weak self] animated in
+            guard let `self` = self else { return }
+            self.thumbs.genericView.change(pos: NSMakePoint((self.frame.width - self.thumbs.frame.width) / 2 + (self.thumbs.frame.width - self.thumbs.genericView.documentSize.width) / 2, (self.frame.height - self.thumbs.frame.height) / 2), animated: animated)
+        }
     }
     
     deinit {

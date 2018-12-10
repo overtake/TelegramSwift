@@ -17,7 +17,7 @@ struct PhotoCachedRecord {
     let image:CGImage
     let size:Int
     init(image:CGImage, size:Int) {
-        self.date = CFAbsoluteTimeGetCurrent()
+        self.date = CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970
         self.size = size
         self.image = image
     }
@@ -28,8 +28,8 @@ struct PhotoCachedRecord {
 enum PhotoCacheKeyEntry : Hashable {
     case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
     case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat)
-    case media(Media, NSSize, CGFloat, LayoutPositionFlags?)
-    case messageId(stableId: Int64, NSSize, CGFloat, LayoutPositionFlags)
+    case media(Media, TransformImageArguments, CGFloat, LayoutPositionFlags?)
+    case messageId(stableId: Int64, TransformImageArguments, CGFloat, LayoutPositionFlags)
     var hashValue:Int {
         switch self {
         case let .avatar(peerId, _, _, _):
@@ -71,7 +71,7 @@ enum PhotoCacheKeyEntry : Hashable {
             }
         case let .media(lhsMedia, lhsSize, lhsScale, lhsPositionFlags):
             if case let .media(rhsMedia, rhsSize, rhsScale, rhsPositionFlags) = rhs {
-                if !lhsMedia.isEqual(to: rhsMedia) {
+                if lhsMedia.id != rhsMedia.id {
                     return false
                 }
                 if lhsSize != rhsSize {
@@ -164,12 +164,14 @@ class PhotoCache {
 
 
 private let peerPhotoCache = PhotoCache()
-private let stickersCache = PhotoCache(32 * 1024 * 1024)
+private let photosCache = PhotoCache(48 * 1024 * 1024)
+private let photoThumbsCache = PhotoCache(8 * 1024 * 1024)
 
 
 func clearImageCache() -> Signal<Void, NoError> {
     return Signal<Void, NoError> { subscriber -> Disposable in
-        stickersCache.clearAll()
+        photosCache.clearAll()
+        photoThumbsCache.clearAll()
         subscriber.putNext(Void())
         subscriber.putCompletion()
         return EmptyDisposable
@@ -197,33 +199,57 @@ func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NS
 }
 
 
-func cachedMedia(media: Media, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<CGImage?, NoError> {
-    let entry:PhotoCacheKeyEntry = .media(media, size, scale, positionFlags)
-    return .single(stickersCache.cachedImage(for: entry))
+func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<(CGImage?, Bool), NoError> {
+    let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
+    let value: CGImage?
+    var full: Bool = false
+    if let image = photosCache.cachedImage(for: entry) {
+        value = image
+        full = true
+    } else {
+        value = photoThumbsCache.cachedImage(for: entry)
+    }
+    return .single((value, full))
 }
 
-func cachedMedia(messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<CGImage?, NoError> {
-    let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, size, scale, positionFlags ?? [])
-    return .single(stickersCache.cachedImage(for: entry))
+func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<(CGImage?, Bool), NoError> {
+    let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, arguments, scale, positionFlags ?? [])
+    let value: CGImage?
+    var full: Bool = false
+    if let image = photosCache.cachedImage(for: entry) {
+        value = image
+        full = true
+    } else {
+        value = photoThumbsCache.cachedImage(for: entry)
+    }
+    return .single((value, full))
 }
 
-func cacheMedia(signal:Signal<(CGImage?, Bool), NoError>, media: Media, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, NoError> {
-    
-    return signal |> filter {$0.1} |> mapToSignal { (image, _) -> Signal<Void, NoError> in
+func cacheMedia(signal:Signal<(CGImage?, Bool), NoError>, media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, NoError> {
+    // |> filter {$0.1}
+    return signal |> mapToSignal { (image, highResolution) -> Signal<Void, NoError> in
         if let image = image {
-            let entry:PhotoCacheKeyEntry = .media(media, size, scale, positionFlags)
-            return .single(stickersCache.cacheImage(image, for: entry))
+            let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
+            if !highResolution {
+                return .single(photoThumbsCache.cacheImage(image, for: entry))
+            } else {
+                return .single(photosCache.cacheImage(image, for: entry))
+            }
         }
         return .complete()
     }
 }
 
-func cacheMedia(signal:Signal<(CGImage?, Bool), NoError>, messageId: Int64, size: NSSize, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, NoError> {
+func cacheMedia(signal:Signal<(CGImage?, Bool), NoError>, messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, NoError> {
     
-    return signal |> filter {$0.1} |> take(1) |> mapToSignal { (image, _) -> Signal<Void, NoError> in
+    return signal |> mapToSignal { (image, highResolution) -> Signal<Void, NoError> in
         if let image = image {
-            let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, size, scale, positionFlags ?? [])
-            return .single(stickersCache.cacheImage(image, for: entry))
+            let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, arguments, scale, positionFlags ?? [])
+            if !highResolution {
+                return .single(photoThumbsCache.cacheImage(image, for: entry))
+            } else {
+                return .single(photosCache.cacheImage(image, for: entry))
+            }
         }
         return .complete()
     }

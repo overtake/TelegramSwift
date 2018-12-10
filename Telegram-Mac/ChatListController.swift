@@ -80,13 +80,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, t
 
 }
 
-private final class SwipingChatItemController : ViewController {
-    let item: ChatListRowItem
-    init(item: ChatListRowItem) {
-        self.item = item
-        super.init()
-    }
-}
+
 
 
 class ChatListController : PeersListController {
@@ -346,6 +340,11 @@ class ChatListController : PeersListController {
     
     override func scrollup() {
         
+        if searchController != nil {
+            self.genericView.searchView.change(state: .None, true)
+            return
+        }
+        
         let lastScrolledIndex = self.lastScrolledIndex
         
         let scrollToTop:()->Void = { [weak self] in
@@ -435,7 +434,10 @@ class ChatListController : PeersListController {
                 swipeState = nil
             }
             
+            
             guard let state = swipeState else {return .failed}
+            
+
             
             switch state {
             case .start:
@@ -444,16 +446,16 @@ class ChatListController : PeersListController {
                     let item = self.genericView.tableView.item(at: row) as! ChatListRowItem
                     guard item.pinnedType != .ad else {return .failed}
                     self.removeSwipingStateIfNeeded(item.peerId)
-                    (item.view as? ChatListRowView)?.initSwipingState()
-                    return .success(SwipingChatItemController(item: item))
+                    (item.view as? SwipingTableView)?.initSwipingState()
+                    return .success(SwipingTableItemController(item: item))
                 } else {
                     return .failed
                 }
                
             case let .swiping(_delta, controller):
-                let controller = controller as! SwipingChatItemController
+                let controller = controller as! SwipingTableItemController
 
-                guard let view = controller.item.view as? ChatListRowView else {return .nothing}
+                guard let view = controller.item.view as? SwipingTableView else {return .nothing}
                 
                 var delta:CGFloat
                 switch direction {
@@ -466,11 +468,22 @@ class ChatListController : PeersListController {
                 }
                 
                 
+                delta -= view.additionalSwipingDelta
+                
+                let newDelta = min(view.width * log2(abs(delta) + 1) * log2(delta < 0 ? view.width * 4 : view.width) / 100.0, abs(delta))
+
+                if delta < 0 {
+                    delta = -newDelta
+                } else {
+                    delta = newDelta
+                }
+
+                
 
                 view.moveSwiping(delta: delta)
             case let .success(_, controller), let .failed(_, controller):
-                let controller = controller as! SwipingChatItemController
-                guard let view = (controller.item.view as? ChatListRowView) else {return .nothing}
+                let controller = controller as! SwipingTableItemController
+                guard let view = (controller.item.view as? SwipingTableView) else {return .nothing}
                 
                 
                 var direction = direction
@@ -518,7 +531,7 @@ class ChatListController : PeersListController {
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let item = self?.genericView.tableView.highlightedItem(), item.index > 0 {
-                self?.genericView.tableView.highlitedPrev(turnDirection: false)
+                self?.genericView.tableView.highlightPrev(turnDirection: false)
                 while self?.genericView.tableView.highlightedItem() is PopularPeersRowItem || self?.genericView.tableView.highlightedItem() is SeparatorRowItem {
                     self?.genericView.tableView.highlightNext(turnDirection: false)
                 }

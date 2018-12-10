@@ -62,7 +62,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
         isVerified = peer?.isVerified ?? false
         
         if let peer = peer {
-            photo = peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters), displayDimensions:NSMakeSize(photoDimension, photoDimension))
+            photo = peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
         }
         self.result = stringStatus(for: peerView, account: account, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false))
         
@@ -124,6 +124,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
     private let callDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         image.frame = NSMakeRect(0, 0, 70, 70)
         addSubview(image)
         
@@ -283,27 +284,21 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
             editableContainer.isHidden = !item.editable
             editableContainer.backgroundColor = theme.colors.background
             
-            firstNameTextView.textColor = theme.colors.text
-            lastNameTextView.textColor = theme.colors.text
-            firstNameTextView.background = theme.colors.background
-            lastNameTextView.background = theme.colors.background
-            
-            firstNameSeparator.backgroundColor = theme.colors.border
-            lastNameSeparator.backgroundColor = theme.colors.border
+          
             if let peer = item.peer {
                 image.setPeer(account: item.account, peer: peer)
                 if let peer = peer as? TelegramUser {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.firstName ?? "", animated: false)
                     lastNameTextView.setString(item.lastTextEdited ?? peer.lastName ?? "", animated: false)
-                    firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
-                    lastNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    lastNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     lastNameTextView.isHidden = false
                 } else {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.displayTitle, animated: false)
                     if peer.isChannel {
-                        firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoChannelNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoChannelNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     } else {
-                        firstNameTextView.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.peerInfoGroupNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoGroupNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     }
                     lastNameTextView.isHidden = true
                 }
@@ -331,8 +326,17 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                 callButton.isHidden = !item.canCall
                 
                 lastNameSeparator.isHidden = lastNameTextView.isHidden
-                needsLayout = true
+                
             }
+            firstNameTextView.textColor = theme.colors.text
+            lastNameTextView.textColor = theme.colors.text
+            firstNameTextView.background = theme.colors.background
+            lastNameTextView.background = theme.colors.background
+            
+            firstNameSeparator.backgroundColor = theme.colors.border
+            lastNameSeparator.backgroundColor = theme.colors.border
+            
+            needsLayout = true
         }
     }
     

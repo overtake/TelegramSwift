@@ -28,18 +28,18 @@ class PeerMediaRowItem: TableRowItem {
     }
     
     private var entry:PeerMediaSharedEntry
-    var message:Message
-    var account:Account
-    var interface:ChatInteraction
+    let message:Message
+    let account:Account
+    let interface:ChatInteraction
+    let automaticDownload: AutomaticMediaDownloadSettings
     
     init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
-        
         self.entry = object
         self.account = account
         self.interface = interface
-        
-        if case let .messageEntry(message) = object {
+        if case let .messageEntry(message, automaticDownload) = object {
             self.message = message
+            self.automaticDownload = automaticDownload
         } else {
             fatalError("entry haven't message")
         }

@@ -349,7 +349,6 @@ open class ViewController : NSObject {
     open func viewWillDisappear(_ animated:Bool) -> Void {
         if #available(OSX 10.12.2, *) {
             window?.touchBar = nil
-            window?.makeFirstResponder(nil)
         }
         //assert(self.window != nil)
         if canBecomeResponder {
@@ -519,9 +518,9 @@ open class ViewController : NSObject {
         return Popover.self
     }
     
-    open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint) -> Void {
+    open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, static: Bool = false) -> Void {
         if popover == nil {
-            self.popover = (self.popoverClass as! Popover.Type).init(controller: self)
+            self.popover = (self.popoverClass as! Popover.Type).init(controller: self, static: `static`)
         }
         
         if let popover = popover {
@@ -537,6 +536,12 @@ open class ViewController : NSObject {
         _ = (self.ready.get() |> take(1) |> deliverOnMainQueue).start(next: { (ready) in
             action.close()
         })
+    }
+    
+    public func removeToaster() {
+        if let toaster = self.toaster {
+            toaster.hide(true)
+        }
     }
     
     public func show(toaster:ControllerToaster, for delay:Double = 3.0, animated:Bool = true) {

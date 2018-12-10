@@ -22,6 +22,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case instantViewAppearance = 11
     case additionalSettings = 15
     case autoNight = 26
+    case stickerSettings = 29
 }
 
 struct ApplicationSpecificPreferencesKeys {
@@ -36,4 +37,5 @@ struct ApplicationSpecificPreferencesKeys {
     static let additionalSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.additionalSettings.rawValue)
     static let readArticles = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.readArticles.rawValue)
     static let autoNight = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.autoNight.rawValue)
+    static let stickerSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.stickerSettings.rawValue)
 }

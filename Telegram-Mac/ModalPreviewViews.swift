@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 
-fileprivate class StickerPreviewModalView : View {
+class StickerPreviewModalView : View, ModalPreviewControllerView {
     fileprivate let imageView:TransformImageView = TransformImageView()
     fileprivate let textView:TextView = TextView()
     required init(frame frameRect: NSRect) {
@@ -51,50 +51,44 @@ fileprivate class StickerPreviewModalView : View {
     }
 }
 
-class StickerPreviewModalController: ModalViewController {
-    fileprivate let account:Account
-    fileprivate var reference:FileMediaReference?
-    init(_ account:Account) {
-        self.account = account
+
+
+class GifPreviewModalView : View, ModalPreviewControllerView {
+    fileprivate var player:GIFContainerView = GIFContainerView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(player)
+        player.setFrameSize(100,100)
+        self.background = .clear
+    }
+    
+    override func layout() {
+        super.layout()
+        player.center()
         
-        super.init(frame: NSMakeRect(0, 0, 360, 400))
     }
     
-    override var containerBackground: NSColor {
-        return .clear
-    }
-    
-    override var handleEvents:Bool {
-        return false
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        if let reference = reference {
-            genericView.update(with: reference, account: account)
-        }
-        readyOnce()
-    }
-    
-    func update(with reference:FileMediaReference?) {
-        if self.reference?.media != reference?.media {
-            self.reference = reference
-            if isLoaded(), let reference = reference {
-                genericView.update(with: reference, account: account)
+    func update(with reference: FileMediaReference, account:Account) -> Void {
+        
+        
+        let current = self.player
+        current.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak current] completed in
+            if completed {
+                current?.removeFromSuperview()
             }
-        }
+        })
+        self.player = GIFContainerView()
+        self.player.layer?.borderWidth = 0
+        addSubview(self.player)
+        let size = reference.media.dimensions?.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 40)) ?? frame.size
+        
+        player.update(with: reference.resourceReference(reference.media.resource), size: size, viewSize: size, file: reference.media, account: account, table: nil, iconSignal: chatMessageVideo(postbox: account.postbox, fileReference: reference, scale: backingScaleFactor))
+        player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
+        player.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        needsLayout = true
     }
     
-    fileprivate var genericView:StickerPreviewModalView {
-        return view as! StickerPreviewModalView
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
-    
-    override func viewClass() -> AnyClass {
-        return StickerPreviewModalView.self
-    }
-    
-    //    override var isFullScreen: Bool {
-    //        return true
-    //    }
-    
 }

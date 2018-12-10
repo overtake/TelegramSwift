@@ -568,10 +568,10 @@ class PhoneCallWindowController {
         
         if let dimension = user.profileImageRepresentations.last?.dimensions {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: view.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
-            view.imageView.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
+            view.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor))
             view.imageView.setSignal(chatMessagePhoto(account: session.account, imageReference: ImageMediaReference.standalone(media: media), scale: view.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                 if let strongSelf = self {
-                    return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.view.backingScaleFactor)
+                    return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.view.backingScaleFactor)
                 } else {
                     return .complete()
                 }
@@ -579,7 +579,7 @@ class PhoneCallWindowController {
             view.imageView.set(arguments: arguments)
 
         } else {
-            view.imageView.setSignal(signal: generateEmptyRoundAvatar(view.imageView.frame.size, font: .avatar(90.0), account: session.account, peer: user))
+            view.imageView.setSignal(signal: generateEmptyRoundAvatar(view.imageView.frame.size, font: .avatar(90.0), account: session.account, peer: user) |> map {($0, true)})
         }
         
         

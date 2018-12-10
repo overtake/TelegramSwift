@@ -23,6 +23,7 @@ class GalleryThumbContainer : Control {
         if let item = item as? MGalleryPhotoItem {
             signal = chatWebpageSnippetPhoto(account: item.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)
             size = item.media.representations.first?.dimensions
+            item.fetch()
         } else if let item = item as? MGalleryGIFItem {
             signal = chatMessageImageFile(account: item.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
@@ -33,8 +34,9 @@ class GalleryThumbContainer : Control {
             signal = chatMessagePhotoThumbnail(account: item.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
             
             size = item.media.representations.first?.dimensions
+            item.fetch()
         }
-        item.fetch()
+        
 
         if let signal = signal, let size = size {
             imageView.setSignal(signal)
@@ -143,6 +145,9 @@ class GalleryThumbsControlView: View {
         
     }
     
+    var documentSize: NSSize {
+        return NSMakeSize(min(documentView.frame.width, frame.width), documentView.frame.height)
+    }
     
     func layoutItems(selectedIndex: Int? = nil, animated: Bool) {
         
@@ -191,6 +196,8 @@ class GalleryThumbsControlView: View {
             scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated)
            // documentView.change(pos: NSMakePoint(selectedView.frame.minX, 0), animated: true)
         }
+        
+        
        // change(size: NSMakeSize(min(500, documentView.frame.width), documentView.frame.height), animated: animated)
         
     }

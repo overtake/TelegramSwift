@@ -181,6 +181,13 @@ let playerPauseThumb = generateImage(CGSize(width: 40, height: 40), contextGener
 })
 
 
+let stopFetchStreamableControl = generateImage(CGSize(width: 6, height: 6), contextGenerator: { size, context in
+    context.clear(CGRect(origin: CGPoint(), size: size))
+    context.round(size, 2)
+    context.setFillColor(NSColor.white.cgColor)
+    context.fill(NSMakeRect(0, 0, size.width, size.height))
+})
+
 
 public struct PreviewOptions: OptionSet {
     public var rawValue: UInt32

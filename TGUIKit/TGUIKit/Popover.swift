@@ -40,8 +40,8 @@ open class Popover: NSObject {
     public var animationStyle:AnimationStyle = AnimationStyle(duration:0.2, function:CAMediaTimingFunctionName.spring)
     
     var readyDisposable:MetaDisposable = MetaDisposable()
-    
-    required public init(controller:ViewController) {
+    private let `static`: Bool
+    required public init(controller:ViewController, static: Bool) {
         self.controller = controller
         self.background.layer?.shadowOpacity = 0.4
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
@@ -49,6 +49,7 @@ open class Popover: NSObject {
         self.background.layer?.isOpaque = false
         self.background.layer?.shadowOffset = NSMakeSize(0, 0)
         self.background.layer?.cornerRadius = 4
+        self.static = `static`
         super.init()
         
         background.popover = self
@@ -125,7 +126,6 @@ open class Popover: NSObject {
                 signal = signal |> delay(delayBeforeShown, queue: Queue.mainQueue())
             }
             self.readyDisposable.set(signal.start(next: { [weak self, weak controller, weak parentView] ready in
-                
                 if let parentView = parentView {
                     for subview in parentView.subviews {
                         if let view = subview  as? PopoverBackground {
@@ -134,7 +134,8 @@ open class Popover: NSObject {
                     }
                 }
                 
-                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight) || !control.userInteractionEnabled), control.window != nil, control.visibleRect != NSZeroRect {
+                
+                if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight || strongSelf.static) || !control.userInteractionEnabled), control.window != nil, control.visibleRect != NSZeroRect {
                     
                     control.isSelected = true
                     
@@ -203,25 +204,27 @@ open class Popover: NSObject {
                             
                             var once:Bool = false
                             
-                            for sub in strongSelf.background.subviews {
-                                sub.layer?.animate(from: (-strongSelf.background.frame.height) as NSNumber, to: (sub.frame.minY) as NSNumber, keyPath: "position.y", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration, removeOnCompletion: true, additive: false, completion:{ [weak controller] (comple) in
-                                    if let strongSelf = self, !once {
-                                        once = true
-                                        controller?.viewDidAppear(strongSelf.animates)
-                                    }
-                                    
-                                })
+                            strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.1, completion: { [weak controller] (comple) in
+                                if let strongSelf = self, !once {
+                                    once = true
+                                    controller?.viewDidAppear(strongSelf.animates)
+                                }
                                 
-                                //   sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
-                            }
+                            })
                             
+//                            for sub in strongSelf.background.subviews {
+//
+//
+//                                //   sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
+//                            }
+//
                             
                             
                         }
                         
                         let nHandler:(Control) -> Void = { [weak strongSelf] control in
                             if let strongSelf = strongSelf {
-                                let s = Signal<Void,NoError>.single(Void()) |> delay(0.2, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single(Void()) |> delay(0.1, queue: Queue.mainQueue()) |> restart)
+                                let s = Signal<Void,NoError>.single(Void()) |> delay(0.2, queue: Queue.mainQueue()) |> then(Signal<Void,NoError>.single(Void()) |> delay(0.2, queue: Queue.mainQueue()) |> restart)
                                 
                                 strongSelf.disposable.set(s.start(next: { [weak strongSelf] () in
                                     if let strongSelf = strongSelf {
@@ -239,7 +242,7 @@ open class Popover: NSObject {
                         var first: Bool = true
                         
                         control.kitWindow?.set(mouseHandler: { [weak strongSelf, weak control] _ -> KeyHandlerResult in
-                            if let strongSelf = strongSelf, first, let control = control {
+                            if let strongSelf = strongSelf, first, let control = control, !strongSelf.static {
                                 if !strongSelf.inside() && !control.mouseInside() {
                                     first = false
                                     nHandler(control)
@@ -339,22 +342,26 @@ open class Popover: NSObject {
         
         controller?.viewWillDisappear(true)
         if animates {
-            var once:Bool = false
-            background.change(opacity: 0, animated: animates)
-            for sub in background.subviews {
-                
-                sub._change(opacity: 0, animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] complete in
-                    if let strongSelf = self, !once {
-                        once = true
-                        strongSelf.controller?.viewDidDisappear(true)
-                        strongSelf.controller?.didRemovedFromStack()
-                        strongSelf.controller?.popover = nil
-                        strongSelf.controller = nil
-                        strongSelf.background.removeFromSuperview()
-                    }
-                })
-                
-            }
+            background.change(opacity: 0, animated: animates, duration: 0.15, completion: { [weak self] complete in
+                guard let `self` = self else {return}
+                if self === self.controller?.popover {
+                    self.controller?.viewDidDisappear(true)
+                    self.controller?.didRemovedFromStack()
+                    self.controller?.popover = nil
+                }
+                self.controller = nil
+                self.background.removeFromSuperview()
+            })
+//            for sub in background.subviews {
+//
+//                sub._change(opacity: 0, animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] complete in
+//                    if let strongSelf = self, !once {
+//                        once = true
+//
+//                    }
+//                })
+//
+//            }
         } else {
             controller?.viewDidDisappear(false)
             controller?.didRemovedFromStack()
@@ -378,11 +385,24 @@ public func hasPopover(_ window:Window) -> Bool {
     return false
 }
 
-public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.2) -> Void {
-    if let window = control.window as? Window, !hasPopover(window) {
-        if controller.popover == nil {
-            controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller)
+public func closeAllPopovers(for window: Window) {
+    while hasPopover(window) {
+        for subview in window.contentView!.subviews {
+            if let subview = subview as? PopoverBackground, let popover = subview.popover {
+                popover.hide()
+            }
         }
+    }
+}
+
+public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.2, static: Bool = false ) -> Void {
+    if let window = control.window as? Window {
+        if let popover = controller.popover {
+            if popover.isShown {
+                return
+            }
+        }
+        controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller, static: `static`)
         
         if let popover = controller.popover {
             popover.show(for: control, edge: edge, inset: inset, delayBeforeShown: delayBeforeShown)

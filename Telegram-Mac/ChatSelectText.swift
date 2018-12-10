@@ -44,8 +44,7 @@ class SelectManager : NSResponder {
     }
     
     
-    @objc func copy(_ sender:Any) {
-        
+    var selectedText: String {
         var string:String = ""
         
         for i in stride(from: ranges.count - 1, to: -1, by: -1) {
@@ -68,6 +67,13 @@ class SelectManager : NSResponder {
                 string += "\n\n"
             }
         }
+        
+        return string
+    }
+    
+    @objc func copy(_ sender:Any) {
+        
+        let string:String = selectedText
         
         if !string.isEmpty {
             let pb = NSPasteboard.general
@@ -211,10 +217,29 @@ class ChatSelectText : NSObject {
             self?.inPressedState = false
             
             if let table = self?.table, let superview = table.superview, let documentView = table.documentView {
-                let point = superview.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-                let documentPoint = documentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                let point = superview.convert(event.locationInWindow, from: nil)
+                let documentPoint = documentView.convert(event.locationInWindow, from: nil)
                 let row = table.row(at: documentPoint)
-                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals() || (!table.item(at: row).canMultiselectTextIn(window.mouseLocationOutsideOfEventStream) && chatInteraction.presentation.state != .selecting)) {
+                
+                var isCurrentTableView: (NSView?)->Bool = { _ in return false}
+                
+                isCurrentTableView = { [weak table] view in
+                    if view === table {
+                        return true
+                    } else if let superview = view?.superview {
+                        if superview is TableView, view is TableRowView || view is NSClipView {
+                            return isCurrentTableView(superview)
+                        } else if superview is TableView {
+                            return false
+                        } else {
+                            return isCurrentTableView(superview)
+                        }
+                    } else {
+                        return false
+                    }
+                }
+                
+                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals() || (!table.item(at: row).canMultiselectTextIn(event.locationInWindow) && chatInteraction.presentation.state != .selecting)) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {
                     self?.beginInnerLocation = NSZeroPoint
                 } else {
                     self?.beginInnerLocation = documentPoint
@@ -294,11 +319,11 @@ class ChatSelectText : NSObject {
             if self.started {
                 self.table.clipView.autoscroll(with: event)
                 if chatInteraction.presentation.state != .selecting {
-                    if window.firstResponder != selectManager {
-                        _ = window.makeFirstResponder(selectManager)
-                    }
                     if !self.inPressedState {
                         self.runSelector(window: window, chatInteraction: chatInteraction)
+                        if window.firstResponder != selectManager {
+                            _ = window.makeFirstResponder(selectManager)
+                        }
                     }
                     return .invoked
                     

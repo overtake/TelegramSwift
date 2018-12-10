@@ -11,9 +11,9 @@ import TelegramCoreMac
 import TGUIKit
 import PostboxMac
 import SwiftSignalKitMac
-class GIFContainerView: View {
+class GIFContainerView: Control {
 
-    private(set) var player:GIFPlayerView = GIFPlayerView()
+    let player:GIFPlayerView = GIFPlayerView()
     private var progressView:RadialProgressView?
     var playerInset:NSEdgeInsets = NSEdgeInsets() {
         didSet {
@@ -27,13 +27,14 @@ class GIFContainerView: View {
     private var reference:MediaResourceReference?
     private var account:Account?
     private var size:NSSize = NSZeroSize
+    private var ignoreWindowKey: Bool = false
     private weak var tableView:TableView?
     var timebase:CMTimebase? {
         didSet {
             player.reset(with: timebase, false)
         }
     }
-    private var path:String? {
+    private var data:AVGifData? {
         didSet {
             updatePlayerIfNeeded()
         }
@@ -46,7 +47,16 @@ class GIFContainerView: View {
         self.layer?.borderWidth = 1.5
         //self.layer?.cornerRadius = 4.0
         player.background = .clear
+        player.setVideoLayerGravity(.resizeAspectFill)
+        
+        set(handler: { [weak self] control in
+            if let `self` = self, let window = self.window as? Window, let table = self.tableView, let account = self.account {
+                _ = startModalPreviewHandle(table, viewType: GifPreviewModalView.self, window: window, account: account)
+            }
+        }, for: .LongMouseDown)
+        
     }
+    
     
     required convenience init(frame frameRect: NSRect) {
         self.init()
@@ -92,7 +102,7 @@ class GIFContainerView: View {
         
         
         
-        let wAccept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        let wAccept = window != nil && (window!.isKeyWindow || self.ignoreWindowKey)  && !NSIsEmptyRect(visibleRect)
         var accept:Bool = false
 
         if let window = window {
@@ -118,28 +128,30 @@ class GIFContainerView: View {
             
             
         }
-        player.set(path: accept ? path : nil, timebase: timebase)
         
-        
-        /*var s:Signal<Void, NoError> = .single()
-        s = s |> delay(0.01, queue: Queue.mainQueue())
-        playerDisposable.set(s.start(next: {[weak self] (next) in
-            if let strongSelf = self {
-                let accept = strongSelf.window != nil && strongSelf.window!.isKeyWindow && !NSIsEmptyRect(strongSelf.visibleRect)
-                strongSelf.player.set(path: accept ? strongSelf.path : nil)
+        if !ignoreWindowKey {
+            var s:Signal<Void, Void> = .single(Void())
+            if accept {
+                s = s |> delay(0.01, queue: Queue.mainQueue())
             }
-        })) */
+            playerDisposable.set(s.start(next: {[weak self] (next) in
+                if let strongSelf = self {
+                    strongSelf.player.set(data: accept ? strongSelf.data : nil, timebase: strongSelf.timebase)
+                }
+            }))
+        } else {
+             player.set(data: accept ? data : nil, timebase: timebase)
+        }
         
     }
     
     
     func updateListeners() {
+        removeNotificationListeners()
         if let window = window {
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: tableView?.clipView)
-        } else {
-            removeNotificationListeners()
         }
     }
     deinit {
@@ -151,14 +163,14 @@ class GIFContainerView: View {
         updatePlayerIfNeeded()
     }
     
-    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, account: Account, table: TableView?, iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>) {
-        
+    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, account: Account, table: TableView?, ignoreWindowKey: Bool = false, iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>) {
+        let updated = self.reference == nil || !self.reference!.resource.id.isEqual(to: reference.resource.id)
         self.tableView = table
         self.account = account
         self.reference = reference
         self.size = size
         self.setFrameSize(size)
-        
+        self.ignoreWindowKey = ignoreWindowKey
         self.layer?.borderColor = theme.colors.background.cgColor
         
         updateListeners()
@@ -166,21 +178,48 @@ class GIFContainerView: View {
         
         player.center()
         progressView?.center()
-        
-        player.setSignal(iconSignal)
-        let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height - 8))
+        let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height))
+        let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: (file?.dimensions ?? imageSize).aspectFilled(viewSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
 
-        let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+        if let file = file {
+            player.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
+            if updated {
+                player.set(data: nil, timebase: nil)
+                player.reset()
+            }
+        }
+        player.animatesAlphaOnFirstTransition = !player.hasImage
+
+        
+        player.setSignal(iconSignal, cacheImage: { [weak file] image in
+            if let file = file {
+                return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
+            } else {
+                return .complete()
+            }
+        })
+
+
         player.set(arguments: arguments)
         
         let updatedStatusSignal = account.postbox.mediaBox.resourceStatus(reference.resource)
         
-        self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(reference.resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
+        self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(reference.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil}) |> deliverOnMainQueue).start(next: { [weak self] status, data in
             if let strongSelf = self {
                 if case .Local = status {
-                    strongSelf.progressView?.removeFromSuperview()
-                    strongSelf.progressView = nil
-                    strongSelf.path = resource.path
+                    
+                    if let progressView = strongSelf.progressView {
+                        progressView.state = .Fetching(progress: 1.0, force: false)
+
+                        strongSelf.progressView = nil
+                        progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                            if completed {
+                                progressView?.removeFromSuperview()
+                            }
+                        })
+                    }
+                    
+                    strongSelf.data = data
                     
                 } else {
                     if strongSelf.progressView == nil {

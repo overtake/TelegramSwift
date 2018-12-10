@@ -90,14 +90,20 @@ struct APResource {
 
 class APItem : Equatable {
     
-    private(set) var status: MediaPlayerStatus = MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, baseRate: 1.0, seekId: 0, status: .paused)
+    private(set) var status: MediaPlayerStatus = MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, baseRate: 1.0, volume: 1.0, seekId: 0, status: .paused)
     
     func setStatus(_ status: MediaPlayerStatus, rate: Double) {
+        
+        let status = status.withUpdatedDuration(max(status.duration, self.status.duration))
+        
         var progress:TimeInterval = (status.timestamp / status.duration)
         if progress.isNaN {
             progress = 0
         } 
         
+        if !progress.isFinite {
+            progress = 1.0
+        }
 
         switch status.status {
         case .playing:
@@ -834,31 +840,34 @@ class APController : NSResponder {
         }))
 
 //
-//        itemDisposable.set(item.pullResource().start(next: { [weak self] resource in
-//            if let strongSelf = self {
-//                if resource.complete {
-////                    strongSelf.player = .player(for: resource.path)
-////                    strongSelf.player?.delegate = strongSelf
-////                    strongSelf.player?.play()
-//
-//
-//                    let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
-//                    if let index = items.index(of: item) {
-//                        let previous = index - 1
-//                        let next = index + 1
-//                        if previous >= 0 {
-//                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[previous].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
-//                        }
-//                        if next < items.count {
-//                            strongSelf.prevNextDisposable.add(strongSelf.account.postbox.mediaBox.fetchedResource(items[next].resource, tag: TelegramMediaResourceFetchTag(statsCategory: .audio)).start())
-//                        }
-//                    }
-//
-//                } else {
-//                    item.state = .fetching(resource.progress,true)
-//                }
-//            }
-//        }))
+        if !streamable {
+            itemDisposable.set(item.pullResource().start(next: { [weak self] resource in
+                if let strongSelf = self {
+                    if resource.complete {
+                        //                    strongSelf.player = .player(for: resource.path)
+                        //                    strongSelf.player?.delegate = strongSelf
+                        //                    strongSelf.player?.play()
+                        
+                        
+                        let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+                        if let index = items.index(of: item) {
+                            let previous = index - 1
+                            let next = index + 1
+                            if previous >= 0 {
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(postbox: strongSelf.account.postbox, reference: items[previous].reference, statsCategory: .audio).start())
+                            }
+                            if next < items.count {
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(postbox: strongSelf.account.postbox, reference: items[next].reference, statsCategory: .audio).start())
+                            }
+                        }
+                        
+                    } else {
+                        item.state = .fetching(resource.progress,true)
+                    }
+                }
+            }))
+        }
+        
     }
 
 
@@ -933,14 +942,14 @@ class APController : NSResponder {
         if let player = mediaPlayer, let song = song {
             let current: Double = song.status.duration * Double(trackProgress)
             player.seek(timestamp: current)
-            if case .paused = song.state {
-                var progress:TimeInterval = (current / song.status.duration)
-                if progress.isNaN {
-                    progress = 1
-                }
-                song.state = .playing(current: current, duration: song.status.duration, progress: progress, animated: true)
-                song.state = .paused(current: current, duration: song.status.duration, progress: progress, animated: true)
-            }
+//            if case .paused = song.state {
+//                var progress:TimeInterval = (current / song.status.duration)
+//                if progress.isNaN {
+//                    progress = 1
+//                }
+//               // song.state = .playing(current: current, duration: song.status.duration, progress: progress, animated: false)
+//               // song.state = .paused(current: current, duration: song.status.duration, progress: progress, animated: false)
+//            }
         }
     }
 

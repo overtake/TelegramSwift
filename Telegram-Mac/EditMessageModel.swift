@@ -146,9 +146,9 @@ class EditMessageModel: ChatAccessoryModel {
                 }
                 
                 if let updateImageSignal = updateImageSignal, let media = updatedMedia {
-                    view.imageView?.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: view.backingScaleFactor))
+                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor))
                     view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
-                        return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
+                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: System.backingScale)
                     })
                     if let media = media as? TelegramMediaImage {
                         self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())

@@ -25,7 +25,7 @@ final class InstantPageMediaView: View, InstantPageView {
     private let statusDisposable = MetaDisposable()
     private let playerDisposable = MetaDisposable()
     private let videoDataDisposable = MetaDisposable()
-    private var videoPath:String? {
+    private var videoData:AVGifData? {
         didSet {
             updatePlayerIfNeeded()
         }
@@ -38,7 +38,7 @@ final class InstantPageMediaView: View, InstantPageView {
         playerDisposable.set(s.start(next: { [weak self] in
             if let strongSelf = self {
                  let accept = strongSelf.window != nil && strongSelf.window!.isKeyWindow
-                (strongSelf.imageView as? GIFPlayerView)?.set(path: accept ? strongSelf.videoPath : nil)
+                (strongSelf.imageView as? GIFPlayerView)?.set(data: accept ? strongSelf.videoData : nil)
             }
         }))
     }
@@ -80,7 +80,7 @@ final class InstantPageMediaView: View, InstantPageView {
         
         progressView.isHidden = true
         
-        self.imageView.alphaTransitionOnFirstUpdate = true
+        self.imageView.animatesAlphaOnFirstTransition = true
         self.addSubview(self.imageView)
         addSubview(progressView)
         
@@ -134,17 +134,13 @@ final class InstantPageMediaView: View, InstantPageView {
             statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
             self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)).start())
             
-            self.imageView.setSignal( chatMessageVideoThumbnail(account: account, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+            self.imageView.setSignal( chatMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
 
             switch arguments {
             case let .video(_, autoplay):
                 if autoplay {
-                    videoDataDisposable.set((account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue).start(next: { [weak self] data in
-                        if data.complete {
-                            self?.videoPath = data.path
-                        } else {
-                            self?.videoPath = nil
-                        }
+                    videoDataDisposable.set((account.postbox.mediaBox.resourceData(file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
+                        self?.videoData = data
                     }))
                 }
             default:

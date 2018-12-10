@@ -76,7 +76,7 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
 func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32) -> (String, Bool, NSColor) {
     switch presence.status {
     case .none:
-        return (tr(L10n.peerStatusRecently), false, theme.colors.grayText)
+        return (L10n.peerStatusLongTimeAgo, false, theme.colors.grayText)
     case let .present(statusTimestamp):
         let statusTimestamp = statusTimestamp - Int32(timeDifference)
         if statusTimestamp >= timestamp {
@@ -88,7 +88,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
             } else if difference < 60 * 60 {
                 let minutes = max(difference / 60, 1)
                 
-                return (tr(L10n.peerStatusMinAgoCountable(Int(minutes))), false, theme.colors.grayText)
+                return (L10n.peerStatusMinAgoCountable(Int(minutes)), false, theme.colors.grayText)
             } else {
                 var t: time_t = time_t(statusTimestamp)
                 var timeinfo: tm = tm()
@@ -99,7 +99,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
                 localtime_r(&now, &timeinfoNow)
                 
                 if timeinfo.tm_year != timeinfoNow.tm_year {
-                    return ("\(tr(L10n.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
                 }
                 
                 let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
@@ -112,16 +112,16 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
                     }
                     return (stringForUserPresence(day: day, hours: timeinfo.tm_hour, minutes: timeinfo.tm_min), false, theme.colors.grayText)
                 } else {
-                    return ("\(tr(L10n.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
                 }
             }
         }
     case .recently:
-        return (tr(L10n.peerStatusRecently), false, theme.colors.grayText)
+        return (L10n.peerStatusRecently, false, theme.colors.grayText)
     case .lastWeek:
-        return (tr(L10n.peerStatusLastWeek), false, theme.colors.grayText)
+        return (L10n.peerStatusLastWeek, false, theme.colors.grayText)
     case .lastMonth:
-        return (tr(L10n.peerStatusLastMonth), false, theme.colors.grayText)
+        return (L10n.peerStatusLastMonth, false, theme.colors.grayText)
     }
 }
 

@@ -220,23 +220,11 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                 let controller = APChatMusicController(account: item.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
                 item.interface.inlineAudioPlayer(controller)
                 controller.start()
-                addGlobalAudioToVisible()
             }
         }
     }
     
-    
-    func addGlobalAudioToVisible() {
-        if let controller = globalAudio {
-            item?.table?.enumerateViews(with: { (view) in
-                if  let view = (view as? PeerMediaMusicRowView) {
-                    controller.add(listener: view)
-                }
-                return true
-            })
-        }
-        
-    }
+
     
     func fetch() {
         if let item = item as? PeerMediaMusicRowItem {

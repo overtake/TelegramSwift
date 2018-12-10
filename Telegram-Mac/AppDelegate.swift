@@ -117,6 +117,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         
         
+        
+        
        // applyMainMenuLocalization(window)
         
         mw = window
@@ -196,6 +198,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             LSSetDefaultHandlerForURLScheme("tg" as CFString, bundleId as CFString)
         }
         
+        
 
         launchInterface()
         
@@ -206,7 +209,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         self.accountManagerPromise.set(accountManager(basePath: containerUrl + "/accounts-metadata"))
         let _ = (accountManagerPromise.get() |> mapToSignal { manager in
-            return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: ""), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+            return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
         }).start()
         
         
@@ -440,6 +443,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #if !APP_STORE
             updater.checkForUpdates(sender)
         #endif
+    }
+    
+    
+    func windowDidDeminiaturize(_ notification: Notification) {
+        window.orderOut(nil)
+        window.makeKeyAndOrderFront(nil)
+    }
+    
+    func windowDidMiniaturize(_ notification: Notification) {
+        window.resignMain()
     }
     
     

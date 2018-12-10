@@ -624,7 +624,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.report()
             })
         case let .members(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoMembers), type: .context(count != nil ? "\(count!)" : ""), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, type: .context(count != nil ? "\(count!)" : ""), action: { () in
                 arguments.members()
             })
         case let .admins(_, count: count):

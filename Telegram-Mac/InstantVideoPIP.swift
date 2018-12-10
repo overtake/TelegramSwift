@@ -51,7 +51,7 @@ class InstantVideoPIPView : GIFContainerView {
 }
 
 class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
-    private let controller:APController
+    private var controller:APController
     private weak var tableView:TableView?
     private var listener:TableScrollListener!
     
@@ -83,9 +83,9 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     
     override func navigationWillChangeController() {
         if let controller = controller.account.context.mainNavigation?.controller as? ChatController {
-            updateTableView(controller.genericView.tableView)
+            updateTableView(controller.genericView.tableView, controller: self.controller)
         } else {
-            updateTableView(nil)
+            updateTableView(nil, controller: self.controller)
         }
     }
     
@@ -133,11 +133,12 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     func showIfNeeded(animated: Bool = true) {
         loadViewIfNeeded()
         isShown = true
+        genericView.player.animatesAlphaOnFirstTransition = false
         if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
             let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
-            signal = chatWebpageSnippetPhoto(account: controller.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, small:true)
-            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), account: controller.account, table: nil, iconSignal: signal)
+            signal = chatMessageVideo(postbox: controller.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
+            
+            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), file: media, account: controller.account, table: nil, ignoreWindowKey: true, iconSignal: .complete())
         }
 
         if let contentView = window?.contentView, genericView.superview == nil {
@@ -276,10 +277,15 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         }
     }
     
-    func updateTableView(_ tableView:TableView?) {
+    func updateTableView(_ tableView:TableView?, controller: APController) {
         self.tableView?.removeScroll(listener: listener)
         self.tableView = tableView
         self.tableView?.addScroll(listener: listener)
+        if controller != self.controller {
+            self.controller = controller
+            controller.add(listener: self)
+        }
+        
         updateScrolled()
     }
     
@@ -304,7 +310,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
             }
             
             currentMessage = msg
-            genericView.timebase = controller.timebase
+           // genericView.timebase = controller.timebase
             
         } else {
             currentMessage = nil

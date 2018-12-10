@@ -85,7 +85,6 @@ class ChatInputActionsView: View, Notifable {
         entertaiments.canHighlight = false
         
         
-        
         updateLocalizationAndTheme()
     }
     
@@ -113,7 +112,7 @@ class ChatInputActionsView: View, Notifable {
     
     private func updateEntertainmentIcon() {
         entertaiments.set(image: chatInteraction.presentation.isEmojiSection || chatInteraction.presentation.state == .editing ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
-        _ = entertaiments.sizeToFit()
+        entertaiments.setFrameSize(60, 40)
     }
     
     var entertaimentsPopover: ViewController {
@@ -138,16 +137,13 @@ class ChatInputActionsView: View, Notifable {
                 enabled = sidebarEnabled
             }
             if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
-                if !hasPopover(mainWindow) {
-                    self.showEntertainment()
-                }
-                
+                self.showEntertainment()
             }
         }, for: .Hover)
     }
     
     private func showEntertainment() {
-        let rect = NSMakeRect(0, 0, 350, floor(mainWindow.frame.height - 150))
+        let rect = NSMakeRect(0, 0, 350, max(mainWindow.frame.height - 300, 300))
         entertaimentsPopover._frameRect = rect
         entertaimentsPopover.view.frame = rect
         showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
@@ -182,10 +178,10 @@ class ChatInputActionsView: View, Notifable {
         inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 4)
         voice.centerY(x:frame.width - voice.frame.width - iconsInset)
         send.centerY(x: frame.width - send.frame.width - iconsInset)
-        entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - iconsInset)
-        secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width - iconsInset)
-        keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width - iconsInset)
-        muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width - iconsInset)
+        entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - 0)
+        secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
+        keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
+        muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width)
         
     }
     

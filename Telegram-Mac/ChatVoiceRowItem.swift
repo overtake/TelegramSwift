@@ -33,7 +33,7 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {
-        return TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: Int(duration)), color: presentation.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
+        return TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: Int(round(duration))), color: presentation.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
     }
 }
 

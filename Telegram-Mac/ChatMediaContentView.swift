@@ -63,28 +63,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         fatalError("init(coder:) has not been implemented")
     }
     
-    func addGlobalAudioToVisible() {
-        if let controller = globalAudio {
-            table?.enumerateViews(with: { (view) in
-                var contentView: NSView? = (view as? ChatRowView)?.contentView.subviews.last
-                if let view = ((view as? ChatMessageView)?.webpageContent as? WPMediaContentView)?.contentNode {
-                    contentView = view
-                }
-                
-                if let view = contentView as? ChatAudioContentView {
-                    controller.add(listener: view)
-                } else if let view = contentView as? ChatVideoMessageContentView {
-                    controller.add(listener: view)
-                } else if let view = contentView as? WPMediaContentView {
-                    if let contentNode = view.contentNode as? ChatAudioContentView {
-                        controller.add(listener: contentNode)
-                    }
-                }
-                return true
-            })
-            controller.notifyGlobalStateChanged()
-        }
-    }
+    
     
     func willRemove() -> Void {
         //self.cancel()
@@ -160,16 +139,15 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.media = media
         
         if let parameters = parameters {
-            if let parent = parent, parameters.automaticDownloadFunc(parent) {
-                fetch()
+            if let parent = parent {
+                if parameters.automaticDownloadFunc(parent) {
+                    fetch()
+                }
             } else if parameters.automaticDownload {
                 fetch()
             }
         }
         
-        if updated {
-            addGlobalAudioToVisible()
-        }
     }
     
     func addSublayer(_ layer:CALayer) -> Void {
@@ -191,6 +169,13 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     func interactionControllerDidFinishAnimation(interactive: Bool) {
+        
+    }
+    
+    func videoTimebase() -> CMTimebase? {
+        return nil
+    }
+    func applyTimebase(timebase: CMTimebase?) {
         
     }
     

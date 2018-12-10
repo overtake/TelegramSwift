@@ -69,7 +69,7 @@ class PeerMediaControllerView : View {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
         typesContainerView.frame = NSMakeRect(0, 0, frame.width, 50)
-        segmentControl.view.setFrameSize(frame.width - 40, 28)
+        segmentControl.view.setFrameSize(frame.width - 20, 28)
         segmentControl.view.center()
         mainView?.frame = NSMakeRect(0, typesContainerView.frame.maxY, frame.width, frame.height - inset - typesContainerView.frame.maxY)
         actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
@@ -90,8 +90,9 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private var mode:PeerMediaCollectionMode = .photoOrVideo
     
     private let mediaGrid:PeerMediaGridController
-    private let mediaList:PeerMediaListController
-    
+    private let listControllers:[PeerMediaListController]
+    private let tagsList:[PeerMediaCollectionMode] = [.file, .webpage, .music, .voice]
+    private var currentTagListIndex: Int = -1
     private var interactions:ChatInteraction
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
     private let loadFwdMessagesDisposable = MetaDisposable()
@@ -105,7 +106,12 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
         
         mediaGrid = PeerMediaGridController(account: account, chatLocation: .peer(peerId), messageId: nil, tagMask: tagMask, chatInteraction: interactions)
-        mediaList = PeerMediaListController(account: account, chatLocation: .peer(peerId), chatInteraction: interactions)
+        
+        var listControllers: [PeerMediaListController] = []
+        for _ in tagsList {
+            listControllers.append(PeerMediaListController(account: account, chatLocation: .peer(peerId), chatInteraction: interactions))
+        }
+        self.listControllers = listControllers
         
         
         super.init(account)
@@ -130,7 +136,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         if self.mode == .photoOrVideo {
             self.mediaGrid.viewDidAppear(animated)
         } else {
-            self.mediaList.viewDidAppear(animated)
+            self.listControllers[currentTagListIndex].viewDidAppear(animated)
         }
     }
     
@@ -140,7 +146,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         if self.mode == .photoOrVideo {
             self.mediaGrid.viewDidDisappear(animated)
         } else {
-            self.mediaList.viewDidDisappear(animated)
+            self.listControllers[currentTagListIndex].viewDidDisappear(animated)
         }
     }
     
@@ -149,7 +155,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         if self.mode == .photoOrVideo {
             self.mediaGrid.viewWillAppear(animated)
         } else {
-            self.mediaList.viewWillAppear(animated)
+            self.listControllers[currentTagListIndex].viewWillAppear(animated)
         }
     }
     
@@ -158,7 +164,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         if self.mode == .photoOrVideo {
             self.mediaGrid.viewWillDisappear(animated)
         } else {
-            self.mediaList.viewWillDisappear(animated)
+            self.listControllers[currentTagListIndex].viewWillDisappear(animated)
         }
     }
     
@@ -218,25 +224,26 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
         
         interactions.forwardMessages = { [weak self] messageIds in
-            if let strongSelf = self, let navigation = strongSelf.navigationController {
-                strongSelf.loadFwdMessagesDisposable.set((strongSelf.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue).start(next: { [weak strongSelf] messages in
-                    if let strongSelf = strongSelf {
-                        
-                        let displayName:String = strongSelf.peer?.compactDisplayTitle ?? "Unknown"
-                        let action = FWDNavigationAction(messages: messages, displayName: displayName)
-                        navigation.set(modalAction: action, strongSelf.account.context.layout != .single)
-                        
-                        if strongSelf.account.context.layout == .single {
-                            navigation.push(ForwardChatListController(strongSelf.account))
-                        }
-                        
-                        action.afterInvoke = { [weak strongSelf] in
-                            strongSelf?.interactions.update(animated: false, {$0.withoutSelectionState()})
-                            strongSelf?.interactions.saveState()
-                        }
-                        
-                    }
-                }))
+            if let strongSelf = self {
+                showModal(with: ShareModalController.init(ForwardMessagesObject(strongSelf.account, messageIds: messageIds)), for: mainWindow)
+//                strongSelf.loadFwdMessagesDisposable.set((strongSelf.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue).start(next: { [weak strongSelf] messages in
+//                    if let strongSelf = strongSelf {
+//
+//                        let displayName:String = strongSelf.peer?.compactDisplayTitle ?? "Unknown"
+//                        let action = FWDNavigationAction(messages: messages, displayName: displayName)
+//                        navigation.set(modalAction: action, strongSelf.account.context.layout != .single)
+//
+//                        if strongSelf.account.context.layout == .single {
+//                            navigation.push(ForwardChatListController(strongSelf.account))
+//                        }
+//
+//                        action.afterInvoke = { [weak strongSelf] in
+//                            strongSelf?.interactions.update(animated: false, {$0.withoutSelectionState()})
+//                            strongSelf?.interactions.saveState()
+//                        }
+//
+//                    }
+//                }))
             }
         }
         
@@ -247,11 +254,12 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         }
         
         interactions.inlineAudioPlayer = { [weak self] controller in
-            if let navigation = self?.navigationController, let strongSelf = self {
+            if let navigation = self?.navigationController, let `self` = self {
                 if let header = navigation.header {
                     header.show(true)
                     if let view = header.view as? InlineAudioPlayerView {
-                        view.update(with: controller, chatInteraction: strongSelf.interactions, tableView: strongSelf.mediaList.genericView)
+                        let tableView = (navigation.first { $0 is ChatController} as? ChatController)?.genericView.tableView
+                        view.update(with: controller, tableView: tableView, supportTableView: self.currentTable)
                     }
                 }
             }
@@ -340,10 +348,20 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         self.ready.set(combined |> deliverOnMainQueue)
     }
     
+    private var currentTable: TableView? {
+        if self.mode == .photoOrVideo {
+            return nil
+        } else {
+            return self.listControllers[currentTagListIndex].genericView
+        }
+    }
     override func loadView() {
         super.loadView()
  
-        mediaList.loadViewIfNeeded(bounds)
+        for i in 0 ..< listControllers.count {
+            listControllers[i].loadViewIfNeeded(bounds)
+            listControllers[i].load(with: tagsList[i].tagsValue)
+        }
         mediaGrid.loadViewIfNeeded(bounds)
         
         mediaGrid.viewWillAppear(false)
@@ -360,25 +378,31 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
             self.mode = mode
             if mode == .photoOrVideo {
                 mediaGrid.viewWillAppear(animated)
-                mediaList.viewWillDisappear(animated)
+                self.listControllers[currentTagListIndex].viewWillDisappear(animated)
                 mediaGrid.view.frame = bounds
                 genericView.updateMainView(with: mediaGrid.view, animated: animated)
                 mediaGrid.viewDidAppear(animated)
-                mediaList.removeFromSuperview()
-                mediaList.viewDidDisappear(animated)
+                self.listControllers[currentTagListIndex].removeFromSuperview()
+                self.listControllers[currentTagListIndex].viewDidDisappear(animated)
+                currentTagListIndex = -1
+
             } else {
-                mediaList.viewWillAppear(animated)
-                mediaGrid.viewWillDisappear(animated)
-                mediaList.view.frame = bounds
-                genericView.updateMainView(with: mediaList.view, animated: animated)
-                mediaList.viewDidAppear(animated)
-                mediaGrid.removeFromSuperview()
-                mediaGrid.viewDidDisappear(animated)
+                let previous: ViewController
+                if currentTagListIndex != -1 {
+                    previous = self.listControllers[currentTagListIndex]
+                } else {
+                    previous = mediaGrid
+                }
+                self.currentTagListIndex = tagsList.firstIndex(of: mode)!
+                self.listControllers[currentTagListIndex].viewWillAppear(animated)
+                previous.viewWillDisappear(animated)
+                self.listControllers[currentTagListIndex].view.frame = bounds
+                genericView.updateMainView(with: self.listControllers[currentTagListIndex].view, animated: animated)
+                self.listControllers[currentTagListIndex].viewDidAppear(animated)
+                previous.removeFromSuperview()
+                previous.viewDidDisappear(animated)
             }
             
-            if mode != .photoOrVideo {
-                mediaList.load(with: mode.tagsValue)
-            }
         }
         
     }
@@ -421,13 +445,16 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     }
   
     override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
-        if mediaList.view.superview != nil {
-            if current == 0 {
-                genericView.typesContainerView.setFrameOrigin(genericView.typesContainerView.frame.minX, 50)
+        for mediaList in listControllers {
+            if mediaList.view.superview != nil {
+                if current == 0 {
+                    genericView.typesContainerView.setFrameOrigin(genericView.typesContainerView.frame.minX, 50)
+                }
+                genericView.typesContainerView._change(pos: NSMakePoint(genericView.typesContainerView.frame.minX, current), animated: animated)
+                return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
             }
-            genericView.typesContainerView._change(pos: NSMakePoint(genericView.typesContainerView.frame.minX, current), animated: animated)
-            return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
         }
+       
         if mediaGrid.view.superview != nil {
             return mediaGrid.navigationHeaderDidNoticeAnimation(current, previous, animated)
         }

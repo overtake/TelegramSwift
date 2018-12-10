@@ -147,23 +147,25 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
         return row
     }
     var rows:[NSSize] = []
+    var plus: Int = 0
     while true {
-        rows = sizeup(dimensions)
+        let about = Array(dimensions.prefix(Int(ceil(perSize.width / perSize.height)) + plus))
+        rows = sizeup(about)
+
         let width:CGFloat = rows.reduce(0, { (acc, size) -> CGFloat in
             return acc + size.width
         })
-        
-        if width - perSize.width > 0 && dimensions.count > 1 {
-            dimensions.removeLast()
+
+        if perSize.width < width {
+            plus -= 1
             continue
         }
-        if (width < perSize.width && !isLastRow) && !dimensions.isEmpty && !fitToHeight {
+        if (width < perSize.width && !isLastRow) && !fitToHeight {
             maxHeight += CGFloat(6 * dimensions.count)
         } else {
             break
         }
     }
-    
     return rows
 }
 
@@ -297,13 +299,19 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
     for i in removeResultIndexes.reversed() {
         results.remove(at: i)
     }
-    
     var fitted:[[NSSize]] = []
     let f:Int = Int(round(initialSize.width / initialSize.height))
     while !dimensions.isEmpty {
         let row = fitPrettyDimensions(dimensions, isLastRow: f > dimensions.count, fitToHeight: false, perSize:initialSize)
         fitted.append(row)
         dimensions.removeSubrange(0 ..< row.count)
+    }
+    
+    
+    if fitted.count >= 2, fitted[fitted.count - 1].count == 1 && fitted[fitted.count - 2].reduce(0, { $0 + $1.width}) < (initialSize.width - 50) {
+        let width = fitted[fitted.count - 2].reduce(0, { $0 + $1.width})
+        let last = fitted.removeLast()
+        fitted[fitted.count - 1] = fitted[fitted.count - 1] + [NSMakeSize(initialSize.width - width, last[0].height)]
     }
     
     for row in fitted {

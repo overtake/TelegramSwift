@@ -33,13 +33,13 @@ enum PeerMediaSharedEntryStableId : Hashable {
 }
 
 enum PeerMediaSharedEntry : Comparable, Identifiable {
-    case messageEntry(Message)
+    case messageEntry(Message, AutomaticMediaDownloadSettings)
     case searchEntry(Bool)
     case emptySearchEntry(Bool)
     case date(MessageIndex)
     var stableId: PeerMediaSharedEntryStableId {
         switch self {
-        case let .messageEntry(message):
+        case let .messageEntry(message, _):
             return .messageId(message.id)
         case let .date(index):
             return .date(index)
@@ -52,7 +52,7 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
     
     var message:Message? {
         switch self {
-        case let .messageEntry(message):
+        case let .messageEntry(message, _):
             return message
         default:
             return nil
@@ -79,14 +79,14 @@ func <(lhs:PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
         switch rhs {
         case .date(let rhsIndex):
             return lhsIndex < rhsIndex
-        case let .messageEntry(rhsMessage):
+        case let .messageEntry(rhsMessage, _):
             return lhsIndex < MessageIndex(rhsMessage)
         default:
             return true
         }
-    case let .messageEntry(lhsMessage):
+    case let .messageEntry(lhsMessage, _):
         switch rhs {
-        case let .messageEntry(rhsMessage):
+        case let .messageEntry(rhsMessage, _):
             return MessageIndex(lhsMessage) < MessageIndex(rhsMessage)
         default:
             if case .date(let rhsIndex) = rhs {
@@ -99,8 +99,8 @@ func <(lhs:PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
 
 func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
     switch lhs {
-    case let .messageEntry(lhsMessage):
-        if case let .messageEntry(rhsMessage) = rhs {
+    case let .messageEntry(lhsMessage, _):
+        if case let .messageEntry(rhsMessage, _) = rhs {
             if lhsMessage.id != rhsMessage.id {
                 return false
             }
@@ -134,7 +134,7 @@ func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
 }
 
 
-func convertEntries(from update: PeerMediaUpdate, timeDifference: TimeInterval) -> [PeerMediaSharedEntry] {
+func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDifference: TimeInterval) -> [PeerMediaSharedEntry] {
     var converted:[PeerMediaSharedEntry] = []
    
     for i in 0 ..< update.messages.count {
@@ -160,7 +160,7 @@ func convertEntries(from update: PeerMediaUpdate, timeDifference: TimeInterval) 
             converted.append(.date(index))
         }
         
-        converted.append(.messageEntry(message))
+        converted.append(.messageEntry(message, update.automaticDownload))
     }
 
     if update.updateType == .search {
@@ -169,10 +169,14 @@ func convertEntries(from update: PeerMediaUpdate, timeDifference: TimeInterval) 
             converted.append(.emptySearchEntry(false))
         }
     } else if update.updateType == .loading {
-         converted.append(.searchEntry(true))
-         converted.append(.emptySearchEntry(true))
+        if !tags.contains(.voiceOrInstantVideo) {
+            converted.append(.searchEntry(true))
+        }
+        if update.messages.isEmpty {
+            converted.append(.emptySearchEntry(true))
+        }
     } else if update.laterId == nil {
-        if !update.messages.isEmpty {
+        if !update.messages.isEmpty && !tags.contains(.voiceOrInstantVideo) {
             converted.append(.searchEntry(false))
         }
     }
@@ -184,7 +188,7 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
     let (removed,inserted,updated) = proccessEntries(fromView, right: toView, { entry -> TableRowItem in
         
         switch entry.entry {
-        case .messageEntry(let message):
+        case let .messageEntry(message, _):
             if tags == .file, message.media.first is TelegramMediaFile {
                 return PeerMediaFileRowItem(initialSize, interaction, account, entry.entry)
             } else if tags == .webPage {
@@ -200,8 +204,8 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
             return PeerMediaDateItem(initialSize, index: index, stableId: entry.stableId)
         case let .searchEntry(isLoading):
             return SearchRowItem(initialSize, stableId: entry.stableId, searchInteractions: searchInteractions, isLoading: isLoading, inset: NSEdgeInsets(left: 10, right: 10, top: 10, bottom: 10))
-        case let .emptySearchEntry(loading):
-            return SearchEmptyRowItem(initialSize, stableId: entry.stableId, isLoading: loading)
+        case .emptySearchEntry:
+            return SearchEmptyRowItem(initialSize, stableId: entry.stableId, isLoading: false)
         }
         
     })
@@ -227,11 +231,17 @@ struct PeerMediaUpdate {
     let updateType: PeerMediaUpdateState
     let laterId: MessageIndex?
     let earlierId: MessageIndex?
-    init (messages: [Message] = [], updateType:PeerMediaUpdateState = .loading, laterId:MessageIndex? = nil, earlierId:MessageIndex? = nil) {
+    let automaticDownload: AutomaticMediaDownloadSettings
+    init (messages: [Message] = [], updateType:PeerMediaUpdateState = .loading, laterId:MessageIndex? = nil, earlierId:MessageIndex? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings) {
         self.messages = messages
         self.updateType = updateType
         self.laterId = laterId
         self.earlierId = earlierId
+        self.automaticDownload = automaticDownload
+    }
+    
+    func withUpdatedUpdatedType(_ updateType:PeerMediaUpdateState) -> PeerMediaUpdate {
+        return PeerMediaUpdate.init(messages: self.messages, updateType: updateType, laterId: self.laterId, earlierId: self.earlierId, automaticDownload: self.automaticDownload)
     }
 }
 
@@ -260,6 +270,8 @@ class PeerMediaListController: GenericViewController<TableView> {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+       
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -293,7 +305,7 @@ class PeerMediaListController: GenericViewController<TableView> {
          |> mapToSignal { [weak self] location, searchState -> Signal<PeerMediaUpdate, NoError> in
             if let strongSelf = self {
                 if searchState.request.isEmpty {
-                    return chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> mapToQueue { view -> Signal<PeerMediaUpdate, NoError> in
+                    return combineLatest(chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> deliverOnPrepareQueue, automaticDownloadSettings(postbox: strongSelf.account.postbox) |> deliverOnPrepareQueue) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())
@@ -318,7 +330,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                                 earlierId = nil
                             }
                             
-                            return .single(PeerMediaUpdate(messages: messages, updateType: .history, laterId: laterId, earlierId: earlierId))
+                            return .single(PeerMediaUpdate(messages: messages, updateType: .history, laterId: laterId, earlierId: earlierId, automaticDownload: settings))
                         }
                     }
                 } else {
@@ -334,10 +346,12 @@ class PeerMediaListController: GenericViewController<TableView> {
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
                     }
                     
+                    let update = strongSelf.updateView.modify {$0?.withUpdatedUpdatedType(.loading)} ?? PeerMediaUpdate()
+                    
                     if isFirst {
-                        return .single(PeerMediaUpdate()) |> then(signal)
+                        return .single(update) |> then(signal)
                     } else {
-                        return signal
+                        return .single(update) |> then(signal)
                     }
                     
                 }
@@ -369,17 +383,22 @@ class PeerMediaListController: GenericViewController<TableView> {
             let animated = animated.swap(true)
             let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
             
-            let entries = convertEntries(from: update, timeDifference: account.context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let entries = convertEntries(from: update, tags: tagMask, timeDifference: account.context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = _entries.swap(entries)
             _ = _updateView.swap(update)
             
-            return preparedMediaTransition(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: animated, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
+            return preparedMediaTransition(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: false, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
 
         } |> deliverOnMainQueue
         
         
         disposable.set(historyViewTransition.start(next: { [weak self] transition in
             self?.genericView.merge(with: transition)
+            
+            guard let `self` = self else {return}
+            if let controller = globalAudio {
+                (account.context.mainNavigation?.header?.view as? InlineAudioPlayerView)?.update(with: controller, tableView: (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView, supportTableView: self.genericView)
+            }
         }))
         
         historyPromise.set(historyViewUpdate)

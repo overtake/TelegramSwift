@@ -15,11 +15,11 @@ private let imagesThreadPool = ThreadPool(threadCount: 3, threadPriority: 0.1)
 
 open class TransformImageView: NSView {
     public var imageUpdated: (() -> Void)?
-    public var alphaTransitionOnFirstUpdate = false
     private let disposable = MetaDisposable()
     private let cachedDisposable = MetaDisposable()
     public var animatesAlphaOnFirstTransition:Bool = false
     private let argumentsPromise = Promise<TransformImageArguments>()
+    private var isFullyLoaded: Bool = false
     private var first:Bool = true
     public init() {
         super.init(frame: NSZeroRect)
@@ -57,22 +57,29 @@ open class TransformImageView: NSView {
         disposable.set(nil)
     }
     
-    public func setSignal(signal: Signal<CGImage?, NoError>, clearInstantly: Bool = true) {
-        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image in
+    public func setSignal(signal: Signal<(CGImage?, Bool), NoError>, clearInstantly: Bool = true) {
+        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, isFullyLoaded in
             if clearInstantly {
                 self?.layer?.contents = image
             } else if let image = image {
                 self?.layer?.contents = image
             }
-            
+            self?.isFullyLoaded = isFullyLoaded
         }))
     }
     
     
-    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, cacheImage:(Signal<(CGImage?, Bool), NoError>) -> Signal<Void, NoError> = { signal in return signal |> map {_ in return}}) {
+    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, cacheImage:@escaping(Signal<(CGImage?, Bool), NoError>) -> Signal<Void, NoError> = { signal in return signal |> map {_ in return}}) {
         if clearInstantly {
             self.layer?.contents = nil
         }
+        
+        if isFullyLoaded {
+            disposable.set(nil)
+            isFullyLoaded = false
+            return
+        }
+        
         let result = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged) |> deliverOn(imagesThreadPool) |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
             return deferred {
                 let context = transform(arguments)
@@ -80,7 +87,7 @@ open class TransformImageView: NSView {
             }
         }
         
-        self.disposable.set((cacheImage(result |> deliverOnMainQueue |> beforeNext { [weak self] (next, _) in
+        self.disposable.set((result |> deliverOnMainQueue |> beforeNext { [weak self] (next, isThumb) in
             if let strongSelf = self  {
                 if strongSelf.layer?.contents == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -90,8 +97,9 @@ open class TransformImageView: NSView {
                     self?.layer?.animateContents()
                 }
                 strongSelf.first = false
+                _ = cacheImage(.single((next, isThumb))).start()
             }
-        })).start())
+        }).start())
 
     }
     

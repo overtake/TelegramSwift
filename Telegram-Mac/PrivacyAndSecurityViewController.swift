@@ -712,9 +712,6 @@ class PrivacyAndSecurityViewController: TableViewController {
                 }) ({ controller in
                     pushControllerImpl(controller)
                 })
-                //pushControllerImpl(proxyListController(postbox: account.postbox, network: account.network))
-                
-//                pushControllerImpl(controller)
             }
         }, togglePeerSuggestions: { enabled in
             _ = (updateRecentPeersEnabled(postbox: account.postbox, network: account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(accountPeerId: account.peerId, postbox: account.postbox, network: account.network) : Signal<Void, NoError>.complete())).start()

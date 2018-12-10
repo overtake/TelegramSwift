@@ -16,7 +16,9 @@ class ChatRowAnimateView: View {
     var stableId:AnyHashable?
 }
 
-class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate {
+class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate, SwipingTableView {
+    
+    
    
     
     var header: String? {
@@ -58,6 +60,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.addSubview(rightView)
         
         rowView.displayDelegate = self
+        
+        super.addSubview(swipingRightView)
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -306,7 +310,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
         if let item = self.item as? ChatRowItem {
             
-            if let fwdHeader = item.forwardHeader, !item.isBubbled {
+            if let fwdHeader = item.forwardHeader, !item.isBubbled, layer == rowView.layer {
                 let rect = NSMakeRect(item.defLeftInset, item.forwardHeaderInset.y, fwdHeader.0.size.width, fwdHeader.0.size.height)
                 if backingScaleFactor == 1.0 {
                     ctx.setFillColor(contentColor.cgColor)
@@ -321,7 +325,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
           //  ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
             
             //draw separator
-            if let fwdType = item.forwardType, !item.isBubbled {
+            if let fwdType = item.forwardType, !item.isBubbled, layer == rowView.layer {
                 ctx.setFillColor(item.presentation.colors.blueFill.cgColor)
                 switch fwdType {
                 case .ShortHeader:
@@ -542,10 +546,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     var rowPoint: NSPoint {
         guard let item = item as? ChatRowItem else {return NSZeroPoint}
+        
         if item.isBubbled {
-            return NSMakePoint(item.chatInteraction.presentation.state == .selecting && !item.isIncoming ? -20 : 0, 0)
+            return NSMakePoint((item.chatInteraction.presentation.state == .selecting && !item.isIncoming ? -20 : 0), 0)
         } else {
-            return NSZeroPoint
+            return NSMakePoint(0, 0)
         }
     }
     
@@ -590,6 +595,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
             
             selectingView?.setFrameOrigin(selectingPoint)
+            
+
+            swipingRightView.frame = NSMakeRect(frame.width, 0, rightSwipingWidth, frame.height)
             
             
             if let shareControl = shareControl {
@@ -650,7 +658,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 item?.openInfo()
             }, for: .Click)
             
-            self.avatar?.setPeer(account: item.account, peer: peer)
+            self.avatar?.setPeer(account: item.account, peer: peer, message: item.message)
             
         } else {
             avatar?.removeFromSuperview()
@@ -976,5 +984,142 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
         }
     }
+    
+    
+    // swiping methods
+    
+    private var swipingRightView: View = View()
+
+    private var animateOnceAfterDelta: Bool = true
+
+    var additionalSwipingDelta: CGFloat {
+        return 0
+    }
+    
+    var containerX: CGFloat {
+        return rowView.frame.minX
+    }
+    var width: CGFloat {
+        return rowView.frame.width
+    }
+    
+    var rightSwipingWidth: CGFloat {
+        return 40
+    }
+    
+    var leftSwipingWidth: CGFloat {
+        return 0
+    }
+    
+    var endSwipingState: SwipeDirection?
+    
+    func initSwipingState() {
+        swipingRightView.removeAllSubviews()
+        swipingRightView.setFrameSize(rightSwipingWidth, frame.height)
+
+        
+        guard let item = item as? ChatRowItem else {return}
+        
+        let control = ImageButton()
+        control.disableActions()
+        
+        
+        if item.isBubbled && item.presentation.wallpaper.hasWallpaper {
+            control.set(image: item.presentation.icons.chatSwipeReplyWallpaper, for: .Normal)
+            _ = control.sizeToFit()
+            control.setFrameSize(NSMakeSize(control.frame.width + 10, control.frame.height + 10))
+            control.background = item.presentation.colors.background
+            control.layer?.cornerRadius = control.frame.height / 2
+        } else {
+            control.set(image: item.presentation.icons.chatSwipeReply, for: .Normal)
+            _ = control.sizeToFit()
+            control.background = .clear
+        }
+        swipingRightView.addSubview(control)
+        
+        control.centerY()
+        
+    }
+    
+    func moveSwiping(delta: CGFloat) {
+        if swipingRightView.subviews.isEmpty {
+            initSwipingState()
+        }
+        
+        let delta = delta - additionalSwipingDelta
+
+        
+        rowView.setFrameOrigin(NSMakePoint(delta, rowView.frame.minY))
+        swipingRightView.change(pos: NSMakePoint(frame.width + delta, swipingRightView.frame.minY), animated: false)
+        
+        swipingRightView.change(size: NSMakeSize(max(rightSwipingWidth, -delta), swipingRightView.frame.height), animated: false)
+
+        
+        
+        let subviews = swipingRightView.subviews
+        let action = subviews[0]
+        action.centerY()
+        
+        if swipingRightView.frame.width > 100 {
+            if animateOnceAfterDelta {
+                animateOnceAfterDelta = false
+              //  NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
+                action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - action.frame.width), 0), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+            }
+            action.setFrameOrigin(NSMakePoint(0, action.frame.minY))
+        } else {
+            if !animateOnceAfterDelta {
+                animateOnceAfterDelta = true
+                action.layer?.animatePosition(from: NSMakePoint(-(swipingRightView.frame.width), 0), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+            }
+            action.setFrameOrigin(NSMakePoint(max(swipingRightView.frame.width, 0), action.frame.minY))
+        }
+        
+    }
+    
+    func completeSwiping(direction: SwipeDirection) {
+        
+        if swipingRightView.subviews.isEmpty {
+            initSwipingState()
+        }
+        
+        CATransaction.begin()
+        
+        let updateRightSubviews:(Bool) -> Void = { [weak self] animated in
+            guard let `self` = self else {return}
+            let subviews = self.swipingRightView.subviews
+            subviews[0]._change(pos: NSMakePoint(0, subviews[0].frame.minY), animated: animated, completion: { [weak self] completed in
+                self?.swipingRightView.removeAllSubviews()
+            })
+        }
+        
+        let failed:(@escaping(Bool)->Void)->Void = { [weak self] completion in
+            guard let `self` = self else {return}
+            self.rowView.change(pos: NSMakePoint(0, self.rowView.frame.minY), animated: true)
+            self.swipingRightView.change(pos: NSMakePoint(self.frame.width, self.swipingRightView.frame.minY), animated: true, completion: completion)
+            updateRightSubviews(true)
+            self.endSwipingState = nil
+        }
+        
+        
+        
+        
+        switch direction {
+        case .left:
+            failed({_ in})
+        case .right:
+            let invokeRightAction = swipingRightView.frame.width > 100
+            if invokeRightAction {
+                _ = (item as? ChatRowItem)?.replyAction()
+            }
+            failed({ completed in })
+        default:
+            self.endSwipingState = nil
+            failed({_ in})
+        }
+        
+        CATransaction.commit()
+    }
+    
     
 }

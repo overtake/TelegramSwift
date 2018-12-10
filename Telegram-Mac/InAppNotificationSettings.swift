@@ -49,7 +49,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let totalUnreadCountIncludeTags: PeerSummaryCounterTags
 
     static var defaultSettings: InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .raw, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: [.regularChatsAndPrivateGroups, .channels, .publicGroups])
+        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: [.regularChatsAndPrivateGroups, .channels, .publicGroups])
     }
     
     init(enabled:Bool, playSounds: Bool, tone: String, displayPreviews: Bool, muteUntil: Int32, totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: PeerSummaryCounterTags) {
@@ -70,7 +70,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
         self.displayPreviews = decoder.decodeInt32ForKey("p", orElse: 0) != 0
         self.muteUntil = decoder.decodeInt32ForKey("m2", orElse: 0)
         
-        self.totalUnreadCountDisplayStyle = TotalUnreadCountDisplayStyle(rawValue: decoder.decodeInt32ForKey("tds", orElse: 1)) ?? .raw
+        self.totalUnreadCountDisplayStyle = TotalUnreadCountDisplayStyle(rawValue: decoder.decodeInt32ForKey("tds", orElse: 1)) ?? .filtered
         self.totalUnreadCountDisplayCategory = TotalUnreadCountDisplayCategory(rawValue: decoder.decodeInt32ForKey("totalUnreadCountDisplayCategory", orElse: 1)) ?? .chats
         if let value = decoder.decodeOptionalInt32ForKey("totalUnreadCountIncludeTags") {
             self.totalUnreadCountIncludeTags = PeerSummaryCounterTags(rawValue: value)

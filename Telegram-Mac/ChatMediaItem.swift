@@ -354,7 +354,7 @@ class ChatMediaItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayout {
                 let text = captionLayout.attributedString.string
-                items.insert(ContextMenuItem(tr(L10n.textCopy), handler: {
+                items.insert(ContextMenuItem(L10n.textCopyText, handler: {
                     copyToClipboard(text)
                 }), at: min(items.count, 1))
                 
@@ -482,6 +482,13 @@ class ChatMediaView: ChatRowView {
             return content
         }
         return self
+    }
+    
+    override func videoTimebase(for innerId: AnyHashable) -> CMTimebase? {
+       return self.contentNode?.videoTimebase()
+    }
+    override func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
+        self.contentNode?.applyTimebase(timebase: timebase)
     }
     
     override func interactionControllerDidFinishAnimation(interactive: Bool, innerId: AnyHashable) {

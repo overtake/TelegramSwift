@@ -37,7 +37,7 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
     }
     
     public static var defaultSettings: RecentUsedEmoji {
-        return RecentUsedEmoji(emojies: ["😂", "😘", "❤️", "😍", "😊", "🤔", "😁", "👍", "☺️", "😔", "😄", "😭", "💋", "😒", "😳", "😜", "🙈", "😉", "😃", "😢", "😝", "😱", "😡", "😏", "😞", "😅", "😚", "🙊", "😌", "😀", "😋", "😆", "😐", "😕", "👎"], skinModifiers: [])
+        return RecentUsedEmoji(emojies: ["😂", "😘", "❤️", "😍", "😊", "🤔", "😁", "👍", "☺️", "😔", "😄", "😭", "💋", "😒", "😳", "😜", "🙈", "😉", "😃", "😢", "😝", "😱", "😡", "😏", "😞", "😅", "😚", "🙊", "😌", "😀", "😋", "😆", "🌚", "😐", "😕", "👎"], skinModifiers: [])
     }
     
     public required init(decoder: PostboxDecoder) {
@@ -53,7 +53,7 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
         }
         self.emojies = list
         
-        self.skinModifiers = decoder.decodeObjectForKey("sm_new", decoder: {EmojiSkinModifier(decoder: $0)}) as? [EmojiSkinModifier] ?? []
+        self.skinModifiers = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("sm_new", decoder: {EmojiSkinModifier(decoder: $0)})) ?? []
         
     }
     
@@ -97,24 +97,29 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
                     emojies.insert(emoji, at: 0)
                 }
             }
-            emojies = Array(emojies.prefix(35))
+            emojies = Array(emojies.filter({$0.containsEmoji}).prefix(35))
             return RecentUsedEmoji(emojies: emojies, skinModifiers: (entry as? RecentUsedEmoji)?.skinModifiers ?? [])
         })
     }
 }
 
-func modifySkinEmoji(_ emoji:String, postbox: Postbox) -> Signal<Void, NoError> {
+func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             let settings = (entry as? RecentUsedEmoji) ?? RecentUsedEmoji.defaultSettings
             var skinModifiers = settings.skinModifiers
-            let index:Int? = skinModifiers.firstIndex(where: {$0.emoji == emoji.emojiUnmodified})
+            let index:Int? = skinModifiers.firstIndex(where: {$0.emoji == emoji})
             
-            if let index = index {
-                skinModifiers[index] = EmojiSkinModifier(emoji: emoji.emojiUnmodified, modifier: emoji.emojiSkin)
-            } else {
-                skinModifiers.append(EmojiSkinModifier(emoji: emoji.emojiUnmodified, modifier: emoji.emojiSkin))
+            if let modifier = modifier {
+                if let index = index {
+                    skinModifiers[index] = EmojiSkinModifier(emoji: emoji, modifier: modifier)
+                } else {
+                    skinModifiers.append(EmojiSkinModifier(emoji: emoji, modifier: modifier))
+                }
+            } else if let index = index {
+                skinModifiers.remove(at: index)
             }
+           
             return RecentUsedEmoji(emojies: settings.emojies, skinModifiers: skinModifiers)
             
         })

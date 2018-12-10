@@ -25,6 +25,7 @@ enum ChatInitialAction : Equatable {
     case start(parameter: String, behavior: ChatInitialActionBehavior)
     case inputText(text: String, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
+    case forward(messageIds: [MessageId], text: String?, behavior: ChatInitialActionBehavior)
     case ad
 }
 
@@ -52,6 +53,8 @@ var globalLinkExecutor:TextViewInteractions {
                     return .command
                 case .hashtag:
                     return .hashtag
+                case .code:
+                    return .code
                 case .followResolvedName:
                     if url.hasPrefix("@") {
                         return .username
@@ -61,6 +64,8 @@ var globalLinkExecutor:TextViewInteractions {
                 case let .external(link, _):
                     if isValidEmail(link) {
                         return .email
+                    } else if telegram_me.first(where: {link.contains($0 + "joinchat/")}) != nil {
+                        return .inviteLink
                     } else {
                         return .plain
                     }
@@ -95,6 +100,8 @@ func copyContextText(from type: LinkType) -> String {
         return L10n.textContextCopyInviteLink
     case .stickerPack:
         return L10n.textContextCopyStickerPack
+    case .code:
+        return L10n.textContextCopyCode
     }
 }
 
@@ -216,6 +223,8 @@ func execute(inapp:inAppLink) {
             }
         })
     case let .callback(param, interaction):
+        interaction(param)
+    case let .code(param, interaction):
         interaction(param)
     case let .logout(interaction):
         interaction()
@@ -345,6 +354,7 @@ enum inAppLink {
     case inviteBotToGroup(username:String, account:Account, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case botCommand(String, (String)->Void)
     case callback(String, (String)->Void)
+    case code(String, (String)->Void)
     case hashtag(String, (String)->Void)
     case shareUrl(Account, String)
     case joinchat(String, account:Account, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)

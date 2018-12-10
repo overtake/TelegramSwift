@@ -56,7 +56,9 @@ let emojiesInstance:[EmojiSegment:[String]] = {
     var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
     
     let resource:URL?
-    if #available(OSX 10.12, *) {
+    if #available(OSX 10.14.1, *) {
+        resource = Bundle.main.url(forResource:"emoji1014-1", withExtension:"txt")
+    } else  if #available(OSX 10.12, *) {
         resource = Bundle.main.url(forResource:"emoji", withExtension:"txt")
     } else {
         resource = Bundle.main.url(forResource:"emoji11", withExtension:"txt")
@@ -102,8 +104,15 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
             
             var e:String = emoji
             for modifier in skinModifiers {
-                if emoji.emojiUnmodified == modifier.emoji {
-                    e = emoji + modifier.modifier
+                if emoji == modifier.emoji {
+                    if emoji.length == 5 {
+                        let mutable = NSMutableString()
+                        mutable.insert(e, at: 0)
+                        mutable.insert(modifier.modifier, at: 2)
+                        e = mutable as String
+                    } else {
+                        e = emoji + modifier.modifier
+                    }
                 }
             }
             
@@ -316,7 +325,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
        
         let initialSize = atomicSize.modify({$0})
-
+        genericView.tableView.beginTableUpdates()
         genericView.tableView.removeAll()
         genericView.tabs.removeAll()
         
@@ -337,7 +346,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             let seg = segments(e, skinModifiers: recent.skinModifiers)
             let seglist = seg.map { (key,_) -> EmojiSegment in
                 return key
-                }.sorted(by: <)
+            }.sorted(by: <)
             
             let w = floorToScreenPixels(scaleFactor: System.backingScale, frame.width / CGFloat(seg.count))
             
@@ -376,7 +385,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
                 }))
             }
         }
-        
+        genericView.tableView.endTableUpdates()
         genericView.updateVisibility(genericView.tableView.isEmpty, isSearch: search != nil)
     }
     

@@ -129,7 +129,7 @@ class Sender: NSObject {
         
         var input:ChatTextInputState = input
         
-        let emojis = ObjcUtils.getEmojiFrom(input.inputText.fixed)
+        let emojis = input.inputText.fixed.emojis
         if input.attributes.isEmpty {
             input = ChatTextInputState(inputText: input.inputText.trimmed)
         }

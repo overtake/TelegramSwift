@@ -15,11 +15,34 @@ let sampleBufferQueue = DispatchQueue(label: "samplebuffer")
 
 private let veryLongTimeInterval = CFTimeInterval(256.0 * 365.0 * 24.0 * 60.0 * 60.0)
 
-
+struct AVGifData : Equatable {
+    let asset: AVURLAsset
+    let track: AVAssetTrack
+    private init(asset: AVURLAsset, track: AVAssetTrack) {
+        self.asset = asset
+        self.track = track
+    }
+    
+    static func dataFrom(_ path: String?) -> AVGifData? {
+        let new = link(path: path, ext: "mp4")
+        if let new = new {
+            let avAsset = AVURLAsset(url: URL(fileURLWithPath: new))
+            let t = avAsset.tracks(withMediaType: .video).first
+            if let t = t {
+                return AVGifData(asset: avAsset, track: t)
+            }
+        }
+        return nil
+    }
+    static func ==(lhs: AVGifData, rhs: AVGifData) -> Bool {
+        return lhs.asset.url == rhs.asset.url
+    }
+    
+}
 
 class GIFPlayerView: TransformImageView {
     
-    private var sampleLayer:AVSampleBufferDisplayLayer = AVSampleBufferDisplayLayer()
+    private let sampleLayer:AVSampleBufferDisplayLayer = AVSampleBufferDisplayLayer()
     
     private var _reader:Atomic<AVAssetReader?> = Atomic(value:nil)
 
@@ -43,11 +66,10 @@ class GIFPlayerView: TransformImageView {
 
     private let _stopRequesting:Atomic<Bool> = Atomic(value:false)
     private let _swapNext:Atomic<Bool> = Atomic(value:true)
-    private let _path:Atomic<String?> = Atomic(value:nil)
+    private let _data:Atomic<AVGifData?> = Atomic(value:nil)
     
     private let maskLayer = CAShapeLayer()
     
-    var followWindow:Bool = true
     var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
@@ -93,19 +115,26 @@ class GIFPlayerView: TransformImageView {
         super.init()
         sampleLayer.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"opacity":NSNull(), "transform": NSNull()
         ]
-        sampleLayer.videoGravity = .resizeAspectFill
+        sampleLayer.videoGravity = .resizeAspect
         sampleLayer.backgroundColor = NSColor.clear.cgColor
         
 
         layer?.addSublayer(sampleLayer)
 
-
     }
-
+    
+    func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
+        sampleLayer.videoGravity = gravity
+    }
+    
     
 
-    var isHasPath: Bool {
-        return _path.modify({$0}) != nil
+    var controlTimebase: CMTimebase? {
+        return sampleLayer.controlTimebase
+    }
+
+    var isHasData: Bool {
+        return _data.modify({$0}) != nil
     }
     
     required init?(coder: NSCoder) {
@@ -122,20 +151,14 @@ class GIFPlayerView: TransformImageView {
         sampleLayer.frame = bounds
     }
     
-    func pause() {
-        sampleLayer.stopRequestingMediaData()
-    }
+   
     
-    func set(path:String?, timebase:CMTimebase? = nil) -> Void {
+    func set(data: AVGifData?, timebase:CMTimebase? = nil) -> Void {
         assertOnMainThread()
-        
-        let realPath:String? = link(path:path, ext:"mp4")
-        
-        
-        if realPath != self._path.modify({$0}) {
-            _ = _path.swap(realPath)
+      
+         if data != _data.swap(data) {
             _ = _timebase.swap(timebase)
-            let path = self._path
+            let _data = self._data
             let layer:AVSampleBufferDisplayLayer = self.sampleLayer
             let reader = self._reader
             let output = self._output
@@ -146,18 +169,14 @@ class GIFPlayerView: TransformImageView {
             let asset = self._asset
             let timer = self._timer
             let timebase = self._timebase
-            
-            if let path = realPath {
-                let avAsset = AVURLAsset(url: URL(fileURLWithPath: path))
-                let _ = asset.swap(avAsset)
-                let t = avAsset.tracks(withMediaType: .video).first
-                if let track = t {
-                    layer.setAffineTransform(track.preferredTransform.inverted())
-                }
-
-                let _ = track.swap(t)
-                _ = stopRequesting.swap(t == nil)
-                _ = swapNext.swap(t != nil)
+            if let data = data {
+                let _ = track.swap(data.track)
+                let _ = asset.swap(data.asset)
+                let affineTransform = data.track.preferredTransform.inverted()
+                layer.setAffineTransform(affineTransform)
+                
+                _ = stopRequesting.swap(false)
+                _ = swapNext.swap(true)
             } else {
                 _ = asset.swap(nil)
                 _ = track.swap(nil)
@@ -167,31 +186,43 @@ class GIFPlayerView: TransformImageView {
             }
             
             layer.requestMediaDataWhenReady(on: sampleBufferQueue, using: {
-                if stopRequesting.modify({$0}) {
+                if stopRequesting.swap(false) {
+                    
+                    if let controlTimebase = layer.controlTimebase, let current = timer.swap(nil) {
+                        CMTimebaseRemoveTimer(controlTimebase, timer: current)
+
+                        _ = timebase.swap(nil)
+                    }
+                    
                     
                     layer.stopRequestingMediaData()
                     layer.flushAndRemoveImage()
-                    reader.modify({$0})?.cancelReading()
-                    _ = reader.swap(nil)
-                    _ = stopRequesting.swap(false)
+                    let reader = reader.swap(nil)
+                    Queue.concurrentBackgroundQueue().async {
+                       reader?.cancelReading()
+                    }
+                    
                     return
                 }
                 
                 if swapNext.swap(false) {
-                    _ = reader.modify({$0})?.cancelReading()
-                    _ = reader.swap(nil)
                     _ = output.swap(nil)
+                    let reader = reader.swap(nil)
+                    Queue.concurrentBackgroundQueue().async {
+                        reader?.cancelReading()
+                    }
                 }
                 
                 if  let readerValue = reader.modify({$0}), let outputValue = output.modify({$0}) {
                     while layer.isReadyForMoreMediaData {
                         if !stopRequesting.modify({$0}) {
-                            if let sampleVideo = outputValue.copyNextSampleBuffer() {
-                                layer.enqueue(sampleVideo)
+                            
+                            if readerValue.status == .reading, let sampleBuffer = outputValue.copyNextSampleBuffer() {
+                                layer.enqueue(sampleBuffer)
                                 
                                 continue
                             }
-                            _ = stopRequesting.modify({_ in path.modify({$0}) == nil})
+                            _ = stopRequesting.modify({_ in _data.modify({$0}) == nil})
                             break
                         } else {
                             break
@@ -227,7 +258,6 @@ class GIFPlayerView: TransformImageView {
        //     sampleLayer.flush()
       //  }
         
-        clear(false)
         _ = _swapNext.swap(true)
         _ = _timebase.swap(timebase)
     }
@@ -235,23 +265,11 @@ class GIFPlayerView: TransformImageView {
     
     
     deinit {
-        clear(true)
-        _ = _path.swap(nil)
-        sampleLayer.flushAndRemoveImage()
+        _ = _stopRequesting.swap(true)
     }
     
     
-    private func clear(_ stopRequesting:Bool = false) {
-        _ = _stopRequesting.swap(stopRequesting)
-        
-        if let timebase = sampleLayer.controlTimebase, let timer = _timer.modify({$0}) {
-            _ = _timer.swap(nil)
-            _ = _reader.swap(nil)
-            CMTimebaseRemoveTimer(timebase, timer: timer)
-        }
-        
-    }
-    
+
     
     required convenience init(frame frameRect: NSRect) {
         self.init()
@@ -280,11 +298,8 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                 if reader.canAdd(output) {
                     reader.add(output)
                     
-                    var timebase:CMTimebase?
-                    if let tb = _timebase.modify({$0}) {
-                        timebase = tb
-                        _ = _timebase.swap(nil)
-                    } else {
+                    var timebase:CMTimebase? = _timebase.swap(nil)
+                    if timebase == nil {
                         CMTimebaseCreateWithMasterClock( allocator: kCFAllocatorDefault, masterClock: CMClockGetHostTimeClock(), timebaseOut: &timebase )
                         CMTimebaseSetRate(timebase!, rate: 1.0)
                     }
@@ -307,7 +322,8 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                         
                         if let timer = timer, let runLoop = runLoop {
                             _ = _timer.swap(timer)
-                           //
+                            
+                            
                             CMTimebaseAddTimer(timebase, timer: timer, runloop: runLoop)
                             CFRunLoopAddTimer(runLoop, timer, CFRunLoopMode.defaultMode);
                             CMTimebaseSetTimerNextFireTime(timebase, timer: timer, fireTime: asset.duration, flags: 0)

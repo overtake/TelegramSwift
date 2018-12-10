@@ -15,239 +15,51 @@ import TGUIKit
 import AVFoundation
 import AVKit
 
-enum AVPlayerState : Equatable {
-    case playing(duration: Float64)
-    case paused(duration: Float64)
-    case waiting
-    
-    @available(OSX 10.12, *)
-    init(_ player: AVPlayer) {
-        let duration: Float64
-        if let item = player.currentItem {
-            duration = CMTimeGetSeconds(item.duration)
-        } else {
-            duration = 0
-        }
-        switch player.timeControlStatus {
-        case .playing:
-            self = .playing(duration: duration)
-        case .paused:
-            self = .paused(duration: duration)
-        case .waitingToPlayAtSpecifiedRate:
-            self = .waiting
-        }
-    }
-}
-
-private final class GAVPlayer : AVPlayer {
-    private var playerStatusContext = 0
-    private let _playerState: ValuePromise<AVPlayerState> = ValuePromise(.waiting, ignoreRepeated: true)
-    var playerState: Signal<AVPlayerState, NoError> {
-        return _playerState.get()
-    }
-    
-    override func pause() {
-        super.pause()
-    }
-    override init(url: URL) {
-        super.init(url: url)
-    }
-    override init(playerItem item: AVPlayerItem?) {
-        super.init(playerItem: item)
-        if #available(OSX 10.12, *) {
-            addObserver(self, forKeyPath: "timeControlStatus", options: [.new, .initial], context: &playerStatusContext)
-        }
-        NotificationCenter.default.addObserver(self, selector: #selector(playerDidEnd(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
-    }
-    
-    override init() {
-        super.init()
-    }
-    
-    @objc private func playerDidEnd(_ notification: Notification) {
-        seek(to: CMTime(seconds: 0, preferredTimescale: 1000000000));
-    }
-    
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)
-    {
-        //  Check status
-        if keyPath == "timeControlStatus" && context == &playerStatusContext && change != nil
-        {
-            if #available(OSX 10.12, *) {
-                _playerState.set(AVPlayerState(self))
-            }
-            //  Status is not unknown
-           
-        }
-    }
-    
-    deinit {
-        if #available(OSX 10.12, *) {
-            removeObserver(self, forKeyPath: "timeControlStatus")
-        }
-        NotificationCenter.default.removeObserver(self)
-    }
-}
-
-class VideoPlayerView : AVPlayerView {
-    
-    var isPip: Bool = false
-    
-    override func mouseMoved(with event: NSEvent) {
-        super.mouseMoved(with: event)
-        updateLayout()
-    }
-    
-    override func mouseExited(with event: NSEvent) {
-        super.mouseExited(with: event)
-        updateLayout()
-    }
-    
-    override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-        updateLayout()
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        updateLayout()
-    }
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        updateLayout()
-    }
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        updateLayout()
-    }
-    
-    
-    func rewindForward(_ seekDuration: Float64 = 15) {
-        guard let player = player, let duration = player.currentItem?.duration else { return }
-        let playerCurrentTime = CMTimeGetSeconds(player.currentTime())
-        let newTime = min(playerCurrentTime + seekDuration, CMTimeGetSeconds(duration))
-        
-        let time2: CMTime = CMTimeMake(value: Int64(newTime * 1000 as Float64), timescale: 1000)
-        player.seek(to: time2, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
-    }
-    func rewindBack(_ seekDuration: Float64 = 15) {
-        guard let player = player else { return }
-
-        let playerCurrentTime = CMTimeGetSeconds(player.currentTime())
-        var newTime = playerCurrentTime - seekDuration
-        
-        if newTime < 0 {
-            newTime = 0
-        }
-        let time2: CMTime = CMTimeMake(value: Int64(newTime * 1000 as Float64), timescale: 1000)
-        player.seek(to: time2, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
-        
-    }
-    
-    private func updateLayout() {
-        let controls = HackUtils.findElements(byClass: "AVMovableView", in: self)?.first as? NSView
-        if let controls = controls {
-            if let pip = controls.subviews.last as? ImageButton {
-                pip.setFrameOrigin(controls.frame.width - pip.frame.width - 80, controls.frame.height - pip.frame.height - 20)
-            }
-            controls._change(opacity: _mouseInside() ? 1 : 0, animated: true)
-            
-        }
-    }
-    
-    override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
-        updateLayout()
-    }
-    
-    override func layout() {
-        super.layout()
-        updateLayout()
-    }
-}
-
 class MGalleryVideoItem: MGalleryItem {
     var startTime: TimeInterval = 0
     private var playAfter:Bool = false
-    private let _playerItem: Promise<GAVPlayer> = Promise()
+    private let controller: SVideoController
     var playerState: Signal<AVPlayerState, NoError> {
-        return _playerItem.get() |> mapToSignal { $0.playerState }
-    }
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
-        super.init(account, entry, pagerSize)
-        
-        
-        _playerItem.set((path.get() |> distinctUntilChanged |> deliverOnMainQueue) |> map { path -> GAVPlayer in
-            let url = URL(string: path) ?? URL(fileURLWithPath: path)
-            return GAVPlayer(url: url)
-        })
-        
-        disposable.set(combineLatest(_playerItem.get() |> deliverOnMainQueue, view.get() |> distinctUntilChanged |> deliverOnMainQueue |> map { $0 as! AVPlayerView }).start(next: { [weak self] player, view in
-            if let strongSelf = self {
-                view.player = player
-                if strongSelf.playAfter {
-                    strongSelf.playAfter = false
-                    
-                    player.play()
-                    if strongSelf.startTime > 0 {
-                        player.seek(to: CMTimeMake(value: Int64(strongSelf.startTime * 1000.0), timescale: 1000))
-                    }
-                    let controls = view.subviews.last?.subviews.last
-                    if let controls = controls, let pip = strongSelf.pipButton {
-                        controls.addSubview(pip)
-                        view.needsLayout = true
-                    }
-                    
+        return controller.status |> map { value in
+            switch value.status {
+            case .playing:
+                return .playing(duration: value.duration)
+            case .paused:
+                return .paused(duration: value.duration)
+            case let .buffering(initial, whilePlaying):
+                if whilePlaying {
+                    return .playing(duration: value.duration)
+                } else if !whilePlaying && !initial {
+                    return .paused(duration: value.duration)
+                } else {
+                    return .waiting
                 }
             }
-        }))
+        } |> deliverOnMainQueue
+    }
+    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
+        controller = SVideoController(postbox: account.postbox, reference: entry.fileReference(entry.file!))
+        super.init(account, entry, pagerSize)
         
+        controller.togglePictureInPictureImpl = { [weak self] enter, control in
+            guard let `self` = self else {return}
+            let frame = control.view.window!.convertToScreen(control.view.convert(control.view.bounds, to: nil))
+            if enter, let viewer = viewer {
+                closeGalleryViewer(false)
+                showPipVideo(control: control, viewer: viewer, item: self, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
+            } else if !enter {
+                exitPictureInPicture()
+            }
+        }
     }
     
     deinit {
         var bp:Int = 0
         bp += 1
     }
-    
-    private var _cachedView: VideoPlayerView?
-    private var pipButton: ImageButton?
-    
+        
     override func singleView() -> NSView {
-        let view: VideoPlayerView
-        if let _cachedView = _cachedView {
-            view = _cachedView
-        } else {
-            view = VideoPlayerView()
-        }
-        view.showsFullScreenToggleButton = true
-        view.showsFrameSteppingButtons = true
-        view.controlsStyle = .floating
-        view.autoresizingMask = []
-        view.autoresizesSubviews = false
-        
-        let pip:ImageButton = ImageButton()
-        pip.style = ControlStyle(highlightColor: .grayIcon)
-        pip.set(image: #imageLiteral(resourceName: "Icon_PIPVideoEnable").precomposed(NSColor.white.withAlphaComponent(0.9)), for: .Normal)
-        
-        pip.set(handler: { [weak view, weak self] _ in
-            if let view = view, let strongSelf = self, let viewer = viewer {
-                let frame = view.window!.convertToScreen(view.convert(view.bounds, to: nil))
-                if !viewer.pager.isFullScreen {
-                    closeGalleryViewer(false)
-                    showPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
-                }
-            }
-        }, for: .Down)
-        
-        _ = pip.sizeToFit()
-
-        pipButton = pip
-        
-   
-
-        _cachedView = view
-        return view
+        return controller.genericView
         
     }
     private var isPausedGlobalPlayer: Bool = false
@@ -261,15 +73,8 @@ class MGalleryVideoItem: MGalleryItem {
             isPausedGlobalPlayer = pauseMusic
         }
         
-        if let view = view as? AVPlayerView {
-            if let player = view.player {
-                player.play()
-            } else {
-                playAfter = true
-            }
-        } else {
-             playAfter = true
-        }
+        controller.play(startTime)
+        controller.viewDidAppear(false)
     }
     
     override var maxMagnify: CGFloat {
@@ -281,55 +86,75 @@ class MGalleryVideoItem: MGalleryItem {
         if isPausedGlobalPlayer {
             _ = globalAudio?.play()
         }
-        if let view = view as? VideoPlayerView, !view.isPip {
-            view.player?.pause()
+        if controller.style != .pictureInPicture {
+            controller.pause()
         }
+        controller.viewDidDisappear(false)
         playAfter = false
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
+        if media.isStreamable {
+            return .single(.Local)
+        } else {
+            return chatMessageFileStatus(account: account, file: media)
+        }
+    }
+    
+    override var realStatus:Signal<MediaResourceStatus, NoError> {
         return chatMessageFileStatus(account: account, file: media)
     }
     
     var media:TelegramMediaFile {
-        switch entry {
-        case .message(let entry):
-            if let media = entry.message!.media[0] as? TelegramMediaFile {
-                return media
-            } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
-                switch media.content {
-                case let .Loaded(content):
-                    return content.file!
-                default:
-                    fatalError("")
-                }
-            }
-        case .instantMedia(let media, _):
-            return media.media as! TelegramMediaFile
-        default:
-            fatalError()
-        }
-        
-        fatalError("")
+        return entry.file!
     }
     
-    override var sizeValue: NSSize {
+    override var notFittedSize: NSSize {
         if let size = media.dimensions {
-            let size = size.fitted(pagerSize)
-            return NSMakeSize(max(size.width, 320), max(size.height, 240))
+            return size.fitted(pagerSize)
         }
         return pagerSize
     }
     
+    override var sizeValue: NSSize {
+        if let size = media.dimensions {
+            
+            var pagerSize = self.pagerSize
+            
+            pagerSize.height -= (caption != nil ? caption!.layoutSize.height + 80 : 0)
+            
+            let size = NSMakeSize(max(size.width, 200), max(size.height, 200)).fitted(pagerSize)
+            
+            
+            return size
+        }
+        return pagerSize
+    }
+    
+    override func toggleFullScreen() {
+        controller.toggleFullScreen()
+    }
+    
+    override func togglePlayerOrPause() {
+        controller.togglePlayerOrPause()
+    }
+    
+    override func rewindBack() {
+        controller.rewindBackward()
+    }
+    override func rewindForward() {
+        controller.rewindForward()
+    }
+    
+    
+    
     override func request(immediately: Bool) {
 
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
-       
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: entry.imageReference(image), scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)  //chatMessagePhoto(account: account, imageReference: entry.imageReference(image), scale: System.backingScale)
         
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: media.dimensions?.fitted(pagerSize) ?? sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .fill(.black))
         let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())
         }
@@ -350,8 +175,13 @@ class MGalleryVideoItem: MGalleryItem {
     
     
     override func fetch() -> Void {
-       
-        _ = freeMediaFileInteractiveFetched(account: account, fileReference: entry.fileReference(media)).start()
+        if !media.isStreamable {
+            if let parent = entry.message {
+                _ = messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start()
+            } else {
+                _ = freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.standalone(media: media)).start()
+            }
+        }
     }
 
 }

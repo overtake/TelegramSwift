@@ -62,7 +62,7 @@ final class InstantPageTextLine {
         }
         
         selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
-        return attributedString.attributedSubstring(from: NSMakeRange(startIndex, endIndex - startIndex))
+        return attributedString.attributedSubstring(from: NSMakeRange(min(startIndex, endIndex), abs(endIndex - startIndex)))
     }
     
     func selectWord(in point: NSPoint, boundingWidth: CGFloat, alignment: NSTextAlignment, rect: NSRect) -> NSAttributedString {

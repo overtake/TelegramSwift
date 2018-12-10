@@ -27,6 +27,7 @@ class ContextListRowItem: TableRowItem {
     var fileResource:TelegramMediaResource?
     let chatInteraction:ChatInteraction
     var audioWrapper:APSingleWrapper?
+    private(set) var file: TelegramMediaFile?
     private var vClass:AnyClass = ContextListImageView.self
     private let text:NSAttributedString
     override var stableId: AnyHashable {
@@ -67,6 +68,7 @@ class ContextListRowItem: TableRowItem {
             }
         case let .internalReference(_, _, _, title, description, image, file, _):
             if let file = file {
+                self.file = file
                 fileResource = file.resource
                 if file.isMusic || file.isVoice {
                     vClass = ContextListAudioView.self
@@ -271,7 +273,7 @@ class ContextListGIFView : ContextListRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
-            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), account: item.account, table: item.table, iconSignal: item.iconSignal)
+            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), file: item.file, account: item.account, table: item.table, iconSignal: item.iconSignal)
             player.needsLayout = true
         }
     }

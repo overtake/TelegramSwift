@@ -24,7 +24,7 @@ class PeerListContainerView : View {
     var searchView:SearchView = SearchView(frame:NSZeroRect)
     var compose:ImageButton = ImageButton()
     fileprivate let proxyButton:ImageButton = ImageButton()
-    private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
+    private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
     private var searchState: SearchFieldState = .None
     var mode: PeerListMode = .plain {
         didSet {
@@ -50,6 +50,8 @@ class PeerListContainerView : View {
         setFrameSize(frameRect.size)
         updateLocalizationAndTheme()
         proxyButton.disableActions()
+        
+        
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
@@ -69,8 +71,7 @@ class PeerListContainerView : View {
         proxyConnecting.isEventLess = true
         proxyConnecting.userInteractionEnabled = false
         _ = proxyButton.sizeToFit()
-        proxyConnecting.centerX(addition: backingScaleFactor == 2.0 ? -1.0 : 0)
-        proxyConnecting.centerY(addition: -1)
+        proxyConnecting.centerX()
         needsLayout = true
     }
     
@@ -118,7 +119,7 @@ class PeerListContainerView : View {
         tableView.setFrameOrigin(0, 49)
         
         proxyConnecting.centerX()
-        proxyConnecting.centerY(addition: -1 - (backingScaleFactor == 2.0 ? 0.5 : 0))
+        proxyConnecting.centerY(addition: -(backingScaleFactor == 2.0 ? 0.5 : 0))
         self.needsDisplay = true
     }
 }
@@ -409,6 +410,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                     strongSelf.genericView.searchView.change(state: .None,  false)
                 }
             }
+            self?.genericView.tableView.alwaysOpenRowsOnMouseUp = state == .single
             self?.genericView.tableView.reloadData()
         }))
         
@@ -547,12 +549,12 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
                 self?.effectiveTableView.selectNext(turnDirection: false)
                 return .invoked
-            }, with: self, for: .Tab, priority: .low, modifierFlags: [.control])
+            }, with: self, for: .Tab, priority: .high, modifierFlags: [.control])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
                 self?.effectiveTableView.selectPrev(turnDirection: false)
                 return .invoked
-            }, with: self, for: .Tab, priority: .medium, modifierFlags: [.control, .shift])
+            }, with: self, for: .Tab, priority: .high, modifierFlags: [.control, .shift])
             
         default:
             break

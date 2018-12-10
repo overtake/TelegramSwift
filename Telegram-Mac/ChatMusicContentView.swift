@@ -40,7 +40,13 @@ class ChatMusicContentView: ChatAudioContentView {
     
     override func viewDidMoveToWindow() {
         if window != nil {
-            playAnimationView?.animateToPlaying()
+            if let playAnimationView = playAnimationView {
+                if playAnimationView.isPlaying {
+                    playAnimationView.animateToPlaying()
+                } else {
+                    playAnimationView.animateToPaused()
+                }
+            }
         } else {
             playAnimationView?.animateToPaused()
         }
@@ -69,18 +75,18 @@ class ChatMusicContentView: ChatAudioContentView {
         
         let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: resource)], reference: nil, partialReference: nil)
         
-        imageView.setSignal(signal: cachedMedia(media: media, size: arguments.imageSize, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
+        imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
         
         imageView.setSignal( chatMessagePhotoThumbnail(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)), animate: true, cacheImage: { [weak self] image in
             if let strongSelf = self {
-                return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
+                return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
             } else {
                 return .complete()
             }
         })
         
         imageView.set(arguments: arguments)
-        imageView.layer?.cornerRadius = 20
+      //  imageView.layer?.cornerRadius = 20
     }
     
     override func checkState() {

@@ -28,10 +28,10 @@ class TouchBarStickerItemView: NSScrubberItemView {
         let imageSize = NSMakeSize(30, 30)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions.aspectFitted(imageSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
 
-        imageView.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor), clearInstantly: true)
+        imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
         imageView.setSignal(chatMessageSticker(account: account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file), type: .thumb, scale: backingScaleFactor), cacheImage: { [weak self] signal in
             if let strongSelf = self {
-                return cacheMedia(signal: signal, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                return cacheMedia(signal: signal, media: file, arguments: arguments, scale: strongSelf.backingScaleFactor)
             } else {
                 return .complete()
             }

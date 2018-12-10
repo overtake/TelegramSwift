@@ -25,7 +25,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private let textView:TextView = TextView()
     private let containerView:Control
     private let separator:View = View()
-    private var chatInteraction: ChatInteraction!
     private let playingSpeed: ImageButton = ImageButton()
     private var controller:APController? {
         didSet {
@@ -127,9 +126,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }, for: .SingleClick)
         
         playingSpeed.set(handler: { [weak self] control in
-            FastSettings.setPlayingRate(FastSettings.playingRate == 2.0 ? 1.0 : 2.0)
+            FastSettings.setPlayingRate(FastSettings.playingRate == 1.7 ? 1.0 : 1.7)
             self?.controller?.baseRate = FastSettings.playingRate
-            (control as! ImageButton).set(image: FastSettings.playingRate == 2.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
+            (control as! ImageButton).set(image: FastSettings.playingRate == 1.7 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
 
         }, for: .Click)
     }
@@ -138,10 +137,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         guard let window = kitWindow else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         if NSPointInRect(point, textView.frame) {
-            if let song = controller?.currentSong, controller is APChatMusicController {
+            if let song = controller?.currentSong, let controller = controller as? APChatMusicController {
                 switch song.stableId {
                 case let .message(message):
-                    showPopover(for: textView, with: PlayerListController(chatInteraction: self.chatInteraction, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, account: controller.account, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
                 default:
                     break
                 }
@@ -175,7 +174,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
-        playingSpeed.set(image: FastSettings.playingRate == 2.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
+        playingSpeed.set(image: FastSettings.playingRate != 1.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
         previous.set(image: theme.icons.audioPlayerPrev, for: .Normal)
         next.set(image: theme.icons.audioPlayerNext, for: .Normal)
         playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
@@ -221,16 +220,51 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
     }
     
-    func update(with controller:APController, chatInteraction: ChatInteraction, tableView:TableView) {
-        self.chatInteraction = chatInteraction
+    func update(with controller:APController, tableView:TableView?, supportTableView: TableView? = nil) {
         self.controller?.remove(listener: self)
         self.controller = controller
         self.controller?.add(listener: self)
         self.ready.set(controller.ready.get())
         
         repeatControl.isHidden = !(controller is APChatMusicController)
-        self.instantVideoPip = InstantVideoPIP(controller, window: mainWindow)
-        self.instantVideoPip?.updateTableView(tableView)
+        if let tableView = tableView {
+            if self.instantVideoPip == nil {
+                self.instantVideoPip = InstantVideoPIP(controller, window: mainWindow)
+            }
+            self.instantVideoPip?.updateTableView(tableView, controller: controller)
+            addGlobalAudioToVisible(tableView: tableView)
+        }
+        if let supportTableView = supportTableView {
+            addGlobalAudioToVisible(tableView: supportTableView)
+        }
+        
+    }
+    
+    private func addGlobalAudioToVisible(tableView: TableView) {
+        if let controller = controller {
+            tableView.enumerateViews(with: { (view) in
+                var contentView: NSView? = (view as? ChatRowView)?.contentView.subviews.last ?? (view as? PeerMediaMusicRowView)
+                if let view = ((view as? ChatMessageView)?.webpageContent as? WPMediaContentView)?.contentNode {
+                    contentView = view
+                }
+                
+                if let view = contentView as? ChatAudioContentView {
+                    controller.add(listener: view)
+                } else if let view = contentView as? ChatVideoMessageContentView {
+                    controller.add(listener: view)
+                } else if let view = contentView as? WPMediaContentView {
+                    if let contentNode = view.contentNode as? ChatAudioContentView {
+                        controller.add(listener: contentNode)
+                    }
+                } else if let view = view as? PeerMediaMusicRowView {
+                    controller.add(listener: view)
+                } else if let view = view as? PeerMediaVoiceRowView {
+                    controller.add(listener: view)
+                }
+                return true
+            })
+            controller.notifyGlobalStateChanged()
+        }
     }
     
     deinit {
@@ -308,7 +342,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
-        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20))
+        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20 + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 40)))
         textView.update(textView.layout)
         
         playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 20)

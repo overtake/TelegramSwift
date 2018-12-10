@@ -142,17 +142,32 @@ class ChatServiceItem: ChatRowItem {
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .pinnedMessageUpdated:
                     var replyMessageText = ""
+                    var pinnedId: MessageId?
                     for attribute in message.attributes {
                         if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
                             replyMessageText = pullText(from: message) as String
+                            pinnedId = attribute.messageId
                         }
                     }
                     let cutted = replyMessageText.prefixWithDots(30)
-                    let _ =  attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    _ = attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let pinnedRange = attributedString.string.nsstring.range(of: cutted)
+                    if pinnedRange.location != NSNotFound {
+                        attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                            if let pinnedId = pinnedId {
+                                chatInteraction?.focusMessageId(nil, pinnedId, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+                            }
+                        }), for: pinnedRange, color: grayTextColor)
+                        attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: pinnedRange)
+                    }
+                   
+                    
+                    
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+
                     }
                     
                 case .joinedByLink:
@@ -352,6 +367,7 @@ class ChatServiceRowView: TableRowView {
         //textView.userInteractionEnabled = false
         textView.isEventLess = true
         super.init(frame: frameRect)
+        //layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(textView)
     }
     
@@ -409,18 +425,27 @@ class ChatServiceRowView: TableRowView {
         super.set(item: item, animated:animated)
         
         
-        if let item = item as? ChatServiceItem {
+        if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
             if let image = item.image {
                 if imageView == nil {
                     self.imageView = TransformImageView()
                     self.addSubview(imageView!)
                 }
-                imageView?.setSignal( chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message!), media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
+                imageView?.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor))
+                imageView?.setSignal( chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message!), media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                    if let strongSelf = self {
+                        return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: nil)
+                    } else {
+                        return .complete()
+                    }
+                })
+                
+                
+                imageView?.set(arguments: arguments)
             } else {
                 imageView?.removeFromSuperview()
                 imageView = nil
             }
-            textView.backgroundColor = backdorColor
             self.needsLayout = true
         }
     }

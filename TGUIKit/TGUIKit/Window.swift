@@ -220,7 +220,7 @@ public enum KeyHandlerResult {
 }
 
 
-public class Window: NSWindow {
+open class Window: NSWindow {
     public var name: String = "TGUIKit.Window"
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeIdentifier: SwipeHandler] = [:]
@@ -419,7 +419,7 @@ public class Window: NSWindow {
     }
     
     @available(OSX 10.12.2, *)
-    public override func makeTouchBar() -> NSTouchBar? {
+    open override func makeTouchBar() -> NSTouchBar? {
         if !sheets.isEmpty {
             for sheet in sheets.reversed() {
                 if let sheet = sheet as? Window {
@@ -436,7 +436,7 @@ public class Window: NSWindow {
         return self.rootViewController?.makeTouchBar() ?? super.makeTouchBar()
     }
     
-    public override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+    open override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
         return super.makeFirstResponder(self.firstResponderFilter(responder))
     }
     
@@ -447,10 +447,10 @@ public class Window: NSWindow {
         sendEvent(event)
     }
     
-    public override func makeKeyAndOrderFront(_ sender: Any?) {
+    open override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
     }
-    public override func orderOut(_ sender: Any?) {
+    open override func orderOut(_ sender: Any?) {
         super.orderOut(sender)
         orderOutHandler?()
     }
@@ -469,7 +469,7 @@ public class Window: NSWindow {
         }
     }
     
-    public override func close() {
+    open override func close() {
         if let closeInterceptor = closeInterceptor, closeInterceptor() {
             return
         }
@@ -573,7 +573,7 @@ public class Window: NSWindow {
     }
     
     
-    public override func sendEvent(_ event: NSEvent) {
+    open override func sendEvent(_ event: NSEvent) {
         
         //        let testEvent = NSEvent.EventType.init(rawValue: 36)!
         //
@@ -668,7 +668,7 @@ public class Window: NSWindow {
         
     }
     
-    public override func swipe(with event: NSEvent) {
+    open override func swipe(with event: NSEvent) {
         super.swipe(with: event)
     }
     
@@ -686,7 +686,7 @@ public class Window: NSWindow {
     
     
     
-    public override var canBecomeKey: Bool {
+    open override var canBecomeKey: Bool {
         return true
     }
     
@@ -705,7 +705,7 @@ public class Window: NSWindow {
         }
     }
     
-    public override func toggleFullScreen(_ sender: Any?) {
+    open override func toggleFullScreen(_ sender: Any?) {
         CATransaction.begin()
         super.toggleFullScreen(sender)
         CATransaction.commit()

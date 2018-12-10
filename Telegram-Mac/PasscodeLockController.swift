@@ -484,6 +484,10 @@ class PasscodeLockController: ModalViewController {
         }))
         
     }
+    
+    override var closable: Bool {
+        return false
+    }
 
     
     override func escapeKeyAction() -> KeyHandlerResult {

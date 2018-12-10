@@ -566,12 +566,21 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         formatterPopover = nil
 
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
+        chatInteraction.update({ current in
+            var current = current
+            current = current.withUpdatedEffectiveInputState(state)
+            if let disabledPreview = current.interfaceState.composeDisableUrlPreview {
+                if !current.effectiveInput.inputText.contains(disabledPreview) {
+                    current = current.updatedUrlPreview(nil).updatedInterfaceState {$0.withUpdatedComposeDisableUrlPreview(nil)}
+                }
+            }
+            return current
+        })
         
         if chatInteraction.account.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel && !markNextTextChangeToFalseActivity {
             
             sendActivityDisposable.set((Signal<Bool, NoError>.single(true) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
-                if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel {
+                if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
                     chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: isPresent)
                 }
             }))
@@ -644,12 +653,25 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         
+        
+        
+        
         if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
+            
+            if let string = pasteboard.string(forType: .string) {
+                chatInteraction.update { current in
+                    if let disabled = current.interfaceState.composeDisableUrlPreview, disabled.lowercased() == string.lowercased() {
+                        return current.updatedInterfaceState {$0.withUpdatedComposeDisableUrlPreview(nil)}
+                    }
+                    return current
+                }
+            }
+            
             return !InputPasteboardParser.proccess(pasteboard: pasteboard, account: self.account, chatInteraction:self.chatInteraction, window: window)
         }
         
         
-        return self.chatState == .normal
+        return self.chatState != .normal
     }
 
 }

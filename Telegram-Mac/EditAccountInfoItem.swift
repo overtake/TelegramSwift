@@ -24,7 +24,7 @@ class EditAccountInfoItem: GeneralRowItem {
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
-        self.photo = .PeerAvatar(account.peerId, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation)
+        self.photo = .PeerAvatar(account.peerId, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil)
         super.init(initialSize, height: 90, stableId: stableId)
     }
     

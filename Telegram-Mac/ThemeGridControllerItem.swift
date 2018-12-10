@@ -58,15 +58,16 @@ final class SettingsThemeWallpaperView: View {
                 self.imageView.isHidden = false
 
                 let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], reference: nil, partialReference: nil)
-                self.imageView.setSignal(signal: cachedMedia(media: media, size: size, scale: backingScaleFactor))
+                let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
                 
                 let scale = backingScaleFactor
                 
                 self.imageView.setSignal(settingsBuiltinWallpaperImage(account: account, scale: backingScaleFactor), cacheImage: { signal in
-                    return cacheMedia(signal: signal, media: media, size: size, scale: scale)
+                    return cacheMedia(signal: signal, media: media, arguments: arguments, scale: scale)
                 })
                 
-                self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                self.imageView.set(arguments: arguments)
 
                 
             case let .color(color):

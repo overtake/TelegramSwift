@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKitMac
-
+import AVFoundation
 
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
@@ -24,11 +24,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     required public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
         // self.layer = (self.layerClass() as! CALayer.Type).init()
         self.wantsLayer = true
         backgroundColor = .clear
-        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        self.layerContentsRedrawPolicy = .never
       //  self.layer?.delegate = self
         self.layer?.backgroundColor = backdorColor.cgColor
         autoresizesSubviews = false
@@ -100,6 +99,12 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     open func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        
+    }
+    open func videoTimebase(for innerId: AnyHashable) -> CMTimebase? {
+        return nil
+    }
+    open func applyTimebase(for innerId: AnyHashable, timebase: CMTimebase?) {
         
     }
     

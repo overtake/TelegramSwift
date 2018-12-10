@@ -50,7 +50,16 @@ class ChatEmptyPeerItem: TableRowItem {
             _ = attr.append(string: tr(L10n.chatSecretChat4Feature), color: theme.colors.grayText, font: .normal(.text))
 
         } else {
-            _ = attr.append(string: tr(L10n.chatEmptyChat), color: theme.colors.grayText, font: .normal(.text))
+            if let restriction = chatInteraction.presentation.restrictionInfo {
+                let reason = restriction.reason.components(separatedBy: ":")
+                if reason.count == 2 {
+                    _ = attr.append(string: reason[1], color: theme.colors.grayText, font: .normal(.text))
+                } else {
+                    _ = attr.append(string: L10n.chatEmptyChat, color: theme.colors.grayText, font: .normal(.text))
+                }
+            } else {
+                _ = attr.append(string: tr(L10n.chatEmptyChat), color: theme.colors.grayText, font: .normal(.text))
+            }
         }
         textViewLayout = TextViewLayout(attr, alignment: .center)
         textViewLayout.interactions = globalLinkExecutor

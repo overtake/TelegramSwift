@@ -58,6 +58,11 @@ class FastSettings {
     private static let kPlayingRate = "kPlayingRate"
 
 
+    private static let kVolumeRate = "kVolumeRate"
+    
+    
+
+    
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -93,11 +98,23 @@ class FastSettings {
     }
     
     static var playingRate: Double {
-        return max(UserDefaults.standard.double(forKey: kPlayingRate), 1)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 1.7)
     }
     
     static func setPlayingRate(_ rate: Double) {
         UserDefaults.standard.set(rate, forKey: kPlayingRate)
+    }
+    
+    static var volumeRate: Float {
+        if UserDefaults.standard.value(forKey: kVolumeRate) != nil {
+            return min(max(UserDefaults.standard.float(forKey: kVolumeRate), 0), 1)
+        } else {
+            return 0.8
+        }
+    }
+    
+    static func setVolumeRate(_ rate: Float) {
+        UserDefaults.standard.set(rate, forKey: kVolumeRate)
     }
     
     static var isMinimisize: Bool {
@@ -167,10 +184,10 @@ class FastSettings {
     }
     
     static func openInQuickLook(_ ext: String) -> Bool {
-        return UserDefaults.standard.bool(forKey: "open_in_quick_look_\(ext)")
+        return !UserDefaults.standard.bool(forKey: "open_in_quick_look_\(ext)")
     }
     static func toggleOpenInQuickLook(_ ext: String) -> Void {
-        UserDefaults.standard.set(!openInQuickLook(ext), forKey: "open_in_quick_look_\(ext)")
+        UserDefaults.standard.set(openInQuickLook(ext), forKey: "open_in_quick_look_\(ext)")
         UserDefaults.standard.synchronize()
     }
     
@@ -279,7 +296,7 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Void
 }
 
 private func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String), NoError> {
-    return combineLatest(postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: postbox)) |> mapToSignal { data, settings -> Signal< (String, String), NoError> in
+    return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String), NoError> in
         if data.complete {
             var ext:String = ""
             let fileName = file.fileName ?? data.path.nsstring.lastPathComponent

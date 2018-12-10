@@ -42,7 +42,7 @@ class ContextStickerRowItem: TableRowItem {
 
 
 
-class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
+class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
 
     
     func fileAtPoint(_ point:NSPoint) -> FileMediaReference? {
@@ -105,7 +105,7 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
                     
                     container.set(handler: { [weak self, weak item] (control) in
                         if let window = self?.window as? Window, let item = item, let table = item.table {
-                            _ = startStickerPreviewHandle(table, window: window, account: item.account)
+                            _ = startModalPreviewHandle(table, viewType: StickerPreviewModalView.self, window: window, account: item.account)
                         }
                     }, for: .LongMouseDown)
                     
@@ -114,10 +114,10 @@ class ContextStickerRowView : TableRowView, StickerPreviewRowViewProtocol {
                     
                     let view = TransformImageView()
                     let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
-                    view.setSignal(signal: cachedMedia(media: data.file, size: arguments.imageSize, scale: backingScaleFactor), clearInstantly: false)
+                    view.setSignal(signal: cachedMedia(media: data.file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
                     view.setSignal( chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor), cacheImage: { [weak self] signal in
                         if let strongSelf = self {
-                            return cacheMedia(signal: signal, media: data.file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                            return cacheMedia(signal: signal, media: data.file, arguments: arguments, scale: strongSelf.backingScaleFactor)
                         } else {
                             return .complete()
                         }

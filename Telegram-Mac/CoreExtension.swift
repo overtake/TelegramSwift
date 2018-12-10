@@ -322,6 +322,11 @@ func alertForMediaRestriction(_ peer:Peer) {
     }
 }
 
+extension RenderedPeer {
+    convenience init(_ foundPeer: FoundPeer) {
+        self.init(peerId: foundPeer.peer.id, peers: SimpleDictionary([foundPeer.peer.id : foundPeer.peer]))
+    }
+}
 
 extension TelegramMediaFile {
     var videoSize:NSSize {
@@ -331,6 +336,15 @@ extension TelegramMediaFile {
             }
         }
         return NSZeroSize
+    }
+    
+    var isStreamable: Bool {
+        for attr in attributes {
+            if case let .Video(_, _, flags) = attr {
+                return flags.contains(.supportStreaming) || !flags.contains(.mediaAfterSupportVideoStreaming)
+            }
+        }
+        return false
     }
     
     var imageSize:NSSize {
@@ -614,6 +628,10 @@ public extension Message {
     }
     func withUpdatedId(_ messageId:MessageId) -> Message {
         return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
+    }
+    
+    func withUpdatedGroupingKey(_ groupingKey:Int64?) -> Message {
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds)
     }
     
     public func withUpdatedTimestamp(_ timestamp: Int32) -> Message {
@@ -2153,7 +2171,7 @@ extension PostboxAccessChallengeData {
     }
 }
 
-func clearCache(_ path: String) -> Signal<Void, NoError> {
+func clearCache(_ path: String, excludes: [(partial: String, complete: String)]) -> Signal<Void, NoError> {
     return Signal { subscriber -> Disposable in
         
         let fileManager = FileManager.default
@@ -2161,7 +2179,9 @@ func clearCache(_ path: String) -> Signal<Void, NoError> {
         
         while let file = enumerator?.nextObject() as? String {
             if file != "cache" {
-                unlink(path + "/" + file)
+                if excludes.filter ({ file.contains($0.partial.nsstring.lastPathComponent) || file.contains($0.complete.nsstring.lastPathComponent) }).isEmpty {
+                    unlink(path + "/" + file)
+                }
             }
         }
         
@@ -2171,7 +2191,11 @@ func clearCache(_ path: String) -> Signal<Void, NoError> {
         enumerator = fileManager.enumerator(atPath: p)
         
         while let file = enumerator?.nextObject() as? String {
-            unlink(p + file)
+            
+            
+            if excludes.filter ({ file.contains($0.partial) || file.contains($0.complete) }).isEmpty {
+                unlink(p + file)
+            }
             //try? fileManager.removeItem(atPath: p + file)
         }
         
@@ -2485,3 +2509,5 @@ extension MessageHistoryAnchorIndex {
         }
     }
 }
+
+

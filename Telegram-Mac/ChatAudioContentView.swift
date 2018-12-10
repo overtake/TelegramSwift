@@ -89,7 +89,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 }
                 parameters.showPlayer(controller)
                 controller.start()
-                addGlobalAudioToVisible()
             }
         }
     }
@@ -118,10 +117,10 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     }
     
     func songDidStartPlaying(song:APSongItem, for controller:APController) {
-        
+        checkState()
     }
     func songDidStopPlaying(song:APSongItem, for controller:APController) {
-        
+        checkState()
     }
     func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
         
@@ -139,8 +138,10 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: parent), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:0))
+                progressView.state = .Icon(image: presentation.pauseThumb, mode: .normal)
             } else {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
+                progressView.state = .Play
             }
         } else {
             progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
@@ -170,8 +171,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
             self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
-                    
-                   
                 }
             }))
         }

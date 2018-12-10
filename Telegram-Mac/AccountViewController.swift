@@ -415,12 +415,13 @@ private func accountInfoEntries(peerView:PeerView, language: Language, privacySe
     index += 1
     entries.append(.dataAndStorage(index: index))
     index += 1
+    entries.append(.appearance(index: index))
+    index += 1
     entries.append(.language(index: index, current: L10n.accountSettingsCurrentLanguage, languages: languages))
     index += 1
     entries.append(.stickers(index: index))
     index += 1
-    entries.append(.appearance(index: index))
-    index += 1
+   
     
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1

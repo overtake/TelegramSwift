@@ -43,6 +43,10 @@ public func deliverOnPrepareQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> 
     return signal |> deliverOn(prepareQueue)
 }
 
+public func deliverOnResourceQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
+    return signal |> deliverOn(resourcesQueue)
+}
+
 
 func proccessEntriesWithoutReverse<T,R>(_ left:[R]?,right:[R],_ convertEntry:@escaping (R) -> T) -> ([Int],[(Int,T)],[(Int,T)]) where R:Comparable, R:Identifiable {
     return proccessEntries(false, left, right: right, convertEntry)

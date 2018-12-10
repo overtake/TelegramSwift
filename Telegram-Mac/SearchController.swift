@@ -329,6 +329,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     
     private let account:Account
+    private var marked: Bool = false
     private let arguments:SearchControllerArguments
     private var open:(PeerId?, Message?, Bool) -> Void = {_,_,_  in}
     private let groupId: PeerGroupId?
@@ -371,7 +372,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries: [ChatListSearchEntry] = []
                         
                         
-                        if tr(L10n.peerSavedMessages).lowercased().hasPrefix(query.lowercased()) {
+                        if L10n.peerSavedMessages.lowercased().hasPrefix(query.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.lowercased()) {
                             entries.append(.savedMessages(accountPeer))
                         }
                         
@@ -661,7 +662,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 _ = self.genericView.select(item: highlighted)
                 self.closeNext = true
 
-            } else if self.account.context.mainNavigation?.stackCount == 1 {
+            } else if !self.marked {
+                self.genericView.cancelSelection()
                 self.genericView.selectNext()
                 self.closeNext = true
             }
@@ -689,7 +691,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let item = self?.genericView.highlightedItem(), item.index > 0 {
-                self?.genericView.highlitedPrev(turnDirection: false)
+                self?.genericView.highlightPrev(turnDirection: false)
                 while self?.genericView.highlightedItem() is PopularPeersRowItem || self?.genericView.highlightedItem() is SeparatorRowItem {
                     self?.genericView.highlightNext(turnDirection: false)
                 }
@@ -844,6 +846,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         removeHighlightEvents()
 
+        marked = true
+        
         openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( completed: { [weak self] in
             //!(item is ChatListMessageRowItem) && byClick
             self?.open(peerId, message, self?.closeNext ?? false)
