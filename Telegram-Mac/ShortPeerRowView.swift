@@ -46,7 +46,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     
     override var backdorColor: NSColor {
-        return item?.isSelected ?? false ? theme.colors.blueSelect : theme.colors.background
+        return item?.isSelected ?? false ? theme.colors.blueSelect : item?.isHighlighted ?? false ? theme.colors.grayForeground : theme.colors.background
     }
     
     required init?(coder: NSCoder) {
@@ -347,21 +347,33 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         self.container.setNeedsDisplayLayer()
     }
     
-    override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with:event)
-        
-        if let item = item as? ShortPeerRowItem {
+    func invokeAction(_ item: ShortPeerRowItem, clickCount: Int) {
+        switch item.interactionType {
+        case let .selectable(interaction):
+            interaction.update({$0.withToggledSelected(item.peer.id, peer: item.peer)})
+        default:
+            if clickCount <= 1 {
+                item.action()
+                self.focusAnimation(nil)
+            }
+        }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        if let item = item as? ShortPeerRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp {
             if item.enabled {
-                switch item.interactionType {
-                case let .selectable(interaction):
-                    interaction.update({$0.withToggledSelected(item.peer.id, peer: item.peer)})
-                default:
-                    if event.clickCount == 1 {
-                        item.action()
-                        self.focusAnimation(nil)
-                    }
-                }
-            } 
+                invokeAction(item, clickCount: event.clickCount)
+            }
+        }
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        if let item = item as? ShortPeerRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp {
+            if item.enabled {
+                invokeAction(item, clickCount: event.clickCount)
+            }
         }
     }
     

@@ -293,6 +293,9 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
+        if self.window?.firstResponder == self.input {
+            self.state = .Focus
+        }
         _textUpdater.set(input.string)
         selectedIndex = nil
     }
@@ -300,11 +303,11 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     
     public func textDidEndEditing(_ notification: Notification) {
-        didResignResponder()
+        self.didResignResponder()
     }
     
     public func textDidBeginEditing(_ notification: Notification) {
-        didBecomeResponder()
+        //self.didBecomeResponder()
     }
 
     public override var needsLayout: Bool {

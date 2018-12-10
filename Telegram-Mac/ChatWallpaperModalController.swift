@@ -205,6 +205,8 @@ class ChatWallpaperModalController: ModalViewController {
             |> map { wallpapers -> (ThemeGridEntryTransition, Bool) in
                 var entries: [ThemeGridControllerEntry] = []
                 var index = 0
+                entries.append(ThemeGridControllerEntry(index: index, wallpaper: .none))
+                index += 1
                 for item in wallpapers {
                     entries.append(ThemeGridControllerEntry(index: index, wallpaper: item))
                     index += 1

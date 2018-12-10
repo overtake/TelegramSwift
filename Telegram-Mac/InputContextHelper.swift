@@ -17,6 +17,7 @@ import TelegramCoreMac
 
 enum InputContextEntry : Comparable, Identifiable {
     case switchPeer(PeerId, ChatContextResultSwitchPeer)
+    case message(Int64, Message, String)
     case peer(Peer, Int, Int64)
     case contextResult(ChatContextResultCollection,ChatContextResult,Int64)
     case contextMediaResult(ChatContextResultCollection?, InputMediaContextRow, Int64)
@@ -29,6 +30,8 @@ enum InputContextEntry : Comparable, Identifiable {
         switch self {
         case .switchPeer:
             return -1
+        case let .message(_, message, _):
+            return message.id.toInt64()
         case let .peer(_,_, stableId):
             return stableId
         case let .contextResult(_,_,index):
@@ -68,6 +71,8 @@ enum InputContextEntry : Comparable, Identifiable {
             return Int64(index) //result.maybeId | ((Int64(index) << 40))
         case .inlineRestricted:
             return 0
+        case let .message(index, _, _):
+            return index
         }
     }
 }
@@ -125,6 +130,12 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
         } else {
             return false
         }
+    case let .message(index, lhsMessage, searchText):
+        if case .message(index, let rhsMessage, searchText) = rhs {
+            return isEqualMessages(lhsMessage, rhsMessage)
+        } else {
+            return false
+        }
     }
 }
 
@@ -166,6 +177,10 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case .inlineRestricted(let until):
             let text = until != nil ? tr(L10n.channelPersmissionDeniedSendInlineUntil(until!)) : tr(L10n.channelPersmissionDeniedSendInlineForever)
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, height: 40, text: text, alignment: .center, centerViewAlignment: true)
+        case let .message(_, message, searchText):
+            return ContextSearchMessageItem(initialSize, account: account, message: message, searchText: searchText, action: {
+                
+            })
         }
         
     })
@@ -212,7 +227,7 @@ class InputContextView : TableView {
         case .above:
             separatorView.setFrameOrigin(0, 0)
         case .below:
-            separatorView.setFrameOrigin(NSMakePoint(0, frame.height - separatorView.frame.height))
+            separatorView.frame = NSMakeRect(0, frame.height - separatorView.frame.height, frame.width, .borderSize)
         }
     }
     
@@ -228,8 +243,11 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         return nil
     }
     
+    fileprivate var markAsNeedShown: Bool = false
+    
     private let account:Account
     private let chatInteraction:ChatInteraction
+    private let highlightInsteadOfSelect: Bool
     fileprivate weak var superview: NSView?
     override func loadView() {
         super.loadView()
@@ -237,26 +255,29 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         view.layer?.opacity = 0
     }
     
-    init(account:Account,chatInteraction:ChatInteraction) {
+    init(account:Account,chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool) {
         self.account = account
         self.chatInteraction = chatInteraction
+        self.highlightInsteadOfSelect = highlightInsteadOfSelect
         super.init()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
-            let prev = self?.deselectSelectedSticker()
-            self?.genericView.selectNext(true,true)
-            self?.selectFirstInRowIfCan(prev)
+        mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            let prev = self.deselectSelectedSticker()
+            self.highlightInsteadOfSelect ? self.genericView.highlightNext(true,true) : self.genericView.selectNext(true,true)
+            self.selectFirstInRowIfCan(prev)
             return .invoked
         }, with: self, for: .DownArrow, priority: .high)
         
         mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
-            let prev = self?.deselectSelectedSticker()
-            self?.genericView.selectPrev(true,true)
-            self?.selectFirstInRowIfCan(prev)
+            guard let `self` = self else {return .rejected}
+            let prev = self.deselectSelectedSticker()
+            self.highlightInsteadOfSelect ? self.genericView.highlightPrev(true,true) : self.genericView.selectPrev(true,true)
+            self.selectFirstInRowIfCan(prev)
             return .invoked
         }, with: self, for: .UpArrow, priority: .high)
         
@@ -306,7 +327,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     }
     
     func invoke() -> KeyHandlerResult {
-        if let selectedItem = genericView.selectedItem() {
+        if let selectedItem = genericView.highlightedItem() ?? genericView.selectedItem()  {
             if let selectedItem = selectedItem as? ShortPeerRowItem {
                 chatInteraction.movePeerToInput(selectedItem.peer)
             } else if let selectedItem = selectedItem as? ContextListRowItem {
@@ -340,10 +361,12 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             } else if let selectedItem = selectedItem as? ContextStickerRowItem, let index = selectedItem.selectedIndex {
                 chatInteraction.sendAppFile(selectedItem.result.results[index].file)
                 chatInteraction.clearInput()
+            } else if let selectedItem = selectedItem as? ContextSearchMessageItem {
+                chatInteraction.focusMessageId(nil, selectedItem.message.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
             }
             return .invoked
         }
-        return .invokeNext
+        return .rejected
     }
     
     func invokeTab() -> KeyHandlerResult {
@@ -467,19 +490,33 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         return !(item is ContextMediaRowItem)
     }
     
-    func make(with transition:TableUpdateTransition, animated:Bool, result: ChatPresentationInputQueryResult? = nil) {
+    func make(with transition:TableUpdateTransition, animated:Bool, selectIndex: Int?, result: ChatPresentationInputQueryResult? = nil) {
         assertOnMainThread()
         genericView.cancelSelection()
+        genericView.cancelHighlight()
         genericView.merge(with: transition)
         layout(animated)
-        if !genericView.isEmpty, let result = result, case .mentions = result {
-            _ = genericView.select(item: genericView.item(at: 0))
+        if !genericView.isEmpty, let result = result {
+            switch result {
+            case .mentions, .searchMessages:
+                if !highlightInsteadOfSelect {
+                    _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
+                } else {
+                    _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
+                }
+            default:
+                break
+            }
+            if let selectIndex = selectIndex {
+                _ = genericView.select(item: genericView.item(at: selectIndex))
+                genericView.scroll(to: .center(id: genericView.item(at: selectIndex).stableId, innerId: nil, animated: false, focus: false, inset: 0))
+            }
         }
     }
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            let future = NSMakeSize(frame.width, min(genericView.listHeight,min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))))
+            let future = NSMakeSize(frame.width, min(genericView.listHeight, min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))))
             //  genericView.change(size: future, animated: animated)
             //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
             
@@ -508,17 +545,17 @@ enum InputContextPosition {
 
 class InputContextHelper: NSObject {
     
-    var disposable:MetaDisposable = MetaDisposable()
+    private let disposable:MetaDisposable = MetaDisposable()
 
-    private var controller:InputContextViewController
+    let controller:InputContextViewController
     private let account:Account
     private let chatInteraction:ChatInteraction
     private let entries:Atomic<[AppearanceWrapperEntry<InputContextEntry>]?> = Atomic(value:nil)
     
-    init(account:Account, chatInteraction:ChatInteraction) {
+    init(account:Account, chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
         self.account = account
         self.chatInteraction = chatInteraction
-        controller = InputContextViewController(account:account,chatInteraction:chatInteraction)
+        controller = InputContextViewController(account:account,chatInteraction:chatInteraction, highlightInsteadOfSelect: highlightInsteadOfSelect)
     }
 
     public var accessoryView:NSView? {
@@ -529,7 +566,7 @@ class InputContextHelper: NSObject {
         self.controller.viewWillDisappear(false)
     }
     
-    func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, animated:Bool) {
+    func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, selectIndex:Int? = nil, animated:Bool) {
         
         controller._frameRect = NSMakeRect(0, 0, view.frame.width, floor(view.frame.height / 2))
         controller.loadViewIfNeeded()
@@ -554,9 +591,10 @@ class InputContextHelper: NSObject {
                 if previousIsEmpty {
                     controller.genericView.removeAll()
                 }
-                controller.make(with: transition, animated:animated, result: result)
+                controller.make(with: transition, animated:animated, selectIndex: selectIndex, result: result)
 
                 if let view = view {
+                    controller.markAsNeedShown = true
                     controller.viewWillAppear(animated)
                     if controller.view.superview == nil {
                         view.addSubview(controller.view, positioned: .below, relativeTo: relativeView)
@@ -572,22 +610,25 @@ class InputContextHelper: NSObject {
                 }
                 
             } else if let controller = self?.controller, let relativeView = relativeView {
-                controller.viewWillDisappear(animated)
+                var controller:InputContextViewController? = controller
+                controller?.viewWillDisappear(animated)
+                controller?.markAsNeedShown = false
                 if animated {
-                    controller.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak controller] completed in
-                        
-                        controller?.removeFromSuperview()
-                        controller?.genericView.removeAll()
-                        controller?.viewDidDisappear(animated)
-                        controller?.genericView.cancelSelection()
-                        
+                    controller?.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, completion: { completed in
+                        if controller?.markAsNeedShown == false {
+                            controller?.removeFromSuperview()
+                            controller?.genericView.removeAll()
+                            controller?.viewDidDisappear(animated)
+                            controller?.genericView.cancelSelection()
+                        }
+                        controller = nil
                     })
 
-                    controller.genericView.change(opacity: 0, animated: true)
+                    controller?.genericView.change(opacity: 0, animated: true)
                 } else {
-                    controller.removeFromSuperview()
-                    controller.viewDidDisappear(animated)
-                    controller.genericView.cancelSelection()
+                    controller?.removeFromSuperview()
+                    controller?.viewDidDisappear(animated)
+                    controller?.genericView.cancelSelection()
                 }
             }
     
@@ -669,6 +710,12 @@ class InputContextHelper: NSObject {
                     var index:Int32 = 0
                     for clue in clues {
                         entries.append(.emoji(clue, index))
+                        index += 1
+                    }
+                case let .searchMessages(messages, searchText):
+                    var index: Int64 = 0
+                    for message in messages {
+                        entries.append(.message(index, message, searchText))
                         index += 1
                     }
                 }

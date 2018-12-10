@@ -209,8 +209,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     func withUpdatedWallpaper(_ wallpaper: TelegramWallpaper) -> ThemePaletteSettings {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
     }
-    func withUpdatedDefaultDayName(_ defaultNightName: String) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
+    func withUpdatedDefaultDayName(_ defaultDayName: String) -> ThemePaletteSettings {
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: defaultDayName, followSystemAppearance: self.followSystemAppearance)
     }
     func withUpdatedDefaultNightName(_ defaultNightName: String) -> ThemePaletteSettings {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
@@ -249,7 +249,14 @@ func themeSettingsView(postbox: Postbox)-> Signal<ThemePaletteSettings, NoError>
             let pallete: ColorPalette
             switch NSApp.effectiveAppearance.name {
             case NSAppearance.Name.aqua:
-                pallete = dayClassic
+                switch settings.defaultDayName {
+                case dayClassic.name:
+                    pallete = dayClassic
+                case whitePalette.name:
+                    pallete = whitePalette
+                default:
+                    pallete = dayClassic
+                }
             case NSAppearance.Name.darkAqua:
                 switch settings.defaultNightName {
                 case nightBluePalette.name:

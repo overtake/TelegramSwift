@@ -63,7 +63,7 @@ class VideoRecorderModalView: View {
     }
     
     func updateForPreview(_ path:String? = nil, preview: CGImage?) -> Void {
-        previewPlayer.set(path: path)
+        previewPlayer.set(data: AVGifData.dataFrom(path))
         placeholderView.image = preview
         
         previewPlayer.isHidden = path == nil

@@ -124,13 +124,14 @@ final class ChatInteraction : InterfaceObserver  {
     var openProxySettings: ()->Void = {}
     var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
     var clearMentions:()->Void = {}
-    var attachFile:()->Void = {}
+    var attachFile:(Bool)->Void = { _ in }
     var attachPhotoOrVideo:()->Void = {}
     var attachPicture:()->Void = {}
     var attachLocation:()->Void = {}
     var updateEditingMessageMedia:([String]?, Bool) -> Void = { _, _ in}
     var editEditingMessagePhoto:(TelegramMediaImage) -> Void = { _ in}
-
+    var removeChatInteractively:()->Void = { }
+    
     let loadingMessage: Promise<Bool> = Promise()
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
@@ -283,6 +284,8 @@ final class ChatInteraction : InterfaceObserver  {
                 if invoke {
                     showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true )
                 }
+            case let .forward(messageIds, text, _):
+                update({$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(text != nil ? ChatTextInputState(inputText: text!) : $0.inputState)})})
             default:
                 break
             }

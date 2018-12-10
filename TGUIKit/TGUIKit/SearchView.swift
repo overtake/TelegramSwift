@@ -48,23 +48,22 @@ public enum SearchFieldState {
 public struct SearchState : Equatable {
     public let state:SearchFieldState
     public let request:String
-    public init(state:SearchFieldState, request:String?) {
+    public let responder: Bool
+    public init(state:SearchFieldState, request:String?, responder: Bool = false) {
         self.state = state
         self.request = request ?? ""
+        self.responder = responder
     }
-}
-
-public func ==(lhs:SearchState, rhs:SearchState) -> Bool {
-    return lhs.state == rhs.state && lhs.request == rhs.request
 }
 
 public final class SearchInteractions {
     public let stateModified:(SearchState) -> Void
     public let textModified:(SearchState) -> Void
-    
-    public init(_ state:@escaping(SearchState)->Void, _ text:@escaping(SearchState)->Void) {
-        stateModified = state
-        textModified = text
+    public let responderModified:(SearchState) -> Void
+    public init(_ state:@escaping(SearchState)->Void, _ text:@escaping(SearchState)->Void, responderModified:@escaping(SearchState) -> Void = {_ in}) {
+        self.stateModified = state
+        self.textModified = text
+        self.responderModified = responderModified
     }
 }
 
@@ -89,8 +88,12 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
-
     
+    private let _searchValue:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+    
+    public var searchValue: Signal<SearchState, NoError> {
+        return _searchValue.get()
+    }
     public var shouldUpdateTouchBarItemIdentifiers: (()->[Any])?
     
     
@@ -248,9 +251,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             return
         }
         
-        if let searchInteractions = searchInteractions {
-            searchInteractions.textModified(SearchState(state: state, request: trimmed))
-        }
+        let value = SearchState(state: state, request: trimmed, responder: self.input == window?.firstResponder)
+        searchInteractions?.textModified(value)
+        _searchValue.set(value)
+        
+
         let pHidden = !input.string.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
@@ -329,16 +334,24 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func didResignResponder() {
+        let value = SearchState(state: state, request: self.query, responder: false)
+        searchInteractions?.responderModified(value)
+        _searchValue.set(value)
         if isEmpty {
             change(state: .None, true)
         }
+        
         self.kitWindow?.removeAllHandlers(for: self)
         self.kitWindow?.removeObserver(for: self)
     }
     
     open func didBecomeResponder() {
+        let value = SearchState(state: state, request: self.query, responder: true)
+        searchInteractions?.responderModified(SearchState(state: state, request: self.query, responder: true))
+        _searchValue.set(value)
+
         change(state: .Focus, true)
-        
+
         self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.changeResponder() ? .invoked : .rejected
@@ -378,10 +391,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         if state != self.state && !lock {
             self.state = state
             
-            if let searchInteractions = searchInteractions {
-                let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
-                searchInteractions.stateModified(SearchState(state: state, request: state == .None ? nil : text))
-            }
+            let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+            let value = SearchState(state: state, request: state == .None ? nil : text, responder: self.input == window?.firstResponder)
+            searchInteractions?.stateModified(value)
+
+            _searchValue.set(value)
             
             lock = true
             

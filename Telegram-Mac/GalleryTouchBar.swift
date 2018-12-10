@@ -167,7 +167,7 @@ class GalleryTouchBar: NSTouchBar, NSTouchBarDelegate {
             if let item = item as? MGalleryVideoItem {
                 items.append(.videoPlayControl)
                 items.append(.videoTimeControls)
-                videoStatusDisposable.set(item.playerState.start(next: { [weak self] state in
+                videoStatusDisposable.set((item.playerState |> deliverOnMainQueue).start(next: { [weak self] state in
                     self?.updateVideoControls(state)
                 }))
             } else {
@@ -241,16 +241,12 @@ class GalleryTouchBar: NSTouchBar, NSTouchBarDelegate {
     }
     @objc private func videoTimeControlsActions(_ sender: Any?) {
         guard let segment = sender as? NSSegmentedControl else {return}
-        if let item = selectedItem as? MGalleryVideoItem {
+        if let item = selectedItem {
             switch segment.selectedSegment {
             case 0:
-                _ = (item.view.get() |> take(1)).start(next: { view in
-                    (view as? VideoPlayerView)?.rewindBack()
-                })
+                item.rewindBack()
             case 1:
-                _ = (item.view.get() |> take(1)).start(next: { view in
-                    (view as? VideoPlayerView)?.rewindForward()
-                })
+                item.rewindForward()
             default:
                 break
             }
@@ -258,17 +254,8 @@ class GalleryTouchBar: NSTouchBar, NSTouchBarDelegate {
     }
     
     @objc private func playOrPauseAction() {
-        if let item = selectedItem as? MGalleryVideoItem {
-            _ = combineLatest(item.view.get() |> take(1), item.playerState |> take(1)).start(next: { view, state in
-                switch state {
-                case .paused:
-                    (view as? VideoPlayerView)?.player?.play()
-                case .playing:
-                    (view as? VideoPlayerView)?.player?.pause()
-                default:
-                    break
-                }
-            })
+        if let item = selectedItem {
+            item.togglePlayerOrPause()
         }
     }
     

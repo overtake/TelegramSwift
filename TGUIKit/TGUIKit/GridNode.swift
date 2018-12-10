@@ -1,5 +1,5 @@
 import Cocoa
-
+import AVFoundation
 
 public struct GridNodeInsertItem {
     public let index: Int
@@ -251,6 +251,8 @@ private struct WrappedGridItemNode: Hashable {
 }
 
 open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewProtocol {
+    
+    
     private var gridLayout = GridNodeLayout(size: CGSize(), insets: NSEdgeInsets(), preloadSize: 0.0, type: .fixed(itemSize: CGSize(), lineSpacing: 0.0))
     private var firstIndexInSectionOffset: Int = 0
     private var items: [GridItem] = []
@@ -1233,6 +1235,13 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
     
     public func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
         
+    }
+    public func videoTimebase(for stableId: AnyHashable) -> CMTimebase? {
+        return nil
+    }
+    
+    public func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
+
     }
     
     public func forEachRow(_ f: ([View]) -> Void) {

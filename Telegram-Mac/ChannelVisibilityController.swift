@@ -276,7 +276,16 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
                 if let link = link {
                     arguments.displayPrivateLinkMenu(link)
                 }
-            })
+            }, linkExecutor: TextViewInteractions.init(processURL: { _ in
+                if let link = link {
+                    arguments.account.context.mainNavigation?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                    copyToClipboard(link)
+                }
+            }, makeLinkType: { _ in
+                return .inviteLink
+            }, localizeLinkCopy: { _ in
+                return L10n.textContextCopyInviteLink
+            }))
         case let .editablePublicLink(_, currentText, text, status):
             return UsernameInputRowItem(initialSize, stableId: stableId, placeholder: "t.me/", limit: 30, status: status, text: text, changeHandler: { updatedText in
                 arguments.updatePublicLinkText(currentText, updatedText)

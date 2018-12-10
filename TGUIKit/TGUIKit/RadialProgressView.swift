@@ -56,14 +56,16 @@ public struct RadialProgressTheme : Equatable {
     public let backgroundColor: NSColor
     public let foregroundColor: NSColor
     public let icon: CGImage?
+    public let cancelFetchingIcon: CGImage?
     public let iconInset:NSEdgeInsets
     public let diameter:CGFloat?
     public let lineWidth: CGFloat
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2) {
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, cancelFetchingIcon: CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2) {
         self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.icon = icon
+        self.cancelFetchingIcon = cancelFetchingIcon
         self.diameter = diameter
         self.lineWidth = lineWidth
     }
@@ -407,69 +409,131 @@ public class RadialProgressView: Control {
         case .None:
             break
         case .Success:
-            let checkValue: CGFloat = 1.0
-            context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
-            let centerPoint = NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 2.0), floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2.0));
-            let lineWidth: CGFloat = 2.0
-            let inset: CGFloat = 12
+            let diameter = bounds.size.width
             
-            context.setLineWidth(lineWidth)
+            let progress: CGFloat = 1.0
+            
+            var pathLineWidth: CGFloat = 2.0
+            var pathDiameter: CGFloat = diameter - pathLineWidth
+            
+            if (abs(diameter - 37.0) < 0.1) {
+                pathLineWidth = 2.5
+                pathDiameter = diameter - pathLineWidth * 2.0 - 1.5
+            } else if (abs(diameter - 32.0) < 0.1) {
+                pathLineWidth = 2.0
+                pathDiameter = diameter - pathLineWidth * 2.0 - 1.5
+            } else {
+                pathLineWidth = 2.5
+                pathDiameter = diameter - pathLineWidth * 2.0 - 1.5
+            }
+            
+            let center = CGPoint(x: diameter / 2.0, y: diameter / 2.0)
+            
+            context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
+            context.setLineWidth(pathLineWidth)
             context.setLineCap(.round)
             context.setLineJoin(.round)
-            context.setMiterLimit(10)
-            let firstSegment: CGFloat = min(1.0, checkValue * 3.0)
-            let s = CGPoint(x: inset, y: centerPoint.y)
-            let p1 = CGPoint(x: 5, y: 5)
-            let p2 = CGPoint(x: 11, y: -11)
-            if firstSegment < 1.0 {
-                context.move(to: CGPoint(x: s.x + p1.x * firstSegment, y: s.y + p1.y * firstSegment))
-                context.addLine(to: CGPoint(x: s.x, y: s.y))
-            } else {
-                let secondSegment: CGFloat = (checkValue - 0.33) * 1.5
-                context.move(to: CGPoint(x: s.x + p1.x + p2.x * secondSegment, y: s.y + p1.y + p2.y * secondSegment))
-                context.addLine(to: CGPoint(x: s.x + p1.x, y: s.y + p1.y))
-                context.addLine(to: CGPoint(x: s.x, y: s.y))
+            context.setMiterLimit(10.0)
+            
+            let firstSegment: CGFloat = max(0.0, min(1.0, progress * 3.0))
+            
+            var s = CGPoint(x: center.x - 10.0, y: center.y + 1.0)
+            var p1 = CGPoint(x: 7.0, y: 7.0)
+            var p2 = CGPoint(x: 15.0, y: -16.0)
+            
+            if diameter < 36.0 {
+                s = CGPoint(x: center.x - 7.0, y: center.y + 1.0)
+                p1 = CGPoint(x: 4.5, y: 4.5)
+                p2 = CGPoint(x: 10.0, y: -11.0)
+            }
+            
+            if !firstSegment.isZero {
+                if firstSegment < 1.0 {
+                    context.move(to: CGPoint(x: s.x + p1.x * firstSegment, y: s.y + p1.y * firstSegment))
+                    context.addLine(to: s)
+                } else {
+                    let secondSegment = (progress - 0.33) * 1.5
+                    context.move(to: CGPoint(x: s.x + p1.x + p2.x * secondSegment, y: s.y + p1.y + p2.y * secondSegment))
+                    context.addLine(to: CGPoint(x: s.x + p1.x, y: s.y + p1.y))
+                    context.addLine(to: s)
+                }
             }
             context.strokePath()
         case .Fetching:
-            context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
-            context.setLineWidth(2.0)
-            context.setLineCap(.round)
-            
-            let crossSize: CGFloat = 14.0
-            context.move(to: CGPoint(x: parameters.diameter / 2.0 - crossSize / 2.0, y: parameters.diameter / 2.0 - crossSize / 2.0))
-            context.addLine(to: CGPoint(x: parameters.diameter / 2.0 + crossSize / 2.0, y: parameters.diameter / 2.0 + crossSize / 2.0))
-            context.strokePath()
-            context.move(to: CGPoint(x: parameters.diameter / 2.0 + crossSize / 2.0, y: parameters.diameter / 2.0 - crossSize / 2.0))
-            context.addLine(to: CGPoint(x: parameters.diameter / 2.0 - crossSize / 2.0, y: parameters.diameter / 2.0 + crossSize / 2.0))
-            context.strokePath()
-        case .Remote:
-            context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
-            context.setLineWidth(2.0)
-            context.setLineCap(.round)
-            context.setLineJoin(.round)
-            
-            let arrowHeadSize: CGFloat = 15.0
-            let arrowLength: CGFloat = 18.0
-            let arrowHeadOffset: CGFloat = 1.0
-        
-            context.move(to: CGPoint(x: parameters.diameter / 2.0, y: parameters.diameter / 2.0 - arrowLength / 2.0 + arrowHeadOffset))
-            context.addLine(to: CGPoint(x: parameters.diameter / 2.0, y: parameters.diameter / 2.0 + arrowLength / 2.0 - 1.0 + arrowHeadOffset))
-            context.strokePath()
-            
-            context.move(to: CGPoint(x: parameters.diameter / 2.0 - arrowHeadSize / 2.0, y: parameters.diameter / 2.0 + arrowLength / 2.0 - arrowHeadSize / 2.0 + arrowHeadOffset))
-            context.addLine(to: CGPoint(x: parameters.diameter / 2.0, y: parameters.diameter / 2.0 + arrowLength / 2.0 + arrowHeadOffset))
-            context.addLine(to: CGPoint(x: parameters.diameter / 2.0 + arrowHeadSize / 2.0, y: parameters.diameter / 2.0 + arrowLength / 2.0 - arrowHeadSize / 2.0 + arrowHeadOffset))
-            context.strokePath()
-        case .Play:
-            if let icon = parameters.theme.icon {
+            if let icon = parameters.theme.cancelFetchingIcon {
                 var f = focus(icon.backingSize)
                 f.origin.x += parameters.theme.iconInset.left
                 f.origin.x -= parameters.theme.iconInset.right
                 f.origin.y += parameters.theme.iconInset.top
                 f.origin.y -= parameters.theme.iconInset.bottom
                 context.draw(icon, in: f)
+            } else {
+                context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
+                context.setLineWidth(2.0)
+                context.setLineCap(.round)
+                
+                
+                let crossSize: CGFloat = parameters.diameter < 40 ? 9 : 14.0
+                
+                context.move(to: CGPoint(x: parameters.diameter / 2.0 - crossSize / 2.0, y: parameters.diameter / 2.0 - crossSize / 2.0))
+                context.addLine(to: CGPoint(x: parameters.diameter / 2.0 + crossSize / 2.0, y: parameters.diameter / 2.0 + crossSize / 2.0))
+                context.strokePath()
+                context.move(to: CGPoint(x: parameters.diameter / 2.0 + crossSize / 2.0, y: parameters.diameter / 2.0 - crossSize / 2.0))
+                context.addLine(to: CGPoint(x: parameters.diameter / 2.0 - crossSize / 2.0, y: parameters.diameter / 2.0 + crossSize / 2.0))
+                context.strokePath()
+                
+
             }
+           
+        case .Remote:
+            let color = parameters.theme.foregroundColor
+            let diameter = layer.frame.height
+            
+            context.setStrokeColor(color.cgColor)
+            var lineWidth: CGFloat = 2.0
+            if diameter < 24.0 {
+                lineWidth = 1.3
+            }
+            context.setLineWidth(lineWidth)
+            context.setLineCap(.round)
+            context.setLineJoin(.round)
+            
+            let factor = diameter / 50.0
+            
+            let arrowHeadSize: CGFloat = 15.0 * factor
+            let arrowLength: CGFloat = 18.0 * factor
+            let arrowHeadOffset: CGFloat = 1.0 * factor
+            
+            context.move(to: CGPoint(x: diameter / 2.0, y: diameter / 2.0 - arrowLength / 2.0 + arrowHeadOffset))
+            context.addLine(to: CGPoint(x: diameter / 2.0, y: diameter / 2.0 + arrowLength / 2.0 - 1.0 + arrowHeadOffset))
+            context.strokePath()
+            
+            context.move(to: CGPoint(x: diameter / 2.0 - arrowHeadSize / 2.0, y: diameter / 2.0 + arrowLength / 2.0 - arrowHeadSize / 2.0 + arrowHeadOffset))
+            context.addLine(to: CGPoint(x: diameter / 2.0, y: diameter / 2.0 + arrowLength / 2.0 + arrowHeadOffset))
+            context.addLine(to: CGPoint(x: diameter / 2.0 + arrowHeadSize / 2.0, y: diameter / 2.0 + arrowLength / 2.0 - arrowHeadSize / 2.0 + arrowHeadOffset))
+            context.strokePath()
+        case .Play:
+            let color = parameters.theme.foregroundColor
+            let diameter = layer.frame.height
+            context.setFillColor(color.cgColor)
+            
+            let factor = diameter / 50.0
+            
+            let size = CGSize(width: 15.0, height: 18.0)
+            context.translateBy(x: (diameter - size.width) / 2.0 + 1.5, y: (diameter - size.height) / 2.0)
+            if (diameter < 40.0) {
+                context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                context.scaleBy(x: factor, y: factor)
+                context.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+            }
+            let _ = try? drawSvgPath(context, path: "M1.71891969,0.209353049 C0.769586558,-0.350676705 0,0.0908839327 0,1.18800046 L0,16.8564753 C0,17.9569971 0.750549162,18.357187 1.67393713,17.7519379 L14.1073836,9.60224049 C15.0318735,8.99626906 15.0094718,8.04970371 14.062401,7.49100858 L1.71891969,0.209353049 ")
+            context.fillPath()
+            if (diameter < 40.0) {
+                context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                context.scaleBy(x: 1.0 / 0.8, y: 1.0 / 0.8)
+                context.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+            }
+            context.translateBy(x: -(diameter - size.width) / 2.0 - 1.5, y: -(diameter - size.height) / 2.0)
         case .ImpossibleFetching:
             break
         case let .Icon(image: icon, mode:blendMode):

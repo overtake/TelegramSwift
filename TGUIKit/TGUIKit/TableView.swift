@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKitMac
-
+import AVFoundation
 
 public enum TableSeparator {
     case bottom;
@@ -16,6 +16,29 @@ public enum TableSeparator {
     case right;
     case left;
     case none;
+}
+
+public final class SwipingTableItemController : ViewController  {
+    public let item: TableRowItem
+    public init(item: TableRowItem)  {
+        self.item = item
+        super.init()
+    }
+}
+
+public protocol SwipingTableView {
+    var additionalSwipingDelta: CGFloat { get }
+    var containerX: CGFloat { get }
+    var rightSwipingWidth: CGFloat { get }
+    var leftSwipingWidth: CGFloat { get }
+    var endSwipingState:SwipeDirection? { get set }
+    
+    var width: CGFloat { get }
+    
+    func initSwipingState()
+    
+    func moveSwiping(delta: CGFloat)
+    func completeSwiping(direction: SwipeDirection)
 }
 
 public enum TableBackgroundMode {
@@ -239,12 +262,14 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     weak var table:TableView?
     var border:BorderType?
     
+    
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = .clear
         self.autoresizesSubviews = false
+     //  canDrawSubviewsIntoLayer = true
         usesAlternatingRowBackgroundColors = false
-        layerContentsRedrawPolicy = .onSetNeedsDisplay
+        layerContentsRedrawPolicy = .never
     }
     
     required init?(coder: NSCoder) {
@@ -295,11 +320,12 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         }
     }
 
+    private var beforeRange: NSRange = NSMakeRange(NSNotFound, 0)
     
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
         let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
-        
+        self.beforeRange = beforeRange
         if let resortController = table?.resortController, beforeRange.length > 0 {
             if resortController.resortRange.indexIn(beforeRange.location) {
                 longDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(resortController.startTimeout, queue: Queue.mainQueue())).start(next: { [weak self] in
@@ -310,10 +336,12 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                         self.table?.startResorting()
                     }
                 }))
-            } else {
+            } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
                 sdelegate?.selectRow(index: beforeRange.location)
             }
             
+        } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
+            sdelegate?.selectRow(index: beforeRange.location)
         }
         
         
@@ -359,12 +387,18 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
         if let controller = self.table?.resortController {
             if !controller.resortRange.indexIn(range.location) {
+                if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
+                    sdelegate?.selectRow(index: range.location)
+                }
                 return
             }
-        }
-        if range.length > 0 {
+            if range.length > 0, beforeRange.location == range.location {
+                sdelegate?.selectRow(index: range.location)
+            }
+        } else if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
             sdelegate?.selectRow(index: range.location)
         }
+        
     }
 
 }
@@ -373,6 +407,8 @@ public protocol InteractionContentViewProtocol : class {
     func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView?
     func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable)
     func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView)
+    func videoTimebase(for stableId: AnyHashable) -> CMTimebase?
+    func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?)
 
 }
 
@@ -421,6 +457,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var backgroundView: ImageView? 
     
     private var scrollListeners:[TableScrollListener] = []
+    
+    public var alwaysOpenRowsOnMouseUp: Bool = true
     
     
     public var emptyItem:TableRowItem? {
@@ -525,13 +563,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView = table
         self.tableView.wantsLayer = true
         
-        self.tableView.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        //self.tableView.layerContentsRedrawPolicy = .onSetNeedsDisplay
         tableView.autoresizesSubviews = false
 
         super.init(frame: frameRect);
         
         
-        clipView.copiesOnScroll = true
+     //   clipView.copiesOnScroll = true
         
        // self.scrollsDynamically = true
        // self.verticalLineScroll = 0
@@ -1476,7 +1514,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if let delegate = delegate {
                     let sIndex = selectedIndex
                     for i in sIndex ..< list.count {
-                        if delegate.selectionWillChange(row: i, item: item(at: i)) {
+                        if delegate.selectionWillChange(row: i, item: item(at: i)), selectedItem()?.index != i {
                             selectedIndex = i
                             break
                         }
@@ -1490,7 +1528,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         } else {
             if let delegate = delegate {
                 for item in list {
-                    if delegate.selectionWillChange(row: item.index, item: item) {
+                    if delegate.selectionWillChange(row: item.index, item: item), selectedItem()?.index != item.index {
                         _ = self.highlight(item: item)
                         break
                     }
@@ -1503,7 +1541,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func highlitedPrev(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
+    public func highlightPrev(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
         var previousInset: CGFloat = 0
 
         if let hash = highlitedHash.modify({$0}) {
@@ -1524,7 +1562,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if let delegate = delegate {
                     let sIndex = selectedIndex
                     for i in stride(from: sIndex, to: -1, by: -1) {
-                        if delegate.selectionWillChange(row: i, item: item(at: i)) {
+                        if delegate.selectionWillChange(row: i, item: item(at: i)), selectedItem()?.index != i {
                             selectedIndex = i
                             break
                         }
@@ -1538,7 +1576,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         } else {
             if let delegate = delegate {
                 for i in stride(from: list.count - 1, to: -1, by: -1) {
-                    if delegate.selectionWillChange(row: i, item: item(at: i)) {
+                    if delegate.selectionWillChange(row: i, item: item(at: i)), selectedItem()?.index != i {
                         _ = self.highlight(item: item(at: i))
                         break
                     }
@@ -1599,6 +1637,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         self.cancelSelection();
                     }
                     let _ = selectedhash.swap(item.stableId)
+                    if highlightedItem() != nil {
+                        _ = highlight(item: item)
+                    }
                     item.prepare(true)
                     self.reloadData(row:item.index)
                     if notify {
@@ -1710,10 +1751,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
   
     public func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
-        let item:TableRowItem = self.item(at: row);
+        let item: TableRowItem = self.item(at: row);
         
-        let view:TableRowView = self.rowView(item: item);
-        
+        let view: TableRowView = self.rowView(item: item);
         
         view.set(item: item, animated: false)
         
@@ -1727,20 +1767,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let visible = visibleRows()
         
-        for i in visible.location ..< visible.location + visible.length {
+        for i in visible.min ..< visible.max {
             let item = self.item(at: i)
             let rect = rectOf(index: i)
-            if rect.height == item.height {
-                if !tableView.isFlipped {
-                    let top = frame.height - (rect.minY - documentOffset.y) - rect.height
-                    let bottom = (rect.minY - documentOffset.y)
-                    list.append((item,top,bottom))
-                } else {
-                    let top = rect.minY - documentOffset.y
-                    let bottom = frame.height - (rect.minY - documentOffset.y) - rect.height
-                    list.append((item,top,bottom))
-                    //fatalError("not supported")
-                }
+            if !tableView.isFlipped {
+                let top = frame.height - (rect.minY - documentOffset.y) - rect.height
+                let bottom = (rect.minY - documentOffset.y)
+                list.append((item,top,bottom))
+            } else {
+                let top = rect.minY - documentOffset.y
+                let bottom = frame.height - (rect.minY - documentOffset.y) - rect.height
+                list.append((item,top,bottom))
+                //fatalError("not supported")
             }
             
            // list.append(item,)
@@ -1808,7 +1846,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[TableRowItem] = []
         var removed:[TableRowItem] = []
         
-        
+
         
         for rdx in transition.deleted.reversed() {
             let effect:NSTableView.AnimationOptions
@@ -1858,14 +1896,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if isSomeOfItemVisible {
                 state = transition.state
             } else {
-                state = .saveVisible(.upper)
+                state = transition.state
+               // state = .saveVisible(.upper)
             }
         } else {
             state = transition.state
         }
         
        // NSLog("listHeight: \(listHeight), scroll: \(state)")
-
+      //  self.tableView.beginUpdates()
         
         func saveVisible(_ side: TableSavingSide) {
             var nrect:NSRect = NSZeroRect
@@ -1921,30 +1960,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     let y:CGFloat
                     
-                    switch side {
-                    case .lower:
-                        if !tableView.isFlipped {
-                            y = nrect.minY - (frame.height - visible.1) + nrect.height
-                        } else {
-                            y = nrect.minY - visible.1
-                        }
-                    case .upper:
-                        if !tableView.isFlipped {
-                            y = nrect.minY - (frame.height - visible.1) + nrect.height
-                        } else {
-                            y = nrect.minY - visible.1
-                        }
-                    case .aroundIndex:
-                        if !tableView.isFlipped {
-                            y = nrect.minY - (frame.height - visible.1) + nrect.height
-                        } else {
-                            y = nrect.minY - visible.1
-                        }
+                    if !tableView.isFlipped {
+                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                    } else {
+                        y = nrect.minY - visible.1
                     }
                     
-                    //self.contentView.scroll(to: NSMakePoint(0, y))
-                    self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                    self.contentView.scroll(to: NSMakePoint(0, y))
                     reflectScrolledClipView(clipView)
+                    //self.contentView.bounds = NSMakeRect(0, y, 0, contentView.bounds.height)
+                    //self.display(visi)
+                   // reflectScrolledClipView(clipView)
+                    
+                   // let assertRect = rectOf(item: item)
+                   // let top = frame.height - (assertRect.minY - documentOffset.y) - assertRect.height
+                    
+                   // assert(visible.1 == top)
+                    
                   //  tableView.tile()
                   //  tableView.display()
                     break
@@ -1955,7 +1987,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         case let .none(animation):
             // print("scroll do nothing")
             animation?.animate(table:self, added: inserted, removed:removed)
-            if let animation = animation, !animation.scrollBelow {
+            if let animation = animation, !animation.scrollBelow, !transition.isEmpty {
                 saveVisible(.upper)
             }
         case .bottom, .top, .center:
@@ -1968,7 +2000,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             break
         }
         //reflectScrolledClipView(clipView)
-      
+     //   self.tableView.endUpdates()
         
         self.endUpdates()
         
@@ -2071,6 +2103,44 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 rowView.addAccesoryOnCopiedView(innerId: stableId, view: view)
             }
         }
+    }
+    
+    public func videoTimebase(for stableId: AnyHashable) -> CMTimebase? {
+        var item = self.item(stableId: stableId)
+        
+        if item == nil {
+            if let groupStableId = delegate?.findGroupStableId(for: stableId) {
+                item = self.item(stableId: groupStableId)
+            }
+        }
+        
+        if let item = item {
+            let view = viewNecessary(at:item.index)
+            if let view = view, !NSIsEmptyRect(view.visibleRect) {
+                return view.videoTimebase(for: stableId)
+            }
+            
+        }
+        
+        return nil
+    }
+    
+    public func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
+        var item = self.item(stableId: stableId)
+        
+        if item == nil {
+            if let groupStableId = delegate?.findGroupStableId(for: stableId) {
+                item = self.item(stableId: groupStableId)
+            }
+        }
+        
+        if let item = item {
+            let view = viewNecessary(at:item.index)
+            if let view = view, !NSIsEmptyRect(view.visibleRect) {
+                view.applyTimebase(for: stableId, timebase: timebase)
+            }
+        }
+        
     }
 
     func selectRow(index: Int) {

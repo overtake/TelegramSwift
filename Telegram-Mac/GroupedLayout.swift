@@ -120,7 +120,7 @@ class GroupedLayout {
                 if photos.count == 2 {
                     if proportions == "ww" && averageAspectRatio > 1.4 * maxAspectRatio && photos[1].aspectRatio - photos[0].aspectRatio < 0.2 {
                         let width: CGFloat = maxSize.width
-                        let height:CGFloat = round(min(width / photos[0].aspectRatio, min(width / photos[1].aspectRatio, (maxSize.height - spacing) / 2.0)))
+                        let height:CGFloat = min(width / photos[0].aspectRatio, min(width / photos[1].aspectRatio, (maxSize.height - spacing) / 2.0))
                         
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, width, height)
                         photos[0].positionFlags = [.top, .left, .right]
@@ -129,7 +129,7 @@ class GroupedLayout {
                         photos[1].positionFlags = [.bottom, .left, .right]
                     } else if proportions == "ww" || proportions == "qq" {
                         let width: CGFloat = (maxSize.width - spacing) / 2.0
-                        let height: CGFloat = round(min(width / photos[0].aspectRatio, min(width / photos[1].aspectRatio, maxSize.height)))
+                        let height: CGFloat = min(width / photos[0].aspectRatio, min(width / photos[1].aspectRatio, maxSize.height))
                         
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, width, height)
                         photos[0].positionFlags = [.top, .left, .bottom]
@@ -137,9 +137,9 @@ class GroupedLayout {
                         photos[1].layoutFrame = NSMakeRect(width + spacing, 0.0, width, height)
                         photos[1].positionFlags = [.top, .right, .bottom]
                     } else {
-                        let firstWidth: CGFloat = round((maxSize.width - spacing) / photos[1].aspectRatio / (1.0 / photos[0].aspectRatio + 1.0 / photos[1].aspectRatio))
+                        let firstWidth: CGFloat = (maxSize.width - spacing) / photos[1].aspectRatio / (1.0 / photos[0].aspectRatio + 1.0 / photos[1].aspectRatio)
                         let secondWidth: CGFloat = maxSize.width - firstWidth - spacing
-                        let height: CGFloat = min(maxSize.height, round(min(firstWidth / photos[0].aspectRatio, secondWidth / photos[1].aspectRatio)))
+                        let height: CGFloat = min(maxSize.height, min(firstWidth / photos[0].aspectRatio, secondWidth / photos[1].aspectRatio))
                         
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, firstWidth, height)
                         photos[0].positionFlags = [.top, .left, .bottom]
@@ -150,12 +150,12 @@ class GroupedLayout {
                 } else if photos.count == 3 {
                     if proportions == "www" {
                         var width: CGFloat = maxSize.width
-                        let firstHeight: CGFloat = round(min(width / photos[0].aspectRatio, (maxSize.height - spacing) * 0.66))
+                        let firstHeight: CGFloat = min(width / photos[0].aspectRatio, (maxSize.height - spacing) * 0.66)
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, width, firstHeight)
                         photos[0].positionFlags = [.top, .left, .right]
                         
                         width = (maxSize.width - spacing) / 2.0
-                        let secondHeight: CGFloat = min(maxSize.height - firstHeight - spacing, round(min(width / photos[1].aspectRatio, width / photos[2].aspectRatio)))
+                        let secondHeight: CGFloat = min(maxSize.height - firstHeight - spacing, min(width / photos[1].aspectRatio, width / photos[2].aspectRatio))
                         photos[1].layoutFrame = NSMakeRect(0.0, firstHeight + spacing, width, secondHeight)
                         photos[1].positionFlags = [.left, .bottom]
                         
@@ -163,14 +163,14 @@ class GroupedLayout {
                         photos[2].positionFlags = [.right, .bottom]
                     } else {
                         let firstHeight: CGFloat = maxSize.height
-                        let leftWidth: CGFloat = round(min(firstHeight * photos[0].aspectRatio, (maxSize.width - spacing) * 0.6))
+                        let leftWidth: CGFloat = min(firstHeight * photos[0].aspectRatio, (maxSize.width - spacing) * 0.6)
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, leftWidth, firstHeight)
                         photos[0].positionFlags = [.top, .left, .bottom]
                         
                         
-                        let thirdHeight: CGFloat = min((maxSize.height - spacing) * 0.66, round(photos[1].aspectRatio * (maxSize.width - spacing) / (photos[2].aspectRatio + photos[1].aspectRatio)))
+                        let thirdHeight: CGFloat = min((maxSize.height - spacing) * 0.66, photos[1].aspectRatio * (maxSize.width - spacing) / (photos[2].aspectRatio + photos[1].aspectRatio))
                         let secondHeight: CGFloat = maxSize.height - thirdHeight - spacing
-                        let rightWidth: CGFloat = min(maxSize.width - leftWidth - spacing, round(min(thirdHeight * photos[2].aspectRatio, secondHeight * photos[1].aspectRatio)))
+                        let rightWidth: CGFloat = min(maxSize.width - leftWidth - spacing, min(thirdHeight * photos[2].aspectRatio, secondHeight * photos[1].aspectRatio))
                         photos[1].layoutFrame = NSMakeRect(leftWidth + spacing, 0.0, rightWidth, secondHeight)
                         photos[1].positionFlags = [.right, .top]
                         
@@ -180,11 +180,11 @@ class GroupedLayout {
                 } else if photos.count == 4 {
                     if proportions == "www" || proportions.hasPrefix("w") {
                         let w: CGFloat = maxSize.width
-                        let h0: CGFloat = round(min(w / photos[0].aspectRatio, (maxSize.height - spacing) * 0.66))
+                        let h0: CGFloat = min(w / photos[0].aspectRatio, (maxSize.height - spacing) * 0.66)
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, w, h0)
                         photos[0].positionFlags = [.top, .left, .right]
                         
-                        var h: CGFloat = round((maxSize.width - 2 * spacing) / (photos[1].aspectRatio + photos[2].aspectRatio + photos[3].aspectRatio))
+                        var h: CGFloat = (maxSize.width - 2 * spacing) / (photos[1].aspectRatio + photos[2].aspectRatio + photos[3].aspectRatio)
                         let w0: CGFloat = max((maxSize.width - 2 * spacing) * 0.33, h * photos[1].aspectRatio)
                         var w2: CGFloat = max((maxSize.width - 2 * spacing) * 0.33, h * photos[3].aspectRatio)
                         var w1: CGFloat = w - w0 - w2 - 2 * spacing
@@ -205,11 +205,11 @@ class GroupedLayout {
                         photos[3].positionFlags = [.right, .bottom]
                     } else {
                         let h: CGFloat = maxSize.height
-                        let w0: CGFloat = round(min(h * photos[0].aspectRatio, (maxSize.width - spacing) * 0.6))
+                        let w0: CGFloat = min(h * photos[0].aspectRatio, (maxSize.width - spacing) * 0.6)
                         photos[0].layoutFrame = NSMakeRect(0.0, 0.0, w0, h)
                         photos[0].positionFlags = [.top, .left, .bottom]
                         
-                        var w: CGFloat  = round((maxSize.height - 2 * spacing) / (1.0 / photos[1].aspectRatio + 1.0 /  photos[2].aspectRatio + 1.0 / photos[3].aspectRatio))
+                        var w: CGFloat  = (maxSize.height - 2 * spacing) / (1.0 / photos[1].aspectRatio + 1.0 /  photos[2].aspectRatio + 1.0 / photos[3].aspectRatio)
                         let h0: CGFloat = w / photos[1].aspectRatio
                         let h1: CGFloat = w / photos[2].aspectRatio
                         let h2: CGFloat = w / photos[3].aspectRatio

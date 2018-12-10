@@ -69,7 +69,7 @@ final class SelectPeerPresentation : Equatable {
 final class SelectPeerInteraction : InterfaceObserver {
     private(set) var presentation:SelectPeerPresentation = SelectPeerPresentation()
     var close: ()->Void = {}
-
+    var action:(PeerId)->Void = {_ in}
     func update(animated:Bool = true, _ f:(SelectPeerPresentation)->SelectPeerPresentation)->Void {
         let oldValue = self.presentation
         presentation = f(presentation)

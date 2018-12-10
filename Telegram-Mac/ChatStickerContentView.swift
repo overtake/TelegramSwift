@@ -37,12 +37,12 @@ class ChatStickerContentView: ChatMediaContentView {
         }, for: .Click)
         
         
-        struct EmptyProtocol : StickerPreviewProtocol {
+        struct EmptyProtocol : ModalPreviewProtocol {
             private weak var tableView: TableView?
             init(tableView: TableView?) {
                 self.tableView = tableView
             }
-            func stickerAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
+            func fileAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
                 if let tableView = tableView, let point = tableView.documentView?.convert(point, from: nil) {
                     let row = tableView.row(at: point)
                     if row >= 0, let view = tableView.item(at: row).view as? ChatMediaView {
@@ -59,7 +59,7 @@ class ChatStickerContentView: ChatMediaContentView {
         
         overlay.set(handler: { [weak self] _ in
             guard let `self` = self, let account = self.account, let window = self.kitWindow else {return}
-            _ = startStickerPreviewHandle(EmptyProtocol(tableView: self.table), window: window, account: account)
+            _ = startModalPreviewHandle(EmptyProtocol(tableView: self.table), viewType: StickerPreviewModalView.self, window: window, account: account)
         }, for: .LongMouseDown)
     }
     
@@ -82,10 +82,10 @@ class ChatStickerContentView: ChatMediaContentView {
             
             self.image.animatesAlphaOnFirstTransition = false
            
-            self.image.setSignal(signal: cachedMedia(media: file, size: arguments.imageSize, scale: backingScaleFactor), clearInstantly: false)
+            self.image.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
             self.image.setSignal( chatMessageSticker(account: account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file), type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
                 if let strongSelf = self {
-                    return cacheMedia(signal: signal, media: file, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                    return cacheMedia(signal: signal, media: file, arguments: arguments, scale: strongSelf.backingScaleFactor)
                 } else {
                     return .complete()
                 }

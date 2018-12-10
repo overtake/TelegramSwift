@@ -86,11 +86,11 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
             let context = FFMpegMediaFrameSourceContext(thread: Thread.current)
             let localStorage = Thread.current.threadDictionary
             localStorage["FFMpegMediaFrameSourceContext"] = context
-
+            
             taskQueue.loop()
         }
     }
-   
+    
     init(queue: Queue, postbox: Postbox, resourceReference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, fetchAutomatically: Bool) {
         self.queue = queue
         self.postbox = postbox
@@ -216,13 +216,19 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
                                         audioBuffer = MediaTrackFrameBuffer(frameSource: strongSelf, decoder: audio.decoder, type: .audio, duration: audio.duration, rotationAngle: 0.0, aspect: 1.0)
                                     }
                                     
+                                    var extraDecodedVideoFrames: [MediaTrackFrame] = []
                                     if let video = streamDescriptions.video {
                                         videoBuffer = MediaTrackFrameBuffer(frameSource: strongSelf, decoder: video.decoder, type: .video, duration: video.duration, rotationAngle: video.rotationAngle, aspect: video.aspect)
+                                        for videoFrame in streamDescriptions.extraVideoFrames {
+                                            if let decodedFrame = video.decoder.decode(frame: videoFrame) {
+                                                extraDecodedVideoFrames.append(decodedFrame)
+                                            }
+                                        }
                                     }
                                     
-                                    return MediaFrameSourceSeekResult(buffers: MediaPlaybackBuffers(audioBuffer: audioBuffer, videoBuffer: videoBuffer), timestamp: timestamp)
+                                    return MediaFrameSourceSeekResult(buffers: MediaPlaybackBuffers(audioBuffer: audioBuffer, videoBuffer: videoBuffer), extraDecodedVideoFrames: extraDecodedVideoFrames, timestamp: timestamp)
                                 } else {
-                                    return MediaFrameSourceSeekResult(buffers: MediaPlaybackBuffers(audioBuffer: nil, videoBuffer: nil), timestamp: timestamp)
+                                    return MediaFrameSourceSeekResult(buffers: MediaPlaybackBuffers(audioBuffer: nil, videoBuffer: nil), extraDecodedVideoFrames: [], timestamp: timestamp)
                                 }
                             }))
                             subscriber.putCompletion()

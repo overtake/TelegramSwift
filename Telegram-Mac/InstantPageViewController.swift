@@ -88,7 +88,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     private let mediaDisposable = MetaDisposable()
     private var appearance: InstantViewAppearance = InstantViewAppearance.defaultSettings
     private let actualizeDisposable = MetaDisposable()
-    
+    private let saveProgressDisposable = MetaDisposable()
     var webPage: TelegramMediaWebpage {
         didSet {
             switch webPage.content {
@@ -557,13 +557,13 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         let id = self.webPage.webpageId
         
         let percent = Int32((point.y + frame.height) / genericView.documentSize.height * 100.0)
-        _ = updateReadArticlesPreferences(postbox: account.postbox, { pref in
+        saveProgressDisposable.set((updateReadArticlesPreferences(postbox: account.postbox, { pref in
             var pref = pref
             if let article = pref.list.first(where: {$0.id == id}) {
                 pref = pref.withUpdatedArticle(article.withUpdatedPercent(percent))
             }
             return pref
-        }).start()
+        }) |> delay(0.2, queue: Queue.mainQueue())).start())
     }
     
     deinit {
@@ -571,6 +571,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         selectManager?.removeHandlers(for: mainWindow)
         joinDisposable.dispose()
         actualizeDisposable.dispose()
+        saveProgressDisposable.dispose()
         mediaDisposable.dispose()
         if let window = window {
             selectManager?.removeHandlers(for: window)
@@ -579,7 +580,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             _ = updateInstantViewAppearanceSettingsInteractively(postbox: account.postbox, {$0.withUpdatedIVState(state, for: mediaId)}).start()
         }
         
-        saveArticleProgress()
     }
     
 }

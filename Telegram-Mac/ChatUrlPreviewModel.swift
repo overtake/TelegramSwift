@@ -33,7 +33,7 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
         var isEmptyText: Bool = false
         switch self.webpage.content {
         case .Pending:
-            authorName = "Loading..."
+            authorName = L10n.chatInlineRequestLoading
             text = self.url
         case let .Loaded(content):
             if let title = content.websiteName {

@@ -402,11 +402,11 @@ func stringStatus(for peerView:PeerView, account: Account, theme:PeerStatusStrin
             if onlineCount > 1 {
                 let string = NSMutableAttributedString()
                 
-                let _ = string.append(string: "\(L10n.peerStatusMemberCountable(group.participantCount)), ", color: theme.statusColor, font: theme.statusFont)
+                let _ = string.append(string: "\(L10n.peerStatusMemberCountable(group.participantCount).replacingOccurrences(of: "\(group.participantCount)", with: group.participantCount.formattedWithSeparator)), ", color: theme.statusColor, font: theme.statusFont)
                 let _ = string.append(string: L10n.peerStatusMemberOnlineCountable(onlineCount), color: theme.statusColor, font: theme.statusFont)
                 return PeerStatusStringResult(title, string)
             } else {
-                let string = NSAttributedString.initialize(string: tr(L10n.peerStatusMemberCountable(group.participantCount)), color: theme.statusColor, font: theme.statusFont)
+                let string = NSAttributedString.initialize(string: L10n.peerStatusMemberCountable(group.participantCount).replacingOccurrences(of: "\(group.participantCount)", with: group.participantCount.formattedWithSeparator), color: theme.statusColor, font: theme.statusFont)
                 return PeerStatusStringResult(title, string)
             }
         } else if let channel = peer as? TelegramChannel {
@@ -428,13 +428,23 @@ func stringStatus(for peerView:PeerView, account: Account, theme:PeerStatusStrin
                         }
                     }
                 }
+                
+                let membersLocalized: String
+                if channel.isChannel {
+                    membersLocalized = L10n.peerStatusSubscribersCountable(Int(memberCount))
+                } else {
+                    membersLocalized = L10n.peerStatusMemberCountable(Int(memberCount))
+                }
+                
+                let countString = membersLocalized.replacingOccurrences(of: "\(memberCount)", with: memberCount.formattedWithSeparator)
                 if onlineCount > 1, memberCount <= 200, case .group = channel.info {
                     let string = NSMutableAttributedString()
-                    let _ = string.append(string: "\(tr(L10n.peerStatusMemberCountable(Int(memberCount)))), ", color: theme.statusColor, font: theme.statusFont)
+                    let _ = string.append(string: "\(countString), ", color: theme.statusColor, font: theme.statusFont)
                     let _ = string.append(string: tr(L10n.peerStatusMemberOnlineCountable(onlineCount)), color: theme.statusColor, font: theme.statusFont)
                     return PeerStatusStringResult(title, string)
                 } else {
-                    let string = NSAttributedString.initialize(string: tr(L10n.peerStatusMemberCountable(Int(memberCount))), color: theme.statusColor, font: theme.statusFont)
+                    
+                    let string = NSAttributedString.initialize(string: countString, color: theme.statusColor, font: theme.statusFont)
                     return PeerStatusStringResult(title, string)
                 }
                 

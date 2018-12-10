@@ -78,6 +78,10 @@ class ChatDateStickItem : TableStickItem {
         super.init(initialSize)
     }
     
+    override var canBeAnchor: Bool {
+        return false
+    }
+    
     required init(_ initialSize: NSSize) {
         entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list)
         timestamp = 0

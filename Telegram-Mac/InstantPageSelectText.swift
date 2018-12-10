@@ -19,6 +19,7 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
+import AVFoundation
 
 struct InstantPageSelectContainer {
     let attributedString: NSAttributedString
@@ -88,6 +89,8 @@ private let instantSelectManager:InstantPageSelectManager = {
 }()
 
 private class InstantViewContentInteractive : InteractionContentViewProtocol {
+    
+    
     private let callback:(AnyHashable)->NSView?
     init(_ callback:@escaping(AnyHashable)->NSView?) {
         self.callback = callback
@@ -100,6 +103,12 @@ private class InstantViewContentInteractive : InteractionContentViewProtocol {
     }
     
     public func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        
+    }
+    func videoTimebase(for stableId: AnyHashable) -> CMTimebase? {
+        return nil
+    }
+    public func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
         
     }
 }

@@ -565,8 +565,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 
 -(id)initWithProxy:(CProxy * _Nullable)proxy;
 
--(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p connection:(TGCallConnection *)connection;
-
+-(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p serializedData:(NSString *)serializedData connection:(TGCallConnection *)connection;
 -(void)mute;
 -(void)unmute;
 -(BOOL)isMuted;

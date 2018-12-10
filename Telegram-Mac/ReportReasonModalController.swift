@@ -80,16 +80,24 @@ fileprivate class ReportReasonModalController: ModalViewController {
         genericView.tableView.removeAll()
         
         let initialSize = atomicSize.modify {$0}
-        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonSpam), type: .selectable(current == .spam), action: {
+        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonSpam, type: .selectable(current == .spam), action: {
             updateState(.spam)
         }))
         
-        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonViolence), type: .selectable(current == .violence), action: {
+        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonViolence, type: .selectable(current == .violence), action: {
             updateState(.violence)
         }))
         
-        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: tr(L10n.reportReasonPorno), type: .selectable(current == .porno), action: {
+        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonPorno, type: .selectable(current == .porno), action: {
             updateState(.porno)
+        }))
+        
+        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonChildAbuse, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .selectable(current == .childAbuse), action: {
+            updateState(.childAbuse)
+        }))
+        
+        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonCopyright, type: .selectable(current == .copyright), action: {
+            updateState(.copyright)
         }, drawCustomSeparator: false))
 
     }
@@ -98,13 +106,14 @@ fileprivate class ReportReasonModalController: ModalViewController {
         return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
             if let strongSelf = self {
                 self?._complete.set(.single(strongSelf.current))
+                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 0.5).start()
                 self?.close()
             }
         }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 40)
     }
     
     override init() {
-        super.init(frame: NSMakeRect(0, 0, 260, 180))
+        super.init(frame: NSMakeRect(0, 0, 260, 260))
         bar = .init(height: 0)
     }
     

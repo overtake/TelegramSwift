@@ -17,25 +17,25 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
         self.videoFrame = av_frame_alloc()
         
         /*var sourcePixelBufferOptions: [String: Any] = [:]
-        sourcePixelBufferOptions[kCVPixelBufferPixelFormatTypeKey as String] = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange as NSNumber
-        
-        sourcePixelBufferOptions[kCVPixelBufferWidthKey as String] = codecContext.pointee.width as NSNumber
-        sourcePixelBufferOptions[kCVPixelBufferHeightKey as String] = codecContext.pointee.height as NSNumber
-        sourcePixelBufferOptions[kCVPixelBufferBytesPerRowAlignmentKey as String] = 128 as NSNumber
-        sourcePixelBufferOptions[kCVPixelBufferPlaneAlignmentKey as String] = 128 as NSNumber
-        
-        let ioSurfaceProperties = NSMutableDictionary()
-        ioSurfaceProperties["IOSurfaceIsGlobal"] = true as NSNumber
-        
-        sourcePixelBufferOptions[kCVPixelBufferIOSurfacePropertiesKey as String] = ioSurfaceProperties
-        
-        var pixelBufferPoolOptions: [String: Any] = [:]
-        pixelBufferPoolOptions[kCVPixelBufferPoolMinimumBufferCountKey as String] = bufferCount as NSNumber
-        
-        var pixelBufferPool: CVPixelBufferPool?
-        CVPixelBufferPoolCreate(kCFAllocatorDefault, pixelBufferPoolOptions as CFDictionary, sourcePixelBufferOptions as CFDictionary, &pixelBufferPool)
-        
-        self.pixelBufferPool = pixelBufferPool*/
+         sourcePixelBufferOptions[kCVPixelBufferPixelFormatTypeKey as String] = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange as NSNumber
+         
+         sourcePixelBufferOptions[kCVPixelBufferWidthKey as String] = codecContext.pointee.width as NSNumber
+         sourcePixelBufferOptions[kCVPixelBufferHeightKey as String] = codecContext.pointee.height as NSNumber
+         sourcePixelBufferOptions[kCVPixelBufferBytesPerRowAlignmentKey as String] = 128 as NSNumber
+         sourcePixelBufferOptions[kCVPixelBufferPlaneAlignmentKey as String] = 128 as NSNumber
+         
+         let ioSurfaceProperties = NSMutableDictionary()
+         ioSurfaceProperties["IOSurfaceIsGlobal"] = true as NSNumber
+         
+         sourcePixelBufferOptions[kCVPixelBufferIOSurfacePropertiesKey as String] = ioSurfaceProperties
+         
+         var pixelBufferPoolOptions: [String: Any] = [:]
+         pixelBufferPoolOptions[kCVPixelBufferPoolMinimumBufferCountKey as String] = bufferCount as NSNumber
+         
+         var pixelBufferPool: CVPixelBufferPool?
+         CVPixelBufferPoolCreate(kCFAllocatorDefault, pixelBufferPoolOptions as CFDictionary, sourcePixelBufferOptions as CFDictionary, &pixelBufferPool)
+         
+         self.pixelBufferPool = pixelBufferPool*/
     }
     
     deinit {
@@ -46,7 +46,7 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
     }
     
     func decodeInternal(frame: MediaTrackDecodableFrame) {
-    
+        
     }
     
     func decode(frame: MediaTrackDecodableFrame) -> MediaTrackFrame? {
@@ -107,16 +107,16 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
             
             var options: [String: Any] = [kCVPixelBufferBytesPerRowAlignmentKey as String: frame.pointee.linesize.0 as NSNumber]
             /*if #available(iOSApplicationExtension 9.0, *) {
-                options[kCVPixelBufferOpenGLESTextureCacheCompatibilityKey as String] = true as NSNumber
-            }*/
+             options[kCVPixelBufferOpenGLESTextureCacheCompatibilityKey as String] = true as NSNumber
+             }*/
             options[kCVPixelBufferIOSurfacePropertiesKey as String] = ioSurfaceProperties
-            
+            options[kCVPixelBufferPixelFormatTypeKey as String] = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
             CVPixelBufferCreate(kCFAllocatorDefault,
-                                          Int(frame.pointee.width),
-                                          Int(frame.pointee.height),
-                                          kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
-                                          options as CFDictionary,
-                                          &pixelBufferRef)
+                                Int(frame.pointee.width),
+                                Int(frame.pointee.height),
+                                kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+                                options as CFDictionary,
+                                &pixelBufferRef)
         }
         
         guard let pixelBuffer = pixelBufferRef else {
@@ -223,7 +223,7 @@ final class FFMpegMediaVideoFrameDecoder: MediaTrackFrameDecoder {
     }
     
     func decodeImage() {
-
+        
     }
     
     func reset() {

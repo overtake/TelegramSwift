@@ -98,6 +98,10 @@ class ChatInputAccessory: Node {
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)
+            
+            container.set(handler: { [weak self] _ in
+               self?.chatInteraction.focusMessageId(nil, replyMessageId, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+            }, for: .Click)
         }
         
         if let displayNode = displayNode {
@@ -107,6 +111,8 @@ class ChatInputAccessory: Node {
         }
         container.removeAllSubviews()
         displayNode?.view = container
+        
+     
         
         
     }

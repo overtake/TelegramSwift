@@ -265,10 +265,10 @@ final class GroupInfoArguments : PeerInfoArguments {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMember(peer.displayTitle)))
+                    return confirmSignal(for: mainWindow, information: L10n.peerInfoConfirmAddMember(peer.displayTitle), okTitle: L10n.peerInfoConfirmAdd)
                 }
             }
-            return confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmAddMembers1Countable(peerIds.count)))
+            return confirmSignal(for: mainWindow, information: L10n.peerInfoConfirmAddMembers1Countable(peerIds.count), okTitle: L10n.peerInfoConfirmAdd)
         }
         
         
@@ -1059,7 +1059,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             canInviteByLink = group.hasAdminRights(.canChangeInviteLink)
         }
         
-        entries.append(GroupInfoEntry.info(section: sectionId, view: view, editingState: state.editingState, updatingPhotoState: state.updatingPhotoState))
+        entries.append(GroupInfoEntry.info(section: sectionId, view: view, editingState: canEditInfo ? state.editingState : nil, updatingPhotoState: state.updatingPhotoState))
         
         
         if let editingState = state.editingState {
@@ -1170,7 +1170,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
             }
             
-            let sortedParticipants = participants.participants.filter({peers[$0.peerId]?.displayTitle != L10n.peerDeletedUser}).sorted(by: { lhs, rhs in
+            let sortedParticipants = participants.participants.filter({peers[$0.peerId]?.displayTitle != nil}).sorted(by: { lhs, rhs in
                 let lhsPresence = view.peerPresences[lhs.peerId] as? TelegramUserPresence
                 let rhsPresence = view.peerPresences[rhs.peerId] as? TelegramUserPresence
                 

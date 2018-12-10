@@ -131,7 +131,7 @@ class WPArticleContentView: WPContentView {
 
     
     override func update(with layout: WPLayout) {
-        
+        let newLayout = self.content === layout
         if let layout = layout as? WPArticleLayout {
             
             if let groupLayout = layout.groupLayout {
@@ -175,7 +175,7 @@ class WPArticleContentView: WPContentView {
                     let positionFlags: LayoutPositionFlags = groupLayout.position(at: i)
 
                     
-                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: layout.parent, table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)
+                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: layout.parent.withUpdatedGroupingKey(groupLayout.messages[i].groupingKey), table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)
                     
                     groupedContents[i].change(pos: groupLayout.frame(at: i).origin, animated: false)
                 }
@@ -235,10 +235,10 @@ class WPArticleContentView: WPContentView {
                             var state: RadialProgressState = .None
                             switch status {
                             case .Fetching:
-                                state = .Fetching(progress: 0.8, force: false)
+                                state = .Fetching(progress: 0.3, force: false)
                                 initProgress = true
                             case .Local:
-                                break
+                                 state = .Fetching(progress: 1.0, force: false)
                             case .Remote:
                                 initProgress = true
                                 state = .Remote
@@ -255,10 +255,9 @@ class WPArticleContentView: WPContentView {
                                 self.downloadIndicator!.center()
                                 
                             } else {
-                                self.downloadIndicator?.removeFromSuperview()
-                                self.downloadIndicator = nil
                                 
-                                if ExternalVideoLoader.isPlayable(layout.content) && layout.isFullImageSize {
+                                let playable = ExternalVideoLoader.isPlayable(layout.content)
+                                if playable && layout.isFullImageSize {
                                     if self.playIcon == nil {
                                         self.playIcon = ImageView()
                                         self.imageView?.addSubview(self.playIcon!)
@@ -268,6 +267,21 @@ class WPArticleContentView: WPContentView {
                                 } else {
                                     self.playIcon?.removeFromSuperview()
                                     self.playIcon = nil
+                                }
+                                
+                                if let progressView = self.downloadIndicator {
+                                    progressView.state = state
+
+                                    self.downloadIndicator = nil
+                                    if playable {
+                                        progressView.removeFromSuperview()
+                                    } else {
+                                        progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                                            if completed {
+                                                progressView?.removeFromSuperview()
+                                            }
+                                        })
+                                    }
                                 }
                             }
                             
@@ -295,7 +309,7 @@ class WPArticleContentView: WPContentView {
                     
                     if imageView == nil {
                         imageView = TransformImageView()
-                        imageView?.alphaTransitionOnFirstUpdate = true
+                        imageView?.animatesAlphaOnFirstTransition = true
                         self.addSubview(imageView!)
                     }
                     
@@ -303,12 +317,12 @@ class WPArticleContentView: WPContentView {
                     
                     if let arguments = layout.imageArguments, let imageView = imageView {
                         imageView.set(arguments: arguments)
-                        imageView.setSignal(signal: cachedMedia(media: image, size: arguments.imageSize, scale: backingScaleFactor))
+                        imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
                         
-                        if let updateImageSignal = updateImageSignal, !imageView.hasImage {
+                        if let updateImageSignal = updateImageSignal {
                                 imageView.setSignal(updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] signal in
                                     if let strongSelf = self {
-                                        return cacheMedia(signal: signal, media: image, size: arguments.imageSize, scale: strongSelf.backingScaleFactor)
+                                        return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor)
                                     } else {
                                         return .complete()
                                     }
@@ -341,7 +355,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(tr(L10n.chatWebpageMediaCount(1, mediaCount)), maxWidth: 40)
+                countAccessoryView?.updateText(tr(L10n.chatWebpageMediaCount(1, mediaCount)), maxWidth: 40, status: nil, isStreamable: false)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil

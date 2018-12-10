@@ -330,7 +330,7 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: peer?.id == account.peerId ? tr(L10n.peerSavedMessages) : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+        let _ = titleText.append(string: peer?.id == account.peerId ? L10n.peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: .white ,range: titleText.range)
 
         self.titleText = titleText
@@ -368,7 +368,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let peer = peer, peer.id != account.peerId {
-            self.photo = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage)
+            self.photo = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, nil)
         } else {
             self.photo = .Empty
         }

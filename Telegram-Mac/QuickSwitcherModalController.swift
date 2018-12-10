@@ -231,7 +231,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<QuickSwitcherEnt
         return entry.entry.item(arguments, initialSize: initialSize)
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false)
 }
 
 
@@ -274,15 +274,25 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 }
                 
             } else  {
-                let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
                 
-                let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
+                let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
+                    return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
+                }
                 
-                return combineLatest(foundLocalPeers |> map {$0.0}, foundRemotePeers, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
-                    var peers = (values.1 + values.0)
-                    if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) {
-                        peers.insert(values.2, at: 0)
+                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then( searchPeers(account: account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
+                
+              //  return combineLatest(localPeers, remotePeers) |> map {$0 + $1}
+                
+               // let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
+                
+              //  let foundRemotePeers = searchPeers(account: account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} }
+                
+                return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
+                    var peers = values.0
+                    if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
+                        peers.insert(values.1, at: 0)
                     }
+                    
                     return (uniquePeers(from: peers), false)
                 }
                 |> runOn(prepareQueue)

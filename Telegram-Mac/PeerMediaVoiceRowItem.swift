@@ -57,23 +57,62 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
 }
 
 
-private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
+final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     private let titleView: TextView = TextView()
     private let nameView: TextView = TextView()
     private let progressView:RadialProgressView = RadialProgressView()
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
+    private var player:GIFPlayerView = GIFPlayerView()
+    private let resourceDataDisposable = MetaDisposable()
+    private let unreadDot: View = View()
+    private var instantVideoData: AVGifData? {
+        didSet {
+            updatePlayerIfNeeded()
+        }
+    }
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
         addSubview(nameView)
+        addSubview(player)
         addSubview(progressView)
-        
+        addSubview(unreadDot)
+        player.setFrameSize(40, 40)
+        unreadDot.setFrameSize(NSMakeSize(6, 6))
+        unreadDot.layer?.cornerRadius = 3
         progressView.fetchControls = FetchControls(fetch: { [weak self] in
             self?.executeInteraction(true)
-            self?.open()
         })
     }
+    
+    func removeNotificationListeners() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func updatePlayerIfNeeded() {
+        player.set(data: acceptVisibility ? instantVideoData : nil)
+    }
+    
+    var acceptVisibility:Bool {
+    return window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+    }
+    
+    func updateListeners() {
+        if let window = window {
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
+        } else {
+            removeNotificationListeners()
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
     
     func open() {
         
@@ -86,28 +125,15 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             let controller:APController = APChatVoiceController(account: item.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
             item.interface.inlineAudioPlayer(controller)
             controller.start()
-            addGlobalAudioToVisible()
         }
     }
     
     
-    func addGlobalAudioToVisible() {
-        if let controller = globalAudio {
-            item?.table?.enumerateViews(with: { (view) in
-                if  let view = (view as? PeerMediaVoiceRowView) {
-                    controller.add(listener: view)
-                }
-                return true
-            })
-        }
-        
-    }
     
     func fetch() {
         if let item = item as? PeerMediaVoiceRowItem {
             fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file)).start())
         }
-        open()
     }
     
     
@@ -174,6 +200,9 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     deinit {
         statusDisposable.dispose()
         fetchDisposable.dispose()
+        resourceDataDisposable.dispose()
+        player.set(data: nil)
+        removeNotificationListeners()
     }
     
     var fetchStatus: MediaResourceStatus? {
@@ -200,6 +229,7 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         super.updateColors()
         titleView.backgroundColor = backdorColor
         nameView.backgroundColor = backdorColor
+        unreadDot.backgroundColor = theme.colors.blueUI
     }
     
     override func layout() {
@@ -213,6 +243,22 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         nameView.setFrameOrigin(item.inset.left, center + 1)
         
         progressView.centerY(x: 10)
+        player.centerY(x: 10)
+        
+        unreadDot.setFrameOrigin(titleView.frame.maxX + 5, center - titleView.frame.height / 2 - unreadDot.frame.height / 2)
+    }
+    
+    var isIncomingConsumed:Bool {
+        var isConsumed:Bool = false
+        if let parent = (item as? PeerMediaRowItem)?.message {
+            for attr in parent.attributes {
+                if let attr = attr as? ConsumableContentMessageAttribute {
+                    isConsumed = attr.consumed
+                    break
+                }
+            }
+        }
+        return isConsumed
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -222,6 +268,32 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         titleView.update(item.titleLayout)
         nameView.update(item.nameLayout)
+        
+        unreadDot.isHidden = isIncomingConsumed
+        
+        updateListeners()
+        
+        if item.file.isInstantVideo {
+            let size = player.frame.size
+            player.layer?.cornerRadius = player.frame.height / 2
+            
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: item.file.previewRepresentations, reference: nil, partialReference: nil)
+            player.setSignal( chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image), scale: backingScaleFactor))
+            let arguments = TransformImageArguments(corners: ImageCorners(radius: 20), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            player.set(arguments: arguments)
+            
+            
+            resourceDataDisposable.set((item.account.postbox.mediaBox.resourceData(item.file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
+                self?.instantVideoData = data
+            }))
+            
+        } else {
+            player.setSignal(signal: .single((nil, false)))
+            player.set(data: nil)
+            instantVideoData = nil
+            resourceDataDisposable.set(nil)
+        }
+        
         
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>
@@ -260,18 +332,35 @@ private final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         needsLayout = true
         
+        if item.automaticDownload.isDownloable(item.message) {
+            fetch()
+        }
+        
     }
     
     func checkState() {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
+        let backgroundColor: NSColor
+        let foregroundColor: NSColor
+        if let media = item.message.media.first as? TelegramMediaFile, media.isInstantVideo {
+            backgroundColor = .blackTransparent
+            foregroundColor = .white
+        } else {
+            backgroundColor = theme.colors.fileActivityBackground
+            foregroundColor = theme.colors.fileActivityForeground
+        }
         if let controller = globalAudio, let song = controller.currentSong {
+           
+            
             if song.entry.isEqual(to: item.message), case .playing = song.state {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.fileActivityBackground, foregroundColor: theme.colors.fileActivityForeground, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:0))
+                progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:0))
+                progressView.state = .Icon(image: theme.icons.chatMusicPause, mode: .normal)
             } else {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.fileActivityBackground, foregroundColor: theme.colors.fileActivityForeground, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                progressView.state = .Play
             }
         } else {
-            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.fileActivityBackground, foregroundColor: theme.colors.fileActivityForeground, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+            progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
         }
     }
     

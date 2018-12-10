@@ -180,7 +180,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
 }
 
 //
--(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p connection:(TGCallConnection *)connection {
+-(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p serializedData:(NSString *)serializedData connection:(TGCallConnection *)connection {
     
     tgvoip::VoIPController::Config config = tgvoip::VoIPController::Config();
     config.initTimeout = TGCallConnectTimeout;
@@ -195,7 +195,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
   //  strncpy(config.logFilePath, [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String], sizeof(config.logFilePath));    //memset(config.logFilePath, 0, sizeof(config.logFilePath));
     
     _controller.controller->SetConfig(config);
-    
+    tgvoip::ServerConfig::GetSharedInstance()->Update(serializedData.UTF8String);
     
     std::vector<tgvoip::Endpoint> endpoints {};
     std::vector<tgvoip::Endpoint>::iterator it = endpoints.begin();
@@ -211,7 +211,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
         endpoint.port = (uint32_t)desc.port;
         endpoint.address = tgvoip::IPv4Address(desc.ipv4.UTF8String);
         endpoint.v6address = tgvoip::IPv6Address(desc.ipv6.UTF8String);
-        endpoint.type = tgvoip::Endpoint::TYPE_UDP_RELAY;
+        endpoint.type = tgvoip::Endpoint::Type::UDP_RELAY;
         [desc.peerTag getBytes:&endpoint.peerTag length:16];
         
         it = endpoints.insert ( it , endpoint );

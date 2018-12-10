@@ -363,6 +363,20 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         super.init(account)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            self.searchChannelUsers()
+            return .invoked
+        }, with: self, for: .F, priority: .low, modifierFlags: [.command])
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let account = self.account
@@ -458,6 +472,20 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     override func update(with state: ViewControllerState) {
         super.update(with: state)
         self.statePromise.set(stateValue.modify({$0.withUpdatedEditing(state == .Edit)}))
+    }
+    
+    private func searchChannelUsers() {
+        _ = (selectModalPeers(account: account, title: "", behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+            if let peerId = peerId, let account = self?.account {
+                self?.navigationController?.push(PeerInfoController.init(account: account, peerId: peerId))
+            }
+        })
+    }
+    
+    override func getCenterBarViewOnce() -> TitledBarView {
+        return PeerInfoTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+            self?.searchChannelUsers()
+        })
     }
     
 }

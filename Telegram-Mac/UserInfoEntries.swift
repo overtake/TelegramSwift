@@ -238,8 +238,12 @@ class UserInfoArguments : PeerInfoArguments {
         }
     }
     
-    func updateBlocked(_ blocked:Bool) {
+    func updateBlocked(_ blocked:Bool, _ isBot: Bool) {
         blockDisposable.set(requestUpdatePeerIsBlocked(account: account, peerId: peerId, isBlocked: blocked).start())
+        
+        if !blocked && isBot {
+            pushViewController(ChatController(account: account, chatLocation: .peer(peerId), initialAction: ChatInitialAction.start(parameter: "", behavior: .automatic)))
+        }
     }
     
     func deleteContact() {
@@ -292,7 +296,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case sharedMedia(sectionId:Int)
     case notifications(sectionId:Int, settings: PeerNotificationSettings?)
     case groupInCommon(sectionId:Int, count:Int)
-    case block(sectionId:Int, Bool)
+    case block(sectionId:Int, blocked: Bool, isBot: Bool)
     case deleteChat(sectionId: Int)
     case deleteContact(sectionId: Int)
     case encryptionKey(sectionId: Int)
@@ -459,9 +463,9 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .block(sectionId, isBlocked):
+        case let .block(sectionId, isBlocked, isBot):
             switch entry {
-            case .block(sectionId, isBlocked):
+            case .block(sectionId, isBlocked, isBot):
                 return true
             default:
                 return false
@@ -591,7 +595,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .encryptionKey(sectionId):
             return (sectionId * 1000) + stableIndex
-        case let .block(sectionId, _):
+        case let .block(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .deleteChat(sectionId):
             return (sectionId * 1000) + stableIndex
@@ -623,7 +627,7 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.updateEditingNames(firstName: firstName, lastName: lastName)
             })
         case let .about(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(L10n.peerInfoAbout), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoAbout, text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
@@ -631,13 +635,13 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
             }, hashtag: arguments.account.context.globalSearch)
         case let .bio(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label:tr(L10n.peerInfoBio), text:text, account: arguments.account, detectLinks:false)
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoBio, text:text, account: arguments.account, detectLinks:false)
         case let .phoneNumber(_, _, value):
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, text:formatPhoneNumber(value.number), account: arguments.account)
         case let .userName(_, value):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoUsername), text:"@\(value)", account: arguments.account)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, text:"@\(value)", account: arguments.account)
         case .sendMessage:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSendMessage), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSendMessage, nameStyle: blueActionButton, type: .none, action: {
                 arguments.peerChat(arguments.peerId)
             })
         case .botAddToGroup:
@@ -661,45 +665,45 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.botPrivacy()
             })
         case .shareContact:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoShareContact), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareContact, nameStyle: blueActionButton, type: .none, action: {
                 arguments.shareContact()
             })
         case .addContact:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAddContact), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddContact, nameStyle: blueActionButton, type: .none, action: {
                 arguments.addContact()
             })
         case .startSecretChat:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoStartSecretChat), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStartSecretChat, nameStyle: blueActionButton, type: .none, action: {
                 arguments.startSecretChat()
             })
         case .sharedMedia:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSharedMedia), type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, action: {
                 arguments.sharedMedia()
             })
         case let .groupInCommon(sectionId: _, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoGroupsInCommon), type: .context("\(count)"), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .context("\(count)"), action: {
                 arguments.groupInCommon()
             })
             
         case let .notifications(_, settings):
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
                 arguments.toggleNotifications()
             })
         case .encryptionKey:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoEncryptionKey), type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .none, action: {
                 arguments.encryptionKey()
             })
-        case let .block(_, isBlocked):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: !isBlocked ? tr(L10n.peerInfoBlockUser) : tr(L10n.peerInfoUnblockUser), nameStyle:redActionButton, type: .none, action: {
-                arguments.updateBlocked(!isBlocked)
+        case let .block(_, isBlocked, isBot):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isBot ? (!isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot) : (!isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), nameStyle:redActionButton, type: .none, action: {
+                arguments.updateBlocked(!isBlocked, isBot)
             })
         case .deleteChat:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoDeleteSecretChat), nameStyle: redActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteSecretChat, nameStyle: redActionButton, type: .none, action: {
                 arguments.delete()
             })
         case .deleteContact:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoDeleteContact), nameStyle: redActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteContact, nameStyle: redActionButton, type: .none, action: {
                 arguments.deleteContact()
             })
         case .section(_):
@@ -722,7 +726,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
     var sectionId:Int = 1
     
     
-    entries.append(UserInfoEntry.info(sectionId: sectionId, view, editable: state.editingState != nil))
+    entries.append(UserInfoEntry.info(sectionId: sectionId, view, editable: state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil))
     
     if let peer = view.peers[view.peerId] {
         
@@ -802,7 +806,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                     entries.append(UserInfoEntry.section(sectionId: sectionId))
                     sectionId += 1
                     
-                    entries.append(UserInfoEntry.block(sectionId: sectionId, cachedData.isBlocked))
+                    entries.append(UserInfoEntry.block(sectionId: sectionId, blocked: cachedData.isBlocked, isBot: peer.isBot))
                 } else {
                     entries.append(UserInfoEntry.section(sectionId: sectionId))
                     sectionId += 1

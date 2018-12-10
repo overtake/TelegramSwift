@@ -41,7 +41,7 @@ class TextAndLabelItem: GeneralRowItem {
         
         
         
-        textLayout = TextViewLayout(attr)
+        textLayout = TextViewLayout(attr, alwaysStaticItems: !detectLinks)
         textLayout.interactions = globalLinkExecutor
         textLayout.selectWholeText = !detectLinks
         if selectFullWord {
@@ -86,15 +86,15 @@ class TextAndLabelItem: GeneralRowItem {
         return (height - labelsHeight) / 2.0
     }
     
-//    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-//        return .single([ContextMenuItem(tr(L10n.textCopy), handler: { [weak self] in
-//            if let strongSelf = self {
-//            copyToClipboard(strongSelf.textLayout.attributedString.string)
-//            }
-//            
-//        })]) 
-//    }
-//    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        return .single([ContextMenuItem(L10n.textCopyLabel(self.label.string.components(separatedBy: " ").map{$0.capitalizingFirstLetter()}.joined(separator: " ")), handler: { [weak self] in
+            if let strongSelf = self {
+                copyToClipboard(strongSelf.textLayout.attributedString.string)
+            }
+            
+        })])
+    }
+//
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: textWidth)

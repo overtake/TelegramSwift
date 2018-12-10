@@ -433,13 +433,19 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             
             BOOL result = [_weakd textViewEnterPressed:theEvent];
             
+            if (!result && (theEvent.modifierFlags & NSEventModifierFlagCommand)) {
+                [super insertNewline:self];
+                return;
+            }
+            
         } else if(theEvent.keyCode == 53 && [_weakd respondsToSelector:@selector(textViewNeedClose:)]) {
             [_weakd textViewNeedClose:self];
             return;
         }
         
-        
-        [super keyDown:theEvent];
+        if (!(theEvent.modifierFlags & NSEventModifierFlagCommand) || !isEnterEvent(theEvent)) {
+            [super keyDown:theEvent];
+        }
     } else if(_weakd == nil) {
         [super keyDown:theEvent];
     }
@@ -483,6 +489,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     }
     [super drawRect:dirtyRect];
     
+}
+
+-(void)setHidden:(BOOL)hidden {
+    [super setHidden:hidden];
 }
 
 @end
@@ -914,7 +924,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
             pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
             
-            
+            pAnim.delegate = self;
             [_placeholder.layer removeAnimationForKey:@"position"];
             [_placeholder.layer addAnimation:pAnim forKey:@"position"]; 
             

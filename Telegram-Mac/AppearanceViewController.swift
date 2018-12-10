@@ -199,13 +199,12 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     if settings.bubbled  {
         entries.append(.chatBackground(sectionId, index))
         index += 1
+        
     }
     
     if #available(OSX 10.14, *) {
-        if !settings.bubbled {
-            entries.append(.section(sectionId))
-            sectionId += 1
-        }
+        entries.append(.section(sectionId))
+        sectionId += 1
         entries.append(.followSystemAppearance(sectionId, index, settings.followSystemAppearance))
         index += 1
     }
@@ -239,17 +238,17 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         installed[mojavePalette.name] = darkPalette
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .color(Int32(dayClassic.background.rgb))))
+        entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .none))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .color(Int32(whitePalette.background.rgb))))
+        entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .none))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
+        entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .none))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, .color(Int32(mojavePalette.background.rgb))))
+        entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, .none))
         index += 1
         
         
@@ -273,15 +272,37 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
             index += 1
         }
     } else {
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == nightBluePalette.name, nightBluePalette, .color(Int32(nightBluePalette.background.rgb))))
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
+        entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultHeader, false))
+        descIndex += 1
+
+        
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == nightBluePalette.name, nightBluePalette, .none))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == mojavePalette.name, mojavePalette, .color(Int32(mojavePalette.background.rgb))))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == mojavePalette.name, mojavePalette, .none))
         index += 1
         
         entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDark, false))
         descIndex += 1
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
+        
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == dayClassic.name, dayClassic, .none))
+        index += 1
+        
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == whitePalette.name, whitePalette, .none))
+        index += 1
+        
+        entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDay, false))
+        descIndex += 1
+        
     }
     
     
@@ -362,9 +383,9 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         let account = self.account
-        let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, wallpaper in
+        let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, _ in
             _ = combineLatest(updateThemeInteractivetly(postbox: account.postbox, f: { settings in
-                return settings.withUpdatedPalette(palette).withUpdatedWallpaper(wallpaper).withUpdatedDefaultDayName(palette.isDark ? palette.name : settings.defaultNightName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
+                return settings.withUpdatedPalette(palette).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
                 
             }), updateAutoNightSettingsInteractively(postbox: account.postbox, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
@@ -405,6 +426,8 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         readyOnce()
         
     }
+    
+
     
     override var enableBack: Bool {
         return true

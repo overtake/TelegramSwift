@@ -13,13 +13,13 @@ import SwiftSignalKitMac
 import TGUIKit
 
 enum PeerPhoto {
-    case peer(PeerId, TelegramMediaImageRepresentation?, [String])
+    case peer(PeerId, TelegramMediaImageRepresentation?, [String], Message?)
     case group([PeerId], [PeerId : TelegramMediaImageRepresentation], [PeerId : [String]])
 }
 
 private var capHolder:[String : CGImage] = [:]
 
-private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool) -> Signal<(CGImage?, Bool), NoError> {
+private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool) -> Signal<(CGImage?, Bool), NoError> {
     if let representation = representation {
         return cachedPeerPhoto(peerId, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
@@ -45,7 +45,9 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                                 })
                                 
                                 let fetchedDataDisposable: Disposable
-                                if let reference = PeerReference(peer) {
+                                if let message = message {
+                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
+                                } else if let reference = PeerReference(peer) {
                                     fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
                                 } else {
                                     fetchedDataDisposable = EmptyDisposable
@@ -135,8 +137,8 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
 func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
-    case let .peer(peerId, representation, displayLetters):
-        return peerImage(account: account, peerId: peerId, displayDimensions: displayDimensions, representation: representation, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap)
+    case let .peer(peerId, representation, displayLetters, message):
+        return peerImage(account: account, peerId: peerId, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap)
     case let .group(peerIds, representations, displayLetters):
         var combine:[Signal<(CGImage?, Bool), NoError>] = []
         let inGroupSize = NSMakeSize(displayDimensions.width / 2 - 2, displayDimensions.height / 2 - 2)

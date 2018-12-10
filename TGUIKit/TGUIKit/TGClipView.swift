@@ -25,9 +25,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     public override var needsDisplay: Bool {
         set {
-            self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+            //self.layerContentsRedrawPolicy = .onSetNeedsDisplay
             super.needsDisplay = needsDisplay
-            self.layerContentsRedrawPolicy = .never
+           // self.layerContentsRedrawPolicy = .never
         }
         get {
             return super.needsDisplay
@@ -61,13 +61,17 @@ public class TGClipView: NSClipView,CALayerDelegate {
     override init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
-        self.wantsLayer = true
+        //self.wantsLayer = true
         backgroundColor = .clear
         self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
-        self.layer?.delegate = self
+        //self.layer?.delegate = self
         createDisplayLink()
 
+    }
+    
+    override public static var isCompatibleWithResponsiveScrolling: Bool {
+        return true
     }
     
     public override var backgroundColor: NSColor {
@@ -113,7 +117,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
             }
             if border.contains(.Right) {
-                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize + 2, NSHeight(self.frame)))
+                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
             }
             
         }

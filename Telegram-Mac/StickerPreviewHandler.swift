@@ -1,5 +1,5 @@
 //
-//  StickerPreviewHandler.swift
+//  ModalPreviewHandler.swift
 //  Telegram
 //
 //  Created by keepcoder on 02/02/2017.
@@ -12,13 +12,13 @@ import TGUIKit
 import SwiftSignalKitMac
 
 
-extension GridNode : StickerPreviewProtocol {
-    func stickerAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
+extension GridNode : ModalPreviewProtocol {
+    func fileAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
         let point = self.documentView!.convert(point, from: nil)
         var reference: FileMediaReference? = nil
         self.forEachItemNode { node in
             if NSPointInRect(point, node.frame) {
-                if let c = node as? StickerPreviewRowViewProtocol {
+                if let c = node as? ModalPreviewRowViewProtocol {
                     reference = c.fileAtPoint(node.convert(point, from: nil))
                     return
                 }
@@ -28,12 +28,12 @@ extension GridNode : StickerPreviewProtocol {
     }
 }
 
-extension TableView : StickerPreviewProtocol {
-    func stickerAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
+extension TableView : ModalPreviewProtocol {
+    func fileAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
         let index = self.row(at: documentView!.convert(point, from: nil))
         if index != -1 {
             let item = self.item(at: index)
-            if let view = self.viewNecessary(at: item.index), let c = view as? StickerPreviewRowViewProtocol {
+            if let view = self.viewNecessary(at: item.index), let c = view as? ModalPreviewRowViewProtocol {
                 return c.fileAtPoint(view.convert(point, from: nil))
             }
         }
@@ -42,40 +42,47 @@ extension TableView : StickerPreviewProtocol {
     }
 }
 
-protocol StickerPreviewRowViewProtocol {
+protocol ModalPreviewRowViewProtocol {
     func fileAtPoint(_ point:NSPoint) -> FileMediaReference?
 }
 
-protocol StickerPreviewProtocol {
-    func stickerAtLocationInWindow(_ point:NSPoint) -> FileMediaReference?
+protocol ModalPreviewProtocol {
+    func fileAtLocationInWindow(_ point:NSPoint) -> FileMediaReference?
+    
 }
 
-fileprivate var handler:StickerPreviewHandler?
+protocol ModalPreviewControllerView : class {
+    func update(with reference: FileMediaReference, account:Account)
+}
 
-func startStickerPreviewHandle(_ global:StickerPreviewProtocol, window:Window, account:Account) {
-    handler = StickerPreviewHandler(global, window: window, account: account)
+fileprivate var handler:ModalPreviewHandler?
+
+
+
+func startModalPreviewHandle(_ global:ModalPreviewProtocol, viewType: ModalPreviewControllerView.Type, window:Window, account:Account) {
+    handler = ModalPreviewHandler(global, viewType: viewType, window: window, account: account)
     handler?.startHandler()
 }
 
-class StickerPreviewHandler : NSObject {
-    private let global:StickerPreviewProtocol
+class ModalPreviewHandler : NSObject {
+    private let global:ModalPreviewProtocol
     private let account:Account
     private let window:Window
-    private let modal:StickerPreviewModalController
-    init(_ global:StickerPreviewProtocol, window:Window, account:Account) {
+    private let modal:PreviewModalController
+    init(_ global:ModalPreviewProtocol, viewType: ModalPreviewControllerView.Type, window:Window, account:Account) {
         self.global = global
         self.window = window
         self.account = account
-        self.modal = StickerPreviewModalController(account)
+        self.modal = PreviewModalController(account, viewType: viewType)
     }
     
     func startHandler() {
         
-        modal.update(with: global.stickerAtLocationInWindow(window.mouseLocationOutsideOfEventStream))
+        modal.update(with: global.fileAtLocationInWindow(window.mouseLocationOutsideOfEventStream))
         showModal(with: modal, for: window)
         
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-            if let strongSelf = self, let reference = strongSelf.global.stickerAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
+            if let strongSelf = self, let reference = strongSelf.global.fileAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
                 strongSelf.modal.update(with: reference)
             }
             return .invokeNext
@@ -97,5 +104,57 @@ class StickerPreviewHandler : NSObject {
     deinit {
         stopHandler()
     }
+    
+}
+
+
+class PreviewModalController: ModalViewController {
+    fileprivate let account:Account
+    fileprivate var reference:FileMediaReference?
+    private let viewType: ModalPreviewControllerView.Type
+    init(_ account:Account, viewType: ModalPreviewControllerView.Type) {
+        self.viewType = viewType
+        self.account = account
+        
+        super.init(frame: NSMakeRect(0, 0, 360, 400))
+        bar = .init(height: 0)
+    }
+    
+    override var containerBackground: NSColor {
+        return .clear
+    }
+    
+    override var handleEvents:Bool {
+        return false
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        if let reference = reference {
+            genericView.update(with: reference, account: account)
+        }
+        readyOnce()
+    }
+    
+    func update(with reference:FileMediaReference?) {
+        if self.reference?.media != reference?.media {
+            self.reference = reference
+            if isLoaded(), let reference = reference {
+                genericView.update(with: reference, account: account)
+            }
+        }
+    }
+    
+    fileprivate var genericView:ModalPreviewControllerView {
+        return view as! ModalPreviewControllerView
+    }
+    
+    override func viewClass() -> AnyClass {
+        return viewType
+    }
+    
+    //    override var isFullScreen: Bool {
+    //        return true
+    //    }
     
 }

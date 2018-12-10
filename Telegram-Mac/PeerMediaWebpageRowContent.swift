@@ -133,21 +133,21 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
        
         
         linkLayout?.interactions = TextViewInteractions(processURL: { [weak self] url in
-            if let webpage = self?.message.media.first as? TelegramMediaWebpage {
-                if case let .Loaded(content) = webpage.content {
-                    if let _ = content.instantPage {
-                        showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil, saveToRecent: saveToRecent))
-                        return
-                    }
+            if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
+                if self.hasInstantPage {
+                    showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil, saveToRecent: saveToRecent))
+                    return
                 }
             }
             globalLinkExecutor.processURL(url)
         }, copy: { [weak self] in
-            guard let `self` = self else {return false}
-            if let string = self.linkLayout?.attributedString.string {
-                copyToClipboard(string)
-            }
-            return true
+                guard let `self` = self else {return false}
+                if let string = self.linkLayout?.attributedString.string {
+                    copyToClipboard(string)
+                }
+                return true
+        }, localizeLinkCopy: { link in
+                return L10n.textContextCopyLink
         })
         
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -158,7 +158,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 if let _ = content.instantPage {
-                    if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" {
+                    if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram"  {
                         return false
                     }
                     return true

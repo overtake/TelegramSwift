@@ -74,7 +74,7 @@ private final class VCardHeaderView : TableRowView {
         
         guard let item = item as? VCardHeaderItem else {return}
         
-        photoView.setState(account: item.account, state: .PeerAvatar(PeerId(namespace: 0, id: 0), [item.name.prefix(1)], nil))
+        photoView.setState(account: item.account, state: .PeerAvatar(PeerId(namespace: 0, id: 0), [item.name.prefix(1)], nil, nil))
         textView.update(item.nameLayout)
     }
     

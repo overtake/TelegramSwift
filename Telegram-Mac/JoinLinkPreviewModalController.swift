@@ -35,7 +35,7 @@ private class JoinLinkPreviewView : View {
         _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .normal(.title))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: tr(L10n.peerStatusMemberCountable(peer.participantCount)), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: L10n.peerStatusMemberCountable(peer.participantCount).replacingOccurrences(of: "\(peer.participantCount)", with: peer.participantCount.formattedWithSeparator), color: theme.colors.grayText, font: .normal(.text))
         let titleLayout = TextViewLayout(attr, alignment: .center)
         titleLayout.measure(width: frame.width - 40)
         titleView.update(titleLayout)

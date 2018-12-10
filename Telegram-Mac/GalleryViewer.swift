@@ -28,6 +28,8 @@ final class GalleryInteractions {
     var zoomIn:()->Void = {}
     var zoomOut:()->Void = {}
     var rotateLeft:()->Void = {}
+    
+    var fastSave:()->Void = {}
 }
 private(set) var viewer:GalleryViewer?
 
@@ -136,7 +138,7 @@ fileprivate func prepareEntries(from:[ChatHistoryEntry]?, to:[ChatHistoryEntry],
         subscriber.putCompletion()
         
         return EmptyDisposable
-    } |> runOn(prepareQueue)
+    } |> runOn(Queue.mainQueue())
 }
 
 
@@ -207,7 +209,7 @@ class GalleryViewer: NSResponder {
     private let account:Account
     private let touchbarController: GalleryTouchBarController
     private let indexDisposable:MetaDisposable = MetaDisposable()
-    
+    private let messagesActionDisposable = MetaDisposable()
     
     let interactions:GalleryInteractions = GalleryInteractions()
     let contentInteractions:ChatMediaLayoutParameters?
@@ -233,7 +235,7 @@ class GalleryViewer: NSResponder {
             self.window.isOpaque = false
             self.window.backgroundColor = .clear
             self.window.appearance = theme.appearance
-            backgroundView.backgroundColor = NSColor.black.withAlphaComponent(0.8)
+            backgroundView.backgroundColor = NSColor.black.withAlphaComponent(0.9)
             backgroundView.frame = bounds
             
             self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window, reversed: reversed)
@@ -308,7 +310,19 @@ class GalleryViewer: NSResponder {
         interactions.rotateLeft = { [weak self] in
             self?.pager.rotateLeft()
         }
-        window.set(handler: interactions.dismiss, with:self, for: .Space)
+        interactions.fastSave = { [weak self] in
+            self?.saveAs(true)
+        }
+        window.set(handler: { [weak self]  in
+            guard let `self` = self else {return .rejected}
+            if self.pager.selectedItem is MGalleryVideoItem || self.pager.selectedItem is MGalleryExternalVideoItem {
+                self.pager.selectedItem?.togglePlayerOrPause()
+                return .invoked
+            } else {
+                return self.interactions.dismiss()
+            }
+        }, with:self, for: .Space)
+        
         window.set(handler: interactions.dismiss, with:self, for: .Escape)
         
         window.closeInterceptor = { [weak self] in
@@ -344,7 +358,7 @@ class GalleryViewer: NSResponder {
         }
         
         window.firstResponderFilter = { responder in
-            return nil
+            return responder
         }
         
         self.controls = GalleryModernControls(account, interactions: interactions, frame: NSMakeRect(0, -150, window.frame.width, 150), thumbsControl: pager.thumbsControl)
@@ -769,6 +783,14 @@ class GalleryViewer: NSResponder {
             items.append(SPopoverItem(L10n.galleryContextShowGallery, {[weak self] in
                 self?.showSharedMedia()
             }))
+            if let message = pager.selectedItem?.entry.message {
+                if canDeleteMessage(message, account: account) {
+                    items.append(SPopoverItem(tr(L10n.galleryContextDeletePhoto), {[weak self] in
+                        self?.deleteMessage(control)
+                    }))
+                }
+            }
+           
         }
         items.append(SPopoverItem(tr(L10n.galleryContextCopyToClipboard), {[weak self] in
             self?.copy(nil)
@@ -789,7 +811,106 @@ class GalleryViewer: NSResponder {
             _ = self?.interactions.dismiss()
         }))
         
-        showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), inset:NSMakePoint((-125 + 14), 0))
+        showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), inset:NSMakePoint((-105 + 14), 0), static: true)
+    }
+    
+    private func deleteMessages(_ messages:[Message]) {
+        if !messages.isEmpty, let peer = messageMainPeer(messages[0]) {
+            
+            let peerId = messages[0].id.peerId
+            let messageIds = messages.map {$0.id}
+            
+            let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: account, peerId: peerId)
+                |> `catch` {_ in return .complete()} |> map { admins -> [ChannelParticipant]? in
+                    return admins.map({$0.participant})
+            } : .single(nil)
+            
+            
+            messagesActionDisposable.set((channelAdmin |> deliverOnMainQueue).start( next:{ [weak self] admins in
+                guard let `self` = self else {return}
+                
+                var canDelete:Bool = true
+                var canDeleteForEveryone = true
+                
+                var otherCounter:Int32 = 0
+                for message in messages {
+                    if !canDeleteMessage(message, account: self.account) {
+                        canDelete = false
+                    }
+                    if !canDeleteForEveryoneMessage(message, account: self.account) {
+                        canDeleteForEveryone = false
+                    } else {
+                        if message.author?.id != self.account.peerId {
+                            otherCounter += 1
+                        }
+                    }
+                }
+                
+                if otherCounter == messages.count {
+                    canDeleteForEveryone = false
+                }
+                
+                if canDelete {
+                    let thrid:String? = canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : nil
+                    
+                    if let thrid = thrid {
+                        modernConfirm(for: self.window, account: self.account, peerId: nil, accessory: theme.icons.confirmDeleteMessagesAccessory, header: L10n.chatConfirmDeleteMessages, information: nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak self] result in
+                            guard let `self` = self else {return}
+                            
+                            let type:InteractiveMessagesDeletionType
+                            switch result {
+                            case .basic:
+                                type = .forLocalPeer
+                            case .thrid:
+                                type = .forEveryone
+                            }
+                            
+                            _ = deleteMessagesInteractively(postbox: self.account.postbox, messageIds: messageIds, type: type).start()
+                        })
+                    } else {
+                        _ = deleteMessagesInteractively(postbox: self.account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                    }
+                }
+            }))
+        }
+    }
+    
+    private func deleteMessage(_ control: Control) {
+         if let message = self.pager.selectedItem?.entry.message {
+            let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
+            
+            if messages.count > 1 {
+                
+                var items:[SPopoverItem] = []
+                
+                let thisTitle: String
+                if message.media.first is TelegramMediaImage {
+                    thisTitle = L10n.galleryContextShareThisPhoto
+                } else {
+                    thisTitle = L10n.galleryContextShareThisVideo
+                }
+                items.append(SPopoverItem(thisTitle, { [weak self] in
+                    self?.deleteMessages([message])
+                }))
+               
+                
+                let allTitle: String
+                if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
+                    allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
+                } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
+                    allTitle = L10n.galleryContextShareAllVideosCountable(messages.count)
+                } else {
+                    allTitle = L10n.galleryContextShareAllItemsCountable(messages.count)
+                }
+                
+                items.append(SPopoverItem(allTitle, { [weak self] in
+                    self?.deleteMessages(messages)
+                }))
+                showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-90 + 14),0), static: true)
+            } else {
+                deleteMessages([message])
+            }
+         }
     }
     
     private func deletePhoto() {
@@ -837,14 +958,81 @@ class GalleryViewer: NSResponder {
     }
     
     
-    func saveAs() -> Void {
+    func saveAs(_ fast: Bool = false) -> Void {
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {
-                operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] path in
-                    if let strongSelf = self {
-                        savePanel(file: path.nsstring.deletingPathExtension, ext: path.nsstring.pathExtension, for: strongSelf.window)
+                let isPhoto = item is MGalleryPhotoItem || item is MGalleryPeerPhotoItem
+                operationDisposable.set((item.realStatus |> take(1) |> deliverOnMainQueue).start(next: { [weak self] status in
+                    guard let `self` = self else {return}
+                    switch status {
+                    case .Local:
+                        self.operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] path in
+                            if let strongSelf = self {
+                                if fast {
+                                   // let attr = NSMutableAttributedString()
+                                   // attr.append(string: "File saved to your download folder", color: .white, font: .bold(18))
+                                   
+                                    let text: String
+                                    if item is MGalleryVideoItem {
+                                         text = L10n.galleryViewFastSaveVideo
+                                    } else if item is MGalleryGIFItem {
+                                        text = L10n.galleryViewFastSaveGif
+                                    } else {
+                                        text = L10n.galleryViewFastSaveImage
+                                    }
+                                    
+                                    let dateFormatter = DateFormatter()
+                                    dateFormatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
+                                   
+                                    
+                                    let file: TelegramMediaFile?
+                                    if let item = item as? MGalleryVideoItem {
+                                        file = item.media
+                                    } else if let item = item as? MGalleryGIFItem {
+                                        file = item.media
+                                    } else if let photo = item as? MGalleryPhotoItem {
+                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                    } else if let photo = item as? MGalleryPeerPhotoItem {
+                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                    } else {
+                                        file = nil
+                                    }
+                                    
+                                    let account = strongSelf.account
+                                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(18), textColor: .white), bold: MarkdownAttributeSet(font: .bold(18), textColor: .white), link: MarkdownAttributeSet(font: .bold(18), textColor: theme.colors.link), linkAttribute: { contents in
+                                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in }))
+                                    })).mutableCopy() as! NSMutableAttributedString
+                                    
+                                    let layout = TextViewLayout(attributedText, alwaysStaticItems: true)
+                                    layout.interactions = TextViewInteractions.init(processURL: { [weak strongSelf] url  in
+                                         if let file = file {
+                                            showInFinder(file, account: account)
+                                            strongSelf?.close(false)
+                                        }
+                                    })
+                                    layout.measure(width: strongSelf.window.frame.width - 100)
+                                    
+                                    if let file = file {
+                                        _ = (copyToDownloads(file, postbox: account.postbox) |> deliverOnMainQueue |> take(1) |> then (showModalSuccess(for: strongSelf.window, icon: theme.icons.successModalProgress, text: layout, delay: 4.0))).start()
+                                    } else {
+                                        savePanel(file: path.nsstring.deletingPathExtension, ext: path.nsstring.pathExtension, for: strongSelf.window)
+                                    }
+                                    
+//                                    if let file = item.entry.file {
+//                                        //copyToDownloads(file, postbox: item.account.postbox)
+//
+//                                    }
+                                } else {
+                                    savePanel(file: path.nsstring.deletingPathExtension, ext: path.nsstring.pathExtension, for: strongSelf.window)
+                                }
+                            }
+                        }))
+                    default:
+                        alert(for: self.window, info: isPhoto ? L10n.galleryWaitDownloadPhoto : L10n.galleryWaitDownloadVideo)
                     }
+                    
                 }))
+                
             }
             
         }
@@ -874,20 +1062,37 @@ class GalleryViewer: NSResponder {
             if message.groupInfo != nil {
                 let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
                 var items:[SPopoverItem] = []
-                items.append(SPopoverItem(L10n.galleryContextShareThisPhoto, { [weak self] in
+                
+                let thisTitle: String
+                if message.media.first is TelegramMediaImage {
+                    thisTitle = L10n.galleryContextShareThisPhoto
+                } else {
+                    thisTitle = L10n.galleryContextShareThisVideo
+                }
+                
+                items.append(SPopoverItem(thisTitle, { [weak self] in
                     guard let `self` = self else {return}
                     self.close()
                     showModal(with: ShareModalController(ShareMessageObject(self.account, message)), for: self.window)
                     
                 }))
                 
-                items.append(SPopoverItem(L10n.galleryContextShareAllPhotosCountable(messages.count), { [weak self] in
+                let allTitle: String
+                if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
+                    allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
+                } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
+                    allTitle = L10n.galleryContextShareAllVideosCountable(messages.count)
+                } else {
+                    allTitle = L10n.galleryContextShareAllItemsCountable(messages.count)
+                }
+                
+                items.append(SPopoverItem(allTitle, { [weak self] in
                     guard let `self` = self else {return}
                     showModal(with: ShareModalController(ShareMessageObject(self.account, message, messages)), for: self.window)
                 }))
                 
                 
-                showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-125 + 14),0))
+                showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-125 + 14),0), static: true)
             } else {
                 showModal(with: ShareModalController(ShareMessageObject(self.account, message)), for: self.window)
             }
@@ -919,12 +1124,17 @@ class GalleryViewer: NSResponder {
         mainWindow.resignFirstResponder()
         //window.makeFirstResponder(self)
         //closePipVideo()
-        backgroundView.change(opacity: 0, animated: false)
+        backgroundView.alphaValue = 0
+        //backgroundView.change(opacity: 0, animated: false)
         self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
             if let strongSelf = self {
-                strongSelf.backgroundView.change(opacity: 1, animated: animated)
+                strongSelf.backgroundView.alphaValue = 1.0
+               // strongSelf.backgroundView.change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
+                        if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
+                            return nil
+                        }
                         let view = strongSelf?.delegate?.contentInteractionView(for: firstStableId, animateIn: false)
                         return view?.subviews[innerIndex]
                     }
@@ -934,10 +1144,12 @@ class GalleryViewer: NSResponder {
                     return nil
                 }, completion:{ [weak strongSelf] in
                     strongSelf?.controls.animateIn()
-                }, addAccesoryOnCopiedView: { [weak self] stableId, view in
+                }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {
-                        self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
+                        //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
                     }
+                }, addVideoTimebase: { stableId, view  in
+                   
                 })
                 strongSelf.window.makeKeyAndOrderFront(nil)
             }
@@ -951,7 +1163,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView.change(opacity: 0, duration: 0.15, timingFunction: CAMediaTimingFunctionName.spring)
+            backgroundView.alphaValue = 0
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {
@@ -971,6 +1183,8 @@ class GalleryViewer: NSResponder {
                 if let stableId = stableId {
                     self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
                 }
+            }, addVideoTimebase: { stableId, view  in
+                
             })
         } else {
             window.orderOut(nil)
@@ -990,6 +1204,7 @@ class GalleryViewer: NSResponder {
         operationDisposable.dispose()
         window.removeAllHandlers(for: self)
         readyDispose.dispose()
+        messagesActionDisposable.dispose()
     }
     
 }
@@ -1000,40 +1215,43 @@ func closeGalleryViewer(_ animated: Bool) {
 }
 
 func showChatGallery(account:Account, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false) {
-   // if viewer == nil {
-    viewer?.clean()
-    let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type, reversed: reversed)
-    gallery.show()
-    //}
+    if viewer == nil {
+        viewer?.clean()
+        let gallery = GalleryViewer(account: account, message: message, delegate, contentInteractions, type: type, reversed: reversed)
+        gallery.show()
+    }
 }
 
 func showGalleryFromPip(item: MGalleryItem, gallery: GalleryViewer, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history) {
-   // if viewer == nil {
-    viewer?.clean()
-    gallery.show(true, item.stableId)
-    //}
+    if viewer == nil {
+        viewer?.clean()
+        gallery.show(true, item.stableId)
+    }
 }
 
 func showPhotosGallery(account:Account, peerId:PeerId, firstStableId:AnyHashable, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
-  //  if viewer == nil {
-    viewer?.clean()
-    let gallery = GalleryViewer(account: account, peerId: peerId, firstStableId: firstStableId, delegate, contentInteractions)
-    gallery.show()
-  //  }
+    if viewer == nil {
+        viewer?.clean()
+        let gallery = GalleryViewer(account: account, peerId: peerId, firstStableId: firstStableId, delegate, contentInteractions)
+        gallery.show()
+    }
 }
 
 func showInstantViewGallery(account: Account, medias:[InstantPageMedia], firstIndex: Int, firstStableId:AnyHashable? = nil, parent: Message? = nil, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
-    //if viewer == nil {
-    viewer?.clean()
-    let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
-    gallery.show()
-   // }
+    if viewer == nil {
+        viewer?.clean()
+        let gallery = GalleryViewer(account: account, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
+        gallery.show()
+    }
 }
 
 
 func showSecureIdDocumentsGallery(account: Account, medias:[SecureIdDocumentValue], firstIndex: Int, _ delegate: InteractionContentViewProtocol? = nil) {
-    viewer?.clean()
-    let gallery = GalleryViewer(account: account, secureIdMedias: medias, firstIndex: firstIndex, delegate)
-    gallery.show()
+    if viewer == nil {
+        viewer?.clean()
+        let gallery = GalleryViewer(account: account, secureIdMedias: medias, firstIndex: firstIndex, delegate)
+        gallery.show()
+    }
+   
 }
 

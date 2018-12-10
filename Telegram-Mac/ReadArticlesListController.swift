@@ -58,7 +58,7 @@ private func readArticlesEntries(_ prefs: ReadArticlesListPreferences, state: Se
                 }
             }
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(article.webPage.webpageId)"), equatable: InputDataEquatable(article), item: { initialSize, stableId -> TableRowItem in
-                return PeerMediaWebpageRowItem(initialSize, arguments.chatInteraction, arguments.account, .messageEntry(Message(article.webPage, stableId: UINT32_MAX, messageId: MessageId(peerId: arguments.account.peerId, namespace: 0, id: MessageId.Id(article.webPage.webpageId.id % Int64(INT32_MAX))))), saveToRecent: false, readPercent: article.percent)
+                return PeerMediaWebpageRowItem(initialSize, arguments.chatInteraction, arguments.account, .messageEntry(Message(article.webPage, stableId: UINT32_MAX, messageId: MessageId(peerId: arguments.account.peerId, namespace: 0, id: MessageId.Id(article.webPage.webpageId.id % Int64(INT32_MAX)))), .defaultSettings), saveToRecent: false, readPercent: article.percent)
             }))
             index += 1
         }

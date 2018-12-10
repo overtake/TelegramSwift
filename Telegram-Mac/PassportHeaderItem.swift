@@ -23,7 +23,7 @@ class PassportHeaderItem: TableRowItem {
     init(_ initialSize: NSSize, account: Account, stableId: AnyHashable, requestedFields: [SecureIdRequestedFormField], peer: Peer) {
         self.account = account
         self._stableId = stableId
-        self.botPhoto = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage)
+        self.botPhoto = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, nil)
         
         let attributed = NSMutableAttributedString()
         

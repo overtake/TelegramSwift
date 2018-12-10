@@ -231,7 +231,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let editedLabel = editedLabel {
-            size.width += editedLabel.0.size.width + 6
+            size.width += editedLabel.0.size.width + 7
         }
         
         size.width = max(isBubbled ? size.width : 54, size.width)
@@ -1008,10 +1008,10 @@ class ChatRowItem: TableRowItem {
             var fullDate: String = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - account.context.timeDifference))
             
             for attribute in message.attributes {
-                if let attribute = attribute as? ReplyMessageAttribute  {
+                if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId]  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?   presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account:account, replyMessage:message.associatedMessages[attribute.messageId], presentation: replyPresentation, makesizeCallback: { [weak self] in
+                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account:account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let `self` = self else {return}
                         _ = self.makeSize(self.oldWidth, oldWidth: 0)
                         Queue.mainQueue().async { [weak self] in
@@ -1625,11 +1625,6 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                 _ = reportReasonSelector().start(next: { reason in
                     _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
                 })
-            }))
-        }
-        if account.peerId.id == 835030 {
-            items.append(ContextMenuItem.init("get message id", handler: {
-                alert(for: mainWindow, info: "\(message.id)")
             }))
         }
         return items

@@ -157,10 +157,10 @@ private class HeaderView : View {
         safari.set(image: theme.icons.instantViewSafari, for: .Normal)
         back.set(image: theme.icons.instantViewBack, for: .Normal)
         
-        share.sizeToFit()
-        actions.sizeToFit()
-        safari.sizeToFit()
-        back.sizeToFit()
+        _ = share.sizeToFit()
+        _ = actions.sizeToFit()
+        _ = safari.sizeToFit()
+        _ = back.sizeToFit()
     }
     
     required init?(coder: NSCoder) {
@@ -456,8 +456,19 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     func show() {
         _show()
         self.ready.set(navigation.controller.ready.get() |> take(1) |> filter {$0} |> deliverOnMainQueue |> map { [weak self] value in
-            self?._window.makeKeyAndOrderFront(nil)
-
+            guard let `self` = self else {return value}
+            
+          //  let toRect = self._window.frame
+          //  let fromRect = NSMakeRect(toRect.minX + (toRect.width - 100) / 2, toRect.minY + (toRect.height - 100) / 2, 100, 100)
+            //self._window.setFrame(fromRect, display: true)
+            self._window.makeKeyAndOrderFront(nil)
+            
+         //   NSLog("\(self._window.contentView?.superview?.layer)")
+         //   self._window.contentView?.superview?.layer?.animateScaleCenter(from: 0, to: 1, duration: 0.4)
+            
+            //self._window.setFrame(toRect, display: false, animate: true)
+          //  self._window.contentView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            
             return value
         })
     }

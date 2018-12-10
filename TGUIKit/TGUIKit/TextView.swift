@@ -18,6 +18,7 @@ public enum LinkType {
     case command
     case stickerPack
     case inviteLink
+    case code
 }
 
 public func isValidEmail(_ checkString:String) -> Bool {
@@ -904,7 +905,7 @@ public class TextView: Control {
     public override init() {
         super.init();
         layer?.disableActions()
-        self.style = ControlStyle(backgroundColor: presentation.colors.background)
+        self.style = ControlStyle(backgroundColor: .clear)
 //        wantsLayer = false
 //        self.layer?.delegate = nil
     }
@@ -916,7 +917,7 @@ public class TextView: Control {
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
         layer?.disableActions()
-        self.style = ControlStyle(backgroundColor: presentation.colors.background)
+        self.style = ControlStyle(backgroundColor: .clear)
 //        wantsLayer = false
 //        self.layer?.delegate = nil
        // self.layer?.drawsAsynchronously = System.drawAsync
@@ -1267,8 +1268,9 @@ public class TextView: Control {
             super.mouseUp(with: event)
         }
     }
-    
-
+    public override func cursorUpdate(with event: NSEvent) {
+        checkCursor(event)
+    }
     
     func checkCursor(_ event:NSEvent) -> Void {
         let location = self.convert(event.locationInWindow, from: nil)

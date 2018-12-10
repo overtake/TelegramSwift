@@ -24,7 +24,7 @@ class ChatLayoutUtils: NSObject {
                 size = size.aspectFitted(NSMakeSize(200, 200))
             }
             if hasText {
-                size.width = max(200, size.width)
+                size.width = max(maxSize.width, size.width)
             }
             size.width = max(size.width, 100)
             size = NSMakeSize(max(46, size.width), max(46, size.height))
@@ -48,6 +48,9 @@ class ChatLayoutUtils: NSObject {
                 size = NSMakeSize(200, 200)
             } else if file.isVideo || file.isAnimated {
                 size = contentSize.fitted(maxSize)
+                if hasText {
+                    size.width = max(maxSize.width, size.width)
+                }
             } else if contentSize.height > 0 {
                 size = NSMakeSize(width, 70)
             } else if !file.previewRepresentations.isEmpty {

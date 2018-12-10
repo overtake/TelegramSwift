@@ -19,6 +19,7 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     override var firstResponder: NSResponder? {

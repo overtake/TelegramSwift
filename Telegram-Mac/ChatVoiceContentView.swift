@@ -56,7 +56,6 @@ class ChatVoiceContentView: ChatAudioContentView {
                 }
                 parameters.showPlayer(controller)
                 controller.start()
-                addGlobalAudioToVisible()
             }
         }
     }
@@ -87,7 +86,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     case let .playing(data):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
                         let width = floorToScreenPixels(scaleFactor: backingScaleFactor, parameters.waveformWidth * CGFloat(data.progress))
-                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated)
+                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated && !acceptDragging)
                         let layout = parameters.duration(for: data.current)
                         layout.measure(width: frame.width - 50)
                         durationView.update(layout)
@@ -95,7 +94,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     case let .fetching(progress, animated):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
                         let width = floorToScreenPixels(scaleFactor: backingScaleFactor, parameters.waveformWidth * CGFloat(progress))
-                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: animated)
+                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: animated && !acceptDragging)
                         durationView.update(parameters.durationLayout)
                     case .stoped, .waiting:
                         waveformView.set(foregroundColor: isIncomingConsumed ? wBackgroundColor : wForegroundColor, backgroundColor: wBackgroundColor)
@@ -104,7 +103,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     case let .paused(data):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
                         let width = floorToScreenPixels(scaleFactor: backingScaleFactor, parameters.waveformWidth * CGFloat(data.progress))
-                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated)
+                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated && !acceptDragging)
                         let layout = parameters.duration(for: data.current)
                         layout.measure(width: frame.width - 50)
                         durationView.update(layout)
@@ -131,7 +130,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         if acceptDragging, let parent = parent, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 let point = waveformView.convert(event.locationInWindow, from: nil)
-                let progress = Float(point.x/waveformView.frame.width)
+                let progress = Float(min(max(point.x, 0), waveformView.frame.width)/waveformView.frame.width)
                 switch song.state {
                 case .playing:
                     _ = controller.pause()

@@ -11,7 +11,7 @@ import TGUIKit
 import PostboxMac
 import TelegramCoreMac
 import SwiftSignalKitMac
-
+import AVFoundation
 private class ConnectionStatusView : View {
     private var textViewLayout:TextViewLayout?
     private var disableProxyButton: TitleButton?
@@ -121,6 +121,8 @@ private class ConnectionStatusView : View {
 
 
 class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
+   
+    
     
     private var isSingleLayout:Bool = false
     private var connectionStatusView:ConnectionStatusView? = nil
@@ -308,6 +310,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
         
     }
+    func videoTimebase(for stableId: AnyHashable) -> CMTimebase? {
+        return nil
+    }
+    public func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
+        
+    }
     
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
@@ -413,7 +421,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             var result = stringStatus(for: peerView, account: chatInteraction.account, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
             
             if chatInteraction.account.peerId == peerView.peerId  {
-                result = result.withUpdatedTitle(tr(L10n.peerSavedMessages))
+                result = result.withUpdatedTitle(L10n.peerSavedMessages)
             }
             if chatInteraction.account.peerId == peerView.peerId {
                 status = nil

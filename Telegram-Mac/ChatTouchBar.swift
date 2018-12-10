@@ -210,7 +210,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         chatInteraction.attachPicture()
     }
     @objc private func attachFile() {
-        chatInteraction.attachFile()
+        chatInteraction.attachFile(false)
     }
     @objc private func attachLocation() {
         chatInteraction.attachLocation()

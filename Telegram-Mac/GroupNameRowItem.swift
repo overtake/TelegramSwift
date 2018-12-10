@@ -50,7 +50,7 @@ class GroupNameRowView : GeneralInputRowView {
         addSubview(imageView)
         photoView.setFrameSize(50, 50)
         tranparentView.setFrameSize(50, 50)
-        
+        photoView.animatesAlphaOnFirstTransition = true
         tranparentView.layer?.cornerRadius = 25
     }
     
@@ -60,18 +60,18 @@ class GroupNameRowView : GeneralInputRowView {
         guard let item = item as? GroupNameRowItem else {return}
         
         photoView.isHidden = item.photo == nil
-        
+        imageView.isHidden = item.photo != nil
         if let path = item.photo, let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
             
             let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
             let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: image.size, resource: resource)], reference: nil, partialReference: nil)
-            photoView.setSignal(chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor), clearInstantly: false)
+            photoView.setSignal(chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor), clearInstantly: false, animate: true)
             
             let arguments = TransformImageArguments(corners: ImageCorners(radius: photoView.frame.width / 2), imageSize: photoView.frame.size, boundingSize: photoView.frame.size, intrinsicInsets: NSEdgeInsets())
             photoView.set(arguments: arguments)
             
         }
-        tranparentView.backgroundColor = item.photo == nil ? NSColor.clear : theme.colors.blackTransparent
+        tranparentView.backgroundColor = NSColor.clear
         sepator.backgroundColor = theme.colors.border
         imageView.image = theme.icons.newChatCamera
         imageView.sizeToFit()
@@ -86,9 +86,9 @@ class GroupNameRowView : GeneralInputRowView {
                 if item.photo == nil {
                     item.pickPicture?(true)
                 } else {
-                    ContextMenu.show(items: [ContextMenuItem(tr(L10n.peerCreatePeerContextUpdatePhoto), handler: {
+                    ContextMenu.show(items: [ContextMenuItem(L10n.peerCreatePeerContextUpdatePhoto, handler: {
                         item.pickPicture?(true)
-                    }), ContextMenuItem(tr(L10n.peerCreatePeerContextRemovePhoto), handler: {
+                    }), ContextMenuItem(L10n.peerCreatePeerContextRemovePhoto, handler: {
                         item.pickPicture?(false)
                     })], view: photoView, event: event)
                 }
@@ -118,9 +118,13 @@ class GroupNameRowView : GeneralInputRowView {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setStrokeColor(theme.colors.grayIcon.cgColor)
-        ctx.setLineWidth(1.0)
-        ctx.strokeEllipse(in: NSMakeRect(30, 17, 50, 50))
+        guard let item = item as? GroupNameRowItem else {return}
+
+        if item.photo == nil {
+            ctx.setStrokeColor(theme.colors.grayIcon.cgColor)
+            ctx.setLineWidth(1.0)
+            ctx.strokeEllipse(in: NSMakeRect(30, 17, 50, 50))
+        }
     }
     
     required init?(coder: NSCoder) {

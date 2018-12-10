@@ -56,7 +56,7 @@ enum MigrationData {
 
 
 func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, NoError> {
-    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: ""), supplementary: false, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
+    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion), supplementary: false, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
 
@@ -160,7 +160,12 @@ final class UnauthorizedApplicationContext {
         self.rootController = MajorNavigationController(AuthController.self, AuthController(account))
         rootController.alwaysAnimate = true
         let authSize = NSMakeSize(650, 600)
+
         
+        for (key, _) in UserDefaults.standard.dictionaryRepresentation() {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        UserDefaults.standard.synchronize()
         
         updateTheme(with: themeSettings, for: window)
         
@@ -656,12 +661,54 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 //                NSApp.terminate(nil)
 //            }
 //        }))
-//        
+//
+        let fontSizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
+
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            _ = updateThemeInteractivetly(postbox: account.postbox, f: { current -> ThemePaletteSettings in
+                if let index = fontSizes.firstIndex(of: Int32(current.fontSize)) {
+                    if index == fontSizes.count - 1 {
+                        return current
+                    } else {
+                        return current.withUpdatedFontSize(CGFloat(fontSizes[index + 1]))
+                    }
+                } else {
+                    return current
+                }
+            }).start()
+            if let index = fontSizes.firstIndex(of: Int32(theme.fontSize)), index == fontSizes.count - 1 {
+                return .rejected
+            }
+            return .invoked
+        }, with: self, for: .Equal, modifierFlags: [.command])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            _ = updateThemeInteractivetly(postbox: account.postbox, f: { current -> ThemePaletteSettings in
+                if let index = fontSizes.firstIndex(of: Int32(current.fontSize)) {
+                    if index == 0 {
+                        return current
+                    } else {
+                        return current.withUpdatedFontSize(CGFloat(fontSizes[index - 1]))
+                    }
+                } else {
+                    return current
+                }
+            }).start()
+            if let index = fontSizes.firstIndex(of: Int32(theme.fontSize)), index == 0 {
+                return .rejected
+            }
+            return  .invoked
+        }, with: self, for: .Minus, modifierFlags: [.command])
+        
+        
         
     }
     
     
-    
+    func userNotificationCenter(_ center: NSUserNotificationCenter, shouldPresent notification: NSUserNotification) -> Bool {
+        return true
+    }
     
     private func prepareTouchBarAccessability(_ controller: APController?) {
         setTextViewEnableTouchBar(controller == nil)
@@ -840,6 +887,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         
         let lockedSreenSignal = lockedScreenPromise.get()
         
+        var alsoNotified:Set<MessageId> = Set()
+        
         self.nofityDisposable.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([([Message], PeerGroupId?)], InAppNotificationSettings), NoError> in
             return account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> mapToSignal { (settings) -> Signal<([([Message], PeerGroupId?)], InAppNotificationSettings), NoError> in
                 
@@ -869,7 +918,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                         }
                     }
                     if let peer = peer {
-                        photos.append(peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters), genCap: false) |> map { data in return (message.id, data.0)})
+                        photos.append(peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
                     }
                 }
                 
@@ -893,6 +942,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             } |> deliverOnMainQueue).start(next: { messages, images, inAppSettings, screenIsLocked, inCall in
                 for (messages, groupId) in messages {
                     for message in messages {
+                        
+                        if alsoNotified.contains(message.id) {
+                            continue
+                        }
+                        
                         if message.author?.id != account.peerId {
                             var title:String = message.author?.displayTitle ?? ""
                             var hasReplyButton:Bool = !screenIsLocked
@@ -916,7 +970,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                             }
                             
                             if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
-                                text = tr(L10n.notificationLockedPreview).nsstring
+                                text = L10n.notificationLockedPreview.nsstring
                                 subText = nil
                             }
                             
@@ -927,35 +981,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                             notification.contentImage = screenIsLocked ? nil : images[message.id]
                             notification.hasReplyButton = hasReplyButton
                             
-                            
                             var dict: [String : Any] = [:]
                             
-                            
-                            //                        if let row = message.replyMarkup?.rows.first, message.id.peerId.id == 777000, row.buttons.count == 2 && !screenIsLocked {
-                            //                            notification.hasReplyButton = false
-                            //                            notification.hasActionButton = true
-                            //                            notification.actionButtonTitle = row.buttons[0].title
-                            //                            notification.otherButtonTitle = row.buttons[1].title
-                            //                            if let _ = notification.value(forKey: "_showsButtons") {
-                            //                                notification.setValue(true, forKey: "_showsButtons")
-                            //                            }
-                            //                            
-                            //                            switch row.buttons[0].action {
-                            //                            case .callback(let data):
-                            //                                dict["inline.callbackDecline"] = data.makeData()
-                            //                            default:
-                            //                                break
-                            //                            }
-                            //                            
-                            //                            switch row.buttons[1].action {
-                            //                            case .callback(let data):
-                            //                                
-                            //                                dict["inline.callbackConfirm"] = data.makeData()
-                            //                            default:
-                            //                                break
-                            //                            }
-                            //                        }
-                            //                        
+                 
                             if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
                                 notification.soundName = inAppSettings.tone
                             } else {
@@ -978,8 +1006,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                                 dict = [:]
                             }
                             
+                            alsoNotified.insert(message.id)
+                            
                             notification.userInfo = dict
                             NSUserNotificationCenter.default.deliver(notification)
+                            
                         }
                     }
                 }
@@ -1022,6 +1053,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             } else {
                 location = .peer(messageId.peerId)
             }
+            
+            closeAllModals()
             
             rightController.push(ChatController(account: account, chatLocation: location), false)
             

@@ -147,6 +147,7 @@ final class GridMessageItem: GridItem {
 }
 
 final class GridMessageItemNode: GridItemNode {
+    private var videoAccessory: ChatMessageAccessoryView?
     private var currentState: (Account, Media, CGSize)?
     private let imageView: TransformImageView
     private(set) var message: Message?
@@ -195,6 +196,22 @@ final class GridMessageItemNode: GridItemNode {
         
     }
     
+    private func fetch() {
+        if let currentState = currentState, let message = message {
+            if let file = message.media.first as? TelegramMediaFile {
+                fetchingDisposable.set(messageMediaFileInteractiveFetched(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start())
+            }
+        }
+    }
+    
+    private func cancelFetching() {
+        if let currentState = currentState, let message = message {
+            if let file = message.media.first as? TelegramMediaFile {
+               messageMediaFileCancelInteractiveFetch(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file))
+            }
+        }
+    }
+    
     
     override func mouseUp(with event: NSEvent) {
         if mouseInside() {
@@ -202,24 +219,33 @@ final class GridMessageItemNode: GridItemNode {
                 if interactions.presentation.state == .selecting {
                     interactions.update({$0.withToggledSelectedMessage(message.id)})
                     updateSelectionState(animated: true)
+                } else if let file = message.media.first as? TelegramMediaFile  {
+                    
+                    if let progressView = progressView {
+                        switch progressView.state {
+                        case .Fetching:
+                            if NSPointInRect(self.convert(event.locationInWindow, from: nil), progressView.frame) {
+                                cancelFetching()
+                            } else if file.isStreamable {
+                                showChatGallery(account: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
+                                    interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
+                                }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
+                            }
+                        case .Remote:
+                            fetch()
+                        default:
+                            showChatGallery(account: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
+                                interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
+                            }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
+                        }
+                        
+                    }
                 } else {
                     if _status == nil || _status == .Local {
                         showChatGallery(account: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
                             interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
-                            }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
-                    } else if let file = message.media.first as? TelegramMediaFile {
-                        if let status = _status {
-                            switch status {
-                            case .Remote:
-                                fetchingDisposable.set(messageMediaFileInteractiveFetched(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start())
-                            case .Fetching:
-                                messageMediaFileCancelInteractiveFetch(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file))
-                            default:
-                                break
-                            }
-                        }
+                        }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                     }
-                    
                 }
             }
         }
@@ -237,75 +263,116 @@ final class GridMessageItemNode: GridItemNode {
         return imageView.copy()
     }
     
+    private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile) {
+        let maxWidth = frame.width - 10
+        let text: String
+        
+        
+         text = String.durationTransformed(elapsed: file.videoDuration)
+        
+        
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: file.isStreamable, isCompact: true, fetch: { [weak self] in
+            self?.fetch()
+        }, cancelFetch: { [weak self] in
+            self?.cancelFetching()
+        })
+        needsLayout = true
+    }
+    
     
     func setup(account: Account, media: Media, message: Message, chatInteraction: ChatInteraction) {
+        
+        let semanticMedia = self.currentState?.1.id == media.id
+
+        
         if self.currentState == nil || self.currentState!.0 !== account || !self.currentState!.1.isEqual(to: media) {
             var mediaDimensions: CGSize?
             backgroundColor = theme.colors.background
             statusDisposable.set(nil)
-            fetchingDisposable.set(nil)
 
+            let imageFrame = NSMakeRect(1, 1, bounds.width - 4, bounds.height - 4)
+
+            
             if let media = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(media.representations)?.dimensions {
                 mediaDimensions = largestSize
 
                 let imageSize = largestSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
+                let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets())
+                self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
-                self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
-
-                if !self.imageView.hasImage {
-                    
-                    self.imageView.setSignal( mediaGridMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
-                        if let strongSelf = self {
-                            return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
-                        } else {
-                            return .complete()
-                        }
-                    })
-                }
+                self.imageView.setSignal( mediaGridMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                    if let strongSelf = self {
+                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor)
+                    } else {
+                        return .complete()
+                    }
+                })
                 progressView?.removeFromSuperview()
                 progressView = nil
+                
+                self.videoAccessory?.removeFromSuperview()
+                self.videoAccessory = nil
             } else if let file = media as? TelegramMediaFile, let imgSize = file.previewRepresentations.last?.dimensions {
 
                 mediaDimensions = imgSize
 
                 let imageSize = imgSize.aspectFilled(NSMakeSize(bounds.width, bounds.height))
+                let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets())
 
+                self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
-                self.imageView.setSignal(signal: cachedMedia(media: media, size: imageSize, scale: backingScaleFactor))
-
-
-                if self.imageView.layer?.contents == nil {
-                    self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
-                        if let strongSelf = self {
-                            return cacheMedia(signal: image, media: media, size: imageSize, scale: strongSelf.backingScaleFactor)
-                        } else {
-                            return .complete()
-                        }
-                    })
-                }
-
-
-
-                statusDisposable.set((chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue).start(next: { [weak self] status in
-
+                self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                     if let strongSelf = self {
-                        if strongSelf.progressView == nil {
-                            strongSelf.progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
-                            strongSelf.progressView?.userInteractionEnabled = false
-                            strongSelf.addSubview(strongSelf.progressView!)
-                            strongSelf.progressView?.center()
-                        }
-                        strongSelf._status = status
+                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor)
+                    } else {
+                        return .complete()
+                    }
+                })
+                
+                self.imageView.set(arguments: arguments)
 
-                        switch status {
-                        case let .Fetching(_, progress):
-                            strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
-                        case .Remote:
-                            strongSelf.progressView?.state = .Remote
-                        case .Local:
-                           strongSelf.progressView?.state = .Play
+                let updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue |> map { [weak message, weak file] status -> (MediaResourceStatus, MediaResourceStatus) in
+                    if let message = message, let file = file {
+                        if file.isStreamable && message.id.peerId.namespace != Namespaces.Peer.SecretChat {
+                            return (.Local, status)
                         }
+                    }
+                    return (status, status)
+                }  |> deliverOnMainQueue
 
+                statusDisposable.set(updatedStatusSignal.start(next: { [weak self] status, authentic in
+                    guard let `self` = self else {return}
+                    
+                    if self.progressView == nil {
+                        self.progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
+                        self.progressView?.userInteractionEnabled = false
+                        self.addSubview(self.progressView!)
+                        self.progressView?.center()
+                    }
+                    if self.videoAccessory == nil {
+                        self.videoAccessory = ChatMessageAccessoryView(frame: NSZeroRect)
+                        self.addSubview(self.videoAccessory!)
+                    }
+                    
+                    self.updateVideoAccessory(authentic, file: file)
+                    
+                    self._status = status
+                    
+                    let progressStatus: MediaResourceStatus
+                    switch authentic {
+                    case .Fetching:
+                        progressStatus = authentic
+                    default:
+                        progressStatus = status
+                    }
+                    
+                    switch progressStatus {
+                    case let .Fetching(_, progress):
+                        self.progressView?.state = .Fetching(progress: progress, force: false)
+                    case .Remote:
+                        self.progressView?.state = .Remote
+                    case .Local:
+                        self.progressView?.state = .Play
                     }
                 }))
 
@@ -338,6 +405,7 @@ final class GridMessageItemNode: GridItemNode {
             selectionView.setFrameOrigin(frame.width - selectionView.frame.width - 5, 5)
         }
         progressView?.center()
+        videoAccessory?.setFrameOrigin(5, 5)
     }
     
     func updateSelectionState(animated: Bool) {
@@ -372,7 +440,6 @@ final class GridMessageItemNode: GridItemNode {
     
     deinit {
         statusDisposable.dispose()
-        fetchingDisposable.dispose()
     }
 
 }

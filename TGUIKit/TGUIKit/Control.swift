@@ -165,8 +165,10 @@ open class Control: View {
                         super.isHidden = newValue
                     }
                     self.layer?.opacity = newValue ? 0.0 : 1.0
-                    self.layer?.animateAlpha(from: newValue ? 1.0 : 0.0, to: newValue ? 0.0 : 1.0, duration: 0.2, completion:{[weak self](completed) in
-                        self?.updateHiddenState(newValue)
+                    self.layer?.animateAlpha(from: newValue ? 1.0 : 0.0, to: newValue ? 0.0 : 1.0, duration: 0.2, completion:{[weak self] (completed) in
+                        if completed {
+                            self?.updateHiddenState(newValue)
+                        }
                     })
                 } else {
                     updateHiddenState(newValue)
@@ -251,7 +253,6 @@ open class Control: View {
     }
     
     override open func mouseUp(with event: NSEvent) {
-        
         longHandleDisposable.set(nil)
         longOverHandleDisposable.set(nil)
         mouseIsDown = false
@@ -274,6 +275,8 @@ open class Control: View {
             super.mouseUp(with: event)
         }
     }
+    
+    
     
     public func send(event:ControlEvent) -> Void {
         for (e,handler) in handlers {
@@ -343,6 +346,10 @@ open class Control: View {
         }
     }
     
+    
+    open override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        return NSDragOperation.generic
+    }
     
     
     

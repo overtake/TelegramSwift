@@ -14,6 +14,8 @@ import TelegramCoreMac
 class GalleryThumbsControl: ViewController {
     private let interactions: GalleryInteractions
    
+    var afterLayoutTransition:((Bool)->Void)? = nil
+    
     init(interactions: GalleryInteractions) {
         self.interactions = interactions
         super.init(frame: NSMakeRect(0, 0, 400, 50))
@@ -24,7 +26,6 @@ class GalleryThumbsControl: ViewController {
     
     func layoutItems(with items: [MGalleryItem], selectedIndex selected: Int, animated: Bool) -> UpdateTransition<MGalleryItem> {
       
-        
         let current: MGalleryItem? = selected > items.count - 1 || selected < 0 ? nil : items[selected]
         
         var newItems:[MGalleryItem] = []
@@ -123,6 +124,9 @@ class GalleryThumbsControl: ViewController {
         } else {
             interactions.showThumbsControl(genericView, animated)
         }
+        
+        afterLayoutTransition?(animated)
+        
         return UpdateTransition<MGalleryItem>(deleted: deleteIndices, inserted: indicesAndItems.map {($0.0, $0.1)}, updated: updateIndices.map {($0.0, $0.1)})
     }
     

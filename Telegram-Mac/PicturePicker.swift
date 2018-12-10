@@ -19,6 +19,7 @@ fileprivate class PickerObserver {
             if let img = image {
                 let size = img.size.aspectFilled(NSMakeSize(640, 640))
                 let resized = generateImage(size, contextGenerator: { size, ctx in
+                    ctx.clear(NSMakeRect(0, 0, size.width, size.height))
                     ctx.draw(img.precomposed(), in: NSMakeRect(0, 0, size.width, size.height))
                 })!
                 image = NSImage(cgImage: resized, size: size)

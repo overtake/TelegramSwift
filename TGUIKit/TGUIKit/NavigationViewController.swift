@@ -594,6 +594,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
     }
     
+    public func first(_ f:(ViewController)->Bool) -> ViewController? {
+        return self.stack.first(where: f)
+    }
+    
     func addShadowView(_ shadowDirection: NavigationShadowDirection, updateOrigin: Bool = true) {
         if updateOrigin {
             shadowView.layer?.opacity = shadowDirection == .left ? 1.0 : 0.0

@@ -78,7 +78,7 @@ private class ChatListDraggingContainerView : View {
     }
 }
 
-class ChatListRowView: TableRowView, ViewDisplayDelegate {
+class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
     
     private let swipingLeftView: View = View()
     private let swipingRightView: View = View()
@@ -241,18 +241,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
 //
          if let item = self.item as? ChatListRowItem {
             
-            if let context = item.account.applicationContext as? TelegramApplicationContext {
-                if context.layout == .minimisize {
-                    return
-                }
-            }
+           
             
             if !item.isSelected {
                 
                 if layer != containerView.layer {
                     ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(layer.bounds.width - .borderSize, 0, .borderSize, frame.height))
+                    ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
                 } else {
+                    
+                    if let context = item.account.applicationContext as? TelegramApplicationContext {
+                        if context.layout == .minimisize {
+                            return
+                        }
+                    }
                     
                     if backingScaleFactor == 1.0 {
                         ctx.setFillColor(backdorColor.cgColor)
@@ -261,6 +263,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
                     
                     ctx.setFillColor(theme.colors.border.cgColor)
                     ctx.fill(NSMakeRect(item.pinnedType == .last ? 0 : item.leftInset, NSHeight(layer.bounds) - .borderSize, item.pinnedType == .last ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
+                }
+            }
+            
+            if let context = item.account.applicationContext as? TelegramApplicationContext {
+                if context.layout == .minimisize {
+                    return
                 }
             }
             
@@ -341,7 +349,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
         
         addSubview(swipingRightView)
         addSubview(swipingLeftView)
-        
+        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         
         photo.userInteractionEnabled = false
         photo.frame = NSMakeRect(10, 8, 50, 50)
@@ -653,6 +661,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
     var containerX: CGFloat {
         return containerView.frame.minX
     }
+    
+    var width: CGFloat {
+        return containerView.frame.width
+    }
 
     var rightSwipingWidth: CGFloat {
         return swipingRightView.subviewsSize.width
@@ -669,7 +681,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate {
             initSwipingState()
         }
       
-        let delta = delta - additionalSwipingDelta
+        let delta = delta// - additionalSwipingDelta
         
         
         containerView.change(pos: NSMakePoint(delta, containerView.frame.minY), animated: false)

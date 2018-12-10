@@ -14,7 +14,7 @@ import AVKit
 import TelegramCoreMac
 import PostboxMac
 fileprivate class GMagnifyView : MagnifyView  {
-    private let progressView: RadialProgressView = RadialProgressView()
+    private var progressView: RadialProgressView?
 
     fileprivate let statusDisposable = MetaDisposable()
     
@@ -31,20 +31,41 @@ fileprivate class GMagnifyView : MagnifyView  {
         }))
     }
     private func updateProgress(_ status: MediaResourceStatus) {
-        progressView.isHidden = true
+        
         switch status {
         case let .Fetching(_, progress):
-            progressView.state = .ImpossibleFetching(progress: progress, force: false)
-            progressView.isHidden = false
+            if self.progressView == nil {
+                self.progressView = RadialProgressView()
+                self.addSubview(self.progressView!)
+                self.progressView!.center()
+            }
+            progressView?.state = .ImpossibleFetching(progress: progress, force: false)
         case .Local:
-            progressView.state = .Play
+
+            if let progressView = self.progressView {
+                progressView.state = .ImpossibleFetching(progress: 1, force: false)
+                self.progressView = nil
+                progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] complete in
+                    if complete {
+                        progressView?.removeFromSuperview()
+                    }
+                })
+            }
         case .Remote:
-            progressView.state = .Remote
-            progressView.isHidden = false
+            if self.progressView == nil {
+                self.progressView = RadialProgressView()
+                self.addSubview(self.progressView!)
+                self.progressView!.center()
+            }
+            progressView?.state = .Remote
         }
         
-        progressView.userInteractionEnabled = status != .Local
+        progressView?.userInteractionEnabled = status != .Local
         hideOrShowControls(hasPrev: false, hasNext: false, animated: false)
+    }
+    
+    override func mouseInside() -> Bool {
+        return super.mouseInside()
     }
     
     deinit {
@@ -69,15 +90,22 @@ fileprivate class GMagnifyView : MagnifyView  {
         self.hasNext = hasNext
         self.dismiss = dismiss
         super.init(contentView, contentSize: contentSize)
-        addSubview(progressView)
-        progressView.isHidden = true
-        progressView.center()
+        prev.alphaValue = 0
+        next.alphaValue = 0
         
     }
     
+    override var contentSize: NSSize {
+        didSet {
+            if frame.origin != NSZeroPoint {
+                self.frame = fillFrame(self)
+            }
+        }
+    }
+    
+    
     override func mouseUp(with theEvent: NSEvent) {
-        guard let window = window as? Window else {return}
-        let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        let point = convert(theEvent.locationInWindow, from: nil)
 
         if point.x > frame.width - 80 && self.hasNext() {
             nextAction()
@@ -102,7 +130,7 @@ fileprivate class GMagnifyView : MagnifyView  {
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        progressView.center()
+        progressView?.center()
     }
     
     required init?(coder: NSCoder) {
@@ -154,7 +182,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     private let _prev: ImageButton = ImageButton()
     private let _next: ImageButton = ImageButton()
     
-    
+    private var hasInited: Bool = false
     
     var selectedItemChanged: ((@escaping(MGalleryItem) -> Void)->Void)!
     var transition: ((@escaping(UpdateTransition<MGalleryItem>, MGalleryItem?) -> Void) -> Void)!
@@ -207,31 +235,49 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         cache.countLimit = 10
         captionView.isSelectable = false
-        captionView.userInteractionEnabled = true
+        captionView.userInteractionEnabled = false
         
         var dragged: NSPoint? = nil
         
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
-            guard let `self` = self else {return .rejected}
+            guard let `self` = self, !hasModals(self.window) else {return .rejected}
+            
+            if let view = self.controller.selectedViewController?.view as? GMagnifyView {
+                if let view = view.contentView as? SVideoView, view.insideControls {
+                    dragged = nil
+                    return .invokeNext
+                }
+                
+            }
+            
             if let _dragged = dragged {
                 let difference = NSMakePoint(abs(_dragged.x - event.locationInWindow.x), abs(_dragged.y - event.locationInWindow.y))
                 if difference.x >= 10 || difference.y >= 10 {
                     dragged = nil
                     return .invoked
                 }
-
             }
+            dragged = nil
+            
             if self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
                 self.captionView.mouseUp(with: event)
                 return .invoked
             } else if self.captionView.mouseInside() {
                 return .invoked
             }
-            if let view = self.controller.selectedViewController?.view as? GMagnifyView, let window = view.window, self.controller.view._mouseInside() {
-                guard window.mouseLocationOutsideOfEventStream.x > 80 && window.mouseLocationOutsideOfEventStream.x < window.frame.width - 80 else {
+            if let view = self.controller.selectedViewController?.view as? GMagnifyView, let window = view.window as? Window, self.controller.view._mouseInside() {
+                guard event.locationInWindow.x > 80 && event.locationInWindow.x < window.frame.width - 80 else {
                     view.mouseUp(with: event)
                     return .invoked
                 }
+                
+                if let view = view.contentView as? SVideoView, view.insideControls {
+                    return .rejected
+                }
+                if hasPictureInPicture {
+                    return .rejected
+                }
+                
                 _ = interactions.dismiss()
                 return .invoked
             }
@@ -318,7 +364,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     var isFullScreen: Bool {
         if let view = controller.selectedViewController?.view as? MagnifyView {
-            if view.contentView.frame.size == window.frame.size {
+            if view.contentView.window !== window {
                 return true
             }
         }
@@ -326,17 +372,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     
     func exitFullScreen() {
-        if let view = controller.selectedViewController?.view as? MagnifyView {
-            if let view = view.contentView as? AVPlayerView {
-
-                let controls = view.subviews.last?.subviews.last
-                if let view = controls?.subviews.first?.subviews.last?.subviews.first?.subviews.last?.subviews.last?.subviews.last {
-                    if let view = view as? NSButton {
-                        view.performClick(self)
-                    }
-                }
-            }
-        }
+        self.selectedItem?.toggleFullScreen()
     }
     
     var itemView:NSView? {
@@ -507,8 +543,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             } else {
                 if controller.selectedIndex != index {
                     controller.selectedIndex = index
+                    pageControllerDidEndLiveTransition(controller, force:true)
+                } else if currentController == nil {
+                    selectedIndex.set(index)
                 }
-                pageControllerDidEndLiveTransition(controller, force:true)
                 currentController = controller.selectedViewController
 
             }
@@ -561,7 +599,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if  let controllerView = pageController.selectedViewController?.view as? GMagnifyView, previousView != controllerView || force {
                 controllerView.hideOrShowControls(hasPrev: hasPrev, hasNext: hasNext, animated: !force)
                 let item = self.item(at: startIndex)
-                item.appear(for: controllerView.contentView)
+                if hasInited {
+                    item.appear(for: controllerView.contentView)
+
+                }
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
                 magnifyDisposable.set(controllerView.magnifyUpdater.get().start(next: { [weak self] value in
                     self?.captionView.isHidden = value > 1.0
@@ -700,7 +741,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         return nil
     }
     
-    func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) ->Void {
+    func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil, addVideoTimebase:(((AnyHashable, NSView))->Void)? = nil) ->Void {
         
         window.contentView?.addSubview(_prev)
         window.contentView?.addSubview(_next)
@@ -710,7 +751,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if let oldView = from(item.stableId), let oldWindow = oldView.window {
                 selectedView.isHidden = true
                 
-                ioDisposabe.set((item.image.get() |> take(1)).start(next: { [weak self, weak selectedView] image in
+                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(nil))).start(next: { [weak self, weak selectedView] image in
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame {
                         let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
@@ -718,14 +759,19 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         
                         selectedView?.contentSize = item.sizeValue.fitted(contentFrame.size)
                         if let _ = image, let strongSelf = self {
-                            self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: image, oldView: oldView, completion: { [weak strongSelf] in
+                            self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: image, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false
                                 strongSelf?.lockedTransition = false
                                 strongSelf?.captionView.change(opacity: 1.0)
+                                strongSelf?.hasInited = true
+                                strongSelf?.selectedItem?.appear(for: selectedView?.contentView)
                             }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                         } else {
                             selectedView?.isHidden = false
                             self?.lockedTransition = false
+                        }
+                        if let selectedView = selectedView {
+                            addVideoTimebase?((item.stableId, selectedView.contentView))
                         }
                     }
                     
@@ -761,7 +807,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         newView.wantsLayer = true
         newView.layer?.opacity = Float(newAlphaFrom) + 0.5
         newView.layer?.contents = contents
-        newView.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
+        newView.layer?.backgroundColor = self.selectedItem is MGalleryVideoItem ? .black : theme.colors.transparentBackground.cgColor
         
         
         let copyView = oldView.copy() as! NSView
@@ -782,37 +828,34 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
 
         
         
-        newView._change(pos: newRect.origin, animated: true, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
-        newView._change(opacity: newAlphaTo, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
+        newView._change(pos: newRect.origin, animated: true, duration: duration, timingFunction: .spring)
+        newView._change(opacity: newAlphaTo, duration: duration, timingFunction: .spring)
         
         
-        newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
-        newView.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
+        newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
+        newView.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
 
         
-        copyView._change(pos: newRect.origin, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
-        copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
-        copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
+        copyView._change(pos: newRect.origin, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: .spring)
+        copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
+        copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
         
         
         //.animateBounds(from: NSMakeRect(0, 0, oldRect.width, oldRect.height), to: NSMakeRect(0, 0, newRect.width, newRect.height), duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
 
      //   copyView._change(size: newRect.size, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
-        copyView._change(opacity: oldAlphaTo, duration: duration, timingFunction: CAMediaTimingFunctionName.spring) { [weak self] _ in
+        copyView._change(opacity: oldAlphaTo, duration: duration, timingFunction: .spring) { [weak self] _ in
             completion()
             self?.lockedTransition = false
-            if let strongSelf = self {
-                newView.removeFromSuperview()
-                copyView.removeFromSuperview()
-                
-            }
+            newView.removeFromSuperview()
+            copyView.removeFromSuperview()
         }
         CATransaction.commit()
 
 
     }
     
-    func animateOut( to:@escaping(AnyHashable)->NSView?, completion:(((Bool, AnyHashable?))->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) ->Void {
+    func animateOut( to:@escaping(AnyHashable)->NSView?, completion:(((Bool, AnyHashable?))->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil, addVideoTimebase:(((AnyHashable, NSView))->Void)? = nil) ->Void {
         
         lockedTransition = true
         
@@ -826,11 +869,14 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let newRect = window.convertToScreen(oldView.convert(oldView.bounds, to: nil))
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
-                ioDisposabe.set((item.image.get() |> take(1)).start(next: { [weak self] (image) in
+                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(nil))).start(next: { [weak self] (image) in
                     self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: image, oldView: oldView, completion: {
                         completion?((true, item.stableId))
                     }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                 }))
+                
+                addVideoTimebase?((item.stableId, selectedView.contentView))
+
 
             } else {
                 view._change(opacity: 0, completion: { (_) in

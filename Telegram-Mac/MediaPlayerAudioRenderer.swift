@@ -179,6 +179,7 @@ private final class AudioPlayerRendererContext {
     
     var paused = true
     var baseRate: Double
+    var volume: Float
     
     var audioGraph: AUGraph?
     var timePitchAudioUnit: AudioComponentInstance?
@@ -202,7 +203,7 @@ private final class AudioPlayerRendererContext {
         }
     }
     
-    init(controlTimebase: CMTimebase, playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+    init(controlTimebase: CMTimebase, playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
         assert(audioPlayerRendererQueue.isCurrent())
         
         self.forceAudioToSpeaker = forceAudioToSpeaker
@@ -211,7 +212,7 @@ private final class AudioPlayerRendererContext {
         self.controlTimebase = controlTimebase
         self.updatedRate = updatedRate
         self.audioPaused = audioPaused
-        
+        self.volume = volume
         self.playAndRecord = playAndRecord
         
         self.audioStreamDescription = audioRendererNativeStreamDescription()
@@ -410,6 +411,12 @@ private final class AudioPlayerRendererContext {
                 return
             }
             
+            AudioUnitSetParameter(outputAudioUnit, kHALOutputParam_Volume, kAudioUnitScope_Output, kOutputBus, max(min(1, volume), 0), 0)
+                        
+//            guard AudioUnitSetParameter(outputAudioUnit, kHALOutputParam_Volume, kAudioUnitScope_Output, kOutputBus, 0.1, 0) == noErr else {
+//                return
+//            }
+            
             var maximumFramesPerSlice: UInt32 = 4096
             AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maximumFramesPerSlice, 4)
             AudioUnitSetProperty(timePitchAudioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maximumFramesPerSlice, 4)
@@ -424,6 +431,16 @@ private final class AudioPlayerRendererContext {
             self.outputAudioUnit = outputAudioUnit
         }
         audioSessionAcquired()
+    }
+    
+    
+    
+    func setVolume(_ volume: Float)  {
+        assert(audioPlayerRendererQueue.isCurrent())
+        self.volume = max(min(1, volume), 0)
+        if let outputAudioUnit = outputAudioUnit {
+            AudioUnitSetParameter(outputAudioUnit, kHALOutputParam_Volume, kAudioUnitScope_Output, kOutputBus, self.volume, 0)
+        }
     }
     
     private func audioSessionAcquired() {
@@ -544,6 +561,10 @@ private final class AudioPlayerRendererContext {
                             } else {
                                 assertionFailure()
                             }
+                        case .restoreState:
+                            assertionFailure()
+                            self.checkBuffer()
+                            break
                         case .skipFrame:
                             self.checkBuffer()
                             break
@@ -625,10 +646,9 @@ enum MediaPlayerAudioSessionControl {
 final class MediaPlayerAudioRenderer {
     private var contextRef: Unmanaged<AudioPlayerRendererContext>?
     
-    private let audioClock: CMClock
     let audioTimebase: CMTimebase
     
-    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()
@@ -639,16 +659,29 @@ final class MediaPlayerAudioRenderer {
         
         CMAudioDeviceClockCreateFromAudioDeviceID(allocator: kCFAllocatorDefault, deviceID: deviceId, clockOut: &audioClock)
 
-        self.audioClock = audioClock!
+        if audioClock == nil {
+            CMAudioDeviceClockCreate(allocator: nil, deviceUID: nil, clockOut: &audioClock)
+        }
+        
+        
+        
         
         var audioTimebase: CMTimebase?
+        if let audioClock = audioClock {
+            CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: audioClock, timebaseOut: &audioTimebase)
+        }
         
-        CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: audioClock!, timebaseOut: &audioTimebase)
+        
+        if audioTimebase == nil {
+            CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
+        }
+        
         self.audioTimebase = audioTimebase!
         CMTimebaseSetRate(self.audioTimebase, rate: baseRate)
         audioPlayerRendererQueue.async {
-            let context = AudioPlayerRendererContext(controlTimebase: audioTimebase!, playAndRecord: playAndRecord, forceAudioToSpeaker: forceAudioToSpeaker, baseRate: baseRate, updatedRate: updatedRate, audioPaused: audioPaused)
+            let context = AudioPlayerRendererContext(controlTimebase: audioTimebase!, playAndRecord: playAndRecord, forceAudioToSpeaker: forceAudioToSpeaker, baseRate: baseRate, volume: volume, updatedRate: updatedRate, audioPaused: audioPaused)
             self.contextRef = Unmanaged.passRetained(context)
+            context.setVolume(volume)
         }
     }
     
@@ -673,6 +706,24 @@ final class MediaPlayerAudioRenderer {
             if let contextRef = self.contextRef {
                 let context = contextRef.takeUnretainedValue()
                 context.stop()
+            }
+        }
+    }
+    
+    func volume(_  completion: @escaping (Float) -> Void) {
+        audioPlayerRendererQueue.async {
+            if let contextRef = self.contextRef {
+                let context = contextRef.takeUnretainedValue()
+                completion(context.volume)
+            }
+        }
+    }
+    
+    func setVolume(_ volume: Float) {
+        audioPlayerRendererQueue.async {
+            if let contextRef = self.contextRef {
+                let context = contextRef.takeUnretainedValue()
+                context.setVolume(volume)
             }
         }
     }

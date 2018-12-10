@@ -21,10 +21,12 @@ class ReplyModel: ChatAccessoryModel {
     private var isLoading: Bool = false
     private let fetchDisposable = MetaDisposable()
     private let makesizeCallback:(()->Void)?
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, presentation: ChatAccessoryPresentation? = nil, makesizeCallback: (()->Void)? = nil) {
+    private let autodownload: Bool
+    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, makesizeCallback: (()->Void)? = nil) {
         self.isPinned = isPinned
         self.account = account
         self.makesizeCallback = makesizeCallback
+        self.autodownload = autodownload
         self.replyMessage = replyMessage
         super.init(presentation: presentation)
         if let replyMessage = replyMessage {
@@ -33,7 +35,7 @@ class ReplyModel: ChatAccessoryModel {
         } else {
             
             make(with: nil, display: false)
-            var messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
+            let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
                 if let message = view.message {
                     return .single(message)
                 }
@@ -162,12 +164,17 @@ class ReplyModel: ChatAccessoryModel {
                     }
                 }
                 
+                
                 if let updateImageSignal = updateImageSignal, let media = updatedMedia {
+                    
+                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale))
+
+                    
                     view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
-                        return cacheMedia(signal: image, media: media, size: arguments.imageSize, scale: System.backingScale)
+                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: System.backingScale)
                     })
                     
-                    if let media = media as? TelegramMediaImage {
+                    if let media = media as? TelegramMediaImage, self.autodownload {
                         self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
                     

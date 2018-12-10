@@ -442,7 +442,9 @@ public func hasModals(_ window: Window) -> Bool {
 
 public func closeAllModals() {
     for modal in activeModals {
-        modal.value?.close()
+        if let controller = modal.value?.controller, controller.closable {
+            modal.value?.close()
+        }
     }
 }
 

@@ -29,7 +29,7 @@ private class AvatarNodeParameters: NSObject {
 
 enum AvatarNodeState: Equatable {
     case Empty
-    case PeerAvatar(PeerId, [String], TelegramMediaImageRepresentation?)
+    case PeerAvatar(PeerId, [String], TelegramMediaImageRepresentation?, Message?)
     case GroupAvatar([Peer])
 
 }
@@ -38,7 +38,7 @@ func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     switch (lhs, rhs) {
     case (.Empty, .Empty):
         return true
-    case let (.PeerAvatar(lhsPeerId, lhsLetters, lhsPhotoRepresentations), .PeerAvatar(rhsPeerId, rhsLetters, rhsPhotoRepresentations)):
+    case let (.PeerAvatar(lhsPeerId, lhsLetters, lhsPhotoRepresentations, _), .PeerAvatar(rhsPeerId, rhsLetters, rhsPhotoRepresentations, _)):
         return lhsPeerId == rhsPeerId && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations
     case let (.GroupAvatar(lhsPeers), .GroupAvatar(rhsPeers)):
         if lhsPeers.count != rhsPeers.count {
@@ -116,11 +116,11 @@ class AvatarControl: NSView {
         self.viewDidChangeBackingProperties()
     }
     
-    public func setPeer(account: Account, peer: Peer?) {
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil) {
         self.account = account
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage)
+            state = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, message)
         } else {
             state = .Empty
         }
@@ -197,8 +197,8 @@ class AvatarControl: NSView {
                 self.layer?.contents = nil
                 let photo: PeerPhoto?
                 switch state {
-                case let .PeerAvatar(peerId, letters, representation):
-                    photo = .peer(peerId, representation, letters)
+                case let .PeerAvatar(peerId, letters, representation, message):
+                    photo = .peer(peerId, representation, letters, message)
                 case let .GroupAvatar(peers):
                     let representations: [PeerId:TelegramMediaImageRepresentation] = peers.reduce([:], { current, peer  in
                         var current = current

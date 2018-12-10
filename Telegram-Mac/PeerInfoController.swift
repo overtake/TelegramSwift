@@ -265,14 +265,28 @@ class PeerInfoController: EditableViewController<TableView> {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-            }, with: self, for: .Return, priority: .high)
+        }, with: self, for: .Return, priority: .high)
         
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
-            }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
+        }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
+        
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            if let peerView = self.peerView.modify ({$0}) {
+                if let peer = peerViewMainPeer(peerView) {
+                    if peer.isSupergroup {
+                        self.searchSupergroupUsers()
+                        return .invoked
+                    }
+                }
+            }
+            return .rejected
+        }, with: self, for: .F, priority: .low, modifierFlags: [.command])
     }
     
     

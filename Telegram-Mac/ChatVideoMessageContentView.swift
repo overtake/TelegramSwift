@@ -78,7 +78,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     private var durationView:ChatMessageAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
     private let videoCorner: VideoMessageCorner = VideoMessageCorner()
-    private var path:String? {
+    private var data:AVGifData? {
         didSet {
             updatePlayerIfNeeded()
         }
@@ -152,7 +152,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     
                     parameters.showPlayer(controller)
                     controller.start()
-                    addGlobalAudioToVisible()
                 }
                 
             }
@@ -172,21 +171,21 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 switch song.state {
                 case let .playing(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
-                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50)
+                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50, status: nil, isStreamable: false)
                     stateThumbView.isHidden = true
                 case .stoped, .waiting, .fetching:
                     playingProgressView.state = .None
-                    durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
+                    durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false)
                     stateThumbView.isHidden = false
                 case let .paused(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: true)
-                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50)
+                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50, status: nil, isStreamable: false)
                     stateThumbView.isHidden = false
                 }
                 
             } else {
                 playingProgressView.state = .None
-                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
+                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false)
                 stateThumbView.isHidden = false
             }
         }
@@ -266,7 +265,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     @objc func updatePlayerIfNeeded() {
         let timebase:CMTimebase? = globalAudio?.currentSong?.stableId == parent?.chatStableId ? globalAudio?.timebase : nil
-        player.set(path: acceptVisibility ? path : nil, timebase: timebase)
+        player.set(data: acceptVisibility ? data : nil, timebase: timebase)
     }
     
     func updateListeners() {
@@ -285,11 +284,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     deinit {
-        player.set(path: nil)
+        player.set(data: nil)
     }
     
     override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(to: media)
+        let mediaUpdated = self.media == nil || !self.media!.isSemanticallyEqual(to: media)
         
         
         super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
@@ -300,9 +299,8 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         if let media = media as? TelegramMediaFile {
             durationView.isUnread = !isIncomingConsumed
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50)
+                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false)
             }
-            
             
             
             if mediaUpdated {
@@ -310,12 +308,21 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 globalAudio?.add(listener: self)
                 
                 player.layer?.cornerRadius = size.height / 2
-                path = nil
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations, reference: nil, partialReference: nil)
+                data = nil
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
-                
-                player.setSignal( chatMessagePhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                
+                player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: mediaUpdated)
+                if player.hasImage {
+                    var bp:Int = 0
+                    bp += 1
+                }
+               
+                player.setSignal(chatMessageVideo(postbox: account.postbox, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media), scale: backingScaleFactor), cacheImage: { image in
+                    return cacheMedia(signal: image, media: media, arguments: arguments, scale: System.backingScale)
+                })
+
+                
                 player.set(arguments: arguments)
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -334,20 +341,29 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 if let updatedStatusSignal = updatedStatusSignal {
                     
                     
-                    self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
+                    self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnResourceQueue |> map {  status, resource -> (MediaResourceStatus, AVGifData?) in
+                        if resource.complete {
+                            return (status, AVGifData.dataFrom(resource.path))
+                        } else if status == .Local, let resource = media.resource as? LocalFileReferenceMediaResource {
+                            return (status, AVGifData.dataFrom(resource.localFilePath))
+                        } else {
+                            return (status, nil)
+                        }
+                    } |> deliverOnMainQueue).start(next: { [weak self] status,data in
                         if let strongSelf = self {
                             
-                            if resource.complete {
-                                strongSelf.path = resource.path
-                            } else {
-                                strongSelf.path = nil
-                            }
+                            strongSelf.data = data
                             
                             strongSelf.fetchStatus = status
                             if case .Local = status {
                                 if let progressView = strongSelf.progressView {
-                                    progressView.removeFromSuperview()
+                                    progressView.state = .Fetching(progress: 1.0, force: false)
                                     strongSelf.progressView = nil
+                                    progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                                        if completed {
+                                            progressView?.removeFromSuperview()
+                                        }
+                                    })
                                 }
                                 
                             } else {

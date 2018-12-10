@@ -78,7 +78,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }, theme.icons.chatAttachCamera))
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
-                        self?.chatInteraction.attachFile()
+                        self?.chatInteraction.attachFile(false)
                     }, theme.icons.chatAttachFile))
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverLocation, { [weak self] in
@@ -104,7 +104,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 }
                 self.controller?.popover?.hide()
                 Queue.mainQueue().justDispatch {
-                    self.chatInteraction.attachFile()
+                    self.chatInteraction.attachFile(true)
                 }
             }
         }, for: .Click)

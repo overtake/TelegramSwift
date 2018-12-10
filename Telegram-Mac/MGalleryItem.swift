@@ -110,6 +110,28 @@ enum GalleryEntry : Comparable, Identifiable {
         return nil
     }
     
+    var file:TelegramMediaFile? {
+        switch self {
+        case .message(let entry):
+            if let media = entry.message!.media[0] as? TelegramMediaFile {
+                return media
+            } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
+                switch media.content {
+                case let .Loaded(content):
+                    return content.file
+                default:
+                    return nil
+                }
+            }
+        case .instantMedia(let media, _):
+            return media.media as? TelegramMediaFile
+        default:
+            return nil
+        }
+        
+        return nil
+    }
+    
     func imageReference( _ image: TelegramMediaImage) -> ImageMediaReference {
         switch self {
         case let .message(entry):
@@ -250,18 +272,35 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         return .single(.Local)
     }
     
+    var realStatus:Signal<MediaResourceStatus, NoError> {
+       return self.status
+    }
+    
+    func toggleFullScreen() {
+        
+    }
+    func togglePlayerOrPause() {
+        
+    }
+    func rewindBack() {
+        
+    }
+    func rewindForward() {
+        
+    }
+    
     init(_ account:Account, _ entry:GalleryEntry, _ pagerSize:NSSize) {
         self.entry = entry
         self.account = account
         self._pagerSize = pagerSize
         if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: caption, color: .white, font: .normal(.text))
+            _ = attr.append(string: caption.prefixWithDots(255), color: .white, font: .normal(.text))
             
-            attr.detectLinks(type: [.Links, .Mentions], account: account, color: .linkColor, openInfo: { peerId, _, _, _ in
-                account.context.mainNavigation?.push(PeerInfoController.init(account: account, peerId: peerId))
-                viewer?.close()
-            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
+//            attr.detectLinks(type: [.Links, .Mentions], account: account, color: .linkColor, openInfo: { peerId, _, _, _ in
+//                account.context.mainNavigation?.push(PeerInfoController.init(account: account, peerId: peerId))
+//                viewer?.close()
+//            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
             
             self.caption = TextViewLayout(attr, alignment: .center)
             self.caption?.interactions = globalLinkExecutor
@@ -277,15 +316,26 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         var first:Bool = true
         
         let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] image, view  in
+            
             view.layer?.contents = image
-            view.layer?.backgroundColor = theme.colors.transparentBackground.cgColor
+            if !first {
+                view.layer?.animateContents()
+            }
+            first = false
+            view.layer?.backgroundColor = self is MGalleryPhotoItem ? theme.colors.transparentBackground.cgColor : .black
 
             if let `self` = self, let magnify = view.superview?.superview as? MagnifyView {
                 if let size = image?.size, size.width > 150 && size.height > 150, size.width - size.height != self.sizeValue.width - self.sizeValue.height {
                     self.modifiedSize = size
                     if magnify.contentSize != self.sizeValue {
                         magnify.contentSize = self.sizeValue
+                    } else {
+                        let size = magnify.contentSize
+                        magnify.contentSize = size
                     }
+                } else {
+                    let size = magnify.contentSize
+                    magnify.contentSize = size
                 }
             }
             
@@ -313,6 +363,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
     }
     
+    var notFittedSize: NSSize {
+        return sizeValue
+    }
+    
     func cancel() {
         fetching.set(nil)
     }
@@ -330,6 +384,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         viewDisposable.dispose()
         fetching.dispose()
         magnifyDisposable.dispose()
+        assertOnMainThread()
     }
     
 }

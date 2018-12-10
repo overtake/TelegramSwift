@@ -299,6 +299,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     }
     
     open override func setFrameSize(_ newSize: NSSize) {
+        if !newSize.width.isFinite {
+            var bp:Int = 0
+            bp += 1
+        }
         super.setFrameSize(newSize)
         
         if let size = customHandler.size {

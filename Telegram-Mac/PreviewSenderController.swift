@@ -442,9 +442,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let reorder: (Int, Int) -> Void = { [weak self] from, to in
             guard let `self` = self else {return}
             let medias:[PreviewSendingState] = [.media, .file, .collage]
+            self.urls.move(at: from, to: to)
             for type in medias {
                 self.cachedMedia[type]?.media.move(at: from, to: to)
-                self.urls.move(at: from, to: to)
             }
             self.updateSize(self.frame.width, animated: true)
         }
@@ -541,8 +541,13 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     
                     self.urls.move(at: previous, to: current)
                     self.genericView.tableView.moveItem(from: previous, to: current)
-                    self.cachedMedia[state]?.items.move(at: previous, to: current)
-                    self.cachedMedia[state]?.media.move(at: previous, to: current)
+                    
+                    let medias:[PreviewSendingState] = [.media, .file, .collage]
+                    for type in medias {
+                        self.cachedMedia[type]?.media.move(at: previous, to: current)
+                        self.cachedMedia[type]?.items.move(at: previous, to: current)
+                    }
+                    self.makeItems(self.urls)
                 })
             } else {
                 self.genericView.tableView.resortController = nil
@@ -559,7 +564,17 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     private func updateSize(_ width: CGFloat, animated: Bool) {
         if let contentSize = mainWindow.contentView?.frame.size {
-            self.modal?.resize(with: NSMakeSize(width, min(contentSize.height - 70, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: animated)
+            
+            var listHeight = genericView.tableView.listHeight
+            if inputInteraction.state.inputQueryResult != nil {
+                listHeight = max(150, listHeight)
+            }
+            
+            let height = listHeight + max(genericView.additionHeight, 88)
+
+            
+            self.modal?.resize(with: NSMakeSize(width, min(contentSize.height - 70, height)), animated: animated)
+            genericView.layout()
         }
     }
   
@@ -590,9 +605,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     override func returnKeyAction() -> KeyHandlerResult {
         if let currentEvent = NSApp.currentEvent {
-            if inputInteraction.state.inputQueryResult != nil {
-                return .rejected
-            }
+//            if inputInteraction.state.inputQueryResult != nil {
+//                return .rejected
+//            }
             if FastSettings.checkSendingAbility(for: currentEvent), didSetReady {
                 send()
                 return .invoked
@@ -810,6 +825,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         archiverStatusesDisposable.dispose()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        closeAllPopovers(for: mainWindow)
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if !sent, let temp = temporaryInputState {
@@ -891,6 +911,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
         }
         
+        contextChatInteraction.add(observer: self)
+        
     }
     
     func showEmoji(for control: Control) {
@@ -912,8 +934,27 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return false
     }
     
+    
     func textViewTextDidChange(_ string: String) {
+        if FastSettings.isPossibleReplaceEmojies {
+            let previousString = contextChatInteraction.presentation.effectiveInput.inputText
+            
+            if previousString != string {
+                let difference = string.replacingOccurrences(of: previousString, with: "")
+                if difference.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
+                    let replacedEmojies = string.stringEmojiReplacements
+                    if string != replacedEmojies {
+                        self.genericView.textView.setString(replacedEmojies)
+                    }
+                }
+            }
+            
+        }
         
+        let attributed = genericView.textView.attributedString()
+        let range = self.genericView.textView.selectedRange()
+        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
+        contextChatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -923,8 +964,26 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? PreviewContextState, let oldValue = oldValue as? PreviewContextState {
             if value.inputQueryResult != oldValue.inputQueryResult {
+                updateSize(frame.width, animated: animated)
                 inputContextHelper.context(with: value.inputQueryResult, for: self.genericView, relativeView: self.genericView.textContainerView, animated: animated)
             }
+        } else if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
+            if value.effectiveInput != oldValue.effectiveInput {
+                updateInput(value, prevState: oldValue, animated)
+            }
+        }
+    }
+    
+    private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
+        
+        let textView = genericView.textView
+        
+        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
+            textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+        }
+        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
+        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+            textView.setSelectedRange(range)
         }
     }
     
@@ -934,11 +993,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let animated: Bool = true
         let string = genericView.textView.string()
 
-        if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, !string.isEmpty, let (possibleQueryRange, possibleTypes, _) = textInputStateContextQueryRangeAndType(ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: []), includeContext: false) {
+        if let peer = chatInteraction.peer, !string.isEmpty, let (possibleQueryRange, possibleTypes, _) = textInputStateContextQueryRangeAndType(ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: []), includeContext: false) {
             
-            if possibleTypes.contains(.mention) {
+            if (possibleTypes.contains(.mention) && (peer.isGroup || peer.isSupergroup)) || possibleTypes.contains(.emoji) {
                 let query = String(string[possibleQueryRange])
-                if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, account: account, filter: .filterSelf(includeNameless: true, includeInlineBots: false)) {
+                if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, possibleTypes.contains(.emoji) ? .emoji(query) : .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, account: account, filter: .filterSelf(includeNameless: true, includeInlineBots: false)) {
                     self.contextQueryState?.1.dispose()
                     var inScope = true
                     var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
@@ -982,6 +1041,12 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 }
             })
         }
+        
+        let attributed = self.genericView.textView.attributedString()
+        
+        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
+        contextChatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
+
     }
     
     func textViewDidReachedLimit(_ textView: Any) {

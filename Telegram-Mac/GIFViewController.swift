@@ -56,8 +56,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
 
 private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
-        let result = view.items.prefix(70).compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
-        
+        let result = view.items.compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
         let values = makeMediaEnties(result, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100))
         var wrapped:[InputContextEntry] = []
         for value in values {

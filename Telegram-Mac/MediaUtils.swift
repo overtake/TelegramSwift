@@ -353,9 +353,6 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                     }
                 }
                 
-                c.setBlendMode(.copy)
-                
-                c.setBlendMode(.copy)
                 if let blurredThumbnailImage = blurredThumbnailImage {
                     c.interpolationQuality = .low
                     c.draw(blurredThumbnailImage, in: fittedRect)
@@ -417,6 +414,7 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
+                    c.setFillColor(theme.colors.grayBackground.cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -653,6 +651,7 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
             
             context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
+                
                 if arguments.boundingSize != arguments.imageSize {
                     switch arguments.resizeMode {
                     case .blurBackground:
@@ -679,16 +678,22 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
                                 c.setBlendMode(.copy)
                             }
                         } else {
+                            c.setBlendMode(.normal)
+                            c.setFillColor(theme.colors.grayForeground.cgColor)
                             c.fill(arguments.drawingRect)
                         }
                     case let .fill(color):
+                        c.setBlendMode(.normal)
                         c.setFillColor(color.cgColor)
                         c.fill(arguments.drawingRect)
                     case .fillTransparent:
+                        c.setBlendMode(.normal)
                         c.setFillColor(theme.colors.transparentBackground.cgColor)
                         c.fill(arguments.drawingRect)
                     case .none:
-                        break
+                        c.setBlendMode(.normal)
+                        c.setFillColor(theme.colors.grayForeground.cgColor)
+                        c.fill(arguments.drawingRect)
                     case .imageColor:
                         break
                     }
@@ -704,6 +709,12 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
                 if let fullSizeImage = fullSizeImage {
                     c.interpolationQuality = .medium
                     c.draw(fullSizeImage, in: fittedRect)
+                }
+                
+                if blurredThumbnailImage == nil && fullSizeImage == nil && arguments.boundingSize == arguments.imageSize {
+                    c.setBlendMode(.normal)
+                    c.setFillColor(theme.colors.grayForeground.cgColor)
+                    c.fill(arguments.drawingRect)
                 }
             })
             
@@ -1343,8 +1354,9 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
             
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
+                c.setFillColor(theme.colors.grayBackground.cgColor)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.fill(arguments.drawingRect)
+                   c.fill(arguments.drawingRect)
                 }
                 
                 c.setBlendMode(.copy)
@@ -1357,6 +1369,11 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
                 if let fullSizeImage = fullSizeImage {
                     c.interpolationQuality = .medium
                     c.draw(fullSizeImage, in: fittedRect)
+                }
+                
+                if arguments.boundingSize == arguments.imageSize && fullSizeImage == nil && blurredThumbnailImage == nil {
+                    c.setBlendMode(.normal)
+                    c.fill(arguments.drawingRect)
                 }
             })
             
@@ -1443,7 +1460,8 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                     c.draw(thumbnailImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
                 }
                 telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
-                
+                telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
+
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             

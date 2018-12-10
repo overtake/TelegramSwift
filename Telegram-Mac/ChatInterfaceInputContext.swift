@@ -108,15 +108,36 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             if inputText.startIndex != inputText.index(before: index) {
                 let prev = inputText.index(before: inputText.index(before: index))
                 let scalars:CharacterSet = CharacterSet.alphanumerics
-                
                 if let scalar = inputText[prev].unicodeScalars.first, scalars.contains(scalar) && inputText[prev] != newlineScalar {
                     possibleTypes = []
+                }
+                switch possibleTypes {
+                case .emoji:
+                    if index != inputText.endIndex {
+                        if let scalar = inputText[index].unicodeScalars.first {
+                            if !scalars.contains(scalar) {
+                                possibleTypes = []
+                            }
+                        } else {
+                            possibleTypes = []
+                        }
+                    } else {
+                         possibleTypes = []
+                    }
+                    
+                default:
+                    break
                 }
             }
         }
         
         var definedType = false
         
+        var characterSet = CharacterSet.alphanumerics
+        characterSet.insert(hashScalar.unicodeScalars.first!)
+        characterSet.insert(atScalar.unicodeScalars.first!)
+        characterSet.insert(slashScalar.unicodeScalars.first!)
+        characterSet.insert(emojiScalar.unicodeScalars.first!)
         while true {
             let c = inputText[index]
             
@@ -125,7 +146,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             
             //if index == inputText.startIndex {
                 //|| (inputText[inputText.index(before: index)] == spaceScalar || inputText[inputText.index(before: index)] == newlineScalar)
-                if c == spaceScalar || c == newlineScalar {
+                if !characterSet.contains(c.unicodeScalars.first!) {
                     possibleTypes = []
                 } else if c == hashScalar {
                     possibleTypes = possibleTypes.intersection([.hashtag])

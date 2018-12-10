@@ -285,14 +285,14 @@ private func prepareEntries(left: [AppearanceWrapperEntry<GeneralSettingsEntry>]
 
 class GeneralSettingsViewController: TableViewController {
     
-    
+    private let disposable = MetaDisposable()
     override var removeAfterDisapper:Bool {
         return true
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        readyOnce()
+       
         
         let postbox = account.postbox
         let inputPromise:ValuePromise<SendingType> = ValuePromise(FastSettings.sendingType, ignoreRepeated: true)
@@ -333,7 +333,7 @@ class GeneralSettingsViewController: TableViewController {
         
         let previos:Atomic<[AppearanceWrapperEntry<GeneralSettingsEntry>]> = Atomic(value: [])
         
-        genericView.merge(with: combineLatest(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue, inputPromise.get() |> deliverOnMainQueue, forceTouchPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, _, appearance -> TableUpdateTransition in
+        let signal = combineLatest(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue, inputPromise.get() |> deliverOnMainQueue, forceTouchPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, _, appearance -> TableUpdateTransition in
             
             let baseSettings: BaseApplicationSettings
             if let settings = settings.values[ApplicationSpecificPreferencesKeys.baseAppSettings] as? BaseApplicationSettings {
@@ -345,8 +345,15 @@ class GeneralSettingsViewController: TableViewController {
             let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)
             return prepareEntries(left: previous, right: entries, arguments: arguments, initialSize: initialSize.modify({$0}))
-
-        } |> deliverOnMainQueue )
+            
+        } |> deliverOnMainQueue
+        
+        disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with:  transition)
+            self?.readyOnce()
+        }))
+        
+       
         
     }
     
@@ -375,6 +382,9 @@ class GeneralSettingsViewController: TableViewController {
         
     }
     
+    deinit {
+        disposable.dispose()
+    }
 
     
     override func viewDidAppear(_ animated: Bool) {

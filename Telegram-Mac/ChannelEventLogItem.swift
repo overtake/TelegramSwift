@@ -347,9 +347,17 @@ class ServiceEventLogItem: TableRowItem {
                     break
                 }
             case .deleteMessage:
-                serviceInfo = ServiceTextInfo(text: tr(L10n.eventLogServiceDeletedMessage(peer.displayTitle)), firstLink: peerLink, secondLink: nil)
-            case .editMessage:
-                serviceInfo = ServiceTextInfo(text: tr(L10n.eventLogServiceEditedMessage(peer.displayTitle)), firstLink: peerLink, secondLink: nil)
+                serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+            case let .editMessage(prev, new):
+                if new.media.first is TelegramMediaImage || new.media.first is TelegramMediaFile {
+                    if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
+                        serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                    } else {
+                        serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                    }
+                } else {
+                    serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                }
             case let .participantToggleBan(prev, new):
                 switch prev.participant {
                 case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo):
