@@ -65,6 +65,8 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             messageText = "🎮 \(game.title)".nsstring
         case let invoice as TelegramMediaInvoice:
             messageText = invoice.title.nsstring
+        case let poll as TelegramMediaPoll:
+            messageText = "📊 \(poll.text)".nsstring
         default:
             break
         }
@@ -195,41 +197,41 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
         switch action.action {
         case let .addedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
-                return tr(L10n.chatServiceGroupAddedSelf(authorName))
+                return L10n.chatServiceGroupAddedSelf(authorName)
             } else {
-                return tr(L10n.chatServiceGroupAddedMembers(authorName, peerDisplayTitles(peerIds, message.peers)))
+                return L10n.chatServiceGroupAddedMembers(authorName, peerDebugDisplayTitles(peerIds, message.peers))
             }
         case .channelMigratedFromGroup:
             return tr(L10n.chatServiceGroupMigratedToSupergroup)
         case let .groupCreated(title: title):
             if peer.isChannel {
-                return tr(L10n.chatServiceChannelCreated)
+                return L10n.chatServiceChannelCreated
             } else {
-                return tr(L10n.chatServiceGroupCreated(authorName, title))
+                return L10n.chatServiceGroupCreated(authorName, title)
             }
         case .groupMigratedToChannel:
-            return tr(L10n.chatServiceGroupMigratedToSupergroup)
+            return L10n.chatServiceGroupMigratedToSupergroup
         case .historyCleared:
             return ""
         case .historyScreenshot:
-            return tr(L10n.chatServiceGroupTookScreenshot(authorName))
+            return L10n.chatServiceGroupTookScreenshot(authorName)
         case let .joinedByLink(inviter: peerId):
             if peerId == authorId {
-                return tr(L10n.chatServiceGroupJoinedByLink(tr(L10n.chatServiceYou)))
+                return L10n.chatServiceGroupJoinedByLink(tr(L10n.chatServiceYou))
             } else {
-                return tr(L10n.chatServiceGroupJoinedByLink(authorName))
+                return L10n.chatServiceGroupJoinedByLink(authorName)
             }
         case let .messageAutoremoveTimeoutUpdated(seconds):
             if seconds > 0 {
-                return tr(L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds))))
+                return L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))
             } else {
-                return tr(L10n.chatServiceSecretChatDisabledTimer(authorName))
+                return L10n.chatServiceSecretChatDisabledTimer(authorName)
             }
         case let .photoUpdated(image: image):
             if let _ = image {
-                return peer.isChannel ? tr(L10n.chatServiceChannelUpdatedPhoto) : tr(L10n.chatServiceGroupUpdatedPhoto(authorName))
+                return peer.isChannel ? L10n.chatServiceChannelUpdatedPhoto : L10n.chatServiceGroupUpdatedPhoto(authorName)
             } else {
-                return peer.isChannel ? tr(L10n.chatServiceChannelRemovedPhoto) : tr(L10n.chatServiceGroupRemovedPhoto(authorName))
+                return peer.isChannel ? L10n.chatServiceChannelRemovedPhoto : L10n.chatServiceGroupRemovedPhoto(authorName)
             }
         case .pinnedMessageUpdated:
             var authorName:String = ""
@@ -246,23 +248,23 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                     replyMessageText = pullText(from: message) as String
                 }
             }
-            return tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefixWithDots(15)))
+            return L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefixWithDots(15))
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
-                return tr(L10n.chatServiceGroupRemovedSelf(authorName))
+                return L10n.chatServiceGroupRemovedSelf(authorName)
             } else {
-                return tr(L10n.chatServiceGroupRemovedMembers(authorName, peerCompactDisplayTitles(peerIds, message.peers)))
+                return L10n.chatServiceGroupRemovedMembers(authorName, peerCompactDisplayTitles(peerIds, message.peers))
             }
 
         case let .titleUpdated(title: title):
-            return peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle(authorName, title))
+            return peer.isChannel ? L10n.chatServiceChannelUpdatedTitle(title) : L10n.chatServiceGroupUpdatedTitle(authorName, title)
         case let .phoneCall(callId: _, discardReason: reason, duration: duration):
             
             if let duration = duration, duration > 0 {
                 if message.author?.id == account.peerId {
-                    return tr(L10n.chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration)))
+                    return L10n.chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration))
                 } else {
-                    return tr(L10n.chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration)))
+                    return L10n.chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
                 }
             }
             
@@ -271,13 +273,13 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
 
                 switch reason {
                 case .busy:
-                    return outgoing ? tr(L10n.chatListServiceCallCancelled) : tr(L10n.chatListServiceCallMissed)
+                    return outgoing ? L10n.chatListServiceCallCancelled : L10n.chatListServiceCallMissed
                 case .disconnect:
                     return tr(L10n.chatListServiceCallMissed)
                 case .hangup:
-                    return outgoing ? tr(L10n.chatListServiceCallCancelled) : tr(L10n.chatListServiceCallMissed)
+                    return outgoing ? L10n.chatListServiceCallCancelled : L10n.chatListServiceCallMissed
                 case .missed:
-                    return outgoing ? tr(L10n.chatListServiceCallCancelled) : tr(L10n.chatListServiceCallMissed)
+                    return outgoing ? L10n.chatListServiceCallCancelled : L10n.chatListServiceCallMissed
                 }
             }
         case let .gameScore(gameId: _, score: score):
@@ -289,7 +291,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                     }
                 }
             }
-            var text = tr(L10n.chatListServiceGameScored1Countable(Int(score), gameName))
+            var text = L10n.chatListServiceGameScored1Countable(Int(score), gameName)
             if let peer = messageMainPeer(message) {
                 if peer.isGroup || peer.isSupergroup {
                     text = (message.author?.compactDisplayTitle ?? "") + " " + text
@@ -297,7 +299,7 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             }
             return text
         case let .paymentSent(currency, totalAmount):
-            return tr(L10n.chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency)))
+            return L10n.chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
         case .unknown:
             break
         case .customText(let text, _):

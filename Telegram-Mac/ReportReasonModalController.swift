@@ -92,7 +92,7 @@ fileprivate class ReportReasonModalController: ModalViewController {
             updateState(.porno)
         }))
         
-        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonChildAbuse, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .selectable(current == .childAbuse), action: {
+        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: L10n.reportReasonChildAbuse, type: .selectable(current == .childAbuse), action: {
             updateState(.childAbuse)
         }))
         

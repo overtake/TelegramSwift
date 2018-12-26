@@ -290,7 +290,7 @@ class StorageUsageController: TableViewController {
             })
         
         let statsPromise = Promise<CacheUsageStatsResult?>()
-        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: account) |> map { Optional($0) }))
+        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: account, additionalCachePaths: [], logFilesPath: "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/logs".nsstring.expandingTildeInPath) |> map { Optional($0) }))
         
         let actionDisposables = DisposableSet()
         
@@ -350,7 +350,7 @@ class StorageUsageController: TableViewController {
                                         }
                                     }
                                 }
-                                statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize, tempPaths: stats.tempPaths, tempSize: stats.tempSize))))
+                                statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize, tempPaths: stats.tempPaths, tempSize: stats.tempSize, immutableSize: stats.immutableSize))))
                                 
                                 clearDisposable.set(clearCachedMediaResources(account: account, mediaResourceIds: clearResourceIds).start())
                             }
@@ -362,7 +362,7 @@ class StorageUsageController: TableViewController {
         }, clearAll: {
             let path = account.postbox.mediaBox.basePath
             _ = showModalProgress(signal: combineLatest(clearImageCache(), account.postbox.mediaBox.fileConxtets() |> mapToSignal { clearCache(path, excludes: $0) }), for: mainWindow).start()
-            statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0))))
+            statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<StorageUsageEntry>]> = Atomic(value: [])

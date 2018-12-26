@@ -172,7 +172,7 @@ private class PhoneCallWindowView : View {
         switch state {
         case .accepting:
             statusTextView.stringValue = tr(L10n.callStatusConnecting)
-        case .active(_, let visual, _, _):
+        case .active(_, _, let visual, _, _, _):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
             secureTextView.update(layout)
@@ -562,7 +562,7 @@ class PhoneCallWindowController {
     
     private func updatePeerUI(_ user:TelegramUser) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations, reference: nil, partialReference: nil)
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
         
 
         

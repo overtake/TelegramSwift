@@ -726,7 +726,7 @@ public final class TextViewLayout : Equatable {
         
         let index = findIndex(location: point)
         
-        guard index != -1 else {
+        guard index != -1, !lines.isEmpty else {
             return nil
         }
         
@@ -737,7 +737,13 @@ public final class TextViewLayout : Equatable {
         
         let width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
         
-        if  width > point.x {
+        var point = point
+        
+         //point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
+        
+        point.x -= ((layoutSize.width - line.frame.width) * penFlush)
+        
+        if  width > point.x, point.x >= 0 {
             var pos = CTLineGetStringIndexForPosition(line.line, point);
             pos = min(max(0,pos),attributedString.length - 1)
             var range:NSRange = NSMakeRange(NSNotFound, 0)

@@ -12,6 +12,29 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 
+private func generatePollAddOption(_ color: NSColor) -> CGImage {
+    let image = NSImage(named: "Icon_PollAddOption")!.precomposed(color)
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        ctx.setFillColor(.white)
+        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
+        
+        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
+private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
+    let image = NSImage(named: "Icon_PollDeleteOption")!.precomposed(color)
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        ctx.setFillColor(.white)
+        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
+        
+        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+    })!
+}
 
 private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(10, 10), contextGenerator: { size, ctx in
@@ -652,6 +675,7 @@ struct TelegramIconsTheme {
     let chatAttachPhoto: CGImage
     let chatAttachCamera: CGImage
     let chatAttachLocation: CGImage
+    let chatAttachPoll: CGImage
     
     let mediaEmptyShared: CGImage
     let mediaEmptyFiles: CGImage
@@ -968,6 +992,17 @@ struct TelegramIconsTheme {
     let videoCompactFetching: CGImage
     let compactStreamingFetchingCancel : CGImage
     
+    let customLocalizationDelete: CGImage
+    
+    let pollAddOption: CGImage
+    let pollDeleteOption: CGImage
+    
+    let resort: CGImage
+    
+    let chatPollVoteUnselected: CGImage
+    let chatPollVoteUnselectedBubble_incoming: CGImage
+    let chatPollVoteUnselectedBubble_outgoing: CGImage
+
     
    // let videoMessageChatCap: CGImage
 
@@ -1070,6 +1105,16 @@ class TelegramPresentationTheme : PresentationTheme {
     var dark: Bool {
         return colors.isDark
     }
+    #if !SHARE
+    var insantPageThemeType: InstantPageThemeType {
+        if colors.isDark {
+            return .dark
+        } else {
+            return .light
+        }
+    }
+    #endif
+    
     
     deinit {
        
@@ -1206,6 +1251,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatAttachPhoto: #imageLiteral(resourceName: "Icon_AttachPhoto").precomposed(palette.blueIcon),
                                                chatAttachCamera: #imageLiteral(resourceName: "Icon_AttachCamera").precomposed(palette.blueIcon),
                                                chatAttachLocation: #imageLiteral(resourceName: "Icon_AttachLocation").precomposed(palette.blueIcon),
+                                               chatAttachPoll: #imageLiteral(resourceName: "Icon_AttachPoll").precomposed(palette.blueIcon),
                                                mediaEmptyShared: #imageLiteral(resourceName: "Icon_EmptySharedMedia").precomposed(palette.grayIcon),
                                                mediaEmptyFiles: #imageLiteral(resourceName: "Icon_EmptySharedFiles").precomposed(),
                                                mediaEmptyMusic: #imageLiteral(resourceName: "Icon_EmptySharedMusic").precomposed(palette.grayIcon),
@@ -1448,7 +1494,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                videoPlayerSliderInteractor: NSImage(named: "Icon_Slider")!.precomposed(),
                                                streamingVideoDownload: NSImage(named: "Icon_StreamingDownload")!.precomposed(.white),
                                                videoCompactFetching: NSImage(named: "Icon_VideoCompactFetching")!.precomposed(.white),
-                                               compactStreamingFetchingCancel: NSImage(named: "Icon_CompactStreamingFetchingCancel")!.precomposed(.white)
+                                               compactStreamingFetchingCancel: NSImage(named: "Icon_CompactStreamingFetchingCancel")!.precomposed(.white),
+                                               customLocalizationDelete: NSImage(named: "Icon_MessageActionPanelDelete")!.precomposed(palette.blueIcon),
+                                               pollAddOption: generatePollAddOption(palette.blueIcon),
+                                               pollDeleteOption: generatePollDeleteOption(palette.redUI),
+                                               resort: NSImage(named: "Icon_Resort")!.precomposed(palette.grayIcon.withAlphaComponent(0.6)),
+                                               chatPollVoteUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayText.withAlphaComponent(0.3)),
+                                               chatPollVoteUnselectedBubble_incoming: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_incoming.withAlphaComponent(0.3)),
+                                               chatPollVoteUnselectedBubble_outgoing: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_outgoing.withAlphaComponent(0.3))
                                                ///videoMessageChatCap: generateVideoMessageChatCap(backgroundColor: palette.background)
     )
 }

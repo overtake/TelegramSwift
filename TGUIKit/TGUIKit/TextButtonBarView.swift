@@ -17,7 +17,7 @@ public enum TextBarAligment {
 open class TextButtonBarView: BarView {
 
     private let button:TitleButton = TitleButton()
-    
+    private let progressIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
     public var alignment:TextBarAligment = .Center
     private var _isFitted: Bool
     public init(controller: ViewController, text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center) {
@@ -29,15 +29,25 @@ open class TextButtonBarView: BarView {
         button.set(text: text, for: .Normal)
         button.disableActions()
         
+        
+        
         _isFitted = false
         super.init(controller: controller)
         
         self.alignment = alignment
         button.style = style
+
+        progressIndicator.isHidden = true
         
         self.addSubview(button)
+        self.addSubview(progressIndicator)
         
-        
+    }
+    
+    public var direction: TitleButtonImageDirection = .left {
+        didSet {
+            button.direction = direction
+        }
     }
     
     public func set(image:CGImage, for state:ControlState) -> Void {
@@ -70,18 +80,21 @@ open class TextButtonBarView: BarView {
         return _isFitted
     }
     
+    
+    
     override func fit(to maxWidth: CGFloat) -> CGFloat {
         
         var width: CGFloat = 20
         switch alignment {
         case .Center:
-            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height - .borderSize), thatFit: false)
+            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height), thatFit: false)
             width += button.frame.width + 16
+            //button.center()
         case .Left:
-            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height - .borderSize))
+            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height))
             width += button.frame.width
         case .Right:
-            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height - .borderSize), thatFit: false)
+            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height), thatFit: false)
             width += max(button.frame.width + 16, minWidth)
             let f = focus(button.frame.size)
             button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
@@ -104,6 +117,14 @@ open class TextButtonBarView: BarView {
     }
     
     
+    open var isLoading: Bool = false {
+        didSet {
+            button.isHidden = isLoading
+            progressIndicator.isHidden = !isLoading
+            needsLayout = true
+        }
+    }
+    
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
 
@@ -115,12 +136,15 @@ open class TextButtonBarView: BarView {
         switch alignment {
         case .Center:
             button.center()
+            progressIndicator.center()
         case .Left:
             let f = focus(button.frame.size)
-            button.setFrameOrigin(16, f.minY)
+            button.setFrameOrigin(16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY))
+            progressIndicator.center()
         case .Right:
             let f = focus(button.frame.size)
-            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
+            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY)))
+            progressIndicator.center()
         }
     }
     

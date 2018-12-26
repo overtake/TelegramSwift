@@ -129,17 +129,17 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.editAccountNameDesc, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editAccountNameDesc), color: theme.colors.grayText, detectBold: true))
     index += 1
 
     
     entries.append(InputDataEntry.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, placeholder: L10n.telegramBioViewController, inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.telegramBioViewController), inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.bioDescription, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioDescription), color: theme.colors.grayText, detectBold: true))
     index += 1
     
     entries.append(InputDataEntry.sectionId(sectionId))
@@ -244,7 +244,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         f(PhoneNumberIntroController(account))
     })
     
-    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {editInfoEntries(state: $0.0, arguments: arguments, updateState: updateState)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {editInfoEntries(state: $0.0, arguments: arguments, updateState: updateState)} |> map {($0, true)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -285,14 +285,14 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         return .fail(.none)
     }, afterDisappear: {
         actionsDisposable.dispose()
-    }, updateDoneEnabled: { data in
+    }, updateDoneValue: { data in
         return { f in
             let current = stateValue.modify {$0}
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
-                f(updates.0 != nil || updates.1 != nil)
+                f((updates.0 != nil || updates.1 != nil) ? .enabled(L10n.navigationDone) : .disabled(L10n.navigationDone))
             } else {
-                f(false)
+                f(.disabled(L10n.navigationDone))
             }
         }
     }, removeAfterDisappear: false, identifier: "account"))

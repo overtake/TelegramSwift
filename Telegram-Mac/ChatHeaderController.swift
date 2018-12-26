@@ -244,7 +244,7 @@ class ChatPinnedView : Control {
     private let dismiss:ImageButton = ImageButton()
     private let loadMessageDisposable = MetaDisposable()
     init(_ messageId:MessageId, chatInteraction:ChatInteraction) {
-        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.account, isPinned: true)
+        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true)
         self.chatInteraction = chatInteraction
         super.init()
         

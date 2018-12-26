@@ -54,13 +54,18 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 
 @implementation GrowingScrollView
 
-//-(void)scrollWheel:(NSEvent *)event {
-//    if ([self documentView].frame.size.height > self.frame.size.height) {
-//        [super scrollWheel:event];
-//    } else {
-//        [[self superview].enclosingScrollView scrollWheel:event];
-//    }
-//}
+
+@end
+
+@interface UnscrollableTextScrollView : NSScrollView
+
+@end
+
+@implementation UnscrollableTextScrollView
+
+-(void)scrollWheel:(NSEvent *)event {
+    [[self superview].enclosingScrollView scrollWheel:event];
+}
 
 @end
 
@@ -80,6 +85,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 @interface TGGrowingTextView ()
     @property (nonatomic, strong) NSUndoManager *undo;
     @property (nonatomic, strong) NSMutableArray<MarkdownUndoItem *> *markdownItems;
+    @property (nonatomic, strong) NSTrackingArea *trackingArea;
+
+    
 @end
 
 @implementation TGGrowingTextView
@@ -87,11 +95,26 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(instancetype)initWithFrame:(NSRect)frameRect {
     if(self = [super initWithFrame:frameRect]) {
         self.markdownItems = [NSMutableArray array];
+        
+        NSTrackingArea *trackingArea = [[NSTrackingArea alloc]initWithRect:self.bounds options:NSTrackingCursorUpdate | NSTrackingActiveInActiveApp owner:self userInfo:nil];
+        [self addTrackingArea:trackingArea];
+        
         #ifdef __MAC_10_12_2
           //  self.allowsCharacterPickerTouchBarItem = false;
         #endif
     }
     return self;
+}
+    
+    - (void)mouseMoved:(NSEvent *)event
+    {
+    }
+    
+- (void)updateTrackingAreas {
+    [super updateTrackingAreas];
+    [self removeTrackingArea:_trackingArea];
+    _trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds] options: (NSTrackingMouseMoved | NSTrackingActiveInKeyWindow | NSTrackingMouseEnteredAndExited | NSTrackingCursorUpdate) owner:self userInfo:nil];
+    [self addTrackingArea:_trackingArea];
 }
 
 -(NSPoint)textContainerOrigin {
@@ -502,7 +525,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     int _last_height;
 }
 @property (nonatomic,strong) TGGrowingTextView *textView;
-@property (nonatomic,strong) GrowingScrollView *scrollView;
+@property (nonatomic,strong) NSScrollView *scrollView;
 @property (nonatomic,strong) TGTextFieldPlaceholder *placeholder;
 @property (nonatomic,assign) BOOL notify_next;
 @property (nonatomic, strong) NSUndoManager *_undo;
@@ -512,9 +535,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 @implementation TGModernGrowingTextView
 
 
-
-
 -(instancetype)initWithFrame:(NSRect)frameRect {
+    if (self = [self initWithFrame: frameRect unscrollable: false]) {
+        
+    }
+    return self;
+}
+
+-(instancetype)initWithFrame:(NSRect)frameRect unscrollable:(BOOL)unscrollable {
     if(self = [super initWithFrame:frameRect]) {
         
         _min_height = 34;
@@ -527,7 +555,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         [_textView setImportsGraphics:NO];
         _textView.backgroundColor = [NSColor clearColor];
         _textView.insertionPointColor = _cursorColor;
-        self.scrollView.backgroundColor = [NSColor clearColor];
         [_textView setAllowsUndo:YES];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectionDidChanged:) name:NSTextViewDidChangeSelectionNotification object:_textView];
         
@@ -539,8 +566,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         [_textView setDrawsBackground:YES];
         
 
+        if (unscrollable) {
+            self.scrollView = [[UnscrollableTextScrollView alloc] initWithFrame:self.bounds];
+        } else {
+            self.scrollView = [[GrowingScrollView alloc] initWithFrame:self.bounds];
+        }
+        self.scrollView.backgroundColor = [NSColor clearColor];
+
         
-        self.scrollView = [[GrowingScrollView alloc] initWithFrame:self.bounds];
         [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
         self.scrollView.documentView = _textView;
         [self.scrollView setDrawsBackground:NO];
@@ -610,7 +643,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     newSize.height+= 8;
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
-    [self updatePlaceholder:true newSize:newSize];
+    [self updatePlaceholder:self.animates newSize:newSize];
 }
 
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -720,6 +753,23 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             [self setString:n];
             return;
         }
+    }
+    
+    if(notification.object) {
+        NSString *text = self.string;
+        if (_defaultText.length > 0) {
+            NSRange range = [text rangeOfString:_defaultText];
+            if (range.location != NSNotFound) {
+                text = [text substringFromIndex:range.location + range.length];
+            } else if ([_defaultText containsString:text]) {
+                text = @"";
+            }
+        }
+        [self.delegate textViewTextDidChange:text];
+        if (![text isEqualToString:self.string]) {
+            return;
+        }
+        
     }
     
     self.scrollView.verticalScrollElasticity = NSHeight(_scrollView.contentView.documentRect) <= NSHeight(_scrollView.frame) ? NSScrollElasticityNone : NSScrollElasticityAllowed;
@@ -834,19 +884,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     [self setNeedsDisplay:YES];
     
-    if(notification.object) {
-        NSString *text = self.string;
-        if (_defaultText.length > 0) {
-            NSRange range = [text rangeOfString:_defaultText];
-            if (range.location != NSNotFound) {
-                text = [text substringFromIndex:range.location + range.length];
-            } else if ([_defaultText containsString:text]) {
-                text = @"";
-            }
-        }
-        [self.delegate textViewTextDidChange:text];
-        
-    }
+    
     
     [self refreshAttributes];
     
@@ -1234,9 +1272,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)setString:(NSString *)string animated:(BOOL)animated {
-    [_textView setString:[self textWithDefault:string]];
     BOOL o = self.animates;
     self.animates = animated;
+    [_textView setString:[self textWithDefault:string]];
     [self update:animated];
     self.animates = o;
 }

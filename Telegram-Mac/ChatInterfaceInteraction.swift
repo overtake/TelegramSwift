@@ -132,6 +132,10 @@ final class ChatInteraction : InterfaceObserver  {
     var editEditingMessagePhoto:(TelegramMediaImage) -> Void = { _ in}
     var removeChatInteractively:()->Void = { }
     
+    
+    var vote:(MessageId, Data?) -> Void = { _, _ in }
+    var closePoll:(MessageId) -> Void = { _ in }
+    
     let loadingMessage: Promise<Bool> = Promise()
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()

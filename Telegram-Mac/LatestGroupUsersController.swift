@@ -230,7 +230,7 @@ func latestGroupUsers(chatInteraction: ChatInteraction, f:@escaping(InputDataCon
     }
 
     
-    let _controller = InputDataController(dataSignal: dataSignal, title: "", afterDisappear: {
+    let _controller = InputDataController(dataSignal: dataSignal |> map {($0, true)}, title: "", afterDisappear: {
         controller = nil
     }, didLoaded: { _ in
         if let controller = controller {

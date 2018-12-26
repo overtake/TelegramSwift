@@ -27,7 +27,7 @@ class MGalleryPhotoItem: MGalleryItem {
                     let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
-                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil, partialReference: nil)
+                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
                     
                 } else {
                     fatalError("image for webpage not found")
@@ -37,7 +37,7 @@ class MGalleryPhotoItem: MGalleryItem {
                     let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
-                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, reference: nil, partialReference: nil)
+                    self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
                 } else {
                     self.media = entry.message!.media[0] as! TelegramMediaImage
                 }

@@ -28,7 +28,7 @@ final class InstantPageWebEmbedItem: InstantPageItem {
         self.enableScrolling = enableScrolling
     }
     
-    func node(account: Account) -> InstantPageView? {
+    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
         return instantPageWebEmbedView(frame: self.frame, url: self.url, html: self.html, enableScrolling: self.enableScrolling)
     }
     

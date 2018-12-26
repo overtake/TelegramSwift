@@ -22,6 +22,21 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
         encoder.encodeString(modifier, forKey: "m")
     }
     
+    var modify: String {
+        var e:String = emoji
+        if emoji == modifier {
+            if emoji.length == 5 {
+                let mutable = NSMutableString()
+                mutable.insert(e, at: 0)
+                mutable.insert(modifier, at: 2)
+                e = mutable as String
+            } else {
+                e = emoji + modifier
+            }
+        }
+        return e
+    }
+    
     init(decoder: PostboxDecoder) {
          self.emoji = decoder.decodeStringForKey("e", orElse: "")
          self.modifier = decoder.decodeStringForKey("m", orElse: "")
@@ -29,10 +44,10 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
 }
 
 class RecentUsedEmoji: PreferencesEntry, Equatable {
-    let emojies:[String]
+    private let _emojies:[String]
     let skinModifiers:[EmojiSkinModifier]
     init(emojies:[String], skinModifiers: [EmojiSkinModifier]) {
-        self.emojies = emojies
+        self._emojies = emojies
         self.skinModifiers = skinModifiers
     }
     
@@ -40,20 +55,44 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
         return RecentUsedEmoji(emojies: ["😂", "😘", "❤️", "😍", "😊", "🤔", "😁", "👍", "☺️", "😔", "😄", "😭", "💋", "😒", "😳", "😜", "🙈", "😉", "😃", "😢", "😝", "😱", "😡", "😏", "😞", "😅", "😚", "🙊", "😌", "😀", "😋", "😆", "🌚", "😐", "😕", "👎"], skinModifiers: [])
     }
     
+    var emojies: [String] {
+        var isset:[String: String] = [:]
+        var list:[String] = []
+        for emoji in _emojies {
+            if isset[emoji] == nil, emoji != "�", !emoji.emojiSkinToneModifiers.contains(emoji), emoji != "️" {
+                var emoji = emoji
+                isset[emoji] = emoji
+                for skin in skinModifiers {
+                    if skin.emoji == emoji {
+                        emoji = skin.modify
+                    }
+                }
+                list.append(emoji)
+            }
+        }
+        return list
+    }
+    
     public required init(decoder: PostboxDecoder) {
         let emojies = decoder.decodeStringArrayForKey("e")
-        
+        self.skinModifiers = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("sm_new", decoder: {EmojiSkinModifier(decoder: $0)})) ?? []
+
         var isset:[String: String] = [:]
         var list:[String] = []
         for emoji in emojies {
-            if isset[emoji] == nil, emoji != "�" {
-                list.append(emoji)
+            if isset[emoji] == nil, emoji != "�", !emoji.emojiSkinToneModifiers.contains(emoji), emoji != "️" {
+                var emoji = emoji
                 isset[emoji] = emoji
+                for skin in skinModifiers {
+                    if skin.emoji == emoji {
+                        emoji = skin.modify
+                    }
+                }
+                list.append(emoji)
             }
         }
-        self.emojies = list
+        self._emojies = list
         
-        self.skinModifiers = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("sm_new", decoder: {EmojiSkinModifier(decoder: $0)})) ?? []
         
     }
     
@@ -68,7 +107,7 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
     }
     
     public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeStringArray(emojies, forKey: "e")
+        encoder.encodeStringArray(_emojies, forKey: "e")
         encoder.encodeObjectArray(skinModifiers, forKey: "sm_new")
     }
 }
@@ -90,7 +129,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
             
             for emoji in list.reversed() {
                 let emoji = emoji.emojiString.emojiUnmodified
-                if !emoji.isEmpty {
+                if !emoji.isEmpty && emoji.length > 1 && !emoji.emojiSkinToneModifiers.contains(emoji) {
                     if let index = emojies.index(of: emoji) {
                         emojies.remove(at: index)
                     }
@@ -128,6 +167,7 @@ func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox) -> Sig
 
 func recentUsedEmoji(postbox: Postbox) -> Signal<RecentUsedEmoji, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.recentEmoji]) |> map { preferences in
+        
         return (preferences.values[ApplicationSpecificPreferencesKeys.recentEmoji] as? RecentUsedEmoji) ?? RecentUsedEmoji.defaultSettings
     }
 }

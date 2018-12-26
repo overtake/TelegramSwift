@@ -11,6 +11,24 @@ import Cocoa
 import PostboxMac
 import SwiftSignalKitMac
 
+public enum InstantPageThemeType: Int32 {
+    case light = 0
+    case dark = 1
+    case sepia = 2
+    case gray = 3
+}
+
+public enum InstantPagePresentationFontSize: Int32 {
+    case small = 0
+    case standard = 1
+    case large = 2
+    case xlarge = 3
+    case xxlarge = 4
+}
+
+
+
+
 public struct IVReadState : PostboxCoding, Equatable {
     let blockId:Int32
     let blockOffset: Int32

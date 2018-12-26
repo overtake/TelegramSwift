@@ -39,7 +39,7 @@ class SEModalProgressView: View {
         cancel.set(font: .medium(.title), for: .Normal)
         cancel.set(color: theme.colors.blueUI, for: .Normal)
         cancel.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
-        cancel.sizeToFit()
+        _ = cancel.sizeToFit()
         
         cancel.set(handler: { [weak self] _ in
             self?.cancelImpl?()

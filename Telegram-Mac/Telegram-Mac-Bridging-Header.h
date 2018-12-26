@@ -181,6 +181,9 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @interface TGModernGrowingTextView : NSView
 
+
+-(instancetype)initWithFrame:(NSRect)frameRect unscrollable:(BOOL)unscrollable;
+
 @property (nonatomic,assign) BOOL animates;
 @property (nonatomic,assign) int min_height;
 @property (nonatomic,assign) int max_height;
@@ -569,7 +572,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 -(void)mute;
 -(void)unmute;
 -(BOOL)isMuted;
-
++(int32_t)voipMaxLayer;
 -(NSString *)currentOutputDeviceId;
 -(NSString *)currentInputDeviceId;
 -(NSArray<AudioDevice *> *)outputDevices;

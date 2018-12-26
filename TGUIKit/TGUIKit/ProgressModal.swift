@@ -15,6 +15,12 @@ class ProgressModalController: ModalViewController {
         return .clear
     }
     
+    override func close() {
+        super.close()
+        disposable.dispose()
+    }
+    
+    
     override var containerBackground: NSColor {
         return .clear
     }
@@ -52,7 +58,14 @@ class ProgressModalController: ModalViewController {
         super.viewWillAppear(animated)
     }
     
-    override init() {
+    deinit {
+        disposable.dispose()
+    }
+    
+    fileprivate let disposable: Disposable
+    
+    init(_ disposable: Disposable) {
+        self.disposable = disposable
         super.init(frame:NSMakeRect(0,0,80,80))
         self.bar = .init(height: 0)
     }
@@ -152,16 +165,15 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
     return Signal { subscriber in
         
         let signal = signal |> deliverOnMainQueue
-        
-        let modal = ProgressModalController()
+        let beforeDisposable:DisposableSet = DisposableSet()
+
+        let modal = ProgressModalController(beforeDisposable)
         let beforeModal:Signal<Void,Void> = .single(Void()) |> delay(0.25, queue: Queue.mainQueue())
         
-        let beforeDisposable:DisposableSet = DisposableSet()
         
         beforeDisposable.add(beforeModal.start(completed: {
             showModal(with: modal, for: window)
         }))
-        
         
         
         beforeDisposable.add(signal.start(next: { next in

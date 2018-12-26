@@ -79,7 +79,7 @@ class SuggestionLocalizationViewController: ModalViewController {
             if let strongSelf = self {
                 strongSelf.close()
                 _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
-                _ = showModalProgress(signal: downoadAndApplyLocalization(postbox: strongSelf.account.postbox, network: strongSelf.account.network, languageCode: strongSelf.languageCode), for: mainWindow).start()
+                _ = showModalProgress(signal: downloadAndApplyLocalization(postbox: strongSelf.account.postbox, network: strongSelf.account.network, languageCode: strongSelf.languageCode), for: mainWindow).start()
             }
         }, drawBorder: true, height: 40)
     }
@@ -131,20 +131,21 @@ class SuggestionLocalizationViewController: ModalViewController {
         
         if let info = enInfo {
             
-            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 0, selected: selected == 0, value: info, action: { [weak self] in
+            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 0, selected: selected == 0, deletable: false, value: info, action: { [weak self] in
                 self?.reloadItems(0, swap)
             }, reversed: true), at: 0)
             
         }
         if let info = currentInfo {
-            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 1, selected: selected == 1, value: info, action: { [weak self] in
+            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 1, selected: selected == 1, deletable: false, value: info, action: { [weak self] in
                 self?.reloadItems(1, swap)
             }, reversed: true), at: swap ? 0 : 1)
         }
 
-        let otherInfo = LocalizationInfo(languageCode: "", baseLanguageCode: nil, title: NativeLocalization("Suggest.Localization.Other"), localizedTitle: suggestionInfo.localizedKey("Suggest.Localization.Other"), isOfficial: true, totalStringCount: 0, translatedStringCount: 0 )
+        //    public init(languageCode: String, baseLanguageCode: String?, customPluralizationCode: String?, title: String, localizedTitle: String, isOfficial: Bool, totalStringCount: Int32, translatedStringCount: Int32, platformUrl: String) {
+        let otherInfo = LocalizationInfo(languageCode: "", baseLanguageCode: nil, customPluralizationCode: nil, title: NativeLocalization("Suggest.Localization.Other"), localizedTitle: suggestionInfo.localizedKey("Suggest.Localization.Other"), isOfficial: true, totalStringCount: 0, translatedStringCount: 0, platformUrl: "" )
 
-        _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, value: otherInfo, action: { [weak self] in
+        _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, deletable: false, value: otherInfo, action: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
                 strongSelf.account.context.mainNavigation?.push(LanguageViewController(strongSelf.account))

@@ -90,7 +90,7 @@ func readArticlesListController(_ account: Account) -> InputDataController {
     
     promise.set(combineLatest(readArticlesListPreferences(account.postbox) |> deliverOnPrepareQueue, searchPromise.get() |> deliverOnPrepareQueue) |> map { readArticlesEntries($0.0, state: $0.1, arguments: arguments) })
     
-    return InputDataController(dataSignal: promise.get(), title: L10n.accountSettingsReadArticles, hasDone: false, identifier: "readarticles", customRightButton: { controller in
+    return InputDataController(dataSignal: promise.get() |> map {($0, true)}, title: L10n.accountSettingsReadArticles, hasDone: false, identifier: "readarticles", customRightButton: { controller in
         let back = ImageBarView(controller: controller, theme.icons.chatActions)
         
         back.set(image: theme.icons.chatActions, highlightImage: theme.icons.chatActionsActive)

@@ -70,10 +70,10 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
                 formatter.timeStyle = .short
                 formatter.timeZone = NSTimeZone.local
                 formatter.dateStyle = .none
-                entries.append(.desc(sectionId: sectionId, index: index, text: L10n.autoNightSettingsSunriseDesc(latitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunset), longitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunrise)), color: theme.colors.grayText, detectBold: true))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsSunriseDesc(latitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunset), longitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunrise))), color: theme.colors.grayText, detectBold: true))
                 index += 1
             } else {
-                entries.append(.desc(sectionId: sectionId, index: index, text: L10n.autoNightSettingsSunriseDescNA, color: theme.colors.grayText, detectBold: true))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsSunriseDescNA), color: theme.colors.grayText, detectBold: true))
                 index += 1
             }
             
@@ -143,7 +143,7 @@ func autoNightSettingsController(_ postbox: Postbox) -> InputDataController {
     
     var getController:(()->InputDataController?)? = nil
     
-    controller = InputDataController(dataSignal: signal, title: L10n.autoNightSettingsTitle, validateData: { data in
+    controller = InputDataController(dataSignal: signal |> map {($0, true)}, title: L10n.autoNightSettingsTitle, validateData: { data in
         
         if let _ = data[_id_disabled] {
             _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in

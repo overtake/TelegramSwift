@@ -49,6 +49,7 @@ open class Popover: NSObject {
         self.background.layer?.isOpaque = false
         self.background.layer?.shadowOffset = NSMakeSize(0, 0)
         self.background.layer?.cornerRadius = 4
+        self.background.toolTip = ""
         self.static = `static`
         super.init()
         

@@ -469,12 +469,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let item = self.item(at: min(controller.selectedIndex + 1, controller.arrangedObjects.count - 1))
             item.size.set(.single(item.pagerSize))
             item.request()
-            navigationDisposable.set((item.image.get() |> deliverOnMainQueue).start(next: { [weak self] _ in
-                guard let `self` = self else {return}
-                if let index = self.items.index(of: item) {
-                    self.set(index: index, animated: false)
-                }
-            }))
+            
+            if let index = self.items.index(of: item) {
+                self.set(index: index, animated: false)
+            }
         }
     }
     
@@ -483,12 +481,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let item = self.item(at: max(controller.selectedIndex - 1, 0))
             item.size.set(.single(item.pagerSize))
             item.request()
-            navigationDisposable.set((item.image.get() |> deliverOnMainQueue).start(next: { [weak self] _ in
-                guard let `self` = self else {return}
-                if let index = self.items.index(of: item) {
-                    self.set(index: index, animated: false)
-                }
-            }))
+            
+            if let index = self.items.index(of: item) {
+                self.set(index: index, animated: false)
+            }
         }
     }
     
@@ -510,6 +506,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func rotateLeft() {
         guard let item = self.selectedItem else {return}
+        item.disableAnimations = true
+        
         _ = (item.rotate.get() |> take(1)).start(next: { [weak item] orientation in
             if let orientation = orientation {
                 switch orientation {
@@ -803,11 +801,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         let view = self.view
         
-        let newView:NSView = NSView(frame: NSMakeRect(oldRect.minX, oldRect.minY, newRect.width, newRect.height))
+        let newView:NSView = NSView(frame: newRect) //
         newView.wantsLayer = true
-        newView.layer?.opacity = Float(newAlphaFrom) + 0.5
         newView.layer?.contents = contents
-        newView.layer?.backgroundColor = self.selectedItem is MGalleryVideoItem ? .black : theme.colors.transparentBackground.cgColor
+     //   newView.layer?.backgroundColor = NSColor.red.cgColor//self.selectedItem is MGalleryVideoItem ? .black : theme.colors.transparentBackground.cgColor
         
         
         let copyView = oldView.copy() as! NSView
@@ -815,7 +812,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
 
         copyView.frame = NSMakeRect(oldRect.minX, oldRect.minY, oldAlphaFrom == 0 ? newRect.width : oldRect.width, oldAlphaFrom == 0 ? newRect.height : oldRect.height)
         copyView.wantsLayer = true
-        copyView.layer?.opacity = Float(oldAlphaFrom)
+       // copyView.layer?.contents = nil
+      //  copyView.layer?.backgroundColor = NSColor.blue.cgColor
         view.addSubview(newView)
         view.addSubview(copyView)
         
@@ -825,31 +823,31 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         let duration:Double = 0.25
         
+        let timingFunction: CAMediaTimingFunctionName = .spring
+        
+        
+        newView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        newView.layer?.animateAlpha(from: newAlphaFrom, to: newAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        
+        
+        newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        newView.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
 
         
-        
-        newView._change(pos: newRect.origin, animated: true, duration: duration, timingFunction: .spring)
-        newView._change(opacity: newAlphaTo, duration: duration, timingFunction: .spring)
-        
-        
-        newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
-        newView.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
-
-        
-        copyView._change(pos: newRect.origin, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: .spring)
-        copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
-        copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: .spring, removeOnCompletion: false)
+        copyView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         
         
         //.animateBounds(from: NSMakeRect(0, 0, oldRect.width, oldRect.height), to: NSMakeRect(0, 0, newRect.width, newRect.height), duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
 
      //   copyView._change(size: newRect.size, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
-        copyView._change(opacity: oldAlphaTo, duration: duration, timingFunction: .spring) { [weak self] _ in
+        copyView.layer?.animateAlpha(from: oldAlphaFrom , to: oldAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak self, weak copyView, weak newView] _ in
             completion()
             self?.lockedTransition = false
-            newView.removeFromSuperview()
-            copyView.removeFromSuperview()
-        }
+            newView?.removeFromSuperview()
+            copyView?.removeFromSuperview()
+        })
         CATransaction.commit()
 
 

@@ -20,12 +20,16 @@ final class LoginAuthViewArguments {
     let editPhone:()->Void
     let checkCode:(String)->Void
     let checkPassword:(String)->Void
-    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void) {
+    let requestPasswordRecovery: (@escaping(PasswordRecoveryOption)-> Void)->Void
+    let resetAccount: ()->Void
+    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void) {
         self.sendCode = sendCode
         self.resendCode = resendCode
         self.editPhone = editPhone
         self.checkCode = checkCode
         self.checkPassword = checkPassword
+        self.requestPasswordRecovery = requestPasswordRecovery
+        self.resetAccount = resetAccount
     }
 }
 
@@ -151,6 +155,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
     let textView:TextView = TextView()
     let delayView:TextView = TextView()
     
+    private let forgotPasswordView = TitleButton()
+    private let resetAccountView = TitleButton()
+    
     fileprivate var selectedItem:CountryItem?
     
     fileprivate var undo:[String] = []
@@ -187,8 +194,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         addSubview(codeLabel)
         addSubview(editControl)
         
-        
+      
        
+
         
         
         codeText.font = NSFont.normal(.title)
@@ -225,6 +233,32 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         addSubview(delayView)
         addSubview(errorLabel)
 
+        
+        addSubview(forgotPasswordView)
+        addSubview(resetAccountView)
+        
+        forgotPasswordView.isHidden = true
+        resetAccountView.isHidden = true
+        
+        forgotPasswordView.set(font: .normal(.title), for: .Normal)
+        resetAccountView.set(font: .normal(.title), for: .Normal)
+        
+       
+        forgotPasswordView.set(handler: { [weak self]  _ in
+            self?.arguments?.requestPasswordRecovery({ [weak self] option in
+                switch option {
+                case let .email(pattern):
+                    self?.resetAccountView.isHidden = false
+                case .none:
+                    alert(for: mainWindow, info: L10n.loginRecoveryMailFailed)
+                    self?.resetAccountView.isHidden = false
+                }
+            })
+        }, for: .Click)
+        
+        resetAccountView.set(handler: { [weak self] _ in
+            self?.arguments?.resetAccount()
+        }, for: .Click)
     }
     
     override func updateLocalizationAndTheme() {
@@ -254,6 +288,20 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         numberText.placeholderAttributedString = .initialize(string: L10n.loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
         codeText.placeholderAttributedString = .initialize(string: L10n.loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
         
+        
+        forgotPasswordView.set(color: theme.colors.blueUI, for: .Normal)
+        resetAccountView.set(color: theme.colors.redUI, for: .Normal)
+        
+        forgotPasswordView.set(text: L10n.loginPasswordForgot, for: .Normal)
+        resetAccountView.set(text: L10n.loginResetAccountText, for: .Normal)
+        
+        
+        _ = forgotPasswordView.sizeToFit()
+        _ = resetAccountView.sizeToFit()
+        
+       
+        
+        needsLayout = true
         needsDisplay = true
     }
     
@@ -282,9 +330,12 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
         
         
-        textView.centerX(y: codeText.frame.maxY + 60 + (passwordEnabled ? inputPassword.frame.height : 0))
+        textView.centerX(y: codeText.frame.maxY + 50 + (passwordEnabled ? inputPassword.frame.height : 0))
         delayView.centerX(y: textView.frame.maxY + 20)
         errorLabel.centerX(y: codeText.frame.maxY + 30 + (passwordEnabled ? inputPassword.frame.height : 0))
+        
+        forgotPasswordView.centerX(y: textView.frame.maxY + 10)
+        resetAccountView.centerX(y: forgotPasswordView.frame.maxY + 5)
         
         inputPassword.passwordLabel.centerY()
         inputPassword.passwordLabel.setFrameOrigin(contentInset - inputPassword.passwordLabel.frame.width - 25, inputPassword.passwordLabel.frame.minY)
@@ -418,6 +469,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         self.codeText.isEditable = true
         self.codeText.isSelectable = true
         inputPassword.isHidden = true
+        forgotPasswordView.isHidden = true
+        resetAccountView.isHidden = true
+        clearError()
         self.update(with: type, nextType: nextType, timeout: timeout)
     }
     
@@ -425,11 +479,13 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let textError:String
         switch error {
         case .limitExceeded:
-            textError = tr(L10n.loginFloodWait)
+            textError = L10n.loginFloodWait
         case .invalidCode:
-            textError = tr(L10n.phoneCodeInvalid)
+            textError = L10n.phoneCodeInvalid
         case .generic:
-            textError = tr(L10n.phoneCodeExpired)
+            textError = L10n.phoneCodeExpired
+        case .codeExpired:
+            textError = L10n.phoneCodeExpired
         }
         errorLabel.state.set(.single(.error(textError)))
         codeText.shake()
@@ -439,9 +495,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let text:String
         switch error {
         case .invalidPassword:
-            text = tr(L10n.passwordHashInvalid)
+            text = L10n.passwordHashInvalid
         case .limitExceeded:
-            text = tr(L10n.loginFloodWait)
+            text = L10n.loginFloodWait
         case .generic:
             text = "undefined error"
         }
@@ -461,18 +517,20 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         self.numberText.stringValue = number
         self.codeText.stringValue = code
         if !hint.isEmpty {
-            self.inputPassword.input.placeholderAttributedString = NSAttributedString.initialize(string: hint, color: theme.colors.grayText, font: .normal(.title))
+            self.inputPassword.input.placeholderAttributedString = .initialize(string: hint, color: theme.colors.grayText, font: .normal(.title))
         } else {
-            self.inputPassword.input.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.loginPasswordPlaceholder), color: theme.colors.grayText, font: .normal(.title))
+            self.inputPassword.input.placeholderAttributedString = .initialize(string: L10n.loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
         }
         self.inputPassword.isHidden = false
         self.codeText.textColor = theme.colors.grayText
         self.codeText.isEditable = false
         self.codeText.isSelectable = false
         
-        let textLayout = TextViewLayout(.initialize(string: tr(L10n.loginEnterPasswordDescription), color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
+        let textLayout = TextViewLayout(.initialize(string: L10n.loginEnterPasswordDescription, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
         textLayout.measure(width: 300)
         textView.update(textLayout)
+        
+        
         
         disposable.set(nil)
         delayView.isHidden = true
@@ -482,6 +540,10 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         textView.centerX()
         textView.change(pos: NSMakePoint(textView.frame.minX, textView.frame.minY + inputPassword.frame.height), animated: animated)
+        
+        forgotPasswordView.isHidden = false
+        
+       
         
         needsLayout = true
     }
@@ -808,11 +870,132 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
     
 }
 
+
+private func timerValueString(days: Int32, hours: Int32, minutes: Int32) -> String {
+    var string = NSMutableAttributedString()
+    
+    var daysString = ""
+    if days > 0 {
+        daysString = "**" + L10n.timerDaysCountable(Int(days)) + "** "
+    }
+    
+    var hoursString = ""
+    if hours > 0 || days > 0 {
+        hoursString = "**" + L10n.timerHoursCountable(Int(hours)) + "** "
+    }
+    
+    let minutesString = "**" + L10n.timerMinutesCountable(Int(minutes)) + "**"
+    
+    return daysString + hoursString + minutesString
+}
+
+private final class AwaitingResetConfirmationView : View {
+    private let textView: TextView = TextView()
+    private let reset: TitleButton = TitleButton()
+    private var phoneNumber: String = ""
+    private var protectedUntil: Int32 = 0
+    private var timer: SwiftSignalKitMac.Timer?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        textView.isSelectable = false
+        addSubview(textView)
+        addSubview(reset)
+        
+        reset.set(font: .bold(.title), for: .Normal)
+    }
+    
+    func update(with phoneNumber: String, until:Int32, reset: @escaping()-> Void) -> Void {
+        self.phoneNumber = phoneNumber
+        self.protectedUntil = until
+        updateLocalizationAndTheme()
+        
+        self.reset.removeAllHandlers()
+        self.reset.set(handler: { _ in
+            reset()
+        }, for: .Click)
+        
+        if self.timer == nil {
+            let timer = SwiftSignalKitMac.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
+                self?.updateTimerValue()
+                }, queue: Queue.mainQueue())
+            self.timer = timer
+            timer.start()
+        }
+    }
+    
+    deinit {
+        timer?.invalidate()
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        
+        reset.set(color: theme.colors.redUI, for: .Normal)
+        reset.set(text: L10n.loginResetAccount, for: .Normal)
+        _ = reset.sizeToFit()
+        updateTimerValue()
+    }
+    
+    private func updateTimerValue() {
+        let timerSeconds = max(0, self.protectedUntil - Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970))
+        
+        let secondsInAMinute: Int32 = 60
+        let secondsInAnHour: Int32 = 60 * secondsInAMinute
+        let secondsInADay: Int32 = 24 * secondsInAnHour
+        
+        let days = timerSeconds / secondsInADay
+        
+        let hourSeconds = timerSeconds % secondsInADay
+        let hours = hourSeconds / secondsInAnHour
+        
+        let minuteSeconds = hourSeconds % secondsInAnHour
+        var minutes = minuteSeconds / secondsInAMinute
+        
+        if days == 0 && hours == 0 && minutes == 0 && timerSeconds > 0 {
+            minutes = 1
+        }
+        
+        
+        let attr = NSMutableAttributedString()
+        
+        
+        _ = attr.append(string: L10n.twoStepAuthResetDescription(self.phoneNumber, timerValueString(days: days, hours: hours, minutes: minutes)), color: theme.colors.grayText, font: .normal(.text))
+        attr.detectBoldColorInString(with: .bold(.text))
+        
+        let layout = TextViewLayout(attr, alignment: .left, alwaysStaticItems: true)
+        layout.measure(width: frame.width)
+        
+        textView.update(layout)
+        needsLayout = true
+        
+        self.reset.isEnabled = timerSeconds <= 0
+        
+        if timerSeconds <= 0 {
+            timer?.invalidate()
+            timer = nil
+        }
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.centerX()
+        reset.setFrameOrigin(10, textView.frame.maxY + 20)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 class LoginAuthInfoView : View {
 
     fileprivate var state: UnauthorizedAccountStateContents = .empty
     
     private let phoneNumberContainer:PhoneNumberContainerView
+    private let resetAccountContainer:AwaitingResetConfirmationView
+
     private let codeInputContainer:InputCodeContainerView
     private let signupView:SignupView
     var arguments:LoginAuthViewArguments? {
@@ -851,12 +1034,14 @@ class LoginAuthInfoView : View {
     required init(frame frameRect: NSRect) {
         codeInputContainer = InputCodeContainerView(frame: frameRect)
         phoneNumberContainer = PhoneNumberContainerView(frame: frameRect)
+        resetAccountContainer = AwaitingResetConfirmationView(frame: frameRect)
         signupView = SignupView(frame: frameRect)
         super.init(frame:frameRect)
         
         addSubview(codeInputContainer)
         addSubview(phoneNumberContainer)
         addSubview(signupView)
+        addSubview(resetAccountContainer)
     }
     
     func updateCountryCode(_ code: String) {
@@ -903,9 +1088,12 @@ class LoginAuthInfoView : View {
                 if completed {
                     self?.codeInputContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
             codeInputContainer.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
+            signupView.change(opacity: 0, animated: animated)
         case .empty:
             phoneNumberContainer.updateLocalizationAndTheme()
             phoneNumberContainer.isHidden = false
@@ -913,8 +1101,13 @@ class LoginAuthInfoView : View {
                 if completed {
                     self?.codeInputContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
+            codeInputContainer.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
+            signupView.change(opacity: 0, animated: animated)
+
         case let .confirmationCodeEntry(number, type, hash, timeout, nextType, terms):
             codeInputContainer.updateLocalizationAndTheme()
             codeInputContainer.isHidden = false
@@ -922,15 +1115,15 @@ class LoginAuthInfoView : View {
             codeInputContainer.update(number: number, type: type, hash: hash, timeout: timeout, nextType: nextType, animated: animated)
             phoneNumberContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
-            
-            if let terms = terms {
-                terms
-            }
+            resetAccountContainer.change(opacity: 0, animated: animated)
+
+
 
             codeInputContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.phoneNumberContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
         case let .passwordEntry(hint, number, code):
@@ -939,11 +1132,13 @@ class LoginAuthInfoView : View {
             codeInputContainer.showPasswordInput(hint, number ?? "", code ?? "", animated: animated)
             phoneNumberContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
 
             codeInputContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.phoneNumberContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
 
                 }
             })
@@ -952,19 +1147,34 @@ class LoginAuthInfoView : View {
             signupView.isHidden = false
             phoneNumberContainer.change(opacity: 0, animated: animated)
             codeInputContainer.change(opacity: 0, animated: animated)
-            
+            resetAccountContainer.change(opacity: 0, animated: animated)
+
             signupView.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.phoneNumberContainer.isHidden = true
                     self?.codeInputContainer.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
         case .passwordRecovery(let hint, let number, let code, let emailPattern):
             //TODO
             break
         case .awaitingAccountReset(let protectedUntil, let number):
-            //TODO
-            break
+            resetAccountContainer.isHidden = false
+            
+            resetAccountContainer.update(with: number ?? "", until: protectedUntil, reset: { [weak self] in
+                self?.arguments?.resetAccount()
+            })
+            resetAccountContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
+                if completed {
+                    self?.signupView.isHidden = true
+                    self?.phoneNumberContainer.isHidden = true
+                    self?.codeInputContainer.isHidden = true
+                }
+            })
+            phoneNumberContainer.change(opacity: 0, animated: animated)
+            codeInputContainer.change(opacity: 0, animated: animated)
+            signupView.change(opacity: 0, animated: animated)
         }
         window?.makeFirstResponder(firstResponder())
     }
@@ -975,6 +1185,7 @@ class LoginAuthInfoView : View {
         phoneNumberContainer.setFrameSize(newSize)
         codeInputContainer.setFrameSize(newSize)
         signupView.setFrameSize(newSize)
+        resetAccountContainer.setFrameSize(newSize)
     }
     
 

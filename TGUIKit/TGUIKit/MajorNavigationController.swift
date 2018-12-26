@@ -56,12 +56,15 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             self.controller.viewDidAppear(false)
         }
         
+        
     }
     
     public func closeSidebar() {
         genericView.removeProportion(state: .dual)
         genericView.setProportion(proportion: SplitProportion(min:380, max: .greatestFiniteMagnitude), state: .single)
         genericView.layout()
+        
+        viewDidChangedNavigationLayout(.single)
     }
     
     public init(_ majorClass:AnyClass, _ empty:ViewController) {
@@ -104,6 +107,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         default:
             break
         }
+        controller.viewDidChangedNavigationLayout(state)
     }
     
     public func splitViewDidNeedMinimisize(controller: ViewController) {
@@ -172,7 +176,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
 
                 
                 strongSelf.show(controller, newStyle)
-                
+                controller.viewDidChangedNavigationLayout(strongSelf.genericView.state)
 
             }
         }))
@@ -180,7 +184,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     
     public var doSomethingOnEmptyBack: (()->Void)? = nil
     
-    open override func back(animated:Bool = true, forceAnimated: Bool = false) -> Void {
+    open override func back(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop) -> Void {
         if  !isLocked, let last = stack.last, last.invokeNavigationBack() {
             if stackCount > 1 {
                 let ncontroller = stack[stackCount - 2]
@@ -188,13 +192,16 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                 last.didRemovedFromStack()
                 stack.removeLast()
                 
-                show(ncontroller, removeAnimateFlag ? .none : .pop)
+                show(ncontroller, removeAnimateFlag ? .none : animationStyle)
             } else {
                 doSomethingOnEmptyBack?()
             }
         }
         
     }
+    
+    
+    
     
     public func removeExceptMajor() {
         let index = stack.index(where: { current in
@@ -210,7 +217,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             }
         }
     }
-    
+        
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.window?.set(handler: { [weak self] in
@@ -256,6 +263,8 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     previous.view.frame = NSMakeRect(0, previous.bar.height, self.frame.width, self.frame.height - previous.bar.height)
                     
                     self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
+                    
+                    
                     self.addShadowView(.left)
                     if previous.bar.has {
                         self.navigationBar.startMoveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction)
@@ -288,7 +297,9 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     let animationStyle = previous.animationStyle
                     self.controller.view._change(pos: NSMakePoint(0, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     self.containerView.subviews[0]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
-                        self?.containerView.subviews[0].removeFromSuperview()
+                        if completed {
+                            self?.containerView.subviews[0].removeFromSuperview()
+                        }
                     })
                     self.shadowView.change(pos: NSMakePoint(-self.shadowView.frame.width, self.shadowView.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
                         self?.shadowView.removeFromSuperview()

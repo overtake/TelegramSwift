@@ -28,6 +28,11 @@ open class Button: Control {
         
     }
     
+    open override func cursorUpdate(with event: NSEvent) {
+        //super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
+    }
+    
 //    public func set(backgroundColor:NSColor, for state:ControlState) -> Void {
 //        stateBackground[state] = backgroundColor
 //        apply(state: self.controlState)

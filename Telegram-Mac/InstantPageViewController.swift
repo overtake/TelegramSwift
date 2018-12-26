@@ -139,20 +139,12 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         reloadData()
     }
     
+
+    
     private func updateLayout() {
-        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, presentation: appearance, openChannel: { [weak self] channel in
-            if let account = self?.account {
-                self?.account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(channel.id)))
-               self?.closeModal()
-            }
-        }, joinChannel: { [weak self] channel in
-            if let strongSelf = self, let window = self?.window {
-                strongSelf.joinDisposable.set(showModalProgress(signal: joinChannel(account: strongSelf.account, peerId: channel.id), for: window).start(next: { [weak strongSelf] in
-                    strongSelf?.updateLayout()
-                    strongSelf?.containerLayoutUpdated(transition: .immediate)
-                }))
-            }
-        })
+        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance)) //instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, presentation: appearance)
+        
+        updateInteractions()
         
         for (_, tileNode) in self.visibleTiles {
             tileNode.removeFromSuperview()
@@ -213,15 +205,73 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         if let window = window, let layout = currentLayout, let instantPage = instantPage {
             selectManager?.initializeHandlers(for: window, instantLayout: layout, instantPage: instantPage, account: account, updateLayout: { [weak self] in
                 self?.updateVisibleItems()
-                }, openInfo: { [weak self] peerId, openChat, postId, action in
-                    self?.openInfo(peerId, openChat, postId, action)
-                    self?.modal?.close()
-                }, openNewTab: { [weak self] mediaId, url in
-                    self?.openNewTab(mediaId, url)
+            }, openUrl: { [weak self] url in
+                self?.openUrl(url)
             })
         }
     }
     
+    private func openUrl(_ url: InstantPageUrlItem) {
+        var baseUrl = url.url
+        var anchor: String?
+        if let anchorRange = url.url.range(of: "#") {
+            anchor = String(baseUrl[anchorRange.upperBound...]).removingPercentEncoding
+            baseUrl = String(baseUrl[..<anchorRange.lowerBound])
+        }
+        
+        if  case let .Loaded(content) = webPage.content, let page = content.instantPage, page.url == baseUrl, let anchor = anchor {
+            self.scrollToAnchor(anchor)
+            return
+        }
+        
+        if let mediaId = url.webpageId {
+            openNewTab(mediaId, url.url)
+        }
+    }
+    
+    private func effectiveFrameForItem(_ item: InstantPageItem) -> CGRect {
+        let layoutOrigin = item.frame.origin
+        let origin = layoutOrigin
+        
+        return CGRect(origin: origin, size: item.frame.size)
+    }
+    
+    private func findAnchorItem(_ anchor: String, items: [InstantPageItem]) -> (InstantPageItem, CGFloat, Bool)? {
+        for item in items {
+            if let item = item as? InstantPageAnchorItem, item.matchesAnchor(anchor)  {
+                return (item, -10.0, false)
+            } else if let item = item as? InstantPageTextItem {
+                if let (lineIndex, empty) = item.anchors[anchor] {
+                    return (item, item.lines[lineIndex].frame.minY - 10.0, !empty)
+                }
+            }
+        }
+        return nil
+    }
+    
+    private func scrollToAnchor(_ anchor: String) {
+        guard let items = self.currentLayout?.items else {
+            return
+        }
+
+        if !anchor.isEmpty {
+            if let (item, lineOffset, _) = findAnchorItem(String(anchor), items: items) {
+                let frame: CGRect = self.effectiveFrameForItem(item)
+                let containerOffset: CGFloat = 0.0
+                let targetY = containerOffset + frame.minY + lineOffset
+              
+                 genericView.clipView.scroll(to: CGPoint(x: 0.0, y: targetY), animated: true)
+                
+            } else if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, !instantPage.isComplete {
+                fatalError()
+                //self.loadProgress.set(0.5)
+               // self.pendingAnchor = anchor
+            }
+        } else {
+            genericView.clipView.scroll(to: NSZeroPoint, animated: true)
+        }
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateInteractions()
@@ -247,14 +297,14 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             return transaction.getMedia(mediaId)
         } |> deliverOnMainQueue
         mediaDisposable.set(getMedia.start(next: { [weak self] media in
-            if let media = media as? TelegramMediaWebpage, let strongSelf = self {
+            if let media = media as? TelegramMediaWebpage, let strongSelf = self, case let .Loaded(content) = media.content, let page = content.instantPage, !page.v2 {
                 strongSelf.navigationController?.push(InstantPageViewController(strongSelf.account, webPage: media, message: nil))
             } else if let window = self?.window, let account = self?.account {
                 _ = showModalProgress(signal: webpagePreview(account: account, url: url) |> timeout(0.5, queue: Queue.mainQueue(), alternate: .single(nil)) |> deliverOnMainQueue, for: window).start(next: { page in
                     if let page = page {
                         switch page.content {
                         case let .Loaded(content):
-                            if content.instantPage != nil {
+                            if let instantPage = content.instantPage, !instantPage.v2 {
                                 showInstantPage(InstantPageViewController(account, webPage: page, message: nil))
                             } else {
                                 execute(inapp: .external(link: url, false))
@@ -376,6 +426,20 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     }
     
     func updateVisibleItems() {
+        
+        
+        let arguments = InstantPageItemArguments(account: account, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), openMedia: { media in
+            
+        }, openPeer: { peerId in
+            
+        }, openUrl: { url in
+            
+        }, updateWebEmbedHeight: { height in
+            
+        }, updateDetailsExpanded: { expanded in
+            
+        })
+        
         var visibleTileIndices = Set<Int>()
         var visibleItemIndices = Set<Int>()
         
@@ -391,7 +455,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 visibleTileIndices.insert(tileIndex)
                 
                 if let tile = visibleTiles[tileIndex] {
-                    tile.needsDisplay = true
+                    tile.redrawTile()
                 } else {
                     let tileNode = InstantPageTileView(tile: tile)
                     tileNode.frame = tile.frame
@@ -429,7 +493,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 }
                 
                 if itemNode == nil {
-                    if let itemNode = item.node(account: self.account) {
+                    if let itemNode = item.node(arguments: arguments, currentExpandedDetails: nil) {
                         (itemNode as! View).frame = item.frame
                         documentView.addSubview(itemNode as! View)
                         self.visibleItemsWithViews[itemIndex] = itemNode

@@ -47,6 +47,9 @@ class SeparatorRowItem: TableRowItem {
         
         super.init(initialSize)
     }
+    override var instantlyResize: Bool {
+        return true
+    }
     
     
     override func viewClass() -> AnyClass {
@@ -62,6 +65,7 @@ class SeparatorRowView: TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     override var backdorColor: NSColor {

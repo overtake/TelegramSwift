@@ -98,7 +98,7 @@ private func mediaForMessage(message: Message) -> Media? {
 
 fileprivate func itemFor(entry: ChatHistoryEntry, account: Account, pagerSize: NSSize) -> MGalleryItem {
     switch entry {
-    case let .MessageEntry(message, _, _, _, _, _, _):
+    case let .MessageEntry(message, _, _, _, _, _, _, _):
         if let media = mediaForMessage(message: message) {
             if let _ = media as? TelegramMediaImage {
                 return MGalleryPhotoItem(account, .message(entry), pagerSize)
@@ -425,7 +425,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 if image == nil {
-                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, reference: nil, partialReference: nil)
+                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
                 }
                 
                 _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(account, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peerId: peerId, date: 0), pagerSize))], updated: []))
@@ -611,7 +611,7 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(isAdmin: false), nil, nil)]
+                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(isAdmin: false), nil, nil, nil)]
                     let previous = previous.swap(entries)
                     
                     var inserted: [(Int, MGalleryItem)] = []
@@ -643,7 +643,7 @@ class GalleryViewer: NSResponder {
                     return view |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
-                            case let .MessageEntry(message, _, _, _, _, _, _):
+                            case let .MessageEntry(message, _, _, _, _, _, _, _):
                                 return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia
                             default:
                                 return true
@@ -659,7 +659,7 @@ class GalleryViewer: NSResponder {
                     return account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
-                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(isAdmin: false), nil, nil))
+                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(isAdmin: false), nil, nil, nil))
                         }
                         let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, account: account, pagerSize: pagerSize) |> map { transition in
@@ -1128,7 +1128,7 @@ class GalleryViewer: NSResponder {
         //backgroundView.change(opacity: 0, animated: false)
         self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
             if let strongSelf = self {
-                strongSelf.backgroundView.alphaValue = 1.0
+                
                // strongSelf.backgroundView.change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
@@ -1141,8 +1141,10 @@ class GalleryViewer: NSResponder {
                     if ignoreStableId != stableId {
                         return strongSelf?.delegate?.contentInteractionView(for: stableId, animateIn: false)
                     }
+
                     return nil
                 }, completion:{ [weak strongSelf] in
+                    strongSelf?.backgroundView.alphaValue = 1.0
                     strongSelf?.controls.animateIn()
                 }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {

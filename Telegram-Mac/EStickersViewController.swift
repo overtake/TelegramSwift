@@ -493,7 +493,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             
             self.genericView.searchView.change(state: .None, true)
             
-            _ = showModalProgress(signal: loadedStickerPack(postbox: account.postbox, network: account.network, reference: reference)
+            _ = showModalProgress(signal: loadedStickerPack(postbox: account.postbox, network: account.network, reference: reference, forceActualized: false)
                 |> filter { result in
                     switch result {
                     case .result:

@@ -233,19 +233,30 @@ private func searchEntriesForPeers(_ peers:[Peer], _ global: [Peer], account:Acc
     }
     
     if !global.isEmpty {
-        entries.append(.separator(index, L10n.searchSeparatorGlobalPeers))
-        index += 1
-        for peer in global {
+       
+        let global = global.filter { peer in
             if account.peerId != peer.id, !excludeIds.contains(peer.id) {
                 if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
                     if !botInfo.flags.contains(.worksWithGroups) {
-                        continue
+                        return false
                     }
                 }
-                entries.append(.peer(peer,index, presences[peer.id], !excludeIds.contains(peer.id)))
-                excludeIds.insert(peer.id)
-                index += 1
+                return true
+            } else {
+                return false
             }
+        }
+        
+        if !global.isEmpty {
+            entries.append(.separator(index, L10n.searchSeparatorGlobalPeers))
+            index += 1
+            
+        }
+        
+        for peer in global {
+            entries.append(.peer(peer,index, presences[peer.id], !excludeIds.contains(peer.id)))
+            excludeIds.insert(peer.id)
+            index += 1
         }
     }
     
@@ -287,7 +298,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                 interactionType = .selectable(interactions)
             }
             
-            item = ShortPeerRowItem(initialSize, peer: peer, account: account, stableId: entry.stableId, enabled: enabled, statusStyle: ControlStyle(foregroundColor:color), status: string, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
+            item = ShortPeerRowItem(initialSize, peer: peer, account: account, stableId: entry.stableId, enabled: enabled, statusStyle: ControlStyle(foregroundColor:color), status: string, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
                 if let singleAction = singleAction {
                     singleAction(peer)
                 }

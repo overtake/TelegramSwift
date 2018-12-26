@@ -37,7 +37,7 @@ class ChatMessageItem: ChatRowItem {
             let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
             switch link {
             case let .followResolvedName(_, postId, _, _, _):
-                if let _ = postId {
+                if let postId = postId, postId > 0 {
                     return L10n.chatMessageActionShowMessage
                 }
             default:
@@ -65,7 +65,7 @@ class ChatMessageItem: ChatRowItem {
 
            
             let messageAttr:NSMutableAttributedString
-            if message.text.isEmpty && message.media.isEmpty {
+            if message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
                 _ = attr.append(string: tr(L10n.chatMessageUnsupported), color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr

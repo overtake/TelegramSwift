@@ -22,7 +22,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.networkUsageHeaderGeneric, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderGeneric), color: theme.colors.grayText, detectBold: true))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("messagesSent"), name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.generic.wifi.outgoing + stats.generic.cellular.outgoing)))))
     index += 1
@@ -32,7 +32,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.networkUsageHeaderImages, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderImages), color: theme.colors.grayText, detectBold: true))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("imagesSent"), name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.image.wifi.outgoing + stats.image.cellular.outgoing)))))
     index += 1
@@ -42,7 +42,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.networkUsageHeaderVideos, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderVideos), color: theme.colors.grayText, detectBold: true))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("videosSent"), name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.video.wifi.outgoing + stats.video.cellular.outgoing)))))
     index += 1
@@ -52,7 +52,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.networkUsageHeaderAudio, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderAudio), color: theme.colors.grayText, detectBold: true))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("audioSent"), name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.audio.wifi.outgoing + stats.audio.cellular.outgoing)))))
     index += 1
@@ -62,7 +62,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.networkUsageHeaderFiles, color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderFiles), color: theme.colors.grayText, detectBold: true))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("filesSent"), name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.file.wifi.outgoing + stats.file.cellular.outgoing)))))
     index += 1
@@ -80,7 +80,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
         formatter.dateFormat = "E, d MMM yyyy HH:mm"
         let dateStringPlain = formatter.string(from: Date(timeIntervalSince1970: Double(stats.resetWifiTimestamp)))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.networkUsageNetworkUsageSince(dateStringPlain), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageNetworkUsageSince(dateStringPlain)), color: theme.colors.grayText, detectBold: true))
     }
 
     entries.append(.sectionId(sectionId))
@@ -95,7 +95,7 @@ func networkUsageStatsController(account: Account, f: @escaping((ViewController)
     let promise: Promise<NetworkUsageStats> = Promise()
     promise.set(combineLatest(accountNetworkUsageStats(account: account, reset: []) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {$0.0})
     
-    f(InputDataController(dataSignal: promise.get() |> deliverOnPrepareQueue |> map {networkUsageStatsControllerEntries(stats: $0)}, title: L10n.networkUsageNetworkUsage, validateData: { data in
+    f(InputDataController(dataSignal: promise.get() |> deliverOnPrepareQueue |> map {networkUsageStatsControllerEntries(stats: $0)} |> map {($0, true)}, title: L10n.networkUsageNetworkUsage, validateData: { data in
         if data[.init("reset")] != nil {
             let reset: ResetNetworkUsageStats = [.wifi]
             promise.set(accountNetworkUsageStats(account: account, reset: reset))

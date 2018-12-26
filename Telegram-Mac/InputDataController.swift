@@ -11,6 +11,137 @@ import TGUIKit
 import TelegramCoreMac
 import SwiftSignalKitMac
 
+
+public class InputDataModalController : ModalViewController {
+    private let controller: InputDataController
+    private let _modalInteractions: ModalInteractions?
+    private let closeHandler: (@escaping()-> Void) -> Void
+    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }) {
+        self.controller = controller
+        self._modalInteractions = modalInteractions
+        self.controller._frameRect = NSMakeRect(0, 0, 350, 300)
+        self.closeHandler = closeHandler
+        super.init(frame: controller._frameRect)
+    }
+    
+    public override func close() {
+        closeHandler({ [weak self] in
+            self?.closeModal()
+        })
+    }
+    
+    private func closeModal() {
+        super.close()
+    }
+    
+    public override var modalHeader: String? {
+        return controller.defaultBarTitle
+    }
+    
+    public override var modalInteractions: ModalInteractions? {
+        return _modalInteractions
+    }
+    
+    public override var handleEvents: Bool {
+        return true
+    }
+    
+    public override func becomeFirstResponder() -> Bool? {
+        return controller.becomeFirstResponder()
+    }
+    
+    public override func firstResponder() -> NSResponder? {
+        return controller.firstResponder()
+    }
+    
+    public override func returnKeyAction() -> KeyHandlerResult {
+        return controller.returnKeyAction()
+    }
+    
+    public override var haveNextResponder: Bool {
+        return controller.haveNextResponder
+    }
+    
+    public override func nextResponder() -> NSResponder? {
+        return controller.nextResponder()
+    }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        controller.viewWillAppear(animated)
+    }
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        controller.viewDidAppear(animated)
+    }
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        controller.viewWillDisappear(animated)
+    }
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        controller.viewDidDisappear(animated)
+        controller.didRemovedFromStack()
+    }
+    
+    
+    @objc private func rootControllerFrameChanged(_ notification:Notification) {
+        viewDidResized(frame.size)
+    }
+    
+    public override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        
+        updateSize(true)
+    }
+    
+    override open var dynamicSize: Bool {
+        return true
+    }
+    
+    override open func measure(size: NSSize) {
+        self.modal?.resize(with:NSMakeSize(frame.width, min(size.height - 150, controller.genericView.listHeight)), animated: false)
+    }
+    
+    public func updateSize(_ animated: Bool) {
+        if let contentSize = self.modal?.window.contentView?.frame.size {
+            self.modal?.resize(with:NSMakeSize(frame.width, min(contentSize.height - 150, controller.genericView.listHeight)), animated: animated)
+        }
+    }
+    
+    
+    public override func viewClass() -> AnyClass {
+        fatalError()
+    }
+    
+    public override func loadView() {
+        controller.loadView()
+    
+        viewDidLoad()
+    }
+    
+    public override var view: NSView {
+        if !controller.isLoaded() {
+            loadView()
+        }
+        return controller.view
+    }
+    
+    
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        controller.viewDidLoad()
+        ready.set(controller.ready.get())
+        
+        controller.modalTransitionHandler = { [weak self] animated in
+            self?.updateSize(animated)
+        }
+    }
+}
+
+
+
+
 final class InputDataArguments {
     let select:((InputDataIdentifier, InputDataValue))->Void
     let dataUpdated:()->Void
@@ -20,18 +151,31 @@ final class InputDataArguments {
     }
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], initialSize:NSSize, arguments: InputDataArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, initialSize:NSSize, arguments: InputDataArguments) -> TableUpdateTransition {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments: arguments, initialSize: initialSize)
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated)
 }
 
 
+enum InputDataReturnResult {
+    case `default`
+    case nextResponder
+    case invokeEvent
+    case nothing
+}
+
+enum InputDataDeleteResult {
+    case `default`
+    case invoked
+}
 
 class InputDataController: GenericViewController<TableView> {
 
-    private let values: Promise<[InputDataEntry]> = Promise()
+    fileprivate var modalTransitionHandler:((Bool)->Void)? = nil
+    
+    private let values: Promise<([InputDataEntry], Bool)> = Promise()
     private let disposable = MetaDisposable()
     private let appearanceDisposablet = MetaDisposable()
     private let title: String
@@ -41,12 +185,16 @@ class InputDataController: GenericViewController<TableView> {
     private let didLoaded:([InputDataIdentifier : InputDataValue]) -> Void
     private let _removeAfterDisappear: Bool
     private let hasDone: Bool
-    private let updateDoneEnabled:([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void
+    private let updateDoneValue:([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void
     private let customRightButton:((ViewController)->BarView?)?
     private let afterTransaction: (InputDataController)->Void
     private let backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
+    private let returnKeyInvocation:(InputDataIdentifier?, NSEvent) -> InputDataReturnResult
+    private let deleteKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
+    private let tabKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
+
     let identifier: String
-    init(dataSignal:Signal<[InputDataEntry], NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneEnabled:@escaping([InputDataIdentifier : InputDataValue])->((Bool)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }) {
+    init(dataSignal:Signal<([InputDataEntry], Bool), NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -55,10 +203,13 @@ class InputDataController: GenericViewController<TableView> {
         self.identifier = identifier
         self._removeAfterDisappear = removeAfterDisappear
         self.hasDone = hasDone
-        self.updateDoneEnabled = updateDoneEnabled
+        self.updateDoneValue = updateDoneValue
         self.customRightButton = customRightButton
         self.afterTransaction = afterTransaction
         self.backInvocation = backInvocation
+        self.returnKeyInvocation = returnKeyInvocation
+        self.deleteKeyInvocation = deleteKeyInvocation
+        self.tabKeyInvocation = tabKeyInvocation
         super.init()
         values.set(dataSignal)
     }
@@ -87,6 +238,10 @@ class InputDataController: GenericViewController<TableView> {
         return rightBarView as! TextButtonBarView
     }
     
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
     func fetchData() -> [InputDataIdentifier : InputDataValue] {
         var values:[InputDataIdentifier : InputDataValue] = [:]
         genericView.enumerateItems { item -> Bool in
@@ -113,6 +268,24 @@ class InputDataController: GenericViewController<TableView> {
         return item
     }
     
+    func makeFirstResponderIfPossible(for identifier: InputDataIdentifier, focusIdentifier: InputDataIdentifier? = nil, scrollDown: Bool = false, scrollIfNeeded: Bool = true) {
+        if let item = findItem(for: identifier) {
+            _ = window?.makeFirstResponder(findItem(for: identifier)?.view?.firstResponder)
+            
+            if let focusIdentifier = focusIdentifier {
+                if let item = findItem(for: focusIdentifier) {
+                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: false, inset: 0), inset: NSEdgeInsets(), true)
+                }
+            } else if scrollIfNeeded {
+                if !scrollDown  {
+                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: false, inset: 0), inset: NSEdgeInsets(), true)
+                } else {
+                    genericView.scroll(to: .down(true))
+                }
+            }
+        }
+    }
+    
     private func proccessValidation(_ validation: InputDataValidation) {
         var scrollFirstItem: TableRowItem? = nil
         switch validation {
@@ -129,7 +302,7 @@ class InputDataController: GenericViewController<TableView> {
                         if scrollFirstItem == nil {
                             scrollFirstItem = item
                             if let item = item {
-                                genericView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: true, inset: 0), inset: NSEdgeInsets(), true)
+                                genericView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: true, inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
                             }
                         }
                     }
@@ -146,9 +319,13 @@ class InputDataController: GenericViewController<TableView> {
             switch behaviour {
             case .navigationBack:
                 navigationController?.back()
+            case .navigationBackWithPushAnimation:
+                 navigationController?.back(animationStyle: .push)
             case let .custom(action):
                 action()
             }
+        case .none:
+            break
         }
     }
     
@@ -180,9 +357,9 @@ class InputDataController: GenericViewController<TableView> {
         let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, values.get() |> deliverOnPrepareQueue) |> map { appearance, entries in
-            let entries = entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, values.get() |> deliverOnPrepareQueue) |> map { appearance, state in
+            let entries = state.0.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            return prepareTransition(left: previous.swap(entries), right: entries, animated: state.1, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition in
@@ -192,23 +369,48 @@ class InputDataController: GenericViewController<TableView> {
                 self.didLoaded(self.fetchData())
             }
             
-            let result = self.updateDoneEnabled(self.fetchData())
-            result { [weak self] enabled in
+            let result = self.updateDoneValue(self.fetchData())
+            result { [weak self] value in
                 guard let `self` = self else {return}
-                self.doneView.isEnabled = enabled
+                switch value {
+                case let .disabled(text):
+                    self.doneView.isHidden = false
+                    self.doneView.isLoading = false
+                    self.doneView.isEnabled = false
+                    self.doneView.set(text: text, for: .Normal)
+                case let .enabled(text):
+                    self.doneView.isHidden = false
+                    self.doneView.isLoading = false
+                    self.doneView.isEnabled = true
+                    self.doneView.set(text: text, for: .Normal)
+                case .loading:
+                    self.doneView.isHidden = false
+                    self.doneView.isLoading = true
+                case .invisible:
+                    self.doneView.isHidden = true
+                }
+                
             }
             
             self.afterTransaction(self)
-            
+            self.modalTransitionHandler?(transition.animated)
             self.readyOnce()
         }))
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let event = NSApp.currentEvent {
-            if FastSettings.checkSendingAbility(for: event) {
+            switch returnKeyInvocation(self.currentFirstResponderIdentifier, event) {
+            case .default:
                 self.validateInput(data: self.fetchData())
                 return .invoked
+            case .nextResponder:
+                _ = window?.makeFirstResponder(self.nextResponder())
+                return .invoked
+            case .nothing:
+                return .invoked
+            case .invokeEvent:
+                return .invokeNext
             }
         }
         return .invokeNext
@@ -241,7 +443,8 @@ class InputDataController: GenericViewController<TableView> {
     }
 
     override func backSettings() -> (String, CGImage?) {
-        return super.backSettings()//("", theme.icons.instantViewBack)
+        
+        return super.backSettings()
     }
     
     override var enableBack: Bool {
@@ -276,6 +479,7 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        _ = self.window?.makeFirstResponder(nil)
         super.viewDidAppear(animated)
         
         window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
@@ -286,14 +490,28 @@ class InputDataController: GenericViewController<TableView> {
             if index > -1, let view = self.genericView.item(at: index).view {
                 if view.mouseInsideField {
                     if self.window?.firstResponder != view.firstResponder {
-                        self.window?.makeFirstResponder(view.firstResponder)
+                        _ = self.window?.makeFirstResponder(view.firstResponder)
                         return .invoked
                     }
                 }
             }
             
             return .invokeNext
-        }, with: self, for: .leftMouseDown)
+        }, with: self, for: .leftMouseUp, priority: self.responderPriority)
+        
+        
+        window?.set(handler: { [weak self] in
+            guard let `self` = self else {return .rejected}
+            
+            switch self.deleteKeyInvocation(self.currentFirstResponderIdentifier) {
+            case .default:
+                return .rejected
+            case .invoked:
+                return .invoked
+            }
+            
+            return .rejected
+        }, with: self, for: .Delete, priority: self.responderPriority, modifierFlags: nil)
         
     }
     
@@ -302,6 +520,21 @@ class InputDataController: GenericViewController<TableView> {
         window?.remove(object: self, for: .leftMouseDown)
     }
     
+    
+    var currentFirstResponderIdentifier: InputDataIdentifier? {
+        var identifier: InputDataIdentifier? = nil
+        
+        genericView.enumerateViews { view -> Bool in
+            if view.hasFirstResponder() {
+                if view.firstResponder == view.window?.firstResponder {
+                    identifier = (view.item?.stableId.base as? InputDataEntryId)?.identifier
+                }
+                
+            }
+            return identifier == nil
+        }
+        return identifier
+    }
     
     override func nextResponder() -> NSResponder? {
         var next: NSResponder?

@@ -19,6 +19,8 @@ internal final class L10n {
   internal static var phoneCodeInvalid: String  { return L10n.tr("Localizable", "PHONE_CODE_INVALID") }
   /// Invalid phone number
   internal static var phoneNumberInvalid: String  { return L10n.tr("Localizable", "PHONE_NUMBER_INVALID") }
+  /// An error occurred. Please try again later
+  internal static var unknownError: String  { return L10n.tr("Localizable", "UnknownError") }
   /// You
   internal static var you: String  { return L10n.tr("Localizable", "You") }
   /// Check for Updates
@@ -199,6 +201,32 @@ internal final class L10n {
   internal static var appearanceSettingsFollowSystemAppearanceDefaultHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance.DefaultHeader") }
   /// TEXT SIZE
   internal static var appearanceSettingsTextSizeHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.TextSize.Header") }
+  /// Change
+  internal static var applyLanguageApplyLanguageAction: String  { return L10n.tr("Localizable", "ApplyLanguage.ApplyLanguageAction") }
+  /// Change
+  internal static var applyLanguageChangeLanguageAction: String  { return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageAction") }
+  /// The language %@ is already active.
+  internal static func applyLanguageChangeLanguageAlreadyActive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageAlreadyActive", p1)
+  }
+  /// You are about to apply a language pack **%@**.\n\nThis will translate the entire interface. You can suggest corrections in the [translation panel]().\n\nYou can change your language back at any time in Settings.
+  internal static func applyLanguageChangeLanguageOfficialText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageOfficialText", p1)
+  }
+  /// Change Language?
+  internal static var applyLanguageChangeLanguageTitle: String  { return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageTitle") }
+  /// You are about to apply a custom language pack **%@** that is %@% complete.\n\nThis will translate the entire interface. You can suggest corrections in the [translation panel]().\n\nYou can change your language back at any time in Settings.
+  internal static func applyLanguageChangeLanguageUnofficialText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageUnofficialText", p1, p2)
+  }
+  /// Translation Platform
+  internal static var applyLanguageUnsufficientDataOpenPlatform: String  { return L10n.tr("Localizable", "ApplyLanguage.UnsufficientDataOpenPlatform") }
+  /// Unfortunately, this custom language pack %@ doesn't contain data for Telegram macos. You can contribute to this language pack using the translations platform.
+  internal static func applyLanguageUnsufficientDataText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ApplyLanguage.UnsufficientDataText", p1)
+  }
+  /// Insufficient Data
+  internal static var applyLanguageUnsufficientDataTitle: String  { return L10n.tr("Localizable", "ApplyLanguage.UnsufficientDataTitle") }
   /// You can have up to 200 sticker sets installed. Unused stickers are archived when you add more.
   internal static var archivedStickersDescription: String  { return L10n.tr("Localizable", "ArchivedStickers.Description") }
   /// Your archived sticker packs will appear here
@@ -359,6 +387,20 @@ internal final class L10n {
   internal static var callRecentOutgoing: String  { return L10n.tr("Localizable", "Call.Recent.Outgoing") }
   /// End Call
   internal static var callHeaderEndCall: String  { return L10n.tr("Localizable", "CallHeader.EndCall") }
+  /// The deletion process was cancelled for your account %@.
+  internal static func cancelResetAccountSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "CancelResetAccount.Success", p1)
+  }
+  /// Somebody with access to your phone number **%@** has requested to delete your Telegram account and reset your 2-Step Verification password.\n\nIf it wasn't you, please enter the code we've just sent you via SMS to your number.
+  internal static func cancelResetAccountTextSMS(_ p1: String) -> String {
+    return L10n.tr("Localizable", "CancelResetAccount.TextSMS", p1)
+  }
+  /// Cancel Account Reset
+  internal static var cancelResetAccountTitle: String  { return L10n.tr("Localizable", "CancelResetAccount.Title") }
+  /// %d votes
+  internal static func cChatPollTooltipVotesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "CChat.Poll.Tooltip.Votes_other", p1)
+  }
   /// All Admins
   internal static var chanelEventFilterAllAdmins: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllAdmins") }
   /// All Events
@@ -843,6 +885,80 @@ internal final class L10n {
   internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
   /// SHOW MESSAGE
   internal static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
+  /// %@%
+  internal static func chatPollResult(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Result", p1)
+  }
+  /// Stop Poll
+  internal static var chatPollStop: String  { return L10n.tr("Localizable", "Chat.Poll.Stop") }
+  /// %d
+  internal static func chatPollTotalVotesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_countable", p1)
+  }
+  /// %d voted
+  internal static func chatPollTotalVotesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_few", p1)
+  }
+  /// %d voted
+  internal static func chatPollTotalVotesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_many", p1)
+  }
+  /// %d voted
+  internal static func chatPollTotalVotesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_one", p1)
+  }
+  /// %d voted
+  internal static func chatPollTotalVotesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_other", p1)
+  }
+  /// %d voted
+  internal static func chatPollTotalVotesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_two", p1)
+  }
+  /// %d voted
+  internal static func chatPollTotalVotesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_zero", p1)
+  }
+  /// No votes yet
+  internal static var chatPollTotalVotesEmpty: String  { return L10n.tr("Localizable", "Chat.Poll.TotalVotesEmpty") }
+  /// No votes
+  internal static var chatPollTotalVotesResultEmpty: String  { return L10n.tr("Localizable", "Chat.Poll.TotalVotesResultEmpty") }
+  /// Retract Vote
+  internal static var chatPollUnvote: String  { return L10n.tr("Localizable", "Chat.Poll.Unvote") }
+  /// Stop Poll?
+  internal static var chatPollStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Poll.Stop.Confirm.Header") }
+  /// If you stop this poll now, nobody will be able to vote in it anymore. This action cannot be undone.
+  internal static var chatPollStopConfirmText: String  { return L10n.tr("Localizable", "Chat.Poll.Stop.Confirm.Text") }
+  /// no votes
+  internal static var chatPollTooltipNoVotes: String  { return L10n.tr("Localizable", "Chat.Poll.Tooltip.NoVotes") }
+  /// %d
+  internal static func chatPollTooltipVotesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_countable", p1)
+  }
+  /// %d votes
+  internal static func chatPollTooltipVotesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_few", p1)
+  }
+  /// %d votes
+  internal static func chatPollTooltipVotesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_many", p1)
+  }
+  /// %d votes
+  internal static func chatPollTooltipVotesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_one", p1)
+  }
+  /// %d votes
+  internal static func chatPollTooltipVotesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_two", p1)
+  }
+  /// %d votes
+  internal static func chatPollTooltipVotesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_zero", p1)
+  }
+  /// Anonymous Poll
+  internal static var chatPollTypeAnonymous: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Anonymous") }
+  /// Final Results
+  internal static var chatPollTypeClosed: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Closed") }
   /// Proxy Sponsor
   internal static var chatProxySponsoredAlertHeader: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertHeader") }
   /// Settings
@@ -1737,6 +1853,8 @@ internal final class L10n {
   internal static var inputAttachPopoverPhotoOrVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.PhotoOrVideo") }
   /// Camera
   internal static var inputAttachPopoverPicture: String  { return L10n.tr("Localizable", "InputAttach.Popover.Picture") }
+  /// Poll
+  internal static var inputAttachPopoverPoll: String  { return L10n.tr("Localizable", "InputAttach.Popover.Poll") }
   /// Day:
   internal static var inputDataDateDayPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Day.Placeholder") }
   /// Day
@@ -1771,6 +1889,10 @@ internal final class L10n {
   internal static var joinLinkJoin: String  { return L10n.tr("Localizable", "JoinLink.Join") }
   /// Show All
   internal static var kd2MpPUSTitle: String  { return L10n.tr("Localizable", "Kd2-mp-pUS.title") }
+  /// OFFICIAL TRANSLATIONS
+  internal static var languageOfficialTransationsHeader: String  { return L10n.tr("Localizable", "Language.OfficialTransationsHeader") }
+  /// Are you sure you want to remove this lang-pack?
+  internal static var languageRemovePack: String  { return L10n.tr("Localizable", "Language.RemovePack") }
   /// Bring All to Front
   internal static var le2AR0XJTitle: String  { return L10n.tr("Localizable", "LE2-aR-0XJ.title") }
   /// Welcome to the new super-fast and stable Telegram for macOS, fully rewritten in Swift 3.0.
@@ -1785,6 +1907,8 @@ internal final class L10n {
   internal static var linkInvationConfirmOk: String  { return L10n.tr("Localizable", "LinkInvation.Confirm.Ok") }
   /// Are you sure you want to revoke this link? Once you do, no one will be able to join the group using it.
   internal static var linkInvationGroupConfirmRevoke: String  { return L10n.tr("Localizable", "LinkInvation.Group.Confirm.Revoke") }
+  /// Sorry, this language doesn't seem to exist.
+  internal static var localizationPreviewErrorGeneric: String  { return L10n.tr("Localizable", "Localization.Preview.Error.Generic") }
   /// Accurate to %@
   internal static func locationSendAccurateTo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Location.Send.AccurateTo", p1)
@@ -1821,6 +1945,8 @@ internal final class L10n {
   internal static var loginJustSentSms: String  { return L10n.tr("Localizable", "Login.JustSentSms") }
   /// Next
   internal static var loginNext: String  { return L10n.tr("Localizable", "Login.Next") }
+  /// Forgot password?
+  internal static var loginPasswordForgot: String  { return L10n.tr("Localizable", "Login.PasswordForgot") }
   /// password
   internal static var loginPasswordPlaceholder: String  { return L10n.tr("Localizable", "Login.passwordPlaceholder") }
   /// We’ve just called your number. Please enter the code above.
@@ -1833,10 +1959,12 @@ internal final class L10n {
   internal static var loginPhoneNumberNotRegistred: String  { return L10n.tr("Localizable", "Login.PhoneNumberNotRegistred") }
   /// Since you haven't provided a recovery e-mail when setting up your password, your remaining options are either to remember your password or to reset your account.
   internal static var loginRecoveryMailFailed: String  { return L10n.tr("Localizable", "Login.RecoveryMailFailed") }
-  /// RESET MY ACCOUNT
+  /// RESET
   internal static var loginResetAccount: String  { return L10n.tr("Localizable", "Login.ResetAccount") }
   /// If you proceed with resetting your account, all of your chats and messages along with any media and files you shared, will be lost.
   internal static var loginResetAccountDescription: String  { return L10n.tr("Localizable", "Login.ResetAccountDescription") }
+  /// Reset Account
+  internal static var loginResetAccountText: String  { return L10n.tr("Localizable", "Login.ResetAccountText") }
   /// Haven't received the code?
   internal static var loginSendSmsIfNotReceivedAppCode: String  { return L10n.tr("Localizable", "Login.SendSmsIfNotReceivedAppCode") }
   /// Welcome to the macOS application
@@ -2025,6 +2153,8 @@ internal final class L10n {
   internal static var navigationDone: String  { return L10n.tr("Localizable", "Navigation.Done") }
   /// Edit
   internal static var navigationEdit: String  { return L10n.tr("Localizable", "Navigation.Edit") }
+  /// Next
+  internal static var navigationNext: String  { return L10n.tr("Localizable", "Navigation.Next") }
   /// Bytes Received
   internal static var networkUsageBytesReceived: String  { return L10n.tr("Localizable", "NetworkUsage.BytesReceived") }
   /// Bytes Sent
@@ -2047,6 +2177,86 @@ internal final class L10n {
   internal static var networkUsageHeaderImages: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Images") }
   /// VIDEOS
   internal static var networkUsageHeaderVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Videos") }
+  /// Are you sure you want to discard this poll?
+  internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
+  /// Add an Option
+  internal static var newPollOptionsAddOption: String  { return L10n.tr("Localizable", "NewPoll.OptionsAddOption") }
+  /// %d
+  internal static func newPollOptionsDescriptionCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_countable", p1)
+  }
+  /// You can add %d more options
+  internal static func newPollOptionsDescriptionFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_few", p1)
+  }
+  /// You can add %d more options
+  internal static func newPollOptionsDescriptionMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_many", p1)
+  }
+  /// You can add %d more options
+  internal static func newPollOptionsDescriptionOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_one", p1)
+  }
+  /// You can add %d more options
+  internal static func newPollOptionsDescriptionOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_other", p1)
+  }
+  /// You can add %d more options
+  internal static func newPollOptionsDescriptionTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_two", p1)
+  }
+  /// You can add %d more options
+  internal static func newPollOptionsDescriptionZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescription_zero", p1)
+  }
+  /// You have added the maximum number of options.
+  internal static var newPollOptionsDescriptionLimitReached: String  { return L10n.tr("Localizable", "NewPoll.OptionsDescriptionLimitReached") }
+  /// %d
+  internal static func newPollOptionsDescriptionMinimumCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_countable", p1)
+  }
+  /// Minimum %d options
+  internal static func newPollOptionsDescriptionMinimumFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_few", p1)
+  }
+  /// Minimum %d options
+  internal static func newPollOptionsDescriptionMinimumMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_many", p1)
+  }
+  /// Minimum %d options
+  internal static func newPollOptionsDescriptionMinimumOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_one", p1)
+  }
+  /// Minimum %d options
+  internal static func newPollOptionsDescriptionMinimumOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_other", p1)
+  }
+  /// Minimum %d options
+  internal static func newPollOptionsDescriptionMinimumTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_two", p1)
+  }
+  /// Minimum %d options
+  internal static func newPollOptionsDescriptionMinimumZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.OptionsDescriptionMinimum_zero", p1)
+  }
+  /// POLL OPTIONS
+  internal static var newPollOptionsHeader: String  { return L10n.tr("Localizable", "NewPoll.OptionsHeader") }
+  /// Option
+  internal static var newPollOptionsPlaceholder: String  { return L10n.tr("Localizable", "NewPoll.OptionsPlaceholder") }
+  /// QUESTION
+  internal static var newPollQuestionHeader: String  { return L10n.tr("Localizable", "NewPoll.QuestionHeader") }
+  /// QUESTION (%d)
+  internal static func newPollQuestionHeaderLimit(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "NewPoll.QuestionHeaderLimit", p1)
+  }
+  /// Ask a question
+  internal static var newPollQuestionPlaceholder: String  { return L10n.tr("Localizable", "NewPoll.QuestionPlaceholder") }
+  /// New Poll
+  internal static var newPollTitle: String  { return L10n.tr("Localizable", "NewPoll.Title") }
+  /// No
+  internal static var newPollDisacardConfirmNo: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.No") }
+  /// Yes
+  internal static var newPollDisacardConfirmYes: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.Yes") }
   /// You have a new message
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mute
@@ -2211,6 +2421,12 @@ internal final class L10n {
   internal static var passportLanguageUz: String  { return L10n.tr("Localizable", "Passport.Language.uz") }
   /// Vietnamese
   internal static var passportLanguageVi: String  { return L10n.tr("Localizable", "Passport.Language.vi") }
+  /// Forgotten Password
+  internal static var passportResetPasswordConfirmHeader: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.Header") }
+  /// Reset
+  internal static var passportResetPasswordConfirmOK: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.OK") }
+  /// All documents uploaded to your Telegram Passport will be lost. You will be able to upload new documents.
+  internal static var passportResetPasswordConfirmText: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.Text") }
   /// Sorry, Telegram for macOS doesn't support payments yet. Please use one of our mobile apps to do this.
   internal static var paymentsUnsupported: String  { return L10n.tr("Localizable", "Payments.Unsupported") }
   /// Deleted Account
@@ -3093,6 +3309,10 @@ internal final class L10n {
   internal static var rbDRhWINTitle: String  { return L10n.tr("Localizable", "rbD-Rh-wIN.title") }
   /// Your recent calls will appear here
   internal static var recentCallsEmpty: String  { return L10n.tr("Localizable", "RecentCalls.Empty") }
+  /// These devices have no access to your account. The code was entered correctly, but no correct password was given.
+  internal static var recentSessionsIncompleteAttemptDesc: String  { return L10n.tr("Localizable", "RecentSessions.IncompleteAttemptDesc") }
+  /// INCOMPLETE LOGIN ATTEMPTS
+  internal static var recentSessionsIncompleteAttemptHeader: String  { return L10n.tr("Localizable", "RecentSessions.IncompleteAttemptHeader") }
   /// Revoke
   internal static var recentSessionsRevoke: String  { return L10n.tr("Localizable", "RecentSessions.Revoke") }
   /// Do you want to terminate this session?
@@ -4207,20 +4427,34 @@ internal final class L10n {
   internal static var twoStepAuthChangeEmail: String  { return L10n.tr("Localizable", "TwoStepAuth.ChangeEmail") }
   /// Change Password
   internal static var twoStepAuthChangePassword: String  { return L10n.tr("Localizable", "TwoStepAuth.ChangePassword") }
-  /// Cancel Two-Step Verification Setup
+  /// Please enter a new password which will be used to protect your data.
+  internal static var twoStepAuthChangePasswordDesc: String  { return L10n.tr("Localizable", "TwoStepAuth.ChangePasswordDesc") }
+  /// Abort Two-Step Verification Setup
   internal static var twoStepAuthConfirmationAbort: String  { return L10n.tr("Localizable", "TwoStepAuth.ConfirmationAbort") }
-  /// Please check your e-mail and click on the validation link to complete Two-Step Verification setup. Be sure to check the spam folder as well.
-  internal static var twoStepAuthConfirmationText: String  { return L10n.tr("Localizable", "TwoStepAuth.ConfirmationText") }
+  /// Please check your e-mail and enter the confirmation code to complete Two-Step Verification setup. Be sure to check the spam folder as well.
+  internal static var twoStepAuthConfirmationTextNew: String  { return L10n.tr("Localizable", "TwoStepAuth.ConfirmationTextNew") }
+  /// Please enter the code we've just emailed at %@.
+  internal static func twoStepAuthConfirmEmailCodeDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TwoStepAuth.ConfirmEmailCodeDesc", p1)
+  }
   /// E-Mail
   internal static var twoStepAuthEmail: String  { return L10n.tr("Localizable", "TwoStepAuth.Email") }
+  /// This confirmation code has expired. Please try again.
+  internal static var twoStepAuthEmailCodeExpired: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailCodeExpired") }
+  /// You have entered an invalid code. Please try again.
+  internal static var twoStepAuthEmailCodeInvalid: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailCodeInvalid") }
   /// Please add your valid e-mail. It is the only way to recover a forgotten password.
   internal static var twoStepAuthEmailHelp: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailHelp") }
+  /// Please enter your new recovery email. It is the only way to recover a forgotten password.
+  internal static var twoStepAuthEmailHelpChange: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailHelpChange") }
   /// Invalid e-mail address. Please try again.
   internal static var twoStepAuthEmailInvalid: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailInvalid") }
   /// We have sent you an e-mail to confirm your address.
   internal static var twoStepAuthEmailSent: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailSent") }
   /// No, seriously.\n\nIf you forget your password, you will lose access to your Telegram account. There will be no way to restore it.
   internal static var twoStepAuthEmailSkipAlert: String  { return L10n.tr("Localizable", "TwoStepAuth.EmailSkipAlert") }
+  /// Enter Code
+  internal static var twoStepAuthEnterEmailCode: String  { return L10n.tr("Localizable", "TwoStepAuth.EnterEmailCode") }
   /// Forgot password?
   internal static var twoStepAuthEnterPasswordForgot: String  { return L10n.tr("Localizable", "TwoStepAuth.EnterPasswordForgot") }
   /// You have enabled Two-Step Verification, so your account is protected with an additional password.
@@ -4237,6 +4471,8 @@ internal final class L10n {
   internal static var twoStepAuthGenericError: String  { return L10n.tr("Localizable", "TwoStepAuth.GenericError") }
   /// You have enabled Two-Step verification.\nYou'll need the password you set up here to log in to your Telegram account.
   internal static var twoStepAuthGenericHelp: String  { return L10n.tr("Localizable", "TwoStepAuth.GenericHelp") }
+  /// Invalid password. Please try again.
+  internal static var twoStepAuthInvalidPasswordError: String  { return L10n.tr("Localizable", "TwoStepAuth.InvalidPasswordError") }
   /// Password
   internal static var twoStepAuthPasswordTitle: String  { return L10n.tr("Localizable", "TwoStepAuth.PasswordTitle") }
   /// Your recovery e-mail %@ is not yet active and pending confirmation.
@@ -4251,9 +4487,9 @@ internal final class L10n {
   internal static var twoStepAuthRecoveryCodeHelp: String  { return L10n.tr("Localizable", "TwoStepAuth.RecoveryCodeHelp") }
   /// Invalid code. Please try again.
   internal static var twoStepAuthRecoveryCodeInvalid: String  { return L10n.tr("Localizable", "TwoStepAuth.RecoveryCodeInvalid") }
-  /// Having trouble accessing your e-mail %@?
-  internal static func twoStepAuthRecoveryEmailUnavailable(_ p1: String) -> String {
-    return L10n.tr("Localizable", "TwoStepAuth.RecoveryEmailUnavailable", p1)
+  /// Having trouble accessing your e-mail\n[%@]()?
+  internal static func twoStepAuthRecoveryEmailUnavailableNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TwoStepAuth.RecoveryEmailUnavailableNew", p1)
   }
   /// Your remaining options are either to remember your password or to reset your account.
   internal static var twoStepAuthRecoveryFailed: String  { return L10n.tr("Localizable", "TwoStepAuth.RecoveryFailed") }
@@ -4267,6 +4503,10 @@ internal final class L10n {
   internal static var twoStepAuthRecoveryUnavailable: String  { return L10n.tr("Localizable", "TwoStepAuth.RecoveryUnavailable") }
   /// Turn Password Off
   internal static var twoStepAuthRemovePassword: String  { return L10n.tr("Localizable", "TwoStepAuth.RemovePassword") }
+  /// Since the account **%@** is active and protected by a password, we will delete it in 1 week for security purposes.\n\nYou can cancel this process at any time.\n\nYou'll be able to reset your account in:\n%@
+  internal static func twoStepAuthResetDescription(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "TwoStepAuth.ResetDescription", p1, p2)
+  }
   /// Set Additional Password
   internal static var twoStepAuthSetPassword: String  { return L10n.tr("Localizable", "TwoStepAuth.SetPassword") }
   /// You can set a password that will be required when you log in on a new device in addition to the code you get in the SMS.
@@ -4275,14 +4515,20 @@ internal final class L10n {
   internal static var twoStepAuthSetupEmail: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupEmail") }
   /// Recovery E-Mail
   internal static var twoStepAuthSetupEmailTitle: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupEmailTitle") }
-  /// Please create a hint for your password
-  internal static var twoStepAuthSetupHint: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupHint") }
+  /// You can create an optional hint for your password.
+  internal static var twoStepAuthSetupHintDesc: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupHintDesc") }
+  /// Hint
+  internal static var twoStepAuthSetupHintPlaceholder: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupHintPlaceholder") }
   /// Password Hint
   internal static var twoStepAuthSetupHintTitle: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupHintTitle") }
   /// Passwords don't match. Please try again.
   internal static var twoStepAuthSetupPasswordConfirmFailed: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordConfirmFailed") }
-  /// Please re-enter your password
+  /// Re-enter your password
   internal static var twoStepAuthSetupPasswordConfirmPassword: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordConfirmPassword") }
+  /// Please confirm your password.
+  internal static var twoStepAuthSetupPasswordConfirmPasswordDesc: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordConfirmPasswordDesc") }
+  /// Please create a password which will be used to protect your data.
+  internal static var twoStepAuthSetupPasswordDesc: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordDesc") }
   /// Enter your cloud password
   internal static var twoStepAuthSetupPasswordEnterPassword: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordEnterPassword") }
   /// Enter your new password

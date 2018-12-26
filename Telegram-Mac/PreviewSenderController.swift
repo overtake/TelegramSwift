@@ -542,7 +542,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     self.urls.move(at: previous, to: current)
                     self.genericView.tableView.moveItem(from: previous, to: current)
                     
-                    let medias:[PreviewSendingState] = [.media, .file, .collage]
+                    let medias:[PreviewSendingState] = [.media, .file]
                     for type in medias {
                         self.cachedMedia[type]?.media.move(at: previous, to: current)
                         self.cachedMedia[type]?.items.move(at: previous, to: current)
@@ -567,7 +567,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             var listHeight = genericView.tableView.listHeight
             if inputInteraction.state.inputQueryResult != nil {
-                listHeight = max(150, listHeight)
+                listHeight = listHeight > 0 ? max(150, listHeight) : 0
             }
             
             let height = listHeight + max(genericView.additionHeight, 88)

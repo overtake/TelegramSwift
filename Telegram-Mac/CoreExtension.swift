@@ -52,10 +52,14 @@ extension Peer {
     }
     
     var peerSummaryTags: PeerSummaryCounterTags {
-        if let peer = self as? TelegramChannel, let addressName = peer.addressName, !addressName.isEmpty {
+        if let peer = self as? TelegramChannel {
             switch peer.info {
             case .group:
-                return [.publicGroups]
+                if let addressName = peer.addressName, !addressName.isEmpty {
+                    return [.publicGroups]
+                } else {
+                    return [.regularChatsAndPrivateGroups]
+                }
             case .broadcast:
                 return [.channels]
             }
@@ -341,7 +345,7 @@ extension TelegramMediaFile {
     var isStreamable: Bool {
         for attr in attributes {
             if case let .Video(_, _, flags) = attr {
-                return flags.contains(.supportStreaming) || !flags.contains(.mediaAfterSupportVideoStreaming)
+                return flags.contains(.supportsStreaming) || !flags.contains(.mediaAfterSupportVideoStreaming)
             }
         }
         return false
@@ -869,6 +873,9 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
         if media is TelegramMediaMap {
             return false
         }
+        if media is TelegramMediaPoll {
+            return false
+        }
     }
     
     for attr in message.attributes {
@@ -1002,6 +1009,21 @@ func <(lhs:RenderedChannelParticipant, rhs: RenderedChannelParticipant) -> Bool 
     return lhsInvitedAt < rhsInvitedAt
 }
 
+
+extension TelegramGroup {
+    var canPinMessage: Bool {
+        if self.flags.contains(.adminsEnabled) {
+            switch role {
+            case .admin, .creator:
+                return true
+            default:
+                return false
+            }
+        } else {
+            return true
+        }
+    }
+}
 
 extension Peer {
     var isUser:Bool {
@@ -2424,7 +2446,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], reference: nil, partialReference: nil)
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
     }
 }
 

@@ -24,7 +24,7 @@ open class TextViewLabel: View {
     public var linesCount:Int = 1
     public var autosize:Bool = false
     public var inset:NSEdgeInsets = NSEdgeInsets()
-    
+    public var alignment: NSTextAlignment = .left
     public var attributedString:NSAttributedString? {
         didSet {
             if attributedString != oldValue {
@@ -65,7 +65,7 @@ open class TextViewLabel: View {
     
     func update(attr:NSAttributedString?, size:NSSize) -> Void {
         if let attr = attr {
-            text = TextNode.layoutText(maybeNode: nil, attr, nil, linesCount, .end, size, nil,false, .left)
+            text = TextNode.layoutText(maybeNode: nil, attr, nil, linesCount, .end, size, nil,false, alignment)
         } else {
             text = nil
         }
@@ -75,7 +75,7 @@ open class TextViewLabel: View {
     open override func layout() {
         super.layout()
         if autosize {
-            text = TextNode.layoutText(maybeNode: node, attributedString, nil, linesCount, .end, NSMakeSize(frame.width - inset.left - inset.right, frame.height), nil,false, .left)
+            text = TextNode.layoutText(maybeNode: node, attributedString, nil, linesCount, .end, NSMakeSize(frame.width - inset.left - inset.right, frame.height), nil,false, alignment)
             self.setNeedsDisplay()
         }
     }

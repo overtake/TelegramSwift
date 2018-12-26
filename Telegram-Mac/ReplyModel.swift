@@ -29,18 +29,29 @@ class ReplyModel: ChatAccessoryModel {
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         super.init(presentation: presentation)
+        
+        let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
+            if let message = view.message {
+                return .single(message)
+            }
+            return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network, accountPeerId: account.peerId) |> map {$0.first}
+        }
+        
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
-            nodeReady.set(.single(true))
+            if isPinned {
+                nodeReady.set(.single(true) |> then(messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
+                    self?.make(with: message, isLoading: false, display: true)
+                    return message != nil
+                    }))
+            } else {
+                nodeReady.set(.single(true))
+            }
+            
         } else {
             
             make(with: nil, display: false)
-            let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
-                if let message = view.message {
-                    return .single(message)
-                }
-                return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network, accountPeerId: account.peerId) |> map {$0.first}
-            }
+           
 //            if !isPinned {
 //                messageViewSignal = account.postbox.messageAtId(replyMessageId)
 //            }
@@ -158,7 +169,7 @@ class ReplyModel: ChatAccessoryModel {
                         if file.isVideo {
                             updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
-                            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], reference: nil, partialReference: nil)
+                            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                             updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true)
                         }
                     }

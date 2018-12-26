@@ -394,9 +394,15 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     deinit {
         self.popDisposable.dispose()
         self.pushDisposable.dispose()
+        while !stack.isEmpty {
+            let value = stack.removeFirst()
+            value.removeFromSuperview()
+        }
     }
     
     public func stackInsert(_ controller:ViewController, at: Int) -> Void {
+        controller.navigationController = self
+        controller.loadViewIfNeeded(self.bounds)
         stack.insert(controller, at: at)
     }
     
@@ -613,14 +619,17 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.updateLocalizationAndTheme()
     }
     
-    open func back(animated:Bool = true, forceAnimated: Bool = false) -> Void {
+
+    open func back(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop) -> Void {
         if stackCount > 1 && !isLocked, let last = stack.last, last.invokeNavigationBack() {
             let controller = stack[stackCount - 2]
             last.didRemovedFromStack()
             stack.removeLast()
-            show(controller, animated || forceAnimated ? .pop : .none)
+            show(controller, animated || forceAnimated ? animationStyle : .none)
         }
     }
+    
+
     
     public func to( index:Int? = nil) -> Void {
         if stackCount > 1, let index = index {
@@ -660,6 +669,21 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             actionView.frame = bounds
             view.addSubview(actionView)
         }  
+    }
+    
+    public func removeUntil(_ controllerType: ViewController.Type) {
+        let index = stack.index(where: { current in
+            return current.className == NSStringFromClass(controllerType)
+        })
+        if let index = index {
+            while stack.count - 1 > index {
+                stack.removeLast()
+            }
+        } else {
+            while stack.count > 1 {
+                stack.removeLast()
+            }
+        }
     }
     
     public func removeModalAction() {

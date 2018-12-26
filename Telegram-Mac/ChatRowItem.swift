@@ -758,7 +758,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if case let .MessageEntry(_message, _, _isRead, _renderType, _itemType, _fwdType, _) = object {
+        if case let .MessageEntry(_message, _, _isRead, _renderType, _itemType, _fwdType, _, _) = object {
             message = _message
             isRead = _isRead
             itemType = _itemType
@@ -1104,6 +1104,10 @@ class ChatRowItem: TableRowItem {
                     return ChatServiceItem(initialSize, interaction, account, entry, downloadSettings)
                 } else if message.media.first is TelegramMediaGame {
                     return ChatMessageItem(initialSize, interaction, account, entry, downloadSettings)
+                } else if message.media.first is TelegramMediaPoll {
+                    return ChatPollItem(initialSize, interaction, account, entry, downloadSettings)
+                } else if message.media.first is TelegramMediaUnsupported {
+                    return ChatMessageItem(initialSize, interaction, account,entry, downloadSettings)
                 }
                 
                 return ChatMediaItem(initialSize, interaction, account, entry, downloadSettings)
@@ -1415,6 +1419,8 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     
     var items:[ContextMenuItem] = []
     
+
+    
     if canReplyMessage(message, peerId: chatInteraction.peerId) {
         items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
@@ -1427,10 +1433,10 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                 copyToClipboard("t.me/\(address)/\(message.id.id)")
             }))
         }
-        
     }
     
     items.append(ContextSeparatorItem())
+    
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
         if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
@@ -1444,6 +1450,16 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
                 }
             }))
         }
+    } else if message.id.peerId == account.peerId {
+        items.append(ContextMenuItem(L10n.messageContextPin, handler: {
+             chatInteraction.updatePinned(message.id, false, true)
+        }))
+    } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage {
+        items.append(ContextMenuItem(L10n.messageContextPin, handler: {
+            modernConfirm(for: mainWindow, account: account, peerId: nil, accessory: theme.icons.confirmPinAccessory, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                chatInteraction.updatePinned(message.id, false, result == .thrid)
+            })
+        }))
     }
     
     if canEditMessage(message, account:account) {

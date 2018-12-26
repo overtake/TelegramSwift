@@ -86,7 +86,7 @@ private final class Archiver {
                     try Zip.zipFiles(paths: contents, zipFilePath: destination, password: nil, compression: ZipCompression.DefaultCompression, progress: { progress in
                         status.set(.progress(progress))
                     }, cancel: cancelToken)
-                    status.set(.done(destination))
+                   status.set(.done(destination))
                 } catch {
                     if let error = error as? ZipError {
                         status.set(.fail(error))

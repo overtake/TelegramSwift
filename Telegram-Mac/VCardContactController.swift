@@ -232,7 +232,7 @@ private class VCardContactController: NavigationViewController {
         self.account = account
         self.vCard = vCard
         self.contact = contact
-        input = InputDataController(dataSignal: values.get(), title: L10n.contactInfoContactInfo, hasDone: false)
+        input = InputDataController(dataSignal: values.get() |> map {($0, true)}, title: L10n.contactInfoContactInfo, hasDone: false)
         super.init(input)
         self._frameRect = NSMakeRect(0, 0, 380, 500)
     }

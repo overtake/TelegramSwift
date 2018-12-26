@@ -192,6 +192,10 @@ class WPLayout: Equatable {
                     break
                 }
             }
+            
+            if instantPage.v2 {
+                return false
+            }
             return true
         }
         return  false

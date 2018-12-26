@@ -335,7 +335,7 @@ public class NavigationBarView: View {
             right.setFrameOrigin(nRight_from, right.frame.minY)
             
             pLeft.setFrameOrigin(pLeft_from, left.frame.minY)
-            pCenter.setFrameOrigin(pCenter_from, pCenter.frame.minY)
+          //  pCenter.setFrameOrigin(pCenter_from, pCenter.frame.minY)
             pRight.setFrameOrigin(pRight_from, pRight.frame.minY)
             
                         
@@ -353,7 +353,7 @@ public class NavigationBarView: View {
                     pCenter?.removeFromSuperview()
                 }
             })
-            pCenter.change(pos: NSMakePoint(pCenter_to, pCenter.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
+         //   pCenter.change(pos: NSMakePoint(pCenter_to, pCenter.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
 
             
             pRight.change(opacity: 0.0, duration: animationStyle.duration, timingFunction: animationStyle.function, completion:{ [weak pRight] completed in

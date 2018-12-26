@@ -213,7 +213,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, {$0.withUpdatedUseForCalls(enable)}).start())
         })
         
-        let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)}, title: L10n.proxySettingsTitle, validateData: {
+        let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map {($0, true)}, title: L10n.proxySettingsTitle, validateData: {
             data in
             
             if data[_p_id_add] != nil {
@@ -282,7 +282,7 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
     
     let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
         return addProxySettingsEntries(state: state)
-    }, title: title, validateData: { data -> InputDataValidation in
+    } |> map {($0, true)}, title: title, validateData: { data -> InputDataValidation in
             if data[_id_export] != nil {
                 updateState { current in
                     copyToClipboard(current.server.link)
@@ -382,16 +382,16 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     
     let server = state.server
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: L10n.proxySettingsConnectionHeader.uppercased(), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.proxySettingsConnectionHeader.uppercased()), color: theme.colors.grayText, detectBold: true))
     index += 1
     
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(server.host), error: nil, identifier: _id_host, mode: .plain, placeholder: L10n.proxySettingsServer, inputPlaceholder: L10n.proxySettingsServer, filter: {$0}, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(server.host), error: nil, identifier: _id_host, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsServer), inputPlaceholder: L10n.proxySettingsServer, filter: {$0}, limit: 255))
     index += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string("\(server.port > 0 ? "\(server.port)" : "")"), error: nil, identifier: _id_port, mode: .plain, placeholder: L10n.proxySettingsPort, inputPlaceholder: L10n.proxySettingsPort, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 10))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string("\(server.port > 0 ? "\(server.port)" : "")"), error: nil, identifier: _id_port, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsPort), inputPlaceholder: L10n.proxySettingsPort, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 10))
     index += 1
     
 
@@ -400,22 +400,22 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     
     switch server.connection {
     case let .mtp(secret):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string((secret as NSData).hexString), error: nil, identifier: _id_secret, mode: .plain, placeholder: L10n.proxySettingsSecret, inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string((secret as NSData).hexString), error: nil, identifier: _id_secret, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsSecret), inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
         index += 1
     case let .socks5(username, password):
         entries.append(.sectionId(sectionId))
         sectionId += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.proxySettingsCredentialsHeader, color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.proxySettingsCredentialsHeader), color: theme.colors.grayText, detectBold: true))
         index += 1
-        entries.append(.input(sectionId: sectionId, index: index, value:  .string(username ?? ""), error: nil, identifier: _id_username, mode: .plain, placeholder: L10n.proxySettingsUsername, inputPlaceholder: L10n.proxySettingsUsername, filter: {$0}, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value:  .string(username ?? ""), error: nil, identifier: _id_username, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsUsername), inputPlaceholder: L10n.proxySettingsUsername, filter: {$0}, limit: 255))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(password ?? ""), error: nil, identifier: _id_pass, mode: .secure, placeholder: L10n.proxySettingsPassword, inputPlaceholder: L10n.proxySettingsPassword, filter: {$0}, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(password ?? ""), error: nil, identifier: _id_pass, mode: .secure, placeholder: InputDataInputPlaceholder(L10n.proxySettingsPassword), inputPlaceholder: L10n.proxySettingsPassword, filter: {$0}, limit: 255))
         index += 1
     }
     
     if case .mtp = server.connection {
-        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.proxySettingsMtpSponsor, color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.proxySettingsMtpSponsor), color: theme.colors.grayText, detectBold: true))
         index += 1
     }
     

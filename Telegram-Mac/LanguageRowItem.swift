@@ -14,17 +14,22 @@ class LanguageRowItem: TableRowItem {
     fileprivate let locale:TextViewLayout
     fileprivate let title:TextViewLayout
     fileprivate let action:()->Void
+    fileprivate let deleteAction: ()->Void
+    fileprivate let deletable: Bool
+
     fileprivate let _stableId:AnyHashable
     override var stableId: AnyHashable {
         return _stableId
     }
     
-    init(initialSize: NSSize, stableId: AnyHashable, selected: Bool, value:LocalizationInfo, action:@escaping()->Void, reversed: Bool = false) {
+    init(initialSize: NSSize, stableId: AnyHashable, selected: Bool, deletable: Bool, value:LocalizationInfo, action:@escaping()->Void, deleteAction: @escaping()->Void = {}, reversed: Bool = false) {
         self._stableId = stableId
         self.selected = selected
         self.title = TextViewLayout(.initialize(string: reversed ? value.localizedTitle : value.title, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
         self.locale = TextViewLayout(.initialize(string: reversed ? value.title : value.localizedTitle, color: reversed ? theme.colors.grayText : theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         self.action = action
+        self.deletable = deletable
+        self.deleteAction = deleteAction
         super.init(initialSize)
         
         _ = makeSize(initialSize.width, oldWidth: initialSize.width)
@@ -51,20 +56,28 @@ class LanguageRowView : TableRowView {
     private let titleTextView:TextView = TextView()
     private let selectedImage:ImageView = ImageView()
     private let overalay:OverlayControl = OverlayControl()
+    private let deleteButton = ImageButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleTextView)
         addSubview(localeTextView)
         addSubview(selectedImage)
+       
         selectedImage.sizeToFit()
         localeTextView.isSelectable = false
         titleTextView.isSelectable = false
         addSubview(overalay)
         overalay.set(background: .grayTransparent, for: .Highlight)
-        
+        addSubview(deleteButton)
         overalay.set(handler: { [weak self] _ in
             if let item = self?.item as? LanguageRowItem {
                 item.action()
+            }
+        }, for: .Click)
+        
+        deleteButton.set(handler: { [weak self] _ in
+            if let item = self?.item as? LanguageRowItem {
+                item.deleteAction()
             }
         }, for: .Click)
     }
@@ -85,11 +98,18 @@ class LanguageRowView : TableRowView {
             titleTextView.update(item.title)
             localeTextView.update(item.locale)
             
+            deleteButton.set(image: theme.icons.customLocalizationDelete, for: .Normal)
+            _ = deleteButton.sizeToFit()
+            
             selectedImage.image = theme.icons.generalSelect
             selectedImage.sizeToFit()
             titleTextView.backgroundColor = theme.colors.background
             localeTextView.backgroundColor = theme.colors.background
             selectedImage.isHidden = !item.selected
+            
+            deleteButton.isHidden = !item.deletable || item.selected
+            
+            needsLayout = true
         }
     }
 
@@ -97,6 +117,7 @@ class LanguageRowView : TableRowView {
     override func layout() {
         super.layout()
         selectedImage.centerY(x: frame.width - 25 - selectedImage.frame.width)
+        deleteButton.centerY(x: frame.width - 18 - deleteButton.frame.width)
         if let item = item as? LanguageRowItem {
             titleTextView.update(item.title, origin: NSMakePoint(25, 5))
             localeTextView.update(item.locale, origin: NSMakePoint(25, frame.height - titleTextView.frame.height - 5))

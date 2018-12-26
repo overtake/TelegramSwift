@@ -183,18 +183,18 @@ private enum GroupAdminsEntry: Comparable, Identifiable {
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case let .peerItem(_, _, peer, presence, toggled, enabled):
             
-            var string:String = tr(L10n.peerStatusRecently)
+            var string:String = L10n.peerStatusRecently
             var color:NSColor = theme.colors.grayText
             
             if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
-                string = botInfo.flags.contains(.hasAccessToChatHistory) ? tr(L10n.peerInfoBotStatusHasAccess) : tr(L10n.peerInfoBotStatusHasNoAccess)
+                string = botInfo.flags.contains(.hasAccessToChatHistory) ? L10n.peerInfoBotStatusHasAccess : L10n.peerInfoBotStatusHasNoAccess
             } else if let presence = presence as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5)), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, drawLastSeparator: true, inset:NSEdgeInsets(left:30.0,right:30.0), generalType: .switchable(toggled), action: { 
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, drawLastSeparator: true, inset:NSEdgeInsets(left:30.0,right:30.0), generalType: .switchable(toggled), action: { 
                 arguments.updatePeerIsAdmin(peer.id, !toggled)
             })
             
@@ -321,9 +321,14 @@ private func prepareTransition(left:[AppearanceWrapperEntry<GroupAdminsEntry>], 
 
 class GroupAdminsController : TableViewController {
     private let peerId:PeerId
+    private let disposable = MetaDisposable()
     init(account:Account, peerId:PeerId) {
         self.peerId = peerId
         super.init(account)
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     override func viewDidLoad() {
@@ -401,15 +406,19 @@ class GroupAdminsController : TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<GroupAdminsEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        genericView.merge(with: combineLatest(statePromise.get(), peerView, appearanceSignal) |> deliverOnMainQueue
+        disposable.set((combineLatest(statePromise.get(), peerView, appearanceSignal) |> deliverOnMainQueue
             |> map { state, view, appearance -> TableUpdateTransition in
                 let entries = groupAdminsControllerEntries(account: account, view: view, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: initialSize.modify({$0}))
                 
-            } |> afterDisposed {
+        } |> afterDisposed {
                 actionsDisposable.dispose()
-        })
-        readyOnce()
+        }).start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
+        }))
+        
+       
 
     }
 }

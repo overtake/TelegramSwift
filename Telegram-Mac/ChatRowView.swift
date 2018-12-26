@@ -544,6 +544,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return rect
     }
     
+    var contentFrameModifier: NSRect {
+        return self.contentFrame
+    }
+    
     var rowPoint: NSPoint {
         guard let item = item as? ChatRowItem else {return NSZeroPoint}
         
@@ -572,7 +576,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         super.layout()
         if let item = item as? ChatRowItem {
             bubbleView.frame = bubbleFrame
-            contentView.frame = contentFrame
+            contentView.frame = contentFrameModifier
             
             rowView.setFrameOrigin(rowPoint)
             
@@ -1063,7 +1067,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if swipingRightView.frame.width > 100 {
             if animateOnceAfterDelta {
                 animateOnceAfterDelta = false
-              //  NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
+                NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
                 action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - action.frame.width), 0), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
             }
             action.setFrameOrigin(NSMakePoint(0, action.frame.minY))

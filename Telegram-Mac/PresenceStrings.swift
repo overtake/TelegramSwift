@@ -58,12 +58,14 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
     case .none:
         return .offline
     case let .present(statusTimestamp):
-        let statusTimestamp = statusTimestamp - Int32(timeDifference)
+        let statusTimestampInt: Int = Int(statusTimestamp)
+        let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
         if statusTimestamp >= timestamp {
             return .online(at: statusTimestamp)
         } else {
             return .lastSeen(at: statusTimestamp)
         }
+        
     case .recently:
         return .recently
     case .lastWeek:
@@ -78,9 +80,10 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
     case .none:
         return (L10n.peerStatusLongTimeAgo, false, theme.colors.grayText)
     case let .present(statusTimestamp):
-        let statusTimestamp = statusTimestamp - Int32(timeDifference)
+        let statusTimestampInt: Int = Int(statusTimestamp)
+        let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
         if statusTimestamp >= timestamp {
-            return (tr(L10n.peerStatusOnline), true, theme.colors.blueText)
+            return (L10n.peerStatusOnline, true, theme.colors.blueText)
         } else {
             let difference = timestamp - statusTimestamp
             if difference < 59 {
@@ -128,6 +131,13 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
 func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> Double {
     switch presence.status {
     case let .present(statusTimestamp):
+        
+        let statusTimestampInt: Int = Int(statusTimestamp)
+        let statusTimestamp = Int32(min(statusTimestampInt, Int(INT32_MAX)))
+        
+        if statusTimestamp > INT32_MAX - 1 {
+            return Double.infinity
+        }
         if statusTimestamp >= timestamp {
             return Double(statusTimestamp - timestamp)
         } else {

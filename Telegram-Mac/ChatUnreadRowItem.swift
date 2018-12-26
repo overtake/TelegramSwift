@@ -42,6 +42,10 @@ class ChatUnreadRowItem: ChatRowItem {
         return super.messageIndex
     }
     
+    override var instantlyResize: Bool {
+        return true
+    }
+    
     override func viewClass() -> AnyClass {
         return ChatUnreadRowView.self
     }

@@ -136,95 +136,6 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
         }
     }
     
-    static func ==(lhs: DataAndStorageEntry, rhs: DataAndStorageEntry) -> Bool {
-        switch lhs {
-        case let .storageUsage(sectionId, text):
-            if case .storageUsage(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .networkUsage(sectionId, text):
-            if case .networkUsage(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .automaticMediaDownloadHeader(sectionId, text):
-            if case .automaticMediaDownloadHeader(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .automaticDownloadMedia(sectionId, value):
-            if case .automaticDownloadMedia(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .photos(sectionId, category, enabled):
-            if case .photos(sectionId, category, enabled) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .videos(sectionId, category, enabled):
-            if case .videos(sectionId, category, enabled) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .files(sectionId, category, enabled):
-            if case .files(sectionId, category, enabled) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .voice(sectionId, category, enabled):
-            if case .voice(sectionId, category, enabled) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .instantVideo(sectionId, category, enabled):
-            if case .instantVideo(sectionId, category, enabled) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .gifs(sectionId, category, enabled):
-            if case .gifs(sectionId, category, enabled) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .resetDownloadSettings(sectionId, value):
-            if case .resetDownloadSettings(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .downloadFolder(sectionId, value):
-            if case .downloadFolder(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .automaticCopyToDownload(sectionId, value):
-            if case .automaticCopyToDownload(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .sectionId(sectionId):
-            if case .sectionId(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
-    
     static func <(lhs: DataAndStorageEntry, rhs: DataAndStorageEntry) -> Bool {
         return lhs.index < rhs.index
     }
@@ -356,7 +267,6 @@ class DataAndStorageViewController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        readyOnce()
         
         let account = self.account
         let initialState = DataAndStorageControllerState()
@@ -441,7 +351,9 @@ class DataAndStorageViewController: TableViewController {
                 let entries = dataAndStorageControllerEntries(state: state, data: dataAndStorageData).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
 
-            } |> afterDisposed {
+        } |> beforeNext { [weak self] _ in
+            self?.readyOnce()
+        } |> afterDisposed {
                 actionsDisposable.dispose()
         })
         

@@ -549,12 +549,12 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
                 self?.effectiveTableView.selectNext(turnDirection: false)
                 return .invoked
-            }, with: self, for: .Tab, priority: .high, modifierFlags: [.control])
+            }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control])
             
             self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
                 self?.effectiveTableView.selectPrev(turnDirection: false)
                 return .invoked
-            }, with: self, for: .Tab, priority: .high, modifierFlags: [.control, .shift])
+            }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control, .shift])
             
         default:
             break

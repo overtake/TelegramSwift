@@ -234,6 +234,17 @@ func execute(inapp:inAppLink) {
         }
     case let .stickerPack(reference, account, peerId):
         showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
+    case let .confirmPhone(account, phone, hash):
+        _ = showModalProgress(signal: requestCancelAccountResetData(network: account.network, hash: hash) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
+            showModal(with: cancelResetAccountController(account: account, phone: phone, data: data), for: mainWindow)
+        }, error: { error in
+            switch error {
+            case .limitExceeded:
+                alert(for: mainWindow, info: L10n.loginFloodWait)
+            case .generic:
+                alert(for: mainWindow, info: L10n.unknownError)
+            }
+        })
     case let .socks(settings, applyProxy):
         applyProxy(settings)
     case .nothing:
@@ -258,6 +269,29 @@ func execute(inapp:inAppLink) {
                 alert(for: mainWindow, info: "An error occured")
             case .versionOutdated:
                 updateAppAsYouWish(text: L10n.secureIdAppVersionOutdated, updateApp: true)
+            }
+        })
+    case let .applyLocalization(account, value):
+        _ = showModalProgress(signal: requestLocalizationPreview(network: account.network, identifier: value) |> deliverOnMainQueue, for: mainWindow).start(next: { info in
+            if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
+                alert(for: mainWindow, info: L10n.applyLanguageChangeLanguageAlreadyActive(info.title))
+            } else if info.totalStringCount == 0 {
+                confirm(for: mainWindow, header: L10n.applyLanguageUnsufficientDataTitle, information: L10n.applyLanguageUnsufficientDataText(info.title), cancelTitle: "", thridTitle: L10n.applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
+                    switch result {
+                    case .basic:
+                        break
+                    case .thrid:
+                        execute(inapp: inAppLink.external(link: info.platformUrl, false))
+                    }
+                })
+            } else {
+                showModal(with: LocalizationPreviewModalController.init(account: account, info: info), for: mainWindow)
+            }
+           
+        }, error: { error in
+            switch error {
+            case .generic:
+                alert(for: mainWindow, info: L10n.localizationPreviewErrorGeneric)
             }
         })
     case let .unsupportedScheme(account, path):
@@ -360,17 +394,19 @@ enum inAppLink {
     case joinchat(String, account:Account, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case logout(()->Void)
     case stickerPack(StickerPackReference, account:Account, peerId:PeerId?)
+    case confirmPhone(account: Account, phone: String, hash: String)
     case nothing
     case socks(ProxyServerSettings, applyProxy:(ProxyServerSettings)->Void)
     case requestSecureId(account: Account, value: inAppSecureIdRequest)
     case unsupportedScheme(account: Account, path: String)
+    case applyLocalization(account: Account, value: String)
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy"]
+let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage"]
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -381,6 +417,9 @@ private let keyURLText = "text";
 private let keyURLStart = "start";
 private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
+
+private let keyURLPhone = "phone";
+private let keyURLHash = "hash";
 
 private let keyURLHost = "server";
 private let keyURLPort = "port";
@@ -408,6 +447,11 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         if let account = account {
                             return .stickerPack(StickerPackReference.name(value), account: account, peerId: peerId)
                         }
+                    case actions_me[2]:
+                        let vars = urlVars(with: string)
+                        if let account = account, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
+                            return .confirmPhone(account: account, phone: phone, hash: hash)
+                        }
                     case actions_me[3]:
                         let vars = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
@@ -422,6 +466,12 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                             let secret = ObjcUtils.data(fromHexString: rawSecret)!
                             let server = escape(with: server)
                             return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
+                        }
+                    case actions_me[5]:
+                        if let account = account, !value.isEmpty {
+                            return .applyLocalization(account: account, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
+                        } else {
+                            return .external(link: url as String, false)
                         }
                     default:
                         break
@@ -540,7 +590,10 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                     if let set = vars[keyURLSet], let account = account {
                         return .stickerPack(.name(set), account:account, peerId:nil)
                     }
-                
+                case known_scheme[4]:
+                    if let account = account, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
+                        return .confirmPhone(account: account, phone: phone, hash: hash)
+                    }
                 case known_scheme[5]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)
@@ -567,6 +620,10 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         
                         let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
                         return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
+                    }
+                case known_scheme[8]:
+                    if let account = account, let value = vars["lang"] {
+                        return .applyLocalization(account: account, value: value)
                     }
                 default:
                     break
