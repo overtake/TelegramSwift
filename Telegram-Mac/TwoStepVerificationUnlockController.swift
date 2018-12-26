@@ -945,17 +945,6 @@ private func twoStepVerificationResetPasswordController(account: Account, emailP
 
 
 
-/*
- let loading = stateValue.with {$0.checking}
- if loading {
- resetDisposable.set(nil)
- updateState { $0.withUpdatedChecking(false) }
- }
- f(!loading)
- 
- */
-
-
 
 private let _id_input_entry_pwd = InputDataIdentifier("_id_input_entry_pwd")
 private let _id_input_reentry_pwd = InputDataIdentifier("_id_input_reentry_pwd")
