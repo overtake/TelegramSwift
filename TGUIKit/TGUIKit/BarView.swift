@@ -46,7 +46,9 @@ open class BarView: OverlayControl {
     
     open override var isHidden: Bool {
         didSet {
-            
+            if !isHidden {
+                layer?.opacity = 1
+            }
         }
     }
     

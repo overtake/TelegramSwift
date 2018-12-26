@@ -79,16 +79,16 @@ class PCallSession {
         self.peerId = peerId
         self.id = id
 
-        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(VoiceCallP2PMode, Bool, CallSession, VoipConfiguration), NoError> in
+        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(CallSession, VoipConfiguration), NoError> in
             return account.postbox.transaction { transaction in
-                return (p2pCallMode(transaction: transaction), transaction.isPeerContact(peerId: peerId), session, currentVoipConfiguration(transaction: transaction))
+                return (session, currentVoipConfiguration(transaction: transaction))
             }
-        } |> deliverOnMainQueue |> beforeNext { [weak self] config, isContact, session, configuration in
-            self?.proccessState(session, isContact, config, configuration)
+        } |> deliverOnMainQueue |> beforeNext { [weak self] session, configuration in
+            self?.proccessState(session, configuration)
         }
         
         
-        state.set(signal |> map { $0.2.state})
+        state.set(signal |> map { $0.0.state})
         
         proxyDisposable.set((proxySettingsSignal(account.postbox) |> deliverOn(callQueue) |> take(1)).start(next: { [weak self] settings in
             guard let `self` = self else {return}
@@ -318,25 +318,16 @@ class PCallSession {
         }
     }
     
-    private func proccessState(_ session: CallSession, _ isContact: Bool, _ p2pMode: VoiceCallP2PMode, _ configuration: VoipConfiguration) {
+    private func proccessState(_ session: CallSession, _ configuration: VoipConfiguration) {
         self.callSessionValue = session
         
         switch session.state {
-        case .active(let key, _, let connection, let maxLayer):
+        case .active(let id, let key, _, let connection, let maxLayer, let allowP2p):
             playTone(.callToneConnecting)
             
             let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)}, maxLayer: maxLayer)
             
             withContext { context in
-                let allowP2p: Bool
-                switch p2pMode {
-                case .always:
-                    allowP2p = true
-                case .contacts:
-                    allowP2p = isContact
-                case .never:
-                    allowP2p = false
-                }
                 context.startTransmissionIfNeeded(session.isOutgoing, allowP2p: allowP2p, serializedData: configuration.serializedData ?? "", connection: cdata)
             }
             invalidateTimeout()

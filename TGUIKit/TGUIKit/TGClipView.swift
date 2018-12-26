@@ -48,7 +48,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     var scrollCompletion:((_ success:Bool) ->Void)?
-    public var decelerationRate:CGFloat = 0.78
+    public var decelerationRate:CGFloat = 0.8
     
     
     var isScrolling: Bool {

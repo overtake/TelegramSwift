@@ -43,7 +43,7 @@ class InstantPageChannelItem: InstantPageItem {
         return node is InstantPageChannelView
     }
     
-    func node(account: Account) -> InstantPageView? {
+    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
         return InstantPageChannelView(frameRect: frame, channel: channel, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
     }
     

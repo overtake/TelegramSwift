@@ -34,6 +34,7 @@ public class ImageView: NSView {
         }
     }
 
+    
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true
@@ -52,7 +53,7 @@ public class ImageView: NSView {
 
     override public func viewDidChangeBackingProperties() {
         if let window = self.window {
-            self.layer?.contentsScale = window.backingScaleFactor/2.0;
+            self.layer?.contentsScale = window.backingScaleFactor
         }
     }
     

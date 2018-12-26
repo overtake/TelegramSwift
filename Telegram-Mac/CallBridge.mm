@@ -133,6 +133,9 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     }
 }
 
++(int32_t)voipMaxLayer {
+    return tgvoip::VoIPController::GetConnectionMaxLayer();
+}
 
 -(NSArray<AudioDevice *> *)inputDevices {
     

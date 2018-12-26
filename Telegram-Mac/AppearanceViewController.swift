@@ -184,14 +184,14 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     
     let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
     
-    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil)
     
     entries.append(.preview(sectionId, index, firstEntry))
     index += 1
     
     let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewSecondText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     
-    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil)
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil)
     
     entries.append(.preview(sectionId, index, secondEntry))
     index += 1
@@ -416,14 +416,15 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         let signal:Signal<(TableUpdateTransition, TelegramWallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(postbox: account.postbox), account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, themeSettings, selfPeer in
             let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
-        } |> deliverOnMainQueue
+        } |> deliverOnMainQueue |> beforeNext { [weak self] _ in
+            self?.readyOnce()
+        }
         
         disposable.set(signal.start(next: { [weak self] transition, wallpaper in
             self?.genericView.tableView.merge(with: transition)
             self?.updateWallpaper(wallpaper)
         }))
         
-        readyOnce()
         
     }
     

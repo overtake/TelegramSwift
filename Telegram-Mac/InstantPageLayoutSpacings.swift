@@ -12,41 +12,18 @@ import TelegramCoreMac
 func spacingBetweenBlocks(upper: InstantPageBlock?, lower: InstantPageBlock?) -> CGFloat {
     if let upper = upper, let lower = lower {
         switch (upper, lower) {
-        case (_, .cover):
+        case (_, .cover), (_, .channelBanner), (.details, .details), (.relatedArticles, nil), (_, .anchor):
             return 0.0
-        case (.cover(let block), .channelBanner):
-            var hasCaption: Bool = true
-            switch block {
-            case let .image(_, caption: caption):
-                if case .empty = caption {
-                    hasCaption = false
-                }
-            case let .video(_, caption, _, _):
-                if case .empty = caption {
-                    hasCaption = false
-                }
-            case let .slideshow(_, caption):
-                if case .empty = caption {
-                    hasCaption = false
-                }
-            default:
-                hasCaption = false
-            }
-            
-            return hasCaption ? -40 : 0
-            
         case (.divider, _), (_, .divider):
             return 25.0
         case (_, .blockQuote), (.blockQuote, _), (_, .pullQuote), (.pullQuote, _):
             return 27.0
+        case (.kicker, .title), (.cover, .title):
+            return 16.0
         case (_, .title):
             return 20.0
-        case (.title, .subtitle):
-            return 20.0
-        case (.title, .authorDate):
+        case (.title, .authorDate), (.subtitle, .authorDate):
             return 18.0
-        case (.subtitle, .authorDate):
-            return 20
         case (_, .authorDate):
             return 20.0
         case (.title, .paragraph), (.authorDate, .paragraph):
@@ -67,29 +44,29 @@ func spacingBetweenBlocks(upper: InstantPageBlock?, lower: InstantPageBlock?) ->
             return 31.0
         case (.preformatted, .list):
             return 19.0
-        case (.paragraph, .list), (.list, .list):
-            return 31
         case (_, .list):
-            return 20.0
+            return 25.0
         case (.paragraph, .preformatted):
             return 19.0
         case (_, .preformatted):
             return 20.0
-        case (_, .header):
-            return 32.0
-        case (_, .subheader):
+        case (_, .header), (_, .subheader):
             return 32.0
         default:
             return 20.0
         }
     } else if let lower = lower {
         switch lower {
-        case .cover, .channelBanner:
+        case .cover, .channelBanner, .details, .anchor:
             return 0.0
         default:
-            return 24.0
+            return 25.0
         }
     } else {
-        return 24.0
+        if let upper = upper, case .relatedArticles = upper {
+            return 0.0
+        } else {
+            return 25.0
+        }
     }
 }

@@ -726,7 +726,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
     var sectionId:Int = 1
     
     
-    entries.append(UserInfoEntry.info(sectionId: sectionId, view, editable: state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil))
+    entries.append(UserInfoEntry.info(sectionId: sectionId, view, editable: state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil && view.peerIsContact))
     
     if let peer = view.peers[view.peerId] {
         

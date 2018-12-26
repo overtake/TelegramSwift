@@ -34,7 +34,7 @@ private class QuickLookPreviewItem : NSObject, QLPreviewItem {
         if let media = media as? TelegramMediaFile {
             return media.fileName ?? tr(L10n.quickLookPreview)
         }
-        return tr(L10n.quickLookPreview)
+        return L10n.quickLookPreview
     }
 }
 
@@ -75,6 +75,9 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         var fileResource:TelegramMediaResource?
         var fileName:String? = nil
         var forceExtension: String? = nil
+        
+        let signal:Signal<(String?, String?), NoError>
+        
         if let file = media as? TelegramMediaFile {
             fileResource = file.resource
             mimeType = file.mimeType
@@ -82,25 +85,32 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
             if let ext = fileName?.nsstring.pathExtension, !ext.isEmpty {
                 forceExtension = ext
             }
+            
+            signal = downloadFilePath(file, account.postbox) |> mapToSignal { data in
+                return copyToDownloads(file, postbox: account.postbox) |> map {
+                    return  (Optional(data.1.nsstring.deletingPathExtension), Optional(data.1.nsstring.pathExtension))
+                }
+            }
         } else if let image = media as? TelegramMediaImage {
             fileResource = largestImageRepresentation(image.representations)?.resource
+            if let fileResource = fileResource {
+                signal = combineLatest(account.postbox.mediaBox.resourceData(fileResource), resourceType(mimeType: mimeType))
+                    |> mapToSignal({ (data) -> Signal<(String?,String?), NoError> in
+                        
+                        return .single((data.0.path, forceExtension ?? data.1))
+                    })  |> deliverOnMainQueue
+            } else {
+                signal = .complete()
+            }
+           
+        } else {
+            signal = .complete()
         }
         
-        
-        if let fileResource = fileResource {
-            
-           let signal = combineLatest(account.postbox.mediaBox.resourceData(fileResource), resourceType(mimeType: mimeType))
-                |> mapToSignal({ (data) -> Signal<(String?,String?), NoError> in
-                return .single((data.0.path, forceExtension ?? data.1))
-            })
-            |> deliverOnMainQueue
-            
-            self.ready.set(signal)
-            
-        }
+       self.ready.set(signal |> deliverOnMainQueue)
         
         
-        disposable.set(ready.get().start(next: {[weak self] (path,ext) in
+        disposable.set(ready.get().start(next: { [weak self] (path,ext) in
             if let strongSelf = self, let path = path {
                 var ext:String? = ext
                 if ext == nil || ext == "*" {

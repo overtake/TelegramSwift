@@ -34,7 +34,7 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
                     if let type = venue.type {
                         let resource = HttpReferenceMediaResource(url: "https://ss3.4sqi.net/img/categories_v2/\(type)_88.png", size: nil)
                         let representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(60, 60), resource: resource)
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], reference: nil, partialReference: nil)
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
 
                     }
                 }

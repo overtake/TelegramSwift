@@ -110,7 +110,7 @@ public class TitleButton: ImageButton {
         
         if maxSize.width < size.width {
             if let image = imageView.image, direction != .top {
-                msize.width += (image.backingSize.width + 12) // max size
+                msize.width += (image.backingSize.width + (12)) // max size
             }
         }
        
@@ -123,7 +123,7 @@ public class TitleButton: ImageButton {
         if let image = imageView.image, direction != .top {
             
             textSize = min(maxWidth,size.width)
-            let iwidth:CGFloat = (image.backingSize.width + 12)
+            let iwidth:CGFloat = (image.backingSize.width + (12))
             
             if textSize == maxWidth {
                 textSize -= iwidth
@@ -181,7 +181,7 @@ public class TitleButton: ImageButton {
         }
         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
         var size:NSSize = attributedString.CTSize(CGFloat.greatestFiniteMagnitude, framesetter: nil).1
-        size.width = ceil(size.width) + 10
+        size.width = ceil(size.width) + (size.width == 0 ? 0 : 10)
         size.height = ceil(size.height)
         return size
     }

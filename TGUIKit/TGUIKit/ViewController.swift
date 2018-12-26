@@ -339,6 +339,10 @@ open class ViewController : NSObject {
         
     }
     
+    open func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
+        
+    }
+    
     deinit {
         self.window?.removeObserver(for: self)
         window?.removeAllHandlers(for: self)
@@ -618,7 +622,7 @@ open class ModalViewController : ViewController {
     }
     
     open var background:NSColor {
-        return NSColor(0x000000, 0.27)
+        return NSColor(0x000000, 0.6)
     }
     
     
@@ -643,6 +647,9 @@ open class ModalViewController : ViewController {
     }
     
     open var modalInteractions:ModalInteractions? {
+        return nil
+    }
+    open var modalHeader: String? {
         return nil
     }
     

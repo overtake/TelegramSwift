@@ -42,28 +42,6 @@ private enum RecentSessionsEntryStableId: Hashable {
         }
     }
     
-    static func ==(lhs: RecentSessionsEntryStableId, rhs: RecentSessionsEntryStableId) -> Bool {
-        switch lhs {
-        case let .session(hash):
-            if case .session(hash) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .index(index):
-            if case .index(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum RecentSessionsEntry: Comparable, Identifiable {
@@ -74,6 +52,10 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
     case currentSessionInfo(sectionId:Int)
     
     case otherSessionsHeader(sectionId:Int)
+    
+    case incompleteHeader(sectionId: Int)
+    case incompleteDesc(sectionId: Int)
+    
     case session(sectionId:Int, index: Int32, session: RecentAccountSession, enabled: Bool, editing: Bool)
     case section(sectionId:Int)
 
@@ -91,8 +73,12 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return .index(3)
         case .currentSessionInfo:
             return .index(4)
-        case .otherSessionsHeader:
+        case .incompleteHeader:
             return .index(5)
+        case .incompleteDesc:
+            return .index(6)
+        case .otherSessionsHeader:
+            return .index(7)
         case let .session(_, _, session, _, _):
             return .session(session.hash)
         case let .section(sectionId):
@@ -112,9 +98,13 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return 3
         case .currentSessionInfo:
             return 4
-        case .otherSessionsHeader:
+        case .incompleteHeader:
             return 5
-        case let .session(_, _, _, _, _):
+        case .incompleteDesc:
+            return 6
+        case .otherSessionsHeader:
+            return 7
+        case .session:
             fatalError()
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -132,6 +122,10 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         case let .terminateOtherSessions(sectionId):
             return sectionId
         case let .currentSessionInfo(sectionId):
+            return sectionId
+        case let .incompleteHeader(sectionId):
+            return sectionId
+        case let .incompleteDesc(sectionId):
             return sectionId
         case let .otherSessionsHeader(sectionId):
             return sectionId
@@ -154,6 +148,10 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return (sectionId * 1000) + stableIndex
         case let .currentSessionInfo(sectionId):
             return (sectionId * 1000) + stableIndex
+        case let .incompleteHeader(sectionId):
+            return (sectionId * 1000) + stableIndex
+        case let .incompleteDesc(sectionId):
+            return (sectionId * 1000) + stableIndex
         case let .otherSessionsHeader(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .session(sectionId, index, _, _, _):
@@ -162,26 +160,6 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return (sectionId * 1000) + stableIndex
         }
     }
-    
-    static func ==(lhs: RecentSessionsEntry, rhs: RecentSessionsEntry) -> Bool {
-        switch lhs {
-        case .currentSessionHeader, .terminateOtherSessions, .currentSessionInfo, .otherSessionsHeader, .section, .loading:
-            return lhs.stableId == rhs.stableId && lhs.sectionId == rhs.sectionId
-        case let .currentSession(sectionId, session):
-            if case .currentSession(sectionId, session) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .session(sectionId, index, session, enabled, editing):
-            if case .session(sectionId, index, session, enabled, editing) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
-    
     
     
     static func <(lhs: RecentSessionsEntry, rhs: RecentSessionsEntry) -> Bool {
@@ -199,9 +177,13 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
                 arguments.terminateOthers()
             })
         case .currentSessionInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.sessionsTerminateDescription))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsTerminateDescription)
+        case .incompleteHeader:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.recentSessionsIncompleteAttemptHeader)
+        case .incompleteDesc:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.recentSessionsIncompleteAttemptDesc)
         case .otherSessionsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.sessionsActiveSessionsHeader))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsActiveSessionsHeader)
         case let .session(_, _, session, _, _):
             return RecentSessionRowItem(initialSize, session: session, stableId: stableId, revoke: {
                 arguments.removeSession(session.hash)
@@ -282,18 +264,43 @@ private func recentSessionsControllerEntries(state: RecentSessionsControllerStat
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
             
-            entries.append(.otherSessionsHeader(sectionId: sectionId))
-             
+            
             let filteredSessions: [RecentAccountSession] = sessions.sorted(by: { lhs, rhs in
                 return lhs.activityDate > rhs.activityDate
             })
             
-            for i in 0 ..< filteredSessions.count {
-                if !existingSessionIds.contains(sessions[i].hash) {
-                    existingSessionIds.insert(sessions[i].hash)
-                    let session = sessions[i]
-                    let enabled = state.removingSessionId != sessions[i].hash
-                    entries.append(.session(sectionId: sectionId, index: Int32(i), session: session, enabled: enabled, editing: state.editing))
+            let nonApplied = filteredSessions.filter {$0.flags.contains(.passwordPending)}
+            let applied = filteredSessions.filter {!$0.flags.contains(.passwordPending)}
+            
+            var index: Int32 = 0
+            
+            if !nonApplied.isEmpty {
+                entries.append(.incompleteHeader(sectionId: sectionId))
+                for session in nonApplied {
+                    if !existingSessionIds.contains(session.hash) {
+                        existingSessionIds.insert(session.hash)
+                        let enabled = state.removingSessionId != session.hash
+                        entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing))
+                        index += 1
+                    }
+                }
+                entries.append(.incompleteDesc(sectionId: sectionId))
+                
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+
+            }
+            
+            entries.append(.otherSessionsHeader(sectionId: sectionId))
+
+            for session in applied {
+                if !existingSessionIds.contains(session.hash) {
+                    existingSessionIds.insert(session.hash)
+                    let enabled = state.removingSessionId != session.hash
+                    entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing))
+                    index += 1
                 }
             }
         }
@@ -314,6 +321,11 @@ private func prepareSessions(left:[AppearanceWrapperEntry<RecentSessionsEntry>],
 }
 
 class RecentSessionsController : TableViewController {
+    private let activeSessions: [RecentAccountSession]?
+    init(_ account: Account, activeSessions: [RecentAccountSession]?) {
+        self.activeSessions = activeSessions
+        super.init(account)
+    }
     
     override func viewDidLoad() {
         let statePromise = ValuePromise(RecentSessionsControllerState(), ignoreRepeated: true)
@@ -328,7 +340,7 @@ class RecentSessionsController : TableViewController {
         let removeSessionDisposable = MetaDisposable()
         actionsDisposable.add(removeSessionDisposable)
         
-        let sessionsPromise = Promise<[RecentAccountSession]?>(nil)
+        let sessionsPromise = Promise<[RecentAccountSession]?>()
         
         let arguments = RecentSessionsControllerArguments(account: account, removeSession: { sessionId in
             updateState {
@@ -374,7 +386,7 @@ class RecentSessionsController : TableViewController {
             _ = (confirmSignal(for: mainWindow, information: tr(L10n.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: account)}).start()
         })
         
-        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(nil) |> then(requestRecentAccountSessions(account: account) |> map { Optional($0) })
+        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(self.activeSessions) |> then(requestRecentAccountSessions(account: account) |> map { Optional($0) })
         
         sessionsPromise.set(sessionsSignal)
         

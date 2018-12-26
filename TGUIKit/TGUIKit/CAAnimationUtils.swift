@@ -303,6 +303,7 @@ public extension CALayer {
         animation.toValue = to
         animation.isRemovedOnCompletion = removeOnCompletion
         animation.fillMode = .forwards
+        
         if let completion = completion {
             animation.delegate = CALayerAnimationDelegate(completion: completion)
         }

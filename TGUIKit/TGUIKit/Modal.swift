@@ -14,6 +14,21 @@ private class ModalBackground : Control {
     fileprivate override func scrollWheel(with event: NSEvent) {
         
     }
+    override func cursorUpdate(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        
+    }
+    override func mouseExited(with event: NSEvent) {
+        
+    }
+
 }
 
 private var activeModals:[WeakReference<Modal>] = []
@@ -103,7 +118,7 @@ private class ModalInteractionsContainer : View {
             }, for: .Click)
         } else {
             cancelView?.set(handler: { [weak modal] _ in
-                modal?.close()
+                modal?.controller?.close()
             }, for: .Click)
         }
         
@@ -113,7 +128,7 @@ private class ModalInteractionsContainer : View {
             }, for: .Click)
         } else {
             acceptView.set(handler: { [weak modal] _ in
-                modal?.close()
+                modal?.controller?.close()
             }, for: .Click)
 
         }
@@ -189,15 +204,48 @@ private class ModalInteractionsContainer : View {
     
 }
 
-private class ModalContainerView: View {
-    
-    deinit {
-        var bp:Int = 0
-        bp += 1
+
+private final class ModalHeaderView: View {
+    let titleView: TextView = TextView()
+    required init(frame frameRect: NSRect, title: String) {
+        super.init(frame: frameRect)
+        
+        titleView.update(TextViewLayout(.initialize(string: title, color: presentation.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        border = [.Bottom]
+        addSubview(titleView)
     }
     
+    override func layout() {
+        super.layout()
+        titleView.layout?.measure(width: frame.width - 40)
+        titleView.update(titleView.layout)
+        titleView.center()
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override required public init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+private class ModalContainerView: View {
     
     
+    override func mouseMoved(with event: NSEvent) {
+        
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        
+    }
+    override func mouseExited(with event: NSEvent) {
+        
+    }
     fileprivate override func mouseDown(with event: NSEvent) {
         
     }
@@ -215,6 +263,8 @@ public class Modal: NSObject {
     public let window:Window
     private let disposable:MetaDisposable = MetaDisposable()
     private var interactionsView:ModalInteractionsContainer?
+    private var headerView:ModalHeaderView?
+
     public let interactions:ModalInteractions?
     fileprivate let animated: Bool
     private let isOverlay: Bool
@@ -234,6 +284,9 @@ public class Modal: NSObject {
             interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
             interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
         }
+        if let header = controller.modalHeader {
+            headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), title: header)
+        }
        
         if controller.isFullScreen {
             controller._frameRect = window.contentView!.bounds
@@ -247,9 +300,16 @@ public class Modal: NSObject {
         
         container.addSubview(controller.view)
         
+        
+        if let headerView = headerView {
+            container.addSubview(headerView)
+        }
+        
         if let interactionsView = interactionsView {
             container.addSubview(interactionsView)
         }
+        
+      
         
         background.addSubview(container)
         
@@ -268,7 +328,7 @@ public class Modal: NSObject {
             
             window.set(escape: {[weak self] () -> KeyHandlerResult in
                 if self?.controller?.escapeKeyAction() == .rejected {
-                    self?.close()
+                    self?.controller?.close()
                 }
                 return .invoked
             }, with: self, priority: .high)
@@ -285,7 +345,7 @@ public class Modal: NSObject {
         
         background.set(handler: { [weak self] _ in
             if let closable = self?.controller?.closable, closable {
-                self?.close()
+                self?.controller?.close()
             }
         }, for: .Click)
         
@@ -300,16 +360,26 @@ public class Modal: NSObject {
     
     public func resize(with size:NSSize, animated:Bool = true) {
         let focus:NSRect
-        if let interactions = controller?.modalInteractions {
-            focus = background.focus(NSMakeSize(size.width, size.height + interactions.height))
-            interactionsView?.change(pos: NSMakePoint(0, size.height), animated: animated)
-        } else {
-            focus = background.focus(size)
-        }
-        container.change(size: focus.size, animated: animated)
-        container.change(pos: focus.origin, animated: animated)
         
-        controller?.view._change(size: size, animated: animated)
+        var headerOffset: CGFloat = 0
+        if let headerView = headerView {
+            headerOffset += headerView.frame.height
+        }
+        
+        if let interactions = controller?.modalInteractions {
+            focus = background.focus(NSMakeSize(size.width, size.height + interactions.height + headerOffset))
+            interactionsView?.change(pos: NSMakePoint(0, size.height + headerOffset), animated: animated)
+        } else {
+            focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
+        }
+        if focus != container.frame {
+            container.change(size: focus.size, animated: animated)
+            container.change(pos: focus.origin, animated: animated)
+            
+            controller?.view._change(size: size, animated: animated)
+            controller?.view._change(pos: NSMakePoint(0, headerOffset), animated: animated)
+        }
+       
     }
     
     private var containerRect:NSRect {
@@ -317,6 +387,9 @@ public class Modal: NSObject {
             var containerRect = controller.bounds
             if let interactions = controller.modalInteractions {
                 containerRect.size.height += interactions.height
+            }
+            if let headerView = headerView {
+                containerRect.size.height += headerView.frame.height
             }
             return containerRect
         }

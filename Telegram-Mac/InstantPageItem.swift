@@ -8,6 +8,27 @@
 
 import Cocoa
 import TelegramCoreMac
+import PostboxMac
+
+
+final class InstantPageItemArguments {
+    let account: Account
+    let theme: InstantPageTheme
+    let openMedia:(InstantPageMedia)->Void
+    let openPeer:(PeerId) -> Void
+    let openUrl:(InstantPageUrlItem) -> Void
+    let updateWebEmbedHeight:(CGFloat) -> Void
+    let updateDetailsExpanded: (Bool) -> Void
+    init(account: Account, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (Bool) -> Void) {
+        self.account = account
+        self.theme = theme
+        self.openMedia = openMedia
+        self.openPeer = openPeer
+        self.openUrl = openUrl
+        self.updateWebEmbedHeight = updateWebEmbedHeight
+        self.updateDetailsExpanded = updateDetailsExpanded
+    }
+}
 
 protocol InstantPageItem {
     var frame: CGRect { get set }
@@ -19,10 +40,11 @@ protocol InstantPageItem {
     
     func matchesAnchor(_ anchor: String) -> Bool
     func drawInTile(context: CGContext)
-    func node(account: Account) -> InstantPageView?
+    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView?
     func matchesNode(_ node: InstantPageView) -> Bool
     func linkSelectionViews() -> [InstantPageLinkSelectionView]
     
     func distanceThresholdGroup() -> Int?
     func distanceThresholdWithGroupCount(_ count: Int) -> CGFloat
 }
+

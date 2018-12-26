@@ -308,6 +308,16 @@ class ChatListRowItem: TableRowItem {
     }
 
     init(_ initialSize:NSSize,  account:Account,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), state: ChatListRowState = .plain) {
+        
+        
+        var embeddedState = embeddedState
+        
+        if let peer = renderedPeer.chatMainPeer as? TelegramChannel {
+            if !peer.hasAdminRights(.canPostMessages) {
+                embeddedState = nil
+            }
+        }
+        
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.account = account

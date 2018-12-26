@@ -53,11 +53,11 @@ class ShareModalView : View {
         
         acceptView.style = ControlStyle(font: .medium(.text),foregroundColor: theme.colors.blueUI)
         acceptView.set(text: tr(L10n.shareExtensionShare), for: .Normal)
-        acceptView.sizeToFit()
+        _ = acceptView.sizeToFit()
         
         cancelView.style = ControlStyle(font:.medium(.text),foregroundColor: theme.colors.blueUI)
         cancelView.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
-        cancelView.sizeToFit()
+        _ = cancelView.sizeToFit()
         
         addSubview(acceptView)
         addSubview(cancelView)
@@ -104,7 +104,7 @@ class ShareObject {
             if let item = item as? NSExtensionItem {
                 if let _ = item.attributedContentText?.string {
                     return current + 1
-                } else if let attachments = item.attachments as? [NSItemProvider] {
+                } else if let attachments = item.attachments {
                     return current + attachments.count
                 }
             }
@@ -147,7 +147,7 @@ class ShareObject {
                         signals.append(sendText(text, to:peerId))
                         k += 1
                         requestIfNeeded()
-                    } else if let attachments = item.attachments as? [NSItemProvider] {
+                    } else if let attachments = item.attachments {
                         
                         for i in 0 ..< attachments.count {
                             attachments[i].loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil, completionHandler: { (coding, error) in
@@ -157,10 +157,20 @@ class ShareObject {
                                     } else {
                                         signals.append(self.sendMedia(url, to:peerId))
                                     }
+                                    k += 1
+                                    requestIfNeeded()
                                 }
-                                k += 1
-                                requestIfNeeded()
+                               
                             })
+                            if k != total {
+                                attachments[i].loadItem(forTypeIdentifier: kUTTypeImage as String, options: nil, completionHandler: { (coding, error) in
+                                    if let data = (coding as? NSImage)?.tiffRepresentation {
+                                        signals.append(self.sendMedia(nil, data, to:peerId))
+                                        k += 1
+                                        requestIfNeeded()
+                                    }
+                                })
+                            }
                         }
                     }
                 }
@@ -175,13 +185,25 @@ class ShareObject {
     
     private let queue:Queue = Queue(name: "proccessShareFilesQueue")
     
-    private func prepareMedia(_ path: URL) -> Signal<StandaloneMedia, NoError> {
+    private func prepareMedia(_ path: URL?, _ pasteData: Data? = nil) -> Signal<StandaloneMedia, NoError> {
         return Signal { subscriber in
-            if let data = try? Data(contentsOf: path) {
+            
+            let data = pasteData ?? (path != nil ? try? Data(contentsOf: path!) : nil)
+            
+            if let data = data {
+                var forceImage: Bool = false
+                if let _ = NSImage(data: data) {
+                    if let path = path {
+                        let mimeType = MIMEType(path.path)
+                        if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif") {
+                            forceImage = true
+                        }
+                    } else {
+                        forceImage = true
+                    }
+                }
                 
-                let mimeType = MIMEType(path.absoluteString)
-                if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif") {
-                    
+                if forceImage {
                     let options = NSMutableDictionary()
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
                     options.setValue(1280 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
@@ -198,7 +220,16 @@ class ShareObject {
                     }
 
                 } else {
-                    subscriber.putNext(StandaloneMedia.file(data: data, mimeType: mimeType, attributes: []))
+                    var mimeType: String = "application/octet-stream"
+                    let fileName: String
+                    if let path = path {
+                        mimeType = MIMEType(path.path)
+                        fileName = path.path.nsstring.lastPathComponent
+                    } else {
+                        fileName = "Unnamed.file"
+                    }
+                    
+                    subscriber.putNext(StandaloneMedia.file(data: data, mimeType: mimeType, attributes: [.FileName(fileName: fileName)]))
                 }
                 
             }
@@ -210,8 +241,8 @@ class ShareObject {
     
     
     
-    private func sendMedia(_ path:URL, to peerId:PeerId) -> Signal<Float, NoError> {
-        return Signal<Float, NoError>.single(0) |> then(prepareMedia(path) |> mapToSignal { media -> Signal<Float, NoError> in
+    private func sendMedia(_ path:URL?, _ data: Data? = nil, to peerId:PeerId) -> Signal<Float, NoError> {
+        return Signal<Float, NoError>.single(0) |> then(prepareMedia(path, data) |> mapToSignal { media -> Signal<Float, NoError> in
             return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> `catch` {_ in return .complete()}
         })
     }
@@ -303,19 +334,16 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], account:Account, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> {
     
     return Signal {subscriber in
-        let (deleted,inserted,updated) = proccessEntries(from, right: to, { (entry) -> TableRowItem in
-            
+        let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
             switch entry {
             case let .plain(peer, _):
-                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
             case .emptySearch:
                 return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }
-            
-            
         })
         
-        let transition = TableEntriesTransition<[SelectablePeersEntry]>(deleted: deleted, inserted: inserted, updated:updated, entries:to, animated:animated, state: animated ? .none(nil) : .saveVisible(.lower))
+        let transition = TableEntriesTransition<[SelectablePeersEntry]>(deleted: deleted, inserted: inserted, updated:updated, entries:to, animated:animated, state: .none(nil))
         
         subscriber.putNext(transition)
         subscriber.putCompletion()
@@ -379,10 +407,10 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
             
             if search.state == .None {
-                let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: nil, count: 100)
+                let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: nil, count: 100) |> take(1)
                 
                 
-                return signal |> deliverOn(prepareQueue) |> mapToQueue { [weak self] (value) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
+                return combineLatest(signal, account.postbox.loadedPeerWithId(account.peerId)) |> deliverOn(prepareQueue) |> mapToQueue { [weak self] value, mainPeer -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
                     if let strongSelf = self {
                         var entries:[SelectablePeersEntry] = []
                         
@@ -390,6 +418,9 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         let fromSetIds:Set<PeerId> = Set(fromSearch)
                         var fromPeers:[PeerId:Peer] = [:]
                         var contains:[PeerId:Peer] = [:]
+                        
+                        entries.append(.plain(mainPeer, ChatListIndex.init(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())))
+                        contains[mainPeer.id] = mainPeer
                         
                         for entry in value.0.entries {
                             switch entry {
@@ -420,43 +451,72 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         }
                         entries.sort(by: <)
                         
-                        return prepareEntries(from: previous.modify({$0}), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction) |> deliverOnMainQueue
+                        return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                     }
                     return .never()
                 }
             } else {
-                return ( search.request.isEmpty ? recentPeers(account: account) |> map { recent -> [Peer] in
-                    switch recent {
-                    case .disabled:
-                        return []
-                    case let .peers(peers):
-                        return peers
-                    }
-                    } : account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
-                        return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)}) }) |> deliverOn(prepareQueue) |> mapToSignal { peers -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
+                
+                let signal: Signal<([Peer], Peer), NoError>
+                
+                if search.request.isEmpty {
+                    signal = combineLatest(recentPeers(account: account) |> map { recent -> [Peer] in
+                        switch recent {
+                        case .disabled:
+                            return []
+                        case let .peers(peers):
+                            return peers
+                        }
+                        }, account.postbox.loadedPeerWithId(account.peerId))
+                    |> deliverOn(prepareQueue)
+                } else {
+                    let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap { $0.chatMainPeer} }
+                    
+                    let foundRemotePeers:Signal<[Peer], NoError> = .single([]) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map { $0.map{$0.peer} + $1.map{$0.peer} } )
+
+                    signal = combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, account.postbox.loadedPeerWithId(account.peerId))
+                    
+                }
+                
+                let assignSavedMessages:Bool
+                if search.request.isEmpty {
+                    assignSavedMessages = true
+                } else if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || "Saved Messages".lowercased().hasPrefix(search.request.lowercased()) {
+                    assignSavedMessages = true
+                } else {
+                    assignSavedMessages = false
+                }
+
+                
+                return signal |> mapToSignal { peers, mainPeer in
                     var entries:[SelectablePeersEntry] = []
                     var i:Int32 = Int32.max
+                    
+                    var contains: Set<PeerId> = Set()
+                    if assignSavedMessages {
+                        entries.append(.plain(mainPeer, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())))
+                        contains.insert(mainPeer.id)
+                    }
+                   
+                    
                     for peer in peers {
-                        if peer.canSendMessage {
+                        if peer.canSendMessage, !contains.contains(peer.id) {
                             let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
                             entries.append(.plain(peer, ChatListIndex(pinningIndex: nil, messageIndex: index)))
+                            contains.insert(peer.id)
                             i -= 1
                         }
                         
                     }
-                    if entries.isEmpty {
-                        entries.append(.emptySearch)
-                    }
                     entries.sort(by: <)
-                    return prepareEntries(from: previous.modify({$0}), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction) |> deliverOnMainQueue
+                    return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                 }
+                
             }
-            
         }
         
-        disposable.set(list.start(next: { [weak self] (transition) in
+        disposable.set((list |> deliverOnMainQueue).start(next: { [weak self] (transition) in
             table.resetScrollNotifies()
-            _ = previous.swap(transition.entries)
             table.merge(with:transition)
             self?.readyOnce()
         }))

@@ -409,7 +409,7 @@ class GroupStickerSetController: TableViewController {
             if updated.isEmpty {
                 resolveDisposable.set(nil)
             } else {
-                resolveDisposable.set((loadedStickerPack(postbox: account.postbox, network: account.network, reference: .name(updated)) |> deliverOnMainQueue).start(next: { result in
+                resolveDisposable.set((loadedStickerPack(postbox: account.postbox, network: account.network, reference: .name(updated), forceActualized: false) |> deliverOnMainQueue).start(next: { result in
                     switch result {
                     case .fetching:
                         updateState({$0.withUpdatedLoadedPack(nil).withUpdatedLoading(true)})

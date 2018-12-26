@@ -191,7 +191,7 @@ final class GridMessageItemNode: GridItemNode {
         self.imageView = TransformImageView()
         
         super.init(grid)
-        
+        self.imageView.ignoreFullyLoad = true
         self.addSubview(self.imageView)
         
     }
@@ -319,6 +319,9 @@ final class GridMessageItemNode: GridItemNode {
                 let imageSize = imgSize.aspectFilled(NSMakeSize(bounds.width, bounds.height))
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets())
 
+                
+                self.imageView.background = theme.colors.grayBackground
+                
                 self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
                 self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in

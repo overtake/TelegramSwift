@@ -85,7 +85,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case general(index: Int)
     case stickers(index: Int)
     case notifications(index: Int)
-    case language(index: Int, current: String, languages:[LocalizationInfo]?)
+    case language(index: Int, current: String)
     case appearance(index: Int)
     case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, [Peer]?)
     case dataAndStorage(index: Int)
@@ -143,7 +143,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return index
         case let .notifications(index):
             return index
-        case let .language(index, _, _):
+        case let .language(index, _):
             return index
         case let .appearance(index):
             return index
@@ -198,8 +198,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .language(index, current, languages):
-            if case .language(index, current, languages) = rhs {
+        case let .language(index, current):
+            if case .language(index, current) = rhs {
                 return true
             } else {
                 return false
@@ -320,9 +320,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: .next, action: {
                 arguments.presentController(NotificationSettingsViewController(arguments.account), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .language(_, _, languages):
+        case .language:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(""), action: {
-                arguments.presentController(LanguageViewController(arguments.account, languages: languages), true)
+                arguments.presentController(LanguageViewController(arguments.account), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .appearance:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, action: {
@@ -379,7 +379,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, language: Language, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers:[Peer]?, proxySettings: (ProxySettings, ConnectionStatus), languages: [LocalizationInfo]?, passportVisible: Bool) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers:[Peer]?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -417,7 +417,7 @@ private func accountInfoEntries(peerView:PeerView, language: Language, privacySe
     index += 1
     entries.append(.appearance(index: index))
     index += 1
-    entries.append(.language(index: index, current: L10n.accountSettingsCurrentLanguage, languages: languages))
+    entries.append(.language(index: index, current: L10n.accountSettingsCurrentLanguage))
     index += 1
     entries.append(.stickers(index: index))
     index += 1
@@ -490,7 +490,7 @@ class LayoutAccountController : TableViewController {
     }
     
     private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus), Bool)> = Promise()
-    private let languages: Promise<[LocalizationInfo]?> = Promise()
+    private let syncLocalizations = MetaDisposable()
     private let blockedPeers: Promise<[Peer]?> = Promise()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
     private weak var arguments: AccountInfoArguments?
@@ -523,8 +523,8 @@ class LayoutAccountController : TableViewController {
         
 
         
-        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings.get() |> deliverOnPrepareQueue, languages.get() |> deliverOnPrepareQueue, blockedPeers.get() |> deliverOnPrepareQueue) |> map { peerView, appearance, settings, languages, blockedPeers -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, blockedPeers: blockedPeers, proxySettings: settings.2, languages: languages, passportVisible: settings.3).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(account.viewTracker.peerView( account.peerId) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, settings.get() |> deliverOnPrepareQueue, blockedPeers.get() |> deliverOnPrepareQueue) |> map { peerView, appearance, settings, blockedPeers -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, blockedPeers: blockedPeers, proxySettings: settings.2, passportVisible: settings.3).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -559,7 +559,7 @@ class LayoutAccountController : TableViewController {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is LanguageViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.language(index: 0, current: "", languages: nil).stableId)) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntry.language(index: 0, current: "").stableId)) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is InstalledStickerPacksController {
@@ -630,9 +630,9 @@ class LayoutAccountController : TableViewController {
             return account.network.connectionStatus |> map {(settings, $0)}
         }, passportPromise.get()))
         
+
+        syncLocalizations.set(synchronizedLocalizationListState(postbox: account.postbox, network: account.network).start())
         
-        
-        languages.set(Signal<[LocalizationInfo]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(availableLocalizations(postbox: account.postbox, network: account.network, allowCached: true) |> map {Optional($0)} |> deliverOnPrepareQueue))
         blockedPeers.set(Signal<[Peer]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: account) |> map {Optional($0)} |> deliverOnPrepareQueue))
     }
     
@@ -661,6 +661,7 @@ class LayoutAccountController : TableViewController {
     }
     
     deinit {
+        syncLocalizations.dispose()
         disposable.dispose()
     }
 

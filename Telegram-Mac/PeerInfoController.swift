@@ -378,7 +378,7 @@ class PeerInfoController: EditableViewController<TableView> {
                     
                 } else if let peer = peer as? TelegramGroup {
                     editable = peer.role == .creator || peer.role == .admin || !peer.flags.contains(.adminsEnabled)
-                } else if peer is TelegramUser {
+                } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
                     editable = account.peerId != peer.id
                 } else {
                     editable = false

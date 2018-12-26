@@ -47,8 +47,8 @@ final class InstantPageMediaItem: InstantPageItem {
         self.arguments = arguments
     }
     
-    func node(account: Account) -> InstantPageView? {
-        return InstantPageMediaView(account: account, media: self.media, arguments: self.arguments)
+    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+        return InstantPageMediaView(account: arguments.account, media: self.media, arguments: self.arguments)
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {

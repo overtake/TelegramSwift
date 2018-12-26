@@ -701,6 +701,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                 if animateOnceAfterDelta {
                     animateOnceAfterDelta = false
                     action.layer?.animatePosition(from: NSMakePoint(-(swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                    NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
                 }
                 action.setFrameOrigin(NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY))
             } else {
@@ -729,6 +730,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                 if delta + subviews[1].frame.maxX < -frame.midX {
                     if animateOnceAfterDelta {
                         animateOnceAfterDelta = false
+                        NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
                         action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
                     }
                     action.setFrameOrigin(NSMakePoint(subviews[1].frame.maxX, action.frame.minY))

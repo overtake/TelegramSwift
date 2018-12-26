@@ -128,7 +128,7 @@ class InstantPageSelectText : NSObject {
     }
     
     
-    func initializeHandlers(for window:Window, instantLayout: InstantPageLayout, instantPage: InstantPage, account: Account, updateLayout: @escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openNewTab:@escaping (MediaId, String)->Void) {
+    func initializeHandlers(for window:Window, instantLayout: InstantPageLayout, instantPage: InstantPage, account: Account, updateLayout: @escaping()->Void, openUrl:@escaping(InstantPageUrlItem) -> Void) {
         window.removeAllHandlers(for: self)
         
         
@@ -138,7 +138,7 @@ class InstantPageSelectText : NSObject {
             let isInDocument = self?.scroll.documentView?.isInnerView(window?.contentView?.hitTest(event.locationInWindow)) ?? false
             
             self?.started = false
-            window?.makeFirstResponder(nil)
+            _ = window?.makeFirstResponder(nil)
             if isInDocument {
                 if let scroll = self?.scroll, let superview = scroll.superview, let documentView = scroll.documentView, let window = window {
                     let point = superview.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -198,7 +198,7 @@ class InstantPageSelectText : NSObject {
         
             let item = instantLayout.items(in: NSMakeRect(point.x, point.y, 1, 1)).first
 
-            window?.makeFirstResponder(instantSelectManager)
+            _ = window?.makeFirstResponder(instantSelectManager)
             
             if event.clickCount == 2, let item = textItem {
                 
@@ -238,40 +238,42 @@ class InstantPageSelectText : NSObject {
                 if let item = textItem, instantSelectManager.isEmpty {
                     let p = NSMakePoint(point.x - item.frame.minX, point.y - item.frame.minY)
                     if let link = item.linkAt(point: p) {
-                        
-                        switch link {
-                        case .email(_, let email):
-                            execute(inapp: inAppLink.external(link: email, false))
-                        case let .url(_ , url, webpageId):
-                            
-                            let url = url.nsstring
-                            let anchorRange = url.range(of: "#")
-                            var foundAnchor = false
-                            if anchorRange.location != NSNotFound {
-                                let anchor = url.substring(from: anchorRange.location + anchorRange.length)
-                                if !anchor.isEmpty {
-                                    for item in instantLayout.items {
-                                        if item.matchesAnchor(anchor) {
-                                            self?.scroll.clipView.scroll(to: item.frame.origin, animated: true)
-                                            foundAnchor = true
-                                            break
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            if !foundAnchor {
-                                if let mediaId = webpageId {
-                                    openNewTab(mediaId, url as String)
-                                } else {
-                                    execute(inapp: inApp(for: url, account: account, openInfo: openInfo))
-                                }
-                            }
-                            
-                            break
-                        default:
-                            break
-                        }
+                    
+                        openUrl(link)
+//
+//                        switch link {
+//                        case .email(_, let email):
+//                            execute(inapp: inAppLink.external(link: email, false))
+//                        case let .url(_ , url, webpageId):
+//
+//                            let url = url.nsstring
+//                            let anchorRange = url.range(of: "#")
+//                            var foundAnchor = false
+//                            if anchorRange.location != NSNotFound {
+//                                let anchor = url.substring(from: anchorRange.location + anchorRange.length)
+//                                if !anchor.isEmpty {
+//                                    for item in instantLayout.items {
+//                                        if item.matchesAnchor(anchor) {
+//                                            self?.scroll.clipView.scroll(to: item.frame.origin, animated: true)
+//                                            foundAnchor = true
+//                                            break
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//                            if !foundAnchor {
+//                                if let mediaId = webpageId {
+//                                    openNewTab(mediaId, url as String)
+//                                } else {
+//                                    execute(inapp: inApp(for: url, account: account, openInfo: openInfo))
+//                                }
+//                            }
+//
+//                            break
+//                        default:
+//                            break
+//                        }
                     }
                     result = .rejected
 
@@ -398,7 +400,7 @@ class InstantPageSelectText : NSObject {
                 self?.scroll.contentView.autoscroll(with: event)
                 
                 if window?.firstResponder != instantSelectManager {
-                    window?.makeFirstResponder(instantSelectManager)
+                    _ = window?.makeFirstResponder(instantSelectManager)
                 }
                 self?.runSelector(instantLayout, updateLayout: updateLayout)
                 return .invoked
@@ -414,82 +416,76 @@ class InstantPageSelectText : NSObject {
         
         let itemsRect = NSMakeRect(max(min(endInnerLocation.x, beginInnerLocation.x), 0), max(min(endInnerLocation.y, beginInnerLocation.y), 0), abs(endInnerLocation.x - beginInnerLocation.x), abs(endInnerLocation.y - beginInnerLocation.y))
         
-        let items = instantPage.items(in: itemsRect).filter({$0 is InstantPageTextItem}).map({$0 as! InstantPageTextItem})
+        guard itemsRect.size != NSZeroSize else {
+            return
+        }
+        
+        let items = instantPage.items(in: itemsRect).compactMap { $0 as? InstantPageTextItem }
         
 
         let reversed = endInnerLocation.y < beginInnerLocation.y
         
-
-        let multiple = items.count > 1
         
-        for i in 0 ..< items.count  {
-            let item = items[i]
+
+        let lines = items.reduce([]) { (current, item) -> [InstantPageTextLine] in
             
-            let initiatedItem = (!multiple || (reversed ? i == items.count - 1 : i == 0))
+            let rect = NSMakeRect(item.frame.minX, itemsRect.minY < item.frame.minY ? 0 : itemsRect.minY - item.frame.minY, itemsRect.width ,itemsRect.minY < item.frame.minY ? min(itemsRect.maxY - item.frame.minY, item.frame.height) : itemsRect.minY < item.frame.minY ? min(item.frame.maxY - itemsRect.minY, item.frame.height) : itemsRect.height)
             
-            for line in item.lines {
-                
-                var minX:CGFloat = item.frame.minX
-                switch item.alignment {
-                case .center:
-                    minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.frame.width - line.frame.width) / 2)
-                default:
-                    break
-                }
-                
-                let rect = NSMakeRect(item.frame.minX, itemsRect.minY < item.frame.minY ? 0 : itemsRect.minY - item.frame.minY, itemsRect.width ,itemsRect.minY < item.frame.minY ? min(itemsRect.maxY - item.frame.minY, item.frame.height) : itemsRect.minY < item.frame.minY ? min(item.frame.maxY - itemsRect.minY, item.frame.height) : itemsRect.height)
-                
-                let z = NSMakeRect(rect.minX, rect.minY, rect.width, 1)
-                let n = NSMakeRect(rect.maxX, rect.maxY, rect.width, 1)
-                
-                let start = reversed ? n : z
-                let end = reversed ? z : n
-                
-                let beginX = beginInnerLocation.x - minX
-                let endX = endInnerLocation.x - minX
-                
-                if rect.intersects(line.frame) {
-                    
-                    let selectedText:NSAttributedString
-                    
-                    if line.frame.intersects(start) && line.frame.intersects(end) {
-                        if !initiatedItem {
-                            selectedText = line.selectText(in: NSMakeRect(0, 0, endX, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                        } else {
-                            selectedText = line.selectText(in: NSMakeRect(beginX, 0, endX - beginX, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                        }
-                        
-                    } else if line.frame.intersects(start) {
-                        
-                        if !initiatedItem {
-                            selectedText = line.selectText(in: NSMakeRect(0, 0, line.frame.width, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                        } else {
-                            selectedText = line.selectText(in: NSMakeRect(reversed ? 0 : beginX, 0, reversed ? beginX : line.frame.width - beginX, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                        }
-                        
-                    } else if line.frame.intersects(end) {
-                        if !initiatedItem {
-                            if reversed {
-                                selectedText = line.selectText(in: NSMakeRect(endX, 0, line.frame.width - endX, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                            } else {
-                                selectedText = line.selectText(in: NSMakeRect(0, 0, endX, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                            }
-                        } else {
-                            if multiple {
-                                selectedText = line.selectText(in: NSMakeRect(0, 0, line.frame.width, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                            } else {
-                                selectedText = line.selectText(in: NSMakeRect(reversed ? endX : 0, 0, reversed ? line.frame.width - endX : endX, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                            }
-                        }
-                        
-                    } else {
-                        selectedText = line.selectText(in: NSMakeRect(0, 0, line.frame.width, 0), boundingWidth: item.frame.width, alignment: item.alignment)
-                    }
-                    
-                    
-                    instantSelectManager.add(line: line, attributedString: selectedText)
-                }
+            let lines = item.lines.filter { line in
+                return line.frame.intersects(rect)
             }
+            
+            return current + lines
+        }
+        
+        for i in 0 ..< lines.count  {
+            let line = lines[i]
+            
+            let item = items.first(where: {$0.lines.contains(where: {$0 === line})})!
+
+            var minX:CGFloat = item.frame.minX
+            switch item.alignment {
+            case .center:
+                minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.frame.width - line.frame.width) / 2)
+            default:
+                break
+            }
+            
+            let selectedText:NSAttributedString
+            
+            let beginX = beginInnerLocation.x - minX
+            let endX = endInnerLocation.x - minX
+
+            let firstLine: InstantPageTextLine = reversed ? lines.last! : lines.first!
+            let endLine: InstantPageTextLine = !reversed ? lines.last! : lines.first!
+            let multiple: Bool = lines.count > 1
+            
+            if firstLine === line {
+                if !reversed {
+                    if multiple {
+                        selectedText = line.selectText(in: NSMakeRect(beginX, 0, line.frame.width - beginX, 0), boundingWidth: line.frame.width, alignment: .left)
+                    } else {
+                        selectedText = line.selectText(in: NSMakeRect(beginX, 0, endX - beginX, 0), boundingWidth: line.frame.width, alignment: .left)
+                    }
+                } else {
+                    if multiple {
+                        selectedText = line.selectText(in: NSMakeRect(0, 0, beginX, 0), boundingWidth: line.frame.width, alignment: .left)
+                    } else {
+                        selectedText = line.selectText(in: NSMakeRect(endX, 0, beginX - endX, 0), boundingWidth: line.frame.width, alignment: .left)
+                    }
+                }
+                
+            } else if endLine === line {
+                if !reversed {
+                    selectedText = line.selectText(in: NSMakeRect(0, 0, endX, 0), boundingWidth: line.frame.width, alignment: .left)
+                } else {
+                    selectedText = line.selectText(in: NSMakeRect(endX, 0, line.frame.maxX - endX, 0), boundingWidth: line.frame.width, alignment: .left)
+                }
+            } else {
+                selectedText = line.selectText(in: NSMakeRect(0, 0, line.frame.width, 0), boundingWidth: line.frame.width, alignment: .left)
+            }
+            
+            instantSelectManager.add(line: line, attributedString: selectedText)
         }
 
         updateLayout()

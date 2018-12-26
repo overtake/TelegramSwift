@@ -24,11 +24,11 @@ class ShareViewController: NSViewController {
     private let contextDisposable = MetaDisposable()
     
     
-    override func loadView() {
-        super.loadView()
+    override func viewDidLoad() {
+        super.viewDidLoad()
         
         declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
-    
+        
         let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
         guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
             return
@@ -40,6 +40,8 @@ class ShareViewController: NSViewController {
         Logger.setSharedLogger(logger)
         
         let extensionContext = self.extensionContext!
+        
+        initializeAccountManagement()
         
         self.accountManagerPromise.set(accountManager(basePath: containerUrl.path + "/accounts-metadata"))
         self.context.set(self.accountManagerPromise.get() |> deliverOnMainQueue |> mapToSignal { accountManager -> Signal<ShareApplicationContext?, NoError> in
@@ -57,5 +59,6 @@ class ShareViewController: NSViewController {
         }))
         
     }
+
 }
 

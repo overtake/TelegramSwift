@@ -361,7 +361,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                 
                 
                 if let fullSizeImage = fullSizeImage {
-                    c.interpolationQuality = .medium
+                    c.interpolationQuality = .low
                     c.draw(fullSizeImage, in: fittedRect)
                 }
 
@@ -927,7 +927,7 @@ func chatMessageVideoThumbnail(account: Account, fileReference: FileMediaReferen
             context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
-                    //c.setFillColor(UIColor(white: 0.0, alpha: 0.4).cgColor)
+                    //c.setFillColor(NSColor(white: 0.0, alpha: 0.4).cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -1019,7 +1019,7 @@ func chatSecretMessageVideo(account: Account, fileReference: FileMediaReference,
             context.withContext { c in
                 c.setBlendMode(.copy)
                 if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
-                    //c.setFillColor(UIColor(white: 0.0, alpha: 0.4).cgColor)
+                    //c.setFillColor(NSColor(white: 0.0, alpha: 0.4).cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -1719,7 +1719,7 @@ func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scal
             context.withContext { c in
                 c.setBlendMode(.copy)
                 if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
-                    //c.setFillColor(UIColor(white: 0.0, alpha: 0.4).cgColor)
+                    //c.setFillColor(NSColor(white: 0.0, alpha: 0.4).cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -1984,7 +1984,7 @@ func chatMessagePhotoThumbnail(account: Account,  imageReference: ImageMediaRefe
             context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
-                    //c.setFillColor(UIColor(white: 0.0, alpha: 0.4).cgColor)
+                    //c.setFillColor(NSColor(white: 0.0, alpha: 0.4).cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -2168,7 +2168,7 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
             context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
-                    //c.setFillColor(UIColor(white: 0.0, alpha: 0.4).cgColor)
+                    //c.setFillColor(NSColor(white: 0.0, alpha: 0.4).cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 

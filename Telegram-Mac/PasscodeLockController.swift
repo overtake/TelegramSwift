@@ -486,7 +486,12 @@ class PasscodeLockController: ModalViewController {
     }
     
     override var closable: Bool {
-        return false
+        switch self.state {
+        case .login:
+            return false
+        default:
+            return true
+        }
     }
 
     

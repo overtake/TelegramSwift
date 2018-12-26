@@ -107,10 +107,10 @@ private class CallRatingModalView: View {
 class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegate {
     
     private let account:Account
-    private let report:ReportCallRating
+    private let report:CallId
     private var starsCount:Int32? = nil
     private var comment:String = ""
-    init(_ account:Account, report:ReportCallRating) {
+    init(_ account:Account, report:CallId) {
         self.account = account
         self.report = report
         super.init(frame: NSMakeRect(0, 0, 260, 100))
@@ -129,7 +129,7 @@ class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegat
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             if let strongSelf = self, let stars = strongSelf.starsCount {
-                _ = rateCall(account: strongSelf.account, report: strongSelf.report, starsCount: stars, comment: strongSelf.comment).start()
+                _ = rateCall(account: strongSelf.account, callId: strongSelf.report, starsCount: stars, comment: strongSelf.comment).start()
             }
             self?.close()
         }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)

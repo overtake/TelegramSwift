@@ -295,7 +295,7 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Void
     
 }
 
-private func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String), NoError> {
+func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String), NoError> {
     return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String), NoError> in
         if data.complete {
             var ext:String = ""

@@ -16,6 +16,8 @@ public enum  LinearProgressAlignment {
 
 public class LinearProgressControl: Control {
     
+    public var hasMinumimVisibility: Bool = false
+    
     private var progressView:View!
     private var fetchingView:View!
 
@@ -215,7 +217,7 @@ public class LinearProgressControl: Control {
     public func set(progress:CGFloat, animated:Bool, duration: Double, beginTime: Double?, offset: Double, speed: Float, repeatForever: Bool = false) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, containerView.frame.width * self.progress), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
         
         
         progressView.centerY(x: 0)
@@ -236,10 +238,15 @@ public class LinearProgressControl: Control {
         updateFetchingRanges(animated)
     }
     
+    public override var frame: NSRect {
+        didSet {
+            layout()
+        }
+    }
     public func set(progress:CGFloat, animated:Bool = false, duration: Double = 0.2) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, containerView.frame.width * self.progress), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
 
         progressView.change(size: size, animated: animated, duration: duration, timingFunction: .linear)
         if let scrubber = scrubber {
@@ -313,7 +320,7 @@ public class LinearProgressControl: Control {
             containerView.frame = NSMakeRect(insets.left, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - progressHeight) / 2), frame.width - insets.left - insets.right, progressHeight)
         }
         
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, containerView.frame.width * progress), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
         progressView.setFrameSize(size)
         
         

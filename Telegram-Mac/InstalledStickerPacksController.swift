@@ -359,10 +359,11 @@ class InstalledStickerPacksController: TableViewController {
                 
                 let entries = installedStickerPacksControllerEntries(state: state, stickerSettings: stickerSettings, view: view, featured: featured).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
+            } |> beforeNext { [weak self] _ in
+                self?.readyOnce()
             } |> afterDisposed {
                 actionsDisposable.dispose()
         } )
-        readyOnce()
     }
     
 }

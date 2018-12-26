@@ -43,6 +43,8 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @interface TGModernGrowingTextView : NSView
 
+-(instancetype)initWithFrame:(NSRect)frameRect unscrollable:(BOOL)unscrollable;
+
 @property (nonatomic,assign) BOOL animates;
 
 @property (nonatomic,assign) int min_height;

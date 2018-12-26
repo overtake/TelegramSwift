@@ -77,6 +77,23 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self.chatInteraction.attachPicture()
                     }, theme.icons.chatAttachCamera))
                     
+                    var canAttachPoll: Bool = false
+                    if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
+                        canAttachPoll = true
+                    }
+                    if let peer = chatInteraction.presentation.peer as? TelegramChannel {
+                        if peer.hasAdminRights(.canPostMessages) {
+                            canAttachPoll = true
+                        }
+                    }
+                   
+                    if canAttachPoll {
+                        items.append(SPopoverItem(L10n.inputAttachPopoverPoll, { [weak self] in
+                            guard let `self` = self else {return}
+                            showModal(with: newPollController(account: self.chatInteraction.account, chatInteraction: self.chatInteraction), for: mainWindow)
+                        }, theme.icons.chatAttachPoll))
+                    }
+                    
                     items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
                         self?.chatInteraction.attachFile(false)
                     }, theme.icons.chatAttachFile))
@@ -88,7 +105,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 
                 
                 if !items.isEmpty {
-                    self.controller = SPopoverViewController(items: items)
+                    self.controller = SPopoverViewController(items: items, visibility: 10)
                     showPopover(for: self, with: self.controller!, edge: nil, inset: NSMakePoint(0,0))
                 }
                

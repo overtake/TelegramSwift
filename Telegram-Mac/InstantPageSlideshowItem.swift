@@ -18,8 +18,12 @@ class InstantPageSlideshowItem: InstantPageItem {
     let hasLinks: Bool = false
     let isInteractive: Bool = true
     
-    init(frame: CGRect, medias:[InstantPageMedia]) {
+    let webPage: TelegramMediaWebpage
+    let separatesTiles: Bool = false
+    
+    init(frame: CGRect, webPage: TelegramMediaWebpage, medias: [InstantPageMedia]) {
         self.frame = frame
+        self.webPage = webPage
         self.medias = medias
     }
     
@@ -39,8 +43,8 @@ class InstantPageSlideshowItem: InstantPageItem {
     }
 
     
-    func node(account: Account) -> InstantPageView? {
-        return InstantPageSlideshowView(frameRect: frame, medias: medias, account: account)
+    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+        return InstantPageSlideshowView(frameRect: frame, medias: medias, account: arguments.account)
     }
     
     func linkSelectionViews() -> [InstantPageLinkSelectionView] {

@@ -241,6 +241,8 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     let caption: TextViewLayout?
     
+    var disableAnimations: Bool = false
+    
     private(set) var modifiedSize: NSSize? = nil
     
     private(set) var magnifyValue:CGFloat = 1.0
@@ -316,16 +318,18 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         var first:Bool = true
         
         let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] image, view  in
+            guard let `self` = self else {return}
             
             view.layer?.contents = image
-            if !first {
+            if !first && !self.disableAnimations {
                 view.layer?.animateContents()
             }
+            self.disableAnimations = false
             first = false
             view.layer?.backgroundColor = self is MGalleryPhotoItem ? theme.colors.transparentBackground.cgColor : .black
 
-            if let `self` = self, let magnify = view.superview?.superview as? MagnifyView {
-                if let size = image?.size, size.width > 150 && size.height > 150, size.width - size.height != self.sizeValue.width - self.sizeValue.height {
+            if let magnify = view.superview?.superview as? MagnifyView {
+                if let size = image?.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height {
                     self.modifiedSize = size
                     if magnify.contentSize != self.sizeValue {
                         magnify.contentSize = self.sizeValue
@@ -339,10 +343,6 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 }
             }
             
-            if !first {
-               // view.layer?.animateContents()
-            }
-            first = false
         }
         viewDisposable.set(image.start())
         

@@ -69,31 +69,32 @@ private func dictFromLocalization(_ value: Localization) -> [String: String] {
 }
 
 func applyUILocalization(_ settings: LocalizationSettings) {
-    let language = Language(languageCode: settings.languageCode, strings: dictFromLocalization(settings.localization))
-    #if !APP_STORE
-       // SULocalizationWrapper.setLanguageCode(settings.languageCode)
-    #endif
+    let primaryLanguage = Language(languageCode: settings.primaryComponent.languageCode, customPluralizationCode: settings.primaryComponent.customPluralizationCode, strings: dictFromLocalization(settings.primaryComponent.localization))
+    let secondaryLanguage = settings.secondaryComponent != nil ? Language.init(languageCode: settings.secondaryComponent!.languageCode, customPluralizationCode: settings.secondaryComponent!.customPluralizationCode, strings: dictFromLocalization(settings.secondaryComponent!.localization)) : nil
+
+    let language = TelegramLocalization(primaryLanguage: primaryLanguage, secondaryLanguage: secondaryLanguage)
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
     applyMainMenuLocalization(mainWindow)
 }
 
 func applyShareUILocalization(_ settings: LocalizationSettings) {
-    let language = Language(languageCode: settings.languageCode, strings: dictFromLocalization(settings.localization))
+    let primaryLanguage = Language(languageCode: settings.primaryComponent.languageCode, customPluralizationCode: settings.primaryComponent.customPluralizationCode, strings: dictFromLocalization(settings.primaryComponent.localization))
+    let secondaryLanguage = settings.secondaryComponent != nil ? Language.init(languageCode: settings.secondaryComponent!.languageCode, customPluralizationCode: settings.secondaryComponent!.customPluralizationCode, strings: dictFromLocalization(settings.secondaryComponent!.localization)) : nil
+    
+    let language = TelegramLocalization(primaryLanguage: primaryLanguage, secondaryLanguage: secondaryLanguage)
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
 }
 func dropShareLocalization() {
-    let language = Language(languageCode: "en", strings: [:])
+    let language = TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil)
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
 }
 
 func dropLocalization() {
-    #if !APP_STORE
-       // SULocalizationWrapper.setLanguageCode("en")
-    #endif
-    let language = Language(languageCode: "en", strings: [:])
+
+    let language = TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil)
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
     applyMainMenuLocalization(mainWindow)
@@ -121,9 +122,11 @@ private func localizeMainMenuItem(_ item:NSMenuItem) {
 
 class Language : Equatable {
     let languageCode:String
+    let customPluralizationCode: String?
     let strings:[String: String]
-    init (languageCode:String, strings:[String: String]) {
+    init (languageCode:String, customPluralizationCode: String?, strings:[String: String]) {
         self.languageCode = languageCode
+        self.customPluralizationCode = customPluralizationCode
         self.strings = strings
     }
 }
@@ -139,7 +142,7 @@ func translate(key: String, _ args: [CVarArg]) -> String {
         
         for i in 0 ..< args.count {
             if let count = args[i] as? Int {
-                let code = languageCodehash(appCurrentLanguage.languageCode)
+                let code = languageCodehash(appCurrentLanguage.pluralizationCode)
                 
                 if let index = key.range(of: "_")?.lowerBound {
                     var string = String(key[..<index])
@@ -200,23 +203,48 @@ func extractArgumentRanges(_ value: String) -> [(Int, NSRange)] {
     return result
 }
 
-
-
-let _appCurrentLanguage:Atomic<Language> = Atomic(value: Language(languageCode: "en", strings: [:]))
-var appCurrentLanguage:Language {
-    return _appCurrentLanguage.modify({$0})
+final class TelegramLocalization : Equatable {
+    
+    
+    let primaryLanguage: Language
+    let secondaryLanguage: Language?
+    let baseLanguageCode: String
+    init(primaryLanguage: Language, secondaryLanguage: Language?) {
+        self.primaryLanguage = primaryLanguage
+        self.secondaryLanguage = secondaryLanguage
+        self.baseLanguageCode = secondaryLanguage?.languageCode ?? primaryLanguage.languageCode
+    }
+    
+    var languageCode: String {
+        return baseLanguageCode
+    }
+    
+    static func == (lhs: TelegramLocalization, rhs: TelegramLocalization) -> Bool {
+        return lhs.primaryLanguage == rhs.primaryLanguage && lhs.secondaryLanguage == rhs.secondaryLanguage && lhs.baseLanguageCode == rhs.baseLanguageCode
+    }
+    
+    var pluralizationCode: String {
+        return primaryLanguage.customPluralizationCode ?? secondaryLanguage?.customPluralizationCode ?? secondaryLanguage?.languageCode ?? primaryLanguage.languageCode
+    }
+    
 }
-let languagePromise:Promise<Language> = Promise(Language(languageCode: "en", strings: [:]))
 
-var languageSignal:Signal<Language, NoError> {
+let _appCurrentLanguage:Atomic<TelegramLocalization> = Atomic(value: TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil))
+var appCurrentLanguage:TelegramLocalization {
+    return _appCurrentLanguage.modify {$0}
+}
+private let languagePromise:Promise<TelegramLocalization> = Promise(appCurrentLanguage)
+
+var languageSignal:Signal<TelegramLocalization, NoError> {
     return languagePromise.get() |> distinctUntilChanged |> deliverOnMainQueue
 }
 
 public func _NSLocalizedString(_ key: String) -> String {
     
-    let language = appCurrentLanguage
-    
-    if let value = language.strings[key], !value.isEmpty {
+    let primary = appCurrentLanguage.primaryLanguage
+    let secondary = appCurrentLanguage.secondaryLanguage
+
+    if let value = (primary.strings[key] ?? secondary?.strings[key]), !value.isEmpty {
         return value
     } else {
         let path = Bundle.main.path(forResource: "en", ofType: "lproj")

@@ -20,6 +20,7 @@ open class TransformImageView: NSView {
     public var animatesAlphaOnFirstTransition:Bool = false
     private let argumentsPromise = Promise<TransformImageArguments>()
     private var isFullyLoaded: Bool = false
+    public var ignoreFullyLoad:Bool = false
     private var first:Bool = true
     public init() {
         super.init(frame: NSZeroRect)
@@ -74,7 +75,7 @@ open class TransformImageView: NSView {
             self.layer?.contents = nil
         }
         
-        if isFullyLoaded {
+        if isFullyLoaded && !ignoreFullyLoad {
             disposable.set(nil)
             isFullyLoaded = false
             return

@@ -204,9 +204,9 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
 }
 
 final class Appearance : Equatable {
-    let language:Language
+    let language: TelegramLocalization
     var presentation: TelegramPresentationTheme
-    init(language: Language, presentation: TelegramPresentationTheme) {
+    init(language: TelegramLocalization, presentation: TelegramPresentationTheme) {
         self.language = language
         self.presentation = presentation
     }

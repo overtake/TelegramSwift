@@ -40,7 +40,7 @@ open class TableAnimationInterface: NSObject {
         let scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
         
         
-        if bounds.minY > height, scrollBelow {
+        if false {
 //            height = bounds.minY
 //            
 //            let presentation = contentView.layer?.presentation()
@@ -49,15 +49,17 @@ open class TableAnimationInterface: NSObject {
 //            }
 //            
             
-            table.scroll(to: .down(true))
-
+            //table.scroll(to: .down(false))
+//            contentView.scroll(to: NSMakePoint(0, 0))// = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
+//            table.reflectScrolledClipView(contentView)
+//            contentView.layer?.removeAllAnimations()
             
-            
-        } else if height - bounds.height < table.frame.height, scrollBelow {
+        } else if height - bounds.height < table.frame.height || bounds.minY > height, scrollBelow {
             
             
             if scrollBelow {
                 contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
+                contentView.layer?.removeAllAnimations()
             }
             
             let range:NSRange = table.visibleRows(height)

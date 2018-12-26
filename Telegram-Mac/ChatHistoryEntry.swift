@@ -106,16 +106,20 @@ enum ChatHistoryEntryId : Hashable {
 
 }
 
+struct MessageEntryAdditionalData : Equatable {
+    let opaqueIdentifier: Data?
+}
+
 enum ChatHistoryEntry: Identifiable, Comparable {
     case HoleEntry(MessageHistoryHole)
-    case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?)
+    case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?, MessageEntryAdditionalData?)
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
     case UnreadEntry(MessageIndex, ChatItemRenderType)
     case DateEntry(MessageIndex, ChatItemRenderType)
     case bottom
     var message:Message? {
         switch self {
-        case let .MessageEntry(message,_, _,_,_,_,_):
+        case let .MessageEntry(message,_, _,_,_,_,_, _):
             return message
         default:
           return nil
@@ -126,7 +130,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case .HoleEntry:
             return .list
-        case let .MessageEntry(_,_,_, renderType,_,_,_):
+        case let .MessageEntry(_,_,_, renderType,_,_,_, _):
             return renderType
         case .groupedPhotos(let entries, _):
             return entries.first!.renderType
@@ -141,7 +145,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var location:MessageHistoryEntryLocation? {
         switch self {
-        case let .MessageEntry(_,_,_,_,_,_,location):
+        case let .MessageEntry(_,_,_,_,_,_,location, _):
             return location
         default:
             return nil
@@ -149,11 +153,20 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     }
     
     
+    var additionalData: MessageEntryAdditionalData? {
+        switch self {
+        case let .MessageEntry(_,_,_,_,_,_,_, additionalData):
+           return additionalData
+        default:
+            return nil
+        }
+    }
+    
     var stableId: ChatHistoryEntryId {
         switch self {
         case let .HoleEntry(hole):
             return .hole(hole)
-        case let .MessageEntry(message,_,_,_,_,_,_):
+        case let .MessageEntry(message,_,_,_,_,_,_, _):
             return .message(message)
         case .groupedPhotos(_, let info):
             return .groupedPhotos(groupInfo: info)
@@ -170,7 +183,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .HoleEntry(hole):
             return hole.maxIndex
-        case let .MessageEntry(_,index,_,_,_, _,_):
+        case let .MessageEntry(_,index,_,_,_, _,_, _):
             return index
         case let .groupedPhotos(entries, _):
             return entries.last!.index
@@ -188,7 +201,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .HoleEntry(hole):
             return hole.maxIndex
-        case let .MessageEntry(message,_,_,_,_, _,_):
+        case let .MessageEntry(message,_,_,_,_, _,_, _):
             return MessageIndex(message)
         case let .groupedPhotos(entries, _):
             return entries.last!.index
@@ -259,9 +272,9 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
-    case let .MessageEntry(lhsMessage, lhsIndex, lhsRead, lhsRenderType, lhsType, lhsFwdType, _):
+    case let .MessageEntry(lhsMessage, lhsIndex, lhsRead, lhsRenderType, lhsType, lhsFwdType, _, lhsAdditionalData):
         switch rhs {
-        case let .MessageEntry(rhsMessage, rhsIndex, rhsRead, rhsRenderType, rhsType, rhsFwdType, _):
+        case let .MessageEntry(rhsMessage, rhsIndex, rhsRead, rhsRenderType, rhsType, rhsFwdType, _, rhsAdditionalData):
             if lhsRead != rhsRead {
                 return false
             }
@@ -275,6 +288,9 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
                 return false
             }
             if lhsRenderType != rhsRenderType {
+                return false
+            }
+            if lhsAdditionalData != rhsAdditionalData {
                 return false
             }
             return isEqualMessages(lhsMessage, rhsMessage)
@@ -332,7 +348,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = [], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = [], pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
  
     
@@ -527,8 +543,16 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
             }
             
+            let additionalData: MessageEntryAdditionalData?
             
-            let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), read, renderType,itemType,fwdType, location)
+            if let opaqueData = pollAnswersLoading[message.id] {
+                additionalData = MessageEntryAdditionalData(opaqueIdentifier: opaqueData)
+            } else {
+                additionalData = nil
+            }
+            
+            
+            let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), read, renderType,itemType,fwdType, location, additionalData)
              
             if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
                 

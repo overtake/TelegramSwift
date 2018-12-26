@@ -83,11 +83,107 @@ final class ChatMediaPresentation : Equatable {
     }
 }
 
+private func generatePercentageImage(color: NSColor, value: Int, font: NSFont) -> CGImage {
+    return generateImage(CGSize(width: 36.0, height: 16.0), rotatedContext: { size, context in
+    
+        
+        context.clear(CGRect(origin: CGPoint(), size: size))
+        
+        
+        let layout = TextViewLayout(.initialize(string: "\(value)%", color: color, font: font), maximumNumberOfLines: 1, alignment: .right)
+        layout.measure(width: size.width)
+        if !layout.lines.isEmpty {
+            let line = layout.lines[0]
+            context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+            let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(size.width))) + line.frame.minX
+            
+            context.setAllowsAntialiasing(true)
+            context.setShouldAntialias(true)
+            context.setShouldSmoothFonts(false)
+            context.setAllowsFontSmoothing(false)
+            
+            context.textPosition = CGPoint(x: penOffset, y: line.frame.minY)
+
+            CTLineDraw(line.line, context)
+        }
+        
+    })!
+}
+
+
 struct TelegramChatColors {
+    
+    private let generatedPercentageAnimationImages:[CGImage]
+    
+    private let generatedPercentageAnimationImagesIncomingBubbled:[CGImage]
+    private let generatedPercentageAnimationImagesOutgoingBubbled:[CGImage]
+    
+    private let generatedPercentageAnimationImagesPlain:[CGImage]
+    
+    private let generatedPercentageAnimationImagesIncomingBubbledPlain:[CGImage]
+    private let generatedPercentageAnimationImagesOutgoingBubbledPlain:[CGImage]
     
     private let palette: ColorPalette
     init(_ palette: ColorPalette, _ bubbled: Bool) {
         self.palette = palette
+        
+        
+        var images:[CGImage] = []
+        for i in 0 ... 100 {
+            images.append(generatePercentageImage(color: palette.textBubble_incoming, value: i, font: .bold(12)))
+        }
+        self.generatedPercentageAnimationImagesIncomingBubbled = images
+       
+        images.removeAll()
+        for i in 0 ... 100 {
+            images.append(generatePercentageImage(color: palette.textBubble_outgoing, value: i, font: .bold(12)))
+        }
+        self.generatedPercentageAnimationImagesOutgoingBubbled = images
+        
+        images.removeAll()
+        for i in 0 ... 100 {
+            images.append(generatePercentageImage(color: palette.text, value: i, font: .bold(12)))
+        }
+        self.generatedPercentageAnimationImages = images
+         images.removeAll()
+        
+        for i in 0 ... 100 {
+            images.append(generatePercentageImage(color: palette.textBubble_incoming, value: i, font: .normal(12)))
+        }
+        self.generatedPercentageAnimationImagesIncomingBubbledPlain = images
+        
+        images.removeAll()
+        for i in 0 ... 100 {
+            images.append(generatePercentageImage(color: palette.textBubble_outgoing, value: i, font: .normal(12)))
+        }
+        self.generatedPercentageAnimationImagesOutgoingBubbledPlain = images
+        
+        images.removeAll()
+        for i in 0 ... 100 {
+            images.append(generatePercentageImage(color: palette.text, value: i, font: .normal(12)))
+        }
+        self.generatedPercentageAnimationImagesPlain = images
+        images.removeAll()
+    }
+    
+    func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, selected: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
+        let minimumFrameDuration = 1.0 / 60
+        let numberOfFrames = max(1, Int(duration / minimumFrameDuration))
+        var images: [CGImage] = []
+        
+        let generated = bubbled ? incoming ? (selected ? generatedPercentageAnimationImagesIncomingBubbled : generatedPercentageAnimationImagesIncomingBubbledPlain) : (selected ? generatedPercentageAnimationImagesOutgoingBubbled : generatedPercentageAnimationImagesOutgoingBubbledPlain) : (selected ? generatedPercentageAnimationImages : generatedPercentageAnimationImagesPlain)
+        
+        for i in 0 ..< numberOfFrames {
+            let t = CGFloat(i) / CGFloat(numberOfFrames)
+            let value = (1.0 - t) * fromValue + t * toValue
+            images.append(generated[Int(round(value * 100))])
+        }
+        return images
+    }
+    
+    func pollPercentAnimatedIcon(_ incoming: Bool, _ bubbled: Bool, selected: Bool, value: Int) -> CGImage {
+        let generated = bubbled ? incoming ? (selected ? generatedPercentageAnimationImagesIncomingBubbled : generatedPercentageAnimationImagesIncomingBubbledPlain) : (selected ? generatedPercentageAnimationImagesOutgoingBubbled : generatedPercentageAnimationImagesOutgoingBubbledPlain) : (selected ? generatedPercentageAnimationImages : generatedPercentageAnimationImagesPlain)
+        return generated[max(min(generated.count - 1, value), 0)]
     }
     
     func activityBackground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
@@ -99,6 +195,12 @@ struct TelegramChatColors {
     
     func webPreviewActivity(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
+    }
+    func pollOptionBorder(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+        return (bubbled ? incoming ?  grayText(incoming, bubbled) : grayText(incoming, bubbled) : palette.grayText).withAlphaComponent(0.2)
+    }
+    func pollOptionUnselectedImage(_ incoming: Bool, _ bubbled: Bool) -> CGImage {
+        return bubbled ? incoming ? theme.icons.chatPollVoteUnselectedBubble_incoming :  theme.icons.chatPollVoteUnselectedBubble_outgoing : theme.icons.chatPollVoteUnselected
     }
     
     func waveformBackground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {

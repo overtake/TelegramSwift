@@ -44,7 +44,20 @@ public extension NSAttributedString {
         
         return attr.copy() as! NSAttributedString
     }
-    
+    public convenience init(string: String, font: NSFont? = nil, textColor: NSColor = NSColor.black, paragraphAlignment: NSTextAlignment? = nil) {
+        var attributes: [NSAttributedString.Key: AnyObject] = [:]
+        if let font = font {
+            attributes[.font] = font
+        }
+        attributes[.foregroundColor] = textColor
+        if let paragraphAlignment = paragraphAlignment {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = paragraphAlignment
+            attributes[.paragraphStyle] = paragraphStyle
+        }
+        self.init(string: string, attributes: attributes)
+    }
+
     
 }
 
@@ -654,6 +667,10 @@ public extension CGSize {
         return size;
     }
     
+    public func cropped(_ size: CGSize) -> CGSize {
+        return CGSize(width: min(size.width, self.width), height: min(size.height, self.height))
+    }
+    
     public func fittedToArea(_ area: CGFloat) -> CGSize {
         if self.height < 1.0 || self.width < 1.0 {
             return CGSize()
@@ -667,6 +684,10 @@ public extension CGSize {
     public func aspectFilled(_ size: CGSize) -> CGSize {
         let scale = max(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
         return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
+    }
+    public func fittedToWidthOrSmaller(_ width: CGFloat) -> CGSize {
+        let scale = min(1.0, width / max(1.0, self.width))
+        return CGSize(width: floor(self.width * scale), height: floor(self.height * scale))
     }
     
     public func aspectFitted(_ size: CGSize) -> CGSize {
@@ -1373,6 +1394,9 @@ public extension String {
         } else if nsstring.length == 4 {
             return nsstring.substring(to: nsstring.length - 2)
         } else if nsstring.length == 5 {
+            if emojiSkinToneModifiers.contains(nsstring.substring(with: NSMakeRange(2, 2))) {
+                return nsstring.substring(to: 2)
+            }
             return self
         } else if nsstring.length == 7 {
             return nsstring.substring(with: NSMakeRange(0, 2)) + nsstring.substring(with: NSMakeRange(4, 3))

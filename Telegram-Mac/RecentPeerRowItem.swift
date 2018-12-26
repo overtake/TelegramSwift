@@ -49,7 +49,7 @@ class RecentPeerRowView : ShortPeerRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         //removeControl.autohighlight = false
-    
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         removeControl.isHidden = true
         
         removeControl.set(handler: { [weak self] _ in

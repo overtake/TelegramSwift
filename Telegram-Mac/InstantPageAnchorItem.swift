@@ -36,7 +36,7 @@ final class InstantPageAnchorItem: InstantPageItem {
         return false
     }
     
-    func node(account: Account) -> InstantPageView? {
+    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
         return nil
     }
     

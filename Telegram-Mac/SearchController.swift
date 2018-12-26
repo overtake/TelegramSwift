@@ -787,8 +787,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private var closeNext: Bool = false
     
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
-        var peer:Peer!
-        var peerId:PeerId!
+        var peer:Peer?
+        var peerId:PeerId?
         var message:Message?
         if let item = item as? ChatListMessageRowItem {
             peer = item.peer
@@ -835,14 +835,18 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             storedPeer = .complete()
         }
         
-        
-        
-        let recently = (searchQuery.get() |> take(1)) |> mapToSignal { [weak self] query -> Signal<Void, NoError> in
-            if let _ = query, let account = self?.account, !(item is ChatListMessageRowItem) {
-                return addRecentlySearchedPeer(postbox: account.postbox, peerId: peerId)
+        let recently: Signal<Void, NoError>
+        if let peerId = peerId {
+            recently = (searchQuery.get() |> take(1)) |> mapToSignal { [weak self] query -> Signal<Void, NoError> in
+                if let _ = query, let account = self?.account, !(item is ChatListMessageRowItem) {
+                    return addRecentlySearchedPeer(postbox: account.postbox, peerId: peerId)
+                }
+                return .complete()
             }
-            return .complete()
+        } else {
+            recently = .complete()
         }
+        
         
         removeHighlightEvents()
 
@@ -850,7 +854,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( completed: { [weak self] in
             //!(item is ChatListMessageRowItem) && byClick
-            self?.open(peerId, message, self?.closeNext ?? false)
+            if let peerId = peerId {
+                self?.open(peerId, message, self?.closeNext ?? false)
+            }
         }))
         
     }

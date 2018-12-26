@@ -18,8 +18,14 @@ final class InstantPageTileView: View {
         self.tile = tile
         super.init()
         super.backgroundColor = theme.colors.background
+        layerContentsRedrawPolicy = .never
     }
     
+    func redrawTile() {
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
+        display()
+        layerContentsRedrawPolicy = .never
+    }
     
     
     required init?(coder: NSCoder) {

@@ -13,7 +13,7 @@ public enum HandlerPriority: Int, Comparable {
     case medium = 1
     case high = 2
     case modal = 3
-    
+    case supreme = 4
 }
 
 public func <(lhs: HandlerPriority, rhs: HandlerPriority) -> Bool {
@@ -440,6 +440,9 @@ open class Window: NSWindow {
         return super.makeFirstResponder(self.firstResponderFilter(responder))
     }
     
+    open override func becomeFirstResponder() -> Bool {
+        return false
+    }
 
     public func sendKeyEvent(_ key: KeyboardKey, modifierFlags: NSEvent.ModifierFlags) {
         guard let event = NSEvent.keyEvent(with: .keyDown, location: mouseLocationOutsideOfEventStream, modifierFlags: modifierFlags, timestamp: Date().timeIntervalSince1970, windowNumber: windowNumber, context: graphicsContext, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: key.rawValue) else {return}

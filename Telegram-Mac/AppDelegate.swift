@@ -206,10 +206,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     
     private func launchInterface() {
-        
+        initializeAccountManagement()
         self.accountManagerPromise.set(accountManager(basePath: containerUrl + "/accounts-metadata"))
         let _ = (accountManagerPromise.get() |> mapToSignal { manager in
-            return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+            //managedCleanupAccounts(networkArguments: NetworkInitializationArguments, accountManager: AccountManager, rootPath: String, auxiliaryMethods: AccountAuxiliaryMethods
+            return managedCleanupAccounts(networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer()), accountManager: manager, rootPath: self.containerUrl, auxiliaryMethods: telegramAccountAuxiliaryMethods)
         }).start()
         
         

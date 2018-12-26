@@ -39,4 +39,6 @@
 -(void)setCurrentInputDeviceId:(NSString *)deviceId;
 @property (nonatomic, copy) void (^stateChangeHandler)(int);
 
++(int32_t)voipMaxLayer;
+
 @end

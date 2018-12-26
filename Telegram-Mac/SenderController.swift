@@ -129,7 +129,7 @@ class Sender: NSObject {
         
         var input:ChatTextInputState = input
         
-        let emojis = input.inputText.fixed.emojis
+        let emojis = input.inputText.fixed.emojiString.components(separatedBy: "")
         if input.attributes.isEmpty {
             input = ChatTextInputState(inputText: input.inputText.trimmed)
         }
@@ -248,7 +248,7 @@ class Sender: NSObject {
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)], reference: nil, partialReference: nil)
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                             }
                             
                         } else {

@@ -39,8 +39,9 @@ private class SelectSizeRowView : TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
+    
     
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)

@@ -20,6 +20,7 @@ enum InputDataEntryId : Hashable {
     case dateSelector(InputDataIdentifier)
     case custom(InputDataIdentifier)
     case search(InputDataIdentifier)
+    case loading
     case sectionId(Int32)
     var hashValue: Int {
         return 0
@@ -180,15 +181,37 @@ internal func _InputDataEquatableDownCastConditionalIndirect<T>(
 }
 
 
+struct InputDataInputPlaceholder : Equatable {
+    let placeholder: String?
+    let drawBorderAfterPlaceholder: Bool
+    let icon: CGImage?
+    let action: (()-> Void)?
+    let hasLimitationText: Bool
+    let rightResoringImage: CGImage?
+    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, rightResoringImage: CGImage? = nil, action: (()-> Void)? = nil) {
+        self.drawBorderAfterPlaceholder = drawBorderAfterPlaceholder
+        self.hasLimitationText = hasLimitationText
+        self.placeholder = placeholder
+        self.rightResoringImage = rightResoringImage
+        self.icon = icon
+        self.action = action
+    }
+    
+    static func ==(lhs: InputDataInputPlaceholder, rhs: InputDataInputPlaceholder) -> Bool {
+        return lhs.placeholder == rhs.placeholder && lhs.icon === rhs.icon && lhs.drawBorderAfterPlaceholder == rhs.drawBorderAfterPlaceholder
+    }
+}
+
 enum InputDataEntry : Identifiable, Comparable {
-    case desc(sectionId: Int32, index: Int32, text: String, color: NSColor, detectBold: Bool)
-    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: String, inputPlaceholder: String, filter:(String)->String, limit: Int32)
+    case desc(sectionId: Int32, index: Int32, text: GeneralRowTextType, color: NSColor, detectBold: Bool)
+    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
     case general(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, name: String, color: NSColor, icon: CGImage?, type: GeneralInteractedType)
     case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String)
     case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
     case dataSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, description: String?, icon: CGImage?, action:()->Void)
     case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, item:(NSSize, InputDataEntryId)->TableRowItem)
     case search(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, update:(SearchState)->Void)
+    case loading
     case sectionId(Int32)
     
     var stableId: InputDataEntryId {
@@ -211,6 +234,8 @@ enum InputDataEntry : Identifiable, Comparable {
             return .custom(identifier)
         case let .sectionId(index):
             return .sectionId(index)
+        case .loading:
+            return .loading
         }
     }
     
@@ -232,6 +257,8 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .search(_, index, _, _, _):
             return index
+        case .loading:
+            return 0
         case .sectionId:
             fatalError()
         }
@@ -255,6 +282,8 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .search(index, _, _, _, _):
             return index
+        case .loading:
+            return 0
         case .sectionId:
             fatalError()
         }
@@ -289,6 +318,8 @@ enum InputDataEntry : Identifiable, Comparable {
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, placeholder, inputPlaceholder, filter, limit: limit):
             return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: arguments.dataUpdated, limit: limit)
+        case .loading:
+            return SearchEmptyRowItem.init(initialSize, stableId: stableId, isLoading: true)
         case let .search(_, _, value, _, update):
             return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state in
                 update(state)
@@ -355,6 +386,12 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
         }
     case let .sectionId(id):
         if case .sectionId(id) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .loading:
+        if case .loading = rhs {
             return true
         } else {
             return false
@@ -453,6 +490,7 @@ enum InputDataValidationFailAction {
 
 enum InputDataValidationBehaviour {
     case navigationBack
+    case navigationBackWithPushAnimation
     case custom(()->Void)
 }
 
@@ -467,15 +505,24 @@ enum InputDataFailResult {
 enum InputDataValidation {
     case success(InputDataValidationBehaviour)
     case fail(InputDataFailResult)
-    
+    case none
     var isSuccess: Bool {
         switch self {
         case .success:
             return true
-        case .fail:
+        case .fail, .none:
             return false
+            
         }
     }
 }
 
 
+
+
+enum InputDoneValue : Equatable {
+    case enabled(String)
+    case disabled(String)
+    case invisible
+    case loading
+}

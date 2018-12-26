@@ -415,6 +415,7 @@ class SVideoView: NSView {
         self.bufferingStatus = bufferingStatus
         controls.centerX(y: frame.height - controls.frame.height - 24)
         bufferingIndicator.center()
+        bufferingIndicator.progressColor = .white
         backgroundView.frame = bounds
     }
     
