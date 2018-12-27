@@ -21,7 +21,8 @@ struct InstantPageMapAttribute: InstantPageImageAttribute {
 final class InstantPageImageItem: InstantPageItem {
     let hasLinks: Bool = false
     let isInteractive: Bool
-    
+    let separatesTiles: Bool = false
+
     func linkSelectionViews() -> [InstantPageLinkSelectionView] {
         return []
     }
@@ -40,8 +41,7 @@ final class InstantPageImageItem: InstantPageItem {
     let roundCorners: Bool
     let fit: Bool
     
-    let wantsNode: Bool = true
-    let separatesTiles: Bool = false
+    let wantsView: Bool = true
     
     init(frame: CGRect, webPage: TelegramMediaWebpage, media: InstantPageMedia, attributes: [InstantPageImageAttribute] = [], interactive: Bool, roundCorners: Bool, fit: Bool) {
         self.frame = frame
@@ -53,15 +53,23 @@ final class InstantPageImageItem: InstantPageItem {
         self.fit = fit
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
-        return  InstantPageMediaView(account: arguments.account, media: media, arguments: InstantPageMediaArguments.image(interactive: self.isInteractive, roundCorners: self.roundCorners, fit: self.fit))
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
+        
+        let viewArguments: InstantPageMediaArguments
+        if let _ = media.media as? TelegramMediaMap, let attribute = attributes.first as? InstantPageMapAttribute {
+            viewArguments = .map(attribute)
+        } else {
+            viewArguments = .image(interactive: self.isInteractive, roundCorners: self.roundCorners, fit: self.fit)
+        }
+        
+        return  InstantPageMediaView(account: arguments.account, media: media, arguments: viewArguments)
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         if let node = node as? InstantPageMediaView {
             return node.media == self.media
         } else {

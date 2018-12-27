@@ -15,9 +15,11 @@ class InstantPageChannelItem: InstantPageItem {
     var frame: CGRect
     
     let medias: [InstantPageMedia] = []
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let hasLinks: Bool = false
     let isInteractive: Bool = false
+    let separatesTiles: Bool = false
+
     let channel: TelegramChannel
     let overlay: Bool
     private let joinChannel:(TelegramChannel)->Void
@@ -39,11 +41,11 @@ class InstantPageChannelItem: InstantPageItem {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         return node is InstantPageChannelView
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return InstantPageChannelView(frameRect: frame, channel: channel, overlay: overlay, openChannel: openChannel, joinChannel: joinChannel)
     }
     

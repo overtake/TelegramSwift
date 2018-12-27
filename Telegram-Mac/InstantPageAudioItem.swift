@@ -11,12 +11,13 @@ import PostboxMac
 import TelegramCoreMac
 
 final class InstantPageAudioItem: InstantPageItem {
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let hasLinks: Bool = false
     var isInteractive: Bool {
         return true
     }
-    
+    let separatesTiles: Bool = false
+
     func linkSelectionViews() -> [InstantPageLinkSelectionView] {
         return []
     }
@@ -32,7 +33,7 @@ final class InstantPageAudioItem: InstantPageItem {
         self.medias = [media]
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return InstantPageAudioView(account: arguments.account, media: media)
     }
     
@@ -40,7 +41,7 @@ final class InstantPageAudioItem: InstantPageItem {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         if let node = node as? InstantPageAudioView {
             return self.media == node.media
         } else {

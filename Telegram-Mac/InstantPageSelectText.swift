@@ -128,7 +128,7 @@ class InstantPageSelectText : NSObject {
     }
     
     
-    func initializeHandlers(for window:Window, instantLayout: InstantPageLayout, instantPage: InstantPage, account: Account, updateLayout: @escaping()->Void, openUrl:@escaping(InstantPageUrlItem) -> Void) {
+    func initializeHandlers(for window:Window, instantLayout: InstantPageLayout, instantPage: InstantPage, account: Account, updateLayout: @escaping()->Void, openUrl:@escaping(InstantPageUrlItem) -> Void, itemsInRect:@escaping(NSRect) -> [InstantPageItem], effectiveRectForItem:@escaping(InstantPageItem)-> NSRect) {
         window.removeAllHandlers(for: self)
         
         
@@ -194,9 +194,9 @@ class InstantPageSelectText : NSObject {
             let point = self?.scroll.documentView?.convert(event.locationInWindow, from: nil) ?? NSZeroPoint
             
             
-            let textItem = instantLayout.items(in: NSMakeRect(point.x, point.y, 1, 1)).filter({$0 is InstantPageTextItem}).map({$0 as! InstantPageTextItem}).first
+            let textItem = itemsInRect(NSMakeRect(point.x, point.y, 1, 1)).compactMap({$0 as? InstantPageTextItem}).first // instantLayout.items(in: NSMakeRect(point.x, point.y, 1, 1)).filter({$0 is InstantPageTextItem}).map({$0 as! InstantPageTextItem}).first
         
-            let item = instantLayout.items(in: NSMakeRect(point.x, point.y, 1, 1)).first
+            let item = itemsInRect(NSMakeRect(point.x, point.y, 1, 1)).first
 
             _ = window?.makeFirstResponder(instantSelectManager)
             
@@ -209,6 +209,8 @@ class InstantPageSelectText : NSObject {
                 
                 for line in item.lines {
                     
+                    let itemFrame = effectiveRectForItem(item)
+                    
                     var minX:CGFloat = item.frame.minX
                     switch item.alignment {
                     case .center:
@@ -217,13 +219,13 @@ class InstantPageSelectText : NSObject {
                         break
                     }
                     
-                    let rect = NSMakeRect(item.frame.minX, itemsRect.minY < item.frame.minY ? 0 : itemsRect.minY - item.frame.minY, itemsRect.width ,itemsRect.minY < item.frame.minY ? min(itemsRect.maxY - item.frame.minY, item.frame.height) : itemsRect.minY < item.frame.minY ? min(item.frame.maxY - itemsRect.minY, item.frame.height) : itemsRect.height)
+                    let rect = NSMakeRect(itemFrame.minX, itemsRect.minY < itemFrame.minY ? 0 : itemsRect.minY - itemFrame.minY, itemsRect.width ,itemsRect.minY < itemFrame.minY ? min(itemsRect.maxY - itemFrame.minY, itemFrame.height) : itemsRect.minY < itemFrame.minY ? min(itemFrame.maxY - itemsRect.minY, itemFrame.height) : itemsRect.height)
                     
   
                     let beginX = point.x - minX
                     
                     if rect.intersects(line.frame) {
-                        instantSelectManager.add(line: line, attributedString: line.selectWord(in: NSMakePoint(beginX, 0), boundingWidth: item.frame.width, alignment: item.alignment, rect: rect))
+                        instantSelectManager.add(line: line, attributedString: line.selectWord(in: NSMakePoint(beginX, 0), boundingWidth: itemFrame.width, alignment: item.alignment, rect: rect))
                     }
                     
                 }
@@ -236,44 +238,11 @@ class InstantPageSelectText : NSObject {
                 result = .rejected
             } else if event.clickCount == 1 {
                 if let item = textItem, instantSelectManager.isEmpty {
-                    let p = NSMakePoint(point.x - item.frame.minX, point.y - item.frame.minY)
+                    let itemFrame = effectiveRectForItem(item)
+
+                    let p = NSMakePoint(point.x - itemFrame.minX, point.y - itemFrame.minY)
                     if let link = item.linkAt(point: p) {
-                    
                         openUrl(link)
-//
-//                        switch link {
-//                        case .email(_, let email):
-//                            execute(inapp: inAppLink.external(link: email, false))
-//                        case let .url(_ , url, webpageId):
-//
-//                            let url = url.nsstring
-//                            let anchorRange = url.range(of: "#")
-//                            var foundAnchor = false
-//                            if anchorRange.location != NSNotFound {
-//                                let anchor = url.substring(from: anchorRange.location + anchorRange.length)
-//                                if !anchor.isEmpty {
-//                                    for item in instantLayout.items {
-//                                        if item.matchesAnchor(anchor) {
-//                                            self?.scroll.clipView.scroll(to: item.frame.origin, animated: true)
-//                                            foundAnchor = true
-//                                            break
-//                                        }
-//                                    }
-//                                }
-//                            }
-//
-//                            if !foundAnchor {
-//                                if let mediaId = webpageId {
-//                                    openNewTab(mediaId, url as String)
-//                                } else {
-//                                    execute(inapp: inApp(for: url, account: account, openInfo: openInfo))
-//                                }
-//                            }
-//
-//                            break
-//                        default:
-//                            break
-//                        }
                     }
                     result = .rejected
 
@@ -292,7 +261,7 @@ class InstantPageSelectText : NSObject {
                                     if let _ = item.medias.filter({$0.index == index}).first {
                                         if let subviews = self?.scroll.documentView?.subviews {
                                             for subview in subviews {
-                                                if !NSIsEmptyRect(subview.visibleRect), let subview = subview as? InstantPageView, item.matchesNode(subview) {
+                                                if !NSIsEmptyRect(subview.visibleRect), let subview = subview as? InstantPageView, item.matchesView(subview) {
                                                     return subview as? NSView
                                                 }
                                             }
@@ -373,13 +342,14 @@ class InstantPageSelectText : NSObject {
             let point = self?.scroll.documentView?.convert(event.locationInWindow, from: nil) ?? NSZeroPoint
             
             
-            let items = instantLayout.items(in: NSMakeRect(point.x, point.y, 1, 1)).filter({$0 is InstantPageTextItem}).map({$0 as! InstantPageTextItem})
+            let items = itemsInRect(NSMakeRect(point.x, point.y, 1, 1)).compactMap { $0 as? InstantPageTextItem }
             
             if items.isEmpty {
                 NSCursor.arrow.set()
             } else {
                 if let item = items.first {
-                    let p = NSMakePoint(point.x - item.frame.minX, point.y - item.frame.minY)
+                    let itemRect = effectiveRectForItem(item)
+                    let p = NSMakePoint(point.x - itemRect.minX, point.y - itemRect.minY)
                     if let _ = item.linkAt(point: p) {
                         NSCursor.pointingHand.set()
                     } else {
@@ -402,14 +372,14 @@ class InstantPageSelectText : NSObject {
                 if window?.firstResponder != instantSelectManager {
                     _ = window?.makeFirstResponder(instantSelectManager)
                 }
-                self?.runSelector(instantLayout, updateLayout: updateLayout)
+                self?.runSelector(instantLayout, updateLayout: updateLayout, itemsInRect: itemsInRect, effectiveRectForItem: effectiveRectForItem)
                 return .invoked
             }
-            return .invoked
+            return .invokeNext
         }, with: self, for: .leftMouseDragged, priority:.modal)
     }
     
-    private func runSelector(_ instantPage: InstantPageLayout, updateLayout: @escaping()->Void) {
+    private func runSelector(_ instantPage: InstantPageLayout, updateLayout: @escaping()->Void, itemsInRect:@escaping(NSRect) -> [InstantPageItem], effectiveRectForItem:@escaping(InstantPageItem)-> NSRect) {
         
         
         instantSelectManager.removeAll()
@@ -420,7 +390,7 @@ class InstantPageSelectText : NSObject {
             return
         }
         
-        let items = instantPage.items(in: itemsRect).compactMap { $0 as? InstantPageTextItem }
+        let items = itemsInRect(itemsRect).compactMap { $0 as? InstantPageTextItem }
         
 
         let reversed = endInnerLocation.y < beginInnerLocation.y
@@ -428,8 +398,9 @@ class InstantPageSelectText : NSObject {
         
 
         let lines = items.reduce([]) { (current, item) -> [InstantPageTextLine] in
+            let itemRect = effectiveRectForItem(item)
             
-            let rect = NSMakeRect(item.frame.minX, itemsRect.minY < item.frame.minY ? 0 : itemsRect.minY - item.frame.minY, itemsRect.width ,itemsRect.minY < item.frame.minY ? min(itemsRect.maxY - item.frame.minY, item.frame.height) : itemsRect.minY < item.frame.minY ? min(item.frame.maxY - itemsRect.minY, item.frame.height) : itemsRect.height)
+            let rect = NSMakeRect(itemRect.minX, itemsRect.minY < itemRect.minY ? 0 : itemsRect.minY - itemRect.minY, itemsRect.width ,itemsRect.minY < itemRect.minY ? min(itemsRect.maxY - itemRect.minY, itemRect.height) : itemsRect.minY < itemRect.minY ? min(itemRect.maxY - itemsRect.minY, itemRect.height) : itemsRect.height)
             
             let lines = item.lines.filter { line in
                 return line.frame.intersects(rect)
@@ -443,10 +414,12 @@ class InstantPageSelectText : NSObject {
             
             let item = items.first(where: {$0.lines.contains(where: {$0 === line})})!
 
-            var minX:CGFloat = item.frame.minX
+            let itemRect = effectiveRectForItem(item)
+            
+            var minX:CGFloat = itemRect.minX
             switch item.alignment {
             case .center:
-                minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.frame.width - line.frame.width) / 2)
+                minX += floorToScreenPixels(scaleFactor: System.backingScale, (itemRect.width - line.frame.width) / 2)
             default:
                 break
             }

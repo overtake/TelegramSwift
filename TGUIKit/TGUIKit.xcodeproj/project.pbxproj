@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */; };
 		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
 		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
@@ -104,6 +105,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalScrollView.swift; sourceTree = "<group>"; };
 		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
 		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
@@ -291,6 +293,7 @@
 			children = (
 				C2271F321DB4CEB30045E719 /* HorizontalTableView.swift */,
 				C2271F351DB4CF270045E719 /* HorizontalRowView.swift */,
+				9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */,
 			);
 			name = horizontal;
 			sourceTree = "<group>";
@@ -654,6 +657,7 @@
 				C2B1A12E1DA5148B00ACB1DD /* TextButtonBarView.swift in Sources */,
 				C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */,
 				C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */,
+				9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */,
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,
 				C253A9521D9147A400CDC850 /* Layer.swift in Sources */,

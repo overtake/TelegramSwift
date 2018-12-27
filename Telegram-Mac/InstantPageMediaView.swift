@@ -16,7 +16,8 @@ final class InstantPageMediaView: View, InstantPageView {
     private let account: Account
     let media: InstantPageMedia
     private let arguments: InstantPageMediaArguments
-    
+    private var iconView:ImageView?
+
     private let imageView: TransformImageView
     private let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
     private var currentSize: CGSize?
@@ -73,6 +74,8 @@ final class InstantPageMediaView: View, InstantPageView {
             } else {
                 self.imageView = TransformImageView()
             }
+        case .map:
+            self.imageView = TransformImageView()
         }
         
         
@@ -127,14 +130,22 @@ final class InstantPageMediaView: View, InstantPageView {
             self.imageView.setSignal( chatMessagePhoto(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image), scale: backingScaleFactor))
             self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)).start())
             if let largest = largestImageRepresentation(image.representations) {
-                statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+                if arguments.isInteractive {
+                    statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+                }
             }
             
         } else if let file = media.media as? TelegramMediaFile {
-            statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+            if arguments.isInteractive {
+                statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+            }
             self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)).start())
             
-            self.imageView.setSignal( chatMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+            if file.mimeType.hasPrefix("image/") && !file.mimeType.hasSuffix("gif") {
+                self.imageView.setSignal(instantPageImageFile(account: account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
+            } else {
+                self.imageView.setSignal( chatMessageVideo(postbox: account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+            }
 
             switch arguments {
             case let .video(_, autoplay):
@@ -146,6 +157,38 @@ final class InstantPageMediaView: View, InstantPageView {
             default:
                 break
             }
+        } else if let map = media.media as? TelegramMediaMap {
+            
+            let iconView = ImageView()
+            iconView.image = theme.icons.chatMapPin
+            iconView.sizeToFit()
+            addSubview(iconView)
+            
+            self.iconView = iconView
+            
+         //   self.addSubnode(self.pinNode)
+            
+            var zoom: Int32 = 12
+            var dimensions = CGSize(width: 200.0, height: 100.0)
+            switch arguments {
+            case let .map(attribute):
+                zoom = attribute.zoom
+                dimensions = attribute.dimensions
+            default:
+                break
+            }
+
+            let resource = MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: Int32(dimensions.width), height: Int32(dimensions.height), zoom: zoom)
+            
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+            let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
+            let signal = chatWebpageSnippetPhoto(account: account, imageReference: imageReference, scale: backingScaleFactor, small: false)
+            self.imageView.setSignal(signal)
+        } else if let webPage = media.media as? TelegramMediaWebpage, case let .Loaded(content) = webPage.content, let image = content.image {
+            let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(webPage), media: image)
+            let signal = chatMessagePhoto(account: account, imageReference: imageReference, scale: backingScaleFactor)
+            self.imageView.setSignal(signal)
+            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: imageReference).start())
         }
         
     }
@@ -179,6 +222,8 @@ final class InstantPageMediaView: View, InstantPageView {
         
         let size = self.bounds.size
         
+        iconView?.center()
+        
         if self.currentSize != size {
             self.currentSize = size
             
@@ -197,7 +242,9 @@ final class InstantPageMediaView: View, InstantPageView {
                         imageSize = largest.dimensions.fitted(size)
                         boundingSize = imageSize;
                     }
+               
                 default:
+                    
                     break
                 }
                 
@@ -209,6 +256,20 @@ final class InstantPageMediaView: View, InstantPageView {
                 let boundingSize = size
                 
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
+            } else if let _ = self.media.media as? TelegramMediaMap {
+                var imageSize = size
+
+                var boundingSize = size
+                switch arguments {
+                case let .map(attribute):
+                    boundingSize = attribute.dimensions
+                    imageSize = attribute.dimensions.aspectFilled(size)
+                default:
+                    break
+                }
+
+                
+                imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
             }
         }
         progressView.center()

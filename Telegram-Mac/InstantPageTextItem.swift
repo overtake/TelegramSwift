@@ -66,6 +66,9 @@ final class InstantPageTextLine {
     let isRTL: Bool
     let attributedString: NSAttributedString
     
+    let separatesTiles: Bool = false
+
+    
     var selectRect: NSRect = NSZeroRect
     
     init(line: CTLine, attributedString: NSAttributedString, range: NSRange, frame: CGRect, strikethroughItems: [InstantPageTextStrikethroughItem], markedItems: [InstantPageTextMarkedItem], imageItems: [InstantPageTextImageItem], anchorItems: [InstantPageTextAnchorItem], isRTL: Bool) {
@@ -205,7 +208,7 @@ final class InstantPageTextItem: InstantPageItem {
     let alignment: NSTextAlignment
     let medias: [InstantPageMedia] = []
     let anchors: [String: (Int, Bool)]
-    let wantsNode: Bool = false
+    let wantsView: Bool = false
     let separatesTiles: Bool = false
     var selectable: Bool = true
     
@@ -317,11 +320,11 @@ final class InstantPageTextItem: InstantPageItem {
         return false
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return nil
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         return false
     }
     
@@ -754,7 +757,7 @@ func layoutTextItemWithString(_ string: NSAttributedString, boundingWidth: CGFlo
             let lineFrame = frameForLine(line, boundingWidth: boundingWidth, alignment: alignment)
             for imageItem in line.imageItems {
                 if let image = media[imageItem.id] as? TelegramMediaFile {
-                    let item = InstantPageImageItem(frame: imageItem.frame.offsetBy(dx: lineFrame.minX + offset.x, dy: offset.y), webPage: webpage, media: InstantPageMedia(index: -1, media: image, webpage: webpage, url: nil, caption: nil, credit: nil), interactive: true, roundCorners: false, fit: false)
+                    let item = InstantPageImageItem(frame: imageItem.frame.offsetBy(dx: lineFrame.minX + offset.x, dy: offset.y), webPage: webpage, media: InstantPageMedia(index: -1, media: image, webpage: webpage, url: nil, caption: nil, credit: nil), interactive: false, roundCorners: false, fit: false)
                     additionalItems.append(item)
                     
                     if item.frame.minY < topInset {

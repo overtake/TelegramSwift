@@ -171,6 +171,8 @@ private class HeaderView : View {
 class InstantWindowContentView : View {
     private let headerView: HeaderView = HeaderView(frame: NSZeroRect)
     private let contentView: View = View()
+    fileprivate let loadingIndicatorView: LinearProgressControl = LinearProgressControl(progressHeight: 4)
+
     fileprivate var arguments: InstantViewArguments? {
         didSet {
             headerView.arguments = arguments
@@ -186,6 +188,8 @@ class InstantWindowContentView : View {
         super.init(frame: frameRect)
         addSubview(headerView)
         addSubview(contentView)
+        addSubview(loadingIndicatorView)
+        loadingIndicatorView.layer?.opacity = 0
         flip = false
         contentView.autoresizesSubviews = false
         layout()
@@ -195,6 +199,7 @@ class InstantWindowContentView : View {
         super.updateLocalizationAndTheme()
         contentView.backgroundColor = theme.colors.background
         backgroundColor = theme.colors.background
+        loadingIndicatorView.style = ControlStyle(foregroundColor: theme.colors.text, backgroundColor: backgroundColor)
     }
     
     func updateTitle(_ title:String, animated: Bool) {
@@ -223,6 +228,7 @@ class InstantWindowContentView : View {
         headerView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, barHeight)
         contentView.frame = NSMakeRect(0, 0, frame.width, frame.height - headerView.frame.height)
         contentView.subviews.first?.frame = contentView.bounds
+        loadingIndicatorView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, loadingIndicatorView.frame.height)
     }
 }
 
@@ -238,6 +244,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     
     fileprivate let _window:Window
     private let appearanceDisposable = MetaDisposable()
+    private let loadProgressDisposable = MetaDisposable()
     init( page: InstantPageViewController, account: Account) {
         navigation = MajorNavigationController(ViewController.self, page)
         navigation.alwaysAnimate = true
@@ -364,6 +371,18 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         }
         return nil
     }
+    
+    func updateProgress(_ signal: Signal<CGFloat, NoError>) {
+        loadProgressDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] value in
+            guard let `self` = self else {return}
+            self.genericView.loadingIndicatorView.set(progress: value, animated: true, duration: 0.2)
+            if value == 1 || value == 0 {
+                self.genericView.loadingIndicatorView.change(opacity: 0, animated: true)
+            } else if value > 0 {
+                self.genericView.loadingIndicatorView.change(opacity: 1, animated: true)
+            }
+        }))
+    }
 
     
     private func openInSafari() {
@@ -436,7 +455,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     deinit {
         NotificationCenter.default.removeObserver(self)
         appearanceDisposable.dispose()
-        
+        loadProgressDisposable.dispose()
         if let titleView = titleView {
             NotificationCenter.default.removeObserver(titleView)
         }
@@ -478,6 +497,7 @@ func showInstantPage(_ page: InstantPageViewController) {
     if let instantController = instantController {
         if page.webPage.webpageId != (instantController.navigationController?.controller as? InstantPageViewController)?.webPage.webpageId {
             instantController.navigation.push(page, true)
+            instantController.updateProgress(page.progressSignal)
             instantController._window.orderFront(nil)
             instantController._window.deminiaturize(nil)
         }

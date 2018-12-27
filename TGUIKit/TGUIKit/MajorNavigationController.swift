@@ -258,7 +258,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                 switch state {
                 case .start:
                     
-                    guard let previous = self.previousController, self.stackCount > 1 && !self.isLocked, (self.genericView.state == .single || self.stackCount > 2) else {return .failed}
+                    guard let previous = self.previousController, self.controller.supportSwipes, self.stackCount > 1 && !self.isLocked, (self.genericView.state == .single || self.stackCount > 2) else {return .failed}
                 
                     previous.view.frame = NSMakeRect(0, previous.bar.height, self.frame.width, self.frame.height - previous.bar.height)
                     

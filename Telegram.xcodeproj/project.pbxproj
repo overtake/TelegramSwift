@@ -42,6 +42,7 @@
 		9F1962D82101458C00FFF048 /* VCardLocationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1962D72101458C00FFF048 /* VCardLocationRowItem.swift */; };
 		9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1AE5E320B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift */; };
 		9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */; };
+		9F1C279321D38A96003CD033 /* InstantPageScrollableItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C279221D38A96003CD033 /* InstantPageScrollableItem.swift */; };
 		9F21A7CF21C1552D0037784F /* InstantPageTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21A7CE21C1552D0037784F /* InstantPageTheme.swift */; };
 		9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21A7D221C167000037784F /* InstantPageImageItem.swift */; };
 		9F21A7D521C16CB90037784F /* InstantPagePeerReferenceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21A7D421C16CB90037784F /* InstantPagePeerReferenceItem.swift */; };
@@ -57,6 +58,12 @@
 		9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB4320A5ED2F003FE7E3 /* fast-edge.cpp */; };
 		9F3EAB4B20A5F90B003FE7E3 /* TGPassportMRZ.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB4A20A5F90B003FE7E3 /* TGPassportMRZ.m */; };
 		9F4EC948218B459A002B3C56 /* RenderedTotalUnreadCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EC947218B459A002B3C56 /* RenderedTotalUnreadCount.swift */; };
+		9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF7D21D3C3E3002C3B33 /* InstantPageDetailsItem.swift */; };
+		9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF7F21D3C76E002C3B33 /* InstantPageContentView.swift */; };
+		9F4EEF8221D4F584002C3B33 /* ImageTransparency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF8121D4F584002C3B33 /* ImageTransparency.swift */; };
+		9F4EEF8421D4F59C002C3B33 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4EEF8321D4F59C002C3B33 /* Accelerate.framework */; };
+		9F4EEF8621D4FA68002C3B33 /* InstantPageArticleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF8521D4FA68002C3B33 /* InstantPageArticleItem.swift */; };
+		9F4EEF8821D515C5002C3B33 /* InstantPageStoredState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF8721D515C5002C3B33 /* InstantPageStoredState.swift */; };
 		9F52F51A2130286E006FC0B5 /* LocationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F52F5192130286E006FC0B5 /* LocationRequest.swift */; };
 		9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F580BE420A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift */; };
 		9F5B6E792011460000C58B2A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B6E78201145FA00C58B2A /* MergeLists.swift */; };
@@ -783,6 +790,7 @@
 		9F1962D72101458C00FFF048 /* VCardLocationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VCardLocationRowItem.swift; sourceTree = "<group>"; };
 		9F1AE5E320B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPlaceSuggestionRowItem.swift; sourceTree = "<group>"; };
 		9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSendCurrentItem.swift; sourceTree = "<group>"; };
+		9F1C279221D38A96003CD033 /* InstantPageScrollableItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageScrollableItem.swift; sourceTree = "<group>"; };
 		9F21A7CE21C1552D0037784F /* InstantPageTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageTheme.swift; sourceTree = "<group>"; };
 		9F21A7D221C167000037784F /* InstantPageImageItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageImageItem.swift; sourceTree = "<group>"; };
 		9F21A7D421C16CB90037784F /* InstantPagePeerReferenceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPagePeerReferenceItem.swift; sourceTree = "<group>"; };
@@ -802,6 +810,12 @@
 		9F3EAB4920A5F90B003FE7E3 /* TGPassportMRZ.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGPassportMRZ.h; sourceTree = "<group>"; };
 		9F3EAB4A20A5F90B003FE7E3 /* TGPassportMRZ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGPassportMRZ.m; sourceTree = "<group>"; };
 		9F4EC947218B459A002B3C56 /* RenderedTotalUnreadCount.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RenderedTotalUnreadCount.swift; sourceTree = "<group>"; };
+		9F4EEF7D21D3C3E3002C3B33 /* InstantPageDetailsItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageDetailsItem.swift; sourceTree = "<group>"; };
+		9F4EEF7F21D3C76E002C3B33 /* InstantPageContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageContentView.swift; sourceTree = "<group>"; };
+		9F4EEF8121D4F584002C3B33 /* ImageTransparency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTransparency.swift; sourceTree = "<group>"; };
+		9F4EEF8321D4F59C002C3B33 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		9F4EEF8521D4FA68002C3B33 /* InstantPageArticleItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageArticleItem.swift; sourceTree = "<group>"; };
+		9F4EEF8721D515C5002C3B33 /* InstantPageStoredState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageStoredState.swift; sourceTree = "<group>"; };
 		9F52E74E2074C12B0048791C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		9F52E7502074C16D0048791C /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		9F52E7522074C1710048791C /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/MainMenu.strings; sourceTree = "<group>"; };
@@ -1607,6 +1621,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F4EEF8421D4F59C002C3B33 /* Accelerate.framework in Frameworks */,
 				9F63152221D11E17009FD379 /* HockeySDK.framework in Frameworks */,
 				9F63152321D11E17009FD379 /* Sparkle.framework in Frameworks */,
 				D0675D6B217E20B9004900A7 /* Zip.framework in Frameworks */,
@@ -1931,6 +1946,7 @@
 				9F72973320B878B00067F815 /* MapResources.swift */,
 				C2B6488F1EB25B1700BA574B /* MediaResources.swift */,
 				9FDA713120E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift */,
+				9F4EEF8121D4F584002C3B33 /* ImageTransparency.swift */,
 			);
 			name = media;
 			sourceTree = "<group>";
@@ -2639,6 +2655,11 @@
 				9F21A7D221C167000037784F /* InstantPageImageItem.swift */,
 				9F21A7D421C16CB90037784F /* InstantPagePeerReferenceItem.swift */,
 				9F21A7DB21C290E00037784F /* InstantPageTableItem.swift */,
+				9F1C279221D38A96003CD033 /* InstantPageScrollableItem.swift */,
+				9F4EEF7D21D3C3E3002C3B33 /* InstantPageDetailsItem.swift */,
+				9F4EEF7F21D3C76E002C3B33 /* InstantPageContentView.swift */,
+				9F4EEF8521D4FA68002C3B33 /* InstantPageArticleItem.swift */,
+				9F4EEF8721D515C5002C3B33 /* InstantPageStoredState.swift */,
 			);
 			name = instantpage;
 			sourceTree = "<group>";
@@ -3827,6 +3848,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9F4EEF8321D4F59C002C3B33 /* Accelerate.framework */,
 				9F0AE6B62199A52600A8B53A /* UserNotifications.framework */,
 				D0675D6A217E20B9004900A7 /* Zip.framework */,
 				9F388C8B213550C500830715 /* HockeySDK.framework */,
@@ -4301,6 +4323,7 @@
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
 				C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */,
 				D071E8AA214BC589001B6024 /* TouchBarStickerItemView.swift in Sources */,
+				9F4EEF8821D515C5002C3B33 /* InstantPageStoredState.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				C259ED1C1DB8DC78008E6712 /* ChatNavigateScroller.swift in Sources */,
 				C29A65031E08396F0071BCEF /* MGalleryExternalVideoItem.swift in Sources */,
@@ -4406,6 +4429,7 @@
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
+				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
 				9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,
@@ -4516,6 +4540,7 @@
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
+				9F4EEF8621D4FA68002C3B33 /* InstantPageArticleItem.swift in Sources */,
 				9F18DD94206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift in Sources */,
 				C25F714A1E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift in Sources */,
 				C226743A1DC1273E000BA9ED /* PeerMediaGridController.swift in Sources */,
@@ -4532,8 +4557,10 @@
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
 				C29C3E5B1E421F1700193A7E /* ChatAccessoryModel.swift in Sources */,
 				C2BB2DB01F8BDF6700520255 /* Config.swift in Sources */,
+				9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */,
 				C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */,
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
+				9F1C279321D38A96003CD033 /* InstantPageScrollableItem.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				C251FB4C1FEDCC750035E5D7 /* ChatPresentationUtils.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
@@ -4578,6 +4605,7 @@
 				C230B8F61DD371430057F596 /* SPopoverViewController.swift in Sources */,
 				C22674331DBF665A000BA9ED /* EStickerPackEntries.swift in Sources */,
 				9FC8ADA42063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift in Sources */,
+				9F4EEF8221D4F584002C3B33 /* ImageTransparency.swift in Sources */,
 				C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */,
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,

@@ -186,6 +186,10 @@ open class ViewController : NSObject {
         return 350
     }
     
+    open var supportSwipes: Bool {
+        return true
+    }
+    
     public private(set) var internalId:Int = 0;
     
     public override init() {

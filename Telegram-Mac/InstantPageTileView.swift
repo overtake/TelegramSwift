@@ -14,17 +14,17 @@ import TGUIKit
 final class InstantPageTileView: View {
     private let tile: InstantPageTile
     
-    init(tile: InstantPageTile) {
+    init(tile: InstantPageTile, backgroundColor: NSColor) {
         self.tile = tile
         super.init()
-        super.backgroundColor = theme.colors.background
-        layerContentsRedrawPolicy = .never
+        super.backgroundColor = backgroundColor
+       // layerContentsRedrawPolicy = .never
     }
     
     func redrawTile() {
-        layerContentsRedrawPolicy = .onSetNeedsDisplay
-        display()
-        layerContentsRedrawPolicy = .never
+//        layerContentsRedrawPolicy = .onSetNeedsDisplay
+//        display()
+//        layerContentsRedrawPolicy = .never
     }
     
     
