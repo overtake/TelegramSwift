@@ -28,6 +28,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(AutoNightThemePreferences.self, f: { AutoNightThemePreferences(decoder: $0) })
     declareEncodable(StickerSettings.self, f: { StickerSettings(decoder: $0) })
     declareEncodable(EmojiSkinModifier.self, f: { AutoNightThemePreferences(decoder: $0) })
+    declareEncodable(InstantPageStoredDetailsState.self, f: { InstantPageStoredDetailsState(decoder: $0) })
     return
 }()
 

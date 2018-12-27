@@ -397,10 +397,6 @@ internal final class L10n {
   }
   /// Cancel Account Reset
   internal static var cancelResetAccountTitle: String  { return L10n.tr("Localizable", "CancelResetAccount.Title") }
-  /// %d votes
-  internal static func cChatPollTooltipVotesOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "CChat.Poll.Tooltip.Votes_other", p1)
-  }
   /// All Admins
   internal static var chanelEventFilterAllAdmins: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllAdmins") }
   /// All Events
@@ -946,6 +942,10 @@ internal final class L10n {
   /// %d votes
   internal static func chatPollTooltipVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_one", p1)
+  }
+  /// %d votes
+  internal static func chatPollTooltipVotesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_other", p1)
   }
   /// %d votes
   internal static func chatPollTooltipVotesTwo(_ p1: Int) -> String {
@@ -1882,6 +1882,10 @@ internal final class L10n {
   /// By %1$@ • %2$@
   internal static func instantPageAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "InstantPage.AuthorAndDateTitle", p1, p2)
+  }
+  /// %1$@ • %2$@
+  internal static func instantPageRelatedArticleAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "InstantPage.RelatedArticleAuthorAndDateTitle", p1, p2)
   }
   /// Join
   internal static var ivChannelJoin: String  { return L10n.tr("Localizable", "IV.Channel.Join") }

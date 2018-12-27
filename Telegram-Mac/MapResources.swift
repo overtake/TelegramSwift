@@ -9,9 +9,9 @@ public struct MapSnapshotMediaResourceId: MediaResourceId {
     public let longitude: Double
     public let width: Int32
     public let height: Int32
-    
+    public let zoom: Int32
     public var uniqueId: String {
-        return "map-\(latitude)-\(longitude)-\(width)x\(height)"
+        return "map-\(latitude)-\(longitude)-\(width)x\(height)-\(zoom)"
     }
     
     public var hashValue: Int {
@@ -20,7 +20,7 @@ public struct MapSnapshotMediaResourceId: MediaResourceId {
     
     public func isEqual(to: MediaResourceId) -> Bool {
         if let to = to as? MapSnapshotMediaResourceId {
-            return self.latitude == to.latitude && self.longitude == to.longitude && self.width == to.width && self.height == to.height
+            return self.latitude == to.latitude && self.longitude == to.longitude && self.width == to.width && self.height == to.height && self.zoom == to.zoom
         } else {
             return false
         }
@@ -32,12 +32,13 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
     public let longitude: Double
     public let width: Int32
     public let height: Int32
-    
-    public init(latitude: Double, longitude: Double, width: Int32, height: Int32) {
+    public let zoom: Int32
+    public init(latitude: Double, longitude: Double, width: Int32, height: Int32, zoom: Int32) {
         self.latitude = latitude
         self.longitude = longitude
         self.width = width
         self.height = height
+        self.zoom = zoom
     }
     
     public required init(decoder: PostboxDecoder) {
@@ -45,6 +46,8 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
         self.longitude = decoder.decodeDoubleForKey("ln", orElse: 0.0)
         self.width = decoder.decodeInt32ForKey("w", orElse: 0)
         self.height = decoder.decodeInt32ForKey("h", orElse: 0)
+        self.zoom = decoder.decodeInt32ForKey("z", orElse: 15)
+
     }
     
     public func encode(_ encoder: PostboxEncoder) {
@@ -52,15 +55,16 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
         encoder.encodeDouble(self.longitude, forKey: "ln")
         encoder.encodeInt32(self.width, forKey: "w")
         encoder.encodeInt32(self.height, forKey: "h")
+        encoder.encodeInt32(self.zoom, forKey: "z")
     }
     
     public var id: MediaResourceId {
-        return MapSnapshotMediaResourceId(latitude: self.latitude, longitude: self.longitude, width: self.width, height: self.height)
+        return MapSnapshotMediaResourceId(latitude: self.latitude, longitude: self.longitude, width: self.width, height: self.height, zoom: self.zoom)
     }
     
     public func isEqual(to: MediaResource) -> Bool {
         if let to = to as? MapSnapshotMediaResource {
-            return self.latitude == to.latitude && self.longitude == to.longitude && self.width == to.width && self.height == to.height
+            return self.latitude == to.latitude && self.longitude == to.longitude && self.width == to.width && self.height == to.height && self.zoom == to.zoom
         } else {
             return false
         }
@@ -89,7 +93,7 @@ func fetchMapSnapshotResource(resource: MapSnapshotMediaResource) -> Signal<Medi
         
         Queue.concurrentDefaultQueue().async {
             let options = MKMapSnapshotter.Options()
-            let latitude = adjustGMapLatitude(resource.latitude, offset: -10, zoom: 15)
+            let latitude = adjustGMapLatitude(resource.latitude, offset: -10, zoom: Int(resource.zoom))
             options.region = MKCoordinateRegion(center: CLLocationCoordinate2DMake(latitude, resource.longitude), span: MKCoordinateSpan(latitudeDelta: 0.003, longitudeDelta: 0.003))
             options.mapType = .standard
             options.showsPointsOfInterest = false

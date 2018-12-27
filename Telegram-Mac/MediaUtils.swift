@@ -2192,3 +2192,100 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
     }
 }
 
+
+func instantPageImageFile(account: Account, fileReference: FileMediaReference, scale: CGFloat, fetched: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+    return chatMessageFileDatas(account: account, fileReference: fileReference, progressive: false)
+        |> map { (thumbnailData, fullSizePath, fullSizeComplete) in
+            return { arguments in
+                assertNotOnMainThread()
+                let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+                
+                let drawingRect = arguments.drawingRect
+                let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
+                
+                var fullSizeImage: CGImage?
+                var imageOrientation: ImageOrientation = .up
+                if let fullSizePath = fullSizePath {
+                    if fullSizeComplete {
+                        let options = NSMutableDictionary()
+                        options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                        options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                        if let imageSource = CGImageSourceCreateWithURL(URL(fileURLWithPath: fullSizePath) as CFURL, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
+                            imageOrientation = imageOrientationFromSource(imageSource)
+                            fullSizeImage = image
+                        }
+                    }
+                }
+                
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                
+                context.withFlippedContext { c in
+                    if var fullSizeImage = fullSizeImage {
+                        if let color = arguments.emptyColor, imageRequiresInversion(fullSizeImage), let tintedImage = generateTintedImage(image: fullSizeImage, color: color) {
+                            fullSizeImage = tintedImage
+                        }
+                        
+                        c.setBlendMode(.normal)
+                        c.interpolationQuality = .medium
+                        
+                        drawImage(context: c, image: fullSizeImage, orientation: imageOrientation, in: fittedRect)
+                    }
+                }
+                
+                addCorners(context, arguments: arguments, scale: scale)
+                
+                return context
+            }
+    }
+}
+
+private func rotationFor(_ orientation: ImageOrientation) -> CGFloat {
+    switch orientation {
+    case .left:
+        return CGFloat.pi / 2.0
+    case .right:
+        return -CGFloat.pi / 2.0
+    case .down:
+        return -CGFloat.pi
+    default:
+        return 0.0
+    }
+}
+
+func drawImage(context: CGContext, image: CGImage, orientation: ImageOrientation, in rect: CGRect) {
+    var restore = true
+    var drawRect = rect
+    switch orientation {
+    case .left:
+        fallthrough
+    case .right:
+        fallthrough
+    case .down:
+        let angle = rotationFor(orientation)
+        context.saveGState()
+        context.translateBy(x: rect.midX, y: rect.midY)
+        context.rotate(by: angle)
+        context.translateBy(x: -rect.midX, y: -rect.midY)
+        var t = CGAffineTransform(translationX: rect.midX, y: rect.midY)
+        t = t.rotated(by: angle)
+        t = t.translatedBy(x: -rect.midX, y: -rect.midY)
+        
+        drawRect = rect.applying(t)
+    case .leftMirrored:
+        context.saveGState()
+        context.translateBy(x: rect.midX, y: rect.midY)
+        context.rotate(by: -CGFloat.pi / 2.0)
+        context.translateBy(x: -rect.midX, y: -rect.midY)
+        var t = CGAffineTransform(translationX: rect.midX, y: rect.midY)
+        t = t.rotated(by: -CGFloat.pi / 2.0)
+        t = t.translatedBy(x: -rect.midX, y: -rect.midY)
+        
+        drawRect = rect.applying(t)
+    default:
+        restore = false
+    }
+    context.draw(image, in: drawRect)
+    if restore {
+        context.restoreGState()
+    }
+}
