@@ -120,9 +120,14 @@ class GalleryThumbsControl: ViewController {
         }
         
         if self.items.count <= 1 {
-            interactions.hideThumbsControl(genericView, animated)
+            genericView.change(opacity: 0, animated: animated, completion: { [weak self] completed in
+                if completed {
+                    self?.genericView.isHidden = true
+                }
+            })
         } else {
-            interactions.showThumbsControl(genericView, animated)
+            genericView.isHidden = false
+            genericView.change(opacity: 1, animated: animated)
         }
         
         afterLayoutTransition?(animated)
